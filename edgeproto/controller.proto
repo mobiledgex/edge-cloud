@@ -7,6 +7,10 @@ import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // ControllerKey uniquely defines a Controller
 message ControllerKey {
   // external API address

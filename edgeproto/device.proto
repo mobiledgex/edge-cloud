@@ -9,6 +9,10 @@ import "gogoproto/gogo.proto";
 import "result.proto";
 import "google/protobuf/timestamp.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // DeviceReport is a reporting message. It takes a begining and end time
 // for the report
 message DeviceReport {

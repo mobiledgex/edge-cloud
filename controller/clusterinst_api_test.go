@@ -35,6 +35,7 @@ func TestClusterInstApi(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 	InfluxUsageUnitTestSetup(t)
+	defer InfluxUsageUnitTestStop()
 
 	// cannot create insts without cluster/cloudlet
 	for _, obj := range testutil.ClusterInstData {
@@ -332,6 +333,8 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 	require.Nil(t, err, "delete App")
 }
 
+var testInfluxProc *process.Influx
+
 func InfluxUsageUnitTestSetup(t *testing.T) {
 	addr := "http://127.0.0.1:8086"
 
@@ -346,12 +349,18 @@ func InfluxUsageUnitTestSetup(t *testing.T) {
 		err = p.StartLocal("/var/tmp/influxdb.log",
 			process.WithCleanStartup())
 		require.Nil(t, err, "start InfluxDB server")
-		defer p.StopLocal()
+		testInfluxProc = &p
 	}
-
 	q := influxq.NewInfluxQ(cloudcommon.EventsDbName, "", "")
 	err = q.Start(addr)
+	if err != nil {
+		testInfluxProc.StopLocal()
+	}
 	require.Nil(t, err, "new influx q")
-	defer q.Stop()
 	services.events = q
+}
+
+func InfluxUsageUnitTestStop() {
+	services.events.Stop()
+	testInfluxProc.StopLocal()
 }

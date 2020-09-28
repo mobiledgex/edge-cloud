@@ -5,6 +5,10 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "appinst.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 message CloudletMgmtNode {
   // Type of Cloudlet Mgmt Node
   string type = 1;

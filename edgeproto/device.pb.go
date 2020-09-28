@@ -3,51 +3,86 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-import google_protobuf1 "github.com/gogo/protobuf/types"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-import google_protobuf "github.com/gogo/protobuf/types"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	google_protobuf "github.com/gogo/protobuf/types"
+	types "github.com/gogo/protobuf/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
 // DeviceReport is a reporting message. It takes a begining and end time
 // for the report
 type DeviceReport struct {
 	// Device Key
-	Key DeviceKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key DeviceKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Timestamp of the beginning of the report
-	Begin *google_protobuf1.Timestamp `protobuf:"bytes,2,opt,name=begin" json:"begin,omitempty"`
+	Begin *types.Timestamp `protobuf:"bytes,2,opt,name=begin,proto3" json:"begin,omitempty"`
 	// Timestamp of the beginning of the report
-	End *google_protobuf1.Timestamp `protobuf:"bytes,3,opt,name=end" json:"end,omitempty"`
+	End *types.Timestamp `protobuf:"bytes,3,opt,name=end,proto3" json:"end,omitempty"`
 }
 
-func (m *DeviceReport) Reset()                    { *m = DeviceReport{} }
-func (m *DeviceReport) String() string            { return proto.CompactTextString(m) }
-func (*DeviceReport) ProtoMessage()               {}
-func (*DeviceReport) Descriptor() ([]byte, []int) { return fileDescriptorDevice, []int{0} }
+func (m *DeviceReport) Reset()         { *m = DeviceReport{} }
+func (m *DeviceReport) String() string { return proto.CompactTextString(m) }
+func (*DeviceReport) ProtoMessage()    {}
+func (*DeviceReport) Descriptor() ([]byte, []int) {
+	return fileDescriptor_870276a56ac00da5, []int{0}
+}
+func (m *DeviceReport) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeviceReport) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeviceReport.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeviceReport) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeviceReport.Merge(m, src)
+}
+func (m *DeviceReport) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeviceReport) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeviceReport.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeviceReport proto.InternalMessageInfo
 
 // DeviceKey is an identifier for a given device on the MobiledgeX platform
 // It is defined by a unique id and unique id type
@@ -59,38 +94,122 @@ type DeviceKey struct {
 	UniqueId string `protobuf:"bytes,2,opt,name=unique_id,json=uniqueId,proto3" json:"unique_id,omitempty"`
 }
 
-func (m *DeviceKey) Reset()                    { *m = DeviceKey{} }
-func (m *DeviceKey) String() string            { return proto.CompactTextString(m) }
-func (*DeviceKey) ProtoMessage()               {}
-func (*DeviceKey) Descriptor() ([]byte, []int) { return fileDescriptorDevice, []int{1} }
+func (m *DeviceKey) Reset()         { *m = DeviceKey{} }
+func (m *DeviceKey) String() string { return proto.CompactTextString(m) }
+func (*DeviceKey) ProtoMessage()    {}
+func (*DeviceKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_870276a56ac00da5, []int{1}
+}
+func (m *DeviceKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeviceKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeviceKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeviceKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeviceKey.Merge(m, src)
+}
+func (m *DeviceKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeviceKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeviceKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeviceKey proto.InternalMessageInfo
 
 // Device represents a device on the MobiledgeX platform
 // We record when this device first showed up on our platform
 type Device struct {
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Key
-	Key DeviceKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key DeviceKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Timestamp when the device was registered
-	FirstSeen *google_protobuf1.Timestamp `protobuf:"bytes,3,opt,name=first_seen,json=firstSeen" json:"first_seen,omitempty"`
+	FirstSeen *types.Timestamp `protobuf:"bytes,3,opt,name=first_seen,json=firstSeen,proto3" json:"first_seen,omitempty"`
 	// Timestamp when the device was last seen(Future use)
-	LastSeen *google_protobuf1.Timestamp `protobuf:"bytes,4,opt,name=last_seen,json=lastSeen" json:"last_seen,omitempty"`
+	LastSeen *types.Timestamp `protobuf:"bytes,4,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
 	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,5,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 }
 
-func (m *Device) Reset()                    { *m = Device{} }
-func (m *Device) String() string            { return proto.CompactTextString(m) }
-func (*Device) ProtoMessage()               {}
-func (*Device) Descriptor() ([]byte, []int) { return fileDescriptorDevice, []int{2} }
-
-type DeviceData struct {
-	Devices []Device `protobuf:"bytes,1,rep,name=devices" json:"devices"`
+func (m *Device) Reset()         { *m = Device{} }
+func (m *Device) String() string { return proto.CompactTextString(m) }
+func (*Device) ProtoMessage()    {}
+func (*Device) Descriptor() ([]byte, []int) {
+	return fileDescriptor_870276a56ac00da5, []int{2}
+}
+func (m *Device) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Device) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Device.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Device) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Device.Merge(m, src)
+}
+func (m *Device) XXX_Size() int {
+	return m.Size()
+}
+func (m *Device) XXX_DiscardUnknown() {
+	xxx_messageInfo_Device.DiscardUnknown(m)
 }
 
-func (m *DeviceData) Reset()                    { *m = DeviceData{} }
-func (m *DeviceData) String() string            { return proto.CompactTextString(m) }
-func (*DeviceData) ProtoMessage()               {}
-func (*DeviceData) Descriptor() ([]byte, []int) { return fileDescriptorDevice, []int{3} }
+var xxx_messageInfo_Device proto.InternalMessageInfo
+
+type DeviceData struct {
+	Devices []Device `protobuf:"bytes,1,rep,name=devices,proto3" json:"devices"`
+}
+
+func (m *DeviceData) Reset()         { *m = DeviceData{} }
+func (m *DeviceData) String() string { return proto.CompactTextString(m) }
+func (*DeviceData) ProtoMessage()    {}
+func (*DeviceData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_870276a56ac00da5, []int{3}
+}
+func (m *DeviceData) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeviceData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeviceData.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeviceData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeviceData.Merge(m, src)
+}
+func (m *DeviceData) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeviceData) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeviceData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeviceData proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*DeviceReport)(nil), "edgeproto.DeviceReport")
@@ -98,6 +217,56 @@ func init() {
 	proto.RegisterType((*Device)(nil), "edgeproto.Device")
 	proto.RegisterType((*DeviceData)(nil), "edgeproto.DeviceData")
 }
+
+func init() { proto.RegisterFile("device.proto", fileDescriptor_870276a56ac00da5) }
+
+var fileDescriptor_870276a56ac00da5 = []byte{
+	// 687 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xc1, 0x4f, 0x13, 0x4f,
+	0x14, 0xee, 0xb4, 0x85, 0x5f, 0x77, 0x58, 0x08, 0xec, 0x8f, 0xc8, 0xd8, 0x90, 0xd2, 0xec, 0x09,
+	0x09, 0x76, 0x11, 0xa3, 0xc1, 0x7a, 0xa2, 0xe2, 0xa1, 0x31, 0x5e, 0x16, 0xe2, 0x95, 0x6c, 0x77,
+	0x5f, 0x97, 0x91, 0x76, 0x66, 0xed, 0x4e, 0xc1, 0x26, 0x9a, 0x18, 0xff, 0x02, 0xa2, 0x17, 0x8f,
+	0xc4, 0x83, 0xf1, 0x68, 0x38, 0xf2, 0x17, 0x70, 0x24, 0xf1, 0xa0, 0x27, 0x83, 0xe0, 0xc1, 0x70,
+	0x32, 0x61, 0xd3, 0x78, 0x34, 0xbb, 0xb3, 0x5b, 0x9a, 0x40, 0x42, 0xb9, 0x6c, 0x66, 0xde, 0x7e,
+	0xef, 0xfb, 0xde, 0xf7, 0xbd, 0x0c, 0x56, 0x1d, 0xd8, 0xa2, 0x36, 0x94, 0xbc, 0x16, 0x17, 0x5c,
+	0x53, 0xc0, 0x71, 0x21, 0x3a, 0xe6, 0xa7, 0x5d, 0xce, 0xdd, 0x06, 0x18, 0x96, 0x47, 0x0d, 0x8b,
+	0x31, 0x2e, 0x2c, 0x41, 0x39, 0xf3, 0x25, 0x30, 0xbf, 0xe4, 0x52, 0xb1, 0xd1, 0xae, 0x95, 0x6c,
+	0xde, 0x34, 0x9a, 0xbc, 0x46, 0x1b, 0x61, 0xe3, 0x4b, 0x23, 0xfc, 0xde, 0xb6, 0x1b, 0xbc, 0xed,
+	0x18, 0x11, 0xce, 0x05, 0xd6, 0x3b, 0xc4, 0x9d, 0x93, 0x2e, 0x77, 0x79, 0x74, 0x34, 0xc2, 0x53,
+	0x5c, 0x55, 0x5b, 0xe0, 0xb7, 0x1b, 0x22, 0xbe, 0xcd, 0xc4, 0xda, 0xd1, 0xad, 0xd6, 0xae, 0x1b,
+	0x82, 0x36, 0xc1, 0x17, 0x56, 0xd3, 0x93, 0x00, 0xfd, 0x23, 0xc2, 0xea, 0x4a, 0x34, 0xb8, 0x09,
+	0x1e, 0x6f, 0x09, 0x6d, 0x1e, 0x67, 0x36, 0xa1, 0x43, 0x50, 0x11, 0xcd, 0x8e, 0x2c, 0x4e, 0x96,
+	0x7a, 0x36, 0x4a, 0x12, 0xf5, 0x04, 0x3a, 0x95, 0xec, 0xc1, 0x8f, 0x99, 0x94, 0x19, 0xc2, 0xb4,
+	0x05, 0x3c, 0x54, 0x03, 0x97, 0x32, 0x92, 0x8e, 0xf0, 0xf9, 0x92, 0xd4, 0x2b, 0x25, 0x7a, 0xa5,
+	0xb5, 0x44, 0xcf, 0x94, 0xc0, 0x90, 0x1f, 0x98, 0x43, 0x32, 0x57, 0xe2, 0x43, 0x58, 0x39, 0xfb,
+	0xe7, 0x8c, 0x20, 0xfd, 0x15, 0x56, 0x7a, 0xea, 0xda, 0x7d, 0x3c, 0xd6, 0x66, 0xf4, 0x45, 0x1b,
+	0xd6, 0xa9, 0xb3, 0x2e, 0x3a, 0x1e, 0x44, 0xb3, 0x2a, 0x95, 0xf1, 0xfd, 0x2e, 0x89, 0x77, 0x40,
+	0x9d, 0xb0, 0x6e, 0xaa, 0x12, 0x57, 0x75, 0xd6, 0x3a, 0x1e, 0x68, 0xb7, 0xb0, 0xd2, 0xeb, 0x8b,
+	0xc6, 0x55, 0x2a, 0xea, 0x7e, 0x97, 0xe4, 0x92, 0x16, 0x33, 0x97, 0xc0, 0xcb, 0xea, 0xef, 0x33,
+	0x82, 0xfe, 0x9e, 0x11, 0xf4, 0x65, 0x77, 0x06, 0xe9, 0x9f, 0xd2, 0x78, 0x58, 0xca, 0x6b, 0x37,
+	0xf0, 0x70, 0x9d, 0x42, 0xc3, 0xf1, 0x09, 0x2a, 0x66, 0x66, 0x15, 0x33, 0xbe, 0x25, 0xa1, 0xa5,
+	0x07, 0x0b, 0x6d, 0x05, 0xe3, 0x3a, 0x6d, 0xf9, 0x62, 0xdd, 0x07, 0x60, 0x57, 0x27, 0x51, 0x51,
+	0xde, 0xed, 0xdd, 0x1c, 0x62, 0xdc, 0x6e, 0x7a, 0xa6, 0x12, 0x35, 0xae, 0x02, 0x30, 0xad, 0x82,
+	0x95, 0x86, 0x95, 0x90, 0x64, 0xaf, 0x43, 0x92, 0x0b, 0xfb, 0x22, 0x8e, 0x39, 0xac, 0x30, 0x2e,
+	0x68, 0xbd, 0x13, 0x66, 0x32, 0x54, 0x44, 0xb3, 0x99, 0xca, 0xe8, 0xe7, 0x80, 0xa0, 0x3e, 0xac,
+	0xfc, 0x5f, 0x75, 0xca, 0xc5, 0x30, 0x94, 0x70, 0x1d, 0x6f, 0x02, 0x82, 0x76, 0x02, 0x82, 0x76,
+	0x03, 0x82, 0x8e, 0x02, 0x82, 0xf6, 0xba, 0x24, 0xcb, 0x38, 0x03, 0xbd, 0x8a, 0xb1, 0xf4, 0xbb,
+	0x62, 0x09, 0x4b, 0xbb, 0x83, 0xff, 0x93, 0xd1, 0xca, 0xb0, 0x46, 0x16, 0x27, 0x2e, 0xe4, 0x12,
+	0x87, 0x92, 0xe0, 0xca, 0xb9, 0x0f, 0x5d, 0x82, 0x76, 0xbb, 0x24, 0xb5, 0xf8, 0x2d, 0x93, 0xac,
+	0x7c, 0xd9, 0xa3, 0x1a, 0xc7, 0x6a, 0x95, 0x3d, 0x07, 0x5b, 0xc4, 0x6b, 0xb8, 0xc8, 0x94, 0xef,
+	0x2f, 0x99, 0xd1, 0x0b, 0xd0, 0x1f, 0x9c, 0x06, 0x64, 0xda, 0x04, 0x9f, 0xb7, 0x5b, 0x36, 0x3c,
+	0xe2, 0xac, 0x4e, 0xdd, 0xf9, 0x65, 0x3b, 0x7c, 0x7b, 0x4f, 0x2d, 0x66, 0xb9, 0x30, 0xff, 0xf6,
+	0xeb, 0xaf, 0xf7, 0xe9, 0xff, 0xf5, 0x31, 0xc3, 0x6e, 0x81, 0x25, 0xc0, 0x90, 0x63, 0x94, 0xd1,
+	0x9c, 0xb6, 0x89, 0xf1, 0xea, 0x06, 0xdf, 0x1e, 0x4c, 0x4e, 0x96, 0xf4, 0x7b, 0xa7, 0x01, 0xc9,
+	0x5f, 0x2a, 0xf7, 0x8c, 0xc2, 0xb6, 0x14, 0x9b, 0xd0, 0x55, 0xc3, 0xdf, 0xe0, 0xdb, 0xe7, 0x52,
+	0x0b, 0x48, 0x6b, 0xe2, 0x91, 0xc7, 0x5b, 0xf4, 0x9a, 0xe6, 0x96, 0x06, 0x32, 0xa7, 0xe9, 0xa3,
+	0x46, 0x48, 0x21, 0xfa, 0xbc, 0xbd, 0xc6, 0xe3, 0xe7, 0xde, 0xe2, 0x47, 0x3f, 0x75, 0x41, 0x53,
+	0xfe, 0xb8, 0xcc, 0xe7, 0xc3, 0x01, 0x7c, 0x4e, 0xe9, 0x5a, 0xbf, 0xcf, 0x56, 0x44, 0x16, 0xb9,
+	0xad, 0x4c, 0x1f, 0xfc, 0x2c, 0xa4, 0x0e, 0x8e, 0x0b, 0xe8, 0xf0, 0xb8, 0x80, 0x8e, 0x8e, 0x0b,
+	0x68, 0xe7, 0xa4, 0x90, 0x3a, 0x3c, 0x29, 0xa4, 0xbe, 0x9f, 0x14, 0x52, 0xb5, 0xe1, 0x48, 0xea,
+	0xee, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf6, 0xfe, 0x0b, 0x84, 0x4d, 0x05, 0x00, 0x00,
+}
+
 func (this *DeviceKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -126,8 +295,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for DeviceApi service
-
+// DeviceApiClient is the client API for DeviceApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DeviceApiClient interface {
 	InjectDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error)
 	ShowDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (DeviceApi_ShowDeviceClient, error)
@@ -146,7 +316,7 @@ func NewDeviceApiClient(cc *grpc.ClientConn) DeviceApiClient {
 
 func (c *deviceApiClient) InjectDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.DeviceApi/InjectDevice", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.DeviceApi/InjectDevice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +324,7 @@ func (c *deviceApiClient) InjectDevice(ctx context.Context, in *Device, opts ...
 }
 
 func (c *deviceApiClient) ShowDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (DeviceApi_ShowDeviceClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_DeviceApi_serviceDesc.Streams[0], c.cc, "/edgeproto.DeviceApi/ShowDevice", opts...)
+	stream, err := c.cc.NewStream(ctx, &_DeviceApi_serviceDesc.Streams[0], "/edgeproto.DeviceApi/ShowDevice", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +357,7 @@ func (x *deviceApiShowDeviceClient) Recv() (*Device, error) {
 
 func (c *deviceApiClient) EvictDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.DeviceApi/EvictDevice", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.DeviceApi/EvictDevice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +365,7 @@ func (c *deviceApiClient) EvictDevice(ctx context.Context, in *Device, opts ...g
 }
 
 func (c *deviceApiClient) ShowDeviceReport(ctx context.Context, in *DeviceReport, opts ...grpc.CallOption) (DeviceApi_ShowDeviceReportClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_DeviceApi_serviceDesc.Streams[1], c.cc, "/edgeproto.DeviceApi/ShowDeviceReport", opts...)
+	stream, err := c.cc.NewStream(ctx, &_DeviceApi_serviceDesc.Streams[1], "/edgeproto.DeviceApi/ShowDeviceReport", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -226,14 +396,30 @@ func (x *deviceApiShowDeviceReportClient) Recv() (*Device, error) {
 	return m, nil
 }
 
-// Server API for DeviceApi service
-
+// DeviceApiServer is the server API for DeviceApi service.
 type DeviceApiServer interface {
 	InjectDevice(context.Context, *Device) (*Result, error)
 	ShowDevice(*Device, DeviceApi_ShowDeviceServer) error
 	EvictDevice(context.Context, *Device) (*Result, error)
 	// Device Reports API.
 	ShowDeviceReport(*DeviceReport, DeviceApi_ShowDeviceReportServer) error
+}
+
+// UnimplementedDeviceApiServer can be embedded to have forward compatible implementations.
+type UnimplementedDeviceApiServer struct {
+}
+
+func (*UnimplementedDeviceApiServer) InjectDevice(ctx context.Context, req *Device) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InjectDevice not implemented")
+}
+func (*UnimplementedDeviceApiServer) ShowDevice(req *Device, srv DeviceApi_ShowDeviceServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowDevice not implemented")
+}
+func (*UnimplementedDeviceApiServer) EvictDevice(ctx context.Context, req *Device) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EvictDevice not implemented")
+}
+func (*UnimplementedDeviceApiServer) ShowDeviceReport(req *DeviceReport, srv DeviceApi_ShowDeviceReportServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowDeviceReport not implemented")
 }
 
 func RegisterDeviceApiServer(s *grpc.Server, srv DeviceApiServer) {
@@ -349,7 +535,7 @@ var _DeviceApi_serviceDesc = grpc.ServiceDesc{
 func (m *DeviceReport) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -357,45 +543,56 @@ func (m *DeviceReport) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *DeviceReport) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeviceReport) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintDevice(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if m.Begin != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintDevice(dAtA, i, uint64(m.Begin.Size()))
-		n2, err := m.Begin.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
-	}
 	if m.End != nil {
+		{
+			size, err := m.End.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDevice(dAtA, i, uint64(size))
+		}
+		i--
 		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintDevice(dAtA, i, uint64(m.End.Size()))
-		n3, err := m.End.MarshalTo(dAtA[i:])
+	}
+	if m.Begin != nil {
+		{
+			size, err := m.Begin.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDevice(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i -= size
+		i = encodeVarintDevice(dAtA, i, uint64(size))
 	}
-	return i, nil
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *DeviceKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -403,29 +600,36 @@ func (m *DeviceKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *DeviceKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeviceKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.UniqueIdType) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintDevice(dAtA, i, uint64(len(m.UniqueIdType)))
-		i += copy(dAtA[i:], m.UniqueIdType)
-	}
 	if len(m.UniqueId) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.UniqueId)
+		copy(dAtA[i:], m.UniqueId)
 		i = encodeVarintDevice(dAtA, i, uint64(len(m.UniqueId)))
-		i += copy(dAtA[i:], m.UniqueId)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.UniqueIdType) > 0 {
+		i -= len(m.UniqueIdType)
+		copy(dAtA[i:], m.UniqueIdType)
+		i = encodeVarintDevice(dAtA, i, uint64(len(m.UniqueIdType)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *Device) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -433,65 +637,70 @@ func (m *Device) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Device) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Device) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintDevice(dAtA, i, uint64(m.Key.Size()))
-	n4, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	if m.FirstSeen != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintDevice(dAtA, i, uint64(m.FirstSeen.Size()))
-		n5, err := m.FirstSeen.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
+	if m.NotifyId != 0 {
+		i = encodeVarintDevice(dAtA, i, uint64(m.NotifyId))
+		i--
+		dAtA[i] = 0x28
 	}
 	if m.LastSeen != nil {
+		{
+			size, err := m.LastSeen.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDevice(dAtA, i, uint64(size))
+		}
+		i--
 		dAtA[i] = 0x22
-		i++
-		i = encodeVarintDevice(dAtA, i, uint64(m.LastSeen.Size()))
-		n6, err := m.LastSeen.MarshalTo(dAtA[i:])
+	}
+	if m.FirstSeen != nil {
+		{
+			size, err := m.FirstSeen.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDevice(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i -= size
+		i = encodeVarintDevice(dAtA, i, uint64(size))
 	}
-	if m.NotifyId != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintDevice(dAtA, i, uint64(m.NotifyId))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintDevice(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *DeviceData) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -499,33 +708,42 @@ func (m *DeviceData) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *DeviceData) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeviceData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.Devices) > 0 {
-		for _, msg := range m.Devices {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintDevice(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
+		for iNdEx := len(m.Devices) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Devices[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintDevice(dAtA, i, uint64(size))
 			}
-			i += n
+			i--
+			dAtA[i] = 0xa
 		}
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintDevice(dAtA []byte, offset int, v uint64) int {
+	offset -= sovDevice(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *DeviceReport) CopyInFields(src *DeviceReport) int {
 	changed := 0
@@ -1658,6 +1876,9 @@ func IgnoreDeviceDataFields(taglist string) cmp.Option {
 }
 
 func (m *DeviceReport) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -1674,6 +1895,9 @@ func (m *DeviceReport) Size() (n int) {
 }
 
 func (m *DeviceKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.UniqueIdType)
@@ -1688,6 +1912,9 @@ func (m *DeviceKey) Size() (n int) {
 }
 
 func (m *Device) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1713,6 +1940,9 @@ func (m *Device) Size() (n int) {
 }
 
 func (m *DeviceData) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Devices) > 0 {
@@ -1725,14 +1955,7 @@ func (m *DeviceData) Size() (n int) {
 }
 
 func sovDevice(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozDevice(x uint64) (n int) {
 	return sovDevice(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1752,7 +1975,7 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1780,7 +2003,7 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1789,6 +2012,9 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1810,7 +2036,7 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1819,11 +2045,14 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Begin == nil {
-				m.Begin = &google_protobuf1.Timestamp{}
+				m.Begin = &types.Timestamp{}
 			}
 			if err := m.Begin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1843,7 +2072,7 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1852,11 +2081,14 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			if m.End == nil {
-				m.End = &google_protobuf1.Timestamp{}
+				m.End = &types.Timestamp{}
 			}
 			if err := m.End.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1869,6 +2101,9 @@ func (m *DeviceReport) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthDevice
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthDevice
 			}
 			if (iNdEx + skippy) > l {
@@ -1898,7 +2133,7 @@ func (m *DeviceKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1926,7 +2161,7 @@ func (m *DeviceKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1936,6 +2171,9 @@ func (m *DeviceKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1955,7 +2193,7 @@ func (m *DeviceKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1965,6 +2203,9 @@ func (m *DeviceKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1977,6 +2218,9 @@ func (m *DeviceKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthDevice
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthDevice
 			}
 			if (iNdEx + skippy) > l {
@@ -2006,7 +2250,7 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2034,7 +2278,7 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2044,6 +2288,9 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2063,7 +2310,7 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2072,6 +2319,9 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2093,7 +2343,7 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2102,11 +2352,14 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			if m.FirstSeen == nil {
-				m.FirstSeen = &google_protobuf1.Timestamp{}
+				m.FirstSeen = &types.Timestamp{}
 			}
 			if err := m.FirstSeen.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2126,7 +2379,7 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2135,11 +2388,14 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			if m.LastSeen == nil {
-				m.LastSeen = &google_protobuf1.Timestamp{}
+				m.LastSeen = &types.Timestamp{}
 			}
 			if err := m.LastSeen.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2159,7 +2415,7 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NotifyId |= (int64(b) & 0x7F) << shift
+				m.NotifyId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2171,6 +2427,9 @@ func (m *Device) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthDevice
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthDevice
 			}
 			if (iNdEx + skippy) > l {
@@ -2200,7 +2459,7 @@ func (m *DeviceData) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2228,7 +2487,7 @@ func (m *DeviceData) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2237,6 +2496,9 @@ func (m *DeviceData) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthDevice
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2254,6 +2516,9 @@ func (m *DeviceData) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthDevice
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDevice
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2269,6 +2534,7 @@ func (m *DeviceData) Unmarshal(dAtA []byte) error {
 func skipDevice(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -2300,10 +2566,8 @@ func skipDevice(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -2320,102 +2584,34 @@ func skipDevice(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthDevice
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowDevice
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipDevice(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupDevice
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthDevice
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthDevice = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowDevice   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthDevice        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowDevice          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupDevice = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("device.proto", fileDescriptorDevice) }
-
-var fileDescriptorDevice = []byte{
-	// 675 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x41, 0x4f, 0x13, 0x4d,
-	0x18, 0x66, 0xda, 0xc2, 0xd7, 0x1d, 0x16, 0x02, 0xfb, 0x91, 0x8f, 0xf9, 0x1a, 0x52, 0x9a, 0x3d,
-	0x21, 0xc1, 0x2e, 0x62, 0x34, 0x58, 0x4f, 0x54, 0x3c, 0x34, 0xc6, 0xcb, 0x42, 0xbc, 0x92, 0xed,
-	0xee, 0xdb, 0x65, 0xa4, 0x9d, 0x59, 0xbb, 0x53, 0xb0, 0x89, 0x26, 0xc6, 0x5f, 0x60, 0xf4, 0xe2,
-	0x91, 0x78, 0x30, 0x1e, 0x0d, 0x47, 0x7e, 0x01, 0x47, 0x13, 0x0f, 0xde, 0x0c, 0x12, 0x0f, 0x86,
-	0x93, 0x09, 0x9b, 0xc6, 0xa3, 0xd9, 0x99, 0xdd, 0xd2, 0x04, 0x12, 0xca, 0x65, 0x33, 0xf3, 0xee,
-	0xf3, 0x3e, 0xcf, 0xfb, 0x3c, 0x6f, 0x06, 0xeb, 0x1e, 0xec, 0x52, 0x17, 0xca, 0x41, 0x9b, 0x0b,
-	0x6e, 0x68, 0xe0, 0xf9, 0x20, 0x8f, 0x85, 0x39, 0x9f, 0x73, 0xbf, 0x09, 0x96, 0x13, 0x50, 0xcb,
-	0x61, 0x8c, 0x0b, 0x47, 0x50, 0xce, 0x42, 0x05, 0x2c, 0xac, 0xfa, 0x54, 0x6c, 0x77, 0xea, 0x65,
-	0x97, 0xb7, 0xac, 0x16, 0xaf, 0xd3, 0x66, 0xdc, 0xf8, 0xdc, 0x8a, 0xbf, 0x37, 0xdd, 0x26, 0xef,
-	0x78, 0x96, 0xc4, 0xf9, 0xc0, 0xfa, 0x87, 0xa4, 0x73, 0xc6, 0xe7, 0x3e, 0x97, 0x47, 0x2b, 0x3e,
-	0x25, 0x55, 0xbd, 0x0d, 0x61, 0xa7, 0x29, 0x92, 0xdb, 0x7c, 0xa2, 0x2d, 0x6f, 0xf5, 0x4e, 0xc3,
-	0x12, 0xb4, 0x05, 0xa1, 0x70, 0x5a, 0x81, 0x02, 0x98, 0x1f, 0x10, 0xd6, 0xd7, 0xe5, 0xe0, 0x36,
-	0x04, 0xbc, 0x2d, 0x8c, 0x25, 0x9c, 0xdd, 0x81, 0x2e, 0x41, 0x25, 0xb4, 0x30, 0xbe, 0x32, 0x53,
-	0xee, 0xdb, 0x28, 0x2b, 0xd4, 0x23, 0xe8, 0x56, 0x73, 0x47, 0xdf, 0xe7, 0x47, 0xec, 0x18, 0x66,
-	0x2c, 0xe3, 0xd1, 0x3a, 0xf8, 0x94, 0x91, 0x8c, 0xc4, 0x17, 0xca, 0x4a, 0xaf, 0x9c, 0xea, 0x95,
-	0x37, 0x53, 0x3d, 0x5b, 0x01, 0x63, 0x7e, 0x60, 0x1e, 0xc9, 0x5e, 0x89, 0x8f, 0x61, 0x95, 0xdc,
-	0xef, 0x33, 0x82, 0xcc, 0x17, 0x58, 0xeb, 0xab, 0x1b, 0x77, 0xf1, 0x64, 0x87, 0xd1, 0x67, 0x1d,
-	0xd8, 0xa2, 0xde, 0x96, 0xe8, 0x06, 0x20, 0x67, 0xd5, 0xaa, 0x53, 0x87, 0x3d, 0x92, 0xec, 0x80,
-	0x7a, 0x71, 0xdd, 0xd6, 0x15, 0xae, 0xe6, 0x6d, 0x76, 0x03, 0x30, 0x6e, 0x60, 0xad, 0xdf, 0x27,
-	0xc7, 0xd5, 0xaa, 0xfa, 0x61, 0x8f, 0xe4, 0xd3, 0x16, 0x3b, 0x9f, 0xc2, 0x2b, 0xfa, 0xaf, 0x33,
-	0x82, 0xfe, 0x9c, 0x11, 0xf4, 0x79, 0x7f, 0x1e, 0x99, 0x1f, 0x33, 0x78, 0x4c, 0xc9, 0x1b, 0xff,
-	0xe1, 0xb1, 0x06, 0x85, 0xa6, 0x17, 0x12, 0x54, 0xca, 0x2e, 0x68, 0x76, 0x72, 0x4b, 0x43, 0xcb,
-	0x0c, 0x17, 0xda, 0x3a, 0xc6, 0x0d, 0xda, 0x0e, 0xc5, 0x56, 0x08, 0xc0, 0xae, 0x4e, 0xa2, 0xaa,
-	0xbd, 0x3d, 0xf8, 0x7f, 0x94, 0x71, 0xb7, 0x15, 0xd8, 0x9a, 0x6c, 0xdc, 0x00, 0x60, 0x46, 0x15,
-	0x6b, 0x4d, 0x27, 0x25, 0xc9, 0x5d, 0x87, 0x24, 0x1f, 0xf7, 0x49, 0x8e, 0x45, 0xac, 0x31, 0x2e,
-	0x68, 0xa3, 0x1b, 0x67, 0x32, 0x5a, 0x42, 0x0b, 0xd9, 0xea, 0xc4, 0xa7, 0x88, 0xa0, 0x01, 0xac,
-	0xfa, 0x5f, 0xf3, 0x2a, 0xa5, 0x38, 0x94, 0x78, 0x1d, 0xaf, 0x22, 0x82, 0xde, 0x44, 0x04, 0xed,
-	0x47, 0x04, 0x1d, 0x47, 0x04, 0x1d, 0xf4, 0x48, 0x8e, 0x71, 0x06, 0x66, 0x0d, 0x63, 0xe5, 0x77,
-	0xdd, 0x11, 0x8e, 0x71, 0x0b, 0xff, 0xa3, 0xa2, 0x55, 0x61, 0x8d, 0xaf, 0x4c, 0x5f, 0xc8, 0x25,
-	0x09, 0x25, 0xc5, 0x55, 0xf2, 0xef, 0x7b, 0x04, 0xed, 0xf7, 0xc8, 0xc8, 0xca, 0xb7, 0x6c, 0xba,
-	0xf2, 0xb5, 0x80, 0x1a, 0x1c, 0xeb, 0x35, 0xf6, 0x14, 0x5c, 0x91, 0xac, 0xe1, 0x22, 0x53, 0x61,
-	0xb0, 0x64, 0xcb, 0x17, 0x60, 0xde, 0x3b, 0x8d, 0xc8, 0x9c, 0x0d, 0x21, 0xef, 0xb4, 0x5d, 0x78,
-	0xc0, 0x59, 0x83, 0xfa, 0x4b, 0x6b, 0x6e, 0xfc, 0xf6, 0x1e, 0x3b, 0xcc, 0xf1, 0x61, 0xe9, 0xf5,
-	0xd7, 0x9f, 0xef, 0x32, 0xff, 0x9a, 0x93, 0x96, 0xdb, 0x06, 0x47, 0x80, 0xa5, 0xc6, 0xa8, 0xa0,
-	0x45, 0x63, 0x07, 0xe3, 0x8d, 0x6d, 0xbe, 0x37, 0x9c, 0x9c, 0x2a, 0x99, 0x77, 0x4e, 0x23, 0x52,
-	0xb8, 0x54, 0xee, 0x09, 0x85, 0x3d, 0x25, 0x36, 0x6d, 0xea, 0x56, 0xb8, 0xcd, 0xf7, 0xce, 0xa5,
-	0x96, 0x91, 0xd1, 0xc2, 0xe3, 0x0f, 0x77, 0xe9, 0x35, 0xcd, 0xad, 0x0e, 0x65, 0xce, 0x30, 0x27,
-	0xac, 0x98, 0x42, 0x0c, 0x78, 0x7b, 0x89, 0xa7, 0xce, 0xbd, 0x25, 0x8f, 0x7e, 0xf6, 0x82, 0xa6,
-	0xfa, 0x71, 0x99, 0xcf, 0xfb, 0x43, 0xf8, 0x9c, 0x35, 0x8d, 0x41, 0x9f, 0x6d, 0x49, 0x26, 0xdd,
-	0x56, 0xa7, 0x8e, 0x7e, 0x14, 0x47, 0x8e, 0x4e, 0x8a, 0xe8, 0xcb, 0x49, 0x11, 0x1d, 0x9f, 0x14,
-	0x51, 0x7d, 0x4c, 0xd2, 0xdf, 0xfe, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xed, 0x55, 0x69, 0x27, 0x41,
-	0x05, 0x00, 0x00,
-}

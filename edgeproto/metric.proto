@@ -8,6 +8,9 @@ import "gogoproto/gogo.proto";
 //import "result.proto";
 import "google/protobuf/timestamp.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
 
 // MetricTag is used as a tag or label to look up the metric, beyond just the name of the metric.
 message MetricTag {

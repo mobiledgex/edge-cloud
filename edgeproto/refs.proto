@@ -10,6 +10,10 @@ import "clusterinst.proto";
 import "app.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // Refs track ref counts of used resources, ports, etc.
 // They are not part of the base Cloudlet/Cluster objects because
 // there's no way in GRPC to prevent certain fields from being sent/marshalled,
