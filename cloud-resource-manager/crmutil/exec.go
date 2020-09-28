@@ -90,34 +90,34 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		if err != nil {
 			return fmt.Errorf("unable to get list of cloudlet mgmt nodes, %v", err)
 		}
-		access_node := req.Cmd.CloudletMgmtNode
-		found := false
+		if len(nodes) == 0 {
+			return fmt.Errorf("no nodes found")
+		}
+		accessNode := req.Cmd.CloudletMgmtNode
+		matchedNodes := []edgeproto.CloudletMgmtNode{}
 		for _, node := range nodes {
-			if access_node.Type == "" && access_node.Name != "" {
-				// wildcard on node type, so allow node name
-				found = true
-				break
-			}
-			if access_node.Type != node.Type {
+			// filter by specified node/type.
+			// blank means match any.
+			if accessNode.Type != "" && accessNode.Type != node.Type {
 				continue
 			}
-			if access_node.Name == "" {
-				access_node.Name = node.Name
-				found = true
-				break
-			} else if access_node.Name == node.Name {
-				found = true
-				break
+			if accessNode.Name != "" && accessNode.Name != node.Name {
+				continue
 			}
+			matchedNodes = append(matchedNodes, node)
 		}
-		if !found {
-			return fmt.Errorf("unable to find cloudlet mgmt node, list of valid nodes: %v", nodes)
+		if len(matchedNodes) == 0 {
+			return fmt.Errorf("unable to find specified cloudlet mgmt node, list of valid nodes: %v", nodes)
+		} else if len(matchedNodes) > 1 {
+			return fmt.Errorf("too many nodes matched, please specify type and name from: %v", matchedNodes)
 		}
+		accessNode = &matchedNodes[0]
+
 		run.contcmd = "bash"
 		if req.Cmd.Command != "" {
 			run.contcmd = req.Cmd.Command
 		}
-		run.client, err = cd.platform.GetNodePlatformClient(ctx, access_node)
+		run.client, err = cd.platform.GetNodePlatformClient(ctx, accessNode)
 		if err != nil {
 			return err
 		}
