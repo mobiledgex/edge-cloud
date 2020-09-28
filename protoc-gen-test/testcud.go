@@ -440,7 +440,7 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 		t.PrintImport("", "google.golang.org/grpc")
 	}
 	if t.importProtoPkg {
-		t.PrintImport("", t.support.PackageImportPath)
+		t.PrintImport("", generator.GoImportPath(t.support.PackageImportPath))
 	}
 	if t.importIO {
 		t.PrintImport("", "io")

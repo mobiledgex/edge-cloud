@@ -8,6 +8,10 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // Although in Prometheus, labels and annotations are an array of Label,
 // we can't do that here and generate map-style json because protobuffers
 // does not provide a way to specify an array like "[]Label" as a custom

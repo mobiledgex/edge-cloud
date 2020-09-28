@@ -6,6 +6,10 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "node.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // DebugRequest. Keep everything in one struct to make it easy to send commands without having to change the code.
 message DebugRequest {
   // Service node identifier (see NodeShow)

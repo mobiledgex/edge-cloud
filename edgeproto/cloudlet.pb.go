@@ -3,36 +3,44 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "errors"
-import "strconv"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	"errors"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dme_proto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	"strconv"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Platform Type
 //
@@ -74,6 +82,7 @@ var PlatformType_name = map[int32]string{
 	8: "PLATFORM_TYPE_AWS",
 	9: "PLATFORM_TYPE_VM_POOL",
 }
+
 var PlatformType_value = map[string]int32{
 	"PLATFORM_TYPE_FAKE":      0,
 	"PLATFORM_TYPE_DIND":      1,
@@ -90,7 +99,10 @@ var PlatformType_value = map[string]int32{
 func (x PlatformType) String() string {
 	return proto.EnumName(PlatformType_name, int32(x))
 }
-func (PlatformType) EnumDescriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{0} }
+
+func (PlatformType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{0}
+}
 
 // Infra API Access
 //
@@ -108,6 +120,7 @@ var InfraApiAccess_name = map[int32]string{
 	0: "DIRECT_ACCESS",
 	1: "RESTRICTED_ACCESS",
 }
+
 var InfraApiAccess_value = map[string]int32{
 	"DIRECT_ACCESS":     0,
 	"RESTRICTED_ACCESS": 1,
@@ -116,7 +129,10 @@ var InfraApiAccess_value = map[string]int32{
 func (x InfraApiAccess) String() string {
 	return proto.EnumName(InfraApiAccess_name, int32(x))
 }
-func (InfraApiAccess) EnumDescriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{1} }
+
+func (InfraApiAccess) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{1}
+}
 
 // CloudletState is the state of the Cloudlet.
 type CloudletState int32
@@ -150,6 +166,7 @@ var CloudletState_name = map[int32]string{
 	6: "CLOUDLET_STATE_UPGRADE",
 	7: "CLOUDLET_STATE_NEED_SYNC",
 }
+
 var CloudletState_value = map[string]int32{
 	"CLOUDLET_STATE_UNKNOWN":     0,
 	"CLOUDLET_STATE_ERRORS":      1,
@@ -164,7 +181,10 @@ var CloudletState_value = map[string]int32{
 func (x CloudletState) String() string {
 	return proto.EnumName(CloudletState_name, int32(x))
 }
-func (CloudletState) EnumDescriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{2} }
+
+func (CloudletState) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{2}
+}
 
 // Cloudlet unique key
 //
@@ -176,10 +196,38 @@ type CloudletKey struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *CloudletKey) Reset()                    { *m = CloudletKey{} }
-func (m *CloudletKey) String() string            { return proto.CompactTextString(m) }
-func (*CloudletKey) ProtoMessage()               {}
-func (*CloudletKey) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{0} }
+func (m *CloudletKey) Reset()         { *m = CloudletKey{} }
+func (m *CloudletKey) String() string { return proto.CompactTextString(m) }
+func (*CloudletKey) ProtoMessage()    {}
+func (*CloudletKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{0}
+}
+func (m *CloudletKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletKey.Merge(m, src)
+}
+func (m *CloudletKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletKey proto.InternalMessageInfo
 
 // Operation time limits
 //
@@ -199,10 +247,38 @@ type OperationTimeLimits struct {
 	DeleteAppInstTimeout Duration `protobuf:"varint,6,opt,name=delete_app_inst_timeout,json=deleteAppInstTimeout,proto3,casttype=Duration" json:"delete_app_inst_timeout,omitempty"`
 }
 
-func (m *OperationTimeLimits) Reset()                    { *m = OperationTimeLimits{} }
-func (m *OperationTimeLimits) String() string            { return proto.CompactTextString(m) }
-func (*OperationTimeLimits) ProtoMessage()               {}
-func (*OperationTimeLimits) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{1} }
+func (m *OperationTimeLimits) Reset()         { *m = OperationTimeLimits{} }
+func (m *OperationTimeLimits) String() string { return proto.CompactTextString(m) }
+func (*OperationTimeLimits) ProtoMessage()    {}
+func (*OperationTimeLimits) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{1}
+}
+func (m *OperationTimeLimits) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OperationTimeLimits) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OperationTimeLimits.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OperationTimeLimits) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OperationTimeLimits.Merge(m, src)
+}
+func (m *OperationTimeLimits) XXX_Size() int {
+	return m.Size()
+}
+func (m *OperationTimeLimits) XXX_DiscardUnknown() {
+	xxx_messageInfo_OperationTimeLimits.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OperationTimeLimits proto.InternalMessageInfo
 
 //
 // Platform specific configuration required for Cloudlet management
@@ -222,7 +298,7 @@ type PlatformConfig struct {
 	// TLS ca file
 	TlsCaFile string `protobuf:"bytes,21,opt,name=tls_ca_file,json=tlsCaFile,proto3" json:"tls_ca_file,omitempty"`
 	// Environment variables
-	EnvVar map[string]string `protobuf:"bytes,6,rep,name=env_var,json=envVar" json:"env_var,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	EnvVar map[string]string `protobuf:"bytes,6,rep,name=env_var,json=envVar,proto3" json:"env_var,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// Tag of edge-cloud image
 	PlatformTag string `protobuf:"bytes,8,opt,name=platform_tag,json=platformTag,proto3" json:"platform_tag,omitempty"`
 	// Internal Test flag
@@ -249,23 +325,79 @@ type PlatformConfig struct {
 	DeploymentTag string `protobuf:"bytes,19,opt,name=deployment_tag,json=deploymentTag,proto3" json:"deployment_tag,omitempty"`
 }
 
-func (m *PlatformConfig) Reset()                    { *m = PlatformConfig{} }
-func (m *PlatformConfig) String() string            { return proto.CompactTextString(m) }
-func (*PlatformConfig) ProtoMessage()               {}
-func (*PlatformConfig) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{2} }
+func (m *PlatformConfig) Reset()         { *m = PlatformConfig{} }
+func (m *PlatformConfig) String() string { return proto.CompactTextString(m) }
+func (*PlatformConfig) ProtoMessage()    {}
+func (*PlatformConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{2}
+}
+func (m *PlatformConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PlatformConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PlatformConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PlatformConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PlatformConfig.Merge(m, src)
+}
+func (m *PlatformConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *PlatformConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_PlatformConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PlatformConfig proto.InternalMessageInfo
 
 // optional resource input consists of a resource specifier and clouldkey name
 type CloudletResMap struct {
 	// Resource cloudlet key
-	Key CloudletKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Resource mapping info
-	Mapping map[string]string `protobuf:"bytes,2,rep,name=mapping" json:"mapping,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Mapping map[string]string `protobuf:"bytes,2,rep,name=mapping,proto3" json:"mapping,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
-func (m *CloudletResMap) Reset()                    { *m = CloudletResMap{} }
-func (m *CloudletResMap) String() string            { return proto.CompactTextString(m) }
-func (*CloudletResMap) ProtoMessage()               {}
-func (*CloudletResMap) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{3} }
+func (m *CloudletResMap) Reset()         { *m = CloudletResMap{} }
+func (m *CloudletResMap) String() string { return proto.CompactTextString(m) }
+func (*CloudletResMap) ProtoMessage()    {}
+func (*CloudletResMap) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{3}
+}
+func (m *CloudletResMap) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletResMap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletResMap.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletResMap) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletResMap.Merge(m, src)
+}
+func (m *CloudletResMap) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletResMap) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletResMap.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletResMap proto.InternalMessageInfo
 
 // Infra specific configuration used for Cloudlet deployments
 type InfraConfig struct {
@@ -275,22 +407,50 @@ type InfraConfig struct {
 	FlavorName string `protobuf:"bytes,2,opt,name=flavor_name,json=flavorName,proto3" json:"flavor_name,omitempty"`
 }
 
-func (m *InfraConfig) Reset()                    { *m = InfraConfig{} }
-func (m *InfraConfig) String() string            { return proto.CompactTextString(m) }
-func (*InfraConfig) ProtoMessage()               {}
-func (*InfraConfig) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{4} }
+func (m *InfraConfig) Reset()         { *m = InfraConfig{} }
+func (m *InfraConfig) String() string { return proto.CompactTextString(m) }
+func (*InfraConfig) ProtoMessage()    {}
+func (*InfraConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{4}
+}
+func (m *InfraConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *InfraConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_InfraConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *InfraConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InfraConfig.Merge(m, src)
+}
+func (m *InfraConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *InfraConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_InfraConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_InfraConfig proto.InternalMessageInfo
 
 // Cloudlet
 //
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator.
 type Cloudlet struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// required: true
 	// Unique identifier key
-	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key CloudletKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Location of the Cloudlet site
-	Location distributed_match_engine.Loc `protobuf:"bytes,5,opt,name=location" json:"location"`
+	Location dme_proto.Loc `protobuf:"bytes,5,opt,name=location,proto3" json:"location"`
 	// Type of IP support provided by Cloudlet (see IpSupport)
 	IpSupport IpSupport `protobuf:"varint,6,opt,name=ip_support,json=ipSupport,proto3,enum=edgeproto.IpSupport" json:"ip_support,omitempty"`
 	// List of static IPs for static IP support
@@ -298,11 +458,11 @@ type Cloudlet struct {
 	// Number of dynamic IPs available for dynamic IP support
 	NumDynamicIps int32 `protobuf:"varint,8,opt,name=num_dynamic_ips,json=numDynamicIps,proto3" json:"num_dynamic_ips,omitempty"`
 	// time limits which override global settings if non-zero
-	TimeLimits OperationTimeLimits `protobuf:"bytes,9,opt,name=time_limits,json=timeLimits" json:"time_limits"`
+	TimeLimits OperationTimeLimits `protobuf:"bytes,9,opt,name=time_limits,json=timeLimits,proto3" json:"time_limits"`
 	// Any errors trying to create, update, or delete the Cloudlet.
-	Errors []string `protobuf:"bytes,10,rep,name=errors" json:"errors,omitempty"`
+	Errors []string `protobuf:"bytes,10,rep,name=errors,proto3" json:"errors,omitempty"`
 	// status is used to reflect progress of creation or other events
-	Status StatusInfo `protobuf:"bytes,11,opt,name=status" json:"status"`
+	Status StatusInfo `protobuf:"bytes,11,opt,name=status,proto3" json:"status"`
 	// Current state of the cloudlet
 	State TrackedState `protobuf:"varint,12,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
 	// Override actions to CRM
@@ -314,19 +474,19 @@ type Cloudlet struct {
 	// Address for the CRM notify listener to run on
 	NotifySrvAddr string `protobuf:"bytes,16,opt,name=notify_srv_addr,json=notifySrvAddr,proto3" json:"notify_srv_addr,omitempty"`
 	// Min system resource requirements for platform
-	Flavor FlavorKey `protobuf:"bytes,17,opt,name=flavor" json:"flavor"`
+	Flavor FlavorKey `protobuf:"bytes,17,opt,name=flavor,proto3" json:"flavor"`
 	// Physical infrastructure cloudlet name
 	PhysicalName string `protobuf:"bytes,18,opt,name=physical_name,json=physicalName,proto3" json:"physical_name,omitempty"`
 	// Single Key-Value pair of env var to be passed to CRM
-	EnvVar map[string]string `protobuf:"bytes,19,rep,name=env_var,json=envVar" json:"env_var,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	EnvVar map[string]string `protobuf:"bytes,19,rep,name=env_var,json=envVar,proto3" json:"env_var,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// Cloudlet container version
 	ContainerVersion string `protobuf:"bytes,20,opt,name=container_version,json=containerVersion,proto3" json:"container_version,omitempty"`
 	// Platform Config Info
-	Config PlatformConfig `protobuf:"bytes,21,opt,name=config" json:"config"`
+	Config PlatformConfig `protobuf:"bytes,21,opt,name=config,proto3" json:"config"`
 	// Optional resource to restagtbl key map key values = [gpu, nas, nic]
-	ResTagMap map[string]*ResTagTableKey `protobuf:"bytes,22,rep,name=res_tag_map,json=resTagMap" json:"res_tag_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	ResTagMap map[string]*ResTagTableKey `protobuf:"bytes,22,rep,name=res_tag_map,json=resTagMap,proto3" json:"res_tag_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// Variables required to access cloudlet
-	AccessVars map[string]string `protobuf:"bytes,23,rep,name=access_vars,json=accessVars" json:"access_vars,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	AccessVars map[string]string `protobuf:"bytes,23,rep,name=access_vars,json=accessVars,proto3" json:"access_vars,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// MobiledgeX baseimage version where CRM services reside
 	VmImageVersion string `protobuf:"bytes,24,opt,name=vm_image_version,json=vmImageVersion,proto3" json:"vm_image_version,omitempty"`
 	// Deployment type to bring up CRM services (docker, kubernetes)
@@ -334,9 +494,9 @@ type Cloudlet struct {
 	// Infra Access Type is the type of access available to Infra API Endpoint
 	InfraApiAccess InfraApiAccess `protobuf:"varint,27,opt,name=infra_api_access,json=infraApiAccess,proto3,enum=edgeproto.InfraApiAccess" json:"infra_api_access,omitempty"`
 	// Infra specific config
-	InfraConfig InfraConfig `protobuf:"bytes,28,opt,name=infra_config,json=infraConfig" json:"infra_config"`
+	InfraConfig InfraConfig `protobuf:"bytes,28,opt,name=infra_config,json=infraConfig,proto3" json:"infra_config"`
 	// Chef client key
-	ChefClientKey map[string]string `protobuf:"bytes,29,rep,name=chef_client_key,json=chefClientKey" json:"chef_client_key,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	ChefClientKey map[string]string `protobuf:"bytes,29,rep,name=chef_client_key,json=chefClientKey,proto3" json:"chef_client_key,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// State for maintenance
 	MaintenanceState MaintenanceState `protobuf:"varint,30,opt,name=maintenance_state,json=maintenanceState,proto3,enum=edgeproto.MaintenanceState" json:"maintenance_state,omitempty"`
 	// Override container version from policy file
@@ -345,32 +505,116 @@ type Cloudlet struct {
 	VmPool string `protobuf:"bytes,32,opt,name=vm_pool,json=vmPool,proto3" json:"vm_pool,omitempty"`
 }
 
-func (m *Cloudlet) Reset()                    { *m = Cloudlet{} }
-func (m *Cloudlet) String() string            { return proto.CompactTextString(m) }
-func (*Cloudlet) ProtoMessage()               {}
-func (*Cloudlet) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{5} }
+func (m *Cloudlet) Reset()         { *m = Cloudlet{} }
+func (m *Cloudlet) String() string { return proto.CompactTextString(m) }
+func (*Cloudlet) ProtoMessage()    {}
+func (*Cloudlet) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{5}
+}
+func (m *Cloudlet) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Cloudlet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Cloudlet.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Cloudlet) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Cloudlet.Merge(m, src)
+}
+func (m *Cloudlet) XXX_Size() int {
+	return m.Size()
+}
+func (m *Cloudlet) XXX_DiscardUnknown() {
+	xxx_messageInfo_Cloudlet.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Cloudlet proto.InternalMessageInfo
 
 type FlavorMatch struct {
 	// Cloudlet ctx
-	Key              CloudletKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key              CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	FlavorName       string      `protobuf:"bytes,3,opt,name=flavor_name,json=flavorName,proto3" json:"flavor_name,omitempty"`
 	AvailabilityZone string      `protobuf:"bytes,4,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone,omitempty"`
 }
 
-func (m *FlavorMatch) Reset()                    { *m = FlavorMatch{} }
-func (m *FlavorMatch) String() string            { return proto.CompactTextString(m) }
-func (*FlavorMatch) ProtoMessage()               {}
-func (*FlavorMatch) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{6} }
+func (m *FlavorMatch) Reset()         { *m = FlavorMatch{} }
+func (m *FlavorMatch) String() string { return proto.CompactTextString(m) }
+func (*FlavorMatch) ProtoMessage()    {}
+func (*FlavorMatch) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{6}
+}
+func (m *FlavorMatch) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FlavorMatch) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FlavorMatch.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FlavorMatch) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlavorMatch.Merge(m, src)
+}
+func (m *FlavorMatch) XXX_Size() int {
+	return m.Size()
+}
+func (m *FlavorMatch) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlavorMatch.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FlavorMatch proto.InternalMessageInfo
 
 type CloudletManifest struct {
 	// Manifest to bringup cloudlet VM and services.
 	Manifest string `protobuf:"bytes,2,opt,name=manifest,proto3" json:"manifest,omitempty"`
 }
 
-func (m *CloudletManifest) Reset()                    { *m = CloudletManifest{} }
-func (m *CloudletManifest) String() string            { return proto.CompactTextString(m) }
-func (*CloudletManifest) ProtoMessage()               {}
-func (*CloudletManifest) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{7} }
+func (m *CloudletManifest) Reset()         { *m = CloudletManifest{} }
+func (m *CloudletManifest) String() string { return proto.CompactTextString(m) }
+func (*CloudletManifest) ProtoMessage()    {}
+func (*CloudletManifest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{7}
+}
+func (m *CloudletManifest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletManifest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletManifest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletManifest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletManifest.Merge(m, src)
+}
+func (m *CloudletManifest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletManifest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletManifest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletManifest proto.InternalMessageInfo
 
 type PropertyInfo struct {
 	// Name of the property
@@ -387,22 +631,78 @@ type PropertyInfo struct {
 	Internal bool `protobuf:"varint,6,opt,name=internal,proto3" json:"internal,omitempty"`
 }
 
-func (m *PropertyInfo) Reset()                    { *m = PropertyInfo{} }
-func (m *PropertyInfo) String() string            { return proto.CompactTextString(m) }
-func (*PropertyInfo) ProtoMessage()               {}
-func (*PropertyInfo) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{8} }
+func (m *PropertyInfo) Reset()         { *m = PropertyInfo{} }
+func (m *PropertyInfo) String() string { return proto.CompactTextString(m) }
+func (*PropertyInfo) ProtoMessage()    {}
+func (*PropertyInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{8}
+}
+func (m *PropertyInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PropertyInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PropertyInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PropertyInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PropertyInfo.Merge(m, src)
+}
+func (m *PropertyInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *PropertyInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_PropertyInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PropertyInfo proto.InternalMessageInfo
 
 type CloudletProps struct {
 	// Platform type
 	PlatformType PlatformType `protobuf:"varint,1,opt,name=platform_type,json=platformType,proto3,enum=edgeproto.PlatformType" json:"platform_type,omitempty"`
 	// Single Key-Value pair of env var to be passed to CRM
-	Properties map[string]*PropertyInfo `protobuf:"bytes,2,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	Properties map[string]*PropertyInfo `protobuf:"bytes,2,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
-func (m *CloudletProps) Reset()                    { *m = CloudletProps{} }
-func (m *CloudletProps) String() string            { return proto.CompactTextString(m) }
-func (*CloudletProps) ProtoMessage()               {}
-func (*CloudletProps) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{9} }
+func (m *CloudletProps) Reset()         { *m = CloudletProps{} }
+func (m *CloudletProps) String() string { return proto.CompactTextString(m) }
+func (*CloudletProps) ProtoMessage()    {}
+func (*CloudletProps) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{9}
+}
+func (m *CloudletProps) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletProps) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletProps.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletProps) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletProps.Merge(m, src)
+}
+func (m *CloudletProps) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletProps) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletProps.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletProps proto.InternalMessageInfo
 
 // Flavor details from the Cloudlet
 type FlavorInfo struct {
@@ -415,23 +715,79 @@ type FlavorInfo struct {
 	// Amount of disk in GB on the Cloudlet
 	Disk uint64 `protobuf:"varint,4,opt,name=disk,proto3" json:"disk,omitempty"`
 	// OS Flavor Properties, if any
-	PropMap map[string]string `protobuf:"bytes,5,rep,name=prop_map,json=propMap" json:"prop_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	PropMap map[string]string `protobuf:"bytes,5,rep,name=prop_map,json=propMap,proto3" json:"prop_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
-func (m *FlavorInfo) Reset()                    { *m = FlavorInfo{} }
-func (m *FlavorInfo) String() string            { return proto.CompactTextString(m) }
-func (*FlavorInfo) ProtoMessage()               {}
-func (*FlavorInfo) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{10} }
+func (m *FlavorInfo) Reset()         { *m = FlavorInfo{} }
+func (m *FlavorInfo) String() string { return proto.CompactTextString(m) }
+func (*FlavorInfo) ProtoMessage()    {}
+func (*FlavorInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{10}
+}
+func (m *FlavorInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FlavorInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FlavorInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FlavorInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlavorInfo.Merge(m, src)
+}
+func (m *FlavorInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *FlavorInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlavorInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FlavorInfo proto.InternalMessageInfo
 
 type OSAZone struct {
 	Name   string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Status string `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
 }
 
-func (m *OSAZone) Reset()                    { *m = OSAZone{} }
-func (m *OSAZone) String() string            { return proto.CompactTextString(m) }
-func (*OSAZone) ProtoMessage()               {}
-func (*OSAZone) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{11} }
+func (m *OSAZone) Reset()         { *m = OSAZone{} }
+func (m *OSAZone) String() string { return proto.CompactTextString(m) }
+func (*OSAZone) ProtoMessage()    {}
+func (*OSAZone) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{11}
+}
+func (m *OSAZone) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OSAZone) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OSAZone.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OSAZone) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OSAZone.Merge(m, src)
+}
+func (m *OSAZone) XXX_Size() int {
+	return m.Size()
+}
+func (m *OSAZone) XXX_DiscardUnknown() {
+	xxx_messageInfo_OSAZone.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OSAZone proto.InternalMessageInfo
 
 type OSImage struct {
 	// image name
@@ -444,17 +800,45 @@ type OSImage struct {
 	DiskFormat string `protobuf:"bytes,4,opt,name=disk_format,json=diskFormat,proto3" json:"disk_format,omitempty"`
 }
 
-func (m *OSImage) Reset()                    { *m = OSImage{} }
-func (m *OSImage) String() string            { return proto.CompactTextString(m) }
-func (*OSImage) ProtoMessage()               {}
-func (*OSImage) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{12} }
+func (m *OSImage) Reset()         { *m = OSImage{} }
+func (m *OSImage) String() string { return proto.CompactTextString(m) }
+func (*OSImage) ProtoMessage()    {}
+func (*OSImage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{12}
+}
+func (m *OSImage) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OSImage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OSImage.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OSImage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OSImage.Merge(m, src)
+}
+func (m *OSImage) XXX_Size() int {
+	return m.Size()
+}
+func (m *OSImage) XXX_DiscardUnknown() {
+	xxx_messageInfo_OSImage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OSImage proto.InternalMessageInfo
 
 // CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
 type CloudletInfo struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key CloudletKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// State of cloudlet
 	State CloudletState `protobuf:"varint,3,opt,name=state,proto3,enum=edgeproto.CloudletState" json:"state,omitempty"`
 	// Id of client assigned by server (internal use only)
@@ -468,27 +852,55 @@ type CloudletInfo struct {
 	// Maximum amount of disk in GB on the Cloudlet
 	OsMaxVolGb uint64 `protobuf:"varint,8,opt,name=os_max_vol_gb,json=osMaxVolGb,proto3" json:"os_max_vol_gb,omitempty"`
 	// Any errors encountered while making changes to the Cloudlet
-	Errors []string `protobuf:"bytes,9,rep,name=errors" json:"errors,omitempty"`
+	Errors []string `protobuf:"bytes,9,rep,name=errors,proto3" json:"errors,omitempty"`
 	// Supported flavors by the Cloudlet
-	Flavors []*FlavorInfo `protobuf:"bytes,10,rep,name=flavors" json:"flavors,omitempty"`
+	Flavors []*FlavorInfo `protobuf:"bytes,10,rep,name=flavors,proto3" json:"flavors,omitempty"`
 	// status is used to reflect progress of creation or other events
-	Status StatusInfo `protobuf:"bytes,11,opt,name=status" json:"status"`
+	Status StatusInfo `protobuf:"bytes,11,opt,name=status,proto3" json:"status"`
 	// Cloudlet container version
 	ContainerVersion string `protobuf:"bytes,12,opt,name=container_version,json=containerVersion,proto3" json:"container_version,omitempty"`
 	// Availability Zones if any
-	AvailabilityZones []*OSAZone `protobuf:"bytes,13,rep,name=availability_zones,json=availabilityZones" json:"availability_zones,omitempty"`
+	AvailabilityZones []*OSAZone `protobuf:"bytes,13,rep,name=availability_zones,json=availabilityZones,proto3" json:"availability_zones,omitempty"`
 	// Local Images availble to cloudlet
-	OsImages []*OSImage `protobuf:"bytes,14,rep,name=os_images,json=osImages" json:"os_images,omitempty"`
+	OsImages []*OSImage `protobuf:"bytes,14,rep,name=os_images,json=osImages,proto3" json:"os_images,omitempty"`
 	// Indicates all controller data has been sent to CRM
 	ControllerCacheReceived bool `protobuf:"varint,15,opt,name=controller_cache_received,json=controllerCacheReceived,proto3" json:"controller_cache_received,omitempty"`
 	// State for maintenance
 	MaintenanceState MaintenanceState `protobuf:"varint,16,opt,name=maintenance_state,json=maintenanceState,proto3,enum=edgeproto.MaintenanceState" json:"maintenance_state,omitempty"`
 }
 
-func (m *CloudletInfo) Reset()                    { *m = CloudletInfo{} }
-func (m *CloudletInfo) String() string            { return proto.CompactTextString(m) }
-func (*CloudletInfo) ProtoMessage()               {}
-func (*CloudletInfo) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{13} }
+func (m *CloudletInfo) Reset()         { *m = CloudletInfo{} }
+func (m *CloudletInfo) String() string { return proto.CompactTextString(m) }
+func (*CloudletInfo) ProtoMessage()    {}
+func (*CloudletInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{13}
+}
+func (m *CloudletInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletInfo.Merge(m, src)
+}
+func (m *CloudletInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletInfo proto.InternalMessageInfo
 
 // (TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
 type CloudletMetrics struct {
@@ -496,31 +908,282 @@ type CloudletMetrics struct {
 	Foo uint64 `protobuf:"varint,5,opt,name=foo,proto3" json:"foo,omitempty"`
 }
 
-func (m *CloudletMetrics) Reset()                    { *m = CloudletMetrics{} }
-func (m *CloudletMetrics) String() string            { return proto.CompactTextString(m) }
-func (*CloudletMetrics) ProtoMessage()               {}
-func (*CloudletMetrics) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{14} }
+func (m *CloudletMetrics) Reset()         { *m = CloudletMetrics{} }
+func (m *CloudletMetrics) String() string { return proto.CompactTextString(m) }
+func (*CloudletMetrics) ProtoMessage()    {}
+func (*CloudletMetrics) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{14}
+}
+func (m *CloudletMetrics) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletMetrics) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletMetrics.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletMetrics) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletMetrics.Merge(m, src)
+}
+func (m *CloudletMetrics) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletMetrics) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletMetrics.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletMetrics proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterEnum("edgeproto.PlatformType", PlatformType_name, PlatformType_value)
+	proto.RegisterEnum("edgeproto.InfraApiAccess", InfraApiAccess_name, InfraApiAccess_value)
+	proto.RegisterEnum("edgeproto.CloudletState", CloudletState_name, CloudletState_value)
 	proto.RegisterType((*CloudletKey)(nil), "edgeproto.CloudletKey")
 	proto.RegisterType((*OperationTimeLimits)(nil), "edgeproto.OperationTimeLimits")
 	proto.RegisterType((*PlatformConfig)(nil), "edgeproto.PlatformConfig")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.PlatformConfig.EnvVarEntry")
 	proto.RegisterType((*CloudletResMap)(nil), "edgeproto.CloudletResMap")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.CloudletResMap.MappingEntry")
 	proto.RegisterType((*InfraConfig)(nil), "edgeproto.InfraConfig")
 	proto.RegisterType((*Cloudlet)(nil), "edgeproto.Cloudlet")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Cloudlet.AccessVarsEntry")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Cloudlet.ChefClientKeyEntry")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Cloudlet.EnvVarEntry")
+	proto.RegisterMapType((map[string]*ResTagTableKey)(nil), "edgeproto.Cloudlet.ResTagMapEntry")
 	proto.RegisterType((*FlavorMatch)(nil), "edgeproto.FlavorMatch")
 	proto.RegisterType((*CloudletManifest)(nil), "edgeproto.CloudletManifest")
 	proto.RegisterType((*PropertyInfo)(nil), "edgeproto.PropertyInfo")
 	proto.RegisterType((*CloudletProps)(nil), "edgeproto.CloudletProps")
+	proto.RegisterMapType((map[string]*PropertyInfo)(nil), "edgeproto.CloudletProps.PropertiesEntry")
 	proto.RegisterType((*FlavorInfo)(nil), "edgeproto.FlavorInfo")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.FlavorInfo.PropMapEntry")
 	proto.RegisterType((*OSAZone)(nil), "edgeproto.OSAZone")
 	proto.RegisterType((*OSImage)(nil), "edgeproto.OSImage")
 	proto.RegisterType((*CloudletInfo)(nil), "edgeproto.CloudletInfo")
 	proto.RegisterType((*CloudletMetrics)(nil), "edgeproto.CloudletMetrics")
-	proto.RegisterEnum("edgeproto.PlatformType", PlatformType_name, PlatformType_value)
-	proto.RegisterEnum("edgeproto.InfraApiAccess", InfraApiAccess_name, InfraApiAccess_value)
-	proto.RegisterEnum("edgeproto.CloudletState", CloudletState_name, CloudletState_value)
 }
+
+func init() { proto.RegisterFile("cloudlet.proto", fileDescriptor_3aea31a648a25d86) }
+
+var fileDescriptor_3aea31a648a25d86 = []byte{
+	// 3326 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x39, 0x4b, 0x8c, 0x1b, 0xc7,
+	0x95, 0xd3, 0x33, 0x9c, 0x0f, 0x8b, 0x1c, 0x4e, 0x4f, 0xcd, 0xaf, 0x45, 0x49, 0xa3, 0x31, 0x0d,
+	0x1b, 0xb2, 0x96, 0x1a, 0xee, 0x8e, 0xe0, 0x85, 0x76, 0x60, 0xc9, 0xe6, 0x90, 0x1c, 0x89, 0x98,
+	0xef, 0x36, 0xa9, 0xd1, 0xda, 0xc0, 0xa2, 0x51, 0xd3, 0xac, 0xe1, 0xf4, 0xaa, 0xbb, 0xab, 0xb7,
+	0xba, 0x49, 0x89, 0x3a, 0xed, 0xee, 0x65, 0x93, 0x9c, 0x9c, 0xcf, 0x21, 0x71, 0x10, 0xc7, 0x97,
+	0x04, 0x46, 0x90, 0x83, 0xe1, 0xa3, 0x11, 0xe4, 0x2c, 0x24, 0x17, 0x21, 0x39, 0x24, 0x30, 0x60,
+	0xc3, 0x91, 0x73, 0x08, 0x7c, 0x49, 0x00, 0xcf, 0x08, 0x41, 0x0e, 0x41, 0x50, 0x55, 0xdd, 0x64,
+	0x37, 0xd9, 0x23, 0x7b, 0xc6, 0x41, 0x2e, 0x44, 0xd5, 0xfb, 0xd5, 0xab, 0xf7, 0x5e, 0xbd, 0x0f,
+	0x1b, 0x64, 0x74, 0x93, 0xb4, 0x1a, 0x26, 0xf6, 0x96, 0x1d, 0x4a, 0x3c, 0x02, 0x93, 0xb8, 0xd1,
+	0xc4, 0x7c, 0x99, 0xbd, 0xd0, 0x24, 0xa4, 0x69, 0xe2, 0x02, 0x72, 0x8c, 0x02, 0xb2, 0x6d, 0xe2,
+	0x21, 0xcf, 0x20, 0xb6, 0x2b, 0x08, 0xb3, 0xd7, 0x9b, 0x86, 0x77, 0xd8, 0xda, 0x5f, 0xd6, 0x89,
+	0x55, 0xb0, 0xc8, 0xbe, 0x61, 0x32, 0xc6, 0x07, 0x05, 0xf6, 0x7b, 0x95, 0xcb, 0x2c, 0x70, 0xba,
+	0x26, 0xb6, 0xbb, 0x0b, 0x9f, 0x33, 0x7d, 0x60, 0xa2, 0x36, 0xa1, 0xc1, 0x8e, 0x62, 0xb7, 0x65,
+	0xfa, 0xc7, 0x67, 0xa7, 0x29, 0x76, 0x3d, 0xd4, 0xf4, 0xd0, 0xbe, 0x89, 0x03, 0x02, 0x9d, 0x58,
+	0x16, 0x09, 0x98, 0x4b, 0x5f, 0x78, 0x6c, 0xe3, 0xaa, 0x85, 0x3c, 0xfd, 0xf0, 0x2a, 0xb6, 0x9b,
+	0x86, 0x8d, 0x0b, 0x0d, 0x0b, 0x5f, 0xe5, 0xac, 0x05, 0x93, 0xe8, 0xbe, 0x90, 0xd9, 0x26, 0x69,
+	0x12, 0x01, 0x64, 0x2b, 0x01, 0xcd, 0x51, 0x90, 0x2a, 0xf9, 0xc6, 0xd8, 0xc0, 0x1d, 0x78, 0x0d,
+	0xa4, 0x09, 0x6d, 0x22, 0xdb, 0x78, 0xc8, 0xef, 0xad, 0x48, 0x4b, 0xd2, 0xe5, 0xe4, 0xda, 0xd4,
+	0x07, 0x4f, 0x95, 0x54, 0x60, 0x33, 0x42, 0x9b, 0x6a, 0x84, 0x08, 0x2e, 0x81, 0x84, 0x8d, 0x2c,
+	0xac, 0x0c, 0x73, 0xe2, 0xf4, 0x07, 0x4f, 0x95, 0x89, 0x80, 0x58, 0xe5, 0x98, 0xd5, 0xf4, 0x1f,
+	0x3e, 0x57, 0xa4, 0x3f, 0x7f, 0xae, 0x48, 0xef, 0xbd, 0x73, 0x49, 0xca, 0xfd, 0x72, 0x04, 0xcc,
+	0xec, 0x38, 0x98, 0x72, 0xee, 0xba, 0x61, 0xe1, 0x4d, 0xc3, 0x32, 0x3c, 0x17, 0x6e, 0x80, 0xf3,
+	0x3a, 0xc5, 0xc8, 0xc3, 0x9a, 0x6e, 0xb6, 0x5c, 0x0f, 0x53, 0xcd, 0xb0, 0x5d, 0x4f, 0xf3, 0x0c,
+	0x0b, 0x93, 0x96, 0xc7, 0x75, 0x19, 0x59, 0x4b, 0xff, 0xe5, 0xe3, 0x4b, 0x13, 0xe5, 0x96, 0x60,
+	0x56, 0x15, 0xc1, 0x50, 0x12, 0xf4, 0x55, 0xdb, 0xf5, 0xea, 0x82, 0x9a, 0x09, 0x6b, 0x39, 0x8d,
+	0x13, 0x85, 0x0d, 0xc7, 0x09, 0x13, 0x0c, 0xf1, 0xc2, 0x1a, 0xd8, 0xc4, 0x27, 0x09, 0x1b, 0x89,
+	0x13, 0x26, 0x18, 0x62, 0x84, 0x95, 0xc0, 0x82, 0x7f, 0x4d, 0xe4, 0x38, 0x51, 0x41, 0x89, 0x18,
+	0x41, 0xb3, 0x82, 0xb8, 0xe8, 0x38, 0x7d, 0x42, 0xfc, 0xeb, 0x0d, 0x08, 0x19, 0x8d, 0x13, 0x22,
+	0x88, 0x07, 0x85, 0xf8, 0xd7, 0x1a, 0x10, 0x32, 0x16, 0x27, 0x44, 0x10, 0x47, 0x85, 0xe4, 0x9e,
+	0x8c, 0x81, 0xcc, 0xae, 0x89, 0xbc, 0x03, 0x42, 0xad, 0x12, 0xb1, 0x0f, 0x8c, 0x26, 0xfc, 0x57,
+	0xb0, 0xa0, 0x13, 0xdb, 0x43, 0x86, 0x8d, 0xa9, 0x46, 0x71, 0xd3, 0x70, 0x3d, 0xda, 0xd1, 0x1c,
+	0xe4, 0x1d, 0x8a, 0x80, 0x52, 0xe7, 0xba, 0x68, 0xd5, 0xc7, 0xee, 0x22, 0xef, 0x10, 0x5e, 0x03,
+	0xf3, 0x41, 0xe0, 0x68, 0x6d, 0x4b, 0x33, 0x2c, 0xd4, 0xc4, 0x82, 0x8d, 0x87, 0x96, 0x3a, 0x13,
+	0x60, 0xf7, 0xac, 0x2a, 0xc3, 0x71, 0xa6, 0x2b, 0x60, 0xda, 0x26, 0x9e, 0x71, 0xd0, 0xd1, 0x74,
+	0x8f, 0x9a, 0x1a, 0x6a, 0x34, 0xa8, 0xcb, 0x3d, 0x92, 0x54, 0xa7, 0x04, 0xa2, 0xe4, 0x51, 0xb3,
+	0xc8, 0xc0, 0xf0, 0x22, 0x00, 0x6d, 0xd4, 0x32, 0x3d, 0x4e, 0xc5, 0xad, 0x9d, 0x54, 0x93, 0x1c,
+	0xc2, 0xf0, 0x30, 0x07, 0x26, 0x3d, 0xd3, 0xd5, 0x74, 0x4c, 0x3d, 0xed, 0xc0, 0x30, 0x31, 0x37,
+	0x65, 0x52, 0x4d, 0x79, 0xa6, 0x5b, 0xc2, 0xd4, 0x5b, 0x37, 0x4c, 0x0c, 0x97, 0x40, 0x9a, 0xd1,
+	0xdc, 0xc3, 0x1d, 0x41, 0x32, 0xcb, 0x49, 0x80, 0x67, 0xba, 0x1b, 0xb8, 0xc3, 0x29, 0x16, 0x41,
+	0x8a, 0x4b, 0x41, 0x82, 0x60, 0x4e, 0x9c, 0xc2, 0x64, 0x20, 0x8e, 0xbf, 0x09, 0xc6, 0xb1, 0xdd,
+	0xd6, 0xda, 0x88, 0x2a, 0x63, 0x4b, 0x23, 0x97, 0x53, 0x2b, 0x2f, 0x2c, 0x77, 0xf3, 0xcf, 0x72,
+	0xd4, 0x92, 0xcb, 0x15, 0xbb, 0xbd, 0x87, 0x68, 0xc5, 0xf6, 0x68, 0x47, 0x1d, 0xc3, 0x7c, 0x03,
+	0x9f, 0x03, 0x69, 0xc7, 0xa7, 0xd2, 0x3c, 0xd4, 0x54, 0x26, 0x84, 0x92, 0x01, 0xac, 0x8e, 0x9a,
+	0xf0, 0x3c, 0x48, 0x7a, 0xd8, 0xf5, 0x34, 0x8b, 0x34, 0xb0, 0x92, 0x5c, 0x92, 0x2e, 0x4f, 0xa8,
+	0x13, 0x0c, 0xb0, 0x45, 0x1a, 0x18, 0x42, 0x90, 0x70, 0x1d, 0x64, 0x2b, 0x80, 0xf3, 0xf1, 0x35,
+	0x93, 0xa9, 0x9b, 0x18, 0xd9, 0x2d, 0x47, 0xf0, 0xa4, 0x38, 0x4f, 0xca, 0x87, 0x71, 0xb6, 0x79,
+	0x30, 0xc6, 0x5c, 0x49, 0x6c, 0x25, 0xcd, 0x19, 0xfd, 0x1d, 0x7c, 0x09, 0xc8, 0x2c, 0x59, 0x61,
+	0xaa, 0x1b, 0xc8, 0xe4, 0xb6, 0x73, 0x95, 0x49, 0xce, 0x3e, 0xd5, 0x83, 0x33, 0xf3, 0xb9, 0xf0,
+	0x45, 0x30, 0xd5, 0x72, 0xb1, 0x26, 0x5c, 0x20, 0x28, 0x33, 0x9c, 0x72, 0xb2, 0xe5, 0xe2, 0x3d,
+	0x06, 0x15, 0x74, 0x39, 0x30, 0x19, 0xa2, 0x43, 0xae, 0x32, 0x25, 0xd4, 0xe9, 0x52, 0x21, 0x97,
+	0xf9, 0x81, 0x05, 0x6d, 0xc3, 0x76, 0x35, 0x4a, 0x88, 0xa7, 0xc8, 0xc2, 0x0f, 0xc8, 0x71, 0xca,
+	0xb6, 0xab, 0x12, 0xe2, 0xc1, 0xcb, 0x40, 0xd6, 0x0f, 0xf1, 0x81, 0xe6, 0x62, 0xda, 0xc6, 0x54,
+	0xc4, 0xd1, 0x34, 0xa7, 0xca, 0x30, 0x78, 0x8d, 0x83, 0x79, 0x08, 0xdd, 0x04, 0xb3, 0x9c, 0x52,
+	0x37, 0x0d, 0x6c, 0x7b, 0x9a, 0x61, 0x7b, 0x98, 0xb6, 0x91, 0xa9, 0xc0, 0x25, 0xe9, 0xf2, 0x68,
+	0xdf, 0x23, 0x80, 0x8c, 0xb2, 0xc4, 0x09, 0xab, 0x3e, 0x1d, 0x7c, 0x01, 0x64, 0x1a, 0xd8, 0x31,
+	0x49, 0xc7, 0x62, 0xec, 0xcc, 0x27, 0x33, 0xfc, 0x9c, 0xc9, 0x1e, 0xb4, 0x8e, 0x9a, 0xd9, 0x7f,
+	0x03, 0xa9, 0x90, 0x3f, 0xa1, 0x0c, 0x46, 0xee, 0xe1, 0x8e, 0xff, 0x22, 0xd8, 0x12, 0xce, 0x82,
+	0xd1, 0x36, 0x32, 0x5b, 0x7e, 0x26, 0x55, 0xc5, 0x66, 0x75, 0xf8, 0xba, 0x94, 0xfb, 0xab, 0x04,
+	0x32, 0x41, 0x9e, 0x56, 0xb1, 0xbb, 0x85, 0x1c, 0xb8, 0xdc, 0x63, 0x4f, 0xad, 0xcc, 0x87, 0x42,
+	0x28, 0x94, 0xcf, 0xd7, 0x12, 0x8f, 0x3e, 0xbe, 0x34, 0x24, 0x84, 0xbf, 0x06, 0xc6, 0x2d, 0xe4,
+	0x38, 0x86, 0xdd, 0x54, 0x86, 0x79, 0xd8, 0xbd, 0x18, 0xc3, 0x23, 0x64, 0x2f, 0x6f, 0x09, 0x42,
+	0x11, 0x77, 0x01, 0x5b, 0x76, 0x15, 0xa4, 0xc3, 0x88, 0xd3, 0x5c, 0x60, 0xf5, 0xe6, 0x5b, 0xc7,
+	0x4a, 0x21, 0x78, 0xbe, 0x37, 0x36, 0x70, 0x67, 0x79, 0x1b, 0x59, 0x38, 0x1f, 0x40, 0xae, 0x12,
+	0xda, 0xe4, 0xd0, 0x9d, 0x50, 0x61, 0xf9, 0xc5, 0xb1, 0x32, 0xee, 0x1f, 0x98, 0xdb, 0x07, 0xa9,
+	0xaa, 0x7d, 0x40, 0x91, 0x9f, 0x61, 0x56, 0xc0, 0x1c, 0x7e, 0xe0, 0x61, 0x6a, 0x23, 0x53, 0xb3,
+	0xb1, 0x77, 0x9f, 0xd0, 0x7b, 0x1a, 0xaf, 0x41, 0x42, 0x99, 0x99, 0x00, 0xb9, 0x2d, 0x70, 0xec,
+	0x2c, 0x78, 0x09, 0xa4, 0x44, 0x11, 0xd6, 0x7a, 0xd5, 0x4a, 0x05, 0x02, 0xc4, 0x08, 0x72, 0x5f,
+	0x9f, 0x06, 0x13, 0x81, 0x21, 0x58, 0xb8, 0x1f, 0x18, 0xd8, 0x6c, 0xb8, 0x8a, 0xb4, 0x34, 0xc2,
+	0xc2, 0x5d, 0xec, 0x02, 0xb3, 0x0f, 0x7f, 0x59, 0xb3, 0xbf, 0x0a, 0x26, 0x4c, 0xa2, 0x8b, 0x6a,
+	0x3a, 0xca, 0x99, 0x2e, 0x2e, 0x37, 0x58, 0xca, 0x33, 0xf6, 0x5b, 0x1e, 0x6e, 0x68, 0xbc, 0x6e,
+	0x6b, 0xa2, 0x6e, 0x2f, 0x6f, 0x12, 0xdd, 0xe7, 0xed, 0x32, 0xc1, 0x6b, 0x00, 0x18, 0x8e, 0xe6,
+	0xb6, 0x1c, 0x87, 0x50, 0x91, 0x97, 0x33, 0x2b, 0xb3, 0xa1, 0x73, 0xab, 0x4e, 0x4d, 0xe0, 0xd4,
+	0xa4, 0x11, 0x2c, 0x59, 0xa2, 0x73, 0x59, 0xeb, 0xa2, 0x6b, 0x86, 0xe3, 0x2a, 0xe3, 0x22, 0x05,
+	0x09, 0x48, 0xd5, 0xe1, 0x0f, 0xd1, 0x6e, 0x59, 0x5a, 0xa3, 0x63, 0x23, 0xcb, 0xa7, 0x61, 0x59,
+	0x64, 0x54, 0x9d, 0xb4, 0x5b, 0x56, 0x59, 0x40, 0x19, 0x5d, 0x05, 0xa4, 0x58, 0x41, 0xd0, 0x4c,
+	0x5e, 0xa0, 0x79, 0x26, 0x49, 0xad, 0x2c, 0x86, 0x0e, 0x8f, 0x29, 0xe3, 0xfe, 0x05, 0x80, 0xd7,
+	0x2b, 0xec, 0x2f, 0x80, 0x31, 0x4c, 0x29, 0xa1, 0xae, 0x02, 0x98, 0x2d, 0xd7, 0x26, 0xdf, 0x3d,
+	0x52, 0xa4, 0x6f, 0xbd, 0x7f, 0x6e, 0xd4, 0x26, 0xba, 0xe5, 0xa8, 0x3e, 0x12, 0xbe, 0x06, 0xc6,
+	0x98, 0x8a, 0x2d, 0x97, 0xa7, 0x9f, 0xd4, 0xca, 0x5c, 0xe8, 0xa0, 0x1a, 0x47, 0x54, 0xed, 0x03,
+	0xb2, 0x36, 0x1d, 0xe1, 0xe6, 0x87, 0xf9, 0x7c, 0xf0, 0x15, 0x30, 0xca, 0x56, 0x98, 0xa7, 0xa8,
+	0xcc, 0xca, 0x42, 0x48, 0x40, 0x9d, 0x22, 0xfd, 0x1e, 0x6e, 0x30, 0x39, 0xb8, 0x5f, 0x01, 0xc1,
+	0x04, 0x6f, 0x83, 0xb4, 0x4e, 0x2d, 0x8d, 0xb4, 0x31, 0xa5, 0x46, 0x03, 0xf3, 0x2c, 0x96, 0x89,
+	0xfa, 0x58, 0xdd, 0xda, 0xf1, 0xb1, 0xfd, 0x32, 0x52, 0x3a, 0xb5, 0x02, 0x1c, 0xbc, 0x0e, 0xe4,
+	0x50, 0x42, 0x60, 0xae, 0x34, 0x45, 0xa6, 0xeb, 0xe7, 0x9a, 0xea, 0x91, 0x6d, 0x32, 0x2a, 0xf8,
+	0x0a, 0x98, 0xec, 0x25, 0xf7, 0x8e, 0x83, 0x79, 0xea, 0x8b, 0xde, 0x24, 0x28, 0x11, 0xf5, 0x8e,
+	0x83, 0xd5, 0x6e, 0x29, 0x60, 0x3b, 0xf8, 0x2f, 0xc0, 0x2f, 0x79, 0x9a, 0x4b, 0xdb, 0xa2, 0xc8,
+	0xf1, 0xbc, 0xb8, 0x96, 0xec, 0x1d, 0x39, 0x29, 0x28, 0x6a, 0xb4, 0xcd, 0x6b, 0xde, 0x0a, 0x18,
+	0x13, 0x4f, 0x80, 0xe7, 0xc6, 0x54, 0x24, 0xb4, 0xd6, 0x39, 0xa2, 0x17, 0xd0, 0x3e, 0x25, 0x7c,
+	0x1e, 0x4c, 0x3a, 0x87, 0x1d, 0xd7, 0xd0, 0xd9, 0xeb, 0x63, 0x6f, 0x09, 0xf2, 0x00, 0x4b, 0x07,
+	0x40, 0xfe, 0xdc, 0xae, 0xf7, 0xca, 0xdc, 0x0c, 0xcf, 0x37, 0x97, 0x62, 0x1e, 0x4b, 0x6c, 0x81,
+	0xfb, 0x27, 0x30, 0xdd, 0x6b, 0x1f, 0xda, 0x98, 0xba, 0xec, 0xed, 0x88, 0x3a, 0x2b, 0x77, 0x11,
+	0x7b, 0x02, 0x0e, 0xcb, 0x60, 0x4c, 0xe7, 0x39, 0x81, 0x17, 0xda, 0xd4, 0xca, 0xb9, 0x13, 0x8b,
+	0x69, 0x6c, 0xe0, 0x08, 0x5e, 0x78, 0x1b, 0xa4, 0x28, 0x76, 0x59, 0xea, 0xd6, 0x2c, 0xe4, 0x28,
+	0xf3, 0x5c, 0xe1, 0x5c, 0x9c, 0xc2, 0x2a, 0x76, 0xeb, 0xa8, 0xb9, 0x85, 0x1c, 0xae, 0xf3, 0x5a,
+	0x82, 0xc9, 0x54, 0x93, 0x34, 0x80, 0xc2, 0x32, 0x48, 0x21, 0x5d, 0xc7, 0xae, 0xcb, 0x6e, 0xee,
+	0x2a, 0x0b, 0x5c, 0xd2, 0xf3, 0x71, 0x92, 0x8a, 0x9c, 0x6c, 0x0f, 0x51, 0x57, 0x5c, 0x1f, 0xa0,
+	0x2e, 0x80, 0xd5, 0xae, 0x6e, 0x03, 0x14, 0x58, 0x40, 0x11, 0xb5, 0xab, 0x2d, 0x7a, 0x9f, 0xe0,
+	0xfe, 0x2f, 0x01, 0xd0, 0x8b, 0x21, 0x25, 0xdb, 0xef, 0xed, 0x10, 0x12, 0x96, 0x80, 0x6c, 0xb0,
+	0x1c, 0xaa, 0x21, 0xc7, 0xd0, 0xc4, 0x61, 0xca, 0x79, 0x1e, 0x5e, 0x61, 0xa3, 0xf1, 0x34, 0x5b,
+	0x74, 0x0c, 0xa1, 0x9e, 0x9a, 0x31, 0x22, 0x7b, 0xf8, 0x2a, 0x48, 0x0b, 0x21, 0xbe, 0xd5, 0x2f,
+	0x0c, 0x24, 0xc2, 0x50, 0x9e, 0xf6, 0xe3, 0x26, 0x65, 0x84, 0x52, 0x77, 0x1d, 0x4c, 0x85, 0x8b,
+	0x2d, 0x4b, 0xa6, 0x17, 0x4f, 0xac, 0x47, 0xcb, 0xa5, 0x6e, 0xb5, 0xdd, 0xc0, 0x9d, 0xb0, 0xc9,
+	0x27, 0xf5, 0x30, 0x06, 0xde, 0x06, 0xd3, 0x16, 0x62, 0x85, 0xdb, 0x46, 0xb6, 0x8e, 0x35, 0x91,
+	0x05, 0x16, 0xf9, 0xe5, 0xce, 0x87, 0xe4, 0x6e, 0xf5, 0x68, 0x78, 0x26, 0x50, 0x65, 0xab, 0x0f,
+	0x02, 0xab, 0xe0, 0xb9, 0x20, 0x03, 0x68, 0x0e, 0x31, 0x0d, 0xbd, 0xa3, 0x0d, 0x46, 0xe3, 0x25,
+	0xde, 0x90, 0x2c, 0x06, 0x84, 0xbb, 0x9c, 0xae, 0xd4, 0x1f, 0x9b, 0x0b, 0x60, 0xbc, 0x6d, 0x69,
+	0x0e, 0x21, 0xa6, 0xb2, 0x24, 0x7a, 0xa6, 0xb6, 0xb5, 0x4b, 0x88, 0xf9, 0x15, 0x3a, 0x81, 0xec,
+	0x5d, 0x90, 0x89, 0x86, 0x60, 0x0c, 0x77, 0x21, 0xcc, 0x1d, 0x7d, 0x12, 0x82, 0xb7, 0xce, 0x46,
+	0xcd, 0x0d, 0xdc, 0x09, 0x0b, 0xbe, 0x01, 0xa6, 0xfa, 0x22, 0xf2, 0x54, 0x7a, 0xbd, 0x06, 0xe0,
+	0xa0, 0xaf, 0x4e, 0xd5, 0x22, 0x7c, 0x63, 0x98, 0x4d, 0x89, 0x7f, 0xfa, 0x5c, 0x91, 0xfe, 0xe7,
+	0x48, 0x91, 0xde, 0x3c, 0x52, 0xa4, 0xef, 0x1e, 0x29, 0xd2, 0x7b, 0x47, 0x8a, 0xf4, 0xe8, 0x48,
+	0x91, 0x1e, 0xb3, 0xb7, 0x7b, 0xac, 0xbc, 0x2d, 0x6d, 0xfa, 0x85, 0x71, 0xf9, 0x36, 0xa1, 0xc6,
+	0x43, 0x66, 0x72, 0xb3, 0xa8, 0xeb, 0x2d, 0x8a, 0xf4, 0x4e, 0xbe, 0x8b, 0xdb, 0xc3, 0xd4, 0x63,
+	0x99, 0x68, 0x10, 0x53, 0x22, 0x2d, 0xea, 0xe2, 0xde, 0xbe, 0xe6, 0x60, 0xdc, 0xe8, 0x6d, 0x59,
+	0x1d, 0x73, 0x3d, 0x64, 0x39, 0x79, 0x51, 0x71, 0xf2, 0x22, 0x6a, 0xf3, 0xdb, 0xe1, 0xa4, 0x99,
+	0x8f, 0xdc, 0x94, 0x53, 0xe2, 0x7c, 0x85, 0x17, 0xb1, 0x33, 0xb4, 0x39, 0xef, 0x3f, 0x55, 0xe4,
+	0x7b, 0xb8, 0x73, 0x23, 0x0c, 0xcb, 0xfd, 0x4a, 0x02, 0x29, 0x91, 0x7e, 0xb7, 0x58, 0x83, 0x70,
+	0xea, 0x6e, 0xaf, 0xaf, 0xd9, 0x19, 0xe9, 0x6f, 0x76, 0x58, 0x92, 0x45, 0x6d, 0x64, 0x98, 0x68,
+	0xdf, 0x30, 0x0d, 0xaf, 0xa3, 0x3d, 0x24, 0x36, 0xf6, 0x27, 0x22, 0x39, 0x8c, 0x78, 0x83, 0xd8,
+	0x78, 0xb5, 0xf2, 0xd6, 0xb1, 0x52, 0x3c, 0xe5, 0xb5, 0xf2, 0xe2, 0xb0, 0x1b, 0xeb, 0xbd, 0x06,
+	0x6b, 0x19, 0xc8, 0x81, 0xba, 0x5b, 0xc8, 0x36, 0x0e, 0xb0, 0xeb, 0xc1, 0x2c, 0x98, 0xb0, 0xfc,
+	0xb5, 0x1f, 0x12, 0xdd, 0x7d, 0xee, 0xa7, 0x12, 0x48, 0xef, 0x52, 0xe2, 0x60, 0xea, 0x75, 0x58,
+	0xe9, 0x67, 0xa3, 0x4b, 0xa8, 0xcb, 0xe3, 0x6b, 0xb8, 0x04, 0x52, 0x0d, 0xec, 0xea, 0xd4, 0x70,
+	0x78, 0x8f, 0x25, 0x64, 0x84, 0x41, 0xbd, 0x90, 0x1b, 0x09, 0x85, 0x1c, 0x6b, 0xf0, 0x5c, 0xac,
+	0x53, 0x2c, 0xa6, 0xee, 0x09, 0xd5, 0xdf, 0xc1, 0x0b, 0x20, 0x69, 0x21, 0xbb, 0x81, 0x3c, 0x42,
+	0x3b, 0xbc, 0x63, 0x9b, 0x50, 0x7b, 0x00, 0xa6, 0x2e, 0x1f, 0x0f, 0x6c, 0x64, 0xf2, 0x5e, 0x6c,
+	0x42, 0xed, 0xee, 0x73, 0x7f, 0x94, 0xc0, 0x64, 0x70, 0x3f, 0xa6, 0xb6, 0x3b, 0x58, 0xcd, 0xa5,
+	0xd3, 0x54, 0xf3, 0xdb, 0x00, 0x38, 0xe2, 0xf6, 0x06, 0x76, 0xfd, 0xa6, 0xfd, 0x72, 0x8c, 0xeb,
+	0xf9, 0x59, 0xcb, 0xbb, 0x5d, 0x52, 0xbf, 0x9c, 0xf4, 0x78, 0xb3, 0x7b, 0x60, 0xaa, 0x0f, 0x1d,
+	0xf3, 0x32, 0xaf, 0x46, 0xb3, 0x46, 0x44, 0xc9, 0x90, 0x13, 0xc2, 0x63, 0xc9, 0x47, 0x12, 0x00,
+	0xc2, 0xbf, 0x27, 0xba, 0x87, 0x19, 0x5f, 0x77, 0x5a, 0x2e, 0x97, 0x9a, 0x50, 0xc5, 0x86, 0x9d,
+	0x4e, 0x91, 0xc5, 0x1d, 0x92, 0x50, 0xd9, 0x92, 0xf1, 0x36, 0x0c, 0xf7, 0x1e, 0x77, 0x46, 0x42,
+	0xe5, 0x6b, 0x58, 0x02, 0x13, 0xec, 0x12, 0xbc, 0x24, 0x8f, 0x0e, 0x94, 0xe4, 0xde, 0xc1, 0x5c,
+	0xbf, 0xbe, 0x92, 0x3c, 0xee, 0x08, 0x18, 0x9b, 0x5a, 0xc2, 0xe8, 0x53, 0x8d, 0x5d, 0x2f, 0x83,
+	0xf1, 0x9d, 0x5a, 0x91, 0x3d, 0x81, 0xd8, 0xbb, 0xcd, 0x77, 0x1b, 0x56, 0xc1, 0xe9, 0xef, 0x72,
+	0x94, 0xb1, 0xf1, 0x2a, 0x1d, 0xcb, 0x06, 0x41, 0xc2, 0x43, 0xcd, 0x80, 0x89, 0xaf, 0xe1, 0x62,
+	0xc4, 0xd7, 0xfe, 0x73, 0xed, 0x41, 0xd8, 0x7b, 0x66, 0x26, 0xd1, 0x58, 0x70, 0x20, 0xcf, 0x7f,
+	0xa8, 0x80, 0x81, 0xd6, 0x39, 0x24, 0xf7, 0xb3, 0x31, 0x90, 0x0e, 0x02, 0x82, 0x3b, 0xe3, 0xef,
+	0x35, 0xc0, 0x2c, 0x07, 0x3d, 0xf5, 0x08, 0x8f, 0x5d, 0x25, 0x86, 0x43, 0x94, 0x52, 0xbf, 0x8b,
+	0x7e, 0x11, 0x24, 0xfd, 0x1e, 0xd4, 0x68, 0xf8, 0x7f, 0x68, 0x85, 0xfa, 0x91, 0x09, 0x81, 0xab,
+	0x36, 0x58, 0xe3, 0xc2, 0xea, 0x2a, 0x25, 0xa6, 0x89, 0xa9, 0xf8, 0xa7, 0x25, 0xd2, 0xb8, 0xf4,
+	0x90, 0xf0, 0x02, 0x00, 0xc4, 0xd5, 0x2c, 0xf4, 0x40, 0x63, 0x41, 0x33, 0xc6, 0x23, 0x64, 0x82,
+	0xb8, 0x5b, 0xe8, 0x81, 0x8a, 0x2c, 0x98, 0x03, 0x93, 0x3e, 0xb6, 0xad, 0x13, 0x8a, 0xc5, 0xb8,
+	0x93, 0x50, 0x53, 0x9c, 0x60, 0x8f, 0x83, 0xe0, 0x73, 0x3d, 0x1a, 0x62, 0x6a, 0xcd, 0x7d, 0x3e,
+	0xee, 0x24, 0x54, 0x20, 0x68, 0x88, 0x79, 0x6b, 0x9f, 0xd9, 0xcb, 0x1f, 0x52, 0x92, 0xc2, 0x5e,
+	0xfe, 0x54, 0x52, 0x00, 0xe3, 0x22, 0x93, 0x89, 0xe9, 0x25, 0x3a, 0x96, 0xf4, 0x62, 0x50, 0x0d,
+	0xa8, 0xe0, 0xb5, 0x2f, 0x37, 0xc6, 0x24, 0x22, 0x93, 0x4b, 0x6c, 0xcf, 0x9b, 0x3e, 0xa1, 0xe7,
+	0x2d, 0x02, 0x38, 0x90, 0xbb, 0x5d, 0x65, 0x92, 0x6b, 0x07, 0xc3, 0xd3, 0x99, 0x88, 0x5d, 0x75,
+	0xba, 0x3f, 0xa1, 0xb3, 0x5b, 0x25, 0x89, 0x2b, 0x1a, 0x4c, 0x57, 0xc9, 0xc4, 0x70, 0xf2, 0xf0,
+	0x65, 0x56, 0xe6, 0x0b, 0x17, 0xae, 0x82, 0x73, 0x3d, 0x8f, 0x68, 0x3a, 0xd2, 0x0f, 0xb1, 0x46,
+	0xb1, 0x8e, 0x8d, 0x36, 0x6e, 0xf8, 0xff, 0xcf, 0x2c, 0xf4, 0x08, 0x4a, 0x0c, 0xaf, 0xfa, 0xe8,
+	0xf8, 0xe6, 0x4c, 0x3e, 0x43, 0x73, 0xb6, 0x7a, 0xb7, 0xbf, 0x45, 0x78, 0xc7, 0x6f, 0x0d, 0x3e,
+	0x39, 0x52, 0xa4, 0xb3, 0xd5, 0xde, 0x84, 0x4d, 0x6c, 0x9c, 0x7b, 0x1e, 0x4c, 0x75, 0x4b, 0x13,
+	0xf6, 0xa8, 0xa1, 0xf3, 0x1c, 0x75, 0x40, 0x08, 0x8f, 0xcc, 0x84, 0xca, 0x96, 0x57, 0xde, 0x1c,
+	0x06, 0xe9, 0x70, 0xbe, 0x86, 0xf3, 0x00, 0xee, 0x6e, 0x16, 0xeb, 0xeb, 0x3b, 0xea, 0x96, 0x56,
+	0x7f, 0x7d, 0xb7, 0xa2, 0xad, 0x17, 0x37, 0x2a, 0xf2, 0xd0, 0x20, 0xbc, 0x5c, 0xdd, 0x2e, 0xcb,
+	0x12, 0x3c, 0x0f, 0x16, 0xa2, 0xf0, 0x9d, 0xdd, 0xca, 0x76, 0xad, 0x5e, 0x2c, 0x6d, 0xc8, 0xc3,
+	0x70, 0x01, 0xcc, 0x44, 0x91, 0xc5, 0x37, 0xee, 0xa8, 0x15, 0x79, 0x04, 0xce, 0x81, 0xe9, 0x28,
+	0xe2, 0x56, 0x69, 0x57, 0x4e, 0xc0, 0x73, 0x60, 0x2e, 0x0a, 0xae, 0x94, 0x6f, 0x55, 0xd6, 0x76,
+	0xfe, 0x43, 0x1e, 0x1d, 0x3c, 0x87, 0xe9, 0x55, 0xdd, 0x5e, 0x57, 0x8b, 0xf2, 0xd8, 0x20, 0xdf,
+	0x5e, 0x6d, 0xf7, 0x76, 0x45, 0xad, 0xc8, 0xe3, 0x83, 0x27, 0x15, 0xef, 0xd6, 0xe4, 0x89, 0x18,
+	0x8e, 0x2d, 0x6d, 0x77, 0x67, 0x67, 0x53, 0x4e, 0x5e, 0x59, 0x05, 0x99, 0xe8, 0xc0, 0x00, 0xa7,
+	0xc1, 0x64, 0xb9, 0xaa, 0x56, 0x4a, 0x75, 0xad, 0x58, 0x2a, 0x55, 0x6a, 0x35, 0x79, 0x88, 0x89,
+	0x55, 0x2b, 0xb5, 0xba, 0x5a, 0x2d, 0xd5, 0x2b, 0xe5, 0x00, 0x2c, 0x5d, 0x09, 0xd7, 0x4b, 0xd1,
+	0x7b, 0x67, 0xc1, 0x7c, 0x69, 0x73, 0xe7, 0x4e, 0x79, 0xb3, 0x52, 0xd7, 0x6a, 0xf5, 0x62, 0xbd,
+	0xa2, 0xdd, 0xd9, 0xde, 0xd8, 0xde, 0xb9, 0xbb, 0x2d, 0x0f, 0x31, 0x25, 0xfa, 0x70, 0x15, 0x55,
+	0xdd, 0x51, 0x6b, 0xb2, 0x04, 0x15, 0x30, 0xdb, 0x87, 0x52, 0x2b, 0xc5, 0xf2, 0xeb, 0xf2, 0x70,
+	0x8c, 0xc0, 0x9d, 0xf5, 0xf5, 0xcd, 0xea, 0x36, 0x33, 0xeb, 0x22, 0xc8, 0xf6, 0xe1, 0xb6, 0x77,
+	0xea, 0xda, 0xae, 0x5a, 0xa9, 0x55, 0xb6, 0xeb, 0x72, 0x82, 0xf9, 0xa3, 0x0f, 0x5f, 0xdd, 0xae,
+	0xd6, 0xe5, 0xd1, 0x38, 0x2d, 0x77, 0x6f, 0xa9, 0xc5, 0x72, 0x45, 0x1e, 0x83, 0x17, 0x80, 0xd2,
+	0x2f, 0xb4, 0x52, 0x29, 0x6b, 0xb5, 0xd7, 0xb7, 0x4b, 0xf2, 0xf8, 0xca, 0x6f, 0xd2, 0xbd, 0xcf,
+	0x2d, 0x45, 0xc7, 0x80, 0x1f, 0x49, 0x20, 0x53, 0xf2, 0xbf, 0x60, 0xf8, 0xff, 0x3b, 0xcd, 0xc4,
+	0xe4, 0xd7, 0xec, 0x74, 0xb4, 0x83, 0x6f, 0x99, 0x5e, 0xee, 0x1d, 0xe9, 0xb3, 0x23, 0xa5, 0xa0,
+	0x62, 0x97, 0xb4, 0xa8, 0xde, 0x65, 0x77, 0xf3, 0x45, 0x9d, 0xc5, 0xf5, 0x16, 0xb2, 0x51, 0x13,
+	0xe7, 0xfb, 0xc3, 0xfd, 0xdd, 0x63, 0x45, 0x7a, 0x72, 0xac, 0xac, 0x6c, 0x87, 0xff, 0xe5, 0xe9,
+	0x35, 0xbf, 0x9b, 0xc8, 0x33, 0xbc, 0x56, 0x23, 0xd4, 0x1d, 0x6f, 0x12, 0xbb, 0xc9, 0x41, 0x5f,
+	0x7b, 0xaa, 0x48, 0x3f, 0x79, 0xaa, 0xc8, 0xfd, 0x12, 0xff, 0xef, 0xd7, 0xbf, 0xff, 0xf6, 0xf0,
+	0x5c, 0x4e, 0x2e, 0x88, 0xaf, 0x14, 0xdd, 0xf7, 0xb7, 0x2a, 0x5d, 0xf9, 0x67, 0x09, 0x7e, 0x53,
+	0x02, 0x99, 0xb2, 0xff, 0x1d, 0xe4, 0x94, 0xf7, 0xbb, 0x73, 0xc6, 0xeb, 0x31, 0x45, 0xb9, 0x52,
+	0xb3, 0xb9, 0xa9, 0x82, 0xf8, 0x60, 0x21, 0x94, 0x0a, 0x74, 0xfa, 0xf9, 0x30, 0xc8, 0xdc, 0xf1,
+	0x3f, 0xf4, 0x9c, 0x52, 0xa7, 0xff, 0x1d, 0x3e, 0xa3, 0x52, 0x1f, 0x1e, 0x2b, 0x3f, 0x96, 0xc2,
+	0x99, 0x23, 0x5f, 0x8e, 0xfe, 0xef, 0x93, 0x17, 0x85, 0x24, 0xbf, 0x1b, 0xfa, 0x07, 0x25, 0xdf,
+	0x3f, 0x4f, 0xe6, 0xbb, 0x83, 0x5f, 0x7e, 0x2f, 0xf2, 0x27, 0x40, 0x48, 0x5a, 0x3e, 0xfa, 0x1a,
+	0xf3, 0xa1, 0x61, 0x3c, 0xbf, 0xf3, 0xcc, 0x69, 0x35, 0xbf, 0xc7, 0x67, 0xd3, 0xae, 0xfd, 0x98,
+	0x53, 0xc5, 0x57, 0xa3, 0x3e, 0xa7, 0x3e, 0x04, 0xe9, 0xda, 0x21, 0xb9, 0xff, 0x6c, 0xeb, 0xc5,
+	0x01, 0x73, 0x37, 0x3f, 0x3b, 0x52, 0x2e, 0x9e, 0x64, 0xbe, 0x3d, 0x03, 0xdf, 0xcf, 0x3f, 0x3e,
+	0xf6, 0x4f, 0x9f, 0xc9, 0x65, 0x0a, 0xee, 0x21, 0xb9, 0xdf, 0x77, 0xf6, 0x0f, 0x24, 0x30, 0x73,
+	0x0b, 0x7b, 0x03, 0x53, 0x44, 0xac, 0x0e, 0xe7, 0x63, 0x80, 0x01, 0x47, 0xae, 0x7e, 0x06, 0x57,
+	0x72, 0xcd, 0xce, 0xe7, 0xe6, 0x0b, 0x4d, 0xec, 0x75, 0x15, 0x2b, 0x04, 0xe3, 0xca, 0xaa, 0x74,
+	0x05, 0xfe, 0x48, 0x02, 0x72, 0x48, 0x3f, 0x31, 0x05, 0x28, 0x27, 0xf5, 0xec, 0xd9, 0x13, 0x31,
+	0xb9, 0xff, 0xfc, 0x42, 0x53, 0x7d, 0x78, 0xac, 0x80, 0x5e, 0x53, 0xff, 0xe4, 0x58, 0x89, 0x94,
+	0x26, 0xae, 0xaa, 0x92, 0x9b, 0x89, 0xaa, 0xca, 0x1a, 0x4a, 0x97, 0xe9, 0xf9, 0x3d, 0x09, 0xcc,
+	0x15, 0x1b, 0x8d, 0xe8, 0xdf, 0xfe, 0x8e, 0x61, 0x37, 0xe1, 0xb9, 0x13, 0xbf, 0x0a, 0xc4, 0xbd,
+	0x08, 0xf5, 0xac, 0x56, 0x3c, 0x97, 0x9b, 0x2d, 0xa0, 0x46, 0xc3, 0xff, 0xb4, 0x10, 0xf6, 0x32,
+	0xfc, 0xbe, 0x04, 0x14, 0x15, 0x5b, 0xa4, 0x8d, 0xbf, 0xb2, 0x7a, 0xff, 0x7e, 0x56, 0xf5, 0x98,
+	0xe5, 0xa8, 0x15, 0xa7, 0xdd, 0x77, 0x24, 0x30, 0xb5, 0x6e, 0xd8, 0x8d, 0xf0, 0x70, 0x3e, 0x3f,
+	0xd0, 0x11, 0x72, 0x78, 0xf6, 0x04, 0x38, 0x57, 0xeb, 0xea, 0x33, 0x9d, 0x1b, 0xab, 0x54, 0x36,
+	0x37, 0x57, 0x38, 0x30, 0xec, 0x38, 0xa3, 0xad, 0xfc, 0x70, 0xa4, 0xd7, 0xc0, 0xb0, 0xf6, 0x92,
+	0x55, 0x97, 0xb7, 0x25, 0x20, 0x87, 0x5f, 0x2a, 0x1f, 0x0b, 0x16, 0x62, 0x0c, 0xc8, 0x10, 0xd9,
+	0x93, 0x10, 0xb9, 0xbd, 0xcf, 0x8e, 0x94, 0x97, 0xfb, 0xb5, 0x2d, 0xda, 0xc8, 0xec, 0x78, 0x86,
+	0xfe, 0xc5, 0x5a, 0x2f, 0xe4, 0x60, 0xf4, 0x25, 0x1b, 0xf6, 0x01, 0x11, 0xaf, 0xb9, 0x05, 0x60,
+	0xd5, 0xfe, 0x2f, 0xac, 0x7b, 0x5f, 0x4e, 0xc3, 0x18, 0x07, 0x5f, 0x3b, 0x83, 0x83, 0xa1, 0x07,
+	0xa6, 0x2b, 0x6d, 0xe3, 0x1f, 0x7c, 0xea, 0xca, 0xff, 0x4b, 0x00, 0xf6, 0xb5, 0x98, 0xcc, 0x49,
+	0xff, 0x0d, 0x66, 0xc2, 0x3e, 0x0a, 0x9a, 0xcf, 0x6c, 0x5c, 0xee, 0x12, 0xb8, 0xec, 0x33, 0x70,
+	0xb9, 0xa5, 0x6e, 0xa4, 0x44, 0x6c, 0x6e, 0x09, 0x34, 0x37, 0xfb, 0xda, 0x85, 0x47, 0xbf, 0x5b,
+	0x1c, 0x7a, 0xf4, 0x64, 0x51, 0x7a, 0xfc, 0x64, 0x51, 0xfa, 0xe4, 0xc9, 0xa2, 0xf4, 0xe6, 0xa7,
+	0x8b, 0x43, 0x8f, 0x3f, 0x5d, 0x1c, 0xfa, 0xed, 0xa7, 0x8b, 0x43, 0xfb, 0x63, 0x5c, 0xf0, 0xb5,
+	0xbf, 0x05, 0x00, 0x00, 0xff, 0xff, 0x51, 0x7c, 0x51, 0x37, 0x25, 0x23, 0x00, 0x00,
+}
+
 func (this *CloudletKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -549,8 +1212,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for CloudletApi service
-
+// CloudletApiClient is the client API for CloudletApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CloudletApiClient interface {
 	// Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
 	// and integrated as part of MobiledgeX edge resource portfolio.
@@ -584,7 +1248,7 @@ func NewCloudletApiClient(cc *grpc.ClientConn) CloudletApiClient {
 }
 
 func (c *cloudletApiClient) CreateCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_CreateCloudletClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletApi/CreateCloudlet", opts...)
+	stream, err := c.cc.NewStream(ctx, &_CloudletApi_serviceDesc.Streams[0], "/edgeproto.CloudletApi/CreateCloudlet", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -616,7 +1280,7 @@ func (x *cloudletApiCreateCloudletClient) Recv() (*Result, error) {
 }
 
 func (c *cloudletApiClient) DeleteCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_DeleteCloudletClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletApi_serviceDesc.Streams[1], c.cc, "/edgeproto.CloudletApi/DeleteCloudlet", opts...)
+	stream, err := c.cc.NewStream(ctx, &_CloudletApi_serviceDesc.Streams[1], "/edgeproto.CloudletApi/DeleteCloudlet", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -648,7 +1312,7 @@ func (x *cloudletApiDeleteCloudletClient) Recv() (*Result, error) {
 }
 
 func (c *cloudletApiClient) UpdateCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_UpdateCloudletClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletApi_serviceDesc.Streams[2], c.cc, "/edgeproto.CloudletApi/UpdateCloudlet", opts...)
+	stream, err := c.cc.NewStream(ctx, &_CloudletApi_serviceDesc.Streams[2], "/edgeproto.CloudletApi/UpdateCloudlet", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -680,7 +1344,7 @@ func (x *cloudletApiUpdateCloudletClient) Recv() (*Result, error) {
 }
 
 func (c *cloudletApiClient) ShowCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_ShowCloudletClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletApi_serviceDesc.Streams[3], c.cc, "/edgeproto.CloudletApi/ShowCloudlet", opts...)
+	stream, err := c.cc.NewStream(ctx, &_CloudletApi_serviceDesc.Streams[3], "/edgeproto.CloudletApi/ShowCloudlet", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -713,7 +1377,7 @@ func (x *cloudletApiShowCloudletClient) Recv() (*Cloudlet, error) {
 
 func (c *cloudletApiClient) GetCloudletManifest(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (*CloudletManifest, error) {
 	out := new(CloudletManifest)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletApi/GetCloudletManifest", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/GetCloudletManifest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -722,7 +1386,7 @@ func (c *cloudletApiClient) GetCloudletManifest(ctx context.Context, in *Cloudle
 
 func (c *cloudletApiClient) GetCloudletProps(ctx context.Context, in *CloudletProps, opts ...grpc.CallOption) (*CloudletProps, error) {
 	out := new(CloudletProps)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletApi/GetCloudletProps", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/GetCloudletProps", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -731,7 +1395,7 @@ func (c *cloudletApiClient) GetCloudletProps(ctx context.Context, in *CloudletPr
 
 func (c *cloudletApiClient) AddCloudletResMapping(ctx context.Context, in *CloudletResMap, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletApi/AddCloudletResMapping", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/AddCloudletResMapping", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -740,7 +1404,7 @@ func (c *cloudletApiClient) AddCloudletResMapping(ctx context.Context, in *Cloud
 
 func (c *cloudletApiClient) RemoveCloudletResMapping(ctx context.Context, in *CloudletResMap, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletApi/RemoveCloudletResMapping", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/RemoveCloudletResMapping", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -749,15 +1413,14 @@ func (c *cloudletApiClient) RemoveCloudletResMapping(ctx context.Context, in *Cl
 
 func (c *cloudletApiClient) FindFlavorMatch(ctx context.Context, in *FlavorMatch, opts ...grpc.CallOption) (*FlavorMatch, error) {
 	out := new(FlavorMatch)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletApi/FindFlavorMatch", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/FindFlavorMatch", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for CloudletApi service
-
+// CloudletApiServer is the server API for CloudletApi service.
 type CloudletApiServer interface {
 	// Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
 	// and integrated as part of MobiledgeX edge resource portfolio.
@@ -780,6 +1443,38 @@ type CloudletApiServer interface {
 	RemoveCloudletResMapping(context.Context, *CloudletResMap) (*Result, error)
 	// Discover if flavor produces a matching platform flavor
 	FindFlavorMatch(context.Context, *FlavorMatch) (*FlavorMatch, error)
+}
+
+// UnimplementedCloudletApiServer can be embedded to have forward compatible implementations.
+type UnimplementedCloudletApiServer struct {
+}
+
+func (*UnimplementedCloudletApiServer) CreateCloudlet(req *Cloudlet, srv CloudletApi_CreateCloudletServer) error {
+	return status.Errorf(codes.Unimplemented, "method CreateCloudlet not implemented")
+}
+func (*UnimplementedCloudletApiServer) DeleteCloudlet(req *Cloudlet, srv CloudletApi_DeleteCloudletServer) error {
+	return status.Errorf(codes.Unimplemented, "method DeleteCloudlet not implemented")
+}
+func (*UnimplementedCloudletApiServer) UpdateCloudlet(req *Cloudlet, srv CloudletApi_UpdateCloudletServer) error {
+	return status.Errorf(codes.Unimplemented, "method UpdateCloudlet not implemented")
+}
+func (*UnimplementedCloudletApiServer) ShowCloudlet(req *Cloudlet, srv CloudletApi_ShowCloudletServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowCloudlet not implemented")
+}
+func (*UnimplementedCloudletApiServer) GetCloudletManifest(ctx context.Context, req *Cloudlet) (*CloudletManifest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCloudletManifest not implemented")
+}
+func (*UnimplementedCloudletApiServer) GetCloudletProps(ctx context.Context, req *CloudletProps) (*CloudletProps, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCloudletProps not implemented")
+}
+func (*UnimplementedCloudletApiServer) AddCloudletResMapping(ctx context.Context, req *CloudletResMap) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddCloudletResMapping not implemented")
+}
+func (*UnimplementedCloudletApiServer) RemoveCloudletResMapping(ctx context.Context, req *CloudletResMap) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveCloudletResMapping not implemented")
+}
+func (*UnimplementedCloudletApiServer) FindFlavorMatch(ctx context.Context, req *FlavorMatch) (*FlavorMatch, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindFlavorMatch not implemented")
 }
 
 func RegisterCloudletApiServer(s *grpc.Server, srv CloudletApiServer) {
@@ -1010,8 +1705,9 @@ var _CloudletApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cloudlet.proto",
 }
 
-// Client API for CloudletInfoApi service
-
+// CloudletInfoApiClient is the client API for CloudletInfoApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CloudletInfoApiClient interface {
 	// Show CloudletInfos
 	ShowCloudletInfo(ctx context.Context, in *CloudletInfo, opts ...grpc.CallOption) (CloudletInfoApi_ShowCloudletInfoClient, error)
@@ -1030,7 +1726,7 @@ func NewCloudletInfoApiClient(cc *grpc.ClientConn) CloudletInfoApiClient {
 }
 
 func (c *cloudletInfoApiClient) ShowCloudletInfo(ctx context.Context, in *CloudletInfo, opts ...grpc.CallOption) (CloudletInfoApi_ShowCloudletInfoClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletInfoApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletInfoApi/ShowCloudletInfo", opts...)
+	stream, err := c.cc.NewStream(ctx, &_CloudletInfoApi_serviceDesc.Streams[0], "/edgeproto.CloudletInfoApi/ShowCloudletInfo", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1063,7 +1759,7 @@ func (x *cloudletInfoApiShowCloudletInfoClient) Recv() (*CloudletInfo, error) {
 
 func (c *cloudletInfoApiClient) InjectCloudletInfo(ctx context.Context, in *CloudletInfo, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletInfoApi/InjectCloudletInfo", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletInfoApi/InjectCloudletInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1072,15 +1768,14 @@ func (c *cloudletInfoApiClient) InjectCloudletInfo(ctx context.Context, in *Clou
 
 func (c *cloudletInfoApiClient) EvictCloudletInfo(ctx context.Context, in *CloudletInfo, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.CloudletInfoApi/EvictCloudletInfo", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletInfoApi/EvictCloudletInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for CloudletInfoApi service
-
+// CloudletInfoApiServer is the server API for CloudletInfoApi service.
 type CloudletInfoApiServer interface {
 	// Show CloudletInfos
 	ShowCloudletInfo(*CloudletInfo, CloudletInfoApi_ShowCloudletInfoServer) error
@@ -1088,6 +1783,20 @@ type CloudletInfoApiServer interface {
 	InjectCloudletInfo(context.Context, *CloudletInfo) (*Result, error)
 	// Evict (delete) a CloudletInfo for regression testing
 	EvictCloudletInfo(context.Context, *CloudletInfo) (*Result, error)
+}
+
+// UnimplementedCloudletInfoApiServer can be embedded to have forward compatible implementations.
+type UnimplementedCloudletInfoApiServer struct {
+}
+
+func (*UnimplementedCloudletInfoApiServer) ShowCloudletInfo(req *CloudletInfo, srv CloudletInfoApi_ShowCloudletInfoServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowCloudletInfo not implemented")
+}
+func (*UnimplementedCloudletInfoApiServer) InjectCloudletInfo(ctx context.Context, req *CloudletInfo) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InjectCloudletInfo not implemented")
+}
+func (*UnimplementedCloudletInfoApiServer) EvictCloudletInfo(ctx context.Context, req *CloudletInfo) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EvictCloudletInfo not implemented")
 }
 
 func RegisterCloudletInfoApiServer(s *grpc.Server, srv CloudletInfoApiServer) {
@@ -1174,8 +1883,9 @@ var _CloudletInfoApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cloudlet.proto",
 }
 
-// Client API for CloudletMetricsApi service
-
+// CloudletMetricsApiClient is the client API for CloudletMetricsApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CloudletMetricsApiClient interface {
 	// Show Cloudlet metrics
 	ShowCloudletMetrics(ctx context.Context, in *CloudletMetrics, opts ...grpc.CallOption) (CloudletMetricsApi_ShowCloudletMetricsClient, error)
@@ -1190,7 +1900,7 @@ func NewCloudletMetricsApiClient(cc *grpc.ClientConn) CloudletMetricsApiClient {
 }
 
 func (c *cloudletMetricsApiClient) ShowCloudletMetrics(ctx context.Context, in *CloudletMetrics, opts ...grpc.CallOption) (CloudletMetricsApi_ShowCloudletMetricsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletMetricsApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletMetricsApi/ShowCloudletMetrics", opts...)
+	stream, err := c.cc.NewStream(ctx, &_CloudletMetricsApi_serviceDesc.Streams[0], "/edgeproto.CloudletMetricsApi/ShowCloudletMetrics", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1221,11 +1931,18 @@ func (x *cloudletMetricsApiShowCloudletMetricsClient) Recv() (*CloudletMetrics, 
 	return m, nil
 }
 
-// Server API for CloudletMetricsApi service
-
+// CloudletMetricsApiServer is the server API for CloudletMetricsApi service.
 type CloudletMetricsApiServer interface {
 	// Show Cloudlet metrics
 	ShowCloudletMetrics(*CloudletMetrics, CloudletMetricsApi_ShowCloudletMetricsServer) error
+}
+
+// UnimplementedCloudletMetricsApiServer can be embedded to have forward compatible implementations.
+type UnimplementedCloudletMetricsApiServer struct {
+}
+
+func (*UnimplementedCloudletMetricsApiServer) ShowCloudletMetrics(req *CloudletMetrics, srv CloudletMetricsApi_ShowCloudletMetricsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowCloudletMetrics not implemented")
 }
 
 func RegisterCloudletMetricsApiServer(s *grpc.Server, srv CloudletMetricsApiServer) {
@@ -1270,7 +1987,7 @@ var _CloudletMetricsApi_serviceDesc = grpc.ServiceDesc{
 func (m *CloudletKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1278,29 +1995,36 @@ func (m *CloudletKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Organization) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Organization)))
-		i += copy(dAtA[i:], m.Organization)
-	}
 	if len(m.Name) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
 		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Organization) > 0 {
+		i -= len(m.Organization)
+		copy(dAtA[i:], m.Organization)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Organization)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *OperationTimeLimits) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1308,47 +2032,52 @@ func (m *OperationTimeLimits) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *OperationTimeLimits) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OperationTimeLimits) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.CreateClusterInstTimeout != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.CreateClusterInstTimeout))
-	}
-	if m.UpdateClusterInstTimeout != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.UpdateClusterInstTimeout))
-	}
-	if m.DeleteClusterInstTimeout != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.DeleteClusterInstTimeout))
-	}
-	if m.CreateAppInstTimeout != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.CreateAppInstTimeout))
+	if m.DeleteAppInstTimeout != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.DeleteAppInstTimeout))
+		i--
+		dAtA[i] = 0x30
 	}
 	if m.UpdateAppInstTimeout != 0 {
-		dAtA[i] = 0x28
-		i++
 		i = encodeVarintCloudlet(dAtA, i, uint64(m.UpdateAppInstTimeout))
+		i--
+		dAtA[i] = 0x28
 	}
-	if m.DeleteAppInstTimeout != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.DeleteAppInstTimeout))
+	if m.CreateAppInstTimeout != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.CreateAppInstTimeout))
+		i--
+		dAtA[i] = 0x20
 	}
-	return i, nil
+	if m.DeleteClusterInstTimeout != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.DeleteClusterInstTimeout))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.UpdateClusterInstTimeout != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.UpdateClusterInstTimeout))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.CreateClusterInstTimeout != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.CreateClusterInstTimeout))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *PlatformConfig) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1356,179 +2085,199 @@ func (m *PlatformConfig) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *PlatformConfig) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PlatformConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ContainerRegistryPath) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ContainerRegistryPath)))
-		i += copy(dAtA[i:], m.ContainerRegistryPath)
+	if len(m.TlsCaFile) > 0 {
+		i -= len(m.TlsCaFile)
+		copy(dAtA[i:], m.TlsCaFile)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TlsCaFile)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xaa
 	}
-	if len(m.CloudletVmImagePath) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CloudletVmImagePath)))
-		i += copy(dAtA[i:], m.CloudletVmImagePath)
+	if len(m.TlsKeyFile) > 0 {
+		i -= len(m.TlsKeyFile)
+		copy(dAtA[i:], m.TlsKeyFile)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TlsKeyFile)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xa2
 	}
-	if len(m.NotifyCtrlAddrs) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.NotifyCtrlAddrs)))
-		i += copy(dAtA[i:], m.NotifyCtrlAddrs)
+	if len(m.DeploymentTag) > 0 {
+		i -= len(m.DeploymentTag)
+		copy(dAtA[i:], m.DeploymentTag)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DeploymentTag)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x9a
 	}
-	if len(m.VaultAddr) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.VaultAddr)))
-		i += copy(dAtA[i:], m.VaultAddr)
+	if m.ChefClientInterval != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.ChefClientInterval))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x90
 	}
-	if len(m.TlsCertFile) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TlsCertFile)))
-		i += copy(dAtA[i:], m.TlsCertFile)
+	if len(m.ChefServerPath) > 0 {
+		i -= len(m.ChefServerPath)
+		copy(dAtA[i:], m.ChefServerPath)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ChefServerPath)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x8a
 	}
-	if len(m.EnvVar) > 0 {
-		for k, _ := range m.EnvVar {
-			dAtA[i] = 0x32
-			i++
-			v := m.EnvVar[k]
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
-	if len(m.PlatformTag) > 0 {
-		dAtA[i] = 0x42
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.PlatformTag)))
-		i += copy(dAtA[i:], m.PlatformTag)
-	}
-	if m.TestMode {
-		dAtA[i] = 0x48
-		i++
-		if m.TestMode {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if len(m.Span) > 0 {
-		dAtA[i] = 0x52
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Span)))
-		i += copy(dAtA[i:], m.Span)
-	}
-	if m.CleanupMode {
-		dAtA[i] = 0x58
-		i++
-		if m.CleanupMode {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if len(m.Region) > 0 {
-		dAtA[i] = 0x62
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Region)))
-		i += copy(dAtA[i:], m.Region)
-	}
-	if m.CommercialCerts {
-		dAtA[i] = 0x68
-		i++
-		if m.CommercialCerts {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if m.UseVaultCerts {
-		dAtA[i] = 0x70
-		i++
-		if m.UseVaultCerts {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
+	if len(m.AppDnsRoot) > 0 {
+		i -= len(m.AppDnsRoot)
+		copy(dAtA[i:], m.AppDnsRoot)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.AppDnsRoot)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
 	}
 	if m.UseVaultCas {
-		dAtA[i] = 0x78
-		i++
+		i--
 		if m.UseVaultCas {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x78
 	}
-	if len(m.AppDnsRoot) > 0 {
-		dAtA[i] = 0x82
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.AppDnsRoot)))
-		i += copy(dAtA[i:], m.AppDnsRoot)
+	if m.UseVaultCerts {
+		i--
+		if m.UseVaultCerts {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x70
 	}
-	if len(m.ChefServerPath) > 0 {
-		dAtA[i] = 0x8a
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ChefServerPath)))
-		i += copy(dAtA[i:], m.ChefServerPath)
+	if m.CommercialCerts {
+		i--
+		if m.CommercialCerts {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x68
 	}
-	if m.ChefClientInterval != 0 {
-		dAtA[i] = 0x90
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.ChefClientInterval))
+	if len(m.Region) > 0 {
+		i -= len(m.Region)
+		copy(dAtA[i:], m.Region)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Region)))
+		i--
+		dAtA[i] = 0x62
 	}
-	if len(m.DeploymentTag) > 0 {
-		dAtA[i] = 0x9a
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DeploymentTag)))
-		i += copy(dAtA[i:], m.DeploymentTag)
+	if m.CleanupMode {
+		i--
+		if m.CleanupMode {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x58
 	}
-	if len(m.TlsKeyFile) > 0 {
-		dAtA[i] = 0xa2
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TlsKeyFile)))
-		i += copy(dAtA[i:], m.TlsKeyFile)
+	if len(m.Span) > 0 {
+		i -= len(m.Span)
+		copy(dAtA[i:], m.Span)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Span)))
+		i--
+		dAtA[i] = 0x52
 	}
-	if len(m.TlsCaFile) > 0 {
-		dAtA[i] = 0xaa
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TlsCaFile)))
-		i += copy(dAtA[i:], m.TlsCaFile)
+	if m.TestMode {
+		i--
+		if m.TestMode {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x48
 	}
-	return i, nil
+	if len(m.PlatformTag) > 0 {
+		i -= len(m.PlatformTag)
+		copy(dAtA[i:], m.PlatformTag)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.PlatformTag)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.EnvVar) > 0 {
+		for k := range m.EnvVar {
+			v := m.EnvVar[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if len(m.TlsCertFile) > 0 {
+		i -= len(m.TlsCertFile)
+		copy(dAtA[i:], m.TlsCertFile)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TlsCertFile)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.VaultAddr) > 0 {
+		i -= len(m.VaultAddr)
+		copy(dAtA[i:], m.VaultAddr)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.VaultAddr)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.NotifyCtrlAddrs) > 0 {
+		i -= len(m.NotifyCtrlAddrs)
+		copy(dAtA[i:], m.NotifyCtrlAddrs)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.NotifyCtrlAddrs)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.CloudletVmImagePath) > 0 {
+		i -= len(m.CloudletVmImagePath)
+		copy(dAtA[i:], m.CloudletVmImagePath)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CloudletVmImagePath)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ContainerRegistryPath) > 0 {
+		i -= len(m.ContainerRegistryPath)
+		copy(dAtA[i:], m.ContainerRegistryPath)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ContainerRegistryPath)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *CloudletResMap) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1536,42 +2285,51 @@ func (m *CloudletResMap) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletResMap) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletResMap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
 	if len(m.Mapping) > 0 {
-		for k, _ := range m.Mapping {
-			dAtA[i] = 0x12
-			i++
+		for k := range m.Mapping {
 			v := m.Mapping[k]
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
 			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x12
 		}
 	}
-	return i, nil
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *InfraConfig) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1579,29 +2337,36 @@ func (m *InfraConfig) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *InfraConfig) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *InfraConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ExternalNetworkName) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ExternalNetworkName)))
-		i += copy(dAtA[i:], m.ExternalNetworkName)
-	}
 	if len(m.FlavorName) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.FlavorName)
+		copy(dAtA[i:], m.FlavorName)
 		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.FlavorName)))
-		i += copy(dAtA[i:], m.FlavorName)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.ExternalNetworkName) > 0 {
+		i -= len(m.ExternalNetworkName)
+		copy(dAtA[i:], m.ExternalNetworkName)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ExternalNetworkName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *Cloudlet) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1609,311 +2374,329 @@ func (m *Cloudlet) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Cloudlet) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Cloudlet) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Key.Size()))
-	n2, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Location.Size()))
-	n3, err := m.Location.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n3
-	if m.IpSupport != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.IpSupport))
-	}
-	if len(m.StaticIps) > 0 {
-		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.StaticIps)))
-		i += copy(dAtA[i:], m.StaticIps)
-	}
-	if m.NumDynamicIps != 0 {
-		dAtA[i] = 0x40
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.NumDynamicIps))
-	}
-	dAtA[i] = 0x4a
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.TimeLimits.Size()))
-	n4, err := m.TimeLimits.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	if len(m.Errors) > 0 {
-		for _, s := range m.Errors {
-			dAtA[i] = 0x52
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x5a
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Status.Size()))
-	n5, err := m.Status.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n5
-	if m.State != 0 {
-		dAtA[i] = 0x60
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.State))
-	}
-	if m.CrmOverride != 0 {
-		dAtA[i] = 0x68
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.CrmOverride))
-	}
-	if m.DeploymentLocal {
-		dAtA[i] = 0x70
-		i++
-		if m.DeploymentLocal {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if m.PlatformType != 0 {
-		dAtA[i] = 0x78
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.PlatformType))
-	}
-	if len(m.NotifySrvAddr) > 0 {
+	if len(m.VmPool) > 0 {
+		i -= len(m.VmPool)
+		copy(dAtA[i:], m.VmPool)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.VmPool)))
+		i--
+		dAtA[i] = 0x2
+		i--
 		dAtA[i] = 0x82
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.NotifySrvAddr)))
-		i += copy(dAtA[i:], m.NotifySrvAddr)
-	}
-	dAtA[i] = 0x8a
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Flavor.Size()))
-	n6, err := m.Flavor.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n6
-	if len(m.PhysicalName) > 0 {
-		dAtA[i] = 0x92
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.PhysicalName)))
-		i += copy(dAtA[i:], m.PhysicalName)
-	}
-	if len(m.EnvVar) > 0 {
-		for k, _ := range m.EnvVar {
-			dAtA[i] = 0x9a
-			i++
-			dAtA[i] = 0x1
-			i++
-			v := m.EnvVar[k]
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
-	if len(m.ContainerVersion) > 0 {
-		dAtA[i] = 0xa2
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ContainerVersion)))
-		i += copy(dAtA[i:], m.ContainerVersion)
-	}
-	dAtA[i] = 0xaa
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Config.Size()))
-	n7, err := m.Config.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n7
-	if len(m.ResTagMap) > 0 {
-		for k, _ := range m.ResTagMap {
-			dAtA[i] = 0xb2
-			i++
-			dAtA[i] = 0x1
-			i++
-			v := m.ResTagMap[k]
-			msgSize := 0
-			if v != nil {
-				msgSize = v.Size()
-				msgSize += 1 + sovCloudlet(uint64(msgSize))
-			}
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + msgSize
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			if v != nil {
-				dAtA[i] = 0x12
-				i++
-				i = encodeVarintCloudlet(dAtA, i, uint64(v.Size()))
-				n8, err := v.MarshalTo(dAtA[i:])
-				if err != nil {
-					return 0, err
-				}
-				i += n8
-			}
-		}
-	}
-	if len(m.AccessVars) > 0 {
-		for k, _ := range m.AccessVars {
-			dAtA[i] = 0xba
-			i++
-			dAtA[i] = 0x1
-			i++
-			v := m.AccessVars[k]
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
-	if len(m.VmImageVersion) > 0 {
-		dAtA[i] = 0xc2
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.VmImageVersion)))
-		i += copy(dAtA[i:], m.VmImageVersion)
-	}
-	if len(m.Deployment) > 0 {
-		dAtA[i] = 0xd2
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Deployment)))
-		i += copy(dAtA[i:], m.Deployment)
-	}
-	if m.InfraApiAccess != 0 {
-		dAtA[i] = 0xd8
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.InfraApiAccess))
-	}
-	dAtA[i] = 0xe2
-	i++
-	dAtA[i] = 0x1
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.InfraConfig.Size()))
-	n9, err := m.InfraConfig.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n9
-	if len(m.ChefClientKey) > 0 {
-		for k, _ := range m.ChefClientKey {
-			dAtA[i] = 0xea
-			i++
-			dAtA[i] = 0x1
-			i++
-			v := m.ChefClientKey[k]
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
-	if m.MaintenanceState != 0 {
-		dAtA[i] = 0xf0
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.MaintenanceState))
 	}
 	if m.OverridePolicyContainerVersion {
-		dAtA[i] = 0xf8
-		i++
-		dAtA[i] = 0x1
-		i++
+		i--
 		if m.OverridePolicyContainerVersion {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xf8
 	}
-	if len(m.VmPool) > 0 {
+	if m.MaintenanceState != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.MaintenanceState))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xf0
+	}
+	if len(m.ChefClientKey) > 0 {
+		for k := range m.ChefClientKey {
+			v := m.ChefClientKey[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xea
+		}
+	}
+	{
+		size, err := m.InfraConfig.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1
+	i--
+	dAtA[i] = 0xe2
+	if m.InfraApiAccess != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.InfraApiAccess))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xd8
+	}
+	if len(m.Deployment) > 0 {
+		i -= len(m.Deployment)
+		copy(dAtA[i:], m.Deployment)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Deployment)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xd2
+	}
+	if len(m.VmImageVersion) > 0 {
+		i -= len(m.VmImageVersion)
+		copy(dAtA[i:], m.VmImageVersion)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.VmImageVersion)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc2
+	}
+	if len(m.AccessVars) > 0 {
+		for k := range m.AccessVars {
+			v := m.AccessVars[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xba
+		}
+	}
+	if len(m.ResTagMap) > 0 {
+		for k := range m.ResTagMap {
+			v := m.ResTagMap[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintCloudlet(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xb2
+		}
+	}
+	{
+		size, err := m.Config.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1
+	i--
+	dAtA[i] = 0xaa
+	if len(m.ContainerVersion) > 0 {
+		i -= len(m.ContainerVersion)
+		copy(dAtA[i:], m.ContainerVersion)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ContainerVersion)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xa2
+	}
+	if len(m.EnvVar) > 0 {
+		for k := range m.EnvVar {
+			v := m.EnvVar[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x9a
+		}
+	}
+	if len(m.PhysicalName) > 0 {
+		i -= len(m.PhysicalName)
+		copy(dAtA[i:], m.PhysicalName)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.PhysicalName)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x92
+	}
+	{
+		size, err := m.Flavor.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1
+	i--
+	dAtA[i] = 0x8a
+	if len(m.NotifySrvAddr) > 0 {
+		i -= len(m.NotifySrvAddr)
+		copy(dAtA[i:], m.NotifySrvAddr)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.NotifySrvAddr)))
+		i--
+		dAtA[i] = 0x1
+		i--
 		dAtA[i] = 0x82
-		i++
-		dAtA[i] = 0x2
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.VmPool)))
-		i += copy(dAtA[i:], m.VmPool)
 	}
-	return i, nil
+	if m.PlatformType != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.PlatformType))
+		i--
+		dAtA[i] = 0x78
+	}
+	if m.DeploymentLocal {
+		i--
+		if m.DeploymentLocal {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x70
+	}
+	if m.CrmOverride != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.CrmOverride))
+		i--
+		dAtA[i] = 0x68
+	}
+	if m.State != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.State))
+		i--
+		dAtA[i] = 0x60
+	}
+	{
+		size, err := m.Status.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x5a
+	if len(m.Errors) > 0 {
+		for iNdEx := len(m.Errors) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Errors[iNdEx])
+			copy(dAtA[i:], m.Errors[iNdEx])
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Errors[iNdEx])))
+			i--
+			dAtA[i] = 0x52
+		}
+	}
+	{
+		size, err := m.TimeLimits.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x4a
+	if m.NumDynamicIps != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.NumDynamicIps))
+		i--
+		dAtA[i] = 0x40
+	}
+	if len(m.StaticIps) > 0 {
+		i -= len(m.StaticIps)
+		copy(dAtA[i:], m.StaticIps)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.StaticIps)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if m.IpSupport != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.IpSupport))
+		i--
+		dAtA[i] = 0x30
+	}
+	{
+		size, err := m.Location.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *FlavorMatch) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1921,37 +2704,46 @@ func (m *FlavorMatch) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *FlavorMatch) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FlavorMatch) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Key.Size()))
-	n10, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n10
-	if len(m.FlavorName) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.FlavorName)))
-		i += copy(dAtA[i:], m.FlavorName)
-	}
 	if len(m.AvailabilityZone) > 0 {
-		dAtA[i] = 0x22
-		i++
+		i -= len(m.AvailabilityZone)
+		copy(dAtA[i:], m.AvailabilityZone)
 		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.AvailabilityZone)))
-		i += copy(dAtA[i:], m.AvailabilityZone)
+		i--
+		dAtA[i] = 0x22
 	}
-	return i, nil
+	if len(m.FlavorName) > 0 {
+		i -= len(m.FlavorName)
+		copy(dAtA[i:], m.FlavorName)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.FlavorName)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *CloudletManifest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1959,23 +2751,29 @@ func (m *CloudletManifest) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletManifest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletManifest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.Manifest) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Manifest)
+		copy(dAtA[i:], m.Manifest)
 		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Manifest)))
-		i += copy(dAtA[i:], m.Manifest)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *PropertyInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -1983,65 +2781,73 @@ func (m *PropertyInfo) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *PropertyInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PropertyInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
-	}
-	if len(m.Description) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Description)))
-		i += copy(dAtA[i:], m.Description)
-	}
-	if len(m.Value) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Value)))
-		i += copy(dAtA[i:], m.Value)
-	}
-	if m.Secret {
-		dAtA[i] = 0x20
-		i++
-		if m.Secret {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if m.Mandatory {
-		dAtA[i] = 0x28
-		i++
-		if m.Mandatory {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
 	if m.Internal {
-		dAtA[i] = 0x30
-		i++
+		i--
 		if m.Internal {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x30
 	}
-	return i, nil
+	if m.Mandatory {
+		i--
+		if m.Mandatory {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.Secret {
+		i--
+		if m.Secret {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *CloudletProps) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -2049,50 +2855,53 @@ func (m *CloudletProps) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletProps) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletProps) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.PlatformType != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.PlatformType))
-	}
 	if len(m.Properties) > 0 {
-		for k, _ := range m.Properties {
-			dAtA[i] = 0x12
-			i++
+		for k := range m.Properties {
 			v := m.Properties[k]
-			msgSize := 0
+			baseI := i
 			if v != nil {
-				msgSize = v.Size()
-				msgSize += 1 + sovCloudlet(uint64(msgSize))
-			}
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + msgSize
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			if v != nil {
-				dAtA[i] = 0x12
-				i++
-				i = encodeVarintCloudlet(dAtA, i, uint64(v.Size()))
-				n11, err := v.MarshalTo(dAtA[i:])
-				if err != nil {
-					return 0, err
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintCloudlet(dAtA, i, uint64(size))
 				}
-				i += n11
+				i--
+				dAtA[i] = 0x12
 			}
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x12
 		}
 	}
-	return i, nil
+	if m.PlatformType != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.PlatformType))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *FlavorInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -2100,55 +2909,63 @@ func (m *FlavorInfo) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *FlavorInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FlavorInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
-	}
-	if m.Vcpus != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.Vcpus))
-	}
-	if m.Ram != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.Ram))
-	}
-	if m.Disk != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.Disk))
-	}
 	if len(m.PropMap) > 0 {
-		for k, _ := range m.PropMap {
-			dAtA[i] = 0x2a
-			i++
+		for k := range m.PropMap {
 			v := m.PropMap[k]
-			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
-			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
 			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x2a
 		}
 	}
-	return i, nil
+	if m.Disk != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.Disk))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Ram != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.Ram))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Vcpus != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.Vcpus))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *OSAZone) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -2156,29 +2973,36 @@ func (m *OSAZone) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *OSAZone) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OSAZone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
-	}
 	if len(m.Status) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Status)
+		copy(dAtA[i:], m.Status)
 		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *OSImage) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -2186,41 +3010,50 @@ func (m *OSImage) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *OSImage) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OSImage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
-	}
-	if len(m.Tags) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Tags)))
-		i += copy(dAtA[i:], m.Tags)
+	if len(m.DiskFormat) > 0 {
+		i -= len(m.DiskFormat)
+		copy(dAtA[i:], m.DiskFormat)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DiskFormat)))
+		i--
+		dAtA[i] = 0x22
 	}
 	if len(m.Properties) > 0 {
-		dAtA[i] = 0x1a
-		i++
+		i -= len(m.Properties)
+		copy(dAtA[i:], m.Properties)
 		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Properties)))
-		i += copy(dAtA[i:], m.Properties)
+		i--
+		dAtA[i] = 0x1a
 	}
-	if len(m.DiskFormat) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DiskFormat)))
-		i += copy(dAtA[i:], m.DiskFormat)
+	if len(m.Tags) > 0 {
+		i -= len(m.Tags)
+		copy(dAtA[i:], m.Tags)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Tags)))
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *CloudletInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -2228,153 +3061,158 @@ func (m *CloudletInfo) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Key.Size()))
-	n12, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n12
-	if m.State != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.State))
-	}
-	if m.NotifyId != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.NotifyId))
-	}
-	if len(m.Controller) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Controller)))
-		i += copy(dAtA[i:], m.Controller)
-	}
-	if m.OsMaxRam != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.OsMaxRam))
-	}
-	if m.OsMaxVcores != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.OsMaxVcores))
-	}
-	if m.OsMaxVolGb != 0 {
-		dAtA[i] = 0x40
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.OsMaxVolGb))
-	}
-	if len(m.Errors) > 0 {
-		for _, s := range m.Errors {
-			dAtA[i] = 0x4a
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	if len(m.Flavors) > 0 {
-		for _, msg := range m.Flavors {
-			dAtA[i] = 0x52
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	dAtA[i] = 0x5a
-	i++
-	i = encodeVarintCloudlet(dAtA, i, uint64(m.Status.Size()))
-	n13, err := m.Status.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n13
-	if len(m.ContainerVersion) > 0 {
-		dAtA[i] = 0x62
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ContainerVersion)))
-		i += copy(dAtA[i:], m.ContainerVersion)
-	}
-	if len(m.AvailabilityZones) > 0 {
-		for _, msg := range m.AvailabilityZones {
-			dAtA[i] = 0x6a
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if len(m.OsImages) > 0 {
-		for _, msg := range m.OsImages {
-			dAtA[i] = 0x72
-			i++
-			i = encodeVarintCloudlet(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
+	if m.MaintenanceState != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.MaintenanceState))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x80
 	}
 	if m.ControllerCacheReceived {
-		dAtA[i] = 0x78
-		i++
+		i--
 		if m.ControllerCacheReceived {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x78
 	}
-	if m.MaintenanceState != 0 {
-		dAtA[i] = 0x80
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintCloudlet(dAtA, i, uint64(m.MaintenanceState))
+	if len(m.OsImages) > 0 {
+		for iNdEx := len(m.OsImages) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.OsImages[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCloudlet(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x72
+		}
 	}
-	return i, nil
+	if len(m.AvailabilityZones) > 0 {
+		for iNdEx := len(m.AvailabilityZones) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AvailabilityZones[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCloudlet(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
+	if len(m.ContainerVersion) > 0 {
+		i -= len(m.ContainerVersion)
+		copy(dAtA[i:], m.ContainerVersion)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ContainerVersion)))
+		i--
+		dAtA[i] = 0x62
+	}
+	{
+		size, err := m.Status.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x5a
+	if len(m.Flavors) > 0 {
+		for iNdEx := len(m.Flavors) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Flavors[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCloudlet(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x52
+		}
+	}
+	if len(m.Errors) > 0 {
+		for iNdEx := len(m.Errors) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Errors[iNdEx])
+			copy(dAtA[i:], m.Errors[iNdEx])
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Errors[iNdEx])))
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if m.OsMaxVolGb != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.OsMaxVolGb))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.OsMaxVcores != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.OsMaxVcores))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.OsMaxRam != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.OsMaxRam))
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.Controller) > 0 {
+		i -= len(m.Controller)
+		copy(dAtA[i:], m.Controller)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Controller)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.NotifyId != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.NotifyId))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.State != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.State))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *CloudletMetrics) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -2382,26 +3220,33 @@ func (m *CloudletMetrics) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletMetrics) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletMetrics) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if m.Foo != 0 {
-		dAtA[i] = 0x28
-		i++
 		i = encodeVarintCloudlet(dAtA, i, uint64(m.Foo))
+		i--
+		dAtA[i] = 0x28
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintCloudlet(dAtA []byte, offset int, v uint64) int {
+	offset -= sovCloudlet(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *CloudletKey) Matches(o *CloudletKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -6563,6 +7408,9 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 func (m *CloudletKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Organization)
@@ -6577,6 +7425,9 @@ func (m *CloudletKey) Size() (n int) {
 }
 
 func (m *OperationTimeLimits) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if m.CreateClusterInstTimeout != 0 {
@@ -6601,6 +7452,9 @@ func (m *OperationTimeLimits) Size() (n int) {
 }
 
 func (m *PlatformConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.ContainerRegistryPath)
@@ -6685,6 +7539,9 @@ func (m *PlatformConfig) Size() (n int) {
 }
 
 func (m *CloudletResMap) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -6701,6 +7558,9 @@ func (m *CloudletResMap) Size() (n int) {
 }
 
 func (m *InfraConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.ExternalNetworkName)
@@ -6715,6 +7575,9 @@ func (m *InfraConfig) Size() (n int) {
 }
 
 func (m *Cloudlet) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -6839,6 +7702,9 @@ func (m *Cloudlet) Size() (n int) {
 }
 
 func (m *FlavorMatch) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -6855,6 +7721,9 @@ func (m *FlavorMatch) Size() (n int) {
 }
 
 func (m *CloudletManifest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Manifest)
@@ -6865,6 +7734,9 @@ func (m *CloudletManifest) Size() (n int) {
 }
 
 func (m *PropertyInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
@@ -6892,6 +7764,9 @@ func (m *PropertyInfo) Size() (n int) {
 }
 
 func (m *CloudletProps) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if m.PlatformType != 0 {
@@ -6914,6 +7789,9 @@ func (m *CloudletProps) Size() (n int) {
 }
 
 func (m *FlavorInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
@@ -6941,6 +7819,9 @@ func (m *FlavorInfo) Size() (n int) {
 }
 
 func (m *OSAZone) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
@@ -6955,6 +7836,9 @@ func (m *OSAZone) Size() (n int) {
 }
 
 func (m *OSImage) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
@@ -6977,6 +7861,9 @@ func (m *OSImage) Size() (n int) {
 }
 
 func (m *CloudletInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -7046,6 +7933,9 @@ func (m *CloudletInfo) Size() (n int) {
 }
 
 func (m *CloudletMetrics) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if m.Foo != 0 {
@@ -7055,14 +7945,7 @@ func (m *CloudletMetrics) Size() (n int) {
 }
 
 func sovCloudlet(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozCloudlet(x uint64) (n int) {
 	return sovCloudlet(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -7082,7 +7965,7 @@ func (m *CloudletKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -7110,7 +7993,7 @@ func (m *CloudletKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7120,6 +8003,9 @@ func (m *CloudletKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7139,7 +8025,7 @@ func (m *CloudletKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7149,6 +8035,9 @@ func (m *CloudletKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7161,6 +8050,9 @@ func (m *CloudletKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -7190,7 +8082,7 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -7218,7 +8110,7 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CreateClusterInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.CreateClusterInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7237,7 +8129,7 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UpdateClusterInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.UpdateClusterInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7256,7 +8148,7 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DeleteClusterInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.DeleteClusterInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7275,7 +8167,7 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CreateAppInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.CreateAppInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7294,7 +8186,7 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UpdateAppInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.UpdateAppInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7313,7 +8205,7 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DeleteAppInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.DeleteAppInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7325,6 +8217,9 @@ func (m *OperationTimeLimits) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -7354,7 +8249,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -7382,7 +8277,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7392,6 +8287,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7411,7 +8309,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7421,6 +8319,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7440,7 +8341,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7450,6 +8351,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7469,7 +8373,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7479,6 +8383,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7498,7 +8405,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7508,6 +8415,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7527,7 +8437,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7536,6 +8446,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7556,7 +8469,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7573,7 +8486,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7583,6 +8496,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7599,7 +8515,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7609,6 +8525,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7645,7 +8564,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7655,6 +8574,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7674,7 +8596,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7694,7 +8616,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7704,6 +8626,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7723,7 +8648,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7743,7 +8668,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7753,6 +8678,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7772,7 +8700,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7792,7 +8720,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7812,7 +8740,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7832,7 +8760,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7842,6 +8770,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7861,7 +8792,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7871,6 +8802,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7890,7 +8824,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ChefClientInterval |= (Duration(b) & 0x7F) << shift
+				m.ChefClientInterval |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7909,7 +8843,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7919,6 +8853,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7938,7 +8875,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7948,6 +8885,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7967,7 +8907,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7977,6 +8917,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7989,6 +8932,9 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -8018,7 +8964,7 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -8046,7 +8992,7 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8055,6 +9001,9 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8076,7 +9025,7 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8085,6 +9034,9 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8105,7 +9057,7 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8122,7 +9074,7 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8132,6 +9084,9 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -8148,7 +9103,7 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8158,6 +9113,9 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -8189,6 +9147,9 @@ func (m *CloudletResMap) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthCloudlet
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8216,7 +9177,7 @@ func (m *InfraConfig) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -8244,7 +9205,7 @@ func (m *InfraConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8254,6 +9215,9 @@ func (m *InfraConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8273,7 +9237,7 @@ func (m *InfraConfig) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8283,6 +9247,9 @@ func (m *InfraConfig) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8295,6 +9262,9 @@ func (m *InfraConfig) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -8324,7 +9294,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -8352,7 +9322,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8362,6 +9332,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8381,7 +9354,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8390,6 +9363,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8411,7 +9387,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8420,6 +9396,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8441,7 +9420,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.IpSupport |= (IpSupport(b) & 0x7F) << shift
+				m.IpSupport |= IpSupport(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8460,7 +9439,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8470,6 +9449,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8489,7 +9471,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NumDynamicIps |= (int32(b) & 0x7F) << shift
+				m.NumDynamicIps |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8508,7 +9490,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8517,6 +9499,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8538,7 +9523,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8548,6 +9533,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8567,7 +9555,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8576,6 +9564,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8597,7 +9588,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= (TrackedState(b) & 0x7F) << shift
+				m.State |= TrackedState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8616,7 +9607,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CrmOverride |= (CRMOverride(b) & 0x7F) << shift
+				m.CrmOverride |= CRMOverride(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8635,7 +9626,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8655,7 +9646,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PlatformType |= (PlatformType(b) & 0x7F) << shift
+				m.PlatformType |= PlatformType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8674,7 +9665,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8684,6 +9675,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8703,7 +9697,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8712,6 +9706,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8733,7 +9730,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8743,6 +9740,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8762,7 +9762,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8771,6 +9771,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8791,7 +9794,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8808,7 +9811,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8818,6 +9821,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -8834,7 +9840,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8844,6 +9850,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -8880,7 +9889,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8890,6 +9899,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8909,7 +9921,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8918,6 +9930,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8939,7 +9954,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8948,6 +9963,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8968,7 +9986,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8985,7 +10003,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8995,6 +10013,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9011,7 +10032,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9020,7 +10041,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthCloudlet
 					}
 					if postmsgIndex > l {
@@ -9062,7 +10083,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9071,6 +10092,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9091,7 +10115,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9108,7 +10132,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9118,6 +10142,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9134,7 +10161,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9144,6 +10171,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9180,7 +10210,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9190,6 +10220,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9209,7 +10242,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9219,6 +10252,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9238,7 +10274,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.InfraApiAccess |= (InfraApiAccess(b) & 0x7F) << shift
+				m.InfraApiAccess |= InfraApiAccess(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9257,7 +10293,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9266,6 +10302,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9287,7 +10326,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9296,6 +10335,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9316,7 +10358,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9333,7 +10375,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9343,6 +10385,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9359,7 +10404,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9369,6 +10414,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9405,7 +10453,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaintenanceState |= (MaintenanceState(b) & 0x7F) << shift
+				m.MaintenanceState |= MaintenanceState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9424,7 +10472,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9444,7 +10492,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9454,6 +10502,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9466,6 +10517,9 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -9495,7 +10549,7 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9523,7 +10577,7 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9532,6 +10586,9 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9553,7 +10610,7 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9563,6 +10620,9 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9582,7 +10642,7 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9592,6 +10652,9 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9604,6 +10667,9 @@ func (m *FlavorMatch) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -9633,7 +10699,7 @@ func (m *CloudletManifest) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9661,7 +10727,7 @@ func (m *CloudletManifest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9671,6 +10737,9 @@ func (m *CloudletManifest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9683,6 +10752,9 @@ func (m *CloudletManifest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -9712,7 +10784,7 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9740,7 +10812,7 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9750,6 +10822,9 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9769,7 +10844,7 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9779,6 +10854,9 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9798,7 +10876,7 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9808,6 +10886,9 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9827,7 +10908,7 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9847,7 +10928,7 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9867,7 +10948,7 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9880,6 +10961,9 @@ func (m *PropertyInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -9909,7 +10993,7 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9937,7 +11021,7 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PlatformType |= (PlatformType(b) & 0x7F) << shift
+				m.PlatformType |= PlatformType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9956,7 +11040,7 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9965,6 +11049,9 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9985,7 +11072,7 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -10002,7 +11089,7 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -10012,6 +11099,9 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -10028,7 +11118,7 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -10037,7 +11127,7 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthCloudlet
 					}
 					if postmsgIndex > l {
@@ -10074,6 +11164,9 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthCloudlet
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10101,7 +11194,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -10129,7 +11222,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10139,6 +11232,9 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10158,7 +11254,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Vcpus |= (uint64(b) & 0x7F) << shift
+				m.Vcpus |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10177,7 +11273,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Ram |= (uint64(b) & 0x7F) << shift
+				m.Ram |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10196,7 +11292,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Disk |= (uint64(b) & 0x7F) << shift
+				m.Disk |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10215,7 +11311,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10224,6 +11320,9 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10244,7 +11343,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -10261,7 +11360,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -10271,6 +11370,9 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -10287,7 +11389,7 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -10297,6 +11399,9 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCloudlet
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -10328,6 +11433,9 @@ func (m *FlavorInfo) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthCloudlet
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10355,7 +11463,7 @@ func (m *OSAZone) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -10383,7 +11491,7 @@ func (m *OSAZone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10393,6 +11501,9 @@ func (m *OSAZone) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10412,7 +11523,7 @@ func (m *OSAZone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10422,6 +11533,9 @@ func (m *OSAZone) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10434,6 +11548,9 @@ func (m *OSAZone) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -10463,7 +11580,7 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -10491,7 +11608,7 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10501,6 +11618,9 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10520,7 +11640,7 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10530,6 +11650,9 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10549,7 +11672,7 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10559,6 +11682,9 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10578,7 +11704,7 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10588,6 +11714,9 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10600,6 +11729,9 @@ func (m *OSImage) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -10629,7 +11761,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -10657,7 +11789,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10667,6 +11799,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10686,7 +11821,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10695,6 +11830,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10716,7 +11854,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= (CloudletState(b) & 0x7F) << shift
+				m.State |= CloudletState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10735,7 +11873,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NotifyId |= (int64(b) & 0x7F) << shift
+				m.NotifyId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10754,7 +11892,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10764,6 +11902,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10783,7 +11924,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OsMaxRam |= (uint64(b) & 0x7F) << shift
+				m.OsMaxRam |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10802,7 +11943,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OsMaxVcores |= (uint64(b) & 0x7F) << shift
+				m.OsMaxVcores |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10821,7 +11962,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OsMaxVolGb |= (uint64(b) & 0x7F) << shift
+				m.OsMaxVolGb |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10840,7 +11981,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10850,6 +11991,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10869,7 +12013,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10878,6 +12022,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10900,7 +12047,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10909,6 +12056,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10930,7 +12080,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10940,6 +12090,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10959,7 +12112,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10968,6 +12121,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10990,7 +12146,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10999,6 +12155,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCloudlet
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -11021,7 +12180,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -11041,7 +12200,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaintenanceState |= (MaintenanceState(b) & 0x7F) << shift
+				m.MaintenanceState |= MaintenanceState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -11053,6 +12212,9 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -11082,7 +12244,7 @@ func (m *CloudletMetrics) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -11110,7 +12272,7 @@ func (m *CloudletMetrics) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Foo |= (uint64(b) & 0x7F) << shift
+				m.Foo |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -11122,6 +12284,9 @@ func (m *CloudletMetrics) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCloudlet
 			}
 			if (iNdEx + skippy) > l {
@@ -11139,6 +12304,7 @@ func (m *CloudletMetrics) Unmarshal(dAtA []byte) error {
 func skipCloudlet(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -11170,10 +12336,8 @@ func skipCloudlet(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -11190,267 +12354,34 @@ func skipCloudlet(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthCloudlet
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowCloudlet
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipCloudlet(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupCloudlet
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthCloudlet
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthCloudlet = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowCloudlet   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthCloudlet        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowCloudlet          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupCloudlet = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("cloudlet.proto", fileDescriptorCloudlet) }
-
-var fileDescriptorCloudlet = []byte{
-	// 3315 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x39, 0x4b, 0x6c, 0x1b, 0x47,
-	0x96, 0x6e, 0x89, 0xfa, 0xb0, 0x48, 0x51, 0xad, 0xd2, 0xaf, 0x4d, 0xdb, 0xb2, 0xc2, 0x20, 0x81,
-	0xe3, 0xa5, 0xc5, 0x5d, 0x19, 0x59, 0x78, 0x85, 0xd8, 0x09, 0x45, 0x52, 0x36, 0xa1, 0xef, 0x36,
-	0x69, 0x79, 0x13, 0x60, 0xd1, 0x28, 0x75, 0x97, 0xa8, 0x5e, 0x77, 0x77, 0xf5, 0x56, 0x37, 0x69,
-	0xd3, 0xa7, 0xdd, 0xbd, 0xec, 0xe7, 0x94, 0xfd, 0x1c, 0x76, 0xb3, 0xd8, 0x6c, 0x2e, 0xbb, 0x08,
-	0x06, 0x73, 0x08, 0x72, 0x0c, 0x06, 0x73, 0x36, 0x66, 0x2e, 0xc1, 0xcc, 0x61, 0x80, 0x00, 0x09,
-	0x32, 0xc6, 0x1c, 0x06, 0xb9, 0xcc, 0x00, 0x91, 0x8c, 0xc1, 0x1c, 0x06, 0x83, 0xaa, 0xea, 0x26,
-	0xbb, 0xc9, 0x96, 0x13, 0x29, 0x83, 0xb9, 0x10, 0x55, 0xef, 0x57, 0xaf, 0xde, 0x7b, 0xf5, 0x3e,
-	0x6c, 0x90, 0xd3, 0x2d, 0xd2, 0x36, 0x2c, 0xec, 0xaf, 0xb8, 0x94, 0xf8, 0x04, 0xa6, 0xb1, 0xd1,
-	0xc2, 0x7c, 0x99, 0xbf, 0xdc, 0x22, 0xa4, 0x65, 0xe1, 0x12, 0x72, 0xcd, 0x12, 0x72, 0x1c, 0xe2,
-	0x23, 0xdf, 0x24, 0x8e, 0x27, 0x08, 0xf3, 0xb7, 0x5a, 0xa6, 0x7f, 0xd4, 0x3e, 0x58, 0xd1, 0x89,
-	0x5d, 0xb2, 0xc9, 0x81, 0x69, 0x31, 0xc6, 0xc7, 0x25, 0xf6, 0x7b, 0x83, 0xcb, 0x2c, 0x71, 0xba,
-	0x16, 0x76, 0x7a, 0x8b, 0x80, 0x33, 0x7b, 0x68, 0xa1, 0x0e, 0xa1, 0xe1, 0x8e, 0x62, 0xaf, 0x6d,
-	0x05, 0xc7, 0xe7, 0x67, 0x28, 0xf6, 0x7c, 0xd4, 0xf2, 0xd1, 0x81, 0x85, 0x43, 0x02, 0x9d, 0xd8,
-	0x36, 0x09, 0x99, 0x2b, 0xdf, 0x78, 0xac, 0x71, 0xc3, 0x46, 0xbe, 0x7e, 0x74, 0x03, 0x3b, 0x2d,
-	0xd3, 0xc1, 0x25, 0xc3, 0xc6, 0x37, 0x38, 0x6b, 0xc9, 0x22, 0x7a, 0x20, 0x64, 0xae, 0x45, 0x5a,
-	0x44, 0x00, 0xd9, 0x4a, 0x40, 0x0b, 0x14, 0x64, 0x2a, 0x81, 0x31, 0x36, 0x71, 0x17, 0xde, 0x04,
-	0x59, 0x42, 0x5b, 0xc8, 0x31, 0x9f, 0xf0, 0x7b, 0x2b, 0xd2, 0xb2, 0x74, 0x2d, 0xbd, 0x3e, 0xfd,
-	0xc9, 0x73, 0x25, 0x13, 0xda, 0x8c, 0xd0, 0x96, 0x1a, 0x23, 0x82, 0xcb, 0x20, 0xe5, 0x20, 0x1b,
-	0x2b, 0x23, 0x9c, 0x38, 0xfb, 0xc9, 0x73, 0x65, 0x32, 0x24, 0x56, 0x39, 0x66, 0x2d, 0xfb, 0xcb,
-	0xaf, 0x15, 0xe9, 0x37, 0x5f, 0x2b, 0xd2, 0x47, 0x1f, 0x5c, 0x95, 0x0a, 0x3f, 0x1e, 0x05, 0xb3,
-	0xbb, 0x2e, 0xa6, 0x9c, 0xbb, 0x69, 0xda, 0x78, 0xcb, 0xb4, 0x4d, 0xdf, 0x83, 0x9b, 0xe0, 0x92,
-	0x4e, 0x31, 0xf2, 0xb1, 0xa6, 0x5b, 0x6d, 0xcf, 0xc7, 0x54, 0x33, 0x1d, 0xcf, 0xd7, 0x7c, 0xd3,
-	0xc6, 0xa4, 0xed, 0x73, 0x5d, 0x46, 0xd7, 0xb3, 0xbf, 0xfd, 0xe2, 0xea, 0x64, 0xb5, 0x2d, 0x98,
-	0x55, 0x45, 0x30, 0x54, 0x04, 0x7d, 0xdd, 0xf1, 0xfc, 0xa6, 0xa0, 0x66, 0xc2, 0xda, 0xae, 0x71,
-	0xaa, 0xb0, 0x91, 0x24, 0x61, 0x82, 0x21, 0x59, 0x98, 0x81, 0x2d, 0x7c, 0x9a, 0xb0, 0xd1, 0x24,
-	0x61, 0x82, 0x21, 0x41, 0x58, 0x05, 0x2c, 0x06, 0xd7, 0x44, 0xae, 0x1b, 0x17, 0x94, 0x4a, 0x10,
-	0x34, 0x27, 0x88, 0xcb, 0xae, 0x3b, 0x20, 0x24, 0xb8, 0xde, 0x90, 0x90, 0xb1, 0x24, 0x21, 0x82,
-	0x78, 0x58, 0x48, 0x70, 0xad, 0x21, 0x21, 0xe3, 0x49, 0x42, 0x04, 0x71, 0x5c, 0x48, 0xe1, 0xd9,
-	0x38, 0xc8, 0xed, 0x59, 0xc8, 0x3f, 0x24, 0xd4, 0xae, 0x10, 0xe7, 0xd0, 0x6c, 0xc1, 0x3f, 0x07,
-	0x8b, 0x3a, 0x71, 0x7c, 0x64, 0x3a, 0x98, 0x6a, 0x14, 0xb7, 0x4c, 0xcf, 0xa7, 0x5d, 0xcd, 0x45,
-	0xfe, 0x91, 0x08, 0x28, 0x75, 0xbe, 0x87, 0x56, 0x03, 0xec, 0x1e, 0xf2, 0x8f, 0xe0, 0x4d, 0xb0,
-	0x10, 0x06, 0x8e, 0xd6, 0xb1, 0x35, 0xd3, 0x46, 0x2d, 0x2c, 0xd8, 0x78, 0x68, 0xa9, 0xb3, 0x21,
-	0x76, 0xdf, 0xae, 0x33, 0x1c, 0x67, 0xba, 0x0e, 0x66, 0x1c, 0xe2, 0x9b, 0x87, 0x5d, 0x4d, 0xf7,
-	0xa9, 0xa5, 0x21, 0xc3, 0xa0, 0x1e, 0xf7, 0x48, 0x5a, 0x9d, 0x16, 0x88, 0x8a, 0x4f, 0xad, 0x32,
-	0x03, 0xc3, 0x2b, 0x00, 0x74, 0x50, 0xdb, 0xf2, 0x39, 0x15, 0xb7, 0x76, 0x5a, 0x4d, 0x73, 0x08,
-	0xc3, 0xc3, 0x02, 0x98, 0xf2, 0x2d, 0x4f, 0xd3, 0x31, 0xf5, 0xb5, 0x43, 0xd3, 0xc2, 0xdc, 0x94,
-	0x69, 0x35, 0xe3, 0x5b, 0x5e, 0x05, 0x53, 0x7f, 0xc3, 0xb4, 0x30, 0xbc, 0x03, 0x26, 0xb0, 0xd3,
-	0xd1, 0x3a, 0x88, 0x2a, 0xe3, 0xcb, 0xa3, 0xd7, 0x32, 0xab, 0xaf, 0xac, 0xf4, 0xb2, 0xc7, 0x4a,
-	0xdc, 0x0e, 0x2b, 0x35, 0xa7, 0xb3, 0x8f, 0x68, 0xcd, 0xf1, 0x69, 0x57, 0x1d, 0xc7, 0x7c, 0x03,
-	0x5f, 0x02, 0x59, 0x37, 0xa0, 0xd2, 0x7c, 0xd4, 0x52, 0x26, 0xc5, 0x11, 0x21, 0xac, 0x89, 0x5a,
-	0xf0, 0x12, 0x48, 0xfb, 0xd8, 0xf3, 0x35, 0x9b, 0x18, 0x58, 0x49, 0x2f, 0x4b, 0xd7, 0x26, 0xd5,
-	0x49, 0x06, 0xd8, 0x26, 0x06, 0x86, 0x10, 0xa4, 0x3c, 0x17, 0x39, 0x0a, 0xe0, 0x7c, 0x7c, 0xcd,
-	0x64, 0xea, 0x16, 0x46, 0x4e, 0xdb, 0x15, 0x3c, 0x19, 0xce, 0x93, 0x09, 0x60, 0x9c, 0x6d, 0x01,
-	0x8c, 0x33, 0x47, 0x10, 0x47, 0xc9, 0x72, 0xc6, 0x60, 0x07, 0x5f, 0x03, 0x32, 0x4b, 0x35, 0x98,
-	0xea, 0x26, 0xb2, 0xf8, 0xcd, 0x3d, 0x65, 0x8a, 0xb3, 0x4f, 0xf7, 0xe1, 0xec, 0xf2, 0x1e, 0x7c,
-	0x15, 0x4c, 0xb7, 0x3d, 0xac, 0x09, 0x03, 0x0a, 0xca, 0x1c, 0xa7, 0x9c, 0x6a, 0x7b, 0x78, 0x9f,
-	0x41, 0x05, 0x5d, 0x01, 0x4c, 0x45, 0xe8, 0x90, 0xa7, 0x4c, 0x0b, 0x75, 0x7a, 0x54, 0xc8, 0x83,
-	0xcb, 0x20, 0xcb, 0x42, 0xce, 0x70, 0x3c, 0x8d, 0x12, 0xe2, 0x2b, 0x32, 0x57, 0x0a, 0x20, 0xd7,
-	0xad, 0x3a, 0x9e, 0x4a, 0x88, 0x0f, 0xaf, 0x01, 0x59, 0x3f, 0xc2, 0x87, 0x9a, 0x87, 0x69, 0x07,
-	0x53, 0x11, 0x05, 0x33, 0x9c, 0x2a, 0xc7, 0xe0, 0x0d, 0x0e, 0xe6, 0x01, 0x70, 0x07, 0xcc, 0x71,
-	0x4a, 0xdd, 0x32, 0xb1, 0xe3, 0x6b, 0xa6, 0xe3, 0x63, 0xda, 0x41, 0x96, 0x02, 0x97, 0xa5, 0x6b,
-	0x63, 0x03, 0x21, 0x0c, 0x19, 0x65, 0x85, 0x13, 0xd6, 0x03, 0x3a, 0xf8, 0x0a, 0xc8, 0x19, 0xd8,
-	0xb5, 0x48, 0xd7, 0x66, 0xec, 0xcc, 0x27, 0xb3, 0xfc, 0x9c, 0xa9, 0x3e, 0x94, 0x79, 0x65, 0x19,
-	0x64, 0x59, 0x70, 0x3c, 0xc4, 0x5d, 0x11, 0x1b, 0x73, 0x42, 0x65, 0xdf, 0xf2, 0x36, 0x71, 0x97,
-	0x87, 0xc6, 0x12, 0xc8, 0xf0, 0xf0, 0x41, 0x82, 0x60, 0x5e, 0x84, 0x17, 0x0b, 0x1e, 0xc4, 0xf0,
-	0xf9, 0xbf, 0x00, 0x99, 0x48, 0x44, 0x40, 0x19, 0x8c, 0x3e, 0xc4, 0xdd, 0xe0, 0x45, 0xb0, 0x25,
-	0x9c, 0x03, 0x63, 0x1d, 0x64, 0xb5, 0x83, 0x4c, 0xaa, 0x8a, 0xcd, 0xda, 0xc8, 0x2d, 0xa9, 0xf0,
-	0x3b, 0x09, 0xe4, 0xc2, 0x3c, 0xad, 0x62, 0x6f, 0x1b, 0xb9, 0x70, 0xa5, 0xcf, 0x9e, 0x59, 0x5d,
-	0x88, 0x04, 0x61, 0x24, 0x9f, 0xaf, 0xa7, 0x9e, 0x7e, 0x71, 0xf5, 0x82, 0x10, 0xfe, 0x16, 0x98,
-	0xb0, 0x91, 0xeb, 0x9a, 0x4e, 0x4b, 0x19, 0xe1, 0x81, 0xfb, 0x6a, 0x02, 0x8f, 0x90, 0xbd, 0xb2,
-	0x2d, 0x08, 0x45, 0xe4, 0x86, 0x6c, 0xf9, 0x35, 0x90, 0x8d, 0x22, 0xce, 0x72, 0x81, 0xb5, 0x3b,
-	0xef, 0x9d, 0x28, 0xa5, 0xf0, 0xf9, 0xde, 0xde, 0xc4, 0xdd, 0x95, 0x1d, 0x64, 0xe3, 0x62, 0x08,
-	0xb9, 0x41, 0x68, 0x8b, 0x43, 0x77, 0x23, 0x85, 0xe5, 0x47, 0x27, 0xca, 0x44, 0x70, 0x60, 0xe1,
-	0x00, 0x64, 0xea, 0xce, 0x21, 0x45, 0x41, 0x86, 0x59, 0x05, 0xf3, 0xf8, 0xb1, 0x8f, 0xa9, 0x83,
-	0x2c, 0xcd, 0xc1, 0xfe, 0x23, 0x42, 0x1f, 0x6a, 0xbc, 0x06, 0x09, 0x65, 0x66, 0x43, 0xe4, 0x8e,
-	0xc0, 0xb1, 0xb3, 0xe0, 0x55, 0x90, 0x11, 0x45, 0x58, 0xeb, 0x57, 0x2b, 0x15, 0x08, 0x10, 0x23,
-	0x28, 0xfc, 0xf3, 0x0c, 0x98, 0x0c, 0x0d, 0xc1, 0x1e, 0xcc, 0xa1, 0x89, 0x2d, 0xc3, 0x53, 0xa4,
-	0xe5, 0x51, 0xf6, 0x60, 0xc4, 0x2e, 0x34, 0xfb, 0xc8, 0xb7, 0x35, 0xfb, 0x9b, 0x60, 0xd2, 0x22,
-	0xba, 0xa8, 0xa6, 0x63, 0x9c, 0xe9, 0xca, 0x8a, 0xc1, 0x52, 0x9e, 0x79, 0xd0, 0xf6, 0xb1, 0xa1,
-	0xf1, 0xba, 0xad, 0x89, 0xba, 0xbd, 0xb2, 0x45, 0xf4, 0x80, 0xb7, 0xc7, 0x04, 0x6f, 0x02, 0x60,
-	0xba, 0x9a, 0xd7, 0x76, 0x5d, 0x42, 0x45, 0x5e, 0xce, 0xad, 0xce, 0x45, 0xce, 0xad, 0xbb, 0x0d,
-	0x81, 0x53, 0xd3, 0x66, 0xb8, 0x64, 0x89, 0xce, 0x63, 0xad, 0x8b, 0xae, 0x99, 0xae, 0xa7, 0x4c,
-	0x88, 0x48, 0x14, 0x90, 0xba, 0xcb, 0x9f, 0xb2, 0xd3, 0xb6, 0x35, 0xa3, 0xeb, 0x20, 0x3b, 0xa0,
-	0x61, 0x79, 0x68, 0x4c, 0x9d, 0x72, 0xda, 0x76, 0x55, 0x40, 0x19, 0x5d, 0x0d, 0x64, 0x58, 0x41,
-	0xd0, 0x2c, 0x5e, 0xa0, 0x79, 0x2e, 0xca, 0xac, 0x2e, 0x45, 0x0e, 0x4f, 0x28, 0xe3, 0xc1, 0x05,
-	0x80, 0xdf, 0x2f, 0xec, 0xaf, 0x80, 0x71, 0x4c, 0x29, 0xa1, 0x9e, 0x02, 0x98, 0x2d, 0xd7, 0xa7,
-	0x3e, 0x3c, 0x56, 0xa4, 0x7f, 0xfb, 0xf8, 0xe2, 0x98, 0x43, 0x74, 0xdb, 0x55, 0x03, 0x24, 0x7c,
-	0x0b, 0x8c, 0x33, 0x15, 0xdb, 0x1e, 0x4f, 0x60, 0x99, 0xd5, 0xf9, 0xc8, 0x41, 0x0d, 0x8e, 0xa8,
-	0x3b, 0x87, 0x64, 0x7d, 0x26, 0xc6, 0xcd, 0x0f, 0x0b, 0xf8, 0xe0, 0x1b, 0x60, 0x8c, 0xad, 0x30,
-	0x4f, 0x72, 0xb9, 0xd5, 0xc5, 0x88, 0x80, 0x26, 0x45, 0xfa, 0x43, 0x6c, 0x30, 0x39, 0x78, 0x50,
-	0x01, 0xc1, 0x04, 0xef, 0x81, 0xac, 0x4e, 0x6d, 0x8d, 0x74, 0x30, 0xa5, 0xa6, 0x81, 0x79, 0x1e,
-	0xcc, 0xc5, 0x7d, 0xac, 0x6e, 0xef, 0x06, 0xd8, 0x41, 0x19, 0x19, 0x9d, 0xda, 0x21, 0x0e, 0xde,
-	0x02, 0x72, 0x24, 0xa5, 0x30, 0x57, 0x5a, 0x22, 0x57, 0x0e, 0x72, 0x4d, 0xf7, 0xc9, 0xb6, 0x18,
-	0x15, 0x7c, 0x03, 0x4c, 0xf5, 0xcb, 0x43, 0xd7, 0xc5, 0x3c, 0x79, 0xc6, 0x6f, 0x12, 0x16, 0x99,
-	0x66, 0xd7, 0xc5, 0x6a, 0xaf, 0x98, 0xb0, 0x1d, 0xfc, 0x33, 0x10, 0x94, 0x3c, 0xcd, 0xa3, 0x1d,
-	0x51, 0xe4, 0x78, 0x66, 0x5d, 0x4f, 0xf7, 0x8f, 0x9c, 0x12, 0x14, 0x0d, 0xda, 0xe1, 0x35, 0x6f,
-	0x15, 0x8c, 0x8b, 0x27, 0xc0, 0xb3, 0x6b, 0x26, 0x16, 0x5a, 0x1b, 0x1c, 0xd1, 0x0f, 0xe8, 0x80,
-	0x12, 0xbe, 0x0c, 0xa6, 0xdc, 0xa3, 0xae, 0x67, 0xea, 0xec, 0xf5, 0xb1, 0xb7, 0x04, 0x79, 0x80,
-	0x65, 0x43, 0x20, 0x7f, 0x6e, 0xb7, 0xfa, 0x85, 0x72, 0x96, 0xe7, 0x9b, 0xab, 0x09, 0x8f, 0x25,
-	0xb1, 0x44, 0xfe, 0x09, 0x98, 0xe9, 0xb7, 0x0f, 0x1d, 0x4c, 0x3d, 0xf6, 0x76, 0x44, 0xba, 0x95,
-	0x7b, 0x88, 0x7d, 0x01, 0x87, 0x55, 0x30, 0xae, 0xf3, 0x9c, 0xc0, 0xf3, 0x6d, 0x66, 0xf5, 0xe2,
-	0xa9, 0xe5, 0x38, 0x31, 0x70, 0x04, 0x2f, 0xbc, 0x07, 0x32, 0x14, 0x7b, 0x2c, 0xf9, 0x6b, 0x36,
-	0x72, 0x95, 0x05, 0xae, 0x70, 0x21, 0x49, 0x61, 0x15, 0x7b, 0x4d, 0xd4, 0xda, 0x46, 0x2e, 0xd7,
-	0x79, 0x3d, 0xc5, 0x64, 0xaa, 0x69, 0x1a, 0x42, 0x61, 0x15, 0x64, 0x90, 0xae, 0x63, 0xcf, 0x63,
-	0x37, 0xf7, 0x94, 0x45, 0x2e, 0xe9, 0xe5, 0x24, 0x49, 0x65, 0x4e, 0xb6, 0x8f, 0xa8, 0x27, 0xae,
-	0x0f, 0x50, 0x0f, 0xc0, 0xaa, 0x5f, 0xaf, 0x01, 0x0a, 0x2d, 0xa0, 0x88, 0xea, 0xd7, 0x11, 0xbd,
-	0x4f, 0x78, 0xff, 0xd7, 0x00, 0xe8, 0xc7, 0x90, 0x92, 0x1f, 0xf4, 0x76, 0x04, 0x09, 0x2b, 0x40,
-	0x36, 0x59, 0x0e, 0xd5, 0x90, 0x6b, 0x6a, 0xe2, 0x30, 0xe5, 0x12, 0x0f, 0xaf, 0xa8, 0xd1, 0x78,
-	0x9a, 0x2d, 0xbb, 0xa6, 0x50, 0x4f, 0xcd, 0x99, 0xb1, 0x3d, 0x7c, 0x13, 0x64, 0x85, 0x90, 0xc0,
-	0xea, 0x97, 0x87, 0x12, 0x61, 0x24, 0x4f, 0x07, 0x71, 0x93, 0x31, 0x23, 0xa9, 0xbb, 0x09, 0xa6,
-	0xa3, 0xe5, 0x9a, 0x25, 0xd3, 0x2b, 0xa7, 0xd6, 0xa3, 0x95, 0x4a, 0xaf, 0x5e, 0x6f, 0xe2, 0x6e,
-	0xd4, 0xe4, 0x53, 0x7a, 0x14, 0x03, 0xef, 0x81, 0x19, 0x1b, 0xb1, 0xd2, 0xef, 0x20, 0x47, 0xc7,
-	0x9a, 0xc8, 0x02, 0x4b, 0xfc, 0x72, 0x97, 0x22, 0x72, 0xb7, 0xfb, 0x34, 0x3c, 0x13, 0xa8, 0xb2,
-	0x3d, 0x00, 0x81, 0x75, 0xf0, 0x52, 0x98, 0x01, 0x34, 0x97, 0x58, 0xa6, 0xde, 0xd5, 0x86, 0xa3,
-	0xf1, 0x2a, 0x6f, 0x69, 0x96, 0x42, 0xc2, 0x3d, 0x4e, 0x57, 0x19, 0x8c, 0xcd, 0x45, 0x30, 0xd1,
-	0xb1, 0x35, 0x97, 0x10, 0x4b, 0x59, 0x16, 0x5d, 0x57, 0xc7, 0xde, 0x23, 0xc4, 0xfa, 0x0e, 0x9d,
-	0x40, 0xfe, 0x01, 0xc8, 0xc5, 0x43, 0x30, 0x81, 0xbb, 0x14, 0xe5, 0x8e, 0x3f, 0x09, 0xc1, 0xdb,
-	0x64, 0xa3, 0xe6, 0x26, 0xee, 0x46, 0x05, 0xdf, 0x06, 0xd3, 0x03, 0x11, 0x79, 0x26, 0xbd, 0xde,
-	0x02, 0x70, 0xd8, 0x57, 0x67, 0x6a, 0x11, 0xfe, 0x65, 0x84, 0x4d, 0x89, 0xbf, 0xfe, 0x5a, 0x91,
-	0xfe, 0xee, 0x58, 0x91, 0xde, 0x3d, 0x56, 0xa4, 0xff, 0x3c, 0x56, 0xa4, 0x8f, 0x8e, 0x15, 0xe9,
-	0xe9, 0xb1, 0x22, 0x7d, 0xca, 0xde, 0xee, 0x89, 0xf2, 0xbe, 0xb4, 0x15, 0x14, 0xc6, 0x95, 0x7b,
-	0x84, 0x9a, 0x4f, 0x98, 0xc9, 0xad, 0xb2, 0xae, 0xb7, 0x29, 0xd2, 0xbb, 0xc5, 0x1e, 0x6e, 0x1f,
-	0x53, 0x9f, 0x65, 0xa2, 0x61, 0x4c, 0x85, 0xb4, 0xa9, 0x87, 0xfb, 0xfb, 0x86, 0x8b, 0xb1, 0xd1,
-	0xdf, 0xb2, 0x3a, 0xe6, 0xf9, 0xc8, 0x76, 0x8b, 0xa2, 0xe2, 0x14, 0x45, 0xd4, 0x16, 0x77, 0xa2,
-	0x49, 0xb3, 0x18, 0xbb, 0x29, 0xa7, 0xc4, 0xc5, 0x1a, 0x2f, 0x62, 0xe7, 0x68, 0x73, 0x3e, 0x7e,
-	0xae, 0xc8, 0x0f, 0x71, 0xf7, 0x76, 0x14, 0x56, 0xf8, 0x89, 0x04, 0x32, 0x22, 0xfd, 0x6e, 0xb3,
-	0x06, 0xe1, 0xcc, 0xdd, 0xde, 0x40, 0xb3, 0x33, 0x3a, 0xd8, 0xec, 0xb0, 0x24, 0x8b, 0x3a, 0xc8,
-	0xb4, 0xd0, 0x81, 0x69, 0x99, 0x7e, 0x57, 0x7b, 0x42, 0x1c, 0x1c, 0x4c, 0x44, 0x72, 0x14, 0xf1,
-	0x0e, 0x71, 0xf0, 0x5a, 0xed, 0xbd, 0x13, 0xa5, 0x7c, 0xc6, 0x6b, 0x15, 0xc5, 0x61, 0xb7, 0x37,
-	0xfa, 0x0d, 0xd6, 0x0a, 0x90, 0x43, 0x75, 0xb7, 0x91, 0x63, 0x1e, 0x62, 0xcf, 0x87, 0x79, 0x30,
-	0x69, 0x07, 0xeb, 0x20, 0x24, 0x7a, 0xfb, 0xc2, 0xf7, 0x25, 0x90, 0xdd, 0xa3, 0xc4, 0xc5, 0xd4,
-	0xef, 0xb2, 0xd2, 0xcf, 0x86, 0x9f, 0x48, 0x97, 0xc7, 0xd7, 0x70, 0x19, 0x64, 0x0c, 0xec, 0xe9,
-	0xd4, 0x74, 0x79, 0x8f, 0x25, 0x64, 0x44, 0x41, 0xfd, 0x90, 0x1b, 0x8d, 0x84, 0x1c, 0x6b, 0xf0,
-	0x3c, 0xac, 0x53, 0x2c, 0xa6, 0xee, 0x49, 0x35, 0xd8, 0xc1, 0xcb, 0x20, 0x6d, 0x23, 0xc7, 0x40,
-	0x3e, 0xa1, 0x5d, 0xde, 0xb1, 0x4d, 0xaa, 0x7d, 0x00, 0x53, 0x97, 0x0f, 0x18, 0x0e, 0xb2, 0x78,
-	0x2f, 0x36, 0xa9, 0xf6, 0xf6, 0x85, 0x5f, 0x49, 0x60, 0x2a, 0xbc, 0x1f, 0x53, 0xdb, 0x1b, 0xae,
-	0xe6, 0xd2, 0x59, 0xaa, 0xf9, 0x3d, 0x00, 0x5c, 0x71, 0x7b, 0x13, 0x7b, 0x41, 0xd3, 0x7e, 0x2d,
-	0xc1, 0xf5, 0xfc, 0xac, 0x95, 0xbd, 0x1e, 0x69, 0x50, 0x4e, 0xfa, 0xbc, 0xf9, 0x7d, 0x30, 0x3d,
-	0x80, 0x4e, 0x78, 0x99, 0x37, 0xe2, 0x59, 0x23, 0xa6, 0x64, 0xc4, 0x09, 0xd1, 0xb1, 0xe4, 0x73,
-	0x09, 0x00, 0xe1, 0xdf, 0x53, 0xdd, 0xc3, 0x8c, 0xaf, 0xbb, 0x6d, 0x8f, 0x4b, 0x4d, 0xa9, 0x62,
-	0xc3, 0x4e, 0xa7, 0xc8, 0xe6, 0x0e, 0x49, 0xa9, 0x6c, 0xc9, 0x78, 0x0d, 0xd3, 0x7b, 0xc8, 0x9d,
-	0x91, 0x52, 0xf9, 0x1a, 0x56, 0xc0, 0x24, 0xbb, 0x04, 0x2f, 0xc9, 0x63, 0x43, 0x25, 0xb9, 0x7f,
-	0x30, 0xd7, 0x6f, 0xa0, 0x24, 0x4f, 0xb8, 0x02, 0xc6, 0xa6, 0x96, 0x28, 0xfa, 0x4c, 0x63, 0xd7,
-	0xeb, 0x60, 0x62, 0xb7, 0x51, 0x66, 0x4f, 0x20, 0xf1, 0x6e, 0x0b, 0xbd, 0x86, 0x55, 0x70, 0x06,
-	0xbb, 0x02, 0x65, 0x6c, 0xbc, 0x4a, 0x27, 0xb2, 0x41, 0x90, 0xf2, 0x51, 0x2b, 0x64, 0xe2, 0x6b,
-	0xb8, 0x14, 0xf3, 0x75, 0xf0, 0x5c, 0xfb, 0x10, 0xf6, 0x9e, 0x99, 0x49, 0x34, 0x16, 0x1c, 0xc8,
-	0x0f, 0x1e, 0x2a, 0x60, 0xa0, 0x0d, 0x0e, 0x29, 0xfc, 0x60, 0x1c, 0x64, 0xc3, 0x80, 0xe0, 0xce,
-	0xf8, 0x43, 0x0d, 0x30, 0x2b, 0x61, 0x4f, 0x3d, 0xca, 0x63, 0x57, 0x49, 0xe0, 0x10, 0xa5, 0x34,
-	0xe8, 0xa2, 0x5f, 0x05, 0xe9, 0xa0, 0x07, 0x35, 0x8d, 0xe0, 0x0f, 0xad, 0x48, 0x3f, 0x32, 0x29,
-	0x70, 0x75, 0x83, 0x35, 0x2e, 0xac, 0xae, 0x52, 0x62, 0x59, 0x98, 0x8a, 0x7f, 0x5a, 0x62, 0x8d,
-	0x4b, 0x1f, 0x09, 0x2f, 0x03, 0x40, 0x3c, 0xcd, 0x46, 0x8f, 0x35, 0x16, 0x34, 0xe3, 0x3c, 0x42,
-	0x26, 0x89, 0xb7, 0x8d, 0x1e, 0xab, 0xc8, 0x86, 0x05, 0x30, 0x15, 0x60, 0x3b, 0x3a, 0xa1, 0x58,
-	0x8c, 0x3b, 0x29, 0x35, 0xc3, 0x09, 0xf6, 0x39, 0x08, 0xbe, 0xd4, 0xa7, 0x21, 0x96, 0xd6, 0x3a,
-	0xe0, 0xe3, 0x4e, 0x4a, 0x05, 0x82, 0x86, 0x58, 0x77, 0x0f, 0x98, 0xbd, 0x82, 0x21, 0x25, 0x2d,
-	0xec, 0x15, 0x4c, 0x25, 0x25, 0x30, 0x21, 0x32, 0x99, 0x98, 0x5e, 0xe2, 0x63, 0x49, 0x3f, 0x06,
-	0xd5, 0x90, 0x0a, 0xde, 0xfc, 0x76, 0x63, 0x4c, 0x2a, 0x36, 0xb9, 0x24, 0xf6, 0xbc, 0xd9, 0x53,
-	0x7a, 0xde, 0x32, 0x80, 0x43, 0xb9, 0xdb, 0x53, 0xa6, 0xb8, 0x76, 0x30, 0x3a, 0x9d, 0x89, 0xd8,
-	0x55, 0x67, 0x06, 0x13, 0x3a, 0xbb, 0x55, 0x9a, 0x78, 0xa2, 0xc1, 0xf4, 0x94, 0x5c, 0x02, 0x27,
-	0x0f, 0x5f, 0x66, 0x65, 0xbe, 0xf0, 0xe0, 0x1a, 0xb8, 0xd8, 0xf7, 0x88, 0xa6, 0x23, 0xfd, 0x08,
-	0x6b, 0x14, 0xeb, 0xd8, 0xec, 0x60, 0x23, 0xf8, 0x87, 0x67, 0xb1, 0x4f, 0x50, 0x61, 0x78, 0x35,
-	0x40, 0x27, 0x37, 0x67, 0xf2, 0x39, 0x9a, 0xb3, 0xb5, 0x07, 0x83, 0x2d, 0xc2, 0x07, 0x41, 0x6b,
-	0xf0, 0xe5, 0xb1, 0x22, 0x9d, 0xaf, 0xf6, 0xa6, 0x1c, 0xe2, 0xe0, 0xc2, 0xcb, 0x60, 0xba, 0x57,
-	0x9a, 0xb0, 0x4f, 0x4d, 0x9d, 0xe7, 0xa8, 0x43, 0x42, 0x78, 0x64, 0xa6, 0x54, 0xb6, 0xbc, 0xfe,
-	0xee, 0x08, 0xc8, 0x46, 0xf3, 0x35, 0x5c, 0x00, 0x70, 0x6f, 0xab, 0xdc, 0xdc, 0xd8, 0x55, 0xb7,
-	0xb5, 0xe6, 0xdb, 0x7b, 0x35, 0x6d, 0xa3, 0xbc, 0x59, 0x93, 0x2f, 0x0c, 0xc3, 0xab, 0xf5, 0x9d,
-	0xaa, 0x2c, 0xc1, 0x4b, 0x60, 0x31, 0x0e, 0xdf, 0xdd, 0xab, 0xed, 0x34, 0x9a, 0xe5, 0xca, 0xa6,
-	0x3c, 0x02, 0x17, 0xc1, 0x6c, 0x1c, 0x59, 0x7e, 0xe7, 0xbe, 0x5a, 0x93, 0x47, 0xe1, 0x3c, 0x98,
-	0x89, 0x23, 0xee, 0x56, 0xf6, 0xe4, 0x14, 0xbc, 0x08, 0xe6, 0xe3, 0xe0, 0x5a, 0xf5, 0x6e, 0x6d,
-	0x7d, 0xf7, 0xaf, 0xe4, 0xb1, 0xe1, 0x73, 0x98, 0x5e, 0xf5, 0x9d, 0x0d, 0xb5, 0x2c, 0x8f, 0x0f,
-	0xf3, 0xed, 0x37, 0xf6, 0xee, 0xd5, 0xd4, 0x9a, 0x3c, 0x31, 0x7c, 0x52, 0xf9, 0x41, 0x43, 0x9e,
-	0x4c, 0xe0, 0xd8, 0xd6, 0xf6, 0x76, 0x77, 0xb7, 0xe4, 0xf4, 0xf5, 0x35, 0x90, 0x8b, 0x0f, 0x0c,
-	0x70, 0x06, 0x4c, 0x55, 0xeb, 0x6a, 0xad, 0xd2, 0xd4, 0xca, 0x95, 0x4a, 0xad, 0xd1, 0x90, 0x2f,
-	0x30, 0xb1, 0x6a, 0xad, 0xd1, 0x54, 0xeb, 0x95, 0x66, 0xad, 0x1a, 0x82, 0xa5, 0xeb, 0xd1, 0x7a,
-	0x29, 0x7a, 0xef, 0x3c, 0x58, 0xa8, 0x6c, 0xed, 0xde, 0xaf, 0x6e, 0xd5, 0x9a, 0x5a, 0xa3, 0x59,
-	0x6e, 0xd6, 0xb4, 0xfb, 0x3b, 0x9b, 0x3b, 0xbb, 0x0f, 0x76, 0xe4, 0x0b, 0x4c, 0x89, 0x01, 0x5c,
-	0x4d, 0x55, 0x77, 0xd5, 0x86, 0x2c, 0x41, 0x05, 0xcc, 0x0d, 0xa0, 0xd4, 0x5a, 0xb9, 0xfa, 0xb6,
-	0x3c, 0x92, 0x20, 0x70, 0x77, 0x63, 0x63, 0xab, 0xbe, 0xc3, 0xcc, 0xba, 0x04, 0xf2, 0x03, 0xb8,
-	0x9d, 0xdd, 0xa6, 0xb6, 0xa7, 0xd6, 0x1a, 0xb5, 0x9d, 0xa6, 0x9c, 0x62, 0xfe, 0x18, 0xc0, 0xd7,
-	0x77, 0xea, 0x4d, 0x79, 0x2c, 0x49, 0xcb, 0xbd, 0xbb, 0x6a, 0xb9, 0x5a, 0x93, 0xc7, 0xe1, 0x65,
-	0xa0, 0x0c, 0x0a, 0xad, 0xd5, 0xaa, 0x5a, 0xe3, 0xed, 0x9d, 0x8a, 0x3c, 0xb1, 0xfa, 0xb3, 0x6c,
-	0xff, 0x73, 0x4b, 0xd9, 0x35, 0xe1, 0xe7, 0x12, 0xc8, 0x55, 0x82, 0x2f, 0x18, 0xc1, 0xff, 0x4e,
-	0xb3, 0x09, 0xf9, 0x35, 0x3f, 0x13, 0xef, 0xe0, 0xdb, 0x96, 0x5f, 0xf8, 0x40, 0xfa, 0xea, 0x58,
-	0x29, 0xa9, 0xd8, 0x23, 0x6d, 0xaa, 0xf7, 0xd8, 0xbd, 0x62, 0x59, 0x67, 0x71, 0xbd, 0x8d, 0x1c,
-	0xd4, 0xc2, 0xc5, 0xc1, 0x70, 0xff, 0xf0, 0x44, 0x91, 0x9e, 0x9d, 0x28, 0xab, 0x3b, 0xd1, 0x7f,
-	0x79, 0xfa, 0xcd, 0xef, 0x16, 0xf2, 0x4d, 0xbf, 0x6d, 0x44, 0xba, 0xe3, 0x2d, 0xe2, 0xb4, 0x38,
-	0xe8, 0x9f, 0x9e, 0x2b, 0xd2, 0xf7, 0x9e, 0x2b, 0xf2, 0xa0, 0xc4, 0x7f, 0xf8, 0xe9, 0x2f, 0xfe,
-	0x7d, 0x64, 0xbe, 0x20, 0x97, 0xc4, 0x57, 0x8a, 0xde, 0xfb, 0x5b, 0x93, 0xae, 0xff, 0xa9, 0x04,
-	0xff, 0x55, 0x02, 0xb9, 0x6a, 0xf0, 0x1d, 0xe4, 0x8c, 0xf7, 0xbb, 0x7f, 0xce, 0xeb, 0x31, 0x45,
-	0xb9, 0x52, 0x73, 0x85, 0xe9, 0x92, 0xf8, 0x60, 0x21, 0x94, 0x0a, 0x75, 0xfa, 0xe1, 0x08, 0xc8,
-	0xdd, 0x0f, 0x3e, 0xf4, 0x9c, 0x51, 0xa7, 0xbf, 0x1f, 0x39, 0xa7, 0x52, 0x9f, 0x9d, 0x28, 0xff,
-	0x2f, 0x45, 0x33, 0x47, 0xb1, 0x1a, 0xff, 0xdf, 0xa7, 0x28, 0x0a, 0x49, 0x71, 0x2f, 0xf2, 0x0f,
-	0x4a, 0x71, 0x70, 0x9e, 0x2c, 0xf6, 0x06, 0xbf, 0xe2, 0x7e, 0xec, 0x4f, 0x80, 0x88, 0xb4, 0x62,
-	0xfc, 0x35, 0x16, 0x23, 0xc3, 0x78, 0x71, 0xf7, 0x85, 0xd3, 0x6a, 0x71, 0x9f, 0xcf, 0xa6, 0x3d,
-	0xfb, 0x31, 0xa7, 0x8a, 0xaf, 0x46, 0x03, 0x4e, 0x7d, 0x02, 0xb2, 0x8d, 0x23, 0xf2, 0xe8, 0xc5,
-	0xd6, 0x4b, 0x02, 0x16, 0xee, 0x7c, 0x75, 0xac, 0x5c, 0x39, 0xcd, 0x7c, 0xfb, 0x26, 0x7e, 0x54,
-	0xfc, 0xf4, 0x24, 0x38, 0x7d, 0xb6, 0x90, 0x2b, 0x79, 0x47, 0xe4, 0xd1, 0xc0, 0xd9, 0xff, 0x23,
-	0x81, 0xd9, 0xbb, 0xd8, 0x1f, 0x9a, 0x22, 0x12, 0x75, 0xb8, 0x94, 0x00, 0x0c, 0x39, 0x0a, 0xcd,
-	0x73, 0xb8, 0x92, 0x6b, 0x76, 0xa9, 0xb0, 0x50, 0x6a, 0x61, 0xbf, 0xa7, 0x58, 0x29, 0x1c, 0x57,
-	0xd6, 0xa4, 0xeb, 0xf0, 0xff, 0x24, 0x20, 0x47, 0xf4, 0x13, 0x53, 0x80, 0x72, 0x5a, 0xcf, 0x9e,
-	0x3f, 0x15, 0x53, 0xf8, 0xeb, 0x6f, 0x34, 0xd5, 0x67, 0x27, 0x0a, 0xe8, 0x37, 0xf5, 0xcf, 0x4e,
-	0x94, 0x58, 0x69, 0xe2, 0xaa, 0x2a, 0x85, 0xd9, 0xb8, 0xaa, 0xac, 0xa1, 0xf4, 0x98, 0x9e, 0xff,
-	0x25, 0x81, 0xf9, 0xb2, 0x61, 0xc4, 0xff, 0xf6, 0x77, 0x4d, 0xa7, 0x05, 0x2f, 0x9e, 0xfa, 0x55,
-	0x20, 0xe9, 0x45, 0xa8, 0xe7, 0xb5, 0xe2, 0xc5, 0xc2, 0x5c, 0x09, 0x19, 0x46, 0xf0, 0x69, 0x21,
-	0xea, 0x65, 0xf8, 0xdf, 0x12, 0x50, 0x54, 0x6c, 0x93, 0x0e, 0xfe, 0xce, 0xea, 0xfd, 0xe5, 0x79,
-	0xd5, 0x63, 0x96, 0xa3, 0x76, 0x92, 0x76, 0xff, 0x21, 0x81, 0xe9, 0x0d, 0xd3, 0x31, 0xa2, 0xc3,
-	0xf9, 0xc2, 0x50, 0x47, 0xc8, 0xe1, 0xf9, 0x53, 0xe0, 0x5c, 0xad, 0x1b, 0x2f, 0x74, 0x6e, 0xa2,
-	0x52, 0xf9, 0xc2, 0x7c, 0xe9, 0xd0, 0x74, 0x92, 0x8c, 0xb6, 0xfa, 0xbf, 0xa3, 0xfd, 0x06, 0x86,
-	0xb5, 0x97, 0xac, 0xba, 0xbc, 0x2f, 0x01, 0x39, 0xfa, 0x52, 0xf9, 0x58, 0xb0, 0x98, 0x60, 0x40,
-	0x86, 0xc8, 0x9f, 0x86, 0x28, 0xec, 0x7f, 0x75, 0xac, 0xbc, 0x3e, 0xa8, 0x6d, 0xd9, 0x41, 0x56,
-	0xd7, 0x37, 0xf5, 0x6f, 0xd6, 0x7a, 0xb1, 0x00, 0xe3, 0x2f, 0xd9, 0x74, 0x0e, 0x89, 0x78, 0xcd,
-	0x6d, 0x00, 0xeb, 0xce, 0xdf, 0x60, 0xdd, 0xff, 0x76, 0x1a, 0x26, 0x38, 0xf8, 0xe6, 0x39, 0x1c,
-	0x0c, 0x7d, 0x30, 0x53, 0xeb, 0x98, 0x7f, 0xe4, 0x53, 0x57, 0xff, 0x51, 0x02, 0x70, 0xa0, 0xc5,
-	0x64, 0x4e, 0xfa, 0x5b, 0x30, 0x1b, 0xf5, 0x51, 0xd8, 0x7c, 0xe6, 0x93, 0x72, 0x97, 0xc0, 0xe5,
-	0x5f, 0x80, 0x2b, 0x2c, 0xf7, 0x22, 0x25, 0x66, 0x73, 0x5b, 0xa0, 0xb9, 0xd9, 0xd7, 0xe5, 0xa7,
-	0x3f, 0x5f, 0xba, 0xf0, 0xf4, 0xd9, 0x92, 0xf4, 0xe9, 0xb3, 0x25, 0xe9, 0xcb, 0x67, 0x4b, 0xd2,
-	0xc1, 0x38, 0x17, 0x76, 0xf3, 0xf7, 0x01, 0x00, 0x00, 0xff, 0xff, 0x71, 0xe8, 0xe9, 0x90, 0x19,
-	0x23, 0x00, 0x00,
-}

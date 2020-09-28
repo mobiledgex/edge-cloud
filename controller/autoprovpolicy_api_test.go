@@ -32,6 +32,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache, &appInstInfoApi, &clusterInstInfoApi)
 	reduceInfoTimeouts(t, ctx)
 	InfluxUsageUnitTestSetup(t)
+	defer InfluxUsageUnitTestStop()
 
 	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)
 

@@ -3,37 +3,44 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-import google_protobuf1 "github.com/gogo/protobuf/types"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "errors"
-import "strconv"
-import "time"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	"errors"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	types "github.com/gogo/protobuf/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	"strconv"
+	strings "strings"
+	"time"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // VM State
 //
@@ -66,6 +73,7 @@ var VMState_name = map[int32]string{
 	5: "VM_UPDATE",
 	6: "VM_FORCE_FREE",
 }
+
 var VMState_value = map[string]int32{
 	"VM_FREE":        0,
 	"VM_IN_PROGRESS": 1,
@@ -79,7 +87,10 @@ var VMState_value = map[string]int32{
 func (x VMState) String() string {
 	return proto.EnumName(VMState_name, int32(x))
 }
-func (VMState) EnumDescriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{0} }
+
+func (VMState) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{0}
+}
 
 // VM Action
 //
@@ -100,6 +111,7 @@ var VMAction_name = map[int32]string{
 	1: "VM_ACTION_ALLOCATE",
 	2: "VM_ACTION_RELEASE",
 }
+
 var VMAction_value = map[string]int32{
 	"VM_ACTION_DONE":     0,
 	"VM_ACTION_ALLOCATE": 1,
@@ -109,7 +121,10 @@ var VMAction_value = map[string]int32{
 func (x VMAction) String() string {
 	return proto.EnumName(VMAction_name, int32(x))
 }
-func (VMAction) EnumDescriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{1} }
+
+func (VMAction) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{1}
+}
 
 type VMNetInfo struct {
 	// External IP
@@ -118,32 +133,88 @@ type VMNetInfo struct {
 	InternalIp string `protobuf:"bytes,2,opt,name=internal_ip,json=internalIp,proto3" json:"internal_ip,omitempty"`
 }
 
-func (m *VMNetInfo) Reset()                    { *m = VMNetInfo{} }
-func (m *VMNetInfo) String() string            { return proto.CompactTextString(m) }
-func (*VMNetInfo) ProtoMessage()               {}
-func (*VMNetInfo) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{0} }
+func (m *VMNetInfo) Reset()         { *m = VMNetInfo{} }
+func (m *VMNetInfo) String() string { return proto.CompactTextString(m) }
+func (*VMNetInfo) ProtoMessage()    {}
+func (*VMNetInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{0}
+}
+func (m *VMNetInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VMNetInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VMNetInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VMNetInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VMNetInfo.Merge(m, src)
+}
+func (m *VMNetInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *VMNetInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_VMNetInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VMNetInfo proto.InternalMessageInfo
 
 type VM struct {
 	// VM Name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// VM IP
-	NetInfo VMNetInfo `protobuf:"bytes,2,opt,name=net_info,json=netInfo" json:"net_info"`
+	NetInfo VMNetInfo `protobuf:"bytes,2,opt,name=net_info,json=netInfo,proto3" json:"net_info"`
 	// VM Group Name
 	GroupName string `protobuf:"bytes,3,opt,name=group_name,json=groupName,proto3" json:"group_name,omitempty"`
 	// VM State
 	State VMState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.VMState" json:"state,omitempty"`
 	// Last updated time
-	UpdatedAt google_protobuf1.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt" json:"updated_at"`
+	UpdatedAt types.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at"`
 	// VM Internal Name
 	InternalName string `protobuf:"bytes,6,opt,name=internal_name,json=internalName,proto3" json:"internal_name,omitempty"`
 	// VM Flavor
-	Flavor *FlavorInfo `protobuf:"bytes,7,opt,name=flavor" json:"flavor,omitempty"`
+	Flavor *FlavorInfo `protobuf:"bytes,7,opt,name=flavor,proto3" json:"flavor,omitempty"`
 }
 
-func (m *VM) Reset()                    { *m = VM{} }
-func (m *VM) String() string            { return proto.CompactTextString(m) }
-func (*VM) ProtoMessage()               {}
-func (*VM) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{1} }
+func (m *VM) Reset()         { *m = VM{} }
+func (m *VM) String() string { return proto.CompactTextString(m) }
+func (*VM) ProtoMessage()    {}
+func (*VM) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{1}
+}
+func (m *VM) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VM) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VM.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VM) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VM.Merge(m, src)
+}
+func (m *VM) XXX_Size() int {
+	return m.Size()
+}
+func (m *VM) XXX_DiscardUnknown() {
+	xxx_messageInfo_VM.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VM proto.InternalMessageInfo
 
 // VMPool unique key
 //
@@ -155,48 +226,132 @@ type VMPoolKey struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *VMPoolKey) Reset()                    { *m = VMPoolKey{} }
-func (m *VMPoolKey) String() string            { return proto.CompactTextString(m) }
-func (*VMPoolKey) ProtoMessage()               {}
-func (*VMPoolKey) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{2} }
+func (m *VMPoolKey) Reset()         { *m = VMPoolKey{} }
+func (m *VMPoolKey) String() string { return proto.CompactTextString(m) }
+func (*VMPoolKey) ProtoMessage()    {}
+func (*VMPoolKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{2}
+}
+func (m *VMPoolKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VMPoolKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VMPoolKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VMPoolKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VMPoolKey.Merge(m, src)
+}
+func (m *VMPoolKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *VMPoolKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_VMPoolKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VMPoolKey proto.InternalMessageInfo
 
 // VMPool defines a pool of VMs to be part of a Cloudlet
 type VMPool struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// VMPool Key
-	Key VMPoolKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key VMPoolKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// list of VMs to be part of VM pool
-	Vms []VM `protobuf:"bytes,3,rep,name=vms" json:"vms"`
+	Vms []VM `protobuf:"bytes,3,rep,name=vms,proto3" json:"vms"`
 	// Current state of the VM pool
 	State TrackedState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
 	// Any errors trying to add/remove VM to/from VM Pool
-	Errors []string `protobuf:"bytes,5,rep,name=errors" json:"errors,omitempty"`
+	Errors []string `protobuf:"bytes,5,rep,name=errors,proto3" json:"errors,omitempty"`
 	// status is used to reflect progress of creation or other events
-	Status StatusInfo `protobuf:"bytes,6,opt,name=status" json:"status"`
+	Status StatusInfo `protobuf:"bytes,6,opt,name=status,proto3" json:"status"`
 	// Override actions to CRM
 	CrmOverride CRMOverride `protobuf:"varint,7,opt,name=crm_override,json=crmOverride,proto3,enum=edgeproto.CRMOverride" json:"crm_override,omitempty"`
 }
 
-func (m *VMPool) Reset()                    { *m = VMPool{} }
-func (m *VMPool) String() string            { return proto.CompactTextString(m) }
-func (*VMPool) ProtoMessage()               {}
-func (*VMPool) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{3} }
+func (m *VMPool) Reset()         { *m = VMPool{} }
+func (m *VMPool) String() string { return proto.CompactTextString(m) }
+func (*VMPool) ProtoMessage()    {}
+func (*VMPool) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{3}
+}
+func (m *VMPool) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VMPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VMPool.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VMPool) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VMPool.Merge(m, src)
+}
+func (m *VMPool) XXX_Size() int {
+	return m.Size()
+}
+func (m *VMPool) XXX_DiscardUnknown() {
+	xxx_messageInfo_VMPool.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VMPool proto.InternalMessageInfo
 
 // VMPoolMember is used to add and remove VM from VM Pool
 type VMPoolMember struct {
 	// VMPool key
-	Key VMPoolKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key VMPoolKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// VM part of VM Pool
-	Vm VM `protobuf:"bytes,2,opt,name=vm" json:"vm"`
+	Vm VM `protobuf:"bytes,2,opt,name=vm,proto3" json:"vm"`
 	// Override actions to CRM
 	CrmOverride CRMOverride `protobuf:"varint,3,opt,name=crm_override,json=crmOverride,proto3,enum=edgeproto.CRMOverride" json:"crm_override,omitempty"`
 }
 
-func (m *VMPoolMember) Reset()                    { *m = VMPoolMember{} }
-func (m *VMPoolMember) String() string            { return proto.CompactTextString(m) }
-func (*VMPoolMember) ProtoMessage()               {}
-func (*VMPoolMember) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{4} }
+func (m *VMPoolMember) Reset()         { *m = VMPoolMember{} }
+func (m *VMPoolMember) String() string { return proto.CompactTextString(m) }
+func (*VMPoolMember) ProtoMessage()    {}
+func (*VMPoolMember) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{4}
+}
+func (m *VMPoolMember) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VMPoolMember) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VMPoolMember.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VMPoolMember) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VMPoolMember.Merge(m, src)
+}
+func (m *VMPoolMember) XXX_Size() int {
+	return m.Size()
+}
+func (m *VMPoolMember) XXX_DiscardUnknown() {
+	xxx_messageInfo_VMPoolMember.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VMPoolMember proto.InternalMessageInfo
 
 // VMSpec defines the specification of VM required by CRM
 type VMSpec struct {
@@ -207,38 +362,96 @@ type VMSpec struct {
 	// VM has internal network defined or not
 	InternalNetwork bool `protobuf:"varint,3,opt,name=internal_network,json=internalNetwork,proto3" json:"internal_network,omitempty"`
 	// VM flavor
-	Flavor Flavor `protobuf:"bytes,4,opt,name=flavor" json:"flavor"`
+	Flavor Flavor `protobuf:"bytes,4,opt,name=flavor,proto3" json:"flavor"`
 }
 
-func (m *VMSpec) Reset()                    { *m = VMSpec{} }
-func (m *VMSpec) String() string            { return proto.CompactTextString(m) }
-func (*VMSpec) ProtoMessage()               {}
-func (*VMSpec) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{5} }
+func (m *VMSpec) Reset()         { *m = VMSpec{} }
+func (m *VMSpec) String() string { return proto.CompactTextString(m) }
+func (*VMSpec) ProtoMessage()    {}
+func (*VMSpec) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{5}
+}
+func (m *VMSpec) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VMSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VMSpec.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VMSpec) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VMSpec.Merge(m, src)
+}
+func (m *VMSpec) XXX_Size() int {
+	return m.Size()
+}
+func (m *VMSpec) XXX_DiscardUnknown() {
+	xxx_messageInfo_VMSpec.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VMSpec proto.InternalMessageInfo
 
 // VMPoolInfo is used to manage VM pool from Cloudlet
 type VMPoolInfo struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key VMPoolKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key VMPoolKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 	// list of VMs
-	Vms []VM `protobuf:"bytes,4,rep,name=vms" json:"vms"`
+	Vms []VM `protobuf:"bytes,4,rep,name=vms,proto3" json:"vms"`
 	// Current state of the VM pool on the Cloudlet
 	State TrackedState `protobuf:"varint,5,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
 	// Any errors trying to add/remove VM to/from VM Pool
-	Errors []string `protobuf:"bytes,6,rep,name=errors" json:"errors,omitempty"`
+	Errors []string `protobuf:"bytes,6,rep,name=errors,proto3" json:"errors,omitempty"`
 	// status is used to reflect progress of creation or other events
-	Status StatusInfo `protobuf:"bytes,7,opt,name=status" json:"status"`
+	Status StatusInfo `protobuf:"bytes,7,opt,name=status,proto3" json:"status"`
 }
 
-func (m *VMPoolInfo) Reset()                    { *m = VMPoolInfo{} }
-func (m *VMPoolInfo) String() string            { return proto.CompactTextString(m) }
-func (*VMPoolInfo) ProtoMessage()               {}
-func (*VMPoolInfo) Descriptor() ([]byte, []int) { return fileDescriptorVmpool, []int{6} }
+func (m *VMPoolInfo) Reset()         { *m = VMPoolInfo{} }
+func (m *VMPoolInfo) String() string { return proto.CompactTextString(m) }
+func (*VMPoolInfo) ProtoMessage()    {}
+func (*VMPoolInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5168f4b4bc6cb855, []int{6}
+}
+func (m *VMPoolInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VMPoolInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VMPoolInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VMPoolInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VMPoolInfo.Merge(m, src)
+}
+func (m *VMPoolInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *VMPoolInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_VMPoolInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VMPoolInfo proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterEnum("edgeproto.VMState", VMState_name, VMState_value)
+	proto.RegisterEnum("edgeproto.VMAction", VMAction_name, VMAction_value)
 	proto.RegisterType((*VMNetInfo)(nil), "edgeproto.VMNetInfo")
 	proto.RegisterType((*VM)(nil), "edgeproto.VM")
 	proto.RegisterType((*VMPoolKey)(nil), "edgeproto.VMPoolKey")
@@ -246,9 +459,100 @@ func init() {
 	proto.RegisterType((*VMPoolMember)(nil), "edgeproto.VMPoolMember")
 	proto.RegisterType((*VMSpec)(nil), "edgeproto.VMSpec")
 	proto.RegisterType((*VMPoolInfo)(nil), "edgeproto.VMPoolInfo")
-	proto.RegisterEnum("edgeproto.VMState", VMState_name, VMState_value)
-	proto.RegisterEnum("edgeproto.VMAction", VMAction_name, VMAction_value)
 }
+
+func init() { proto.RegisterFile("vmpool.proto", fileDescriptor_5168f4b4bc6cb855) }
+
+var fileDescriptor_5168f4b4bc6cb855 = []byte{
+	// 1373 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4f, 0x6c, 0x1b, 0xc5,
+	0x17, 0xf6, 0xd8, 0x8e, 0x13, 0x4f, 0x9c, 0xd4, 0x9e, 0x36, 0xe9, 0xfc, 0xa2, 0xd6, 0x89, 0x5c,
+	0xf5, 0xa7, 0x50, 0x1c, 0x2f, 0x04, 0x55, 0xa0, 0x88, 0x1e, 0xec, 0x64, 0x5b, 0xac, 0xc6, 0x76,
+	0xb4, 0x4e, 0xcd, 0xd1, 0xda, 0x78, 0x27, 0xee, 0x2a, 0xde, 0x9d, 0x65, 0x77, 0xed, 0x34, 0x1c,
+	0x10, 0xea, 0x0d, 0x89, 0x43, 0x15, 0x2e, 0xa8, 0x07, 0xc4, 0x05, 0x09, 0x71, 0x01, 0x55, 0x1c,
+	0x50, 0x0f, 0x9c, 0x73, 0x42, 0x95, 0x10, 0x12, 0x42, 0x08, 0x95, 0x94, 0x03, 0xea, 0x09, 0xa9,
+	0x4e, 0xc4, 0x11, 0xed, 0xcc, 0xac, 0xff, 0xc4, 0x46, 0x4a, 0x4c, 0x2f, 0xd1, 0xcc, 0x7b, 0xdf,
+	0xcc, 0x7c, 0xf3, 0x7d, 0x2f, 0x6f, 0xd6, 0x30, 0xd6, 0x32, 0x2c, 0x4a, 0x1b, 0x19, 0xcb, 0xa6,
+	0x2e, 0x45, 0x51, 0xa2, 0xd5, 0x09, 0x1b, 0xce, 0x5d, 0xaa, 0x53, 0x5a, 0x6f, 0x10, 0x49, 0xb5,
+	0x74, 0x49, 0x35, 0x4d, 0xea, 0xaa, 0xae, 0x4e, 0x4d, 0x87, 0x03, 0xe7, 0xde, 0xaa, 0xeb, 0xee,
+	0xdd, 0xe6, 0x56, 0xa6, 0x46, 0x0d, 0xc9, 0xa0, 0x5b, 0x7a, 0xc3, 0x5b, 0x78, 0x4f, 0xf2, 0xfe,
+	0x2e, 0xd5, 0x1a, 0xb4, 0xa9, 0x49, 0x0c, 0x57, 0x27, 0x66, 0x67, 0x20, 0x56, 0xc6, 0x6c, 0xe2,
+	0x34, 0x1b, 0xae, 0x3f, 0xab, 0x51, 0xc3, 0xa0, 0x7e, 0x6e, 0x9a, 0x2d, 0x6d, 0x90, 0x4e, 0x76,
+	0xbb, 0xa1, 0xb6, 0xa8, 0x2d, 0x66, 0x17, 0xea, 0xb4, 0x4e, 0xd9, 0x50, 0xf2, 0x46, 0x22, 0x3a,
+	0x2f, 0x78, 0xb2, 0xd9, 0x56, 0x73, 0x5b, 0x72, 0x75, 0x83, 0x38, 0xae, 0x6a, 0x58, 0x1c, 0x90,
+	0x2a, 0xc0, 0x68, 0xa5, 0x50, 0x24, 0x6e, 0xde, 0xdc, 0xa6, 0x68, 0x1e, 0x4e, 0x92, 0x7b, 0x2e,
+	0xb1, 0x4d, 0xb5, 0x51, 0xd5, 0x2d, 0x0c, 0x16, 0xc0, 0x62, 0x54, 0x81, 0x7e, 0x28, 0x6f, 0x79,
+	0x00, 0xdd, 0xec, 0x02, 0x82, 0x1c, 0xe0, 0x87, 0xf2, 0x56, 0xea, 0xfb, 0x20, 0x0c, 0x56, 0x0a,
+	0x08, 0xc1, 0xb0, 0xa9, 0x1a, 0x44, 0xec, 0xc0, 0xc6, 0xe8, 0x3a, 0x9c, 0x30, 0x89, 0x5b, 0xd5,
+	0xcd, 0x6d, 0xca, 0x16, 0x4e, 0x2e, 0x5f, 0xc8, 0x74, 0x04, 0xcd, 0x74, 0x48, 0xe4, 0xc2, 0x07,
+	0xbf, 0xcd, 0x07, 0x94, 0x71, 0x53, 0x70, 0xba, 0x0c, 0x61, 0xdd, 0xa6, 0x4d, 0xab, 0xca, 0x36,
+	0x0c, 0xb1, 0x0d, 0xa3, 0x2c, 0x52, 0xf4, 0x76, 0x5d, 0x84, 0x63, 0x8e, 0xab, 0xba, 0x04, 0x87,
+	0x17, 0xc0, 0xe2, 0xf4, 0x32, 0xea, 0xdb, 0xb2, 0xec, 0x65, 0x14, 0x0e, 0x40, 0x1b, 0x10, 0x36,
+	0x2d, 0x4d, 0x75, 0x89, 0x56, 0x55, 0x5d, 0x3c, 0xc6, 0x18, 0xcc, 0x65, 0xb8, 0x3e, 0x19, 0x5f,
+	0x9f, 0xcc, 0xa6, 0xaf, 0x4f, 0x6e, 0xe6, 0xcb, 0x36, 0x06, 0xfb, 0x8f, 0xfe, 0x17, 0xed, 0x48,
+	0xc6, 0x88, 0x45, 0xc5, 0x26, 0x59, 0x17, 0x5d, 0x81, 0x53, 0x1d, 0x35, 0x18, 0xbb, 0x08, 0x63,
+	0x17, 0xf3, 0x83, 0x8c, 0xe0, 0x12, 0x8c, 0x70, 0x9f, 0xf0, 0x38, 0x3b, 0x72, 0xa6, 0x87, 0xe1,
+	0x4d, 0x96, 0xf0, 0xae, 0xa9, 0x08, 0x50, 0xaa, 0xe1, 0xf9, 0xb1, 0x41, 0x69, 0xe3, 0x36, 0xd9,
+	0x43, 0xaf, 0xc3, 0x18, 0xb5, 0xeb, 0xaa, 0xa9, 0xbf, 0xcf, 0xca, 0x8b, 0xcb, 0x99, 0x9b, 0x7a,
+	0x7c, 0x8c, 0xa3, 0xbc, 0x30, 0xa9, 0x5d, 0x57, 0xfa, 0x20, 0x28, 0x29, 0x94, 0x67, 0xd6, 0xe4,
+	0xe0, 0xe3, 0x63, 0x1c, 0xe1, 0x50, 0xee, 0xc2, 0x4a, 0xec, 0xcf, 0x17, 0x18, 0xfc, 0xfd, 0x02,
+	0x83, 0x6f, 0x3e, 0x9f, 0x07, 0xa9, 0xef, 0xc2, 0x30, 0xc2, 0x8f, 0x43, 0xb3, 0x30, 0xb2, 0xad,
+	0x93, 0x86, 0xe6, 0x60, 0xb0, 0x10, 0x5a, 0x8c, 0x2a, 0x62, 0x86, 0xd2, 0x30, 0xb4, 0x43, 0xf6,
+	0x86, 0x3a, 0x26, 0x68, 0x0a, 0xc7, 0x3c, 0x18, 0xba, 0x0a, 0x43, 0x2d, 0xc3, 0xc1, 0xa1, 0x85,
+	0xd0, 0xe2, 0xe4, 0xf2, 0x54, 0x1f, 0xda, 0x87, 0xb5, 0x0c, 0x07, 0xbd, 0xdd, 0xef, 0xda, 0xc5,
+	0x1e, 0xe0, 0xa6, 0xad, 0xd6, 0x76, 0x88, 0xc6, 0xac, 0xcb, 0x4d, 0x09, 0x0f, 0xc6, 0x4c, 0x5a,
+	0x33, 0x2c, 0xdf, 0xc9, 0xab, 0x30, 0x42, 0x6c, 0x9b, 0xda, 0x0e, 0x1e, 0xf3, 0xa8, 0x9e, 0x44,
+	0x89, 0x24, 0x7a, 0x13, 0x46, 0x3c, 0x7c, 0xd3, 0x61, 0xbe, 0xf4, 0x2b, 0x5f, 0x66, 0x09, 0x56,
+	0x6f, 0x13, 0xde, 0x6a, 0x46, 0x4d, 0xc0, 0xd1, 0x1a, 0x8c, 0xd5, 0x6c, 0xa3, 0x4a, 0x5b, 0xc4,
+	0xb6, 0x75, 0x8d, 0x30, 0xe3, 0xa6, 0x97, 0x67, 0x7b, 0x96, 0xaf, 0x2a, 0x85, 0x92, 0xc8, 0xe6,
+	0xa2, 0xdd, 0x93, 0x27, 0x6b, 0xb6, 0xe1, 0xc7, 0x57, 0x7e, 0x05, 0x9e, 0xd4, 0x7f, 0xbd, 0xc0,
+	0xe0, 0xc3, 0x36, 0x06, 0x0f, 0xda, 0x18, 0x7c, 0xda, 0xc6, 0xe0, 0x71, 0x1b, 0xc7, 0x7a, 0xaf,
+	0xb8, 0x7f, 0x84, 0xdf, 0xab, 0x18, 0xce, 0xca, 0x95, 0xcc, 0x2d, 0xbf, 0xa6, 0xd3, 0x7c, 0x9e,
+	0xef, 0xa9, 0x22, 0x11, 0xba, 0xe3, 0x97, 0x5e, 0xa6, 0x4c, 0x6a, 0xd4, 0xd4, 0x9c, 0x81, 0x78,
+	0x51, 0x35, 0xa9, 0x93, 0x66, 0x3b, 0xa7, 0x65, 0x26, 0x43, 0x9a, 0x5f, 0x55, 0x20, 0x79, 0xc5,
+	0x3d, 0x3c, 0xc2, 0xaf, 0xf2, 0xaa, 0xb8, 0x71, 0x9b, 0xec, 0x65, 0xd8, 0x09, 0x7c, 0xbe, 0x44,
+	0xed, 0x3a, 0x8b, 0x95, 0x7a, 0x8a, 0xea, 0xd1, 0x31, 0x8e, 0xef, 0x90, 0xbd, 0x1b, 0xbd, 0xb1,
+	0xd4, 0x41, 0x10, 0xc6, 0x78, 0x09, 0x14, 0x88, 0xb1, 0x45, 0x6c, 0xbf, 0x50, 0xc0, 0xe9, 0x0a,
+	0xe5, 0x0a, 0x0c, 0xb6, 0x0c, 0x51, 0x55, 0x43, 0xeb, 0x24, 0xd8, 0x32, 0x06, 0x8c, 0x08, 0x8d,
+	0x64, 0xc4, 0x67, 0x60, 0xff, 0x08, 0xbf, 0x5b, 0x31, 0xfa, 0x14, 0xce, 0x70, 0x8d, 0x2a, 0xc6,
+	0x50, 0x51, 0x07, 0x14, 0xad, 0x18, 0x27, 0xfd, 0x78, 0x89, 0x52, 0x7e, 0x0b, 0xbc, 0xff, 0xc2,
+	0xb2, 0x45, 0x6a, 0x83, 0x2d, 0x05, 0x0c, 0x69, 0x29, 0xaf, 0xc0, 0x78, 0xa7, 0x4d, 0x9b, 0xc4,
+	0xdd, 0xa5, 0xf6, 0x0e, 0x53, 0x72, 0x42, 0x39, 0xe7, 0xc7, 0x8b, 0x3c, 0xec, 0x41, 0xbb, 0xfb,
+	0x09, 0x68, 0x88, 0x43, 0x3b, 0x5b, 0x0a, 0xa8, 0xd4, 0x69, 0x54, 0x61, 0xe6, 0x4a, 0x62, 0xa0,
+	0x51, 0x09, 0x67, 0xfc, 0x56, 0xf5, 0x71, 0x08, 0x42, 0xee, 0x2d, 0x6b, 0xd4, 0x2f, 0xa7, 0x81,
+	0xfc, 0x1f, 0x46, 0x4d, 0xea, 0xea, 0xdb, 0x7b, 0x55, 0x5d, 0x63, 0x4c, 0x43, 0xbd, 0xbe, 0x4e,
+	0xf0, 0x5c, 0x5e, 0xf3, 0x1b, 0x4d, 0xf8, 0xb4, 0x8d, 0x66, 0xec, 0xbf, 0x35, 0x9a, 0xc8, 0xe9,
+	0x1a, 0xcd, 0xf8, 0x99, 0x1a, 0xcd, 0xca, 0xed, 0x93, 0x1d, 0xe2, 0x69, 0x1b, 0x83, 0xb3, 0x57,
+	0x54, 0xd8, 0xa4, 0x26, 0xb9, 0xf6, 0x10, 0xc0, 0x71, 0xf1, 0xe4, 0xa1, 0x84, 0x37, 0xac, 0xde,
+	0x54, 0x64, 0x39, 0x1e, 0x98, 0x0b, 0x3f, 0x38, 0xc6, 0x00, 0x61, 0x38, 0x5d, 0x29, 0x54, 0xf3,
+	0xc5, 0xea, 0x86, 0x52, 0xba, 0xa5, 0xc8, 0xe5, 0x72, 0x1c, 0x88, 0xcc, 0x79, 0xef, 0xc9, 0xf1,
+	0x32, 0x77, 0xca, 0x72, 0x3c, 0x28, 0x82, 0x71, 0xaf, 0x24, 0xab, 0xd9, 0xb5, 0xb5, 0x78, 0xa8,
+	0x0f, 0xa6, 0xc8, 0x85, 0x52, 0x45, 0x8e, 0x87, 0xfb, 0x82, 0x77, 0x36, 0xd6, 0xb2, 0x9b, 0x72,
+	0x7c, 0x4c, 0x04, 0x13, 0x70, 0xca, 0x3b, 0xbd, 0xa4, 0xac, 0xca, 0x9c, 0x43, 0xe4, 0x5a, 0x01,
+	0x4e, 0x54, 0x0a, 0xd9, 0x1a, 0x7b, 0xa2, 0x10, 0x63, 0x92, 0x5d, 0xdd, 0xcc, 0x97, 0x8a, 0xd5,
+	0xb5, 0x52, 0x51, 0x8e, 0x07, 0xd0, 0x2c, 0x44, 0xdd, 0x58, 0x76, 0x7d, 0xbd, 0xb4, 0xea, 0x6d,
+	0x08, 0xd0, 0x0c, 0x4c, 0x74, 0xe3, 0x8a, 0xbc, 0x2e, 0x67, 0x3d, 0x8e, 0xcb, 0x3f, 0x8c, 0xfb,
+	0xcf, 0x64, 0xd6, 0xd2, 0xd1, 0x17, 0x00, 0xc6, 0x56, 0x6d, 0xa2, 0xba, 0x44, 0xbc, 0x65, 0x89,
+	0x81, 0x2a, 0x9b, 0xeb, 0x0d, 0x29, 0xec, 0x1b, 0x2b, 0x45, 0x9f, 0xb7, 0xb1, 0xa4, 0x10, 0x87,
+	0x36, 0xed, 0x1a, 0x59, 0x15, 0xdf, 0x56, 0x4e, 0x9a, 0xb3, 0x2c, 0xa8, 0xa6, 0x5a, 0x27, 0xe9,
+	0x93, 0x6a, 0xff, 0x72, 0x84, 0x27, 0x79, 0x27, 0x65, 0x42, 0x7f, 0x75, 0x8c, 0xe3, 0x27, 0x21,
+	0xf7, 0x7f, 0xfc, 0xe3, 0x93, 0xe0, 0xf9, 0xd4, 0xb4, 0x54, 0x63, 0x94, 0x24, 0xee, 0xdd, 0x0a,
+	0xb8, 0x86, 0x3e, 0x02, 0x30, 0xb6, 0x46, 0x1a, 0xe4, 0x8c, 0x3c, 0xcb, 0x23, 0xf0, 0x64, 0x24,
+	0xe6, 0x52, 0x33, 0x92, 0xc6, 0xce, 0x93, 0xd8, 0xa7, 0x23, 0x71, 0xbb, 0x5c, 0xee, 0x03, 0x18,
+	0xe3, 0x4d, 0xee, 0x4c, 0x5c, 0xd6, 0x47, 0xe5, 0xe2, 0x09, 0xc2, 0xbf, 0x9c, 0x7a, 0x04, 0xf9,
+	0x00, 0xc2, 0xf2, 0x5d, 0xba, 0x7b, 0x3a, 0x06, 0x3c, 0x94, 0x7a, 0xe7, 0x79, 0x1b, 0x2f, 0xfd,
+	0x1b, 0x83, 0x8a, 0x4e, 0x76, 0x87, 0x9f, 0x9f, 0x48, 0xc5, 0x24, 0xe7, 0x2e, 0xdd, 0xed, 0x9e,
+	0xfe, 0x1a, 0x40, 0x5f, 0x03, 0x78, 0x2e, 0xab, 0x69, 0x7d, 0xcf, 0xd8, 0xc5, 0x81, 0x23, 0x79,
+	0x62, 0x98, 0x1a, 0xd6, 0x08, 0x6a, 0x1c, 0x1e, 0xe1, 0xcb, 0x15, 0x23, 0xe3, 0xbf, 0x22, 0xe2,
+	0xab, 0xb7, 0xf3, 0xba, 0xe4, 0x2d, 0x46, 0x77, 0x36, 0x95, 0x90, 0x54, 0x4d, 0x13, 0x6c, 0x0d,
+	0xc6, 0xc0, 0x53, 0xec, 0x27, 0x00, 0x91, 0x42, 0x0c, 0xda, 0x22, 0x23, 0x93, 0xde, 0x07, 0xa3,
+	0xd5, 0xfd, 0xf5, 0x1e, 0xb6, 0x72, 0xe7, 0x27, 0xc1, 0xf0, 0x3b, 0x74, 0xdf, 0xc7, 0xc3, 0x23,
+	0x3c, 0x2e, 0xae, 0xcb, 0x2e, 0x36, 0x93, 0x8a, 0x4b, 0xb6, 0x71, 0xf2, 0x5e, 0xb9, 0x4b, 0x07,
+	0xbf, 0x27, 0x03, 0x07, 0x87, 0x49, 0xf0, 0xe4, 0x30, 0x09, 0x9e, 0x1e, 0x26, 0xc1, 0x83, 0x67,
+	0xc9, 0xc0, 0x93, 0x67, 0xc9, 0xc0, 0xcf, 0xcf, 0x92, 0x81, 0xad, 0x08, 0xbb, 0xc0, 0x1b, 0xff,
+	0x04, 0x00, 0x00, 0xff, 0xff, 0xd9, 0x38, 0xab, 0x53, 0x8f, 0x0d, 0x00, 0x00,
+}
+
 func (this *VMPoolKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -277,8 +581,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for VMPoolApi service
-
+// VMPoolApiClient is the client API for VMPoolApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type VMPoolApiClient interface {
 	// Create VMPool. Creates VM pool which will have
 	// VMs defined.
@@ -306,7 +611,7 @@ func NewVMPoolApiClient(cc *grpc.ClientConn) VMPoolApiClient {
 
 func (c *vMPoolApiClient) CreateVMPool(ctx context.Context, in *VMPool, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.VMPoolApi/CreateVMPool", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.VMPoolApi/CreateVMPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +620,7 @@ func (c *vMPoolApiClient) CreateVMPool(ctx context.Context, in *VMPool, opts ...
 
 func (c *vMPoolApiClient) DeleteVMPool(ctx context.Context, in *VMPool, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.VMPoolApi/DeleteVMPool", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.VMPoolApi/DeleteVMPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +629,7 @@ func (c *vMPoolApiClient) DeleteVMPool(ctx context.Context, in *VMPool, opts ...
 
 func (c *vMPoolApiClient) UpdateVMPool(ctx context.Context, in *VMPool, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.VMPoolApi/UpdateVMPool", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.VMPoolApi/UpdateVMPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +637,7 @@ func (c *vMPoolApiClient) UpdateVMPool(ctx context.Context, in *VMPool, opts ...
 }
 
 func (c *vMPoolApiClient) ShowVMPool(ctx context.Context, in *VMPool, opts ...grpc.CallOption) (VMPoolApi_ShowVMPoolClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_VMPoolApi_serviceDesc.Streams[0], c.cc, "/edgeproto.VMPoolApi/ShowVMPool", opts...)
+	stream, err := c.cc.NewStream(ctx, &_VMPoolApi_serviceDesc.Streams[0], "/edgeproto.VMPoolApi/ShowVMPool", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +670,7 @@ func (x *vMPoolApiShowVMPoolClient) Recv() (*VMPool, error) {
 
 func (c *vMPoolApiClient) AddVMPoolMember(ctx context.Context, in *VMPoolMember, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.VMPoolApi/AddVMPoolMember", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.VMPoolApi/AddVMPoolMember", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -374,15 +679,14 @@ func (c *vMPoolApiClient) AddVMPoolMember(ctx context.Context, in *VMPoolMember,
 
 func (c *vMPoolApiClient) RemoveVMPoolMember(ctx context.Context, in *VMPoolMember, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.VMPoolApi/RemoveVMPoolMember", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.VMPoolApi/RemoveVMPoolMember", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for VMPoolApi service
-
+// VMPoolApiServer is the server API for VMPoolApi service.
 type VMPoolApiServer interface {
 	// Create VMPool. Creates VM pool which will have
 	// VMs defined.
@@ -398,6 +702,29 @@ type VMPoolApiServer interface {
 	AddVMPoolMember(context.Context, *VMPoolMember) (*Result, error)
 	// Remove VMPoolMember. Removes a VM from existing VM Pool.
 	RemoveVMPoolMember(context.Context, *VMPoolMember) (*Result, error)
+}
+
+// UnimplementedVMPoolApiServer can be embedded to have forward compatible implementations.
+type UnimplementedVMPoolApiServer struct {
+}
+
+func (*UnimplementedVMPoolApiServer) CreateVMPool(ctx context.Context, req *VMPool) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateVMPool not implemented")
+}
+func (*UnimplementedVMPoolApiServer) DeleteVMPool(ctx context.Context, req *VMPool) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteVMPool not implemented")
+}
+func (*UnimplementedVMPoolApiServer) UpdateVMPool(ctx context.Context, req *VMPool) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVMPool not implemented")
+}
+func (*UnimplementedVMPoolApiServer) ShowVMPool(req *VMPool, srv VMPoolApi_ShowVMPoolServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowVMPool not implemented")
+}
+func (*UnimplementedVMPoolApiServer) AddVMPoolMember(ctx context.Context, req *VMPoolMember) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddVMPoolMember not implemented")
+}
+func (*UnimplementedVMPoolApiServer) RemoveVMPoolMember(ctx context.Context, req *VMPoolMember) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveVMPoolMember not implemented")
 }
 
 func RegisterVMPoolApiServer(s *grpc.Server, srv VMPoolApiServer) {
@@ -553,7 +880,7 @@ var _VMPoolApi_serviceDesc = grpc.ServiceDesc{
 func (m *VMNetInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -561,29 +888,36 @@ func (m *VMNetInfo) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *VMNetInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VMNetInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ExternalIp) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.ExternalIp)))
-		i += copy(dAtA[i:], m.ExternalIp)
-	}
 	if len(m.InternalIp) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.InternalIp)
+		copy(dAtA[i:], m.InternalIp)
 		i = encodeVarintVmpool(dAtA, i, uint64(len(m.InternalIp)))
-		i += copy(dAtA[i:], m.InternalIp)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.ExternalIp) > 0 {
+		i -= len(m.ExternalIp)
+		copy(dAtA[i:], m.ExternalIp)
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.ExternalIp)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *VM) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -591,66 +925,80 @@ func (m *VM) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *VM) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VM) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.NetInfo.Size()))
-	n1, err := m.NetInfo.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if len(m.GroupName) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.GroupName)))
-		i += copy(dAtA[i:], m.GroupName)
-	}
-	if m.State != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(m.State))
-	}
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.UpdatedAt.Size()))
-	n2, err := m.UpdatedAt.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	if len(m.InternalName) > 0 {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.InternalName)))
-		i += copy(dAtA[i:], m.InternalName)
-	}
 	if m.Flavor != nil {
+		{
+			size, err := m.Flavor.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintVmpool(dAtA, i, uint64(size))
+		}
+		i--
 		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(m.Flavor.Size()))
-		n3, err := m.Flavor.MarshalTo(dAtA[i:])
+	}
+	if len(m.InternalName) > 0 {
+		i -= len(m.InternalName)
+		copy(dAtA[i:], m.InternalName)
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.InternalName)))
+		i--
+		dAtA[i] = 0x32
+	}
+	{
+		size, err := m.UpdatedAt.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
 	}
-	return i, nil
+	i--
+	dAtA[i] = 0x2a
+	if m.State != 0 {
+		i = encodeVarintVmpool(dAtA, i, uint64(m.State))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.GroupName) > 0 {
+		i -= len(m.GroupName)
+		copy(dAtA[i:], m.GroupName)
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.GroupName)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.NetInfo.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *VMPoolKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -658,29 +1006,36 @@ func (m *VMPoolKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *VMPoolKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VMPoolKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Organization) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Organization)))
-		i += copy(dAtA[i:], m.Organization)
-	}
 	if len(m.Name) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
 		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Organization) > 0 {
+		i -= len(m.Organization)
+		copy(dAtA[i:], m.Organization)
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.Organization)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *VMPool) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -688,85 +1043,84 @@ func (m *VMPool) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *VMPool) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VMPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+	if m.CrmOverride != 0 {
+		i = encodeVarintVmpool(dAtA, i, uint64(m.CrmOverride))
+		i--
+		dAtA[i] = 0x38
+	}
+	{
+		size, err := m.Status.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Key.Size()))
-	n4, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	if len(m.Vms) > 0 {
-		for _, msg := range m.Vms {
-			dAtA[i] = 0x1a
-			i++
-			i = encodeVarintVmpool(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
+	i--
+	dAtA[i] = 0x32
+	if len(m.Errors) > 0 {
+		for iNdEx := len(m.Errors) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Errors[iNdEx])
+			copy(dAtA[i:], m.Errors[iNdEx])
+			i = encodeVarintVmpool(dAtA, i, uint64(len(m.Errors[iNdEx])))
+			i--
+			dAtA[i] = 0x2a
 		}
 	}
 	if m.State != 0 {
-		dAtA[i] = 0x20
-		i++
 		i = encodeVarintVmpool(dAtA, i, uint64(m.State))
+		i--
+		dAtA[i] = 0x20
 	}
-	if len(m.Errors) > 0 {
-		for _, s := range m.Errors {
-			dAtA[i] = 0x2a
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
+	if len(m.Vms) > 0 {
+		for iNdEx := len(m.Vms) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Vms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintVmpool(dAtA, i, uint64(size))
 			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+			i--
+			dAtA[i] = 0x1a
 		}
 	}
-	dAtA[i] = 0x32
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Status.Size()))
-	n5, err := m.Status.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
 	}
-	i += n5
-	if m.CrmOverride != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(m.CrmOverride))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintVmpool(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *VMPoolMember) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -774,38 +1128,47 @@ func (m *VMPoolMember) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *VMPoolMember) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VMPoolMember) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Key.Size()))
-	n6, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n6
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Vm.Size()))
-	n7, err := m.Vm.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n7
 	if m.CrmOverride != 0 {
-		dAtA[i] = 0x18
-		i++
 		i = encodeVarintVmpool(dAtA, i, uint64(m.CrmOverride))
+		i--
+		dAtA[i] = 0x18
 	}
-	return i, nil
+	{
+		size, err := m.Vm.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *VMSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -813,51 +1176,59 @@ func (m *VMSpec) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *VMSpec) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VMSpec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.InternalName) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(len(m.InternalName)))
-		i += copy(dAtA[i:], m.InternalName)
-	}
-	if m.ExternalNetwork {
-		dAtA[i] = 0x10
-		i++
-		if m.ExternalNetwork {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
+	{
+		size, err := m.Flavor.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i++
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x22
 	if m.InternalNetwork {
-		dAtA[i] = 0x18
-		i++
+		i--
 		if m.InternalNetwork {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x18
 	}
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Flavor.Size()))
-	n8, err := m.Flavor.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if m.ExternalNetwork {
+		i--
+		if m.ExternalNetwork {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
 	}
-	i += n8
-	return i, nil
+	if len(m.InternalName) > 0 {
+		i -= len(m.InternalName)
+		copy(dAtA[i:], m.InternalName)
+		i = encodeVarintVmpool(dAtA, i, uint64(len(m.InternalName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *VMPoolInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -865,89 +1236,90 @@ func (m *VMPoolInfo) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *VMPoolInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VMPoolInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+	{
+		size, err := m.Status.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Key.Size()))
-	n9, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n9
-	if m.NotifyId != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintVmpool(dAtA, i, uint64(m.NotifyId))
-	}
-	if len(m.Vms) > 0 {
-		for _, msg := range m.Vms {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintVmpool(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
+	i--
+	dAtA[i] = 0x3a
+	if len(m.Errors) > 0 {
+		for iNdEx := len(m.Errors) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Errors[iNdEx])
+			copy(dAtA[i:], m.Errors[iNdEx])
+			i = encodeVarintVmpool(dAtA, i, uint64(len(m.Errors[iNdEx])))
+			i--
+			dAtA[i] = 0x32
 		}
 	}
 	if m.State != 0 {
-		dAtA[i] = 0x28
-		i++
 		i = encodeVarintVmpool(dAtA, i, uint64(m.State))
+		i--
+		dAtA[i] = 0x28
 	}
-	if len(m.Errors) > 0 {
-		for _, s := range m.Errors {
-			dAtA[i] = 0x32
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
+	if len(m.Vms) > 0 {
+		for iNdEx := len(m.Vms) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Vms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintVmpool(dAtA, i, uint64(size))
 			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+			i--
+			dAtA[i] = 0x22
 		}
 	}
-	dAtA[i] = 0x3a
-	i++
-	i = encodeVarintVmpool(dAtA, i, uint64(m.Status.Size()))
-	n10, err := m.Status.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if m.NotifyId != 0 {
+		i = encodeVarintVmpool(dAtA, i, uint64(m.NotifyId))
+		i--
+		dAtA[i] = 0x18
 	}
-	i += n10
-	return i, nil
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintVmpool(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintVmpool(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintVmpool(dAtA []byte, offset int, v uint64) int {
+	offset -= sovVmpool(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *VMNetInfo) CopyInFields(src *VMNetInfo) int {
 	changed := 0
@@ -3650,6 +4022,9 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 func (m *VMNetInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.ExternalIp)
@@ -3664,6 +4039,9 @@ func (m *VMNetInfo) Size() (n int) {
 }
 
 func (m *VM) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
@@ -3693,6 +4071,9 @@ func (m *VM) Size() (n int) {
 }
 
 func (m *VMPoolKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Organization)
@@ -3707,6 +4088,9 @@ func (m *VMPoolKey) Size() (n int) {
 }
 
 func (m *VMPool) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -3741,6 +4125,9 @@ func (m *VMPool) Size() (n int) {
 }
 
 func (m *VMPoolMember) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -3754,6 +4141,9 @@ func (m *VMPoolMember) Size() (n int) {
 }
 
 func (m *VMSpec) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.InternalName)
@@ -3772,6 +4162,9 @@ func (m *VMSpec) Size() (n int) {
 }
 
 func (m *VMPoolInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -3806,14 +4199,7 @@ func (m *VMPoolInfo) Size() (n int) {
 }
 
 func sovVmpool(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozVmpool(x uint64) (n int) {
 	return sovVmpool(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -3833,7 +4219,7 @@ func (m *VMNetInfo) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -3861,7 +4247,7 @@ func (m *VMNetInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3871,6 +4257,9 @@ func (m *VMNetInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3890,7 +4279,7 @@ func (m *VMNetInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3900,6 +4289,9 @@ func (m *VMNetInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3912,6 +4304,9 @@ func (m *VMNetInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVmpool
 			}
 			if (iNdEx + skippy) > l {
@@ -3941,7 +4336,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -3969,7 +4364,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3979,6 +4374,9 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3998,7 +4396,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4007,6 +4405,9 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4028,7 +4429,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4038,6 +4439,9 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4057,7 +4461,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= (VMState(b) & 0x7F) << shift
+				m.State |= VMState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4076,7 +4480,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4085,6 +4489,9 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4106,7 +4513,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4116,6 +4523,9 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4135,7 +4545,7 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4144,6 +4554,9 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4161,6 +4574,9 @@ func (m *VM) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVmpool
 			}
 			if (iNdEx + skippy) > l {
@@ -4190,7 +4606,7 @@ func (m *VMPoolKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -4218,7 +4634,7 @@ func (m *VMPoolKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4228,6 +4644,9 @@ func (m *VMPoolKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4247,7 +4666,7 @@ func (m *VMPoolKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4257,6 +4676,9 @@ func (m *VMPoolKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4269,6 +4691,9 @@ func (m *VMPoolKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVmpool
 			}
 			if (iNdEx + skippy) > l {
@@ -4298,7 +4723,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -4326,7 +4751,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4336,6 +4761,9 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4355,7 +4783,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4364,6 +4792,9 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4385,7 +4816,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4394,6 +4825,9 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4416,7 +4850,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= (TrackedState(b) & 0x7F) << shift
+				m.State |= TrackedState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4435,7 +4869,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4445,6 +4879,9 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4464,7 +4901,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4473,6 +4910,9 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4494,7 +4934,7 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CrmOverride |= (CRMOverride(b) & 0x7F) << shift
+				m.CrmOverride |= CRMOverride(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4506,6 +4946,9 @@ func (m *VMPool) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVmpool
 			}
 			if (iNdEx + skippy) > l {
@@ -4535,7 +4978,7 @@ func (m *VMPoolMember) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -4563,7 +5006,7 @@ func (m *VMPoolMember) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4572,6 +5015,9 @@ func (m *VMPoolMember) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4593,7 +5039,7 @@ func (m *VMPoolMember) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4602,6 +5048,9 @@ func (m *VMPoolMember) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4623,7 +5072,7 @@ func (m *VMPoolMember) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CrmOverride |= (CRMOverride(b) & 0x7F) << shift
+				m.CrmOverride |= CRMOverride(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4635,6 +5084,9 @@ func (m *VMPoolMember) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVmpool
 			}
 			if (iNdEx + skippy) > l {
@@ -4664,7 +5116,7 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -4692,7 +5144,7 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4702,6 +5154,9 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4721,7 +5176,7 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4741,7 +5196,7 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4761,7 +5216,7 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4770,6 +5225,9 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4784,6 +5242,9 @@ func (m *VMSpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVmpool
 			}
 			if (iNdEx + skippy) > l {
@@ -4813,7 +5274,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -4841,7 +5302,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4851,6 +5312,9 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4870,7 +5334,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4879,6 +5343,9 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4900,7 +5367,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NotifyId |= (int64(b) & 0x7F) << shift
+				m.NotifyId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4919,7 +5386,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4928,6 +5395,9 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4950,7 +5420,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= (TrackedState(b) & 0x7F) << shift
+				m.State |= TrackedState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4969,7 +5439,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4979,6 +5449,9 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -4998,7 +5471,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5007,6 +5480,9 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVmpool
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVmpool
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5021,6 +5497,9 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVmpool
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVmpool
 			}
 			if (iNdEx + skippy) > l {
@@ -5038,6 +5517,7 @@ func (m *VMPoolInfo) Unmarshal(dAtA []byte) error {
 func skipVmpool(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -5069,10 +5549,8 @@ func skipVmpool(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -5089,144 +5567,34 @@ func skipVmpool(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthVmpool
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowVmpool
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipVmpool(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupVmpool
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthVmpool
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthVmpool = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowVmpool   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthVmpool        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowVmpool          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupVmpool = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("vmpool.proto", fileDescriptorVmpool) }
-
-var fileDescriptorVmpool = []byte{
-	// 1357 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4d, 0x6c, 0x1b, 0x45,
-	0x14, 0xce, 0xd8, 0x8e, 0x13, 0x4f, 0x9c, 0x74, 0x3d, 0x6d, 0xd2, 0x21, 0xa2, 0x49, 0xe4, 0xaa,
-	0x28, 0x14, 0xc7, 0x0b, 0x41, 0x15, 0x28, 0xa2, 0x07, 0x3b, 0xd9, 0x16, 0xab, 0xb1, 0x1d, 0xad,
-	0x53, 0x73, 0xb4, 0x36, 0xde, 0x89, 0xbb, 0xca, 0xee, 0xce, 0xb2, 0xbb, 0x76, 0x1a, 0x0e, 0x08,
-	0xf5, 0x86, 0xc4, 0xa1, 0x0a, 0x17, 0xd4, 0x03, 0xe2, 0x82, 0x84, 0xb8, 0x80, 0x2a, 0x0e, 0xa8,
-	0x07, 0xce, 0x39, 0x21, 0x24, 0xc4, 0x05, 0x21, 0x54, 0x22, 0x0e, 0xa8, 0x27, 0xa4, 0x3a, 0x11,
-	0x47, 0xb4, 0x33, 0xb3, 0xfe, 0x89, 0x8d, 0x94, 0x84, 0x5e, 0xa2, 0x99, 0xf7, 0xbe, 0x99, 0xf9,
-	0xe6, 0xfb, 0x5e, 0xde, 0xac, 0x61, 0xb2, 0x65, 0x39, 0x94, 0x9a, 0x59, 0xc7, 0xa5, 0x3e, 0x45,
-	0x09, 0xa2, 0x37, 0x08, 0x1b, 0xce, 0xbe, 0xdc, 0xa0, 0xb4, 0x61, 0x12, 0x59, 0x73, 0x0c, 0x59,
-	0xb3, 0x6d, 0xea, 0x6b, 0xbe, 0x41, 0x6d, 0x8f, 0x03, 0x67, 0xdf, 0x6e, 0x18, 0xfe, 0xbd, 0xe6,
-	0x56, 0xb6, 0x4e, 0x2d, 0xd9, 0xa2, 0x5b, 0x86, 0x19, 0x2c, 0xbc, 0x2f, 0x07, 0x7f, 0x97, 0xea,
-	0x26, 0x6d, 0xea, 0x32, 0xc3, 0x35, 0x88, 0xdd, 0x19, 0x88, 0x95, 0x49, 0x97, 0x78, 0x4d, 0xd3,
-	0x0f, 0x67, 0x75, 0x6a, 0x59, 0x34, 0xcc, 0x4d, 0xb1, 0xa5, 0x26, 0xe9, 0x64, 0xb7, 0x4d, 0xad,
-	0x45, 0x5d, 0x31, 0xbb, 0xd4, 0xa0, 0x0d, 0xca, 0x86, 0x72, 0x30, 0x12, 0xd1, 0x79, 0xc1, 0x93,
-	0xcd, 0xb6, 0x9a, 0xdb, 0xb2, 0x6f, 0x58, 0xc4, 0xf3, 0x35, 0xcb, 0xe1, 0x80, 0x74, 0x11, 0x26,
-	0xaa, 0xc5, 0x12, 0xf1, 0x0b, 0xf6, 0x36, 0x45, 0xf3, 0x70, 0x82, 0xdc, 0xf7, 0x89, 0x6b, 0x6b,
-	0x66, 0xcd, 0x70, 0x30, 0x58, 0x00, 0x8b, 0x09, 0x15, 0x86, 0xa1, 0x82, 0x13, 0x00, 0x0c, 0xbb,
-	0x0b, 0x88, 0x70, 0x40, 0x18, 0x2a, 0x38, 0xe9, 0x1f, 0x22, 0x30, 0x52, 0x2d, 0x22, 0x04, 0x63,
-	0xb6, 0x66, 0x11, 0xb1, 0x03, 0x1b, 0xa3, 0x1b, 0x70, 0xdc, 0x26, 0x7e, 0xcd, 0xb0, 0xb7, 0x29,
-	0x5b, 0x38, 0xb1, 0x7c, 0x29, 0xdb, 0x11, 0x34, 0xdb, 0x21, 0x91, 0x8f, 0x1d, 0xfc, 0x3e, 0x3f,
-	0xa2, 0x8e, 0xd9, 0x82, 0xd3, 0x15, 0x08, 0x1b, 0x2e, 0x6d, 0x3a, 0x35, 0xb6, 0x61, 0x94, 0x6d,
-	0x98, 0x60, 0x91, 0x52, 0xb0, 0xeb, 0x22, 0x1c, 0xf5, 0x7c, 0xcd, 0x27, 0x38, 0xb6, 0x00, 0x16,
-	0xa7, 0x96, 0x51, 0xdf, 0x96, 0x95, 0x20, 0xa3, 0x72, 0x00, 0xda, 0x80, 0xb0, 0xe9, 0xe8, 0x9a,
-	0x4f, 0xf4, 0x9a, 0xe6, 0xe3, 0x51, 0xc6, 0x60, 0x36, 0xcb, 0xf5, 0xc9, 0x86, 0xfa, 0x64, 0x37,
-	0x43, 0x7d, 0xf2, 0xd3, 0x5f, 0xb5, 0x31, 0xd8, 0x7f, 0xfc, 0x52, 0xa2, 0x23, 0x19, 0x23, 0x96,
-	0x10, 0x9b, 0xe4, 0x7c, 0x74, 0x15, 0x4e, 0x76, 0xd4, 0x60, 0xec, 0xe2, 0x8c, 0x5d, 0x32, 0x0c,
-	0x32, 0x82, 0x4b, 0x30, 0xce, 0x7d, 0xc2, 0x63, 0xec, 0xc8, 0xe9, 0x1e, 0x86, 0xb7, 0x58, 0x22,
-	0xb8, 0xa6, 0x2a, 0x40, 0x69, 0x33, 0xf0, 0x63, 0x83, 0x52, 0xf3, 0x0e, 0xd9, 0x43, 0x6f, 0xc0,
-	0x24, 0x75, 0x1b, 0x9a, 0x6d, 0x7c, 0xc0, 0xca, 0x8b, 0xcb, 0x99, 0x9f, 0x7c, 0x72, 0x8c, 0x13,
-	0xbc, 0x30, 0xa9, 0xdb, 0x50, 0xfb, 0x20, 0x68, 0x4e, 0x28, 0xcf, 0xac, 0xc9, 0xc3, 0x27, 0xc7,
-	0x38, 0xce, 0xa1, 0xdc, 0x85, 0x95, 0xe4, 0x5f, 0xcf, 0x31, 0xf8, 0xe7, 0x39, 0x06, 0xdf, 0x7e,
-	0x31, 0x0f, 0xd2, 0xdf, 0xc7, 0x60, 0x9c, 0x1f, 0x87, 0x66, 0x60, 0x7c, 0xdb, 0x20, 0xa6, 0xee,
-	0x61, 0xb0, 0x10, 0x5d, 0x4c, 0xa8, 0x62, 0x86, 0x32, 0x30, 0xba, 0x43, 0xf6, 0x86, 0x3a, 0x26,
-	0x68, 0x0a, 0xc7, 0x02, 0x18, 0xba, 0x06, 0xa3, 0x2d, 0xcb, 0xc3, 0xd1, 0x85, 0xe8, 0xe2, 0xc4,
-	0xf2, 0x64, 0x1f, 0x3a, 0x84, 0xb5, 0x2c, 0x0f, 0xbd, 0xd3, 0xef, 0xda, 0xe5, 0x1e, 0xe0, 0xa6,
-	0xab, 0xd5, 0x77, 0x88, 0xce, 0xac, 0xcb, 0x4f, 0x0a, 0x0f, 0x46, 0x6d, 0x5a, 0xb7, 0x9c, 0xd0,
-	0xc9, 0x6b, 0x30, 0x4e, 0x5c, 0x97, 0xba, 0x1e, 0x1e, 0x0d, 0xa8, 0x9e, 0x44, 0x89, 0x24, 0x7a,
-	0x0b, 0xc6, 0x03, 0x7c, 0xd3, 0x63, 0xbe, 0xf4, 0x2b, 0x5f, 0x61, 0x09, 0x56, 0x6f, 0xe3, 0xc1,
-	0x6a, 0x46, 0x4d, 0xc0, 0xd1, 0x1a, 0x4c, 0xd6, 0x5d, 0xab, 0x46, 0x5b, 0xc4, 0x75, 0x0d, 0x9d,
-	0x30, 0xe3, 0xa6, 0x96, 0x67, 0x7a, 0x96, 0xaf, 0xaa, 0xc5, 0xb2, 0xc8, 0xe6, 0x13, 0xdd, 0x93,
-	0x27, 0xea, 0xae, 0x15, 0xc6, 0x57, 0x7e, 0x03, 0x81, 0xd4, 0x7f, 0x3f, 0xc7, 0xe0, 0xa3, 0x36,
-	0x06, 0x0f, 0xdb, 0x18, 0x7c, 0xd6, 0xc6, 0xe0, 0x49, 0x1b, 0x27, 0x7b, 0xaf, 0xb8, 0x7f, 0x84,
-	0xdf, 0xaf, 0x5a, 0xde, 0xca, 0xd5, 0xec, 0xed, 0xb0, 0xa6, 0x33, 0x7c, 0x5e, 0xe8, 0xa9, 0x22,
-	0x11, 0xba, 0x1b, 0x96, 0x5e, 0xb6, 0x42, 0xea, 0xd4, 0xd6, 0xbd, 0x81, 0x78, 0x49, 0xb3, 0xa9,
-	0x97, 0x61, 0x3b, 0x67, 0x14, 0x26, 0x43, 0x86, 0x5f, 0x55, 0x20, 0x79, 0xc5, 0x3d, 0x3a, 0xc2,
-	0xaf, 0xf1, 0xaa, 0xb8, 0x79, 0x87, 0xec, 0x65, 0xd9, 0x09, 0x7c, 0xbe, 0x44, 0xdd, 0x06, 0x8b,
-	0x95, 0x7b, 0x8a, 0xea, 0xf1, 0x31, 0x96, 0x76, 0xc8, 0xde, 0xcd, 0xde, 0x58, 0xfa, 0x20, 0x02,
-	0x93, 0xbc, 0x04, 0x8a, 0xc4, 0xda, 0x22, 0x6e, 0x58, 0x28, 0xe0, 0x74, 0x85, 0x72, 0x15, 0x46,
-	0x5a, 0x96, 0xa8, 0xaa, 0xa1, 0x75, 0x12, 0x69, 0x59, 0x03, 0x46, 0x44, 0xcf, 0x65, 0xc4, 0xe7,
-	0x60, 0xff, 0x08, 0xbf, 0x57, 0xb5, 0xfa, 0x14, 0xce, 0x72, 0x8d, 0xaa, 0xd6, 0x50, 0x51, 0x07,
-	0x14, 0xad, 0x5a, 0x27, 0xfd, 0x78, 0x81, 0x52, 0x7e, 0x07, 0x82, 0xff, 0xc2, 0x8a, 0x43, 0xea,
-	0x83, 0x2d, 0x05, 0x0c, 0x69, 0x29, 0xaf, 0x42, 0xa9, 0xd3, 0xa6, 0x6d, 0xe2, 0xef, 0x52, 0x77,
-	0x87, 0x29, 0x39, 0xae, 0x5e, 0x08, 0xe3, 0x25, 0x1e, 0x0e, 0xa0, 0xdd, 0xfd, 0x04, 0x34, 0xca,
-	0xa1, 0x9d, 0x2d, 0x05, 0x54, 0xee, 0x34, 0xaa, 0x18, 0x73, 0x25, 0x35, 0xd0, 0xa8, 0x84, 0x33,
-	0x61, 0xab, 0xfa, 0x24, 0x0a, 0x21, 0xf7, 0x96, 0x35, 0xea, 0x17, 0xd3, 0x40, 0x5e, 0x81, 0x09,
-	0x9b, 0xfa, 0xc6, 0xf6, 0x5e, 0xcd, 0xd0, 0x19, 0xd3, 0x68, 0xaf, 0xaf, 0xe3, 0x3c, 0x57, 0xd0,
-	0xc3, 0x46, 0x13, 0x3b, 0x6d, 0xa3, 0x19, 0xfd, 0x7f, 0x8d, 0x26, 0x7e, 0xba, 0x46, 0x33, 0x76,
-	0xa6, 0x46, 0xb3, 0x72, 0xe7, 0x64, 0x87, 0x78, 0xda, 0xc6, 0xe0, 0xec, 0x15, 0x15, 0xb3, 0xa9,
-	0x4d, 0xae, 0x3f, 0x02, 0x70, 0x4c, 0x3c, 0x79, 0x28, 0x15, 0x0c, 0x6b, 0xb7, 0x54, 0x45, 0x91,
-	0x46, 0x66, 0x63, 0x0f, 0x8f, 0x31, 0x40, 0x18, 0x4e, 0x55, 0x8b, 0xb5, 0x42, 0xa9, 0xb6, 0xa1,
-	0x96, 0x6f, 0xab, 0x4a, 0xa5, 0x22, 0x01, 0x91, 0xb9, 0x18, 0x3c, 0x39, 0x41, 0xe6, 0x6e, 0x45,
-	0x91, 0x22, 0x22, 0x28, 0x05, 0x25, 0x59, 0xcb, 0xad, 0xad, 0x49, 0xd1, 0x3e, 0x98, 0xaa, 0x14,
-	0xcb, 0x55, 0x45, 0x8a, 0xf5, 0x05, 0xef, 0x6e, 0xac, 0xe5, 0x36, 0x15, 0x69, 0x54, 0x04, 0x53,
-	0x70, 0x32, 0x38, 0xbd, 0xac, 0xae, 0x2a, 0x9c, 0x43, 0xfc, 0x7a, 0x11, 0x8e, 0x57, 0x8b, 0xb9,
-	0x3a, 0x7b, 0xa2, 0x10, 0x63, 0x92, 0x5b, 0xdd, 0x2c, 0x94, 0x4b, 0xb5, 0xb5, 0x72, 0x49, 0x91,
-	0x46, 0xd0, 0x0c, 0x44, 0xdd, 0x58, 0x6e, 0x7d, 0xbd, 0xbc, 0x1a, 0x6c, 0x08, 0xd0, 0x34, 0x4c,
-	0x75, 0xe3, 0xaa, 0xb2, 0xae, 0xe4, 0x02, 0x8e, 0xcb, 0x3f, 0x8e, 0x85, 0xcf, 0x64, 0xce, 0x31,
-	0xd0, 0x97, 0x00, 0x26, 0x57, 0x5d, 0xa2, 0xf9, 0x44, 0xbc, 0x65, 0xa9, 0x81, 0x2a, 0x9b, 0xed,
-	0x0d, 0xa9, 0xec, 0x1b, 0x2b, 0x4d, 0x9f, 0xb5, 0xb1, 0xac, 0x12, 0x8f, 0x36, 0xdd, 0x3a, 0x59,
-	0x15, 0xdf, 0x56, 0x5e, 0x86, 0xb3, 0x2c, 0x6a, 0xb6, 0xd6, 0x20, 0x99, 0x93, 0x6a, 0xff, 0x7a,
-	0x84, 0x27, 0x78, 0x27, 0x65, 0x42, 0x7f, 0x7d, 0x8c, 0xa5, 0x93, 0x90, 0x07, 0x3f, 0xff, 0xf9,
-	0x69, 0xe4, 0x62, 0x7a, 0x4a, 0xae, 0x33, 0x4a, 0x32, 0xf7, 0x6e, 0x05, 0x5c, 0x47, 0x1f, 0x03,
-	0x98, 0x5c, 0x23, 0x26, 0x39, 0x23, 0xcf, 0xca, 0x39, 0x78, 0x32, 0x12, 0xb3, 0xe9, 0x69, 0x59,
-	0x67, 0xe7, 0xc9, 0xec, 0xd3, 0x91, 0xf8, 0x5d, 0x2e, 0x0f, 0x00, 0x4c, 0xf2, 0x26, 0x77, 0x26,
-	0x2e, 0xeb, 0xe7, 0xe5, 0x12, 0x08, 0xc2, 0xbf, 0x9c, 0x7a, 0x04, 0xf9, 0x10, 0xc2, 0xca, 0x3d,
-	0xba, 0x7b, 0x3a, 0x06, 0x3c, 0x94, 0x7e, 0xf7, 0x59, 0x1b, 0x2f, 0xfd, 0x17, 0x83, 0xaa, 0x41,
-	0x76, 0x87, 0x9f, 0x9f, 0x4a, 0x27, 0x65, 0xef, 0x1e, 0xdd, 0xed, 0x9e, 0xfe, 0x3a, 0x40, 0xdf,
-	0x00, 0x78, 0x21, 0xa7, 0xeb, 0x7d, 0xcf, 0xd8, 0xe5, 0x81, 0x23, 0x79, 0x62, 0x98, 0x1a, 0xce,
-	0x39, 0xd4, 0x38, 0x3c, 0xc2, 0x57, 0xaa, 0x56, 0x36, 0x7c, 0x45, 0xc4, 0x57, 0x6f, 0xe7, 0x75,
-	0x29, 0x38, 0x8c, 0xee, 0x4c, 0x3a, 0x25, 0x6b, 0xba, 0x2e, 0xd8, 0x5a, 0x8c, 0x41, 0xa0, 0xd8,
-	0x2f, 0x00, 0x22, 0x95, 0x58, 0xb4, 0x45, 0xce, 0x4d, 0x7a, 0x1f, 0x9c, 0xaf, 0xee, 0x6f, 0xf4,
-	0xb0, 0x55, 0x3a, 0x3f, 0x09, 0x86, 0xdf, 0xa1, 0xfb, 0x3e, 0x1e, 0x1e, 0xe1, 0x31, 0x71, 0x5d,
-	0x76, 0xb1, 0xe9, 0xb4, 0x24, 0xbb, 0xd6, 0xc9, 0x7b, 0xe5, 0xa5, 0x83, 0x3f, 0xe6, 0x46, 0x0e,
-	0x0e, 0xe7, 0xc0, 0x4f, 0x87, 0x73, 0xe0, 0xe9, 0xe1, 0x1c, 0xd8, 0x8a, 0x33, 0xd2, 0x6f, 0xfe,
-	0x1b, 0x00, 0x00, 0xff, 0xff, 0xad, 0xb8, 0xa9, 0x13, 0x83, 0x0d, 0x00, 0x00,
-}

@@ -3,21 +3,28 @@
 
 package distributed_match_engine
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-
-import "github.com/mobiledgex/edge-cloud/util"
-import "errors"
-import "strconv"
-import "encoding/json"
-
-import io "io"
+import (
+	"encoding/json"
+	"errors"
+	fmt "fmt"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/util"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	"strconv"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // LProto indicates which protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.
 type LProto int32
@@ -36,6 +43,7 @@ var LProto_name = map[int32]string{
 	1: "L_PROTO_TCP",
 	2: "L_PROTO_UDP",
 }
+
 var LProto_value = map[string]int32{
 	"L_PROTO_UNKNOWN": 0,
 	"L_PROTO_TCP":     1,
@@ -45,7 +53,10 @@ var LProto_value = map[string]int32{
 func (x LProto) String() string {
 	return proto.EnumName(LProto_name, int32(x))
 }
-func (LProto) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppcommon, []int{0} }
+
+func (LProto) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{0}
+}
 
 // Application Port
 //
@@ -65,22 +76,78 @@ type AppPort struct {
 	// TLS termination for this port
 	Tls bool `protobuf:"varint,7,opt,name=tls,proto3" json:"tls,omitempty"`
 	// use nginx proxy for this port if you really need a transparent proxy (udp only)
-	Nginx bool `protobuf:"varint,8,opt,name=nginx,proto3" json:"nginx,omitempty"`
+	Nginx                bool     `protobuf:"varint,8,opt,name=nginx,proto3" json:"nginx,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *AppPort) Reset()                    { *m = AppPort{} }
-func (m *AppPort) String() string            { return proto.CompactTextString(m) }
-func (*AppPort) ProtoMessage()               {}
-func (*AppPort) Descriptor() ([]byte, []int) { return fileDescriptorAppcommon, []int{0} }
+func (m *AppPort) Reset()         { *m = AppPort{} }
+func (m *AppPort) String() string { return proto.CompactTextString(m) }
+func (*AppPort) ProtoMessage()    {}
+func (*AppPort) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{0}
+}
+func (m *AppPort) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppPort) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppPort.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppPort) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppPort.Merge(m, src)
+}
+func (m *AppPort) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppPort) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppPort.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppPort proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*AppPort)(nil), "distributed_match_engine.AppPort")
 	proto.RegisterEnum("distributed_match_engine.LProto", LProto_name, LProto_value)
+	proto.RegisterType((*AppPort)(nil), "distributed_match_engine.AppPort")
 }
+
+func init() { proto.RegisterFile("appcommon.proto", fileDescriptor_fdc58d2114e550de) }
+
+var fileDescriptor_fdc58d2114e550de = []byte{
+	// 285 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0xbb, 0x4e, 0xf3, 0x30,
+	0x1c, 0x47, 0xeb, 0x56, 0x69, 0xfb, 0xfd, 0xfb, 0x41, 0x23, 0xc3, 0x60, 0x96, 0x10, 0xc1, 0x12,
+	0x31, 0x74, 0x00, 0x89, 0x15, 0x71, 0xd9, 0xa8, 0x5a, 0x2b, 0x6a, 0xc5, 0x68, 0xe5, 0xe2, 0x82,
+	0xa5, 0xc4, 0x36, 0xae, 0x2b, 0xf5, 0x11, 0x3b, 0xf2, 0x08, 0x90, 0x95, 0x97, 0x40, 0xb1, 0x15,
+	0x89, 0x85, 0xcd, 0x3e, 0x3a, 0xc7, 0xfa, 0xc9, 0x30, 0xcd, 0xb4, 0x2e, 0x54, 0x5d, 0x2b, 0x39,
+	0xd3, 0x46, 0x59, 0x85, 0x49, 0x29, 0xb6, 0xd6, 0x88, 0x7c, 0x67, 0x79, 0xc9, 0xea, 0xcc, 0x16,
+	0x6f, 0x8c, 0xcb, 0x57, 0x21, 0xf9, 0xc5, 0x37, 0x82, 0xd1, 0xbd, 0xd6, 0x54, 0x19, 0x8b, 0x6f,
+	0x21, 0x70, 0x3a, 0x41, 0x31, 0x4a, 0x8e, 0xaf, 0xe3, 0xd9, 0x5f, 0xd5, 0x6c, 0x4e, 0x5b, 0x2f,
+	0xf5, 0x3a, 0xbe, 0x84, 0x23, 0x21, 0x2d, 0x37, 0x32, 0xab, 0x98, 0x56, 0xc6, 0x92, 0x7e, 0x8c,
+	0x92, 0x20, 0xfd, 0xdf, 0x41, 0xf7, 0xf8, 0x39, 0x4c, 0xf4, 0x2e, 0xaf, 0x44, 0xe1, 0x95, 0x81,
+	0x53, 0xc0, 0xa3, 0x4e, 0xd8, 0xbc, 0x97, 0x92, 0x69, 0xc3, 0x37, 0x62, 0x4f, 0x82, 0x18, 0x25,
+	0xff, 0x52, 0x68, 0x11, 0x75, 0x04, 0x9f, 0xc1, 0x98, 0xcb, 0xd2, 0xe7, 0x43, 0x97, 0x8f, 0xb8,
+	0x2c, 0x5d, 0x1b, 0xc2, 0xc0, 0x56, 0x5b, 0x32, 0x8a, 0x51, 0x32, 0x4e, 0xdb, 0x23, 0x3e, 0x85,
+	0xa0, 0x9d, 0xba, 0x27, 0x63, 0xc7, 0xfc, 0xe5, 0xea, 0x0e, 0x86, 0x7e, 0x3a, 0x3e, 0x81, 0xe9,
+	0x9c, 0xd1, 0x74, 0xb9, 0x5a, 0xb2, 0xf5, 0xe2, 0x79, 0xb1, 0x7c, 0x59, 0x84, 0x3d, 0x3c, 0x85,
+	0x49, 0x07, 0x57, 0x8f, 0x34, 0x44, 0xbf, 0xc1, 0xfa, 0x89, 0x86, 0xfd, 0x87, 0xf0, 0xf0, 0x15,
+	0xf5, 0x0e, 0x4d, 0x84, 0x3e, 0x9a, 0x08, 0x7d, 0x36, 0x11, 0xca, 0x87, 0xee, 0x0f, 0x6e, 0x7e,
+	0x02, 0x00, 0x00, 0xff, 0xff, 0x43, 0x15, 0x16, 0x53, 0x74, 0x01, 0x00, 0x00,
+}
+
 func (m *AppPort) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -88,67 +155,79 @@ func (m *AppPort) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AppPort) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppPort) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Proto != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintAppcommon(dAtA, i, uint64(m.Proto))
-	}
-	if m.InternalPort != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintAppcommon(dAtA, i, uint64(m.InternalPort))
-	}
-	if m.PublicPort != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintAppcommon(dAtA, i, uint64(m.PublicPort))
-	}
-	if len(m.FqdnPrefix) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintAppcommon(dAtA, i, uint64(len(m.FqdnPrefix)))
-		i += copy(dAtA[i:], m.FqdnPrefix)
-	}
-	if m.EndPort != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintAppcommon(dAtA, i, uint64(m.EndPort))
-	}
-	if m.Tls {
-		dAtA[i] = 0x38
-		i++
-		if m.Tls {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	if m.Nginx {
-		dAtA[i] = 0x40
-		i++
+		i--
 		if m.Nginx {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x40
 	}
-	return i, nil
+	if m.Tls {
+		i--
+		if m.Tls {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.EndPort != 0 {
+		i = encodeVarintAppcommon(dAtA, i, uint64(m.EndPort))
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.FqdnPrefix) > 0 {
+		i -= len(m.FqdnPrefix)
+		copy(dAtA[i:], m.FqdnPrefix)
+		i = encodeVarintAppcommon(dAtA, i, uint64(len(m.FqdnPrefix)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.PublicPort != 0 {
+		i = encodeVarintAppcommon(dAtA, i, uint64(m.PublicPort))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.InternalPort != 0 {
+		i = encodeVarintAppcommon(dAtA, i, uint64(m.InternalPort))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Proto != 0 {
+		i = encodeVarintAppcommon(dAtA, i, uint64(m.Proto))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintAppcommon(dAtA []byte, offset int, v uint64) int {
+	offset -= sovAppcommon(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *AppPort) CopyInFields(src *AppPort) int {
 	changed := 0
@@ -282,6 +361,9 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 func (m *AppPort) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if m.Proto != 0 {
@@ -306,18 +388,14 @@ func (m *AppPort) Size() (n int) {
 	if m.Nginx {
 		n += 2
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
 func sovAppcommon(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozAppcommon(x uint64) (n int) {
 	return sovAppcommon(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -337,7 +415,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -365,7 +443,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Proto |= (LProto(b) & 0x7F) << shift
+				m.Proto |= LProto(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -384,7 +462,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.InternalPort |= (int32(b) & 0x7F) << shift
+				m.InternalPort |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -403,7 +481,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PublicPort |= (int32(b) & 0x7F) << shift
+				m.PublicPort |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -422,7 +500,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -432,6 +510,9 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAppcommon
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppcommon
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -451,7 +532,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.EndPort |= (int32(b) & 0x7F) << shift
+				m.EndPort |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -470,7 +551,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -490,7 +571,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -505,9 +586,13 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthAppcommon
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppcommon
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -520,6 +605,7 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 func skipAppcommon(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -551,10 +637,8 @@ func skipAppcommon(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -571,77 +655,34 @@ func skipAppcommon(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthAppcommon
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowAppcommon
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipAppcommon(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupAppcommon
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthAppcommon
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthAppcommon = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowAppcommon   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthAppcommon        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowAppcommon          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupAppcommon = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("appcommon.proto", fileDescriptorAppcommon) }
-
-var fileDescriptorAppcommon = []byte{
-	// 285 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0xbb, 0x4e, 0xf3, 0x30,
-	0x1c, 0x47, 0xeb, 0x56, 0x69, 0xfb, 0xfd, 0xfb, 0x41, 0x23, 0xc3, 0x60, 0x96, 0x10, 0xc1, 0x12,
-	0x31, 0x74, 0x00, 0x89, 0x15, 0x71, 0xd9, 0xa8, 0x5a, 0x2b, 0x6a, 0xc5, 0x68, 0xe5, 0xe2, 0x82,
-	0xa5, 0xc4, 0x36, 0xae, 0x2b, 0xf5, 0x11, 0x3b, 0xf2, 0x08, 0x90, 0x95, 0x97, 0x40, 0xb1, 0x15,
-	0x89, 0x85, 0xcd, 0x3e, 0x3a, 0xc7, 0xfa, 0xc9, 0x30, 0xcd, 0xb4, 0x2e, 0x54, 0x5d, 0x2b, 0x39,
-	0xd3, 0x46, 0x59, 0x85, 0x49, 0x29, 0xb6, 0xd6, 0x88, 0x7c, 0x67, 0x79, 0xc9, 0xea, 0xcc, 0x16,
-	0x6f, 0x8c, 0xcb, 0x57, 0x21, 0xf9, 0xc5, 0x37, 0x82, 0xd1, 0xbd, 0xd6, 0x54, 0x19, 0x8b, 0x6f,
-	0x21, 0x70, 0x3a, 0x41, 0x31, 0x4a, 0x8e, 0xaf, 0xe3, 0xd9, 0x5f, 0xd5, 0x6c, 0x4e, 0x5b, 0x2f,
-	0xf5, 0x3a, 0xbe, 0x84, 0x23, 0x21, 0x2d, 0x37, 0x32, 0xab, 0x98, 0x56, 0xc6, 0x92, 0x7e, 0x8c,
-	0x92, 0x20, 0xfd, 0xdf, 0x41, 0xf7, 0xf8, 0x39, 0x4c, 0xf4, 0x2e, 0xaf, 0x44, 0xe1, 0x95, 0x81,
-	0x53, 0xc0, 0xa3, 0x4e, 0xd8, 0xbc, 0x97, 0x92, 0x69, 0xc3, 0x37, 0x62, 0x4f, 0x82, 0x18, 0x25,
-	0xff, 0x52, 0x68, 0x11, 0x75, 0x04, 0x9f, 0xc1, 0x98, 0xcb, 0xd2, 0xe7, 0x43, 0x97, 0x8f, 0xb8,
-	0x2c, 0x5d, 0x1b, 0xc2, 0xc0, 0x56, 0x5b, 0x32, 0x8a, 0x51, 0x32, 0x4e, 0xdb, 0x23, 0x3e, 0x85,
-	0xa0, 0x9d, 0xba, 0x27, 0x63, 0xc7, 0xfc, 0xe5, 0xea, 0x0e, 0x86, 0x7e, 0x3a, 0x3e, 0x81, 0xe9,
-	0x9c, 0xd1, 0x74, 0xb9, 0x5a, 0xb2, 0xf5, 0xe2, 0x79, 0xb1, 0x7c, 0x59, 0x84, 0x3d, 0x3c, 0x85,
-	0x49, 0x07, 0x57, 0x8f, 0x34, 0x44, 0xbf, 0xc1, 0xfa, 0x89, 0x86, 0xfd, 0x87, 0xf0, 0xf0, 0x15,
-	0xf5, 0x0e, 0x4d, 0x84, 0x3e, 0x9a, 0x08, 0x7d, 0x36, 0x11, 0xca, 0x87, 0xee, 0x0f, 0x6e, 0x7e,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0x43, 0x15, 0x16, 0x53, 0x74, 0x01, 0x00, 0x00,
-}
