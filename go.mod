@@ -27,6 +27,7 @@ require (
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20181012123002-c6f51f82210d // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
+	github.com/creack/pty v1.1.10
 	github.com/daviddengcn/go-colortext v0.0.0-20171126034257-17e75f6184bc
 	github.com/denisenkom/go-mssqldb v0.0.0-20190905012053-7920e8ef8898 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -39,6 +40,10 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/frankban/quicktest v1.10.0 // indirect
 	github.com/go-ldap/ldap v3.0.2+incompatible // indirect
+	github.com/go-openapi/errors v0.19.7
+	github.com/go-openapi/strfmt v0.19.5
+	github.com/go-openapi/swag v0.19.9
+	github.com/go-openapi/validate v0.19.11
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/go-test/deep v1.0.1 // indirect
 	github.com/gocql/gocql v0.0.0-20190402132108-0e1d5de854df // indirect
@@ -71,10 +76,10 @@ require (
 	github.com/jefferai/jsonx v1.0.0 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/keybase/go-crypto v0.0.0-20190403132359-d65b6b94177f // indirect
-	github.com/kr/pty v1.1.1
+	github.com/kr/pty v1.1.5
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
-	github.com/mitchellh/mapstructure v1.2.4
+	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mobiledgex/golang-ssh v0.0.10
 	github.com/mobiledgex/yaml/v2 v2.2.5
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
@@ -93,7 +98,7 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cobra v0.0.4
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.6.0
+	github.com/stretchr/testify v1.6.1
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
 	github.com/uber-go/atomic v1.4.0 // indirect
 	github.com/uber/jaeger-client-go v2.16.1-0.20190705220040-402bec9e6ead+incompatible
@@ -103,7 +108,7 @@ require (
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
-	golang.org/x/net v0.0.0-20200513185701-a91f0712d120
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	google.golang.org/genproto v0.0.0-20200305110556-506484158171 // indirect
 	google.golang.org/grpc v1.27.1
