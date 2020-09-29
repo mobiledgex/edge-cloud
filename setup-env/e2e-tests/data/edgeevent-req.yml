@@ -1,0 +1,17 @@
+registerclientrequest:
+  orgname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+  authtoken: "GENTOKEN:authtoken_private.pem"
+  cellid: 1234
+findcloudletrequest:
+  carriername: 31026
+  gpslocation:
+    latitude: 36.00
+    longitude: -96.00
+  cellid: 1234
+clientedgeevent:
+  event: EVENT_INIT_CONNECTION
+  gpslocation:
+    latitude: 36.32
+    longitude: -96.21

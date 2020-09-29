@@ -105,7 +105,7 @@ func (w *StatsStreamWrapper) RecvMsg(m interface{}) error {
 				return err
 			}
 			// Handle latency samples from client
-			latency, ok := dmecommon.ProcessLatencySamples(w.Context(), appInstKey, p, typ.Samples)
+			latency, ok := dmecommon.ProcessLatencySamples(w.Context(), *appInstKey, p.Addr, typ.Samples)
 			if !ok {
 				log.SpanLog(w.Context(), log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples")
 				return err

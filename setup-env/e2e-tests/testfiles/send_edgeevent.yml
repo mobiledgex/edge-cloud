@@ -1,0 +1,27 @@
+description: SendEdgeEvent persistent connection tests
+
+tests:
+
+- name: Add provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create]
+
+- name: Send initial edge event to start persistent connection
+  apifile: "{{datadir}}/edgeevent-req.yml"
+  actions: [dmeapi-edgeeventinit]
+  compareyaml:
+    yaml1: "{{outputdir}}/edgeeventinit.yml"
+    yaml2: "{{datadir}}/edgeevent-init-response.yml"
+    filetype: sendedgeevent
+
+- name: Start persistent connection and send dummy latency samples to server
+  apifile: "{{datadir}}/edgeevent-req.yml"
+  actions: [dmeapi-edgeeventlatency]
+  compareyaml:
+    yaml1: "{{outputdir}}/edgeeventlatency.yml"
+    yaml2: "{{datadir}}/edgeevent-latency-response.yml"
+    filetype: sendedgeevent
+
+- name: Delete provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete]

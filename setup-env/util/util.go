@@ -524,6 +524,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err1 = ReadYamlFile(firstYamlFile, &f1)
 		err2 = ReadYamlFile(secondYamlFile, &f2)
 
+		// Ignore EdgeEventsCookie
+		copts = []cmp.Option{
+			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
+		}
+
 		//publicport is variable so we nil it out for comparison purposes.
 		clearFindCloudletPorts(&f1)
 		clearFindCloudletPorts(&f2)
@@ -536,6 +541,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		err1 = ReadYamlFile(firstYamlFile, &f1)
 		err2 = ReadYamlFile(secondYamlFile, &f2)
+
+		// Ignore EdgeEventsCookie
+		copts = []cmp.Option{
+			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
+		}
 
 		//publicport is variable so we nil it out for comparison purposes.
 		for _, reply := range f1 {

@@ -1,0 +1,6 @@
+event: EventLatency
+latency:
+  avg: 3.3768000000000002
+  min: 1.12
+  max: 5.33
+  stddev: 1.4768970715659233

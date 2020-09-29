@@ -116,16 +116,17 @@ type EdgeEventPersistentMgr struct {
 	Svr        *dme.MatchEngineApi_SendEdgeEventServer
 	Err        error
 	Terminated chan struct{}
+	Peer       *peer.Peer
 	Firstrcv   bool
 }
 
 // Edge Events Plugin functions
-var AddClientKey func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer, mgr *EdgeEventPersistentMgr)
-var RemoveClientKey func(ctx context.Context, key *edgeproto.AppInstKey, p *peer.Peer)
-var RemoveAppInstKey func(ctx context.Context, key *edgeproto.AppInstKey)
-var SendLatencyRequestEdgeEvent func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey)
-var ProcessLatencySamples func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, samples []float64) (*dme.Latency, bool)
-var SendAppInstStateEvent func(ctx context.Context, appInst *DmeAppInst, key *edgeproto.AppInstKey, eventType dme.EventType)
+var AddClientKey func(ctx context.Context, key edgeproto.AppInstKey, addr net.Addr, mgr *EdgeEventPersistentMgr)
+var RemoveClientKey func(ctx context.Context, key edgeproto.AppInstKey, addr net.Addr)
+var RemoveAppInstKey func(ctx context.Context, key edgeproto.AppInstKey)
+var SendLatencyRequestEdgeEvent func(ctx context.Context, appInst *DmeAppInst, key edgeproto.AppInstKey)
+var ProcessLatencySamples func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, samples []float64) (*dme.Latency, bool)
+var SendAppInstStateEvent func(ctx context.Context, appInst *DmeAppInst, key edgeproto.AppInstKey, eventType dme.EventType)
 var SendEdgeEventToClient func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)
 
 func SetupMatchEngine() {
@@ -252,16 +253,16 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
-		SendAppInstStateEvent(ctx, cl, &appInst.Key, dme.EventType_EVENT_APPINST_HEALTH)
+		SendAppInstStateEvent(ctx, cl, appInst.Key, dme.EventType_EVENT_APPINST_HEALTH)
 	}
 	cl.AppInstHealth = appInst.HealthCheck
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
 		if cl.CloudletState != cloudlet.State {
-			SendAppInstStateEvent(ctx, cl, &appInst.Key, dme.EventType_EVENT_CLOUDLET_STATE)
+			SendAppInstStateEvent(ctx, cl, appInst.Key, dme.EventType_EVENT_CLOUDLET_STATE)
 		}
 		if cl.MaintenanceState != cloudlet.MaintenanceState {
-			SendAppInstStateEvent(ctx, cl, &appInst.Key, dme.EventType_EVENT_CLOUDLET_MAINTENANCE)
+			SendAppInstStateEvent(ctx, cl, appInst.Key, dme.EventType_EVENT_CLOUDLET_MAINTENANCE)
 		}
 		cl.CloudletState = cloudlet.State
 		cl.MaintenanceState = cloudlet.MaintenanceState
@@ -272,7 +273,7 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	// Check if MC API triggered MeasureLatency
 	if appInst.MeasureLatency {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "AppInst update in DME. Request to Measure Latency")
-		SendLatencyRequestEdgeEvent(ctx, cl, &appInst.Key)
+		SendLatencyRequestEdgeEvent(ctx, cl, appInst.Key)
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
@@ -322,8 +323,8 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
 				cl.AppInstHealth = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 				// Remove AppInst from edgeevents plugin
-				SendAppInstStateEvent(ctx, cl, &appInst.Key, dme.EventType_EVENT_APPINST_HEALTH)
-				RemoveAppInstKey(ctx, &appInst.Key)
+				SendAppInstStateEvent(ctx, cl, appInst.Key, dme.EventType_EVENT_APPINST_HEALTH)
+				RemoveAppInstKey(ctx, appInst.Key)
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
@@ -380,8 +381,8 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
 					appInst := carr.Insts[key.ClusterInstKey]
 					// Remove AppInst from edgeevents plugin
-					SendAppInstStateEvent(ctx, appInst, &key, dme.EventType_EVENT_APPINST_HEALTH)
-					RemoveAppInstKey(ctx, &key)
+					SendAppInstStateEvent(ctx, appInst, key, dme.EventType_EVENT_APPINST_HEALTH)
+					RemoveAppInstKey(ctx, key)
 					delete(carr.Insts, key.ClusterInstKey)
 				}
 			}
@@ -1000,7 +1001,6 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 	mgr.Svr = svr
 	mgr.Firstrcv = true
 	var appInstKey *edgeproto.AppInstKey
-	var p *peer.Peer
 
 	// Loop while persistent connection is up
 	for {
@@ -1040,7 +1040,7 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 			break
 		}
 		// Add connection, client, and appinst to Plugin hashmap
-		if mgr.Firstrcv {
+		if mgr.Firstrcv && cupdate.Event == dme.EventType_EVENT_INIT_CONNECTION {
 			// Grab CookieKey
 			key, ok := CookieFromContext(ctx)
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Session Cookie result", "key", key)
@@ -1076,19 +1076,23 @@ func SendEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_SendEdgeEventSer
 				},
 			}
 			// Grab Peer info
-			p, ok = peer.FromContext(ctx)
+			mgr.Peer, ok = peer.FromContext(ctx)
 			if !ok {
 				mgr.Err = errors.New("SendEdgeEventServer unable to get peer context")
 				close(mgr.Terminated)
 				break
 			}
 			// Add Client to edgeevents plugin
-			AddClientKey(ctx, appInstKey, p, mgr)
+			AddClientKey(ctx, *appInstKey, mgr.Peer.Addr, mgr)
+			// Send successful init response
+			initServerEdgeEvent := new(dme.ServerEdgeEvent)
+			initServerEdgeEvent.Event = dme.EventType_EVENT_INIT_CONNECTION
+			SendEdgeEventToClient(ctx, initServerEdgeEvent, mgr)
 			mgr.Firstrcv = false
 		}
 	}
 	// Remove Client from edgeevents plugin
-	RemoveClientKey(ctx, appInstKey, p)
+	RemoveClientKey(ctx, *appInstKey, mgr.Peer.Addr)
 	return mgr.Err
 }
 

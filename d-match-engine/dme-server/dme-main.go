@@ -33,7 +33,6 @@ import (
 	"github.com/segmentio/ksuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -379,9 +378,9 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin does not have AddClientKey symbol", "plugin", *eesolib)
 		return err
 	}
-	addClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *dmecommon.EdgeEventPersistentMgr))
+	addClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, mgr *dmecommon.EdgeEventPersistentMgr))
 	if !ok {
-		log.FatalLog("plugin AddClientKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
+		log.FatalLog("plugin AddClientKey symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
 	}
 	dmecommon.AddClientKey = addClientKeyFunc
 	// Load RemoveClientKey in Plugin
@@ -390,9 +389,9 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin does not have RemoveClientKey symbol", "plugin", *eesolib)
 		return err
 	}
-	removeClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer))
+	removeClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr))
 	if !ok {
-		log.FatalLog("plugin RemoveClientKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer)", "plugin", *eesolib)
+		log.FatalLog("plugin RemoveClientKey symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr)", "plugin", *eesolib)
 	}
 	dmecommon.RemoveClientKey = removeClientKeyFunc
 	// Load RemoveAppInstKey in Plugin
@@ -401,9 +400,9 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin does not have RemoveAppInstKey symbol", "plugin", *eesolib)
 		return err
 	}
-	removeAppInstKeyFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey))
+	removeAppInstKeyFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey))
 	if !ok {
-		log.FatalLog("plugin RemoveAppInstKey symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+		log.FatalLog("plugin RemoveAppInstKey symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey)", "plugin", *eesolib)
 	}
 	dmecommon.RemoveAppInstKey = removeAppInstKeyFunc
 	// Load SendLatencyRequestEdgeEvent in Plugin
@@ -412,9 +411,9 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin does not have SendLatencyRequestEdgeEvent symbol", "plugin", *eesolib)
 		return err
 	}
-	sendLatencyRequestEdgeEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey))
+	sendLatencyRequestEdgeEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey edgeproto.AppInstKey))
 	if !ok {
-		log.FatalLog("plugin SendLatencyRequestEdgeEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey)", "plugin", *eesolib)
+		log.FatalLog("plugin SendLatencyRequestEdgeEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey)", "plugin", *eesolib)
 	}
 	dmecommon.SendLatencyRequestEdgeEvent = sendLatencyRequestEdgeEventFunc
 	// Load ProcessLatencySamples in Plugin
@@ -423,9 +422,9 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin does not have ProcessLatencySamples symbol", "plugin", *eesolib)
 		return err
 	}
-	processLatencySamplesFunc, ok := sym.(func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, samples []float64) (*dme.Latency, bool))
+	processLatencySamplesFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, samples []float64) (*dme.Latency, bool))
 	if !ok {
-		log.FatalLog("plugin ProcessLatencySamples symbol does not implement func(ctx context.Context, appInstKey *edgeproto.AppInstKey, peer *peer.Peer, samples []float64) (*dme.Latency, bool)", "plugin", *eesolib)
+		log.FatalLog("plugin ProcessLatencySamples symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, samples []float64) (*dme.Latency, bool)", "plugin", *eesolib)
 	}
 	dmecommon.ProcessLatencySamples = processLatencySamplesFunc
 	// Load SendAppInstStateEvent in Plugin
@@ -434,9 +433,9 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin does not have SendAppInstStateEvent symbol", "plugin", *eesolib)
 		return err
 	}
-	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey *edgeproto.AppInstKey, eventType dme.EventType))
+	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.EventType))
 	if !ok {
-		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey *edgeproto.AppInstKey, eventType dme.EventType)", "plugin", *eesolib)
+		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.EventType)", "plugin", *eesolib)
 	}
 	dmecommon.SendAppInstStateEvent = sendAppInstStateEventFunc
 	// Load SendEdgeEventToClient in Plugin
