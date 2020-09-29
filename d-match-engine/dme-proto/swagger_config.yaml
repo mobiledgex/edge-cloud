@@ -222,27 +222,27 @@ info:
       server for use. The libraries also allows verification of a device’s
       location for all location-specific tasks.  For detailed descriptions of
       namespaces, classes, functions, and variables within the MobiledgeX C#
-      SDK, visit the [SDK Documentation](/swagger/stage/edge-cloud-sdk-csharp/html/index.html).
+      SDK, visit the [SDK Documentation](/swagger/{{ENVIRON}}/edge-cloud-sdk-csharp/html/index.html).
 
       Some of the most commonly used functions are listed below.
 
       ## RegisterClient
-      [RegisterClient](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#RegisterClient)
+      [RegisterClient](/swagger/{{ENVIRON}}/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#RegisterClient)
       registers the client with the closest Distributed Matching Engine (the nearest edge location in the Operator network) and validates the legitimacy of the mobile subscriber. All session information is encrypted.
 
       ## FindCloudlet
-      [FindCloudlet](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#FindCloudlet)
+      [FindCloudlet](/swagger/{{ENVIRON}}/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#FindCloudlet)
       locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging location, application subscription, and service provider agreement.
       If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
       ## GetConnection
-      [GetConnection](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__getconnection.html)
+      [GetConnection](/swagger/{{ENVIRON}}/edge-cloud-sdk-csharp/html/group__functions__getconnection.html)
       gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
 
       ## PerformanceMetrics
-      [PerformanceMetrics](/swagger/stage/edge-cloud-sdk-csharp/html/group__classes__util.html)
+      [PerformanceMetrics](/swagger/{{ENVIRON}}/edge-cloud-sdk-csharp/html/group__classes__util.html)
       tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
       # Edge SDK - iOS
