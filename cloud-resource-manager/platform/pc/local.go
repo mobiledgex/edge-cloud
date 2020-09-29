@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kr/pty"
+	"github.com/creack/pty"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
 
