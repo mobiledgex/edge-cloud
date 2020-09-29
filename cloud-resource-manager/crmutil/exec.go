@@ -44,7 +44,7 @@ func (s *ExecReqHandler) RecvExecRequest(ctx context.Context, msg *edgeproto.Exe
 	}()
 }
 
-func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.ExecRequest) error {
+func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.ExecRequest) (reterr error) {
 	var err error
 
 	run := &RunExec{
@@ -187,6 +187,15 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		return fmt.Errorf("invalid edgeturn Addr: %s", req.EdgeTurnAddr)
 	}
 
+	replySent := false
+	// if ExecRequest reply is already sent, we can't send any error back to the
+	// client via the ExecRequest. Instead we'll need to write it to the
+	// turn connection.
+	defer func() {
+		if reterr != nil && replySent {
+			turnConn.Write([]byte(err.Error()))
+		}
+	}()
 	if req.Console != nil {
 		urlObj, err := url.Parse(req.Console.Url)
 		if err != nil {
@@ -225,6 +234,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		proxyAddr := "https://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeconsole?edgetoken=" + sessInfo.Token
 		req.AccessUrl = proxyAddr
 		cd.ExecReqSend.Update(ctx, req)
+		replySent = true
 		for {
 			stream, err := sess.AcceptStream()
 			if err != nil {
@@ -275,6 +285,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		proxyAddr := "wss://" + turnAddrParts[0] + ":" + sessInfo.AccessPort + "/edgeshell?edgetoken=" + sessInfo.Token
 		req.AccessUrl = proxyAddr
 		cd.ExecReqSend.Update(ctx, req)
+		replySent = true
 		err = run.proxyRawConn(turnConn)
 		if err != nil {
 			return err

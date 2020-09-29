@@ -667,17 +667,19 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 }
 
 type Retry struct {
-	Enable   bool
-	Count    int // number of retries (does not include first try)
-	Interval time.Duration
-	Try      int
+	Enable    bool
+	Count     int // number of retries (does not include first try)
+	Interval  time.Duration
+	Try       int
+	runAction []bool
 }
 
-func NewRetry(count int, intervalSec float64) *Retry {
+func NewRetry(count int, intervalSec float64, numActions int) *Retry {
 	r := Retry{}
 	r.Try = 1
 	r.Count = count
 	r.Interval = time.Duration(float64(time.Second) * intervalSec)
+	r.runAction = make([]bool, numActions, numActions)
 	if r.Count > 0 {
 		r.Enable = true
 	}
@@ -691,7 +693,13 @@ func (r *Retry) Tries() string {
 	return fmt.Sprintf(" (try %d of %d)", r.Try, r.Try+r.Count)
 }
 
-func (r *Retry) ActionEnable() {
+func (r *Retry) SetActionRetry(ii int, retry bool) {
+	// set whether or not to run the specific action on retries
+	r.runAction[ii] = retry
+	if !retry {
+		return
+	}
+	// enable retries
 	if r.Enable {
 		return
 	}
@@ -699,6 +707,14 @@ func (r *Retry) ActionEnable() {
 	// set defaults
 	r.Count = 5
 	r.Interval = 200 * time.Millisecond
+}
+
+func (r *Retry) ShouldRunAction(ii int) bool {
+	if r.Try == 1 {
+		// always run actions the first iteration
+		return true
+	}
+	return r.runAction[ii]
 }
 
 func (r *Retry) WillRetry() bool {
