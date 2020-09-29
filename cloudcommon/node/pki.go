@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -89,8 +90,6 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 	}
 	if s.InternalPki.UseVaultCerts {
 		s.InternalPki.enabled = true
-
-		go s.InternalPki.refreshCerts()
 		pkiDesc = append(pkiDesc, "useVaultCerts")
 	}
 	if len(pkiDesc) == 0 {
@@ -134,23 +133,29 @@ func (s *internalPki) loadCerts(certFile, keyFile, caFile string) error {
 }
 
 func (s *internalPki) refreshCerts() {
+	// for e2e-tests, to test refresh set a low refresh interval.
+	// e2e-tests last 5 minutes or so, so it doesn't have to be super fast.
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+		refreshCertInterval = 10 * time.Second
+	}
+
 	interval := refreshCertInterval
 	for {
 		select {
 		case <-time.After(interval):
 		case <-s.refreshTrigger:
-			span := log.StartSpan(log.DebugLevelInfo, "refresh internal PKI certs")
-			ctx := log.ContextWithSpan(context.Background(), span)
-			err := s.RefreshNow(ctx)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "refresh pki certs failures", "err", err)
-				// retry again soon
-				interval = time.Hour
-			} else {
-				interval = refreshCertInterval
-			}
-			span.Finish()
 		}
+		span := log.StartSpan(log.DebugLevelInfo, "refresh internal PKI certs")
+		ctx := log.ContextWithSpan(context.Background(), span)
+		err := s.RefreshNow(ctx)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "refresh pki certs failures", "err", err)
+			// retry again soon
+			interval = time.Hour
+		} else {
+			interval = refreshCertInterval
+		}
+		span.Finish()
 	}
 }
 

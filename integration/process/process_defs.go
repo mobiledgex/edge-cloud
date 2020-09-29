@@ -24,31 +24,31 @@ type Etcd struct {
 	cmd            *exec.Cmd
 }
 type Controller struct {
-	Common                `yaml:",inline"`
-	EtcdAddrs             string
-	ApiAddr               string
-	HttpAddr              string
-	NotifyAddr            string
-	NotifyRootAddrs       string
-	NotifyParentAddrs     string
-	EdgeTurnAddr          string
-	VaultAddr             string
-	InfluxAddr            string
-	Region                string
-	TLS                   TLSCerts
-	UseVaultCAs           bool
-	UseVaultCerts         bool
-	cmd                   *exec.Cmd
-	TestMode              bool
-	RegistryFQDN          string
-	ArtifactoryFQDN       string
-	CloudletRegistryPath  string
-	VersionTag            string
-	CloudletVMImagePath   string
-	CheckpointingInterval string
-	AppDNSRoot            string
-	DeploymentTag         string
-	ChefServerPath        string
+	Common               `yaml:",inline"`
+	EtcdAddrs            string
+	ApiAddr              string
+	HttpAddr             string
+	NotifyAddr           string
+	NotifyRootAddrs      string
+	NotifyParentAddrs    string
+	EdgeTurnAddr         string
+	VaultAddr            string
+	InfluxAddr           string
+	Region               string
+	TLS                  TLSCerts
+	UseVaultCAs          bool
+	UseVaultCerts        bool
+	cmd                  *exec.Cmd
+	TestMode             bool
+	RegistryFQDN         string
+	ArtifactoryFQDN      string
+	CloudletRegistryPath string
+	VersionTag           string
+	CloudletVMImagePath  string
+	CheckpointInterval   string
+	AppDNSRoot           string
+	DeploymentTag        string
+	ChefServerPath       string
 }
 type Dme struct {
 	Common        `yaml:",inline"`

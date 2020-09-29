@@ -58,9 +58,10 @@ var MexAppVersionLabel = "mexAppVersion"
 var EventsDbName = "events"
 var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
-var ClusterInstUsage = "clusterinst-usage"
+var ClusterInstCheckpoints = "clusterinst-checkpoints"
 var AppInstEvent = "appinst"
-var VMAppInstUsage = "VMappinst-usage"
+var AppInstCheckpoints = "appinst-checkpoints"
+var MonthlyInterval = "MONTH"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
@@ -87,15 +88,6 @@ const (
 
 var InstanceUp = "UP"
 var InstanceDown = "DOWN"
-
-type Usage_event string
-
-const (
-	// checkpoint
-	USAGE_EVENT_CHECKPOINT = "CHECKPOINT"
-	// end record, delete/unreserved
-	USAGE_EVENT_END = "END"
-)
 
 // DIND script to pull from kubeadm-dind-cluster
 var DindScriptName = "dind-cluster-v1.14.sh"

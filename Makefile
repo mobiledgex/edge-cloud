@@ -13,7 +13,7 @@ build-vers:
 	(cd version; ./version.sh)
 
 check-vers: build-vers
-	@if test $(GOVERS) != go1.12; then \
+	@if test $(GOVERS) != go1.15; then \
 		echo "Go version is $(GOVERS)"; \
 		echo "See https://mobiledgex.atlassian.net/wiki/spaces/SWDEV/pages/307986555/Upgrade+to+go+1.12"; \
 		exit 2; \

@@ -127,7 +127,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 
 	// Generate hidetags functions
 	for _, desc := range file.Messages() {
-		if desc.File() != file.FileDescriptorProto {
+		if desc.File() != file {
 			continue
 		}
 		visited := make([]*generator.Descriptor, 0)
@@ -148,7 +148,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		}
 	}
 	for ii, desc := range file.Messages() {
-		if desc.File() != file.FileDescriptorProto {
+		if desc.File() != file {
 			continue
 		}
 		gensupport.GenerateMessageArgs(g.Generator, &g.support, desc, false, ii)

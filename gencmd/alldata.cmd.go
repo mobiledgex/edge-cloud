@@ -3,16 +3,18 @@
 
 package gencmd
 
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import google_protobuf "github.com/gogo/protobuf/types"
-import "strings"
-import "github.com/mobiledgex/edge-cloud/cli"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	google_protobuf "github.com/gogo/protobuf/types"
+	"github.com/mobiledgex/edge-cloud/cli"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

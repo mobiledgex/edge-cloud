@@ -8,6 +8,10 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 message PolicyKey {
   // Name of the organization for the cluster that this policy will apply to
   string organization = 1 [(protogen.keytag) = "policyorg"];

@@ -61,7 +61,7 @@ var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version h
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
-var checkpointInterval = flag.Duration("checkpointInterval", time.Hour*24*30, "Interval at which to checkpoint cluster usage")
+var checkpointInterval = flag.String("checkpointInterval", "MONTH", "Interval at which to checkpoint cluster usage")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var deploymentTag = flag.String("deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
 
@@ -392,6 +392,10 @@ func startServices() error {
 	services.httpServer = httpServer
 
 	// start the checkpointer
+	err = checkInterval()
+	if err != nil {
+		return err
+	}
 	go runCheckpoints(ctx)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")

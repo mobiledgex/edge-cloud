@@ -168,9 +168,9 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--versionTag")
 		args = append(args, p.VersionTag)
 	}
-	if p.CheckpointingInterval != "" {
+	if p.CheckpointInterval != "" {
 		args = append(args, "--checkpointInterval")
-		args = append(args, p.CheckpointingInterval)
+		args = append(args, p.CheckpointInterval)
 	}
 	if p.DeploymentTag != "" {
 		args = append(args, "--deploymentTag")

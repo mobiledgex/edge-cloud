@@ -3,25 +3,33 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import strings "strings"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-
-import io "io"
+import (
+	context "context"
+	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type CloudletMgmtNode struct {
 	// Type of Cloudlet Mgmt Node
@@ -30,32 +38,116 @@ type CloudletMgmtNode struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *CloudletMgmtNode) Reset()                    { *m = CloudletMgmtNode{} }
-func (m *CloudletMgmtNode) String() string            { return proto.CompactTextString(m) }
-func (*CloudletMgmtNode) ProtoMessage()               {}
-func (*CloudletMgmtNode) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{0} }
+func (m *CloudletMgmtNode) Reset()         { *m = CloudletMgmtNode{} }
+func (m *CloudletMgmtNode) String() string { return proto.CompactTextString(m) }
+func (*CloudletMgmtNode) ProtoMessage()    {}
+func (*CloudletMgmtNode) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4d737c7315c25422, []int{0}
+}
+func (m *CloudletMgmtNode) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletMgmtNode) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletMgmtNode.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletMgmtNode) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletMgmtNode.Merge(m, src)
+}
+func (m *CloudletMgmtNode) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletMgmtNode) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletMgmtNode.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletMgmtNode proto.InternalMessageInfo
 
 type RunCmd struct {
 	// Command or Shell
 	Command string `protobuf:"bytes,1,opt,name=command,proto3" json:"command,omitempty"`
 	// Cloudlet Mgmt Node
-	CloudletMgmtNode *CloudletMgmtNode `protobuf:"bytes,2,opt,name=cloudlet_mgmt_node,json=cloudletMgmtNode" json:"cloudlet_mgmt_node,omitempty"`
+	CloudletMgmtNode *CloudletMgmtNode `protobuf:"bytes,2,opt,name=cloudlet_mgmt_node,json=cloudletMgmtNode,proto3" json:"cloudlet_mgmt_node,omitempty"`
 }
 
-func (m *RunCmd) Reset()                    { *m = RunCmd{} }
-func (m *RunCmd) String() string            { return proto.CompactTextString(m) }
-func (*RunCmd) ProtoMessage()               {}
-func (*RunCmd) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{1} }
+func (m *RunCmd) Reset()         { *m = RunCmd{} }
+func (m *RunCmd) String() string { return proto.CompactTextString(m) }
+func (*RunCmd) ProtoMessage()    {}
+func (*RunCmd) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4d737c7315c25422, []int{1}
+}
+func (m *RunCmd) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RunCmd) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RunCmd.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RunCmd) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RunCmd.Merge(m, src)
+}
+func (m *RunCmd) XXX_Size() int {
+	return m.Size()
+}
+func (m *RunCmd) XXX_DiscardUnknown() {
+	xxx_messageInfo_RunCmd.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RunCmd proto.InternalMessageInfo
 
 type RunVMConsole struct {
 	// VM Console URL
 	Url string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
 }
 
-func (m *RunVMConsole) Reset()                    { *m = RunVMConsole{} }
-func (m *RunVMConsole) String() string            { return proto.CompactTextString(m) }
-func (*RunVMConsole) ProtoMessage()               {}
-func (*RunVMConsole) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{2} }
+func (m *RunVMConsole) Reset()         { *m = RunVMConsole{} }
+func (m *RunVMConsole) String() string { return proto.CompactTextString(m) }
+func (*RunVMConsole) ProtoMessage()    {}
+func (*RunVMConsole) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4d737c7315c25422, []int{2}
+}
+func (m *RunVMConsole) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RunVMConsole) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RunVMConsole.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RunVMConsole) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RunVMConsole.Merge(m, src)
+}
+func (m *RunVMConsole) XXX_Size() int {
+	return m.Size()
+}
+func (m *RunVMConsole) XXX_DiscardUnknown() {
+	xxx_messageInfo_RunVMConsole.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RunVMConsole proto.InternalMessageInfo
 
 type ShowLog struct {
 	// Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)
@@ -68,43 +160,97 @@ type ShowLog struct {
 	Follow bool `protobuf:"varint,4,opt,name=follow,proto3" json:"follow,omitempty"`
 }
 
-func (m *ShowLog) Reset()                    { *m = ShowLog{} }
-func (m *ShowLog) String() string            { return proto.CompactTextString(m) }
-func (*ShowLog) ProtoMessage()               {}
-func (*ShowLog) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{3} }
+func (m *ShowLog) Reset()         { *m = ShowLog{} }
+func (m *ShowLog) String() string { return proto.CompactTextString(m) }
+func (*ShowLog) ProtoMessage()    {}
+func (*ShowLog) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4d737c7315c25422, []int{3}
+}
+func (m *ShowLog) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ShowLog) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ShowLog.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ShowLog) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ShowLog.Merge(m, src)
+}
+func (m *ShowLog) XXX_Size() int {
+	return m.Size()
+}
+func (m *ShowLog) XXX_DiscardUnknown() {
+	xxx_messageInfo_ShowLog.DiscardUnknown(m)
+}
 
-// ExecRequest is a common struct for enabling a webrtc connection do execute some work on a container.
+var xxx_messageInfo_ShowLog proto.InternalMessageInfo
+
+// ExecRequest is a common struct for enabling a connection to execute some work on a container.
 type ExecRequest struct {
 	// Target AppInst
-	AppInstKey AppInstKey `protobuf:"bytes,1,opt,name=app_inst_key,json=appInstKey" json:"app_inst_key"`
+	AppInstKey AppInstKey `protobuf:"bytes,1,opt,name=app_inst_key,json=appInstKey,proto3" json:"app_inst_key"`
 	// ContainerId is the name or ID of the target container, if applicable
 	ContainerId string `protobuf:"bytes,3,opt,name=container_id,json=containerId,proto3" json:"container_id,omitempty"`
-	// WebRTC Offer
+	// Offer
 	Offer string `protobuf:"bytes,4,opt,name=offer,proto3" json:"offer,omitempty"`
-	// WebRTC Answer
+	// Answer
 	Answer string `protobuf:"bytes,5,opt,name=answer,proto3" json:"answer,omitempty"`
 	// Any error message
 	Err string `protobuf:"bytes,6,opt,name=err,proto3" json:"err,omitempty"`
 	// Command to run (one of)
-	Cmd *RunCmd `protobuf:"bytes,9,opt,name=cmd" json:"cmd,omitempty"`
+	Cmd *RunCmd `protobuf:"bytes,9,opt,name=cmd,proto3" json:"cmd,omitempty"`
 	// Show log (one of)
-	Log *ShowLog `protobuf:"bytes,10,opt,name=log" json:"log,omitempty"`
+	Log *ShowLog `protobuf:"bytes,10,opt,name=log,proto3" json:"log,omitempty"`
 	// Console (one of)
-	Console *RunVMConsole `protobuf:"bytes,11,opt,name=console" json:"console,omitempty"`
+	Console *RunVMConsole `protobuf:"bytes,11,opt,name=console,proto3" json:"console,omitempty"`
 	// Timeout
 	Timeout Duration `protobuf:"varint,12,opt,name=timeout,proto3,casttype=Duration" json:"timeout,omitempty"`
-	// WebRTC
-	Webrtc bool `protobuf:"varint,13,opt,name=webrtc,proto3" json:"webrtc,omitempty"`
 	// Access URL
 	AccessUrl string `protobuf:"bytes,14,opt,name=access_url,json=accessUrl,proto3" json:"access_url,omitempty"`
 	// EdgeTurn Server Address
 	EdgeTurnAddr string `protobuf:"bytes,15,opt,name=edge_turn_addr,json=edgeTurnAddr,proto3" json:"edge_turn_addr,omitempty"`
 }
 
-func (m *ExecRequest) Reset()                    { *m = ExecRequest{} }
-func (m *ExecRequest) String() string            { return proto.CompactTextString(m) }
-func (*ExecRequest) ProtoMessage()               {}
-func (*ExecRequest) Descriptor() ([]byte, []int) { return fileDescriptorExec, []int{4} }
+func (m *ExecRequest) Reset()         { *m = ExecRequest{} }
+func (m *ExecRequest) String() string { return proto.CompactTextString(m) }
+func (*ExecRequest) ProtoMessage()    {}
+func (*ExecRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4d737c7315c25422, []int{4}
+}
+func (m *ExecRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ExecRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ExecRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ExecRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExecRequest.Merge(m, src)
+}
+func (m *ExecRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ExecRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ExecRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ExecRequest proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*CloudletMgmtNode)(nil), "edgeproto.CloudletMgmtNode")
@@ -112,6 +258,78 @@ func init() {
 	proto.RegisterType((*RunVMConsole)(nil), "edgeproto.RunVMConsole")
 	proto.RegisterType((*ShowLog)(nil), "edgeproto.ShowLog")
 	proto.RegisterType((*ExecRequest)(nil), "edgeproto.ExecRequest")
+}
+
+func init() { proto.RegisterFile("exec.proto", fileDescriptor_4d737c7315c25422) }
+
+var fileDescriptor_4d737c7315c25422 = []byte{
+	// 1042 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcb, 0x6f, 0x1b, 0x45,
+	0x18, 0xf7, 0xd6, 0x8f, 0xc4, 0x63, 0x37, 0x84, 0x51, 0x09, 0x43, 0x40, 0x4e, 0x70, 0xa0, 0x8a,
+	0xd0, 0xc6, 0x16, 0xe1, 0x82, 0x52, 0x72, 0x70, 0xdc, 0x20, 0x45, 0x4d, 0xda, 0x6a, 0x93, 0xe6,
+	0x86, 0xac, 0xc9, 0xee, 0x64, 0xbb, 0xea, 0xee, 0xcc, 0x32, 0xbb, 0x4b, 0x12, 0x4e, 0xdc, 0xb8,
+	0x22, 0x2e, 0x48, 0x1c, 0x39, 0x21, 0x71, 0x41, 0x88, 0x3f, 0xa0, 0xc7, 0x88, 0x53, 0x8f, 0x55,
+	0x0f, 0x15, 0x38, 0x12, 0xaa, 0x72, 0x43, 0xca, 0x72, 0xe0, 0x84, 0x66, 0x66, 0xd7, 0xde, 0xba,
+	0x76, 0x62, 0x4b, 0xbd, 0xd8, 0xdf, 0x6b, 0xbe, 0xc7, 0xef, 0x7b, 0x68, 0x01, 0x20, 0xc7, 0xc4,
+	0x6c, 0xf8, 0x9c, 0x85, 0x0c, 0x96, 0x89, 0x65, 0x13, 0x49, 0xce, 0x7f, 0x6a, 0x3b, 0xe1, 0xc3,
+	0xe8, 0xa0, 0x61, 0x32, 0xaf, 0xe9, 0xb1, 0x03, 0xc7, 0x15, 0xaa, 0xe3, 0xa6, 0xf8, 0x5d, 0x31,
+	0x5d, 0x16, 0x59, 0x4d, 0x69, 0x67, 0x13, 0xda, 0x23, 0x94, 0x93, 0xf9, 0x1b, 0x36, 0xb3, 0x99,
+	0x24, 0x9b, 0x82, 0x4a, 0xa4, 0xd7, 0xb1, 0xef, 0x3b, 0x34, 0x08, 0x15, 0x5b, 0x5f, 0x03, 0xb3,
+	0x6d, 0xe1, 0xc5, 0x25, 0xe1, 0x8e, 0xed, 0x85, 0x77, 0x99, 0x45, 0x20, 0x04, 0x85, 0xf0, 0xc4,
+	0x27, 0x48, 0x5b, 0xd4, 0x96, 0xcb, 0x86, 0xa4, 0x85, 0x8c, 0x62, 0x8f, 0xa0, 0x6b, 0x4a, 0x26,
+	0xe8, 0xba, 0x07, 0x4a, 0x46, 0x44, 0xdb, 0x9e, 0x05, 0x11, 0x98, 0x32, 0x99, 0xe7, 0x61, 0x6a,
+	0x25, 0x8f, 0x52, 0x16, 0x6e, 0x01, 0x68, 0x26, 0xfe, 0x3b, 0x9e, 0xed, 0x85, 0x1d, 0xca, 0x2c,
+	0xe5, 0xa5, 0xb2, 0xfa, 0x6e, 0xa3, 0x57, 0x66, 0x63, 0x30, 0x09, 0x63, 0xd6, 0x1c, 0x90, 0xd4,
+	0x9b, 0xa0, 0x6a, 0x44, 0x74, 0x7f, 0xa7, 0xcd, 0x68, 0xc0, 0x5c, 0x02, 0x17, 0x40, 0x3e, 0xe2,
+	0xae, 0x0a, 0xb8, 0x71, 0xfd, 0xe7, 0x0b, 0xa4, 0x7d, 0xff, 0xdb, 0x3b, 0x45, 0xca, 0x4c, 0xcf,
+	0x37, 0x84, 0xa6, 0xfe, 0x08, 0x4c, 0xed, 0x3e, 0x64, 0x47, 0xdb, 0xcc, 0x86, 0x37, 0x40, 0x31,
+	0x70, 0xa8, 0x99, 0xd6, 0xa4, 0x18, 0x59, 0x28, 0x76, 0x5c, 0x99, 0x4e, 0xd1, 0x90, 0x34, 0xac,
+	0x01, 0x10, 0x3a, 0x1e, 0x09, 0x42, 0xec, 0xf9, 0x01, 0xca, 0x2f, 0x6a, 0xcb, 0xd3, 0x46, 0x46,
+	0x02, 0xe7, 0x40, 0xe9, 0x90, 0xb9, 0x2e, 0x3b, 0x42, 0x05, 0xa9, 0x4b, 0xb8, 0xfa, 0xb7, 0xd3,
+	0xa0, 0xb2, 0x79, 0x4c, 0x4c, 0x83, 0x7c, 0x19, 0x91, 0x20, 0x84, 0xeb, 0xa0, 0x8a, 0x7d, 0xbf,
+	0x23, 0xa0, 0xee, 0x3c, 0x22, 0x27, 0x32, 0x70, 0x65, 0xf5, 0xad, 0x4c, 0xc9, 0x2d, 0xdf, 0xdf,
+	0xa2, 0x41, 0x78, 0x87, 0x9c, 0x6c, 0x14, 0x4e, 0x9f, 0x2f, 0xe4, 0x0c, 0x80, 0x7b, 0x12, 0xf8,
+	0x3e, 0xa8, 0x9a, 0x8c, 0x86, 0xd8, 0xa1, 0x84, 0x77, 0x1c, 0x4b, 0x26, 0x52, 0x36, 0x2a, 0x3d,
+	0xd9, 0x96, 0x05, 0x97, 0x40, 0x91, 0x1d, 0x1e, 0x12, 0x2e, 0x13, 0x79, 0x05, 0x01, 0xa5, 0x83,
+	0x1f, 0x82, 0x12, 0xa6, 0xc1, 0x11, 0xe1, 0xa8, 0x38, 0xcc, 0x2a, 0x51, 0xc2, 0x59, 0x90, 0x27,
+	0x9c, 0xa3, 0x92, 0x8c, 0x22, 0x48, 0xb8, 0x04, 0xf2, 0xa6, 0x67, 0xa1, 0xb2, 0x4c, 0xfb, 0xcd,
+	0x4c, 0xda, 0xaa, 0xe5, 0x86, 0xd0, 0xc2, 0x0f, 0x40, 0xde, 0x65, 0x36, 0x02, 0xd2, 0x08, 0x66,
+	0x8c, 0x12, 0xdc, 0x0d, 0xa1, 0x86, 0x1f, 0x8b, 0xe9, 0x90, 0x3d, 0x43, 0x15, 0x69, 0xf9, 0xf6,
+	0xcb, 0xee, 0x7a, 0x2d, 0x35, 0x52, 0x3b, 0x78, 0x13, 0x4c, 0x09, 0xcc, 0x59, 0x14, 0xa2, 0xea,
+	0xa2, 0xb6, 0x9c, 0xdf, 0xa8, 0xfe, 0xf7, 0x7c, 0x61, 0xfa, 0x76, 0xc4, 0x71, 0xe8, 0x30, 0x6a,
+	0xa4, 0x4a, 0xb8, 0x04, 0x00, 0x36, 0x4d, 0x12, 0x04, 0x1d, 0x31, 0x0a, 0x33, 0xb2, 0xc4, 0x82,
+	0x28, 0xd1, 0x28, 0x2b, 0xf9, 0x03, 0xee, 0xc2, 0x8f, 0xc0, 0x8c, 0x88, 0xd7, 0x09, 0x23, 0x4e,
+	0x3b, 0xd8, 0xb2, 0x38, 0x7a, 0x23, 0x63, 0x58, 0x15, 0xba, 0xbd, 0x88, 0xd3, 0x96, 0x65, 0xf1,
+	0xb5, 0xc7, 0x85, 0xc7, 0x17, 0x48, 0x3b, 0x15, 0x20, 0xc5, 0xe8, 0xd6, 0x3d, 0x81, 0xa1, 0xde,
+	0x92, 0x18, 0xe9, 0x9b, 0x9c, 0xeb, 0x49, 0xa2, 0x8d, 0x07, 0xdc, 0xd5, 0xf7, 0x54, 0x0e, 0x7a,
+	0x2b, 0x0d, 0xa4, 0x6f, 0x66, 0x3c, 0xfd, 0x18, 0xa3, 0xbf, 0xf3, 0xd8, 0xf7, 0xc5, 0xa6, 0xac,
+	0xf7, 0x5b, 0x2d, 0xba, 0x2e, 0xfe, 0xee, 0x62, 0x8f, 0xe8, 0xd8, 0xf7, 0xbf, 0x22, 0x3c, 0x18,
+	0xa2, 0xde, 0x27, 0x3c, 0x70, 0x18, 0x15, 0x16, 0x2b, 0x8c, 0xdb, 0x43, 0x2c, 0xee, 0x71, 0x1b,
+	0x53, 0xe7, 0x6b, 0x89, 0x87, 0x6e, 0xba, 0x51, 0x10, 0x12, 0x9e, 0x35, 0x6b, 0x2b, 0xd1, 0x00,
+	0xdb, 0x0b, 0x9d, 0xbc, 0x18, 0x74, 0x3e, 0xf0, 0x6a, 0x20, 0x88, 0x5a, 0xc8, 0x4b, 0xa3, 0x28,
+	0x93, 0x4c, 0x18, 0x25, 0xb8, 0x22, 0x4e, 0xf6, 0xdd, 0xcb, 0x31, 0xd5, 0x19, 0x59, 0x6f, 0x7b,
+	0x56, 0xa3, 0xad, 0x68, 0x5d, 0xee, 0xee, 0xfa, 0x36, 0xb3, 0x1b, 0xbb, 0x82, 0xd2, 0xc5, 0xda,
+	0x4a, 0x76, 0x0f, 0x3b, 0xae, 0xde, 0x5f, 0x55, 0x25, 0xeb, 0xb1, 0xba, 0x5a, 0x54, 0x29, 0xfd,
+	0x5c, 0x92, 0xba, 0xb8, 0x45, 0x2b, 0xe2, 0xbc, 0x29, 0xff, 0x03, 0x07, 0xa7, 0xb1, 0x77, 0xe2,
+	0x13, 0x65, 0x23, 0x9b, 0x38, 0xd4, 0x46, 0x54, 0xf9, 0x47, 0x8c, 0x40, 0xbf, 0xb6, 0xd5, 0x5f,
+	0x01, 0x98, 0x12, 0x97, 0xa0, 0xe5, 0x3b, 0xf0, 0x87, 0x6b, 0x00, 0x88, 0x85, 0x49, 0xae, 0xe1,
+	0x5c, 0x66, 0xf0, 0x33, 0xc7, 0x62, 0x7e, 0x84, 0xbc, 0xfe, 0x54, 0x3b, 0xbf, 0x40, 0x9f, 0x19,
+	0x24, 0x60, 0x11, 0x37, 0x49, 0x12, 0x23, 0xd0, 0x5b, 0xa6, 0x00, 0x67, 0x07, 0x53, 0x6c, 0x13,
+	0xfd, 0xf2, 0xd1, 0x78, 0x16, 0xa3, 0xfb, 0xaf, 0x4c, 0x71, 0x3a, 0xb9, 0xdb, 0xcc, 0x4e, 0x27,
+	0x7a, 0xc4, 0x14, 0xeb, 0xc3, 0x8a, 0xee, 0xc6, 0x68, 0xae, 0x1f, 0x55, 0xcf, 0xf4, 0xe6, 0x3c,
+	0x46, 0x37, 0xc7, 0x9b, 0x26, 0xf8, 0x53, 0x8a, 0x8c, 0x5a, 0xf8, 0x49, 0x91, 0x39, 0x7b, 0x1d,
+	0xc8, 0xdc, 0xb9, 0x1c, 0x19, 0xcf, 0xea, 0xa1, 0xd3, 0xee, 0xdf, 0xdd, 0x11, 0x48, 0x9d, 0xc7,
+	0xe8, 0xfe, 0xf8, 0xeb, 0x37, 0x26, 0x48, 0x2f, 0x34, 0x30, 0x9d, 0x9c, 0xd2, 0x60, 0x62, 0x88,
+	0x7e, 0x11, 0x10, 0xad, 0x8d, 0x80, 0x68, 0xdf, 0x21, 0x47, 0x57, 0x03, 0x74, 0x6b, 0x24, 0x40,
+	0x59, 0x70, 0x46, 0x02, 0x32, 0xe6, 0x2c, 0x7c, 0xf3, 0x2f, 0xd2, 0xe0, 0xef, 0x79, 0x30, 0xa3,
+	0x1c, 0xa5, 0xe3, 0x36, 0x71, 0xc1, 0xff, 0x5c, 0x3b, 0xbf, 0x40, 0x0b, 0x69, 0xc1, 0xa9, 0x9b,
+	0x81, 0xa1, 0x78, 0x16, 0xa3, 0x17, 0xda, 0x58, 0x1b, 0x71, 0x75, 0xcf, 0xf5, 0x11, 0x77, 0x7d,
+	0xf4, 0x3d, 0xbf, 0xe2, 0x8e, 0xbf, 0xee, 0x01, 0xea, 0xc6, 0xe8, 0x8b, 0x09, 0xae, 0xf5, 0xe4,
+	0x07, 0x1a, 0xde, 0x06, 0xb3, 0xbb, 0x84, 0x5a, 0xdb, 0xcc, 0xc4, 0x6e, 0xfa, 0xe9, 0x33, 0x69,
+	0xdf, 0x72, 0x1b, 0xef, 0x9d, 0xfe, 0x55, 0xcb, 0x9d, 0x76, 0x6b, 0xda, 0x93, 0x6e, 0x4d, 0xfb,
+	0xb3, 0x5b, 0xd3, 0xbe, 0x3b, 0xab, 0xe5, 0x9e, 0x9c, 0xd5, 0x72, 0x4f, 0xcf, 0x6a, 0xb9, 0x83,
+	0x92, 0x7c, 0xf2, 0xc9, 0xff, 0x01, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x7c, 0x13, 0xd5, 0x22, 0x0b,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -122,8 +340,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for ExecApi service
-
+// ExecApiClient is the client API for ExecApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ExecApiClient interface {
 	// Run a Command or Shell on a container
 	RunCommand(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error)
@@ -147,7 +366,7 @@ func NewExecApiClient(cc *grpc.ClientConn) ExecApiClient {
 
 func (c *execApiClient) RunCommand(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
 	out := new(ExecRequest)
-	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/RunCommand", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ExecApi/RunCommand", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +375,7 @@ func (c *execApiClient) RunCommand(ctx context.Context, in *ExecRequest, opts ..
 
 func (c *execApiClient) RunConsole(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
 	out := new(ExecRequest)
-	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/RunConsole", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ExecApi/RunConsole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +384,7 @@ func (c *execApiClient) RunConsole(ctx context.Context, in *ExecRequest, opts ..
 
 func (c *execApiClient) ShowLogs(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
 	out := new(ExecRequest)
-	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/ShowLogs", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ExecApi/ShowLogs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +393,7 @@ func (c *execApiClient) ShowLogs(ctx context.Context, in *ExecRequest, opts ...g
 
 func (c *execApiClient) AccessCloudlet(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
 	out := new(ExecRequest)
-	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/AccessCloudlet", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ExecApi/AccessCloudlet", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,15 +402,14 @@ func (c *execApiClient) AccessCloudlet(ctx context.Context, in *ExecRequest, opt
 
 func (c *execApiClient) SendLocalRequest(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecRequest, error) {
 	out := new(ExecRequest)
-	err := grpc.Invoke(ctx, "/edgeproto.ExecApi/SendLocalRequest", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ExecApi/SendLocalRequest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for ExecApi service
-
+// ExecApiServer is the server API for ExecApi service.
 type ExecApiServer interface {
 	// Run a Command or Shell on a container
 	RunCommand(context.Context, *ExecRequest) (*ExecRequest, error)
@@ -203,6 +421,26 @@ type ExecApiServer interface {
 	AccessCloudlet(context.Context, *ExecRequest) (*ExecRequest, error)
 	// This is used internally to forward requests to other Controllers.e
 	SendLocalRequest(context.Context, *ExecRequest) (*ExecRequest, error)
+}
+
+// UnimplementedExecApiServer can be embedded to have forward compatible implementations.
+type UnimplementedExecApiServer struct {
+}
+
+func (*UnimplementedExecApiServer) RunCommand(ctx context.Context, req *ExecRequest) (*ExecRequest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RunCommand not implemented")
+}
+func (*UnimplementedExecApiServer) RunConsole(ctx context.Context, req *ExecRequest) (*ExecRequest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RunConsole not implemented")
+}
+func (*UnimplementedExecApiServer) ShowLogs(ctx context.Context, req *ExecRequest) (*ExecRequest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowLogs not implemented")
+}
+func (*UnimplementedExecApiServer) AccessCloudlet(ctx context.Context, req *ExecRequest) (*ExecRequest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AccessCloudlet not implemented")
+}
+func (*UnimplementedExecApiServer) SendLocalRequest(ctx context.Context, req *ExecRequest) (*ExecRequest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendLocalRequest not implemented")
 }
 
 func RegisterExecApiServer(s *grpc.Server, srv ExecApiServer) {
@@ -331,7 +569,7 @@ var _ExecApi_serviceDesc = grpc.ServiceDesc{
 func (m *CloudletMgmtNode) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -339,29 +577,36 @@ func (m *CloudletMgmtNode) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletMgmtNode) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletMgmtNode) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
 	if len(m.Name) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
 		i = encodeVarintExec(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Type) > 0 {
+		i -= len(m.Type)
+		copy(dAtA[i:], m.Type)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Type)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *RunCmd) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -369,33 +614,41 @@ func (m *RunCmd) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *RunCmd) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RunCmd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Command) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.Command)))
-		i += copy(dAtA[i:], m.Command)
-	}
 	if m.CloudletMgmtNode != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(m.CloudletMgmtNode.Size()))
-		n1, err := m.CloudletMgmtNode.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
+		{
+			size, err := m.CloudletMgmtNode.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintExec(dAtA, i, uint64(size))
 		}
-		i += n1
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Command) > 0 {
+		i -= len(m.Command)
+		copy(dAtA[i:], m.Command)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Command)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *RunVMConsole) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -403,23 +656,29 @@ func (m *RunVMConsole) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *RunVMConsole) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RunVMConsole) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.Url) > 0 {
-		dAtA[i] = 0xa
-		i++
+		i -= len(m.Url)
+		copy(dAtA[i:], m.Url)
 		i = encodeVarintExec(dAtA, i, uint64(len(m.Url)))
-		i += copy(dAtA[i:], m.Url)
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *ShowLog) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -427,48 +686,54 @@ func (m *ShowLog) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ShowLog) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ShowLog) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Since) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.Since)))
-		i += copy(dAtA[i:], m.Since)
-	}
-	if m.Tail != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(m.Tail))
-	}
-	if m.Timestamps {
-		dAtA[i] = 0x18
-		i++
-		if m.Timestamps {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
 	if m.Follow {
-		dAtA[i] = 0x20
-		i++
+		i--
 		if m.Follow {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x20
 	}
-	return i, nil
+	if m.Timestamps {
+		i--
+		if m.Timestamps {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Tail != 0 {
+		i = encodeVarintExec(dAtA, i, uint64(m.Tail))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Since) > 0 {
+		i -= len(m.Since)
+		copy(dAtA[i:], m.Since)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Since)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *ExecRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -476,110 +741,121 @@ func (m *ExecRequest) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ExecRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ExecRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintExec(dAtA, i, uint64(m.AppInstKey.Size()))
-	n2, err := m.AppInstKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	if len(m.ContainerId) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.ContainerId)))
-		i += copy(dAtA[i:], m.ContainerId)
-	}
-	if len(m.Offer) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.Offer)))
-		i += copy(dAtA[i:], m.Offer)
-	}
-	if len(m.Answer) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.Answer)))
-		i += copy(dAtA[i:], m.Answer)
-	}
-	if len(m.Err) > 0 {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.Err)))
-		i += copy(dAtA[i:], m.Err)
-	}
-	if m.Cmd != nil {
-		dAtA[i] = 0x4a
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(m.Cmd.Size()))
-		n3, err := m.Cmd.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n3
-	}
-	if m.Log != nil {
-		dAtA[i] = 0x52
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(m.Log.Size()))
-		n4, err := m.Log.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n4
-	}
-	if m.Console != nil {
-		dAtA[i] = 0x5a
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(m.Console.Size()))
-		n5, err := m.Console.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
-	}
-	if m.Timeout != 0 {
-		dAtA[i] = 0x60
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(m.Timeout))
-	}
-	if m.Webrtc {
-		dAtA[i] = 0x68
-		i++
-		if m.Webrtc {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
+	if len(m.EdgeTurnAddr) > 0 {
+		i -= len(m.EdgeTurnAddr)
+		copy(dAtA[i:], m.EdgeTurnAddr)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.EdgeTurnAddr)))
+		i--
+		dAtA[i] = 0x7a
 	}
 	if len(m.AccessUrl) > 0 {
-		dAtA[i] = 0x72
-		i++
+		i -= len(m.AccessUrl)
+		copy(dAtA[i:], m.AccessUrl)
 		i = encodeVarintExec(dAtA, i, uint64(len(m.AccessUrl)))
-		i += copy(dAtA[i:], m.AccessUrl)
+		i--
+		dAtA[i] = 0x72
 	}
-	if len(m.EdgeTurnAddr) > 0 {
-		dAtA[i] = 0x7a
-		i++
-		i = encodeVarintExec(dAtA, i, uint64(len(m.EdgeTurnAddr)))
-		i += copy(dAtA[i:], m.EdgeTurnAddr)
+	if m.Timeout != 0 {
+		i = encodeVarintExec(dAtA, i, uint64(m.Timeout))
+		i--
+		dAtA[i] = 0x60
 	}
-	return i, nil
+	if m.Console != nil {
+		{
+			size, err := m.Console.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintExec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x5a
+	}
+	if m.Log != nil {
+		{
+			size, err := m.Log.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintExec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x52
+	}
+	if m.Cmd != nil {
+		{
+			size, err := m.Cmd.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintExec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x4a
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Answer) > 0 {
+		i -= len(m.Answer)
+		copy(dAtA[i:], m.Answer)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Answer)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Offer) > 0 {
+		i -= len(m.Offer)
+		copy(dAtA[i:], m.Offer)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.Offer)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ContainerId) > 0 {
+		i -= len(m.ContainerId)
+		copy(dAtA[i:], m.ContainerId)
+		i = encodeVarintExec(dAtA, i, uint64(len(m.ContainerId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.AppInstKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintExec(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintExec(dAtA []byte, offset int, v uint64) int {
+	offset -= sovExec(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *CloudletMgmtNode) CopyInFields(src *CloudletMgmtNode) int {
 	changed := 0
@@ -815,10 +1091,6 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		m.Timeout = src.Timeout
 		changed++
 	}
-	if m.Webrtc != src.Webrtc {
-		m.Webrtc = src.Webrtc
-		changed++
-	}
 	if m.AccessUrl != src.AccessUrl {
 		m.AccessUrl = src.AccessUrl
 		changed++
@@ -858,7 +1130,6 @@ func (m *ExecRequest) DeepCopyIn(src *ExecRequest) {
 		m.Console = nil
 	}
 	m.Timeout = src.Timeout
-	m.Webrtc = src.Webrtc
 	m.AccessUrl = src.AccessUrl
 	m.EdgeTurnAddr = src.EdgeTurnAddr
 }
@@ -899,6 +1170,9 @@ func IgnoreExecRequestFields(taglist string) cmp.Option {
 }
 
 func (m *CloudletMgmtNode) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Type)
@@ -913,6 +1187,9 @@ func (m *CloudletMgmtNode) Size() (n int) {
 }
 
 func (m *RunCmd) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Command)
@@ -927,6 +1204,9 @@ func (m *RunCmd) Size() (n int) {
 }
 
 func (m *RunVMConsole) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Url)
@@ -937,6 +1217,9 @@ func (m *RunVMConsole) Size() (n int) {
 }
 
 func (m *ShowLog) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Since)
@@ -956,6 +1239,9 @@ func (m *ShowLog) Size() (n int) {
 }
 
 func (m *ExecRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.AppInstKey.Size()
@@ -991,9 +1277,6 @@ func (m *ExecRequest) Size() (n int) {
 	if m.Timeout != 0 {
 		n += 1 + sovExec(uint64(m.Timeout))
 	}
-	if m.Webrtc {
-		n += 2
-	}
 	l = len(m.AccessUrl)
 	if l > 0 {
 		n += 1 + l + sovExec(uint64(l))
@@ -1006,14 +1289,7 @@ func (m *ExecRequest) Size() (n int) {
 }
 
 func sovExec(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozExec(x uint64) (n int) {
 	return sovExec(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1033,7 +1309,7 @@ func (m *CloudletMgmtNode) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1061,7 +1337,7 @@ func (m *CloudletMgmtNode) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1071,6 +1347,9 @@ func (m *CloudletMgmtNode) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1090,7 +1369,7 @@ func (m *CloudletMgmtNode) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1100,6 +1379,9 @@ func (m *CloudletMgmtNode) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1112,6 +1394,9 @@ func (m *CloudletMgmtNode) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthExec
 			}
 			if (iNdEx + skippy) > l {
@@ -1141,7 +1426,7 @@ func (m *RunCmd) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1169,7 +1454,7 @@ func (m *RunCmd) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1179,6 +1464,9 @@ func (m *RunCmd) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1198,7 +1486,7 @@ func (m *RunCmd) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1207,6 +1495,9 @@ func (m *RunCmd) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1224,6 +1515,9 @@ func (m *RunCmd) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthExec
 			}
 			if (iNdEx + skippy) > l {
@@ -1253,7 +1547,7 @@ func (m *RunVMConsole) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1281,7 +1575,7 @@ func (m *RunVMConsole) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1291,6 +1585,9 @@ func (m *RunVMConsole) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1303,6 +1600,9 @@ func (m *RunVMConsole) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthExec
 			}
 			if (iNdEx + skippy) > l {
@@ -1332,7 +1632,7 @@ func (m *ShowLog) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1360,7 +1660,7 @@ func (m *ShowLog) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1370,6 +1670,9 @@ func (m *ShowLog) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1389,7 +1692,7 @@ func (m *ShowLog) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Tail |= (int32(b) & 0x7F) << shift
+				m.Tail |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1408,7 +1711,7 @@ func (m *ShowLog) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1428,7 +1731,7 @@ func (m *ShowLog) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1441,6 +1744,9 @@ func (m *ShowLog) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthExec
 			}
 			if (iNdEx + skippy) > l {
@@ -1470,7 +1776,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1498,7 +1804,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1507,6 +1813,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1528,7 +1837,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1538,6 +1847,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1557,7 +1869,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1567,6 +1879,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1586,7 +1901,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1596,6 +1911,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1615,7 +1933,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1625,6 +1943,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1644,7 +1965,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1653,6 +1974,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1677,7 +2001,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1686,6 +2010,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1710,7 +2037,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1719,6 +2046,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1743,31 +2073,11 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Timeout |= (Duration(b) & 0x7F) << shift
+				m.Timeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 13:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Webrtc", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Webrtc = bool(v != 0)
 		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccessUrl", wireType)
@@ -1782,7 +2092,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1792,6 +2102,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1811,7 +2124,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1821,6 +2134,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExec
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExec
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1833,6 +2149,9 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthExec
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthExec
 			}
 			if (iNdEx + skippy) > l {
@@ -1850,6 +2169,7 @@ func (m *ExecRequest) Unmarshal(dAtA []byte) error {
 func skipExec(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1881,10 +2201,8 @@ func skipExec(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1901,125 +2219,34 @@ func skipExec(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthExec
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowExec
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipExec(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupExec
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthExec
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthExec = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowExec   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthExec        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowExec          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupExec = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("exec.proto", fileDescriptorExec) }
-
-var fileDescriptorExec = []byte{
-	// 1045 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcf, 0x6f, 0x1b, 0xc5,
-	0x17, 0xcf, 0xc6, 0x3f, 0x12, 0x8f, 0x9d, 0x7c, 0xfd, 0x1d, 0x95, 0x30, 0x04, 0xc9, 0x09, 0x0e,
-	0x54, 0x11, 0xda, 0xd8, 0x22, 0x5c, 0x50, 0x4a, 0x0e, 0x8e, 0x1b, 0xa4, 0xa8, 0x49, 0x5b, 0x6d,
-	0xd2, 0xdc, 0x90, 0x35, 0xd9, 0x9d, 0x6c, 0x57, 0xdd, 0x9d, 0x59, 0x66, 0x77, 0x71, 0xc2, 0x89,
-	0xbf, 0x81, 0x0b, 0x12, 0x17, 0x24, 0x4e, 0x48, 0x5c, 0x10, 0xe2, 0x0f, 0xe8, 0x31, 0xe2, 0xc4,
-	0x11, 0xf5, 0x50, 0x81, 0x91, 0x50, 0x95, 0x1b, 0x52, 0x96, 0x03, 0x27, 0x34, 0x33, 0xbb, 0xf6,
-	0xd6, 0xb5, 0x13, 0x5b, 0xea, 0x25, 0x79, 0xf3, 0xde, 0xdb, 0xf7, 0xe3, 0xf3, 0xde, 0xfb, 0xc8,
-	0x00, 0x90, 0x33, 0x62, 0x36, 0x7c, 0xce, 0x42, 0x06, 0x4b, 0xc4, 0xb2, 0x89, 0x14, 0x97, 0x3f,
-	0xb2, 0x9d, 0xf0, 0x71, 0x74, 0xd2, 0x30, 0x99, 0xd7, 0xf4, 0xd8, 0x89, 0xe3, 0x0a, 0xd3, 0x59,
-	0x53, 0xfc, 0xdd, 0x30, 0x5d, 0x16, 0x59, 0x4d, 0xe9, 0x67, 0x13, 0xda, 0x17, 0x54, 0x90, 0xe5,
-	0x5b, 0x36, 0xb3, 0x99, 0x14, 0x9b, 0x42, 0x4a, 0xb4, 0x0b, 0xd8, 0xf7, 0x1d, 0x1a, 0x84, 0xea,
-	0x59, 0xdf, 0x02, 0xd5, 0xb6, 0x88, 0xe2, 0x92, 0xf0, 0xc0, 0xf6, 0xc2, 0xfb, 0xcc, 0x22, 0x10,
-	0x82, 0x7c, 0x78, 0xee, 0x13, 0xa4, 0xad, 0x6a, 0xeb, 0x25, 0x43, 0xca, 0x42, 0x47, 0xb1, 0x47,
-	0xd0, 0xac, 0xd2, 0x09, 0xb9, 0xee, 0x81, 0xa2, 0x11, 0xd1, 0xb6, 0x67, 0x41, 0x04, 0xe6, 0x4c,
-	0xe6, 0x79, 0x98, 0x5a, 0xc9, 0x47, 0xe9, 0x13, 0xee, 0x01, 0x68, 0x26, 0xf1, 0x3b, 0x9e, 0xed,
-	0x85, 0x1d, 0xca, 0x2c, 0x15, 0xa5, 0xbc, 0xf9, 0x76, 0xa3, 0xdf, 0x66, 0x63, 0xb8, 0x08, 0xa3,
-	0x6a, 0x0e, 0x69, 0xea, 0x4d, 0x50, 0x31, 0x22, 0x7a, 0x7c, 0xd0, 0x66, 0x34, 0x60, 0x2e, 0x81,
-	0x2b, 0x20, 0x17, 0x71, 0x57, 0x25, 0xdc, 0x59, 0xf8, 0xfe, 0x0a, 0x69, 0x5f, 0xfd, 0xf4, 0x56,
-	0x81, 0x32, 0xd3, 0xf3, 0x0d, 0x61, 0xa9, 0x3f, 0x01, 0x73, 0x87, 0x8f, 0x59, 0x77, 0x9f, 0xd9,
-	0xf0, 0x16, 0x28, 0x04, 0x0e, 0x35, 0xd3, 0x9e, 0xd4, 0x43, 0x36, 0x8a, 0x1d, 0x57, 0x96, 0x53,
-	0x30, 0xa4, 0x0c, 0x6b, 0x00, 0x84, 0x8e, 0x47, 0x82, 0x10, 0x7b, 0x7e, 0x80, 0x72, 0xab, 0xda,
-	0xfa, 0xbc, 0x91, 0xd1, 0xc0, 0x25, 0x50, 0x3c, 0x65, 0xae, 0xcb, 0xba, 0x28, 0x2f, 0x6d, 0xc9,
-	0xab, 0xfe, 0xed, 0x3c, 0x28, 0xef, 0x9e, 0x11, 0xd3, 0x20, 0x9f, 0x45, 0x24, 0x08, 0xe1, 0x36,
-	0xa8, 0x60, 0xdf, 0xef, 0x08, 0xa8, 0x3b, 0x4f, 0xc8, 0xb9, 0x4c, 0x5c, 0xde, 0x7c, 0x23, 0xd3,
-	0x72, 0xcb, 0xf7, 0xf7, 0x68, 0x10, 0xde, 0x23, 0xe7, 0x3b, 0xf9, 0x8b, 0xe7, 0x2b, 0x33, 0x06,
-	0xc0, 0x7d, 0x0d, 0x7c, 0x07, 0x54, 0x4c, 0x46, 0x43, 0xec, 0x50, 0xc2, 0x3b, 0x8e, 0x25, 0x0b,
-	0x29, 0x19, 0xe5, 0xbe, 0x6e, 0xcf, 0x82, 0x6b, 0xa0, 0xc0, 0x4e, 0x4f, 0x09, 0x97, 0x85, 0xbc,
-	0x82, 0x80, 0xb2, 0xc1, 0xf7, 0x40, 0x11, 0xd3, 0xa0, 0x4b, 0x38, 0x2a, 0x8c, 0xf2, 0x4a, 0x8c,
-	0xb0, 0x0a, 0x72, 0x84, 0x73, 0x54, 0x94, 0x59, 0x84, 0x08, 0xd7, 0x40, 0xce, 0xf4, 0x2c, 0x54,
-	0x92, 0x65, 0xff, 0x3f, 0x53, 0xb6, 0x1a, 0xb9, 0x21, 0xac, 0xf0, 0x5d, 0x90, 0x73, 0x99, 0x8d,
-	0x80, 0x74, 0x82, 0x19, 0xa7, 0x04, 0x77, 0x43, 0x98, 0xe1, 0x07, 0x62, 0x3b, 0xe4, 0xcc, 0x50,
-	0x59, 0x7a, 0xbe, 0xf9, 0x72, 0xb8, 0xfe, 0x48, 0x8d, 0xd4, 0x0f, 0xde, 0x06, 0x73, 0x02, 0x73,
-	0x16, 0x85, 0xa8, 0xb2, 0xaa, 0xad, 0xe7, 0x76, 0x2a, 0xff, 0x3e, 0x5f, 0x99, 0xbf, 0x1b, 0x71,
-	0x1c, 0x3a, 0x8c, 0x1a, 0xa9, 0x51, 0x4c, 0xa3, 0x4b, 0x4e, 0x78, 0x68, 0xa2, 0x05, 0x35, 0x0d,
-	0xf5, 0x82, 0x6b, 0x00, 0x60, 0xd3, 0x24, 0x41, 0xd0, 0x11, 0x2b, 0xb2, 0x28, 0x5b, 0xcf, 0x8b,
-	0xd6, 0x8d, 0x92, 0xd2, 0x3f, 0xe2, 0x2e, 0x7c, 0x1f, 0x2c, 0x8a, 0x3a, 0x3a, 0x61, 0xc4, 0x69,
-	0x07, 0x5b, 0x16, 0x47, 0xff, 0xcb, 0x38, 0x56, 0x84, 0xed, 0x28, 0xe2, 0xb4, 0x65, 0x59, 0x7c,
-	0xeb, 0x69, 0xfe, 0xe9, 0x15, 0xd2, 0x2e, 0x04, 0x78, 0x31, 0xba, 0xf3, 0x40, 0x60, 0xab, 0xb7,
-	0x24, 0x76, 0xfa, 0x2e, 0xe7, 0x7a, 0xd2, 0x40, 0xe3, 0x11, 0x77, 0xf5, 0x23, 0x55, 0x9b, 0xde,
-	0x4a, 0x13, 0xe9, 0xbb, 0x99, 0x48, 0xdf, 0xc4, 0xe8, 0xaf, 0x1c, 0xf6, 0x7d, 0x71, 0x41, 0xdb,
-	0x83, 0x15, 0x10, 0xdb, 0x20, 0xfe, 0xdd, 0xc7, 0x1e, 0xd1, 0xb1, 0xef, 0x7f, 0x4e, 0x78, 0x30,
-	0xc2, 0x7c, 0x4c, 0x78, 0xe0, 0x30, 0x2a, 0x3c, 0x36, 0x18, 0xb7, 0x47, 0x78, 0x3c, 0xe0, 0x36,
-	0xa6, 0xce, 0x17, 0x12, 0x27, 0xdd, 0x74, 0xa3, 0x20, 0x24, 0x3c, 0xeb, 0xd6, 0x56, 0xaa, 0xa1,
-	0x67, 0x3f, 0x75, 0xf2, 0xc5, 0x70, 0xf0, 0xa1, 0xaf, 0x86, 0x92, 0xa8, 0x43, 0xbd, 0x36, 0x8b,
-	0x72, 0xc9, 0xa4, 0x51, 0x8a, 0x1b, 0xf2, 0x64, 0xbf, 0x7b, 0x39, 0xa7, 0xa2, 0x97, 0xed, 0xb6,
-	0x67, 0x35, 0xda, 0x4a, 0xd6, 0xe5, 0x4d, 0x6f, 0xef, 0x33, 0xbb, 0x71, 0x28, 0x24, 0x5d, 0x9c,
-	0xb3, 0x7c, 0x1e, 0x61, 0xc7, 0xd5, 0x07, 0x27, 0xac, 0x74, 0xfd, 0xa7, 0xae, 0x0e, 0x58, 0x6a,
-	0x3f, 0x91, 0xa2, 0x2e, 0x38, 0x6a, 0x43, 0xd0, 0x9e, 0x8a, 0x3f, 0x44, 0x44, 0x8d, 0xa3, 0x73,
-	0x9f, 0x28, 0x1f, 0x39, 0xc4, 0x91, 0x3e, 0xa2, 0xcb, 0x5f, 0x62, 0x04, 0x06, 0xbd, 0x6d, 0xfe,
-	0x08, 0xc0, 0x9c, 0x60, 0x88, 0x96, 0xef, 0xc0, 0xaf, 0x67, 0x01, 0x10, 0x87, 0x94, 0xb0, 0xe4,
-	0x52, 0xe6, 0x20, 0x32, 0x24, 0xb2, 0x3c, 0x46, 0x5f, 0xff, 0x4d, 0xbb, 0xbc, 0x42, 0x1f, 0x1b,
-	0x24, 0x60, 0x11, 0x37, 0x49, 0x92, 0x23, 0xd0, 0x5b, 0xa6, 0x00, 0xe7, 0x00, 0x53, 0x6c, 0x13,
-	0xfd, 0xfa, 0xd5, 0x78, 0x16, 0xa3, 0x87, 0xaf, 0x6c, 0x71, 0xba, 0xb9, 0xfb, 0xcc, 0x4e, 0x37,
-	0x7a, 0xcc, 0x16, 0xeb, 0xa3, 0x9a, 0xee, 0xc5, 0x68, 0x69, 0x90, 0x55, 0xcf, 0xcc, 0xe6, 0x32,
-	0x46, 0xb7, 0x27, 0xdb, 0x26, 0xf8, 0x5d, 0x8a, 0x8c, 0x22, 0x82, 0x69, 0x91, 0xf9, 0xf3, 0x75,
-	0x20, 0x73, 0xef, 0x7a, 0x64, 0x3c, 0xab, 0x8f, 0x4e, 0x7b, 0xc0, 0xc7, 0x63, 0x90, 0xba, 0x8c,
-	0xd1, 0xc3, 0xc9, 0xcf, 0x6f, 0x42, 0x90, 0x5e, 0x68, 0x60, 0x3e, 0xa1, 0xd8, 0x60, 0x6a, 0x88,
-	0x7e, 0x10, 0x10, 0x6d, 0x8d, 0x81, 0xe8, 0xd8, 0x21, 0xdd, 0x9b, 0x01, 0xba, 0x33, 0x16, 0xa0,
-	0x2c, 0x38, 0x63, 0x01, 0x99, 0x70, 0x17, 0xbe, 0xfc, 0x07, 0x69, 0xf0, 0xe7, 0x1c, 0x58, 0x54,
-	0x81, 0xd2, 0x75, 0x9b, 0xba, 0xe1, 0xbf, 0x67, 0x2f, 0xaf, 0xd0, 0x4a, 0xda, 0x70, 0x1a, 0x66,
-	0x68, 0x29, 0x9e, 0xc5, 0xe8, 0x85, 0x36, 0xd1, 0x45, 0xdc, 0x3c, 0x73, 0x7d, 0x0c, 0xaf, 0x8f,
-	0xe7, 0xf3, 0x1b, 0x78, 0xfc, 0x75, 0x2f, 0x50, 0x2f, 0x46, 0x9f, 0x4e, 0xc1, 0xd6, 0xd3, 0x13,
-	0x34, 0xbc, 0x0b, 0xaa, 0x87, 0x84, 0x5a, 0xfb, 0xcc, 0xc4, 0x6e, 0xfa, 0x93, 0x68, 0xda, 0xb9,
-	0xcd, 0xec, 0x54, 0x2f, 0xfe, 0xa8, 0xcd, 0x5c, 0xf4, 0x6a, 0xda, 0xaf, 0xbd, 0x9a, 0xf6, 0x7b,
-	0xaf, 0xa6, 0x9d, 0x14, 0xa5, 0xdb, 0x87, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0x97, 0x9e, 0x58,
-	0xa4, 0x2e, 0x0b, 0x00, 0x00,
-}
