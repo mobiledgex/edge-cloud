@@ -4,13 +4,14 @@
 PROTOBUF	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/golang/protobuf)
 GOGOPROTO	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 GRPCGATEWAY	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
+UBERPROTOTOOL	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/uber/prototool)
 
 all:
 	go install ${PROTOBUF}/protoc-gen-go
 	go install ${GOGOPROTO}/protoc-gen-gogo
 	go install ${GOGOPROTO}/protoc-gen-gogofast
 	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
-	(cd $(GOPATH); go install github.com/uber/prototool/cmd/prototool)
+	go install ${UBERPROTOTOOL}/cmd/prototool
 ifneq ($(DOCKER_BUILD),yes)
-	(cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway; go install ./protoc-gen-swagger)
+	(cd $(GRPCGATEWAY) && go install ./protoc-gen-swagger)
 endif
