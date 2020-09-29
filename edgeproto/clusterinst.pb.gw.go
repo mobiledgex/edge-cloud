@@ -9,24 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = descriptor.ForMessage
 
 func request_ClusterInstApi_CreateClusterInst_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstApiClient, req *http.Request, pathParams map[string]string) (ClusterInstApi_CreateClusterInstClient, runtime.ServerMetadata, error) {
 	var protoReq ClusterInst
@@ -153,6 +156,57 @@ func request_ClusterInstInfoApi_ShowClusterInstInfo_0(ctx context.Context, marsh
 
 }
 
+// RegisterClusterInstApiHandlerServer registers the http handlers for service ClusterInstApi to "mux".
+// UnaryRPC     :call ClusterInstApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterClusterInstApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ClusterInstApiServer) error {
+
+	mux.Handle("POST", pattern_ClusterInstApi_CreateClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_ClusterInstApi_DeleteClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_ClusterInstApi_UpdateClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_ClusterInstApi_ShowClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
+}
+
+// RegisterClusterInstInfoApiHandlerServer registers the http handlers for service ClusterInstInfoApi to "mux".
+// UnaryRPC     :call ClusterInstInfoApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterClusterInstInfoApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ClusterInstInfoApiServer) error {
+
+	mux.Handle("POST", pattern_ClusterInstInfoApi_ShowClusterInstInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
+}
+
 // RegisterClusterInstApiHandlerFromEndpoint is same as RegisterClusterInstApiHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterClusterInstApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
@@ -275,13 +329,13 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_ClusterInstApi_CreateClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "clusterinst"}, ""))
+	pattern_ClusterInstApi_CreateClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "clusterinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterInstApi_DeleteClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "clusterinst"}, ""))
+	pattern_ClusterInstApi_DeleteClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "clusterinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterInstApi_UpdateClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "clusterinst"}, ""))
+	pattern_ClusterInstApi_UpdateClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "clusterinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterInstApi_ShowClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "clusterinst"}, ""))
+	pattern_ClusterInstApi_ShowClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "clusterinst"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -356,7 +410,7 @@ func RegisterClusterInstInfoApiHandlerClient(ctx context.Context, mux *runtime.S
 }
 
 var (
-	pattern_ClusterInstInfoApi_ShowClusterInstInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "clusterinstinfo"}, ""))
+	pattern_ClusterInstInfoApi_ShowClusterInstInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "clusterinstinfo"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
