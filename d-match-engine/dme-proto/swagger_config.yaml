@@ -214,190 +214,36 @@ info:
       netTest.doTest(true);
       ```
 
-      # Edge SDK - Unity
+      # Edge SDK - C#
+
+      The Matching Engine C# SDK provides everything required to create
+      applications for your devices. It includes libraries that enable
+      applications to register and locate the nearest edge cloudlet backend
+      server for use. The libraries also allows verification of a device’s
+      location for all location-specific tasks.  For detailed descriptions of
+      namespaces, classes, functions, and variables within the MobiledgeX C#
+      SDK, visit the [SDK Documentation](/swagger/stage/edge-cloud-sdk-csharp/html/index.html).
+
+      Some of the most commonly used functions are listed below.
 
       ## RegisterClient
-      Registers the client with the closest Distributed Matching Engine (the nearest edge location in the Operator network) and validates the legitimacy of the mobile subscriber. All session information is encrypted.
-
-      Example Code:
-      ```csharp
-      using DistributedMatchEngine;
-
-      MatchingEngine me = new MatchingEngine();
-      RegisterClientRequest registerClientRequest = me.CreateRegisterClientRequest(orgName, appName, appVers);
-      RegisterClientReply registerClientReply = await me.RegisterClient(registerClientRequest);
-      ```
-
-      Example Response:
-      ```csharp
-      RegisterClientReply:
-
-      session_cookie: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1ODA1MTA3MTksImlhdCI6MTU4MDQyNDMxOSwia2V5Ijp7InBlZXJpcCI6IjEyN
-      y4wLjAuMSIsImRldm5hbWUiOiJNb2JpbGVkZ2VYIiwiYXBwbmFtZSI6Ik1vYmlsZWRnZVggU0RLIERlbW8iLCJhcHB2ZXJzIjoiMS4wIiwidW5pcXVlaWR0eXBlIjo
-      iZG1lLWtzdWlkIiwidW5pcXVlaWQiOiIxWDhPYWlSODVSejN3Z0F4V3BEVkpnYk9RSzciLCJraWQiOjJ9fQ.puGP07UCal3FbpWjj9mlrJe5F0Tjv9QvYMwXhmGq7y
-      cPcxNJ8vjnDNJa67dmRgNIsGXIAd0KXolj-3n_xNIL9A,
-      status: RS_SUCCESS,
-      tags: DistributedMatchEngine.Tag[],
-      token_server_uri: http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc,
-      unique_id: ,
-      unique_id_type: ,
-      ver: 0
-      ```
+      [RegisterClient](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#RegisterClient)
+      registers the client with the closest Distributed Matching Engine (the nearest edge location in the Operator network) and validates the legitimacy of the mobile subscriber. All session information is encrypted.
 
       ## FindCloudlet
-      Locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging location, application subscription, and service provider agreement.
+      [FindCloudlet](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#FindCloudlet)
+      locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging location, application subscription, and service provider agreement.
       If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
-      Example Code:
-      ```csharp
-      using DistributedMatchEngine;
-
-      MatchingEngine me = new MatchingEngine();
-      FindCloudletRequest findCloudletRequest = CreateFindCloudletRequest(loc, carrierName);
-      FindCloudletReply findCloudletReply = await FindCloudlet(findCloudletRequest);
-      ```
-      Example Response:
-      ```csharp
-      FindCloudletReply:
-
-      cloudlet_location: DistributedMatchEngine.Loc,
-      fqdn: fairview-main.gddt.mobiledgex.net,
-      ports: DistributedMatchEngine.AppPort[],
-      status: FIND_FOUND,
-      tags: DistributedMatchEngine.Tag[],
-      ver: 0
-      ```
-
-      ## VerifyLocation
-      Verifies that the GPS coordinates accurately report the actual location of the device.
-
-      Example Code:
-      ```csharp
-      using DistributedMatchEngine;
-
-      MatchingEngine me = new MatchingEngine();
-      VerifyLocationRequest verifyLocationRequest = me.CreateVerifyLocationRequest(loc, carrierName);
-      VerifyLocationReply verifyLocationReply = await me.VerifyLocation(verifyLocationRequest);
-      ```
-      Example Response:
-      ```csharp
-      VerifyLocationReply:
-
-      gps_location_accuracy_km: -1,
-      gps_location_status: LOC_UNKNOWN,
-      tags: DistributedMatchEngine.Tag[],
-      tower_status: TOWER_UNKNOWN,
-      ver: 0
-      ```
-
       ## GetConnection
-      Function that gets a “connection” object (depending on Protocol of
+      [GetConnection](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__getconnection.html)
+      gets a “connection” object (depending on Protocol of
       specified connection and language) bound to cellular interface and
       connected to application backend (as specified by findCloudletReply).
 
-      Parameters:
-         * `reply` DistributedMatchEngine.FindCloudletReply: Object returned from findCloudlet API
-         * `appPort` DistributedMatchEngine.AppPort: AppPort object from Ports field in FindCloudletReply
-         * `desiredPort` int: Used if developer specified a port range and wants a specific port (use -1 if it it doesn’t matter)
-         * `timeoutMs` int: Milliseconds. Throws a GetConnectionException if GetConnection takes longer than specified timeout
-
-      Return:
-      All return a Task object (using System.Threading.Tasks) to facilitate asynchronous code
-         * `GetTCPConnection` Task<Socket> (using System.Net.Sockets)
-         * `GetTCPTLSConnection` Task<SslStream> (using System.Net.Security)
-         * `GetUDPConection` Task<Socket> (using System.Net.Sockets)
-         * `GetHTTPClient` Task<HttpClient> (using System.Net.Http)
-         * `GetWebsocketConnection` Task<ClientWebSocket> (using System.Net.WebSockets)
-
-      Example Code:
-      ```csharp
-      try {
-         reply = await me.RegisterAndFindCloudlet(orgName, appName, appVers, loc, carrierName);
-      }
-      catch (DmeDnsException dde) {
-         /* handle exception */
-      }
-      catch (RegisterClientException rce) {
-         /* handle exception */
-      }
-      Dictionary<int, AppPort> appPortsDict = me.GetTCPAppPorts(reply);
-      int public_port = reply.ports[internal_port].public_port; // We happen to know it's the first one.
-      AppPort appPort = appPortsDict[public_port];
-      try {
-         Socket tcpConnection = await me.GetTCPConnection(reply, appPort, public_port, 5000);
-         /* use tcpConnection */
-         tcpConnection.Close();
-      }
-      catch (GetConnectionException e) {
-         /* handle exception */
-      }
-      catch (Exception e) {
-         /* handle exception */
-      }
-      ```
-
       ## PerformanceMetrics
-
-      Performance Metrics API tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
-
-      ### NetTest
-
-      Initialization:
-      ```csharp
-      NetTest(MatchingEngine matchingEngine)
-      ```
-
-      Class Variables:
-         * bool runTest
-         * int PingIntervalMS { get; set; } (Default to 5000 milliseconds)
-         * int TestTimeoutMS (default to 5000 milliseconds)
-         * ConcurrentQueue<Site> sites { get; }
-
-      Class Functions:
-         * bool doTest(bool enable)
-         * async void RunNetTest()
-
-      ### Site
-      Initialization:
-      ```csharp
-      Site(string host, int port, TestType testType, int numSamples)
-      Site(string L7Path, TestType testType, int numSamples)
-      ```
-
-      Class Variables:
-         * string host
-         * int port
-         * string L7Path
-         * double lastPingMs
-         * TestType testType
-         * double[] samples
-         * double average
-         * double stddev
-
-      Class Functions:
-         * void addSample(double time)
-         * void recalculateStats()
-
-      Example Code:
-      ```csharp
-      Site site1 = new Site
-      {
-          l7Path = MatchingEngine.CreateUrl(findCloudletReply, appPort, appPort.public_port);
-          testType = TestType.CONNECT;
-      }
-
-      Site site2 = new Site
-      {
-          host = appPort.fqdn_prefix + findCloudletReply.fqdn;
-          port = appPort.public_port;
-          testType = TestType.CONNECT;
-      }
-
-      NetTest netTest = new NetTest(matchingEngine);
-      netTest.sites.enqueue(site1);
-      netTest.sites.enqueue(site2);
-      netTest.doTest(true);
-      ```
+      [PerformanceMetrics](/swagger/stage/edge-cloud-sdk-csharp/html/group__classes__util.html)
+      tracks the average latency of the edge network for your application server’s Application Instance. You must add the Application Instance to a list of sites where they can be pinged. Performance metrics are available for all supported SDKs.
 
       # Edge SDK - iOS
 
