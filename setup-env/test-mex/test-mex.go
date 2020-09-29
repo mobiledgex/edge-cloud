@@ -148,18 +148,19 @@ func main() {
 		util.DeploymentReplacementVars = config.Vars
 	}
 
-	retry := setupmex.NewRetry(spec.RetryCount, spec.RetryIntervalSec)
+	retry := setupmex.NewRetry(spec.RetryCount, spec.RetryIntervalSec, len(spec.Actions))
 	ranTest := false
 	for {
 		tryErrs := []string{}
-		for _, a := range spec.Actions {
+		for ii, a := range spec.Actions {
+			if !retry.ShouldRunAction(ii) {
+				continue
+			}
 			util.PrintStepBanner("running action: " + a + retry.Tries())
 			actionretry := false
 			tryErrs = append(tryErrs, setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &actionretry)...)
 			ranTest = true
-			if actionretry {
-				retry.ActionEnable()
-			}
+			retry.SetActionRetry(ii, actionretry)
 		}
 		if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
 			pass := util.CompareYamlFiles(spec.CompareYaml.Yaml1,
