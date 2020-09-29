@@ -227,11 +227,11 @@ info:
       Some of the most commonly used functions are listed below.
 
       ## RegisterClient
-      [RegisterClient](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#gae247ba07be71e177f54c5a5921bfb607)
+      [RegisterClient](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#RegisterClient)
       registers the client with the closest Distributed Matching Engine (the nearest edge location in the Operator network) and validates the legitimacy of the mobile subscriber. All session information is encrypted.
 
       ## FindCloudlet
-      [FindCloudlet](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#ga971c640b88760ace1472d40cbce04cf4)
+      [FindCloudlet](/swagger/stage/edge-cloud-sdk-csharp/html/group__functions__dmeapis.html#FindCloudlet)
       locates the most optimal edge computing footprint and allows the registered application to find the application backend by leveraging location, application subscription, and service provider agreement.
       If there are no suitable cloudlet instances available, the client may connect to the application server located in the public cloud.
 
