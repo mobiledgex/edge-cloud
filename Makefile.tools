@@ -4,7 +4,6 @@
 PROTOBUF	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/golang/protobuf)
 GOGOPROTO	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 GRPCGATEWAY	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
-UBERPROTOTOOL	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/uber/prototool)
 
 all:
 	go install ${PROTOBUF}/protoc-gen-go
