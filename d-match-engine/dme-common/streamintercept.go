@@ -44,10 +44,7 @@ func (s *ServerStreamWrapper) RecvMsg(m interface{}) error {
 	var cookie string
 
 	err := s.inner.RecvMsg(m)
-
-	log.SpanLog(s.Context(), log.DebugLevelDmereq, "RecvMsg auth stream message after call to inner", "type", reflect.TypeOf(m).String())
 	ctx := s.Context()
-
 	switch typ := m.(type) {
 	case *dme.QosPositionRequest:
 		cookie = typ.SessionCookie

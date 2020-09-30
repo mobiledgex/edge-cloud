@@ -130,10 +130,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, outputDir)
-	} else if api == "measurelatency" {
-		output := &edgeproto.AllData{}
-		run.Mode = "measureappinstlatency"
-		run.AppInstApi(&appData.AppInstances, appDataMap["appinstances"], &output.AppInstances)
 	} else {
 		if apiFile == "" {
 			log.Println("Error: Cannot run controller APIs without API file")

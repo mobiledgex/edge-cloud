@@ -105,6 +105,8 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, err
 	}
 	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, edgeEventsCookieExpiration)
+	// TODO: Once DME per cloudlet is implemented, This should be the DNS name for the DME on the cloudlet of app inst provided
+	reply.DmeFqdn = nodeMgr.CommonName()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -151,6 +153,8 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
 	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, cookieExpiration)
+	// TODO: Once DME per cloudlet is implemented, This should be the DNS name for the DME on the cloudlet of app inst provided
+	reply.DmeFqdn = nodeMgr.CommonName()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -356,10 +360,10 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
 }
 
-func (s *server) SendEdgeEvent(sendEdgeEventSvr dme.MatchEngineApi_SendEdgeEventServer) error {
-	ctx := sendEdgeEventSvr.Context()
-	log.SpanLog(ctx, log.DebugLevelDmereq, "SendEdgeEvent")
-	return dmecommon.SendEdgeEvent(ctx, &sendEdgeEventSvr)
+func (s *server) StreamEdgeEvent(streamEdgeEventSvr dme.MatchEngineApi_StreamEdgeEventServer) error {
+	ctx := streamEdgeEventSvr.Context()
+	log.SpanLog(ctx, log.DebugLevelDmereq, "StreamEdgeEvent")
+	return dmecommon.StreamEdgeEvent(ctx, &streamEdgeEventSvr)
 }
 
 // Loads EdgeEvent Plugin functions into corresponding dmecommon functions
@@ -433,15 +437,15 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.FatalLog("plugin does not have SendAppInstStateEvent symbol", "plugin", *eesolib)
 		return err
 	}
-	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.EventType))
+	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType))
 	if !ok {
-		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.EventType)", "plugin", *eesolib)
+		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType)", "plugin", *eesolib)
 	}
 	dmecommon.SendAppInstStateEvent = sendAppInstStateEventFunc
-	// Load SendEdgeEventToClient in Plugin
+	// Load StreamEdgeEventToClient in Plugin
 	sym, err = plug.Lookup("SendEdgeEventToClient")
 	if err != nil {
-		log.FatalLog("plugin does not have SendEdgeEventToClient symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have StreamEdgeEventToClient symbol", "plugin", *eesolib)
 		return err
 	}
 	sendEdgeEventToClientFunc, ok := sym.(func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *dmecommon.EdgeEventPersistentMgr))

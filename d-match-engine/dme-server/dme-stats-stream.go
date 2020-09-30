@@ -69,7 +69,7 @@ func (w *StatsStreamWrapper) RecvMsg(m interface{}) error {
 		call.key.AppKey.Version = ckey.AppVers
 
 		// Separate metric for Edge Events latency -> appinst-latency
-		if typ.Event == dme.EventType_EVENT_LATENCY {
+		if typ.Event == dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES {
 			eekey, ok := dmecommon.EdgeEventsCookieFromContext(w.ctx)
 			if !ok {
 				log.SpanLog(w.Context(), log.DebugLevelDmereq, "ClientEdgeEvent latency unable to get edge events cookie from context")
@@ -116,8 +116,9 @@ func (w *StatsStreamWrapper) RecvMsg(m interface{}) error {
 			log.SpanLog(w.Context(), log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.latency)
 			w.stats.RecordApiStatCall(&call)
 			return nil
+		} else if typ.Event == dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE {
+			// TODO: GPS UPDATE
 		}
-		// TODO: GPS UPDATE
 	// Other stream apis provide same metric as Unary
 	default:
 		ckey, ok := dmecommon.CookieFromContext(w.ctx)

@@ -1,4 +1,4 @@
-event: EventLatency
+event: EventLatencyProcessed
 latency:
   avg: 3.3768000000000002
   min: 1.12

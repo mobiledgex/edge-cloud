@@ -16,6 +16,7 @@
   cloudletlocation:
     latitude: 32
     longitude: -91
+  dmefqdn: dme.mobiledgex.net
 - status: FindFound
   fqdn: tmus-cloud-2.tmus.localtest.net
   ports:
@@ -34,6 +35,7 @@
   cloudletlocation:
     latitude: 35
     longitude: -95
+  dmefqdn: dme.mobiledgex.net
 - status: FindFound
   fqdn: att-cloud-1.att.localtest.net
   ports:
@@ -52,3 +54,4 @@
   cloudletlocation:
     latitude: 37
     longitude: -99
+  dmefqdn: dme.mobiledgex.net

@@ -175,8 +175,8 @@ func (c *dmeRestClient) GetAppOfficialFqdn(ctx context.Context, in *dmeproto.App
 	return out, nil
 }
 
-func (c *dmeRestClient) SendEdgeEvent(ctx context.Context, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_SendEdgeEventClient, error) {
-	return nil, fmt.Errorf("SendEdgeEvent not supported yet in E2E via REST")
+func (c *dmeRestClient) StreamEdgeEvent(ctx context.Context, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_StreamEdgeEventClient, error) {
+	return nil, fmt.Errorf("StreamEdgeEvent not supported yet in E2E via REST")
 }
 
 func readDMEApiFile(apifile string) {
@@ -305,10 +305,10 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		sessionCookie = registerStatus.Reply.SessionCookie
 		log.Printf("Using session cookie: %s\n", sessionCookie)
 
-		// If sendedgeevent, we need the edgeeventscookie from FindCloudletReply as well
+		// If StreamEdgeEvent, we need the edgeeventscookie from FindCloudletReply as well
 		var findcloudlet findcloudlet
 		if api == "edgeeventinit" || api == "edgeeventlatency" {
-			log.Printf("Redoing findcloudlet for sendedgeevent - %+v\n", apiRequest.Rcreq)
+			log.Printf("Redoing findcloudlet for StreamEdgeEvent - %+v\n", apiRequest.Rcreq)
 			ok, reply := runDmeAPIiter(ctx, "findcloudlet", apiFile, outputDir, apiRequest, client)
 			if !ok {
 				return false, nil
@@ -476,8 +476,8 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 	case "edgeeventinit":
 		apiRequest.Eereq.SessionCookie = sessionCookie
 		apiRequest.Eereq.EdgeEventsCookie = eeCookie
-		log.Printf("sendedgeevent request: %+v\n", apiRequest.Eereq)
-		resp, err := client.SendEdgeEvent(ctx)
+		log.Printf("StreamEdgeEvent request: %+v\n", apiRequest.Eereq)
+		resp, err := client.StreamEdgeEvent(ctx)
 		if err == nil {
 			// Send init request
 			err = resp.Send(&apiRequest.Eereq)
@@ -488,15 +488,15 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			}
 			// Terminate persistent connection
 			terminateEvent := new(dmeproto.ClientEdgeEvent)
-			terminateEvent.Event = dmeproto.EventType_EVENT_TERMINATE_CONNECTION
+			terminateEvent.Event = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
 			err = resp.Send(terminateEvent)
 		}
 		dmeerror = err
 	case "edgeeventlatency":
 		apiRequest.Eereq.SessionCookie = sessionCookie
 		apiRequest.Eereq.EdgeEventsCookie = eeCookie
-		log.Printf("sendedgeevent request: %+v\n", apiRequest.Eereq)
-		resp, err := client.SendEdgeEvent(ctx)
+		log.Printf("StreamEdgeEvent request: %+v\n", apiRequest.Eereq)
+		resp, err := client.StreamEdgeEvent(ctx)
 		if err == nil {
 			// Send init request
 			err = resp.Send(&apiRequest.Eereq)
@@ -507,7 +507,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			}
 			// Send dummy latency samples as Latency Event
 			latencyEvent := new(dmeproto.ClientEdgeEvent)
-			latencyEvent.Event = dmeproto.EventType_EVENT_LATENCY
+			latencyEvent.Event = dmeproto.ClientEdgeEvent_EVENT_LATENCY_SAMPLES
 			samples := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
 			latencyEvent.Samples = samples
 			err = resp.Send(latencyEvent)
@@ -518,7 +518,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			}
 			// Terminate persistent connection
 			terminateEvent := new(dmeproto.ClientEdgeEvent)
-			terminateEvent.Event = dmeproto.EventType_EVENT_TERMINATE_CONNECTION
+			terminateEvent.Event = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
 			err = resp.Send(terminateEvent)
 		}
 		dmeerror = err
