@@ -10,7 +10,7 @@
 # All the tools will be inside the docker.
 #
 
-FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.12.1 AS build
+FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.15.2 AS build
 
 ENV GOPATH=/go
 ENV PATH="/go/bin:${PATH}"
