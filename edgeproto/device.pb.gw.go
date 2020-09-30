@@ -9,24 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = descriptor.ForMessage
 
 func request_DeviceApi_InjectDevice_0(ctx context.Context, marshaler runtime.Marshaler, client DeviceApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Device
@@ -41,6 +44,23 @@ func request_DeviceApi_InjectDevice_0(ctx context.Context, marshaler runtime.Mar
 	}
 
 	msg, err := client.InjectDevice(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_DeviceApi_InjectDevice_0(ctx context.Context, marshaler runtime.Marshaler, server DeviceApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Device
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.InjectDevice(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -87,6 +107,23 @@ func request_DeviceApi_EvictDevice_0(ctx context.Context, marshaler runtime.Mars
 
 }
 
+func local_request_DeviceApi_EvictDevice_0(ctx context.Context, marshaler runtime.Marshaler, server DeviceApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Device
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.EvictDevice(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_DeviceApi_ShowDeviceReport_0(ctx context.Context, marshaler runtime.Marshaler, client DeviceApiClient, req *http.Request, pathParams map[string]string) (DeviceApi_ShowDeviceReportClient, runtime.ServerMetadata, error) {
 	var protoReq DeviceReport
 	var metadata runtime.ServerMetadata
@@ -110,6 +147,68 @@ func request_DeviceApi_ShowDeviceReport_0(ctx context.Context, marshaler runtime
 	metadata.HeaderMD = header
 	return stream, metadata, nil
 
+}
+
+// RegisterDeviceApiHandlerServer registers the http handlers for service DeviceApi to "mux".
+// UnaryRPC     :call DeviceApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterDeviceApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server DeviceApiServer) error {
+
+	mux.Handle("POST", pattern_DeviceApi_InjectDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_DeviceApi_InjectDevice_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_DeviceApi_InjectDevice_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_DeviceApi_ShowDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_DeviceApi_EvictDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_DeviceApi_EvictDevice_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_DeviceApi_EvictDevice_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_DeviceApi_ShowDeviceReport_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
 }
 
 // RegisterDeviceApiHandlerFromEndpoint is same as RegisterDeviceApiHandler but
@@ -234,13 +333,13 @@ func RegisterDeviceApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 }
 
 var (
-	pattern_DeviceApi_InjectDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "device"}, ""))
+	pattern_DeviceApi_InjectDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "device"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_DeviceApi_ShowDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "device"}, ""))
+	pattern_DeviceApi_ShowDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "device"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_DeviceApi_EvictDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"evict", "device"}, ""))
+	pattern_DeviceApi_EvictDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"evict", "device"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_DeviceApi_ShowDeviceReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "devicereport"}, ""))
+	pattern_DeviceApi_ShowDeviceReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "devicereport"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
