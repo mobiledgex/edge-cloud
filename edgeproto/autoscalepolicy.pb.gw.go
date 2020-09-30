@@ -9,24 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = descriptor.ForMessage
 
 func request_AutoScalePolicyApi_CreateAutoScalePolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AutoScalePolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AutoScalePolicy
@@ -41,6 +44,23 @@ func request_AutoScalePolicyApi_CreateAutoScalePolicy_0(ctx context.Context, mar
 	}
 
 	msg, err := client.CreateAutoScalePolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_AutoScalePolicyApi_CreateAutoScalePolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AutoScalePolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoScalePolicy
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.CreateAutoScalePolicy(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -62,6 +82,23 @@ func request_AutoScalePolicyApi_DeleteAutoScalePolicy_0(ctx context.Context, mar
 
 }
 
+func local_request_AutoScalePolicyApi_DeleteAutoScalePolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AutoScalePolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoScalePolicy
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DeleteAutoScalePolicy(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_AutoScalePolicyApi_UpdateAutoScalePolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AutoScalePolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AutoScalePolicy
 	var metadata runtime.ServerMetadata
@@ -75,6 +112,23 @@ func request_AutoScalePolicyApi_UpdateAutoScalePolicy_0(ctx context.Context, mar
 	}
 
 	msg, err := client.UpdateAutoScalePolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_AutoScalePolicyApi_UpdateAutoScalePolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AutoScalePolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoScalePolicy
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UpdateAutoScalePolicy(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -102,6 +156,81 @@ func request_AutoScalePolicyApi_ShowAutoScalePolicy_0(ctx context.Context, marsh
 	metadata.HeaderMD = header
 	return stream, metadata, nil
 
+}
+
+// RegisterAutoScalePolicyApiHandlerServer registers the http handlers for service AutoScalePolicyApi to "mux".
+// UnaryRPC     :call AutoScalePolicyApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterAutoScalePolicyApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AutoScalePolicyApiServer) error {
+
+	mux.Handle("POST", pattern_AutoScalePolicyApi_CreateAutoScalePolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoScalePolicyApi_CreateAutoScalePolicy_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoScalePolicyApi_CreateAutoScalePolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AutoScalePolicyApi_DeleteAutoScalePolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoScalePolicyApi_DeleteAutoScalePolicy_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoScalePolicyApi_DeleteAutoScalePolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AutoScalePolicyApi_UpdateAutoScalePolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoScalePolicyApi_UpdateAutoScalePolicy_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoScalePolicyApi_UpdateAutoScalePolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AutoScalePolicyApi_ShowAutoScalePolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
 }
 
 // RegisterAutoScalePolicyApiHandlerFromEndpoint is same as RegisterAutoScalePolicyApiHandler but
@@ -226,13 +355,13 @@ func RegisterAutoScalePolicyApiHandlerClient(ctx context.Context, mux *runtime.S
 }
 
 var (
-	pattern_AutoScalePolicyApi_CreateAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "autoscalepolicy"}, ""))
+	pattern_AutoScalePolicyApi_CreateAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "autoscalepolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoScalePolicyApi_DeleteAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "autoscalepolicy"}, ""))
+	pattern_AutoScalePolicyApi_DeleteAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "autoscalepolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoScalePolicyApi_UpdateAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "autoscalepolicy"}, ""))
+	pattern_AutoScalePolicyApi_UpdateAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "autoscalepolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoScalePolicyApi_ShowAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "autoscalepolicy"}, ""))
+	pattern_AutoScalePolicyApi_ShowAutoScalePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "autoscalepolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
