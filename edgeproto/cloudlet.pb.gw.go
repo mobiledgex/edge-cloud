@@ -9,24 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = descriptor.ForMessage
 
 func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_CreateCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
@@ -145,6 +148,23 @@ func request_CloudletApi_GetCloudletManifest_0(ctx context.Context, marshaler ru
 
 }
 
+func local_request_CloudletApi_GetCloudletManifest_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Cloudlet
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetCloudletManifest(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_CloudletApi_GetCloudletProps_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletProps
 	var metadata runtime.ServerMetadata
@@ -158,6 +178,23 @@ func request_CloudletApi_GetCloudletProps_0(ctx context.Context, marshaler runti
 	}
 
 	msg, err := client.GetCloudletProps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_CloudletApi_GetCloudletProps_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CloudletProps
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetCloudletProps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -179,6 +216,23 @@ func request_CloudletApi_AddCloudletResMapping_0(ctx context.Context, marshaler 
 
 }
 
+func local_request_CloudletApi_AddCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CloudletResMap
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AddCloudletResMapping(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_CloudletApi_RemoveCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletResMap
 	var metadata runtime.ServerMetadata
@@ -196,6 +250,23 @@ func request_CloudletApi_RemoveCloudletResMapping_0(ctx context.Context, marshal
 
 }
 
+func local_request_CloudletApi_RemoveCloudletResMapping_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CloudletResMap
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.RemoveCloudletResMapping(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_CloudletApi_FindFlavorMatch_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq FlavorMatch
 	var metadata runtime.ServerMetadata
@@ -209,6 +280,23 @@ func request_CloudletApi_FindFlavorMatch_0(ctx context.Context, marshaler runtim
 	}
 
 	msg, err := client.FindFlavorMatch(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_CloudletApi_FindFlavorMatch_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FlavorMatch
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.FindFlavorMatch(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -261,6 +349,172 @@ func request_CloudletMetricsApi_ShowCloudletMetrics_0(ctx context.Context, marsh
 	metadata.HeaderMD = header
 	return stream, metadata, nil
 
+}
+
+// RegisterCloudletApiHandlerServer registers the http handlers for service CloudletApi to "mux".
+// UnaryRPC     :call CloudletApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterCloudletApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server CloudletApiServer) error {
+
+	mux.Handle("POST", pattern_CloudletApi_CreateCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_DeleteCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_UpdateCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_ShowCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_GetCloudletManifest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_CloudletApi_GetCloudletManifest_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletApi_GetCloudletManifest_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_GetCloudletProps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_CloudletApi_GetCloudletProps_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletApi_GetCloudletProps_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_AddCloudletResMapping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_CloudletApi_AddCloudletResMapping_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletApi_AddCloudletResMapping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_RemoveCloudletResMapping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_CloudletApi_RemoveCloudletResMapping_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletApi_RemoveCloudletResMapping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_CloudletApi_FindFlavorMatch_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_CloudletApi_FindFlavorMatch_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletApi_FindFlavorMatch_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+// RegisterCloudletInfoApiHandlerServer registers the http handlers for service CloudletInfoApi to "mux".
+// UnaryRPC     :call CloudletInfoApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterCloudletInfoApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server CloudletInfoApiServer) error {
+
+	mux.Handle("POST", pattern_CloudletInfoApi_ShowCloudletInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
+}
+
+// RegisterCloudletMetricsApiHandlerServer registers the http handlers for service CloudletMetricsApi to "mux".
+// UnaryRPC     :call CloudletMetricsApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterCloudletMetricsApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server CloudletMetricsApiServer) error {
+
+	mux.Handle("POST", pattern_CloudletMetricsApi_ShowCloudletMetrics_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
 }
 
 // RegisterCloudletApiHandlerFromEndpoint is same as RegisterCloudletApiHandler but
@@ -485,23 +739,23 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_CloudletApi_CreateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "cloudlet"}, ""))
+	pattern_CloudletApi_CreateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_DeleteCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "cloudet"}, ""))
+	pattern_CloudletApi_DeleteCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "cloudet"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_UpdateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "cloudlet"}, ""))
+	pattern_CloudletApi_UpdateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_ShowCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudlet"}, ""))
+	pattern_CloudletApi_ShowCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_GetCloudletManifest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "manifest"}, ""))
+	pattern_CloudletApi_GetCloudletManifest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "manifest"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_GetCloudletProps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "props"}, ""))
+	pattern_CloudletApi_GetCloudletProps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "props"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_AddCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"addmapping", "cloudlet"}, ""))
+	pattern_CloudletApi_AddCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"addmapping", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_RemoveCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rmmapping", "cloudlet"}, ""))
+	pattern_CloudletApi_RemoveCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rmmapping", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_FindFlavorMatch_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"findmapping", "cloudlet"}, ""))
+	pattern_CloudletApi_FindFlavorMatch_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"findmapping", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -586,7 +840,7 @@ func RegisterCloudletInfoApiHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_CloudletInfoApi_ShowCloudletInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletinfo"}, ""))
+	pattern_CloudletInfoApi_ShowCloudletInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletinfo"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -655,7 +909,7 @@ func RegisterCloudletMetricsApiHandlerClient(ctx context.Context, mux *runtime.S
 }
 
 var (
-	pattern_CloudletMetricsApi_ShowCloudletMetrics_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletmetrics"}, ""))
+	pattern_CloudletMetricsApi_ShowCloudletMetrics_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletmetrics"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

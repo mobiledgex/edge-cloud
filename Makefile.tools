@@ -11,7 +11,6 @@ all:
 	go install ${GOGOPROTO}/protoc-gen-gogo
 	go install ${GOGOPROTO}/protoc-gen-gogofast
 	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
-	go install ${UBERPROTOTOOL}/cmd/prototool
 ifneq ($(DOCKER_BUILD),yes)
-	(cd $(GRPCGATEWAY) && go install ./protoc-gen-swagger)
+	go install ${GRPCGATEWAY}/protoc-gen-swagger
 endif

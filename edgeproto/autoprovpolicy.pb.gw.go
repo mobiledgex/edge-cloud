@@ -9,24 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = descriptor.ForMessage
 
 func request_AutoProvPolicyApi_CreateAutoProvPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AutoProvPolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AutoProvPolicy
@@ -41,6 +44,23 @@ func request_AutoProvPolicyApi_CreateAutoProvPolicy_0(ctx context.Context, marsh
 	}
 
 	msg, err := client.CreateAutoProvPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_AutoProvPolicyApi_CreateAutoProvPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AutoProvPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoProvPolicy
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.CreateAutoProvPolicy(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -62,6 +82,23 @@ func request_AutoProvPolicyApi_DeleteAutoProvPolicy_0(ctx context.Context, marsh
 
 }
 
+func local_request_AutoProvPolicyApi_DeleteAutoProvPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AutoProvPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoProvPolicy
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DeleteAutoProvPolicy(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_AutoProvPolicyApi_UpdateAutoProvPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AutoProvPolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AutoProvPolicy
 	var metadata runtime.ServerMetadata
@@ -75,6 +112,23 @@ func request_AutoProvPolicyApi_UpdateAutoProvPolicy_0(ctx context.Context, marsh
 	}
 
 	msg, err := client.UpdateAutoProvPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_AutoProvPolicyApi_UpdateAutoProvPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AutoProvPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoProvPolicy
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UpdateAutoProvPolicy(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -121,6 +175,23 @@ func request_AutoProvPolicyApi_AddAutoProvPolicyCloudlet_0(ctx context.Context, 
 
 }
 
+func local_request_AutoProvPolicyApi_AddAutoProvPolicyCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, server AutoProvPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoProvPolicyCloudlet
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AddAutoProvPolicyCloudlet(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client AutoProvPolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AutoProvPolicyCloudlet
 	var metadata runtime.ServerMetadata
@@ -136,6 +207,138 @@ func request_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0(ctx context.Contex
 	msg, err := client.RemoveAutoProvPolicyCloudlet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
+}
+
+func local_request_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, server AutoProvPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AutoProvPolicyCloudlet
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.RemoveAutoProvPolicyCloudlet(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+// RegisterAutoProvPolicyApiHandlerServer registers the http handlers for service AutoProvPolicyApi to "mux".
+// UnaryRPC     :call AutoProvPolicyApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterAutoProvPolicyApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AutoProvPolicyApiServer) error {
+
+	mux.Handle("POST", pattern_AutoProvPolicyApi_CreateAutoProvPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoProvPolicyApi_CreateAutoProvPolicy_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoProvPolicyApi_CreateAutoProvPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AutoProvPolicyApi_DeleteAutoProvPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoProvPolicyApi_DeleteAutoProvPolicy_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoProvPolicyApi_DeleteAutoProvPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AutoProvPolicyApi_UpdateAutoProvPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoProvPolicyApi_UpdateAutoProvPolicy_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoProvPolicyApi_UpdateAutoProvPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AutoProvPolicyApi_ShowAutoProvPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_AutoProvPolicyApi_AddAutoProvPolicyCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoProvPolicyApi_AddAutoProvPolicyCloudlet_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoProvPolicyApi_AddAutoProvPolicyCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
 }
 
 // RegisterAutoProvPolicyApiHandlerFromEndpoint is same as RegisterAutoProvPolicyApiHandler but
@@ -300,17 +503,17 @@ func RegisterAutoProvPolicyApiHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_AutoProvPolicyApi_CreateAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "autoprovpolicy"}, ""))
+	pattern_AutoProvPolicyApi_CreateAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "autoprovpolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoProvPolicyApi_DeleteAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "autoprovpolicy"}, ""))
+	pattern_AutoProvPolicyApi_DeleteAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "autoprovpolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoProvPolicyApi_UpdateAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "autoprovpolicy"}, ""))
+	pattern_AutoProvPolicyApi_UpdateAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "autoprovpolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoProvPolicyApi_ShowAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "autoprovpolicy"}, ""))
+	pattern_AutoProvPolicyApi_ShowAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "autoprovpolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoProvPolicyApi_AddAutoProvPolicyCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"add", "autoprovpolicycloudlet"}, ""))
+	pattern_AutoProvPolicyApi_AddAutoProvPolicyCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"add", "autoprovpolicycloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rm", "autoprovpolicycloudlet"}, ""))
+	pattern_AutoProvPolicyApi_RemoveAutoProvPolicyCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"rm", "autoprovpolicycloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
