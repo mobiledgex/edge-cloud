@@ -10,7 +10,6 @@ all:
 	go install ${GOGOPROTO}/protoc-gen-gogo
 	go install ${GOGOPROTO}/protoc-gen-gogofast
 	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
-	(cd $(GOPATH); go install github.com/uber/prototool/cmd/prototool)
 ifneq ($(DOCKER_BUILD),yes)
-	(cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway; go install ./protoc-gen-swagger)
+	go install ${GRPCGATEWAY}/protoc-gen-swagger
 endif
