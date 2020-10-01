@@ -9,24 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = descriptor.ForMessage
 
 func request_AppInstApi_CreateAppInst_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (AppInstApi_CreateAppInstClient, runtime.ServerMetadata, error) {
 	var protoReq AppInst
@@ -203,6 +206,79 @@ func request_AppInstMetricsApi_ShowAppInstMetrics_0(ctx context.Context, marshal
 
 }
 
+// RegisterAppInstApiHandlerServer registers the http handlers for service AppInstApi to "mux".
+// UnaryRPC     :call AppInstApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterAppInstApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AppInstApiServer) error {
+
+	mux.Handle("POST", pattern_AppInstApi_CreateAppInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_AppInstApi_DeleteAppInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_AppInstApi_RefreshAppInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_AppInstApi_UpdateAppInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_AppInstApi_ShowAppInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
+}
+
+// RegisterAppInstInfoApiHandlerServer registers the http handlers for service AppInstInfoApi to "mux".
+// UnaryRPC     :call AppInstInfoApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterAppInstInfoApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AppInstInfoApiServer) error {
+
+	mux.Handle("POST", pattern_AppInstInfoApi_ShowAppInstInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
+}
+
+// RegisterAppInstMetricsApiHandlerServer registers the http handlers for service AppInstMetricsApi to "mux".
+// UnaryRPC     :call AppInstMetricsApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterAppInstMetricsApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AppInstMetricsApiServer) error {
+
+	mux.Handle("POST", pattern_AppInstMetricsApi_ShowAppInstMetrics_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
+}
+
 // RegisterAppInstApiHandlerFromEndpoint is same as RegisterAppInstApiHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterAppInstApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
@@ -345,15 +421,15 @@ func RegisterAppInstApiHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 }
 
 var (
-	pattern_AppInstApi_CreateAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "appinst"}, ""))
+	pattern_AppInstApi_CreateAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AppInstApi_DeleteAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "appinst"}, ""))
+	pattern_AppInstApi_DeleteAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AppInstApi_RefreshAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"refresh", "appinst"}, ""))
+	pattern_AppInstApi_RefreshAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"refresh", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AppInstApi_UpdateAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "appinst"}, ""))
+	pattern_AppInstApi_UpdateAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AppInstApi_ShowAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinst"}, ""))
+	pattern_AppInstApi_ShowAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -430,7 +506,7 @@ func RegisterAppInstInfoApiHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_AppInstInfoApi_ShowAppInstInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinstinfo"}, ""))
+	pattern_AppInstInfoApi_ShowAppInstInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinstinfo"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -499,7 +575,7 @@ func RegisterAppInstMetricsApiHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_AppInstMetricsApi_ShowAppInstMetrics_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinstmetrics"}, ""))
+	pattern_AppInstMetricsApi_ShowAppInstMetrics_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinstmetrics"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

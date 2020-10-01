@@ -9,24 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = descriptor.ForMessage
 
 func request_ControllerApi_ShowController_0(ctx context.Context, marshaler runtime.Marshaler, client ControllerApiClient, req *http.Request, pathParams map[string]string) (ControllerApi_ShowControllerClient, runtime.ServerMetadata, error) {
 	var protoReq Controller
@@ -51,6 +54,21 @@ func request_ControllerApi_ShowController_0(ctx context.Context, marshaler runti
 	metadata.HeaderMD = header
 	return stream, metadata, nil
 
+}
+
+// RegisterControllerApiHandlerServer registers the http handlers for service ControllerApi to "mux".
+// UnaryRPC     :call ControllerApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterControllerApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ControllerApiServer) error {
+
+	mux.Handle("POST", pattern_ControllerApi_ShowController_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
 }
 
 // RegisterControllerApiHandlerFromEndpoint is same as RegisterControllerApiHandler but
@@ -115,7 +133,7 @@ func RegisterControllerApiHandlerClient(ctx context.Context, mux *runtime.ServeM
 }
 
 var (
-	pattern_ControllerApi_ShowController_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "controller"}, ""))
+	pattern_ControllerApi_ShowController_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "controller"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
