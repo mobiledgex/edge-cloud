@@ -43,7 +43,6 @@ message AppInstStream {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
-  //option (protogen.generate_show_test) = true;
   option (protogen.uses_org) = "key=AppKey.Organization,key=ClusterInstKey.Organization,key=ClusterInstKey.CloudletKey.Organization";
   option (protogen.noconfig) = "Msgs,LastId";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization";
