@@ -1,0 +1,62 @@
+// Stream proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "appinst.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+
+// Stream State
+//
+// Indicates if stream has started/ended or in a bad shape
+enum StreamState {
+  // Stream state is unknown
+  STREAM_UNKNOWN = 0;
+  // Stream has started
+  STREAM_START = 1;
+  // Stream has stopped
+  STREAM_STOP = 2;
+  // Stream is in error state
+  STREAM_ERROR = 3;
+}
+
+// StreamMsg to display stream message
+message StreamMsg {
+  // Unique message ID
+  uint32 id = 1;
+  // Stream message
+  string msg = 2;
+}
+
+// AppInstStream to track running status of app instances
+message AppInstStream {
+  // AppInst key
+  AppInstKey key = 1 [(gogoproto.nullable) = false];
+  // AppInst status messages
+  repeated StreamMsg msgs = 2;
+  // Current state of the AppInst on the Cloudlet
+  StreamState state = 3 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Last ID to track duplicate messages
+  uint32 last_id = 4;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  //option (protogen.generate_show_test) = true;
+  option (protogen.uses_org) = "key=AppKey.Organization,key=ClusterInstKey.Organization,key=ClusterInstKey.CloudletKey.Organization";
+  option (protogen.noconfig) = "Msgs,LastId";
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization";
+  option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
+}
+
+service AppInstStreamApi {
+  // Stream Application Instance current progress
+  rpc StreamAppInst(AppInstStream) returns (stream StreamMsg) {
+    option (google.api.http) = {
+      post: "/stream/appinst"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
+  }
+}

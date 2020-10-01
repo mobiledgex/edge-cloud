@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -299,24 +300,64 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	}
 }
 
+type GenericCb interface {
+	Send(*edgeproto.Result) error
+	grpc.ServerStream
+}
+
+type CbWrapper struct {
+	GenericCb
+	key *edgeproto.AppInstKey
+}
+
+func (s *CbWrapper) Send(res *edgeproto.Result) error {
+	if res != nil {
+		go appInstStreamApi.addStream(s.GenericCb.Context(), s.key, res.Message)
+	}
+	return s.GenericCb.Send(res)
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
-func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
+func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, inCb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
 	var clusterInst edgeproto.ClusterInst
-	ctx := cb.Context()
+	ctx := inCb.Context()
+
+	// populate the clusterinst developer from the app developer if not already present
+	setClusterOrg := false
+	if in.Key.ClusterInstKey.Organization == "" {
+		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
+		setClusterOrg = true
+	}
+	s.setDefaultVMClusterKey(ctx, &in.Key)
+
+	var cb edgeproto.AppInstApi_CreateAppInstServer
+
+	// create stream once AppInstKey is formed correctly
+	err := appInstStreamApi.startStream(ctx, &in.Key)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
+		cb = inCb
+	} else {
+		cb = &CbWrapper{
+			key:       &in.Key,
+			GenericCb: inCb,
+		}
+	}
 
 	defer func() {
 		if reterr == nil {
 			RecordAppInstEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
+		if err := appInstStreamApi.stopStream(ctx, &in.Key); err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
+		}
 	}()
 
-	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Organization == "" {
-		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
+	if setClusterOrg {
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
-	s.setDefaultVMClusterKey(ctx, &in.Key)
+
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
@@ -336,7 +377,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	appDeploymentType := ""
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		autocluster = false
 		if s.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
