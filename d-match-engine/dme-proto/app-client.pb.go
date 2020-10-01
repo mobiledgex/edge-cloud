@@ -389,7 +389,7 @@ type RegisterClientRequest struct {
 	// Tags
 	//
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -467,7 +467,7 @@ type RegisterClientReply struct {
 	// Vendor specific data
 	//
 	// _(optional)_ Array of Tags.
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -537,7 +537,7 @@ type FindCloudletRequest struct {
 	// Tags
 	//
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -602,7 +602,7 @@ type PlatformFindCloudletRequest struct {
 	// Tags
 	//
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -656,7 +656,7 @@ type FindCloudletReply struct {
 	// Location of the cloudlet
 	CloudletLocation *Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation,proto3" json:"cloudlet_location,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -730,7 +730,7 @@ type VerifyLocationRequest struct {
 	// Tags
 	//
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -782,7 +782,7 @@ type VerifyLocationReply struct {
 	// means no verification was performed
 	GpsLocationAccuracyKm float64 `protobuf:"fixed64,4,opt,name=gps_location_accuracy_km,json=gpsLocationAccuracyKm,proto3" json:"gps_location_accuracy_km,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -834,7 +834,7 @@ type GetLocationRequest struct {
 	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,4,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -887,7 +887,7 @@ type GetLocationReply struct {
 	// The GPS location of the user
 	NetworkLocation *Loc `protobuf:"bytes,5,opt,name=network_location,json=networkLocation,proto3" json:"network_location,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -947,7 +947,7 @@ type AppInstListRequest struct {
 	// _(optional)_ Limit the number of results, defaults to 3
 	Limit uint32 `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1093,7 +1093,7 @@ type AppInstListReply struct {
 	Status    AppInstListReply_AIStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.AppInstListReply_AIStatus" json:"status,omitempty"`
 	Cloudlets []*CloudletLocation       `protobuf:"bytes,3,rep,name=cloudlets,proto3" json:"cloudlets,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1143,7 +1143,7 @@ type FqdnListRequest struct {
 	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,3,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1240,7 +1240,7 @@ type FqdnListReply struct {
 	AppFqdns []*AppFqdn             `protobuf:"bytes,3,rep,name=app_fqdns,json=appFqdns,proto3" json:"app_fqdns,omitempty"`
 	Status   FqdnListReply_FLStatus `protobuf:"varint,4,opt,name=status,proto3,enum=distributed_match_engine.FqdnListReply_FLStatus" json:"status,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1290,7 +1290,7 @@ type AppOfficialFqdnRequest struct {
 	// The GPS location of the user
 	GpsLocation *Loc `protobuf:"bytes,3,opt,name=gps_location,json=gpsLocation,proto3" json:"gps_location,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1344,7 +1344,7 @@ type AppOfficialFqdnReply struct {
 	// List of Service Endpoints for AppInst
 	Ports []*AppPort `protobuf:"bytes,5,rep,name=ports,proto3" json:"ports,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1399,7 +1399,7 @@ type DynamicLocGroupRequest struct {
 	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,13,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1451,7 +1451,7 @@ type DynamicLocGroupReply struct {
 	// Group Cookie for Secure Group Communication
 	GroupCookie string `protobuf:"bytes,5,opt,name=group_cookie,json=groupCookie,proto3" json:"group_cookie,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1596,7 +1596,7 @@ type QosPositionRequest struct {
 	// _(optional)_ Cell id where the client is
 	CellId uint32 `protobuf:"varint,6,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1699,7 +1699,7 @@ type QosPositionKpiReply struct {
 	// kpi details
 	PositionResults []*QosPositionKpiResult `protobuf:"bytes,3,rep,name=position_results,json=positionResults,proto3" json:"position_results,omitempty"`
 	// _(optional)_ Vendor specific data
-	Tags                 map[string]string `protobuf:"bytes,99,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1821,7 +1821,7 @@ var fileDescriptor_bb90079a337be67f = []byte{
 	0x15, 0xe6, 0x15, 0x6c, 0x18, 0x92, 0xae, 0x96, 0xe6, 0xa9, 0xa0, 0x73, 0xa4, 0x29, 0xa8, 0xe8,
 	0x2d, 0x28, 0xf6, 0x4d, 0xfd, 0x49, 0x1f, 0x4b, 0xba, 0x2a, 0x79, 0x03, 0x1b, 0x97, 0x16, 0xe8,
 	0xdc, 0x45, 0x9f, 0x2a, 0xa8, 0xdd, 0x81, 0x8d, 0xd1, 0x45, 0xc8, 0x0f, 0x47, 0x95, 0xf2, 0x74,
-	0xc0, 0x42, 0x38, 0x00, 0x1d, 0x40, 0xd6, 0x93, 0x35, 0xb7, 0xa4, 0x6c, 0x65, 0x2e, 0x17, 0x76,
+	0xc0, 0x42, 0x38, 0x00, 0x1d, 0x40, 0xd6, 0x93, 0x35, 0xb7, 0xa4, 0x6e, 0x65, 0x2e, 0x17, 0x76,
 	0xdf, 0xdd, 0x39, 0x0f, 0xfd, 0x9d, 0x54, 0xfc, 0x76, 0xba, 0xb2, 0xe6, 0xd6, 0x4d, 0xcf, 0x19,
 	0x88, 0x74, 0x99, 0xf2, 0x6d, 0xc8, 0x0f, 0x49, 0x04, 0xdc, 0x13, 0x3c, 0xa0, 0xe0, 0xe6, 0x45,
 	0xf2, 0x89, 0xd6, 0x20, 0x77, 0x2a, 0x1b, 0xfd, 0x10, 0x59, 0xbf, 0x71, 0x87, 0x7d, 0x87, 0xe1,
@@ -1957,7 +1957,7 @@ var fileDescriptor_bb90079a337be67f = []byte{
 	0xe7, 0x52, 0x29, 0xc9, 0x85, 0xdf, 0xa2, 0x52, 0x95, 0xf9, 0xf5, 0x40, 0xaa, 0x27, 0x96, 0x1b,
 	0x26, 0xaf, 0x13, 0x5b, 0xbf, 0xc3, 0x6c, 0x5f, 0x63, 0x3e, 0xe4, 0x9e, 0xfd, 0x63, 0xf3, 0x95,
 	0x67, 0xcf, 0x37, 0x99, 0x3f, 0x3f, 0xdf, 0x64, 0xfe, 0xfe, 0x7c, 0x93, 0x79, 0x34, 0x47, 0xff,
-	0x3a, 0xbc, 0xf1, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd8, 0x06, 0xe3, 0x78, 0xdd, 0x28, 0x00,
+	0x3a, 0xbc, 0xf1, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xef, 0xac, 0x4d, 0xc6, 0xdd, 0x28, 0x00,
 	0x00,
 }
 
@@ -2481,7 +2481,7 @@ func (m *RegisterClientRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if len(m.UniqueId) > 0 {
@@ -2588,7 +2588,7 @@ func (m *RegisterClientReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if len(m.UniqueId) > 0 {
@@ -2674,7 +2674,7 @@ func (m *FindCloudletRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.CellId != 0 {
@@ -2758,7 +2758,7 @@ func (m *PlatformFindCloudletRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if len(m.ClientToken) > 0 {
@@ -2832,7 +2832,7 @@ func (m *FindCloudletReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.CloudletLocation != nil {
@@ -2923,7 +2923,7 @@ func (m *VerifyLocationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.CellId != 0 {
@@ -3014,7 +3014,7 @@ func (m *VerifyLocationReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.GpsLocationAccuracyKm != 0 {
@@ -3083,7 +3083,7 @@ func (m *GetLocationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.CellId != 0 {
@@ -3155,7 +3155,7 @@ func (m *GetLocationReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.NetworkLocation != nil {
@@ -3237,7 +3237,7 @@ func (m *AppInstListRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.Limit != 0 {
@@ -3468,7 +3468,7 @@ func (m *AppInstListReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if len(m.Cloudlets) > 0 {
@@ -3540,7 +3540,7 @@ func (m *FqdnListRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.CellId != 0 {
@@ -3669,7 +3669,7 @@ func (m *FqdnListReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.Status != 0 {
@@ -3741,7 +3741,7 @@ func (m *AppOfficialFqdnRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.GpsLocation != nil {
@@ -3813,7 +3813,7 @@ func (m *AppOfficialFqdnReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if len(m.Ports) > 0 {
@@ -3899,7 +3899,7 @@ func (m *DynamicLocGroupRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.CellId != 0 {
@@ -3981,7 +3981,7 @@ func (m *DynamicLocGroupReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if len(m.GroupCookie) > 0 {
@@ -4158,7 +4158,7 @@ func (m *QosPositionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if m.CellId != 0 {
@@ -4352,7 +4352,7 @@ func (m *QosPositionKpiReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0x6
 			i--
-			dAtA[i] = 0x9a
+			dAtA[i] = 0xa2
 		}
 	}
 	if len(m.PositionResults) > 0 {
@@ -8500,7 +8500,7 @@ func (m *RegisterClientRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.UniqueId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -8847,7 +8847,7 @@ func (m *RegisterClientReply) Unmarshal(dAtA []byte) error {
 			}
 			m.UniqueId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -9166,7 +9166,7 @@ func (m *FindCloudletRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -9462,7 +9462,7 @@ func (m *PlatformFindCloudletRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ClientToken = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -9783,7 +9783,7 @@ func (m *FindCloudletReply) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -10134,7 +10134,7 @@ func (m *VerifyLocationRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -10383,7 +10383,7 @@ func (m *VerifyLocationReply) Unmarshal(dAtA []byte) error {
 			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 			m.GpsLocationAccuracyKm = float64(math.Float64frombits(v))
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -10666,7 +10666,7 @@ func (m *GetLocationRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -10972,7 +10972,7 @@ func (m *GetLocationReply) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -11310,7 +11310,7 @@ func (m *AppInstListRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -11978,7 +11978,7 @@ func (m *AppInstListReply) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -12229,7 +12229,7 @@ func (m *FqdnListRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -12696,7 +12696,7 @@ func (m *FqdnListReply) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -12964,7 +12964,7 @@ func (m *AppOfficialFqdnRequest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -13281,7 +13281,7 @@ func (m *AppOfficialFqdnReply) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -13602,7 +13602,7 @@ func (m *DynamicLocGroupRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -13872,7 +13872,7 @@ func (m *DynamicLocGroupReply) Unmarshal(dAtA []byte) error {
 			}
 			m.GroupCookie = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -14503,7 +14503,7 @@ func (m *QosPositionRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
@@ -14964,7 +14964,7 @@ func (m *QosPositionKpiReply) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 99:
+		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
