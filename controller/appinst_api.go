@@ -307,12 +307,12 @@ type GenericCb interface {
 
 type CbWrapper struct {
 	GenericCb
-	key *edgeproto.AppInstKey
+	key edgeproto.AppInstKey
 }
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	if res != nil {
-		go appInstStreamApi.addStream(s.GenericCb.Context(), s.key, res.Message)
+		go appInstStreamApi.addStream(s.GenericCb.Context(), &s.key, res.Message)
 	}
 	return s.GenericCb.Send(res)
 }
@@ -334,13 +334,14 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	var cb edgeproto.AppInstApi_CreateAppInstServer
 
 	// create stream once AppInstKey is formed correctly
-	err := appInstStreamApi.startStream(ctx, &in.Key)
+	appInstKey := in.Key
+	err := appInstStreamApi.startStream(ctx, &appInstKey)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
 		cb = inCb
 	} else {
 		cb = &CbWrapper{
-			key:       &in.Key,
+			key:       appInstKey,
 			GenericCb: inCb,
 		}
 	}
@@ -349,7 +350,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if reterr == nil {
 			RecordAppInstEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
-		if err := appInstStreamApi.stopStream(ctx, &in.Key); err != nil {
+		if err := appInstStreamApi.stopStream(ctx, &appInstKey); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 		}
 	}()
