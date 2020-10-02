@@ -193,7 +193,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	// turn connection.
 	defer func() {
 		if reterr != nil && replySent {
-			turnConn.Write([]byte(err.Error()))
+			turnConn.Write([]byte(reterr.Error()))
 		}
 	}()
 	if req.Console != nil {
