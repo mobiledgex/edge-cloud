@@ -12,7 +12,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
 )
 
 const EdgeEventLatencyMethod = "appinst-latency"
@@ -98,14 +97,8 @@ func (w *StatsStreamWrapper) RecvMsg(m interface{}) error {
 					Organization: eekey.ClusterOrg,
 				},
 			}
-			// Grab Peer info
-			p, ok := peer.FromContext(w.Context())
-			if !ok {
-				log.SpanLog(w.Context(), log.DebugLevelDmereq, "ClientEdgeEvent latency unable to get peer info from context")
-				return err
-			}
 			// Handle latency samples from client
-			latency, ok := dmecommon.ProcessLatencySamples(w.Context(), *appInstKey, p.Addr, typ.Samples)
+			latency, ok := dmecommon.EEHandler.ProcessLatencySamples(w.Context(), *appInstKey, *ckey, typ.Samples)
 			if !ok {
 				log.SpanLog(w.Context(), log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples")
 				return err

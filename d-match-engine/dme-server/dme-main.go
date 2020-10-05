@@ -376,84 +376,19 @@ func initEdgeEventsPlugin(ctx context.Context) error {
 		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
 		return err
 	}
-	// Load AddClientKey in Plugin
-	sym, err := plug.Lookup("AddClientKey")
+	sym, err := plug.Lookup("GetEdgeEventsHandler")
 	if err != nil {
-		log.FatalLog("plugin does not have AddClientKey symbol", "plugin", *eesolib)
+		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
+	}
+	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (dmecommon.EdgeEventsHandler, error))
+	if !ok {
+		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *solib)
+	}
+	eehandler, err := getEdgeEventsHandlerFunc(ctx)
+	if err != nil {
 		return err
 	}
-	addClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, mgr *dmecommon.EdgeEventPersistentMgr))
-	if !ok {
-		log.FatalLog("plugin AddClientKey symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
-	}
-	dmecommon.AddClientKey = addClientKeyFunc
-	// Load RemoveClientKey in Plugin
-	sym, err = plug.Lookup("RemoveClientKey")
-	if err != nil {
-		log.FatalLog("plugin does not have RemoveClientKey symbol", "plugin", *eesolib)
-		return err
-	}
-	removeClientKeyFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr))
-	if !ok {
-		log.FatalLog("plugin RemoveClientKey symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr)", "plugin", *eesolib)
-	}
-	dmecommon.RemoveClientKey = removeClientKeyFunc
-	// Load RemoveAppInstKey in Plugin
-	sym, err = plug.Lookup("RemoveAppInstKey")
-	if err != nil {
-		log.FatalLog("plugin does not have RemoveAppInstKey symbol", "plugin", *eesolib)
-		return err
-	}
-	removeAppInstKeyFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey))
-	if !ok {
-		log.FatalLog("plugin RemoveAppInstKey symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey)", "plugin", *eesolib)
-	}
-	dmecommon.RemoveAppInstKey = removeAppInstKeyFunc
-	// Load SendLatencyRequestEdgeEvent in Plugin
-	sym, err = plug.Lookup("SendLatencyRequestEdgeEvent")
-	if err != nil {
-		log.FatalLog("plugin does not have SendLatencyRequestEdgeEvent symbol", "plugin", *eesolib)
-		return err
-	}
-	sendLatencyRequestEdgeEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey edgeproto.AppInstKey))
-	if !ok {
-		log.FatalLog("plugin SendLatencyRequestEdgeEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey)", "plugin", *eesolib)
-	}
-	dmecommon.SendLatencyRequestEdgeEvent = sendLatencyRequestEdgeEventFunc
-	// Load ProcessLatencySamples in Plugin
-	sym, err = plug.Lookup("ProcessLatencySamples")
-	if err != nil {
-		log.FatalLog("plugin does not have ProcessLatencySamples symbol", "plugin", *eesolib)
-		return err
-	}
-	processLatencySamplesFunc, ok := sym.(func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, samples []float64) (*dme.Latency, bool))
-	if !ok {
-		log.FatalLog("plugin ProcessLatencySamples symbol does not implement func(ctx context.Context, appInstKey edgeproto.AppInstKey, addr net.Addr, samples []float64) (*dme.Latency, bool)", "plugin", *eesolib)
-	}
-	dmecommon.ProcessLatencySamples = processLatencySamplesFunc
-	// Load SendAppInstStateEvent in Plugin
-	sym, err = plug.Lookup("SendAppInstStateEvent")
-	if err != nil {
-		log.FatalLog("plugin does not have SendAppInstStateEvent symbol", "plugin", *eesolib)
-		return err
-	}
-	sendAppInstStateEventFunc, ok := sym.(func(ctx context.Context, appInst *dmecommon.DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType))
-	if !ok {
-		log.FatalLog("plugin SendAppInstStateEvent symbol does not implement func(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType)", "plugin", *eesolib)
-	}
-	dmecommon.SendAppInstStateEvent = sendAppInstStateEventFunc
-	// Load StreamEdgeEventToClient in Plugin
-	sym, err = plug.Lookup("SendEdgeEventToClient")
-	if err != nil {
-		log.FatalLog("plugin does not have StreamEdgeEventToClient symbol", "plugin", *eesolib)
-		return err
-	}
-	sendEdgeEventToClientFunc, ok := sym.(func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *dmecommon.EdgeEventPersistentMgr))
-	if !ok {
-		log.FatalLog("plugin SendEdgeEventToClient symbol does not implement func(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, mgr *EdgeEventPersistentMgr)", "plugin", *eesolib)
-	}
-	dmecommon.SendEdgeEventToClient = sendEdgeEventToClientFunc
-
+	dmecommon.EEHandler = eehandler
 	return nil
 }
 
