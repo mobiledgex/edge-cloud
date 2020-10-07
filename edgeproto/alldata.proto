@@ -45,7 +45,7 @@ message AllData {
   repeated AppInst app_instances = 17 [(gogoproto.nullable) = false];
   repeated AppInstRefs app_inst_refs = 18 [(gogoproto.nullable) = false];
   repeated VMPool vm_pools = 19 [(gogoproto.nullable) = false];
-  repeated AppInstStream app_inst_streams = 20 [(gogoproto.nullable) = false];
+  repeated StreamObj stream_objs = 20 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }

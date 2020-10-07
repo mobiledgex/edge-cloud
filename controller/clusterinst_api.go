@@ -188,6 +188,30 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	return clusterInst.IpAccess, nil
 }
 
+func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) edgeproto.ClusterInstApi_CreateClusterInstServer {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
+	err := streamObjApi.startStream(ctx, streamKey)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
+		return inCb
+	}
+	return &CbWrapper{
+		key:       *streamKey,
+		GenericCb: inCb,
+	}
+}
+
+func stopClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey) {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
+	if err := streamObjApi.stopStream(ctx, streamKey); err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop ClusterInst stream", "err", err)
+	}
+}
+
+func (s *StreamObjApi) StreamClusterInst(key *edgeproto.ClusterInstKey, cb edgeproto.StreamObjApi_StreamClusterInstServer) error {
+	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: *key}, cb)
+}
+
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
@@ -196,19 +220,24 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
-func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
+func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
 
+	ctx := inCb.Context()
+
+	clusterInstKey := in.Key
+	cb := startClusterInstStream(ctx, &clusterInstKey, inCb)
+
 	defer func() {
 		if reterr == nil {
 			RecordClusterInstEvent(cb.Context(), &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
+		stopClusterInstStream(ctx, &clusterInstKey)
 	}()
 
-	ctx := cb.Context()
 	if in.Key.Organization == "" {
 		return fmt.Errorf("ClusterInst Organization cannot be empty")
 	}
@@ -448,8 +477,8 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.updateClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
-	ctx := cb.Context()
+func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
+	ctx := inCb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
 
 	err := in.ValidateUpdateFields()
@@ -461,6 +490,12 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	cctx.SetOverride(&in.CrmOverride)
+
+	clusterInstKey := in.Key
+	cb := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	defer func() {
+		stopClusterInstStream(ctx, &clusterInstKey)
+	}()
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
@@ -552,7 +587,7 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 	return nil
 }
 
-func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
+func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
@@ -564,7 +599,13 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	cctx.SetOverride(&in.CrmOverride)
-	ctx := cb.Context()
+	ctx := inCb.Context()
+
+	clusterInstKey := in.Key
+	cb := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	defer func() {
+		stopClusterInstStream(ctx, &clusterInstKey)
+	}()
 
 	var prevState edgeproto.TrackedState
 	// Set state to prevent other apps from being created on ClusterInst

@@ -14,7 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
-	grpc "google.golang.org/grpc"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -300,21 +299,31 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	}
 }
 
-type GenericCb interface {
-	Send(*edgeproto.Result) error
-	grpc.ServerStream
-}
-
-type CbWrapper struct {
-	GenericCb
-	key edgeproto.AppInstKey
-}
-
-func (s *CbWrapper) Send(res *edgeproto.Result) error {
-	if res != nil {
-		go appInstStreamApi.addStream(s.GenericCb.Context(), &s.key, res.Message)
+func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) edgeproto.AppInstApi_CreateAppInstServer {
+	err := streamObjApi.startStream(ctx, key)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
+		return inCb
 	}
-	return s.GenericCb.Send(res)
+	return &CbWrapper{
+		key:       *key,
+		GenericCb: inCb,
+	}
+}
+
+func stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey) {
+	if err := streamObjApi.stopStream(ctx, key); err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
+	}
+}
+
+func (s *StreamObjApi) StreamAppInst(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
+	// populate the clusterinst developer from the app developer if not already present
+	if key.ClusterInstKey.Organization == "" {
+		key.ClusterInstKey.Organization = key.AppKey.Organization
+	}
+	appInstApi.setDefaultVMClusterKey(cb.Context(), key)
+	return s.StreamMsgs(key, cb)
 }
 
 // createAppInstInternal is used to create dynamic app insts internally,
@@ -331,28 +340,16 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	s.setDefaultVMClusterKey(ctx, &in.Key)
 
-	var cb edgeproto.AppInstApi_CreateAppInstServer
+	appInstKey := in.Key
 
 	// create stream once AppInstKey is formed correctly
-	appInstKey := in.Key
-	err := appInstStreamApi.startStream(ctx, &appInstKey)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
-		cb = inCb
-	} else {
-		cb = &CbWrapper{
-			key:       appInstKey,
-			GenericCb: inCb,
-		}
-	}
+	cb := startAppInstStream(ctx, &appInstKey, inCb)
 
 	defer func() {
 		if reterr == nil {
 			RecordAppInstEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
-		if err := appInstStreamApi.stopStream(ctx, &appInstKey); err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
-		}
+		stopAppInstStream(ctx, &appInstKey)
 	}()
 
 	if setClusterOrg {
@@ -378,7 +375,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	appDeploymentType := ""
 
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		autocluster = false
 		if s.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
@@ -774,8 +771,8 @@ func (s *AppInstApi) updateAppInstStore(ctx context.Context, in *edgeproto.AppIn
 }
 
 // refreshAppInstInternal returns true if the appinst updated, false otherwise.  False value with no error means no update was needed
-func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, cb edgeproto.AppInstApi_RefreshAppInstServer, forceUpdate bool) (retbool bool, reterr error) {
-	ctx := cb.Context()
+func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.AppInstKey, inCb edgeproto.AppInstApi_RefreshAppInstServer, forceUpdate bool) (retbool bool, reterr error) {
+	ctx := inCb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "refreshAppInstInternal", "key", key)
 
 	updatedRevision := false
@@ -785,6 +782,12 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	if err := key.ValidateKey(); err != nil {
 		return false, err
 	}
+
+	// create stream once AppInstKey is formed correctly
+	cb := startAppInstStream(ctx, &key, inCb)
+	defer func() {
+		stopAppInstStream(ctx, &key)
+	}()
 
 	var app edgeproto.App
 
@@ -1032,9 +1035,9 @@ func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	return s.deleteAppInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) (reterr error) {
+func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, inCb edgeproto.AppInstApi_DeleteAppInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
-	ctx := cb.Context()
+	ctx := inCb.Context()
 
 	var app edgeproto.App
 
@@ -1042,6 +1045,14 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err := in.Key.AppKey.ValidateKey(); err != nil {
 		return err
 	}
+
+	appInstKey := in.Key
+	// create stream once AppInstKey is formed correctly
+	cb := startAppInstStream(ctx, &appInstKey, inCb)
+	defer func() {
+		stopAppInstStream(ctx, &appInstKey)
+	}()
+
 	// get appinst info for flavor
 	appInstInfo := edgeproto.AppInst{}
 	if !appInstApi.cache.Get(&in.Key, &appInstInfo) {

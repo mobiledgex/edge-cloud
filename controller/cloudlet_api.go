@@ -177,6 +177,37 @@ func isOperatorInfraCloudlet(in *edgeproto.Cloudlet) bool {
 	return false
 }
 
+func startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) edgeproto.CloudletApi_CreateCloudletServer {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
+	err := streamObjApi.startStream(ctx, streamKey)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to start Cloudlet stream", "err", err)
+		return inCb
+	}
+	return &CbWrapper{
+		key:       *streamKey,
+		GenericCb: inCb,
+	}
+}
+
+func stopCloudletStream(ctx context.Context, key *edgeproto.CloudletKey) {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
+	if err := streamObjApi.stopStream(ctx, streamKey); err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop Cloudlet stream", "err", err)
+	}
+}
+
+func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.StreamObjApi_StreamCloudletServer) error {
+	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
+}
+
+func sendCloudletMsg(ctx context.Context, key *edgeproto.CloudletKey, res *edgeproto.Result) {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
+	if res != nil {
+		streamObjApi.addStream(ctx, streamKey, res.Message)
+	}
+}
+
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
@@ -286,14 +317,17 @@ func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
 	return &caches
 }
 
-func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
+func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
-	ctx := cb.Context()
+	ctx := inCb.Context()
 
+	cloudletKey := in.Key
+	cb := startCloudletStream(ctx, &cloudletKey, inCb)
 	defer func() {
 		if reterr == nil {
 			RecordCloudletEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
+		stopCloudletStream(ctx, &cloudletKey)
 	}()
 
 	pfConfig, err := getPlatformConfig(ctx, in)
@@ -644,8 +678,14 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	return err
 }
 
-func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
-	ctx := cb.Context()
+func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_UpdateCloudletServer) error {
+	ctx := inCb.Context()
+
+	cloudletKey := in.Key
+	cb := startCloudletStream(ctx, &cloudletKey, inCb)
+	defer func() {
+		stopCloudletStream(ctx, &cloudletKey)
+	}()
 
 	updatecb := updateCloudletCallback{in, cb}
 
@@ -867,13 +907,16 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	return s.deleteCloudletInternal(DefCallContext(), in, cb)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
-	ctx := cb.Context()
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
+	ctx := inCb.Context()
 
+	cloudletKey := in.Key
+	cb := startCloudletStream(ctx, &cloudletKey, inCb)
 	defer func() {
 		if reterr == nil {
 			RecordCloudletEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
+		stopCloudletStream(ctx, &cloudletKey)
 	}()
 
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})

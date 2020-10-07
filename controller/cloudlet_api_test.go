@@ -128,11 +128,12 @@ func waitForState(key *edgeproto.CloudletKey, state edgeproto.TrackedState) erro
 	return fmt.Errorf("Unable to get desired cloudlet state, actual state %s, desired state %s", lastState, state)
 }
 
-func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.CloudletState, version string) {
+func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.CloudletState, taskName, version string) {
 	info := edgeproto.CloudletInfo{}
 	info.Key = *key
 	info.State = state
 	info.ContainerVersion = version
+	info.Status.SetTask(taskName)
 	cloudletInfoApi.Update(ctx, &info, 0)
 }
 
@@ -203,13 +204,19 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, "cloudlet obj created")
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
+
+	// progress message should exist
+	msgs := GetCloudletStreamMsgs(t, ctx, &cloudlet.Key)
+	require.Equal(t, len(msgs), 2, "cloudlet progress message count match")
+	require.Equal(t, msgs[0].Msg, "sending init", "cloudlet progress message match")
+	require.Equal(t, msgs[1].Msg, "sending ready", "cloudlet progress message match")
 
 	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)

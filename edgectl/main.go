@@ -89,7 +89,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.CloudletRefsApiCmd = edgeproto.NewCloudletRefsApiClient(conn)
 	gencmd.ClusterRefsApiCmd = edgeproto.NewClusterRefsApiClient(conn)
 	gencmd.AppInstRefsApiCmd = edgeproto.NewAppInstRefsApiClient(conn)
-	gencmd.AppInstStreamApiCmd = edgeproto.NewAppInstStreamApiClient(conn)
+	gencmd.StreamObjApiCmd = edgeproto.NewStreamObjApiClient(conn)
 	return nil
 }
 
@@ -136,7 +136,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.CloudletRefsApiCmds...)
 	controllerCmd.AddCommand(gencmd.ClusterRefsApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstRefsApiCmds...)
-	controllerCmd.AddCommand(gencmd.AppInstStreamApiCmds...)
+	controllerCmd.AddCommand(gencmd.StreamObjApiCmds...)
 
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())

@@ -88,8 +88,8 @@ func (a *AllData) Sort() {
 	sort.Slice(a.VmPools[:], func(i, j int) bool {
 		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
 	})
-	sort.Slice(a.AppInstStreams[:], func(i, j int) bool {
-		return a.AppInstStreams[i].Key.GetKeyString() < a.AppInstStreams[j].Key.GetKeyString()
+	sort.Slice(a.StreamObjs[:], func(i, j int) bool {
+		return a.StreamObjs[i].Key.GetKeyString() < a.StreamObjs[j].Key.GetKeyString()
 	})
 }
 
@@ -455,7 +455,7 @@ func (s *AppInstRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *AppInstStream) Validate(fields map[string]struct{}) error {
+func (s *StreamObj) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
