@@ -312,14 +312,15 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 			return resp, err
 		}
 		// skip platform monitoring FindCloudletCalls, or if we didn't find the cloudlet
-		skipUpdate := false
-		if ckey.UniqueIdType == *monitorUuidType ||
+		createClient := true
+		if err != nil ||
+			ckey.UniqueIdType == *monitorUuidType ||
 			getResultFromFindCloudletReply(resp.(*dme.FindCloudletReply)) != dme.FindCloudletReply_FIND_FOUND {
-			skipUpdate = true
+			createClient = false
 		}
 
 		// Update clients cache if we found the cloudlet
-		if err == nil && !skipUpdate {
+		if createClient {
 			client := getAppInstClient(call.key.AppKey.Name, call.key.AppKey.Version, call.key.AppKey.Organization, loc)
 			if client != nil {
 				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
