@@ -253,10 +253,10 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		cl.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 	}
 	// Check if MC API triggered MeasureLatency
-	if appInst.MeasureLatency {
+	/*if appInst.MeasureLatency {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "AppInst update in DME. Request to Measure Latency")
 		EEHandler.SendLatencyRequestEdgeEvent(ctx, cl, appInst.Key)
-	}
+	}*/
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
 		"appName", app.AppKey.Name,
@@ -361,9 +361,8 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 				key.ClusterInstKey = inst.clusterInstKey
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
-					appInst := carr.Insts[key.ClusterInstKey]
 					// Remove AppInst from edgeevents plugin
-					EEHandler.SendAppInstStateEvent(ctx, appInst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+					EEHandler.SendAppInstStateEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 					EEHandler.RemoveAppInstKey(ctx, key)
 					delete(carr.Insts, key.ClusterInstKey)
 				}

@@ -515,6 +515,8 @@ func main() {
 	notifyClient.RegisterSend(sendAutoProvCounts)
 	nodeMgr.RegisterClient(notifyClient)
 
+	InitDebug(&nodeMgr)
+
 	// Start autProvStats before we recieve Settings Update
 	dmecommon.Settings = *edgeproto.GetDefaultSettings()
 	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &nodeMgr.MyNode.Key, sendAutoProvCounts.Update)
