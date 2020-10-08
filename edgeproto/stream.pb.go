@@ -118,13 +118,13 @@ func (m *StreamMsg) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StreamMsg proto.InternalMessageInfo
 
-// AppInstStream to track running status of app instances
+// StreamObj to track running status of stream enabled objects
 type StreamObj struct {
-	// AppInst key
+	// AppInst key - Common key for all stream enabled objects
 	Key AppInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
-	// AppInst status messages
+	// Obj status messages
 	Msgs []*StreamMsg `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
-	// Current state of the AppInst on the Cloudlet
+	// Current state of the obj on the Cloudlet
 	State StreamState `protobuf:"varint,3,opt,name=state,proto3,enum=edgeproto.StreamState" json:"state,omitempty"`
 	// Last ID to track duplicate messages
 	LastId uint32 `protobuf:"varint,4,opt,name=last_id,json=lastId,proto3" json:"last_id,omitempty"`

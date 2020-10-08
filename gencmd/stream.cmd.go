@@ -325,7 +325,7 @@ var StreamObjComments = map[string]string{
 	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
 	"msgs:#.id":                                   "Unique message ID",
 	"msgs:#.msg":                                  "Stream message",
-	"state":                                       "Current state of the AppInst on the Cloudlet, one of StreamUnknown, StreamStart, StreamStop, StreamError",
+	"state":                                       "Current state of the obj on the Cloudlet, one of StreamUnknown, StreamStart, StreamStop, StreamError",
 	"lastid":                                      "Last ID to track duplicate messages",
 	"lease":                                       "Lease time",
 }

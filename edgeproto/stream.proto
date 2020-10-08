@@ -36,13 +36,13 @@ message StreamMsg {
   string msg = 2;
 }
 
-// AppInstStream to track running status of app instances
+// StreamObj to track running status of stream enabled objects
 message StreamObj {
-  // AppInst key
+  // AppInst key - Common key for all stream enabled objects
   AppInstKey key = 1 [(gogoproto.nullable) = false];
-  // AppInst status messages
+  // Obj status messages
   repeated StreamMsg msgs = 2;
-  // Current state of the AppInst on the Cloudlet
+  // Current state of the obj on the Cloudlet
   StreamState state = 3 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Last ID to track duplicate messages
   uint32 last_id = 4;
