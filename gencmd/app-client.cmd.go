@@ -628,6 +628,17 @@ var MatchEngineApiCmds = []*cobra.Command{
 	GetQosPositionKpiCmd.GenCmd(),
 }
 
+var TagRequiredArgs = []string{}
+var TagOptionalArgs = []string{
+	"type",
+	"data",
+}
+var TagAliasArgs = []string{}
+var TagComments = map[string]string{
+	"type": "type of data",
+	"data": "data value",
+}
+var TagSpecialArgs = map[string]string{}
 var RegisterClientRequestRequiredArgs = []string{}
 var RegisterClientRequestOptionalArgs = []string{
 	"ver",
@@ -639,7 +650,8 @@ var RegisterClientRequestOptionalArgs = []string{
 	"cellid",
 	"uniqueidtype",
 	"uniqueid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var RegisterClientRequestAliasArgs = []string{}
 var RegisterClientRequestComments = map[string]string{
@@ -652,11 +664,10 @@ var RegisterClientRequestComments = map[string]string{
 	"cellid":       "Cell ID _(optional)_ Cellular ID of where the client is connected.",
 	"uniqueidtype": "Unique ID Type _(optional)_ Type of unique ID provided by the client. If left blank, a new Unique ID type will be assigned in the RegisterClient Reply.",
 	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server. If left blank, a new Unique ID will be assigned in the RegisterClient Reply.",
-	"tags":         "Tags _(optional)_ Vendor specific data",
+	"tags:#.type":  "type of data",
+	"tags:#.data":  "data value",
 }
-var RegisterClientRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var RegisterClientRequestSpecialArgs = map[string]string{}
 var RegisterClientReplyRequiredArgs = []string{}
 var RegisterClientReplyOptionalArgs = []string{
 	"ver",
@@ -665,7 +676,8 @@ var RegisterClientReplyOptionalArgs = []string{
 	"tokenserveruri",
 	"uniqueidtype",
 	"uniqueid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var RegisterClientReplyAliasArgs = []string{}
 var RegisterClientReplyComments = map[string]string{
@@ -675,11 +687,10 @@ var RegisterClientReplyComments = map[string]string{
 	"tokenserveruri": "URI for the Token Server",
 	"uniqueidtype":   "Unique ID Type _(optional)_ Type of unique ID provided by the server A unique_id_type and unique_id may be provided by the client to be registered. During registering, if a unique_id_type and unique_id are provided by the client in their request, the unique_id_type and unique_id will be left blank in the response. But, if the client does not provide a unique_id_type and unique_id, then the server generates one and provides the unique_id in the response. If possible, the unique_id should be saved by the client locally and used for subsequent RegisterClient API calls. Otherwise, a new unique_id will be generated for further API calls.",
 	"uniqueid":       "Unique ID _(optional)_ Unique identification of the client device or user A unique_id_type and unique_id may be provided by the client to be registered. During registering, if a unique_id_type and unique_id are provided by the client in their request, the unique_id_type and unique_id will be left blank in the response. But, if the client does not provide a unique_id_type and unique_id, then the server generates one and provides the unique_id in the response. If possible, the unique_id should be saved by the client locally and used for subsequent RegisterClient API calls. Otherwise, a new unique_id will be generated for further API calls.",
-	"tags":           "Vendor specific data _(optional)_ Array of Tags.",
+	"tags:#.type":    "type of data",
+	"tags:#.data":    "data value",
 }
-var RegisterClientReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var RegisterClientReplySpecialArgs = map[string]string{}
 var FindCloudletRequestRequiredArgs = []string{}
 var FindCloudletRequestOptionalArgs = []string{
 	"ver",
@@ -695,7 +706,8 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FindCloudletRequestAliasArgs = []string{}
 var FindCloudletRequestComments = map[string]string{
@@ -710,18 +722,18 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
-	"tags":                           "Tags _(optional)_ Vendor specific data",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
-var FindCloudletRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var FindCloudletRequestSpecialArgs = map[string]string{}
 var PlatformFindCloudletRequestRequiredArgs = []string{}
 var PlatformFindCloudletRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
 	"carriername",
 	"clienttoken",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var PlatformFindCloudletRequestAliasArgs = []string{}
 var PlatformFindCloudletRequestComments = map[string]string{
@@ -729,11 +741,10 @@ var PlatformFindCloudletRequestComments = map[string]string{
 	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
 	"carriername":   "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any app instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
 	"clienttoken":   "Client Token Token with encoded client data",
-	"tags":          "Tags _(optional)_ Vendor specific data",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
-var PlatformFindCloudletRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var PlatformFindCloudletRequestSpecialArgs = map[string]string{}
 var FindCloudletReplyRequiredArgs = []string{}
 var FindCloudletReplyOptionalArgs = []string{
 	"ver",
@@ -755,7 +766,8 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.speed",
 	"cloudletlocation.timestamp.seconds",
 	"cloudletlocation.timestamp.nanos",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FindCloudletReplyAliasArgs = []string{}
 var FindCloudletReplyComments = map[string]string{
@@ -776,11 +788,10 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"cloudletlocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"tags":                                "_(optional)_ Vendor specific data",
+	"tags:#.type":                         "type of data",
+	"tags:#.data":                         "data value",
 }
-var FindCloudletReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var FindCloudletReplySpecialArgs = map[string]string{}
 var VerifyLocationRequestRequiredArgs = []string{}
 var VerifyLocationRequestOptionalArgs = []string{
 	"ver",
@@ -797,7 +808,8 @@ var VerifyLocationRequestOptionalArgs = []string{
 	"gpslocation.timestamp.nanos",
 	"verifyloctoken",
 	"cellid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var VerifyLocationRequestAliasArgs = []string{}
 var VerifyLocationRequestComments = map[string]string{
@@ -813,18 +825,18 @@ var VerifyLocationRequestComments = map[string]string{
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"verifyloctoken":                 "Verify Location Token Must be retrieved from TokenServerURI",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
-	"tags":                           "Tags _(optional)_ Vendor specific data",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
-var VerifyLocationRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var VerifyLocationRequestSpecialArgs = map[string]string{}
 var VerifyLocationReplyRequiredArgs = []string{}
 var VerifyLocationReplyOptionalArgs = []string{
 	"ver",
 	"towerstatus",
 	"gpslocationstatus",
 	"gpslocationaccuracykm",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var VerifyLocationReplyAliasArgs = []string{}
 var VerifyLocationReplyComments = map[string]string{
@@ -832,18 +844,18 @@ var VerifyLocationReplyComments = map[string]string{
 	"towerstatus":           ", one of TowerUnknown, ConnectedToSpecifiedTower, NotConnectedToSpecifiedTower",
 	"gpslocationstatus":     ", one of LocUnknown, LocVerified, LocMismatchSameCountry, LocMismatchOtherCountry, LocRoamingCountryMatch, LocRoamingCountryMismatch, LocErrorUnauthorized, LocErrorOther",
 	"gpslocationaccuracykm": "location accuracy, the location is verified to be within this number of kilometers.  Negative value means no verification was performed",
-	"tags":                  "_(optional)_ Vendor specific data",
+	"tags:#.type":           "type of data",
+	"tags:#.data":           "data value",
 }
-var VerifyLocationReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var VerifyLocationReplySpecialArgs = map[string]string{}
 var GetLocationRequestRequiredArgs = []string{}
 var GetLocationRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
 	"carriername",
 	"cellid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var GetLocationRequestAliasArgs = []string{}
 var GetLocationRequestComments = map[string]string{
@@ -851,11 +863,10 @@ var GetLocationRequestComments = map[string]string{
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"carriername":   "Unique carrier identification (typically MCC + MNC)",
 	"cellid":        "_(optional)_ Cell id where the client is",
-	"tags":          "_(optional)_ Vendor specific data",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
-var GetLocationRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var GetLocationRequestSpecialArgs = map[string]string{}
 var GetLocationReplyRequiredArgs = []string{}
 var GetLocationReplyOptionalArgs = []string{
 	"ver",
@@ -871,7 +882,8 @@ var GetLocationReplyOptionalArgs = []string{
 	"networklocation.speed",
 	"networklocation.timestamp.seconds",
 	"networklocation.timestamp.nanos",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var GetLocationReplyAliasArgs = []string{}
 var GetLocationReplyComments = map[string]string{
@@ -886,11 +898,10 @@ var GetLocationReplyComments = map[string]string{
 	"networklocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"networklocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"networklocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"tags":                               "_(optional)_ Vendor specific data",
+	"tags:#.type":                        "type of data",
+	"tags:#.data":                        "data value",
 }
-var GetLocationReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var GetLocationReplySpecialArgs = map[string]string{}
 var AppInstListRequestRequiredArgs = []string{}
 var AppInstListRequestOptionalArgs = []string{
 	"ver",
@@ -907,7 +918,8 @@ var AppInstListRequestOptionalArgs = []string{
 	"gpslocation.timestamp.nanos",
 	"cellid",
 	"limit",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppInstListRequestAliasArgs = []string{}
 var AppInstListRequestComments = map[string]string{
@@ -923,11 +935,10 @@ var AppInstListRequestComments = map[string]string{
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "_(optional)_ Cell id where the client is",
 	"limit":                          "_(optional)_ Limit the number of results, defaults to 3",
-	"tags":                           "_(optional)_ Vendor specific data",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
-var AppInstListRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var AppInstListRequestSpecialArgs = map[string]string{}
 var AppinstanceRequiredArgs = []string{}
 var AppinstanceOptionalArgs = []string{
 	"appname",
@@ -1035,7 +1046,8 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets:#.appinstances:#.ports:#.tls",
 	"cloudlets:#.appinstances:#.ports:#.nginx",
 	"cloudlets:#.appinstances:#.orgname",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppInstListReplyAliasArgs = []string{}
 var AppInstListReplyComments = map[string]string{
@@ -1062,28 +1074,27 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets:#.appinstances:#.ports:#.tls":          "TLS termination for this port",
 	"cloudlets:#.appinstances:#.ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"cloudlets:#.appinstances:#.orgname":              "App Organization Name",
-	"tags":                                            "_(optional)_ Vendor specific data",
+	"tags:#.type":                                     "type of data",
+	"tags:#.data":                                     "data value",
 }
-var AppInstListReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var AppInstListReplySpecialArgs = map[string]string{}
 var FqdnListRequestRequiredArgs = []string{}
 var FqdnListRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
 	"cellid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FqdnListRequestAliasArgs = []string{}
 var FqdnListRequestComments = map[string]string{
 	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"cellid":        "_(optional)_ Cell id where the client is",
-	"tags":          "_(optional)_ Vendor specific data",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
-var FqdnListRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var FqdnListRequestSpecialArgs = map[string]string{}
 var AppFqdnRequiredArgs = []string{}
 var AppFqdnOptionalArgs = []string{
 	"appname",
@@ -1112,7 +1123,8 @@ var FqdnListReplyOptionalArgs = []string{
 	"appfqdns:#.fqdns",
 	"appfqdns:#.androidpackagename",
 	"status",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var FqdnListReplyAliasArgs = []string{}
 var FqdnListReplyComments = map[string]string{
@@ -1123,11 +1135,11 @@ var FqdnListReplyComments = map[string]string{
 	"appfqdns:#.fqdns":              "App FQDN",
 	"appfqdns:#.androidpackagename": "_(optional)_ Android package name",
 	"status":                        ", one of FlUndefined, FlSuccess, FlFail",
-	"tags":                          "_(optional)_ Vendor specific data",
+	"tags:#.type":                   "type of data",
+	"tags:#.data":                   "data value",
 }
 var FqdnListReplySpecialArgs = map[string]string{
 	"appfqdns:#.fqdns": "StringArray",
-	"tags":             "StringToString",
 }
 var AppOfficialFqdnRequestRequiredArgs = []string{}
 var AppOfficialFqdnRequestOptionalArgs = []string{
@@ -1142,7 +1154,8 @@ var AppOfficialFqdnRequestOptionalArgs = []string{
 	"gpslocation.speed",
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppOfficialFqdnRequestAliasArgs = []string{}
 var AppOfficialFqdnRequestComments = map[string]string{
@@ -1155,11 +1168,10 @@ var AppOfficialFqdnRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"tags":                           "_(optional)_ Vendor specific data",
+	"tags:#.type":                    "type of data",
+	"tags:#.data":                    "data value",
 }
-var AppOfficialFqdnRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var AppOfficialFqdnRequestSpecialArgs = map[string]string{}
 var AppOfficialFqdnReplyRequiredArgs = []string{}
 var AppOfficialFqdnReplyOptionalArgs = []string{
 	"ver",
@@ -1173,7 +1185,8 @@ var AppOfficialFqdnReplyOptionalArgs = []string{
 	"ports:#.endport",
 	"ports:#.tls",
 	"ports:#.nginx",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var AppOfficialFqdnReplyAliasArgs = []string{}
 var AppOfficialFqdnReplyComments = map[string]string{
@@ -1188,11 +1201,10 @@ var AppOfficialFqdnReplyComments = map[string]string{
 	"ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"ports:#.tls":          "TLS termination for this port",
 	"ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
-	"tags":                 "_(optional)_ Vendor specific data",
+	"tags:#.type":          "type of data",
+	"tags:#.data":          "data value",
 }
-var AppOfficialFqdnReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var AppOfficialFqdnReplySpecialArgs = map[string]string{}
 var DynamicLocGroupRequestRequiredArgs = []string{}
 var DynamicLocGroupRequestOptionalArgs = []string{
 	"ver",
@@ -1201,7 +1213,8 @@ var DynamicLocGroupRequestOptionalArgs = []string{
 	"commtype",
 	"userdata",
 	"cellid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var DynamicLocGroupRequestAliasArgs = []string{}
 var DynamicLocGroupRequestComments = map[string]string{
@@ -1211,18 +1224,18 @@ var DynamicLocGroupRequestComments = map[string]string{
 	"commtype":      ", one of DlgUndefined, DlgSecure, DlgOpen",
 	"userdata":      "Unused",
 	"cellid":        "_(optional)_ Cell id where the client is",
-	"tags":          "_(optional)_ Vendor specific data",
+	"tags:#.type":   "type of data",
+	"tags:#.data":   "data value",
 }
-var DynamicLocGroupRequestSpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var DynamicLocGroupRequestSpecialArgs = map[string]string{}
 var DynamicLocGroupReplyRequiredArgs = []string{}
 var DynamicLocGroupReplyOptionalArgs = []string{
 	"ver",
 	"status",
 	"errorcode",
 	"groupcookie",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var DynamicLocGroupReplyAliasArgs = []string{}
 var DynamicLocGroupReplyComments = map[string]string{
@@ -1230,11 +1243,10 @@ var DynamicLocGroupReplyComments = map[string]string{
 	"status":      "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
 	"errorcode":   "Error Code based on Failure",
 	"groupcookie": "Group Cookie for Secure Group Communication",
-	"tags":        "_(optional)_ Vendor specific data",
+	"tags:#.type": "type of data",
+	"tags:#.data": "data value",
 }
-var DynamicLocGroupReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var DynamicLocGroupReplySpecialArgs = map[string]string{}
 var QosPositionRequiredArgs = []string{}
 var QosPositionOptionalArgs = []string{
 	"positionid",
@@ -1297,7 +1309,8 @@ var QosPositionRequestOptionalArgs = []string{
 	"bandselection.rat_4g",
 	"bandselection.rat_5g",
 	"cellid",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var QosPositionRequestAliasArgs = []string{}
 var QosPositionRequestComments = map[string]string{
@@ -1314,14 +1327,14 @@ var QosPositionRequestComments = map[string]string{
 	"ltecategory":                                "_(optional)_ Clients device LTE category number.",
 	"bandselection.rat_2g":                       "Radio Access Technologies",
 	"cellid":                                     "_(optional)_ Cell id where the client is",
-	"tags":                                       "_(optional)_ Vendor specific data",
+	"tags:#.type":                                "type of data",
+	"tags:#.data":                                "data value",
 }
 var QosPositionRequestSpecialArgs = map[string]string{
 	"bandselection.rat_2g": "StringArray",
 	"bandselection.rat_3g": "StringArray",
 	"bandselection.rat_4g": "StringArray",
 	"bandselection.rat_5g": "StringArray",
-	"tags":                 "StringToString",
 }
 var QosPositionKpiResultRequiredArgs = []string{}
 var QosPositionKpiResultOptionalArgs = []string{
@@ -1381,7 +1394,8 @@ var QosPositionKpiReplyOptionalArgs = []string{
 	"positionresults:#.latencymin",
 	"positionresults:#.latencyavg",
 	"positionresults:#.latencymax",
-	"tags",
+	"tags:#.type",
+	"tags:#.data",
 }
 var QosPositionKpiReplyAliasArgs = []string{}
 var QosPositionKpiReplyComments = map[string]string{
@@ -1396,8 +1410,7 @@ var QosPositionKpiReplyComments = map[string]string{
 	"positionresults:#.gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"positionresults:#.gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"positionresults:#.dluserthroughputmin":            "throughput",
-	"tags":                                             "_(optional)_ Vendor specific data",
+	"tags:#.type":                                      "type of data",
+	"tags:#.data":                                      "data value",
 }
-var QosPositionKpiReplySpecialArgs = map[string]string{
-	"tags": "StringToString",
-}
+var QosPositionKpiReplySpecialArgs = map[string]string{}
