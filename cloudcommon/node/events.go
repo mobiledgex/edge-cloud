@@ -24,7 +24,7 @@ import (
 // Keyword types are exact matches, while text types use word matching (not grep)
 var eventMapping = `
 {
-  "index_patterns": "events-log-*",
+  "index_patterns": "%s-*",
   "settings":{
     "index.number_of_shards": 5,
     "index.number_of_replicas": 1,
@@ -163,12 +163,13 @@ func (s *NodeMgr) initEvents(ctx context.Context, opts *NodeOptions) error {
 	if opts.esUrls == "" {
 		return nil
 	}
+	if s.DeploymentTag != "" {
+		esEventLog = esEventLog + "-" + s.DeploymentTag
+	}
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "new elastic client", "esurls", opts.esUrls)
 	config := elasticsearch.Config{
 		Addresses: strings.Split(opts.esUrls, ","),
-		Username:  os.Getenv("ES_USERNAME"),
-		Password:  os.Getenv("ES_PASSWORD"),
 	}
 	tlsConfig, err := s.GetPublicClientTlsConfig(ctx)
 	if err != nil {
@@ -216,9 +217,10 @@ func (s *NodeMgr) initEvents(ctx context.Context, opts *NodeOptions) error {
 }
 
 func (s *NodeMgr) writeIndex(ctx context.Context) error {
+	mapping := fmt.Sprintf(eventMapping, esEventLog)
 	req := esapi.IndicesPutTemplateRequest{
 		Name: esEventLog,
-		Body: strings.NewReader(eventMapping),
+		Body: strings.NewReader(mapping),
 	}
 	res, err := req.Do(ctx, s.ESClient)
 	if err != nil {
