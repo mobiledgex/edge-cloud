@@ -81,7 +81,7 @@ lint:
 
 UNIT_TEST_LOG = /tmp/edge-cloud-unit-test.log
 
-unit-test: lint
+unit-test:
 	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
 
 test:
