@@ -134,8 +134,6 @@ message AppInst {
   string vm_flavor = 34 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   // Optional Resources required by OS flavor if any
   string opt_res = 35 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
-  // Check to see if need to measure latency
-  bool measure_latency = 36;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -215,13 +213,21 @@ service AppInstApi {
     };
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
   }
-  // Start Latency measurements for AppInst
-  rpc MeasureAppInstLatency(AppInst) returns (stream Result) {
+  // Request Latency measurements for clients connected to AppInst
+  rpc RequestAppInstLatency(AppInst) returns (Result) {
     option (google.api.http) = {
-      post: "/latency/appinst"
+      post: "/reqlatency/appinst"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
+  }
+  // Display Latency measurements for clients connected to AppInst
+  rpc DisplayAppInstLatency(AppInst) returns (Result) {
+    option (google.api.http) = {
+      post: "/displatency/appinst"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
   }
 }
 

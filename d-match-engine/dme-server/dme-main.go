@@ -78,6 +78,8 @@ var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 
+var stats *DmeStats
+
 func validateLocation(loc *dme.Loc) error {
 	if loc == nil || (loc.Latitude == 0 && loc.Longitude == 0) {
 		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
@@ -453,6 +455,7 @@ func main() {
 	if err != nil {
 		log.FatalLog("Failed init node", "err", err)
 	}
+
 	defer nodeMgr.Finish()
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
@@ -515,8 +518,6 @@ func main() {
 	notifyClient.RegisterSend(sendAutoProvCounts)
 	nodeMgr.RegisterClient(notifyClient)
 
-	InitDebug(&nodeMgr)
-
 	// Start autProvStats before we recieve Settings Update
 	dmecommon.Settings = *edgeproto.GetDefaultSettings()
 	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &nodeMgr.MyNode.Key, sendAutoProvCounts.Update)
@@ -527,7 +528,7 @@ func main() {
 	defer notifyClient.Stop()
 
 	interval := time.Duration(*statsInterval) * time.Second
-	stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
+	stats = NewDmeStats(interval, *statsShards, sendMetric.Update)
 	stats.Start()
 	defer stats.Stop()
 
@@ -552,6 +553,8 @@ func main() {
 	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
+
+	InitDebug(&nodeMgr)
 
 	// Register reflection service on gRPC server.
 	reflection.Register(s)

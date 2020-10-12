@@ -500,8 +500,8 @@ func ShowAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var MeasureAppInstLatencyCmd = &cli.Command{
-	Use:          "MeasureAppInstLatency",
+var RequestAppInstLatencyCmd = &cli.Command{
+	Use:          "RequestAppInstLatency",
 	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
 	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
@@ -509,10 +509,10 @@ var MeasureAppInstLatencyCmd = &cli.Command{
 	Comments:     AppInstComments,
 	ReqData:      &edgeproto.AppInst{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runMeasureAppInstLatency,
+	Run:          runRequestAppInstLatency,
 }
 
-func runMeasureAppInstLatency(c *cli.Command, args []string) error {
+func runRequestAppInstLatency(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -521,55 +521,92 @@ func runMeasureAppInstLatency(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return MeasureAppInstLatency(c, obj)
+	return RequestAppInstLatency(c, obj)
 }
 
-func MeasureAppInstLatency(c *cli.Command, in *edgeproto.AppInst) error {
+func RequestAppInstLatency(c *cli.Command, in *edgeproto.AppInst) error {
 	if AppInstApiCmd == nil {
 		return fmt.Errorf("AppInstApi client not initialized")
 	}
 	ctx := context.Background()
-	stream, err := AppInstApiCmd.MeasureAppInstLatency(ctx, in)
+	obj, err := AppInstApiCmd.RequestAppInstLatency(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("MeasureAppInstLatency failed: %s", errstr)
+		return fmt.Errorf("RequestAppInstLatency failed: %s", errstr)
 	}
-
-	objs := make([]*edgeproto.Result, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("MeasureAppInstLatency recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func MeasureAppInstLatencys(c *cli.Command, data []edgeproto.AppInst, err *error) {
+func RequestAppInstLatencys(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("MeasureAppInstLatency %v\n", data[ii])
-		myerr := MeasureAppInstLatency(c, &data[ii])
+		fmt.Printf("RequestAppInstLatency %v\n", data[ii])
+		myerr := RequestAppInstLatency(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var DisplayAppInstLatencyCmd = &cli.Command{
+	Use:          "DisplayAppInstLatency",
+	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
+	SpecialArgs:  &AppInstSpecialArgs,
+	Comments:     AppInstComments,
+	ReqData:      &edgeproto.AppInst{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDisplayAppInstLatency,
+}
+
+func runDisplayAppInstLatency(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppInst)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DisplayAppInstLatency(c, obj)
+}
+
+func DisplayAppInstLatency(c *cli.Command, in *edgeproto.AppInst) error {
+	if AppInstApiCmd == nil {
+		return fmt.Errorf("AppInstApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppInstApiCmd.DisplayAppInstLatency(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DisplayAppInstLatency failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func DisplayAppInstLatencys(c *cli.Command, data []edgeproto.AppInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DisplayAppInstLatency %v\n", data[ii])
+		myerr := DisplayAppInstLatency(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -583,7 +620,8 @@ var AppInstApiCmds = []*cobra.Command{
 	RefreshAppInstCmd.GenCmd(),
 	UpdateAppInstCmd.GenCmd(),
 	ShowAppInstCmd.GenCmd(),
-	MeasureAppInstLatencyCmd.GenCmd(),
+	RequestAppInstLatencyCmd.GenCmd(),
+	DisplayAppInstLatencyCmd.GenCmd(),
 }
 
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
@@ -795,7 +833,6 @@ var AppInstOptionalArgs = []string{
 	"powerstate",
 	"vmflavor",
 	"optres",
-	"measurelatency",
 }
 var AppInstAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -851,7 +888,6 @@ var AppInstComments = map[string]string{
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
 	"optres":                         "Optional Resources required by OS flavor if any",
-	"measurelatency":                 "Check to see if need to measure latency",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -965,7 +1001,6 @@ var CreateAppInstOptionalArgs = []string{
 	"privacypolicy",
 	"vmflavor",
 	"optres",
-	"measurelatency",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"app-org",
@@ -989,7 +1024,6 @@ var DeleteAppInstOptionalArgs = []string{
 	"privacypolicy",
 	"vmflavor",
 	"optres",
-	"measurelatency",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"app-org",
@@ -1004,7 +1038,6 @@ var RefreshAppInstOptionalArgs = []string{
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
-	"measurelatency",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"app-org",
@@ -1020,5 +1053,4 @@ var UpdateAppInstOptionalArgs = []string{
 	"configs:#.kind",
 	"configs:#.config",
 	"powerstate",
-	"measurelatency",
 }

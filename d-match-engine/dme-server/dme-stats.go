@@ -10,6 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -29,14 +30,16 @@ type ApiStatCall struct {
 	key     dmecommon.StatKey
 	fail    bool
 	latency time.Duration
+	samples []float64 // Latency samples for EdgeEvents
 }
 
 type ApiStat struct {
-	reqs    uint64
-	errs    uint64
-	latency grpcstats.LatencyMetric
-	mux     sync.Mutex
-	changed bool
+	reqs           uint64
+	errs           uint64
+	latency        grpcstats.LatencyMetric
+	rollinglatency dme.Latency // Rolling statistics for EdgeEvents latency measurements
+	mux            sync.Mutex
+	changed        bool
 }
 
 type MapShard struct {
@@ -80,6 +83,16 @@ func (s *DmeStats) Stop() {
 	s.waitGroup.Wait()
 }
 
+func (s *DmeStats) LookupApiStatCall(call *ApiStatCall) (*ApiStat, bool) {
+	idx := util.GetShardIndex(call.key.Method+call.key.AppKey.Organization+call.key.AppKey.Name, s.numShards)
+
+	shard := &s.shards[idx]
+	shard.mux.Lock()
+	defer shard.mux.Unlock()
+	stat, found := shard.apiStatMap[call.key]
+	return stat, found
+}
+
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	idx := util.GetShardIndex(call.key.Method+call.key.AppKey.Organization+call.key.AppKey.Name, s.numShards)
 
@@ -96,6 +109,9 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 		stat.errs++
 	}
 	stat.latency.AddLatency(call.latency)
+	if call.key.Method == EdgeEventLatencyMethod {
+		dmeutil.UpdateRollingLatency(call.samples, &stat.rollinglatency)
+	}
 	stat.changed = true
 	shard.mux.Unlock()
 }

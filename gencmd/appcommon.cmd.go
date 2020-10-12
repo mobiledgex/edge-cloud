@@ -42,8 +42,12 @@ var LatencyOptionalArgs = []string{
 	"min",
 	"max",
 	"stddev",
+	"variance",
 	"numsamples",
 }
 var LatencyAliasArgs = []string{}
-var LatencyComments = map[string]string{}
+var LatencyComments = map[string]string{
+	"stddev":   "Unbiased standard deviation",
+	"variance": "Unbiased variance",
+}
 var LatencySpecialArgs = map[string]string{}

@@ -104,7 +104,7 @@ func (w *StatsStreamWrapper) RecvMsg(m interface{}) error {
 				return err
 			}
 			call.latency = time.Duration(latency.Avg * float64(time.Millisecond))
-
+			call.samples = typ.Samples
 			call.key.Method = EdgeEventLatencyMethod // override method name
 			log.SpanLog(w.Context(), log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.latency)
 			w.stats.RecordApiStatCall(&call)
