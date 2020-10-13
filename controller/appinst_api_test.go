@@ -15,6 +15,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+var (
+	Pass bool = true
+	Fail bool = false
+)
+
 type StreamoutMsg struct {
 	Msgs []*edgeproto.StreamMsg
 	grpc.ServerStream
@@ -36,24 +41,32 @@ func NewStreamoutMsg(ctx context.Context) *StreamoutMsg {
 	}
 }
 
-func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey) []*edgeproto.StreamMsg {
+func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, pass bool) []*edgeproto.StreamMsg {
 	// Verify stream appInst
 	streamAppInst := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamAppInst(key, streamAppInst)
-	require.Nil(t, err, "stream appinst")
-	if len(streamAppInst.Msgs) > 0 {
-		require.Equal(t, streamAppInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
+	if pass {
+		require.Nil(t, err, "stream appinst")
+		if len(streamAppInst.Msgs) > 0 {
+			require.Equal(t, streamAppInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
+		}
+	} else {
+		require.NotNil(t, err, "stream appinst should return error")
 	}
 	return streamAppInst.Msgs
 }
 
-func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey) []*edgeproto.StreamMsg {
+func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, pass bool) []*edgeproto.StreamMsg {
 	// Verify stream clusterInst
 	streamClusterInst := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamClusterInst(key, streamClusterInst)
-	require.Nil(t, err, "stream clusterinst")
-	if len(streamClusterInst.Msgs) > 0 {
-		require.Equal(t, streamClusterInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
+	if pass {
+		require.Nil(t, err, "stream clusterinst")
+		if len(streamClusterInst.Msgs) > 0 {
+			require.Equal(t, streamClusterInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
+		}
+	} else {
+		require.NotNil(t, err, "stream clusterinst should return error")
 	}
 	return streamClusterInst.Msgs
 }
@@ -95,9 +108,8 @@ func TestAppInstApi(t *testing.T) {
 	for _, obj := range testutil.AppInstData {
 		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.NotNil(t, err, "Create app inst without apps/cloudlets")
-		// Verify stream AppInst
-		msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key)
-		require.Equal(t, len(msgs), 0, "no messages on failure")
+		// Verify stream AppInst fails
+		GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
 	}
 
 	// create supporting data
@@ -131,7 +143,7 @@ func TestAppInstApi(t *testing.T) {
 			require.Equal(t, "Encountered failures: crm create app inst failed", err.Error())
 		}
 		// As there was some progress, there should be some messages in stream
-		msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key)
+		msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
 		require.Greater(t, len(msgs), 0, "some progress messages before failure")
 	}
 	responder.SetSimulateAppCreateFailure(false)
@@ -161,7 +173,7 @@ func TestAppInstApi(t *testing.T) {
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
 	// As there was some progress, there should be some messages in stream
-	msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key)
+	msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
 	require.Greater(t, len(msgs), 0, "some progress messages before failure")
 
 	obj = testutil.AppInstData[0]
@@ -174,7 +186,7 @@ func TestAppInstApi(t *testing.T) {
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
 	// As there was progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key)
+	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
 	require.Greater(t, len(msgs), 0, "progress messages")
 
 	// check override of error CREATE_ERROR
@@ -195,7 +207,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, appInstRefsDeleted)
 	// As there was some progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key)
+	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
 	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// check override of error UPDATE_ERROR
@@ -389,14 +401,14 @@ func TestAutoClusterInst(t *testing.T) {
 	err := appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create app inst")
 	// As there was some progress, there should be some messages in stream
-	msgs := GetAppInstStreamMsgs(t, ctx, &copy.Key)
+	msgs := GetAppInstStreamMsgs(t, ctx, &copy.Key, Pass)
 	require.Greater(t, len(msgs), 0, "some progress messages")
 	clusterInst := edgeproto.ClusterInst{}
 	found := clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
 	require.True(t, found, "get auto-clusterinst")
 	require.True(t, clusterInst.Auto, "clusterinst is auto")
 	// Progress message should be there for cluster instance itself
-	msgs = GetClusterInstStreamMsgs(t, ctx, &copy.Key.ClusterInstKey)
+	msgs = GetClusterInstStreamMsgs(t, ctx, &copy.Key.ClusterInstKey, Pass)
 	require.Greater(t, len(msgs), 0, "some progress messages")
 	// delete appinst should also delete clusterinst
 	err = appInstApi.DeleteAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
