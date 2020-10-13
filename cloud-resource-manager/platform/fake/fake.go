@@ -15,6 +15,8 @@ import (
 	ssh "github.com/mobiledgex/golang-ssh"
 )
 
+var dummyDelay = 10 * time.Millisecond
+
 type Platform struct {
 	consoleServer *httptest.Server
 }
@@ -38,10 +40,20 @@ var fakeProps = map[string]*edgeproto.PropertyInfo{
 	},
 }
 
+func timedCallback(updateCallback edgeproto.CacheUpdateCallback) edgeproto.CacheUpdateCallback {
+	return func(updateType edgeproto.CacheUpdateType, value string) {
+		time.Sleep(dummyDelay)
+		updateCallback(updateType, value)
+		time.Sleep(dummyDelay)
+	}
+}
+
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
-	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
+
+	cb := timedCallback(updateCallback)
+	cb(edgeproto.UpdateTask, "Done intializing fake platform")
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
 	}))
@@ -64,13 +76,15 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 }
 
 func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
-	updateCallback(edgeproto.UpdateTask, "Updating Cluster Inst")
+	cb := timedCallback(updateCallback)
+	cb(edgeproto.UpdateTask, "Updating Cluster Inst")
 	return nil
 }
 func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake CreateClusterInst", "clusterInst", clusterInst, "privacyPolicy", privacyPolicy)
-	updateCallback(edgeproto.UpdateTask, "First Create Task")
-	updateCallback(edgeproto.UpdateTask, "Second Create Task")
+	cb := timedCallback(updateCallback)
+	cb(edgeproto.UpdateTask, "First Create Task")
+	cb(edgeproto.UpdateTask, "Second Create Task")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst ready")
 	return nil
 }
@@ -81,18 +95,21 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 }
 
 func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
-	updateCallback(edgeproto.UpdateTask, "Creating App Inst")
+	cb := timedCallback(updateCallback)
+	cb(edgeproto.UpdateTask, "Creating App Inst")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst ready")
 	return nil
 }
 
 func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst deleted")
+	time.Sleep(dummyDelay)
 	return nil
 }
 
 func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
-	updateCallback(edgeproto.UpdateTask, "fake appInst updated")
+	cb := timedCallback(updateCallback)
+	cb(edgeproto.UpdateTask, "fake appInst updated")
 	return nil
 }
 
@@ -143,9 +160,9 @@ func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (strin
 
 func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "create fake cloudlet", "key", cloudlet.Key)
-	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
-
-	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
+	cb := timedCallback(updateCallback)
+	cb(edgeproto.UpdateTask, "Creating Cloudlet")
+	cb(edgeproto.UpdateTask, "Starting CRMServer")
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
@@ -156,16 +173,18 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 
 func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelInfra, "update fake Cloudlet", "cloudlet", cloudlet)
+	cb := timedCallback(updateCallback)
 	for key, val := range cloudlet.EnvVar {
-		updateCallback(edgeproto.UpdateTask, fmt.Sprintf("Updating envvar, %s=%s", key, val))
+		cb(edgeproto.UpdateTask, fmt.Sprintf("Updating envvar, %s=%s", key, val))
 	}
 	return nil
 }
 
 func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelInfra, "delete fake Cloudlet", "key", cloudlet.Key)
-	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
-	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
+	cb := timedCallback(updateCallback)
+	cb(edgeproto.UpdateTask, "Deleting Cloudlet")
+	cb(edgeproto.UpdateTask, "Stopping CRMServer")
 	err := cloudcommon.StopCRMService(ctx, cloudlet)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet delete failed", "err", err)

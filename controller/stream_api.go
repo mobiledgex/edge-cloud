@@ -18,9 +18,10 @@ var StreamTimeout = 30 * time.Minute
 var StreamLeaseTimeoutSec = int64(60 * 60) // 1 hour
 
 type StreamObjApi struct {
-	sync  *Sync
-	store edgeproto.StreamObjStore
-	cache edgeproto.StreamObjCache
+	sync      *Sync
+	store     edgeproto.StreamObjStore
+	cache     edgeproto.StreamObjCache
+	streamBuf map[edgeproto.AppInstKey]chan string
 }
 
 type GenericCb interface {
@@ -35,7 +36,9 @@ type CbWrapper struct {
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	if res != nil {
-		go streamObjApi.addStream(s.GenericCb.Context(), &s.key, res.Message)
+		if streamChan, ok := streamObjApi.streamBuf[s.key]; ok {
+			streamChan <- res.Message
+		}
 	}
 	return s.GenericCb.Send(res)
 }
@@ -43,6 +46,7 @@ func (s *CbWrapper) Send(res *edgeproto.Result) error {
 func InitStreamObjApi(sync *Sync) {
 	streamObjApi.sync = sync
 	streamObjApi.store = edgeproto.NewStreamObjStore(sync.store)
+	streamObjApi.streamBuf = make(map[edgeproto.AppInstKey]chan string)
 	edgeproto.InitStreamObjCache(&streamObjApi.cache)
 	sync.RegisterCache(&streamObjApi.cache)
 }
@@ -57,6 +61,11 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 		return nil
 	})
 	if err != nil {
+		// return nil, if no object present
+		if err.Error() == key.NotFoundError().Error() {
+			log.SpanLog(ctx, log.DebugLevelApi, "Stream obj is not present", "key", key)
+			return nil
+		}
 		return err
 	}
 	lastMsgId := uint32(0)
@@ -65,6 +74,9 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 		lastMsgId = streamMsg.Id
 	}
 	if streamObj.State != edgeproto.StreamState_STREAM_START {
+		if streamObj.ErrorMsg != "" {
+			return fmt.Errorf("%s", streamObj.ErrorMsg)
+		}
 		return nil
 	}
 
@@ -88,7 +100,11 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 
 	select {
 	case <-done:
-		err = nil
+		if streamObj.ErrorMsg != "" {
+			err = fmt.Errorf("%s", streamObj.ErrorMsg)
+		} else {
+			err = nil
+		}
 	case <-time.After(StreamTimeout):
 		err = fmt.Errorf("Timed out waiting for stream messages for app instance %v, please retry again later", key)
 	}
@@ -119,44 +135,62 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		return nil
 	})
 
+	if err == nil {
+		s.streamBuf[*key] = make(chan string, 50)
+		go s.addStream(ctx, key)
+	}
+
 	return err
 }
 
-func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey) error {
+func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey, objErr error) error {
 	streamObj := edgeproto.StreamObj{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, key, &streamObj) {
 			return key.NotFoundError()
 		}
 		streamObj.State = edgeproto.StreamState_STREAM_STOP
+		if objErr != nil {
+			streamObj.ErrorMsg = objErr.Error()
+		}
 		s.store.STMPut(stm, &streamObj, objstore.WithLease(streamObj.Lease))
 		return nil
 	})
+
+	if streamChan, ok := s.streamBuf[*key]; ok {
+		close(streamChan)
+		delete(s.streamBuf, *key)
+	}
 
 	return err
 }
 
-func (s *StreamObjApi) addStream(ctx context.Context, key *edgeproto.AppInstKey, msg string) {
-	streamObj := edgeproto.StreamObj{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, key, &streamObj) {
-			return key.NotFoundError()
-		}
-		if len(streamObj.Msgs) > 0 {
-			if streamObj.Msgs[len(streamObj.Msgs)-1].Msg == msg {
-				// duplicate message, ignore
-				return nil
+func (s *StreamObjApi) addStream(ctx context.Context, key *edgeproto.AppInstKey) {
+	msgCh, ok := s.streamBuf[*key]
+	if !ok {
+		return
+	}
+	for msg := range msgCh {
+		streamObj := edgeproto.StreamObj{}
+		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			if !s.store.STMGet(stm, key, &streamObj) {
+				return key.NotFoundError()
 			}
-		}
-		streamObj.LastId++
-		streamObj.Msgs = append(streamObj.Msgs, &edgeproto.StreamMsg{
-			Id:  streamObj.LastId,
-			Msg: msg,
+			if len(streamObj.Msgs) > 0 &&
+				streamObj.Msgs[len(streamObj.Msgs)-1].Msg == msg {
+				// duplicate message, ignore
+			} else {
+				streamObj.LastId++
+				streamObj.Msgs = append(streamObj.Msgs, &edgeproto.StreamMsg{
+					Id:  streamObj.LastId,
+					Msg: msg,
+				})
+			}
+			s.store.STMPut(stm, &streamObj, objstore.WithLease(streamObj.Lease))
+			return nil
 		})
-		s.store.STMPut(stm, &streamObj, objstore.WithLease(streamObj.Lease))
-		return nil
-	})
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to add stream", "key", key, "msg", msg, "err", err)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to add stream", "key", key, "msg", msg, "err", err)
+		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -149,20 +150,28 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting AppInsts ", "cluster", key.ClusterKey.Name)
 	s.cache.Mux.Lock()
+	keys := []edgeproto.AppInstKey{}
 	for k, data := range s.cache.Objs {
 		val := data.Obj
 		if k.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
 			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE || val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
 				apps[k] = val
+				keys = append(keys, k)
 			}
 		}
 	}
 	s.cache.Mux.Unlock()
 
+	// sort keys for stable iteration order, needed for testing
+	sort.Slice(keys[:], func(i, j int) bool {
+		return keys[i].GetKeyString() < keys[j].GetKeyString()
+	})
+
 	//Spin in case cluster was just created and apps are still in the creation process and cannot be deleted
 	var spinTime time.Duration
 	start := time.Now()
-	for _, val := range apps {
+	for _, key := range keys {
+		val := apps[key]
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting AppInst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting AppInst " + val.Key.AppKey.Name})
 		for {
@@ -299,20 +308,20 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	}
 }
 
-func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) edgeproto.AppInstApi_CreateAppInstServer {
+func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (edgeproto.AppInstApi_CreateAppInstServer, error) {
 	err := streamObjApi.startStream(ctx, key)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
-		return inCb
+		return inCb, err
 	}
 	return &CbWrapper{
 		key:       *key,
 		GenericCb: inCb,
-	}
+	}, nil
 }
 
-func stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey) {
-	if err := streamObjApi.stopStream(ctx, key); err != nil {
+func stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, objErr error) {
+	if err := streamObjApi.stopStream(ctx, key, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 	}
 }
@@ -323,6 +332,11 @@ func (s *StreamObjApi) StreamAppInst(key *edgeproto.AppInstKey, cb edgeproto.Str
 		key.ClusterInstKey.Organization = key.AppKey.Organization
 	}
 	appInstApi.setDefaultVMClusterKey(cb.Context(), key)
+	if key.ClusterInstKey.ClusterKey.Name == "" {
+		// if cluster name is still empty, fill it with
+		// default vm cluster name
+		key.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
+	}
 	return s.StreamMsgs(key, cb)
 }
 
@@ -343,13 +357,17 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	appInstKey := in.Key
 
 	// create stream once AppInstKey is formed correctly
-	cb := startAppInstStream(ctx, &appInstKey, inCb)
+	cb, err := startAppInstStream(ctx, &appInstKey, inCb)
+	if err == nil {
+		defer func() {
+			stopAppInstStream(ctx, &appInstKey, reterr)
+		}()
+	}
 
 	defer func() {
 		if reterr == nil {
 			RecordAppInstEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
-		stopAppInstStream(ctx, &appInstKey)
 	}()
 
 	if setClusterOrg {
@@ -375,7 +393,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	appDeploymentType := ""
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		autocluster = false
 		if s.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
@@ -784,14 +802,16 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	}
 
 	// create stream once AppInstKey is formed correctly
-	cb := startAppInstStream(ctx, &key, inCb)
-	defer func() {
-		stopAppInstStream(ctx, &key)
-	}()
+	cb, err := startAppInstStream(ctx, &key, inCb)
+	if err == nil {
+		defer func() {
+			stopAppInstStream(ctx, &key, reterr)
+		}()
+	}
 
 	var app edgeproto.App
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		var curr edgeproto.AppInst
 
 		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
@@ -1048,10 +1068,12 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
-	cb := startAppInstStream(ctx, &appInstKey, inCb)
-	defer func() {
-		stopAppInstStream(ctx, &appInstKey)
-	}()
+	cb, err := startAppInstStream(ctx, &appInstKey, inCb)
+	if err == nil {
+		defer func() {
+			stopAppInstStream(ctx, &appInstKey, reterr)
+		}()
+	}
 
 	// get appinst info for flavor
 	appInstInfo := edgeproto.AppInst{}
@@ -1077,7 +1099,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 	}
 	clusterInstKey := edgeproto.ClusterInstKey{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			if in.Key.ClusterInstKey.Organization == "" {
 				// create still allows it be unset on input,

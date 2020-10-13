@@ -545,6 +545,7 @@ var AllDataOptionalArgs = []string{
 	"streamobjs:#.state",
 	"streamobjs:#.lastid",
 	"streamobjs:#.lease",
+	"streamobjs:#.errormsg",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -841,6 +842,7 @@ var AllDataComments = map[string]string{
 	"streamobjs:#.state":                                         "Current state of the obj on the Cloudlet, one of StreamUnknown, StreamStart, StreamStop, StreamError",
 	"streamobjs:#.lastid":                                        "Last ID to track duplicate messages",
 	"streamobjs:#.lease":                                         "Lease time",
+	"streamobjs:#.errormsg":                                      "Stream error message, if any",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",

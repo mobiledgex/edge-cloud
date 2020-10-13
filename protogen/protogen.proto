@@ -94,8 +94,6 @@ extend google.protobuf.MessageOptions {
   string generate_lookup_by_sublist = 51048;
   // generate a reverse lookup cache (val is comma separated list of subfield paths)
   string generate_lookup_by_subfield = 51049;
-  // generate stream cb to be used with stream APIs
-  // bool generate_stream_cb = 51050;
 }
 
 extend google.protobuf.EnumOptions {

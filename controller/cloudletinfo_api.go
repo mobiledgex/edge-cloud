@@ -74,23 +74,6 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	localVersion := cloudlet.ContainerVersion
 	remoteVersion := in.ContainerVersion
 
-	if in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT &&
-		cloudlet.State == edgeproto.TrackedState_READY {
-		startCloudletStream(ctx, &in.Key, nil)
-	}
-
-	if in.State != edgeproto.CloudletState_CLOUDLET_STATE_INIT &&
-		in.State != edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC {
-		stopCloudletStream(ctx, &in.Key)
-	}
-
-	if in.Status.TaskName != "" {
-		sendCloudletMsg(ctx, &in.Key, &edgeproto.Result{Message: in.Status.TaskName})
-	}
-	if in.Status.StepName != "" {
-		sendCloudletMsg(ctx, &in.Key, &edgeproto.Result{Message: in.Status.StepName})
-	}
-
 	if !isVersionConflict(ctx, localVersion, remoteVersion) {
 		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
 			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_CRM_INITOK)

@@ -48,10 +48,12 @@ message StreamObj {
   uint32 last_id = 4;
   // Lease time
   int64 lease = 5;
+  // Stream error message, if any
+  string error_msg = 6;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
-  option (protogen.noconfig) = "Msgs,LastId,Lease";
+  option (protogen.noconfig) = "Msgs,LastId,Lease,ErrorMsg";
   option (protogen.uses_org) = "none";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
 }

@@ -328,5 +328,6 @@ var StreamObjComments = map[string]string{
 	"state":                                       "Current state of the obj on the Cloudlet, one of StreamUnknown, StreamStart, StreamStop, StreamError",
 	"lastid":                                      "Last ID to track duplicate messages",
 	"lease":                                       "Lease time",
+	"errormsg":                                    "Stream error message, if any",
 }
 var StreamObjSpecialArgs = map[string]string{}
