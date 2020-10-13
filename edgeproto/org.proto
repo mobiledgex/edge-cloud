@@ -1,0 +1,34 @@
+// Organization proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+message Organization {
+  // Organization name
+  string name = 1;
+}
+
+service OrganizationApi {
+  // Check if an Organization is in use.
+  rpc OrganizationInUse(Organization) returns (Result) {
+    option (google.api.http) = {
+      post: "/inuse/organization"
+      body: "*"
+    };
+  }
+}
+
+message OrganizationData {
+  repeated Organization orgs = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
+}

@@ -3,35 +3,42 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "errors"
-import "strconv"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	"errors"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	"strconv"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ImageType
 //
@@ -55,6 +62,7 @@ var ImageType_name = map[int32]string{
 	2: "IMAGE_TYPE_QCOW",
 	3: "IMAGE_TYPE_HELM",
 }
+
 var ImageType_value = map[string]int32{
 	"IMAGE_TYPE_UNKNOWN": 0,
 	"IMAGE_TYPE_DOCKER":  1,
@@ -65,7 +73,10 @@ var ImageType_value = map[string]int32{
 func (x ImageType) String() string {
 	return proto.EnumName(ImageType_name, int32(x))
 }
-func (ImageType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
+
+func (ImageType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{0}
+}
 
 // DeleteType
 //
@@ -83,6 +94,7 @@ var DeleteType_name = map[int32]string{
 	0: "NO_AUTO_DELETE",
 	1: "AUTO_DELETE",
 }
+
 var DeleteType_value = map[string]int32{
 	"NO_AUTO_DELETE": 0,
 	"AUTO_DELETE":    1,
@@ -91,7 +103,10 @@ var DeleteType_value = map[string]int32{
 func (x DeleteType) String() string {
 	return proto.EnumName(DeleteType_name, int32(x))
 }
-func (DeleteType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
+
+func (DeleteType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{1}
+}
 
 type AccessType int32
 
@@ -109,6 +124,7 @@ var AccessType_name = map[int32]string{
 	1: "ACCESS_TYPE_DIRECT",
 	2: "ACCESS_TYPE_LOAD_BALANCER",
 }
+
 var AccessType_value = map[string]int32{
 	"ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT": 0,
 	"ACCESS_TYPE_DIRECT":                 1,
@@ -118,47 +134,106 @@ var AccessType_value = map[string]int32{
 func (x AccessType) String() string {
 	return proto.EnumName(AccessType_name, int32(x))
 }
-func (AccessType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{2} }
+
+func (AccessType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{2}
+}
 
 // Application unique key
 //
 // AppKey uniquely identifies an App
 type AppKey struct {
-	// Developer key
-	DeveloperKey DeveloperKey `protobuf:"bytes,1,opt,name=developer_key,json=developerKey" json:"developer_key"`
+	// App developer organization
+	Organization string `protobuf:"bytes,1,opt,name=organization,proto3" json:"organization,omitempty"`
 	// App name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// App version
 	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
 }
 
-func (m *AppKey) Reset()                    { *m = AppKey{} }
-func (m *AppKey) String() string            { return proto.CompactTextString(m) }
-func (*AppKey) ProtoMessage()               {}
-func (*AppKey) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
+func (m *AppKey) Reset()         { *m = AppKey{} }
+func (m *AppKey) String() string { return proto.CompactTextString(m) }
+func (*AppKey) ProtoMessage()    {}
+func (*AppKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{0}
+}
+func (m *AppKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppKey.Merge(m, src)
+}
+func (m *AppKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppKey proto.InternalMessageInfo
 
 // ConfigFile
 type ConfigFile struct {
-	// kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config
+	// kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml
 	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
 	// config file contents or URI reference
 	Config string `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
-func (m *ConfigFile) Reset()                    { *m = ConfigFile{} }
-func (m *ConfigFile) String() string            { return proto.CompactTextString(m) }
-func (*ConfigFile) ProtoMessage()               {}
-func (*ConfigFile) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
+func (m *ConfigFile) Reset()         { *m = ConfigFile{} }
+func (m *ConfigFile) String() string { return proto.CompactTextString(m) }
+func (*ConfigFile) ProtoMessage()    {}
+func (*ConfigFile) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{1}
+}
+func (m *ConfigFile) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ConfigFile) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ConfigFile.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ConfigFile) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigFile.Merge(m, src)
+}
+func (m *ConfigFile) XXX_Size() int {
+	return m.Size()
+}
+func (m *ConfigFile) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigFile.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigFile proto.InternalMessageInfo
 
 // Application
 //
-// App belongs to developers and is used to provide information about their application.
+// App belongs to developer organizations and is used to provide information about their application.
 type App struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// required: true
 	// Unique identifier key
-	Key AppKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key AppKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// URI of where image resides
 	ImagePath string `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
 	// Image type (see ImageType)
@@ -168,7 +243,7 @@ type App struct {
 	// i.e. tcp:80,udp:10002,http:443
 	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
 	// Default flavor for the App, which may be overridden by the AppInst
-	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
+	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor,proto3" json:"default_flavor"`
 	// public key used for authentication
 	AuthPublicKey string `protobuf:"bytes,12,opt,name=auth_public_key,json=authPublicKey,proto3" json:"auth_public_key,omitempty"`
 	// Command that the container runs to start service
@@ -189,45 +264,228 @@ type App struct {
 	// Override actions to Controller
 	DelOpt DeleteType `protobuf:"varint,20,opt,name=del_opt,json=delOpt,proto3,enum=edgeproto.DeleteType" json:"del_opt,omitempty"`
 	// Customization files passed through to implementing services
-	Configs []*ConfigFile `protobuf:"bytes,21,rep,name=configs" json:"configs,omitempty"`
+	Configs []*ConfigFile `protobuf:"bytes,21,rep,name=configs,proto3" json:"configs,omitempty"`
 	// Option to run App on all nodes of the cluster
 	ScaleWithCluster bool `protobuf:"varint,22,opt,name=scale_with_cluster,json=scaleWithCluster,proto3" json:"scale_with_cluster,omitempty"`
 	// Should this app have access to outside world?
 	InternalPorts bool `protobuf:"varint,23,opt,name=internal_ports,json=internalPorts,proto3" json:"internal_ports,omitempty"`
-	// Revision increments each time the App is updated
-	Revision int32 `protobuf:"varint,24,opt,name=revision,proto3" json:"revision,omitempty"`
+	// Revision can be specified or defaults to current timestamp when app is updated
+	Revision string `protobuf:"bytes,24,opt,name=revision,proto3" json:"revision,omitempty"`
 	// Official FQDN is the FQDN that the app uses to connect by default
 	OfficialFqdn string `protobuf:"bytes,25,opt,name=official_fqdn,json=officialFqdn,proto3" json:"official_fqdn,omitempty"`
 	// MD5Sum of the VM-based app image
 	Md5Sum string `protobuf:"bytes,26,opt,name=md5sum,proto3" json:"md5sum,omitempty"`
 	// shared volume size when creating auto cluster
 	DefaultSharedVolumeSize uint64 `protobuf:"varint,27,opt,name=default_shared_volume_size,json=defaultSharedVolumeSize,proto3" json:"default_shared_volume_size,omitempty"`
-	// Auto provisioning policy name
+	// (_deprecated_) Auto provisioning policy name
 	AutoProvPolicy string `protobuf:"bytes,28,opt,name=auto_prov_policy,json=autoProvPolicy,proto3" json:"auto_prov_policy,omitempty"`
 	// Access type
 	AccessType AccessType `protobuf:"varint,29,opt,name=access_type,json=accessType,proto3,enum=edgeproto.AccessType" json:"access_type,omitempty"`
+	// Privacy policy when creating auto cluster
+	DefaultPrivacyPolicy string `protobuf:"bytes,30,opt,name=default_privacy_policy,json=defaultPrivacyPolicy,proto3" json:"default_privacy_policy,omitempty"`
+	// Preparing to be deleted
+	DeletePrepare bool `protobuf:"varint,31,opt,name=delete_prepare,json=deletePrepare,proto3" json:"delete_prepare,omitempty"`
+	// Auto provisioning policy names
+	AutoProvPolicies []string `protobuf:"bytes,32,rep,name=auto_prov_policies,json=autoProvPolicies,proto3" json:"auto_prov_policies,omitempty"`
+	// Delimiter to be used for template parsing, defaults to "[[ ]]"
+	TemplateDelimiter string `protobuf:"bytes,33,opt,name=template_delimiter,json=templateDelimiter,proto3" json:"template_delimiter,omitempty"`
+	// Comma separated list of protocol:port pairs that we should not run health check on
+	// Should be configured in case app does not always listen on these ports
+	// "all" can be specified if no health check to be run for this app
+	// Numerical values must be decimal format.
+	// i.e. tcp:80,udp:10002,http:443
+	SkipHcPorts string `protobuf:"bytes,34,opt,name=skip_hc_ports,json=skipHcPorts,proto3" json:"skip_hc_ports,omitempty"`
 }
 
-func (m *App) Reset()                    { *m = App{} }
-func (m *App) String() string            { return proto.CompactTextString(m) }
-func (*App) ProtoMessage()               {}
-func (*App) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{2} }
+func (m *App) Reset()         { *m = App{} }
+func (m *App) String() string { return proto.CompactTextString(m) }
+func (*App) ProtoMessage()    {}
+func (*App) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{2}
+}
+func (m *App) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *App) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_App.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *App) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_App.Merge(m, src)
+}
+func (m *App) XXX_Size() int {
+	return m.Size()
+}
+func (m *App) XXX_DiscardUnknown() {
+	xxx_messageInfo_App.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_App proto.InternalMessageInfo
+
+type AppAutoProvPolicy struct {
+	// App key
+	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey,proto3" json:"app_key"`
+	// Auto provisioning policy name
+	AutoProvPolicy string `protobuf:"bytes,2,opt,name=auto_prov_policy,json=autoProvPolicy,proto3" json:"auto_prov_policy,omitempty"`
+}
+
+func (m *AppAutoProvPolicy) Reset()         { *m = AppAutoProvPolicy{} }
+func (m *AppAutoProvPolicy) String() string { return proto.CompactTextString(m) }
+func (*AppAutoProvPolicy) ProtoMessage()    {}
+func (*AppAutoProvPolicy) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{3}
+}
+func (m *AppAutoProvPolicy) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppAutoProvPolicy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppAutoProvPolicy.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppAutoProvPolicy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppAutoProvPolicy.Merge(m, src)
+}
+func (m *AppAutoProvPolicy) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppAutoProvPolicy) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppAutoProvPolicy.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppAutoProvPolicy proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*AppKey)(nil), "edgeproto.AppKey")
-	proto.RegisterType((*ConfigFile)(nil), "edgeproto.ConfigFile")
-	proto.RegisterType((*App)(nil), "edgeproto.App")
 	proto.RegisterEnum("edgeproto.ImageType", ImageType_name, ImageType_value)
 	proto.RegisterEnum("edgeproto.DeleteType", DeleteType_name, DeleteType_value)
 	proto.RegisterEnum("edgeproto.AccessType", AccessType_name, AccessType_value)
+	proto.RegisterType((*AppKey)(nil), "edgeproto.AppKey")
+	proto.RegisterType((*ConfigFile)(nil), "edgeproto.ConfigFile")
+	proto.RegisterType((*App)(nil), "edgeproto.App")
+	proto.RegisterType((*AppAutoProvPolicy)(nil), "edgeproto.AppAutoProvPolicy")
 }
+
+func init() { proto.RegisterFile("app.proto", fileDescriptor_e0f9056a14b86d47) }
+
+var fileDescriptor_e0f9056a14b86d47 = []byte{
+	// 1484 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x4b, 0x6c, 0x1b, 0x45,
+	0x18, 0xf6, 0x26, 0x69, 0x52, 0x4f, 0x62, 0xc7, 0x99, 0xa6, 0xe9, 0x24, 0x4d, 0x5d, 0xd7, 0x7d,
+	0x28, 0x44, 0x49, 0x5c, 0xda, 0x82, 0x4a, 0x50, 0x51, 0x37, 0xb6, 0xd3, 0x56, 0x79, 0xd8, 0x6c,
+	0x1e, 0x55, 0x2f, 0xac, 0x26, 0xbb, 0x63, 0x7b, 0xc9, 0xee, 0xce, 0x74, 0x77, 0xed, 0xd4, 0x3d,
+	0x21, 0x6e, 0xdc, 0x2a, 0xb8, 0xa0, 0x5e, 0xe0, 0x82, 0xc4, 0x11, 0x55, 0xe2, 0x52, 0x6e, 0x9c,
+	0x72, 0x42, 0x95, 0xb8, 0x20, 0x0e, 0x08, 0x5a, 0x0e, 0xa8, 0x27, 0xa4, 0x26, 0x11, 0x47, 0x34,
+	0xb3, 0xbb, 0xf6, 0x3a, 0x35, 0xa8, 0x45, 0x5c, 0xac, 0x99, 0xef, 0xff, 0x66, 0xfe, 0x6f, 0xfe,
+	0xd7, 0x1a, 0xc4, 0x31, 0x63, 0x73, 0xcc, 0xa1, 0x1e, 0x85, 0x71, 0xa2, 0x57, 0x89, 0x58, 0x4e,
+	0x4c, 0x56, 0x29, 0xad, 0x9a, 0x24, 0x87, 0x99, 0x91, 0xc3, 0xb6, 0x4d, 0x3d, 0xec, 0x19, 0xd4,
+	0x76, 0x7d, 0xe2, 0xc4, 0x90, 0x43, 0xdc, 0xba, 0xe9, 0x05, 0xbb, 0xab, 0x55, 0xc3, 0xab, 0xd5,
+	0xb7, 0xe6, 0x34, 0x6a, 0xe5, 0x2c, 0xba, 0x65, 0x98, 0xfc, 0x9a, 0x7b, 0x39, 0xfe, 0x3b, 0xab,
+	0x99, 0xb4, 0xae, 0xe7, 0x04, 0xaf, 0x4a, 0xec, 0xd6, 0x22, 0xbc, 0xa7, 0x62, 0xe2, 0x06, 0x75,
+	0x82, 0xdd, 0x68, 0x95, 0x56, 0xa9, 0x58, 0xe6, 0xf8, 0xca, 0x47, 0xb3, 0x9f, 0x48, 0xa0, 0x5f,
+	0x66, 0x6c, 0x89, 0x34, 0xe1, 0x1c, 0x18, 0xa2, 0x4e, 0x15, 0xdb, 0xc6, 0x7d, 0xa1, 0x06, 0x49,
+	0x19, 0x69, 0x2a, 0xbe, 0x00, 0x1e, 0x1f, 0xa0, 0x7e, 0xcc, 0x18, 0x75, 0xaa, 0x4a, 0x87, 0x1d,
+	0x9e, 0x04, 0x7d, 0x36, 0xb6, 0x08, 0xea, 0x11, 0xbc, 0x81, 0xc7, 0x07, 0xa8, 0x17, 0x33, 0xa6,
+	0x08, 0x10, 0x9e, 0x03, 0x03, 0x0d, 0xe2, 0xb8, 0xfc, 0x9e, 0xde, 0x8e, 0x7b, 0x1a, 0xc4, 0x51,
+	0x42, 0xd3, 0xfc, 0xd0, 0x1f, 0x2f, 0x90, 0xf4, 0xd7, 0x0b, 0x24, 0x7d, 0xf3, 0xe5, 0x69, 0x29,
+	0x7b, 0x15, 0x80, 0x3c, 0xb5, 0x2b, 0x46, 0x75, 0xd1, 0x30, 0x09, 0x84, 0xa0, 0x6f, 0xdb, 0xb0,
+	0x75, 0x5f, 0x86, 0x22, 0xd6, 0x70, 0x0c, 0xf4, 0x6b, 0x82, 0xe1, 0x3b, 0x55, 0x82, 0x5d, 0xf6,
+	0xdb, 0x41, 0xd0, 0x2b, 0x33, 0xc6, 0xed, 0x15, 0x83, 0x98, 0xba, 0x8b, 0xa4, 0x4c, 0x2f, 0xb7,
+	0xfb, 0x3b, 0xf8, 0x06, 0xe8, 0xdd, 0x26, 0x4d, 0x71, 0x68, 0xf0, 0xd2, 0xc8, 0x5c, 0x2b, 0x11,
+	0x73, 0xfe, 0xd3, 0x17, 0xfa, 0x76, 0x7f, 0x39, 0x1d, 0x53, 0x38, 0x07, 0x9e, 0x05, 0xc0, 0xb0,
+	0x70, 0x95, 0xa8, 0x0c, 0x7b, 0x35, 0xd4, 0x27, 0xb4, 0xf7, 0x7d, 0xbd, 0x87, 0x24, 0x25, 0x2e,
+	0xf0, 0x32, 0xf6, 0x6a, 0xf0, 0x72, 0x48, 0xf2, 0x9a, 0x8c, 0xa0, 0x23, 0x19, 0x69, 0x2a, 0x79,
+	0x69, 0x34, 0x72, 0xed, 0x2d, 0x6e, 0x5c, 0x6f, 0x32, 0x12, 0x1c, 0xe2, 0x4b, 0x78, 0x06, 0x0c,
+	0x61, 0x4d, 0x23, 0xae, 0xab, 0x32, 0xea, 0x78, 0x2e, 0x1a, 0x10, 0x4f, 0x18, 0xf4, 0xb1, 0x32,
+	0x87, 0xa0, 0x0c, 0x92, 0x3a, 0xa9, 0xe0, 0xba, 0xe9, 0xa9, 0x7e, 0xee, 0x50, 0x5c, 0x48, 0x8e,
+	0xde, 0xbd, 0x28, 0x0c, 0x6d, 0xd5, 0x89, 0xe0, 0x84, 0x8f, 0xc3, 0x0b, 0x60, 0x18, 0xd7, 0xbd,
+	0x9a, 0xca, 0xea, 0x5b, 0xa6, 0xa1, 0xa9, 0xfc, 0xd9, 0x43, 0xc2, 0x51, 0x82, 0xc3, 0x65, 0x81,
+	0xf2, 0x6c, 0x23, 0x30, 0xa0, 0x51, 0xcb, 0xc2, 0xb6, 0x8e, 0x12, 0xc2, 0x1e, 0x6e, 0x61, 0x06,
+	0x0c, 0x46, 0x6a, 0x12, 0x25, 0x03, 0x99, 0x6d, 0x08, 0x9e, 0x03, 0x40, 0x27, 0xcc, 0xa4, 0x4d,
+	0x8b, 0xd8, 0x1e, 0x1a, 0x8e, 0xc4, 0x28, 0x82, 0xc3, 0xf7, 0xc0, 0xb1, 0xf6, 0x4e, 0xb5, 0xb0,
+	0x6d, 0x54, 0x88, 0xeb, 0xa1, 0x94, 0xa0, 0x27, 0x38, 0xfd, 0xd3, 0x47, 0xe3, 0x47, 0x6c, 0xaa,
+	0x59, 0x4c, 0x81, 0x6d, 0xe6, 0x4a, 0x40, 0x84, 0xd7, 0xc1, 0x68, 0xe4, 0x7c, 0x95, 0xd8, 0xc4,
+	0xc1, 0x1e, 0x75, 0xd0, 0x48, 0xb7, 0x0b, 0x22, 0xae, 0x6e, 0x84, 0x4c, 0x78, 0x11, 0x8c, 0x62,
+	0x5b, 0x77, 0xa8, 0xa1, 0xab, 0x0c, 0x6b, 0xdb, 0x3c, 0x61, 0xa2, 0x62, 0xa1, 0x78, 0x12, 0x0c,
+	0x6c, 0x65, 0xdf, 0xb4, 0xca, 0xcb, 0xf6, 0x1d, 0x30, 0xa0, 0x13, 0x53, 0xa5, 0xcc, 0x43, 0xa3,
+	0x22, 0xab, 0xc7, 0x23, 0x91, 0x2f, 0x10, 0x93, 0x78, 0x22, 0x97, 0x0b, 0xf1, 0xb6, 0xe7, 0x7e,
+	0x9d, 0x98, 0x25, 0xe6, 0xc1, 0x1c, 0x0f, 0x28, 0xaf, 0x46, 0x17, 0x1d, 0xcf, 0xf4, 0x4e, 0x0d,
+	0x76, 0x1c, 0x6d, 0xd7, 0xb5, 0x12, 0xb2, 0xe0, 0x0c, 0x80, 0xae, 0x86, 0x4d, 0xa2, 0xee, 0x18,
+	0x5e, 0x4d, 0xd5, 0xcc, 0xba, 0xeb, 0x11, 0x07, 0x8d, 0x65, 0xa4, 0xa9, 0xa3, 0x4a, 0x4a, 0x58,
+	0x6e, 0x1b, 0x5e, 0x2d, 0xef, 0xe3, 0xf0, 0x3c, 0x48, 0x1a, 0xb6, 0x47, 0x1c, 0x1b, 0x9b, 0x41,
+	0xfd, 0x9c, 0x10, 0xcc, 0x44, 0x88, 0xfa, 0x15, 0x74, 0x1e, 0x1c, 0x75, 0x48, 0xc3, 0x10, 0x8d,
+	0x87, 0x44, 0xa0, 0x22, 0x52, 0x5b, 0x26, 0x78, 0x16, 0x24, 0x68, 0xa5, 0x62, 0x68, 0x06, 0x36,
+	0xd5, 0xca, 0x5d, 0xdd, 0x46, 0xe3, 0x22, 0x24, 0x43, 0x21, 0xb8, 0x78, 0x57, 0xb7, 0x79, 0x37,
+	0x59, 0xfa, 0x5b, 0x6e, 0xdd, 0x42, 0x13, 0x7e, 0xb7, 0xf9, 0x3b, 0xf8, 0x2e, 0x98, 0x08, 0xab,
+	0xd4, 0xad, 0x61, 0x87, 0xe8, 0x6a, 0x83, 0x9a, 0x75, 0x8b, 0xa8, 0xae, 0x71, 0x9f, 0xa0, 0x93,
+	0x19, 0x69, 0xaa, 0x4f, 0x39, 0x11, 0x30, 0xd6, 0x04, 0x61, 0x53, 0xd8, 0xd7, 0x8c, 0xfb, 0x04,
+	0x4e, 0x81, 0x14, 0xae, 0x7b, 0x54, 0x65, 0x0e, 0x6d, 0xa8, 0x8c, 0x9a, 0x86, 0xd6, 0x44, 0x93,
+	0xe2, 0xfa, 0x24, 0xc7, 0xcb, 0x0e, 0x6d, 0x94, 0x05, 0x0a, 0xdf, 0x06, 0x41, 0x6f, 0xf8, 0x5d,
+	0x76, 0xea, 0xa5, 0x7c, 0xc8, 0xc2, 0x2a, 0xda, 0x0c, 0xe0, 0xd6, 0x1a, 0x5e, 0x01, 0x63, 0xa1,
+	0x3c, 0xe6, 0x18, 0x0d, 0xac, 0x35, 0x43, 0x3f, 0x69, 0xe1, 0x67, 0x34, 0xb0, 0x96, 0x7d, 0x63,
+	0xe0, 0xed, 0x0a, 0x6f, 0x3d, 0x9e, 0x5f, 0x95, 0x39, 0x84, 0x61, 0x87, 0xa0, 0xd3, 0x3c, 0xbe,
+	0x87, 0xeb, 0x2c, 0xe1, 0x93, 0xca, 0x3e, 0x87, 0xe7, 0xf0, 0xd0, 0x6b, 0x0c, 0xe2, 0xa2, 0x8c,
+	0x18, 0x3e, 0xa9, 0x8e, 0xf7, 0x18, 0xc4, 0x85, 0xb3, 0x00, 0x7a, 0xc4, 0x62, 0x26, 0xf6, 0x88,
+	0xaa, 0x13, 0xd3, 0xb0, 0x0c, 0x9e, 0xf1, 0x33, 0x42, 0xd5, 0x48, 0x68, 0x29, 0x84, 0x06, 0x98,
+	0x05, 0x09, 0x77, 0xdb, 0x60, 0x6a, 0x4d, 0x0b, 0x32, 0x9e, 0xf5, 0x5b, 0x91, 0x83, 0x37, 0x35,
+	0x91, 0xef, 0xf9, 0xef, 0x24, 0x3e, 0x42, 0xff, 0x7c, 0x81, 0xa4, 0x8f, 0xf6, 0x90, 0xf4, 0x60,
+	0x0f, 0x49, 0x9f, 0xef, 0x21, 0x69, 0x97, 0x6b, 0xde, 0x47, 0x89, 0x42, 0x54, 0xec, 0xc3, 0x7d,
+	0xf4, 0x01, 0x66, 0x8c, 0x77, 0xc0, 0xb5, 0x25, 0xd2, 0x9c, 0xe3, 0x05, 0x3f, 0xe3, 0x4f, 0x64,
+	0x57, 0x00, 0x9b, 0xfe, 0x54, 0xe6, 0xd8, 0x2c, 0x75, 0xaa, 0x02, 0x2b, 0x45, 0x26, 0xfe, 0x4c,
+	0x10, 0x38, 0x7f, 0x34, 0x5d, 0x2b, 0x44, 0xe7, 0x8e, 0xb8, 0xed, 0xd1, 0x01, 0x4a, 0x6d, 0x93,
+	0xe6, 0xb5, 0xe8, 0xa1, 0xef, 0x0f, 0x10, 0xf2, 0x43, 0xbc, 0x44, 0x9a, 0xf3, 0x72, 0x47, 0x8a,
+	0xb3, 0x14, 0x8c, 0xc8, 0x8c, 0x75, 0x82, 0xf0, 0x22, 0x18, 0xc0, 0x8c, 0x89, 0xc9, 0x25, 0xfd,
+	0xfb, 0xc0, 0xe6, 0xdf, 0x13, 0x3e, 0xcb, 0xba, 0xd5, 0x54, 0x4f, 0xb7, 0x9a, 0x9a, 0xd6, 0x41,
+	0xbc, 0x35, 0x9b, 0xe1, 0x18, 0x80, 0xb7, 0x56, 0xe4, 0x1b, 0x45, 0x75, 0xfd, 0x4e, 0xb9, 0xa8,
+	0x6e, 0xac, 0x2e, 0xad, 0x96, 0x6e, 0xaf, 0xa6, 0x62, 0xf0, 0x38, 0x18, 0x89, 0xe0, 0x85, 0x52,
+	0x7e, 0xa9, 0xa8, 0xa4, 0x24, 0x78, 0x0c, 0x0c, 0x47, 0xe0, 0xf7, 0xf3, 0xa5, 0xdb, 0xa9, 0x9e,
+	0x43, 0xe0, 0xcd, 0xe2, 0xf2, 0x4a, 0xaa, 0x77, 0xfa, 0x4d, 0x00, 0xda, 0xb3, 0x02, 0x42, 0x90,
+	0x5c, 0x2d, 0xa9, 0xf2, 0xc6, 0x7a, 0x49, 0x2d, 0x14, 0x97, 0x8b, 0xeb, 0xc5, 0x54, 0x0c, 0x0e,
+	0x83, 0xc1, 0x28, 0x20, 0x4d, 0x6f, 0x03, 0xd0, 0x2e, 0x67, 0x78, 0x01, 0x64, 0xe5, 0x7c, 0xbe,
+	0xb8, 0xb6, 0x16, 0x48, 0x28, 0x2e, 0xca, 0x1b, 0xcb, 0xeb, 0xea, 0x62, 0x49, 0x51, 0x0b, 0xc5,
+	0xf2, 0x72, 0xe9, 0xce, 0x4a, 0x71, 0x75, 0x3d, 0x15, 0xe3, 0x2f, 0xe8, 0xe0, 0xdd, 0x52, 0x8a,
+	0xf9, 0xf5, 0x94, 0x04, 0x4f, 0x81, 0xf1, 0x28, 0xbe, 0x5c, 0x92, 0x0b, 0xea, 0x82, 0xbc, 0x2c,
+	0xaf, 0xe6, 0x8b, 0x4a, 0xaa, 0xe7, 0xd2, 0x0f, 0xfd, 0xe2, 0xa3, 0x2f, 0x33, 0x03, 0xde, 0x03,
+	0xf1, 0xbc, 0x43, 0xb0, 0x47, 0xf8, 0xe7, 0x33, 0xd9, 0x19, 0xe8, 0x89, 0x68, 0xe0, 0x15, 0xf1,
+	0x9f, 0x24, 0x7b, 0xf3, 0xf9, 0x1e, 0x9a, 0x56, 0x88, 0x4b, 0xeb, 0x8e, 0xc6, 0xcf, 0xb8, 0x33,
+	0xb2, 0xc6, 0xd3, 0xbc, 0x82, 0x6d, 0x5c, 0x25, 0x33, 0x87, 0x4b, 0xe6, 0xc9, 0x3e, 0x92, 0x3e,
+	0xfe, 0xf1, 0xf7, 0xcf, 0x7a, 0x52, 0xd9, 0xc1, 0x9c, 0x26, 0x1c, 0xe5, 0x30, 0x63, 0xf3, 0xd2,
+	0x34, 0xf4, 0x40, 0xdc, 0x0f, 0xd2, 0x2b, 0x7a, 0x2e, 0xbc, 0x9e, 0xe7, 0x96, 0x57, 0xbf, 0x61,
+	0x43, 0xaf, 0x0f, 0x25, 0x10, 0xdf, 0x60, 0xfa, 0xab, 0x3f, 0xf8, 0xc3, 0xd7, 0x7f, 0xf0, 0xcf,
+	0xfb, 0x28, 0x5d, 0x68, 0x7d, 0x8e, 0x66, 0x0a, 0x2f, 0x7f, 0x99, 0x5a, 0xe2, 0xea, 0x42, 0x4a,
+	0x28, 0xce, 0x02, 0x03, 0x6b, 0x35, 0xba, 0xd3, 0x4d, 0xd9, 0xa1, 0x7d, 0xf6, 0xfa, 0xf3, 0x3d,
+	0x34, 0xd5, 0x45, 0xd6, 0xa6, 0x41, 0x76, 0xba, 0xc7, 0x22, 0x99, 0x8d, 0xe7, 0xdc, 0x1a, 0xdd,
+	0x09, 0x9c, 0x5d, 0x94, 0xe0, 0x17, 0x12, 0x18, 0x95, 0x75, 0xfd, 0xe5, 0x0e, 0x9c, 0xec, 0x74,
+	0xd6, 0x69, 0xed, 0x16, 0xa4, 0xcd, 0xe7, 0x7b, 0x68, 0xf6, 0x9f, 0x83, 0xe4, 0x37, 0x6d, 0x87,
+	0xa4, 0xdd, 0xb0, 0x30, 0x4e, 0x66, 0xc7, 0x72, 0x58, 0xd7, 0xb9, 0x2a, 0xde, 0xab, 0xbc, 0x85,
+	0xfd, 0x0e, 0xe6, 0x01, 0xf9, 0x4a, 0x02, 0x27, 0x14, 0x62, 0xd1, 0x06, 0xf9, 0x1f, 0x44, 0xde,
+	0xf9, 0xef, 0x22, 0xd3, 0xd9, 0xf1, 0x9c, 0x23, 0x74, 0x74, 0xd5, 0xb9, 0x30, 0xb9, 0xfb, 0x5b,
+	0x3a, 0xb6, 0xfb, 0x34, 0x2d, 0x3d, 0x79, 0x9a, 0x96, 0x7e, 0x7d, 0x9a, 0x96, 0x1e, 0x3c, 0x4b,
+	0xc7, 0x9e, 0x3c, 0x4b, 0xc7, 0x7e, 0x7a, 0x96, 0x8e, 0x6d, 0xf5, 0x0b, 0x19, 0x97, 0xff, 0x0e,
+	0x00, 0x00, 0xff, 0xff, 0xf7, 0x15, 0x36, 0xcc, 0x0c, 0x0c, 0x00, 0x00,
+}
+
 func (this *AppKey) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 7)
 	s = append(s, "&edgeproto.AppKey{")
-	s = append(s, "DeveloperKey: "+strings.Replace(this.DeveloperKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
 	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
 	s = append(s, "Version: "+fmt.Sprintf("%#v", this.Version)+",\n")
 	s = append(s, "}")
@@ -250,17 +508,22 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for AppApi service
-
+// AppApiClient is the client API for AppApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AppApiClient interface {
-	// Create Application. Create definition for an application instance which will be deployed on a Cloudlet
+	// Create Application. Creates a definition for an application instance for Cloudlet deployment.
 	CreateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Delete Application. Delete definition of an application instance. This requires that no application instance with this definition exists. If it exists, then user must delete those first
+	// Delete Application. Deletes a definition of an Application instance. Make sure no other application
+	// instances exist with that definition. If they do exist, you must delete those Application instances first.
 	DeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Update Application. Update definition of an application instance
+	// Update Application. Updates the definition of an Application instance.
 	UpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
-	// Show Applications. Lists all application definitions managed from edge controller. Any fields specified will be used to filter results
+	// Show Applications. Lists all Application definitions managed from the Edge Controller.
+	// Any fields specified will be used to filter results.
 	ShowApp(ctx context.Context, in *App, opts ...grpc.CallOption) (AppApi_ShowAppClient, error)
+	AddAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error)
+	RemoveAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error)
 }
 
 type appApiClient struct {
@@ -273,7 +536,7 @@ func NewAppApiClient(cc *grpc.ClientConn) AppApiClient {
 
 func (c *appApiClient) CreateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AppApi/CreateApp", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AppApi/CreateApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +545,7 @@ func (c *appApiClient) CreateApp(ctx context.Context, in *App, opts ...grpc.Call
 
 func (c *appApiClient) DeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AppApi/DeleteApp", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AppApi/DeleteApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +554,7 @@ func (c *appApiClient) DeleteApp(ctx context.Context, in *App, opts ...grpc.Call
 
 func (c *appApiClient) UpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AppApi/UpdateApp", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AppApi/UpdateApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +562,7 @@ func (c *appApiClient) UpdateApp(ctx context.Context, in *App, opts ...grpc.Call
 }
 
 func (c *appApiClient) ShowApp(ctx context.Context, in *App, opts ...grpc.CallOption) (AppApi_ShowAppClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AppApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AppApi/ShowApp", opts...)
+	stream, err := c.cc.NewStream(ctx, &_AppApi_serviceDesc.Streams[0], "/edgeproto.AppApi/ShowApp", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -330,17 +593,61 @@ func (x *appApiShowAppClient) Recv() (*App, error) {
 	return m, nil
 }
 
-// Server API for AppApi service
+func (c *appApiClient) AddAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.AppApi/AddAppAutoProvPolicy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
 
+func (c *appApiClient) RemoveAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.AppApi/RemoveAppAutoProvPolicy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AppApiServer is the server API for AppApi service.
 type AppApiServer interface {
-	// Create Application. Create definition for an application instance which will be deployed on a Cloudlet
+	// Create Application. Creates a definition for an application instance for Cloudlet deployment.
 	CreateApp(context.Context, *App) (*Result, error)
-	// Delete Application. Delete definition of an application instance. This requires that no application instance with this definition exists. If it exists, then user must delete those first
+	// Delete Application. Deletes a definition of an Application instance. Make sure no other application
+	// instances exist with that definition. If they do exist, you must delete those Application instances first.
 	DeleteApp(context.Context, *App) (*Result, error)
-	// Update Application. Update definition of an application instance
+	// Update Application. Updates the definition of an Application instance.
 	UpdateApp(context.Context, *App) (*Result, error)
-	// Show Applications. Lists all application definitions managed from edge controller. Any fields specified will be used to filter results
+	// Show Applications. Lists all Application definitions managed from the Edge Controller.
+	// Any fields specified will be used to filter results.
 	ShowApp(*App, AppApi_ShowAppServer) error
+	AddAppAutoProvPolicy(context.Context, *AppAutoProvPolicy) (*Result, error)
+	RemoveAppAutoProvPolicy(context.Context, *AppAutoProvPolicy) (*Result, error)
+}
+
+// UnimplementedAppApiServer can be embedded to have forward compatible implementations.
+type UnimplementedAppApiServer struct {
+}
+
+func (*UnimplementedAppApiServer) CreateApp(ctx context.Context, req *App) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateApp not implemented")
+}
+func (*UnimplementedAppApiServer) DeleteApp(ctx context.Context, req *App) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteApp not implemented")
+}
+func (*UnimplementedAppApiServer) UpdateApp(ctx context.Context, req *App) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateApp not implemented")
+}
+func (*UnimplementedAppApiServer) ShowApp(req *App, srv AppApi_ShowAppServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowApp not implemented")
+}
+func (*UnimplementedAppApiServer) AddAppAutoProvPolicy(ctx context.Context, req *AppAutoProvPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddAppAutoProvPolicy not implemented")
+}
+func (*UnimplementedAppApiServer) RemoveAppAutoProvPolicy(ctx context.Context, req *AppAutoProvPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveAppAutoProvPolicy not implemented")
 }
 
 func RegisterAppApiServer(s *grpc.Server, srv AppApiServer) {
@@ -422,6 +729,42 @@ func (x *appApiShowAppServer) Send(m *App) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _AppApi_AddAppAutoProvPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AppAutoProvPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AppApiServer).AddAppAutoProvPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.AppApi/AddAppAutoProvPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AppApiServer).AddAppAutoProvPolicy(ctx, req.(*AppAutoProvPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AppApi_RemoveAppAutoProvPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AppAutoProvPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AppApiServer).RemoveAppAutoProvPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.AppApi/RemoveAppAutoProvPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AppApiServer).RemoveAppAutoProvPolicy(ctx, req.(*AppAutoProvPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _AppApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.AppApi",
 	HandlerType: (*AppApiServer)(nil),
@@ -438,6 +781,14 @@ var _AppApi_serviceDesc = grpc.ServiceDesc{
 			MethodName: "UpdateApp",
 			Handler:    _AppApi_UpdateApp_Handler,
 		},
+		{
+			MethodName: "AddAppAutoProvPolicy",
+			Handler:    _AppApi_AddAppAutoProvPolicy_Handler,
+		},
+		{
+			MethodName: "RemoveAppAutoProvPolicy",
+			Handler:    _AppApi_RemoveAppAutoProvPolicy_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -452,7 +803,7 @@ var _AppApi_serviceDesc = grpc.ServiceDesc{
 func (m *AppKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -460,37 +811,43 @@ func (m *AppKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AppKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintApp(dAtA, i, uint64(m.DeveloperKey.Size()))
-	n1, err := m.DeveloperKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if len(m.Name) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
-	}
 	if len(m.Version) > 0 {
-		dAtA[i] = 0x1a
-		i++
+		i -= len(m.Version)
+		copy(dAtA[i:], m.Version)
 		i = encodeVarintApp(dAtA, i, uint64(len(m.Version)))
-		i += copy(dAtA[i:], m.Version)
+		i--
+		dAtA[i] = 0x1a
 	}
-	return i, nil
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Organization) > 0 {
+		i -= len(m.Organization)
+		copy(dAtA[i:], m.Organization)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Organization)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *ConfigFile) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -498,29 +855,36 @@ func (m *ConfigFile) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ConfigFile) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ConfigFile) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Kind) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Kind)))
-		i += copy(dAtA[i:], m.Kind)
-	}
 	if len(m.Config) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Config)
+		copy(dAtA[i:], m.Config)
 		i = encodeVarintApp(dAtA, i, uint64(len(m.Config)))
-		i += copy(dAtA[i:], m.Config)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Kind) > 0 {
+		i -= len(m.Kind)
+		copy(dAtA[i:], m.Kind)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Kind)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *App) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -528,207 +892,318 @@ func (m *App) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *App) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *App) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintApp(dAtA, i, uint64(m.Key.Size()))
-	n2, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	if len(m.ImagePath) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.ImagePath)))
-		i += copy(dAtA[i:], m.ImagePath)
-	}
-	if m.ImageType != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(m.ImageType))
-	}
-	if len(m.AccessPorts) > 0 {
-		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.AccessPorts)))
-		i += copy(dAtA[i:], m.AccessPorts)
-	}
-	dAtA[i] = 0x4a
-	i++
-	i = encodeVarintApp(dAtA, i, uint64(m.DefaultFlavor.Size()))
-	n3, err := m.DefaultFlavor.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n3
-	if len(m.AuthPublicKey) > 0 {
-		dAtA[i] = 0x62
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.AuthPublicKey)))
-		i += copy(dAtA[i:], m.AuthPublicKey)
-	}
-	if len(m.Command) > 0 {
-		dAtA[i] = 0x6a
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Command)))
-		i += copy(dAtA[i:], m.Command)
-	}
-	if len(m.Annotations) > 0 {
-		dAtA[i] = 0x72
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Annotations)))
-		i += copy(dAtA[i:], m.Annotations)
-	}
-	if len(m.Deployment) > 0 {
-		dAtA[i] = 0x7a
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Deployment)))
-		i += copy(dAtA[i:], m.Deployment)
-	}
-	if len(m.DeploymentManifest) > 0 {
-		dAtA[i] = 0x82
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.DeploymentManifest)))
-		i += copy(dAtA[i:], m.DeploymentManifest)
-	}
-	if len(m.DeploymentGenerator) > 0 {
-		dAtA[i] = 0x8a
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.DeploymentGenerator)))
-		i += copy(dAtA[i:], m.DeploymentGenerator)
-	}
-	if len(m.AndroidPackageName) > 0 {
+	if len(m.SkipHcPorts) > 0 {
+		i -= len(m.SkipHcPorts)
+		copy(dAtA[i:], m.SkipHcPorts)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.SkipHcPorts)))
+		i--
+		dAtA[i] = 0x2
+		i--
 		dAtA[i] = 0x92
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.AndroidPackageName)))
-		i += copy(dAtA[i:], m.AndroidPackageName)
 	}
-	if m.DelOpt != 0 {
-		dAtA[i] = 0xa0
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(m.DelOpt))
+	if len(m.TemplateDelimiter) > 0 {
+		i -= len(m.TemplateDelimiter)
+		copy(dAtA[i:], m.TemplateDelimiter)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.TemplateDelimiter)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0x8a
 	}
-	if len(m.Configs) > 0 {
-		for _, msg := range m.Configs {
-			dAtA[i] = 0xaa
-			i++
-			dAtA[i] = 0x1
-			i++
-			i = encodeVarintApp(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
+	if len(m.AutoProvPolicies) > 0 {
+		for iNdEx := len(m.AutoProvPolicies) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.AutoProvPolicies[iNdEx])
+			copy(dAtA[i:], m.AutoProvPolicies[iNdEx])
+			i = encodeVarintApp(dAtA, i, uint64(len(m.AutoProvPolicies[iNdEx])))
+			i--
+			dAtA[i] = 0x2
+			i--
+			dAtA[i] = 0x82
 		}
 	}
-	if m.ScaleWithCluster {
-		dAtA[i] = 0xb0
-		i++
-		dAtA[i] = 0x1
-		i++
-		if m.ScaleWithCluster {
+	if m.DeletePrepare {
+		i--
+		if m.DeletePrepare {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xf8
+	}
+	if len(m.DefaultPrivacyPolicy) > 0 {
+		i -= len(m.DefaultPrivacyPolicy)
+		copy(dAtA[i:], m.DefaultPrivacyPolicy)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.DefaultPrivacyPolicy)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xf2
+	}
+	if m.AccessType != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.AccessType))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xe8
+	}
+	if len(m.AutoProvPolicy) > 0 {
+		i -= len(m.AutoProvPolicy)
+		copy(dAtA[i:], m.AutoProvPolicy)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AutoProvPolicy)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xe2
+	}
+	if m.DefaultSharedVolumeSize != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.DefaultSharedVolumeSize))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xd8
+	}
+	if len(m.Md5Sum) > 0 {
+		i -= len(m.Md5Sum)
+		copy(dAtA[i:], m.Md5Sum)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Md5Sum)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xd2
+	}
+	if len(m.OfficialFqdn) > 0 {
+		i -= len(m.OfficialFqdn)
+		copy(dAtA[i:], m.OfficialFqdn)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.OfficialFqdn)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xca
+	}
+	if len(m.Revision) > 0 {
+		i -= len(m.Revision)
+		copy(dAtA[i:], m.Revision)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Revision)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc2
 	}
 	if m.InternalPorts {
-		dAtA[i] = 0xb8
-		i++
-		dAtA[i] = 0x1
-		i++
+		i--
 		if m.InternalPorts {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
-	}
-	if m.Revision != 0 {
-		dAtA[i] = 0xc0
-		i++
+		i--
 		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(m.Revision))
+		i--
+		dAtA[i] = 0xb8
 	}
-	if len(m.OfficialFqdn) > 0 {
-		dAtA[i] = 0xca
-		i++
+	if m.ScaleWithCluster {
+		i--
+		if m.ScaleWithCluster {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
 		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.OfficialFqdn)))
-		i += copy(dAtA[i:], m.OfficialFqdn)
+		i--
+		dAtA[i] = 0xb0
 	}
-	if len(m.Md5Sum) > 0 {
-		dAtA[i] = 0xd2
-		i++
+	if len(m.Configs) > 0 {
+		for iNdEx := len(m.Configs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Configs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintApp(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xaa
+		}
+	}
+	if m.DelOpt != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.DelOpt))
+		i--
 		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Md5Sum)))
-		i += copy(dAtA[i:], m.Md5Sum)
+		i--
+		dAtA[i] = 0xa0
 	}
-	if m.DefaultSharedVolumeSize != 0 {
-		dAtA[i] = 0xd8
-		i++
+	if len(m.AndroidPackageName) > 0 {
+		i -= len(m.AndroidPackageName)
+		copy(dAtA[i:], m.AndroidPackageName)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AndroidPackageName)))
+		i--
 		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(m.DefaultSharedVolumeSize))
+		i--
+		dAtA[i] = 0x92
 	}
+	if len(m.DeploymentGenerator) > 0 {
+		i -= len(m.DeploymentGenerator)
+		copy(dAtA[i:], m.DeploymentGenerator)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.DeploymentGenerator)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x8a
+	}
+	if len(m.DeploymentManifest) > 0 {
+		i -= len(m.DeploymentManifest)
+		copy(dAtA[i:], m.DeploymentManifest)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.DeploymentManifest)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
+	}
+	if len(m.Deployment) > 0 {
+		i -= len(m.Deployment)
+		copy(dAtA[i:], m.Deployment)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Deployment)))
+		i--
+		dAtA[i] = 0x7a
+	}
+	if len(m.Annotations) > 0 {
+		i -= len(m.Annotations)
+		copy(dAtA[i:], m.Annotations)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Annotations)))
+		i--
+		dAtA[i] = 0x72
+	}
+	if len(m.Command) > 0 {
+		i -= len(m.Command)
+		copy(dAtA[i:], m.Command)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Command)))
+		i--
+		dAtA[i] = 0x6a
+	}
+	if len(m.AuthPublicKey) > 0 {
+		i -= len(m.AuthPublicKey)
+		copy(dAtA[i:], m.AuthPublicKey)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AuthPublicKey)))
+		i--
+		dAtA[i] = 0x62
+	}
+	{
+		size, err := m.DefaultFlavor.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintApp(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x4a
+	if len(m.AccessPorts) > 0 {
+		i -= len(m.AccessPorts)
+		copy(dAtA[i:], m.AccessPorts)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AccessPorts)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if m.ImageType != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.ImageType))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.ImagePath) > 0 {
+		i -= len(m.ImagePath)
+		copy(dAtA[i:], m.ImagePath)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.ImagePath)))
+		i--
+		dAtA[i] = 0x22
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintApp(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintApp(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AppAutoProvPolicy) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppAutoProvPolicy) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppAutoProvPolicy) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	if len(m.AutoProvPolicy) > 0 {
-		dAtA[i] = 0xe2
-		i++
-		dAtA[i] = 0x1
-		i++
+		i -= len(m.AutoProvPolicy)
+		copy(dAtA[i:], m.AutoProvPolicy)
 		i = encodeVarintApp(dAtA, i, uint64(len(m.AutoProvPolicy)))
-		i += copy(dAtA[i:], m.AutoProvPolicy)
+		i--
+		dAtA[i] = 0x12
 	}
-	if m.AccessType != 0 {
-		dAtA[i] = 0xe8
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintApp(dAtA, i, uint64(m.AccessType))
+	{
+		size, err := m.AppKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintApp(dAtA, i, uint64(size))
 	}
-	return i, nil
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintApp(dAtA []byte, offset int, v uint64) int {
+	offset -= sovApp(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *AppKey) Matches(o *AppKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -739,8 +1214,10 @@ func (m *AppKey) Matches(o *AppKey, fopts ...MatchOpt) bool {
 		}
 		return false
 	}
-	if !m.DeveloperKey.Matches(&o.DeveloperKey, fopts...) {
-		return false
+	if !opts.Filter || o.Organization != "" {
+		if o.Organization != m.Organization {
+			return false
+		}
 	}
 	if !opts.Filter || o.Name != "" {
 		if o.Name != m.Name {
@@ -757,8 +1234,8 @@ func (m *AppKey) Matches(o *AppKey, fopts ...MatchOpt) bool {
 
 func (m *AppKey) CopyInFields(src *AppKey) int {
 	changed := 0
-	if m.DeveloperKey.Name != src.DeveloperKey.Name {
-		m.DeveloperKey.Name = src.DeveloperKey.Name
+	if m.Organization != src.Organization {
+		m.Organization = src.Organization
 		changed++
 	}
 	if m.Name != src.Name {
@@ -770,6 +1247,12 @@ func (m *AppKey) CopyInFields(src *AppKey) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *AppKey) DeepCopyIn(src *AppKey) {
+	m.Organization = src.Organization
+	m.Name = src.Name
+	m.Version = src.Version
 }
 
 func (m *AppKey) GetKeyString() string {
@@ -795,11 +1278,20 @@ func (m *AppKey) ExistsError() error {
 	return fmt.Errorf("App key %s already exists", m.GetKeyString())
 }
 
+var AppKeyTagOrganization = "apporg"
+var AppKeyTagName = "app"
+var AppKeyTagVersion = "appver"
+
+func (m *AppKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["apporg"] = m.Organization
+	tags["app"] = m.Name
+	tags["appver"] = m.Version
+	return tags
+}
+
 // Helper method to check that enums have valid values
 func (m *AppKey) ValidateEnums() error {
-	if err := m.DeveloperKey.ValidateEnums(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -814,6 +1306,11 @@ func (m *ConfigFile) CopyInFields(src *ConfigFile) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *ConfigFile) DeepCopyIn(src *ConfigFile) {
+	m.Kind = src.Kind
+	m.Config = src.Config
 }
 
 // Helper method to check that enums have valid values
@@ -920,7 +1417,7 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
-	if !opts.Filter || o.Revision != 0 {
+	if !opts.Filter || o.Revision != "" {
 		if o.Revision != m.Revision {
 			return false
 		}
@@ -950,12 +1447,47 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
+	if !opts.Filter || o.DefaultPrivacyPolicy != "" {
+		if o.DefaultPrivacyPolicy != m.DefaultPrivacyPolicy {
+			return false
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.DeletePrepare != false {
+			if o.DeletePrepare != m.DeletePrepare {
+				return false
+			}
+		}
+	}
+	if !opts.Filter || o.AutoProvPolicies != nil {
+		if m.AutoProvPolicies == nil && o.AutoProvPolicies != nil || m.AutoProvPolicies != nil && o.AutoProvPolicies == nil {
+			return false
+		} else if m.AutoProvPolicies != nil && o.AutoProvPolicies != nil {
+			if len(m.AutoProvPolicies) != len(o.AutoProvPolicies) {
+				return false
+			}
+			for i := 0; i < len(m.AutoProvPolicies); i++ {
+				if o.AutoProvPolicies[i] != m.AutoProvPolicies[i] {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.TemplateDelimiter != "" {
+		if o.TemplateDelimiter != m.TemplateDelimiter {
+			return false
+		}
+	}
+	if !opts.Filter || o.SkipHcPorts != "" {
+		if o.SkipHcPorts != m.SkipHcPorts {
+			return false
+		}
+	}
 	return true
 }
 
 const AppFieldKey = "2"
-const AppFieldKeyDeveloperKey = "2.1"
-const AppFieldKeyDeveloperKeyName = "2.1.2"
+const AppFieldKeyOrganization = "2.1"
 const AppFieldKeyName = "2.2"
 const AppFieldKeyVersion = "2.3"
 const AppFieldImagePath = "4"
@@ -982,9 +1514,14 @@ const AppFieldMd5Sum = "26"
 const AppFieldDefaultSharedVolumeSize = "27"
 const AppFieldAutoProvPolicy = "28"
 const AppFieldAccessType = "29"
+const AppFieldDefaultPrivacyPolicy = "30"
+const AppFieldDeletePrepare = "31"
+const AppFieldAutoProvPolicies = "32"
+const AppFieldTemplateDelimiter = "33"
+const AppFieldSkipHcPorts = "34"
 
 var AppAllFields = []string{
-	AppFieldKeyDeveloperKeyName,
+	AppFieldKeyOrganization,
 	AppFieldKeyName,
 	AppFieldKeyVersion,
 	AppFieldImagePath,
@@ -1009,10 +1546,15 @@ var AppAllFields = []string{
 	AppFieldDefaultSharedVolumeSize,
 	AppFieldAutoProvPolicy,
 	AppFieldAccessType,
+	AppFieldDefaultPrivacyPolicy,
+	AppFieldDeletePrepare,
+	AppFieldAutoProvPolicies,
+	AppFieldTemplateDelimiter,
+	AppFieldSkipHcPorts,
 }
 
 var AppAllFieldsMap = map[string]struct{}{
-	AppFieldKeyDeveloperKeyName:     struct{}{},
+	AppFieldKeyOrganization:         struct{}{},
 	AppFieldKeyName:                 struct{}{},
 	AppFieldKeyVersion:              struct{}{},
 	AppFieldImagePath:               struct{}{},
@@ -1037,10 +1579,15 @@ var AppAllFieldsMap = map[string]struct{}{
 	AppFieldDefaultSharedVolumeSize: struct{}{},
 	AppFieldAutoProvPolicy:          struct{}{},
 	AppFieldAccessType:              struct{}{},
+	AppFieldDefaultPrivacyPolicy:    struct{}{},
+	AppFieldDeletePrepare:           struct{}{},
+	AppFieldAutoProvPolicies:        struct{}{},
+	AppFieldTemplateDelimiter:       struct{}{},
+	AppFieldSkipHcPorts:             struct{}{},
 }
 
 var AppAllFieldsStringMap = map[string]string{
-	AppFieldKeyDeveloperKeyName:     "Key Developer Key Name",
+	AppFieldKeyOrganization:         "Key Organization",
 	AppFieldKeyName:                 "Key Name",
 	AppFieldKeyVersion:              "Key Version",
 	AppFieldImagePath:               "Image Path",
@@ -1065,16 +1612,20 @@ var AppAllFieldsStringMap = map[string]string{
 	AppFieldDefaultSharedVolumeSize: "Default Shared Volume Size",
 	AppFieldAutoProvPolicy:          "Auto Prov Policy",
 	AppFieldAccessType:              "Access Type",
+	AppFieldDefaultPrivacyPolicy:    "Default Privacy Policy",
+	AppFieldDeletePrepare:           "Delete Prepare",
+	AppFieldAutoProvPolicies:        "Auto Prov Policies",
+	AppFieldTemplateDelimiter:       "Template Delimiter",
+	AppFieldSkipHcPorts:             "Skip Hc Ports",
 }
 
 func (m *App) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, AppFieldKey+".")
+	return strings.HasPrefix(s, AppFieldKey+".") || s == AppFieldKey
 }
 
 func (m *App) DiffFields(o *App, fields map[string]struct{}) {
-	if m.Key.DeveloperKey.Name != o.Key.DeveloperKey.Name {
-		fields[AppFieldKeyDeveloperKeyName] = struct{}{}
-		fields[AppFieldKeyDeveloperKey] = struct{}{}
+	if m.Key.Organization != o.Key.Organization {
+		fields[AppFieldKeyOrganization] = struct{}{}
 		fields[AppFieldKey] = struct{}{}
 	}
 	if m.Key.Name != o.Key.Name {
@@ -1164,6 +1715,80 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 	if m.AccessType != o.AccessType {
 		fields[AppFieldAccessType] = struct{}{}
 	}
+	if m.DefaultPrivacyPolicy != o.DefaultPrivacyPolicy {
+		fields[AppFieldDefaultPrivacyPolicy] = struct{}{}
+	}
+	if m.DeletePrepare != o.DeletePrepare {
+		fields[AppFieldDeletePrepare] = struct{}{}
+	}
+	if len(m.AutoProvPolicies) != len(o.AutoProvPolicies) {
+		fields[AppFieldAutoProvPolicies] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.AutoProvPolicies); i0++ {
+			if m.AutoProvPolicies[i0] != o.AutoProvPolicies[i0] {
+				fields[AppFieldAutoProvPolicies] = struct{}{}
+				break
+			}
+		}
+	}
+	if m.TemplateDelimiter != o.TemplateDelimiter {
+		fields[AppFieldTemplateDelimiter] = struct{}{}
+	}
+	if m.SkipHcPorts != o.SkipHcPorts {
+		fields[AppFieldSkipHcPorts] = struct{}{}
+	}
+}
+
+var UpdateAppFieldsMap = map[string]struct{}{
+	AppFieldImagePath:               struct{}{},
+	AppFieldImageType:               struct{}{},
+	AppFieldAccessPorts:             struct{}{},
+	AppFieldDefaultFlavor:           struct{}{},
+	AppFieldDefaultFlavorName:       struct{}{},
+	AppFieldAuthPublicKey:           struct{}{},
+	AppFieldCommand:                 struct{}{},
+	AppFieldAnnotations:             struct{}{},
+	AppFieldDeploymentManifest:      struct{}{},
+	AppFieldAndroidPackageName:      struct{}{},
+	AppFieldDelOpt:                  struct{}{},
+	AppFieldConfigs:                 struct{}{},
+	AppFieldConfigsKind:             struct{}{},
+	AppFieldConfigsConfig:           struct{}{},
+	AppFieldScaleWithCluster:        struct{}{},
+	AppFieldInternalPorts:           struct{}{},
+	AppFieldRevision:                struct{}{},
+	AppFieldOfficialFqdn:            struct{}{},
+	AppFieldMd5Sum:                  struct{}{},
+	AppFieldDefaultSharedVolumeSize: struct{}{},
+	AppFieldAutoProvPolicy:          struct{}{},
+	AppFieldAccessType:              struct{}{},
+	AppFieldDefaultPrivacyPolicy:    struct{}{},
+	AppFieldAutoProvPolicies:        struct{}{},
+	AppFieldTemplateDelimiter:       struct{}{},
+	AppFieldSkipHcPorts:             struct{}{},
+}
+
+func (m *App) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateAppFieldsMap[field]; !ok {
+			if _, ok := AppAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, AppAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *App) CopyInFields(src *App) int {
@@ -1171,11 +1796,9 @@ func (m *App) CopyInFields(src *App) int {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			if _, set := fmap["2.1.2"]; set {
-				if m.Key.DeveloperKey.Name != src.Key.DeveloperKey.Name {
-					m.Key.DeveloperKey.Name = src.Key.DeveloperKey.Name
-					changed++
-				}
+			if m.Key.Organization != src.Key.Organization {
+				m.Key.Organization = src.Key.Organization
+				changed++
 			}
 		}
 		if _, set := fmap["2.2"]; set {
@@ -1267,25 +1890,8 @@ func (m *App) CopyInFields(src *App) int {
 	}
 	if _, set := fmap["21"]; set {
 		if src.Configs != nil {
-			if m.Configs == nil || len(m.Configs) != len(src.Configs) {
-				m.Configs = make([]*ConfigFile, len(src.Configs))
-				changed++
-			}
-			for i0 := 0; i0 < len(src.Configs); i0++ {
-				m.Configs[i0] = &ConfigFile{}
-				if _, set := fmap["21.1"]; set {
-					if m.Configs[i0].Kind != src.Configs[i0].Kind {
-						m.Configs[i0].Kind = src.Configs[i0].Kind
-						changed++
-					}
-				}
-				if _, set := fmap["21.2"]; set {
-					if m.Configs[i0].Config != src.Configs[i0].Config {
-						m.Configs[i0].Config = src.Configs[i0].Config
-						changed++
-					}
-				}
-			}
+			m.Configs = src.Configs
+			changed++
 		} else if m.Configs != nil {
 			m.Configs = nil
 			changed++
@@ -1339,7 +1945,86 @@ func (m *App) CopyInFields(src *App) int {
 			changed++
 		}
 	}
+	if _, set := fmap["30"]; set {
+		if m.DefaultPrivacyPolicy != src.DefaultPrivacyPolicy {
+			m.DefaultPrivacyPolicy = src.DefaultPrivacyPolicy
+			changed++
+		}
+	}
+	if _, set := fmap["31"]; set {
+		if m.DeletePrepare != src.DeletePrepare {
+			m.DeletePrepare = src.DeletePrepare
+			changed++
+		}
+	}
+	if _, set := fmap["32"]; set {
+		if src.AutoProvPolicies != nil {
+			m.AutoProvPolicies = src.AutoProvPolicies
+			changed++
+		} else if m.AutoProvPolicies != nil {
+			m.AutoProvPolicies = nil
+			changed++
+		}
+	}
+	if _, set := fmap["33"]; set {
+		if m.TemplateDelimiter != src.TemplateDelimiter {
+			m.TemplateDelimiter = src.TemplateDelimiter
+			changed++
+		}
+	}
+	if _, set := fmap["34"]; set {
+		if m.SkipHcPorts != src.SkipHcPorts {
+			m.SkipHcPorts = src.SkipHcPorts
+			changed++
+		}
+	}
 	return changed
+}
+
+func (m *App) DeepCopyIn(src *App) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.ImagePath = src.ImagePath
+	m.ImageType = src.ImageType
+	m.AccessPorts = src.AccessPorts
+	m.DefaultFlavor.DeepCopyIn(&src.DefaultFlavor)
+	m.AuthPublicKey = src.AuthPublicKey
+	m.Command = src.Command
+	m.Annotations = src.Annotations
+	m.Deployment = src.Deployment
+	m.DeploymentManifest = src.DeploymentManifest
+	m.DeploymentGenerator = src.DeploymentGenerator
+	m.AndroidPackageName = src.AndroidPackageName
+	m.DelOpt = src.DelOpt
+	if src.Configs != nil {
+		m.Configs = make([]*ConfigFile, len(src.Configs), len(src.Configs))
+		for ii, s := range src.Configs {
+			var tmp_s ConfigFile
+			tmp_s.DeepCopyIn(s)
+			m.Configs[ii] = &tmp_s
+		}
+	} else {
+		m.Configs = nil
+	}
+	m.ScaleWithCluster = src.ScaleWithCluster
+	m.InternalPorts = src.InternalPorts
+	m.Revision = src.Revision
+	m.OfficialFqdn = src.OfficialFqdn
+	m.Md5Sum = src.Md5Sum
+	m.DefaultSharedVolumeSize = src.DefaultSharedVolumeSize
+	m.AutoProvPolicy = src.AutoProvPolicy
+	m.AccessType = src.AccessType
+	m.DefaultPrivacyPolicy = src.DefaultPrivacyPolicy
+	m.DeletePrepare = src.DeletePrepare
+	if src.AutoProvPolicies != nil {
+		m.AutoProvPolicies = make([]string, len(src.AutoProvPolicies), len(src.AutoProvPolicies))
+		for ii, s := range src.AutoProvPolicies {
+			m.AutoProvPolicies[ii] = s
+		}
+	} else {
+		m.AutoProvPolicies = nil
+	}
+	m.TemplateDelimiter = src.TemplateDelimiter
+	m.SkipHcPorts = src.SkipHcPorts
 }
 
 func (s *App) HasFields() bool {
@@ -1494,15 +2179,24 @@ type AppKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type AppCacheData struct {
+	Obj    *App
+	ModRev int64
+}
+
 // AppCache caches App objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppCache struct {
-	Objs        map[AppKey]*App
-	Mux         util.Mutex
-	List        map[AppKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *AppKey, old *App)
-	UpdatedCb   func(ctx context.Context, old *App, new *App)
-	KeyWatchers map[AppKey][]*AppKeyWatcher
+	Objs          map[AppKey]*AppCacheData
+	Mux           util.Mutex
+	List          map[AppKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *AppKey, old *App, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *App, new *App)
+	DeletedCbs    []func(ctx context.Context, old *App)
+	KeyWatchers   map[AppKey][]*AppKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AppKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AppKey)
 }
 
 func NewAppCache() *AppCache {
@@ -1512,8 +2206,13 @@ func NewAppCache() *AppCache {
 }
 
 func InitAppCache(cache *AppCache) {
-	cache.Objs = make(map[AppKey]*App)
+	cache.Objs = make(map[AppKey]*AppCacheData)
 	cache.KeyWatchers = make(map[AppKey][]*AppKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *AppCache) GetTypeString() string {
@@ -1521,11 +2220,17 @@ func (c *AppCache) GetTypeString() string {
 }
 
 func (c *AppCache) Get(key *AppKey, valbuf *App) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AppCache) GetWithRev(key *AppKey, valbuf *App, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -1537,64 +2242,87 @@ func (c *AppCache) HasKey(key *AppKey) bool {
 	return found
 }
 
-func (c *AppCache) GetAllKeys(ctx context.Context, keys map[AppKey]context.Context) {
+func (c *AppCache) GetAllKeys(ctx context.Context, cb func(key *AppKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *AppCache) Update(ctx context.Context, in *App, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *App) (*App, bool) {
+func (c *AppCache) Update(ctx context.Context, in *App, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *App) (*App, bool) {
 		return in, true
 	})
 }
 
-func (c *AppCache) UpdateModFunc(ctx context.Context, key *AppKey, rev int64, modFunc func(old *App) (new *App, changed bool)) {
+func (c *AppCache) UpdateModFunc(ctx context.Context, key *AppKey, modRev int64, modFunc func(old *App) (new *App, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *App
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &App{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &App{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &App{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &AppCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *AppCache) Delete(ctx context.Context, in *App, rev int64) {
+func (c *AppCache) Delete(ctx context.Context, in *App, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *App
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete App", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *AppCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
-	notify := make(map[AppKey]*App)
+	notify := make(map[AppKey]*AppCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1602,8 +2330,18 @@ func (c *AppCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1622,13 +2360,13 @@ func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show App", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare App", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare App", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show App", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show App", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1642,12 +2380,48 @@ func AppGenericNotifyCb(fn func(key *AppKey, old *App)) func(objstore.ObjKey, ob
 	}
 }
 
-func (c *AppCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *App)) {
-	c.NotifyCb = fn
+func (c *AppCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *App, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *AppKey, old *App, modRev int64){fn}
 }
 
 func (c *AppCache) SetUpdatedCb(fn func(ctx context.Context, old *App, new *App)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *App, new *App){fn}
+}
+
+func (c *AppCache) SetDeletedCb(fn func(ctx context.Context, old *App)) {
+	c.DeletedCbs = []func(ctx context.Context, old *App){fn}
+}
+
+func (c *AppCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AppKey){fn}
+}
+
+func (c *AppCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AppKey){fn}
+}
+
+func (c *AppCache) AddUpdatedCb(fn func(ctx context.Context, old *App, new *App)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AppCache) AddDeletedCb(fn func(ctx context.Context, old *App)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AppCache) AddNotifyCb(fn func(ctx context.Context, obj *AppKey, old *App, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *AppCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AppCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *AppCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AppCache) WatchKey(key *AppKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1694,14 +2468,21 @@ func (c *AppCache) TriggerKeyWatchers(ctx context.Context, key *AppKey) {
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *AppCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AppCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := App{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse App data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1709,11 +2490,11 @@ func (c *AppCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
 	c.Mux.Unlock()
 }
 
-func (c *AppCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *AppCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := App{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	AppKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *AppCache) SyncListStart(ctx context.Context) {
@@ -1721,7 +2502,7 @@ func (c *AppCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *AppCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[AppKey]*App)
+	deleted := make(map[AppKey]*AppCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1731,12 +2512,116 @@ func (c *AppCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *AppCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if key.Organization == org {
+			return true
 		}
 	}
+	return false
+}
+
+type AppByAutoProvPolicy struct {
+	AutoProvPolicys map[PolicyKey]map[AppKey]struct{}
+	Mux             util.Mutex
+}
+
+func (s *AppByAutoProvPolicy) Init() {
+	s.AutoProvPolicys = make(map[PolicyKey]map[AppKey]struct{})
+}
+
+func (s *AppByAutoProvPolicy) Updated(old *App, new *App) map[PolicyKey]struct{} {
+	// the below func must be implemented by the user:
+	// App.GetAutoProvPolicys() map[PolicyKey]struct{}
+	oldAutoProvPolicys := make(map[PolicyKey]struct{})
+	if old != nil {
+		oldAutoProvPolicys = old.GetAutoProvPolicys()
+	}
+	newAutoProvPolicys := new.GetAutoProvPolicys()
+
+	for lookup, _ := range oldAutoProvPolicys {
+		if _, found := newAutoProvPolicys[lookup]; found {
+			delete(oldAutoProvPolicys, lookup)
+			delete(newAutoProvPolicys, lookup)
+		}
+	}
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	changed := make(map[PolicyKey]struct{})
+	for lookup, _ := range oldAutoProvPolicys {
+		// remove
+		s.removeRef(lookup, old.GetKeyVal())
+		changed[lookup] = struct{}{}
+	}
+	for lookup, _ := range newAutoProvPolicys {
+		// add
+		s.addRef(lookup, new.GetKeyVal())
+		changed[lookup] = struct{}{}
+	}
+	return changed
+}
+
+func (s *AppByAutoProvPolicy) Deleted(old *App) {
+	oldAutoProvPolicys := old.GetAutoProvPolicys()
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	for lookup, _ := range oldAutoProvPolicys {
+		s.removeRef(lookup, old.GetKeyVal())
+	}
+}
+
+func (s *AppByAutoProvPolicy) addRef(lookup PolicyKey, key AppKey) {
+	AppKeys, found := s.AutoProvPolicys[lookup]
+	if !found {
+		AppKeys = make(map[AppKey]struct{})
+		s.AutoProvPolicys[lookup] = AppKeys
+	}
+	AppKeys[key] = struct{}{}
+}
+
+func (s *AppByAutoProvPolicy) removeRef(lookup PolicyKey, key AppKey) {
+	AppKeys, found := s.AutoProvPolicys[lookup]
+	if found {
+		delete(AppKeys, key)
+		if len(AppKeys) == 0 {
+			delete(s.AutoProvPolicys, lookup)
+		}
+	}
+}
+
+func (s *AppByAutoProvPolicy) Find(lookup PolicyKey) []AppKey {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	list := []AppKey{}
+	for k, _ := range s.AutoProvPolicys[lookup] {
+		list = append(list, k)
+	}
+	return list
 }
 
 func (m *App) GetObjKey() objstore.ObjKey {
@@ -1800,7 +2685,47 @@ func IgnoreAppFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "DelOpt")
 	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Revision")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "DeletePrepare")
+	}
 	return cmpopts.IgnoreFields(App{}, names...)
+}
+
+func (m *AppAutoProvPolicy) CopyInFields(src *AppAutoProvPolicy) int {
+	changed := 0
+	if m.AppKey.Organization != src.AppKey.Organization {
+		m.AppKey.Organization = src.AppKey.Organization
+		changed++
+	}
+	if m.AppKey.Name != src.AppKey.Name {
+		m.AppKey.Name = src.AppKey.Name
+		changed++
+	}
+	if m.AppKey.Version != src.AppKey.Version {
+		m.AppKey.Version = src.AppKey.Version
+		changed++
+	}
+	if m.AutoProvPolicy != src.AutoProvPolicy {
+		m.AutoProvPolicy = src.AutoProvPolicy
+		changed++
+	}
+	return changed
+}
+
+func (m *AppAutoProvPolicy) DeepCopyIn(src *AppAutoProvPolicy) {
+	m.AppKey.DeepCopyIn(&src.AppKey)
+	m.AutoProvPolicy = src.AutoProvPolicy
+}
+
+// Helper method to check that enums have valid values
+func (m *AppAutoProvPolicy) ValidateEnums() error {
+	if err := m.AppKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 var ImageTypeStrings = []string{
@@ -2046,10 +2971,15 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 func (m *AppKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
-	l = m.DeveloperKey.Size()
-	n += 1 + l + sovApp(uint64(l))
+	l = len(m.Organization)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
 	l = len(m.Name)
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
@@ -2062,6 +2992,9 @@ func (m *AppKey) Size() (n int) {
 }
 
 func (m *ConfigFile) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Kind)
@@ -2076,6 +3009,9 @@ func (m *ConfigFile) Size() (n int) {
 }
 
 func (m *App) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -2142,8 +3078,9 @@ func (m *App) Size() (n int) {
 	if m.InternalPorts {
 		n += 3
 	}
-	if m.Revision != 0 {
-		n += 2 + sovApp(uint64(m.Revision))
+	l = len(m.Revision)
+	if l > 0 {
+		n += 2 + l + sovApp(uint64(l))
 	}
 	l = len(m.OfficialFqdn)
 	if l > 0 {
@@ -2163,18 +3100,47 @@ func (m *App) Size() (n int) {
 	if m.AccessType != 0 {
 		n += 2 + sovApp(uint64(m.AccessType))
 	}
+	l = len(m.DefaultPrivacyPolicy)
+	if l > 0 {
+		n += 2 + l + sovApp(uint64(l))
+	}
+	if m.DeletePrepare {
+		n += 3
+	}
+	if len(m.AutoProvPolicies) > 0 {
+		for _, s := range m.AutoProvPolicies {
+			l = len(s)
+			n += 2 + l + sovApp(uint64(l))
+		}
+	}
+	l = len(m.TemplateDelimiter)
+	if l > 0 {
+		n += 2 + l + sovApp(uint64(l))
+	}
+	l = len(m.SkipHcPorts)
+	if l > 0 {
+		n += 2 + l + sovApp(uint64(l))
+	}
+	return n
+}
+
+func (m *AppAutoProvPolicy) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.AppKey.Size()
+	n += 1 + l + sovApp(uint64(l))
+	l = len(m.AutoProvPolicy)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
 	return n
 }
 
 func sovApp(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozApp(x uint64) (n int) {
 	return sovApp(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -2194,7 +3160,7 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2210,9 +3176,9 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DeveloperKey", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Organization", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowApp
@@ -2222,21 +3188,23 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthApp
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.DeveloperKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Organization = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2252,7 +3220,7 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2262,6 +3230,9 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2281,7 +3252,7 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2291,6 +3262,9 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2303,6 +3277,9 @@ func (m *AppKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthApp
 			}
 			if (iNdEx + skippy) > l {
@@ -2332,7 +3309,7 @@ func (m *ConfigFile) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2360,7 +3337,7 @@ func (m *ConfigFile) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2370,6 +3347,9 @@ func (m *ConfigFile) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2389,7 +3369,7 @@ func (m *ConfigFile) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2399,6 +3379,9 @@ func (m *ConfigFile) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2411,6 +3394,9 @@ func (m *ConfigFile) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthApp
 			}
 			if (iNdEx + skippy) > l {
@@ -2440,7 +3426,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2468,7 +3454,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2478,6 +3464,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2497,7 +3486,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2506,6 +3495,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2527,7 +3519,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2537,6 +3529,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2556,7 +3551,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ImageType |= (ImageType(b) & 0x7F) << shift
+				m.ImageType |= ImageType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2575,7 +3570,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2585,6 +3580,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2604,7 +3602,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2613,6 +3611,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2634,7 +3635,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2644,6 +3645,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2663,7 +3667,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2673,6 +3677,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2692,7 +3699,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2702,6 +3709,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2721,7 +3731,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2731,6 +3741,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2750,7 +3763,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2760,6 +3773,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2779,7 +3795,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2789,6 +3805,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2808,7 +3827,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2818,6 +3837,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2837,7 +3859,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DelOpt |= (DeleteType(b) & 0x7F) << shift
+				m.DelOpt |= DeleteType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2856,7 +3878,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2865,6 +3887,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2887,7 +3912,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2907,17 +3932,17 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 			m.InternalPorts = bool(v != 0)
 		case 24:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Revision", wireType)
 			}
-			m.Revision = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowApp
@@ -2927,11 +3952,24 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Revision |= (int32(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Revision = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 25:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field OfficialFqdn", wireType)
@@ -2946,7 +3984,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2956,6 +3994,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2975,7 +4016,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2985,6 +4026,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3004,7 +4048,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DefaultSharedVolumeSize |= (uint64(b) & 0x7F) << shift
+				m.DefaultSharedVolumeSize |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3023,7 +4067,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3033,6 +4077,9 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthApp
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -3052,11 +4099,159 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AccessType |= (AccessType(b) & 0x7F) << shift
+				m.AccessType |= AccessType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+		case 30:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultPrivacyPolicy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DefaultPrivacyPolicy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 31:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeletePrepare", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.DeletePrepare = bool(v != 0)
+		case 32:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AutoProvPolicies", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AutoProvPolicies = append(m.AutoProvPolicies, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 33:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TemplateDelimiter", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TemplateDelimiter = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 34:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SkipHcPorts", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SkipHcPorts = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApp(dAtA[iNdEx:])
@@ -3064,6 +4259,127 @@ func (m *App) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppAutoProvPolicy) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApp
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppAutoProvPolicy: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppAutoProvPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AppKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AutoProvPolicy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AutoProvPolicy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApp(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthApp
 			}
 			if (iNdEx + skippy) > l {
@@ -3081,6 +4397,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 func skipApp(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -3112,10 +4429,8 @@ func skipApp(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -3132,135 +4447,34 @@ func skipApp(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthApp
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowApp
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipApp(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupApp
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthApp
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthApp = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowApp   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthApp        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowApp          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupApp = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("app.proto", fileDescriptorApp) }
-
-var fileDescriptorApp = []byte{
-	// 1214 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x55, 0xcf, 0x6f, 0x1b, 0xc5,
-	0x17, 0xcf, 0xc4, 0x69, 0xd2, 0x9d, 0xc4, 0xce, 0x76, 0x9a, 0xb6, 0xd3, 0x7c, 0xdb, 0xd4, 0x5f,
-	0x17, 0x2a, 0x13, 0xa5, 0x71, 0x69, 0x05, 0x2a, 0x45, 0x45, 0x6c, 0x9c, 0x4d, 0x89, 0x92, 0xd8,
-	0x66, 0xe3, 0xb4, 0xea, 0x69, 0x35, 0xd9, 0x1d, 0xdb, 0xa3, 0xac, 0x77, 0xa6, 0xbb, 0x6b, 0x07,
-	0x57, 0xaa, 0x84, 0x38, 0x71, 0x41, 0x20, 0xb8, 0x20, 0x4e, 0x1c, 0x39, 0x22, 0xfe, 0x8a, 0x1c,
-	0x2b, 0x71, 0x47, 0x50, 0x71, 0x40, 0x3d, 0x21, 0x25, 0x91, 0x38, 0xa2, 0x99, 0xdd, 0xb5, 0x37,
-	0x25, 0x42, 0x88, 0x03, 0x17, 0x6b, 0xde, 0xe7, 0x7d, 0xe6, 0x7d, 0xf6, 0xcd, 0xfb, 0x61, 0xa8,
-	0x11, 0x21, 0x96, 0x45, 0xc0, 0x23, 0x8e, 0x34, 0xea, 0xb6, 0xa9, 0x3a, 0xce, 0x5f, 0x69, 0x73,
-	0xde, 0xf6, 0x68, 0x85, 0x08, 0x56, 0x21, 0xbe, 0xcf, 0x23, 0x12, 0x31, 0xee, 0x87, 0x31, 0x71,
-	0x7e, 0x26, 0xa0, 0x61, 0xcf, 0x8b, 0x12, 0xeb, 0x6e, 0x9b, 0x45, 0x9d, 0xde, 0xee, 0xb2, 0xc3,
-	0xbb, 0x95, 0x2e, 0xdf, 0x65, 0x9e, 0x0c, 0xf3, 0x51, 0x45, 0xfe, 0xde, 0x74, 0x3c, 0xde, 0x73,
-	0x2b, 0x8a, 0xd7, 0xa6, 0xfe, 0xf0, 0x90, 0xdc, 0x9c, 0x75, 0x69, 0x9f, 0x7a, 0x5c, 0xd0, 0x20,
-	0x0d, 0xdc, 0xf2, 0x48, 0x9f, 0xa7, 0xd6, 0x5c, 0x9b, 0xb7, 0xb9, 0x3a, 0x56, 0xe4, 0x29, 0x46,
-	0x4b, 0x9f, 0x02, 0x38, 0x69, 0x08, 0xb1, 0x41, 0x07, 0x68, 0x05, 0xe6, 0x87, 0x11, 0xec, 0x3d,
-	0x3a, 0xc0, 0xa0, 0x08, 0xca, 0xd3, 0xb7, 0x2f, 0x2d, 0x0f, 0x13, 0x59, 0x5e, 0x4d, 0xfd, 0x1b,
-	0x74, 0xb0, 0x32, 0x71, 0xf0, 0xd3, 0xb5, 0x31, 0x6b, 0xc6, 0xcd, 0x60, 0x08, 0xc1, 0x09, 0x9f,
-	0x74, 0x29, 0x1e, 0x2f, 0x82, 0xb2, 0x66, 0xa9, 0x33, 0xc2, 0x70, 0xaa, 0x4f, 0x83, 0x90, 0x71,
-	0x1f, 0xe7, 0x14, 0x9c, 0x9a, 0xf7, 0x66, 0x7e, 0x3b, 0xc4, 0xe0, 0x8f, 0x43, 0x0c, 0xbe, 0xff,
-	0xf6, 0x1a, 0x28, 0xdd, 0x85, 0xb0, 0xca, 0xfd, 0x16, 0x6b, 0xaf, 0x31, 0x8f, 0xca, 0x48, 0x7b,
-	0xcc, 0x77, 0xd5, 0x47, 0x68, 0x96, 0x3a, 0xa3, 0x8b, 0x70, 0xd2, 0x51, 0x8c, 0x24, 0x7e, 0x62,
-	0x95, 0x3e, 0xd7, 0x60, 0xce, 0x10, 0x42, 0xfa, 0x5b, 0x8c, 0x7a, 0x6e, 0x88, 0x41, 0x31, 0x27,
-	0xfd, 0xb1, 0x85, 0xde, 0x80, 0x39, 0x99, 0xcf, 0xb8, 0xca, 0xe7, 0x5c, 0x26, 0x9f, 0x38, 0xf3,
-	0x24, 0x13, 0xc9, 0x41, 0xd7, 0x21, 0x64, 0x5d, 0xd2, 0xa6, 0xb6, 0x20, 0x51, 0x07, 0x4f, 0x48,
-	0x99, 0x95, 0x89, 0xef, 0x8e, 0x30, 0xb0, 0x34, 0x85, 0x37, 0x48, 0xd4, 0x41, 0x77, 0x52, 0x52,
-	0x34, 0x10, 0x14, 0x9f, 0x29, 0x82, 0x72, 0xe1, 0xf6, 0x5c, 0x26, 0xec, 0xba, 0x74, 0x36, 0x07,
-	0x82, 0x26, 0x97, 0xe4, 0x11, 0xfd, 0x1f, 0xce, 0x10, 0xc7, 0xa1, 0x61, 0x68, 0x0b, 0x1e, 0x44,
-	0x21, 0x9e, 0x52, 0x29, 0x4c, 0xc7, 0x58, 0x43, 0x42, 0xc8, 0x80, 0x05, 0x97, 0xb6, 0x48, 0xcf,
-	0x8b, 0xec, 0xb8, 0x74, 0x58, 0x53, 0x9f, 0x9c, 0x8d, 0xbd, 0xa6, 0x1c, 0xa3, 0xaf, 0xce, 0x27,
-	0x37, 0x62, 0x1c, 0xdd, 0x80, 0xb3, 0xa4, 0x17, 0x75, 0x6c, 0xd1, 0xdb, 0xf5, 0x98, 0xa3, 0xca,
-	0x38, 0xa3, 0x84, 0xf2, 0x12, 0x6e, 0x28, 0x54, 0x16, 0x0a, 0xc3, 0x29, 0x87, 0x77, 0xbb, 0xc4,
-	0x77, 0x71, 0x3e, 0x2e, 0x4a, 0x62, 0xa2, 0x22, 0x9c, 0xce, 0xf4, 0x28, 0x2e, 0x24, 0x9f, 0x39,
-	0x82, 0xd0, 0x6b, 0x10, 0xba, 0x54, 0x78, 0x7c, 0xd0, 0xa5, 0x7e, 0x84, 0x67, 0x33, 0x6f, 0x94,
-	0xc1, 0xd1, 0x7b, 0xf0, 0xfc, 0xc8, 0xb2, 0xbb, 0xc4, 0x67, 0x2d, 0x1a, 0x46, 0x58, 0x57, 0xf4,
-	0xbc, 0xa4, 0x7f, 0xf9, 0xc3, 0xe5, 0x33, 0x3e, 0x77, 0xba, 0xc2, 0x42, 0x23, 0xe6, 0x56, 0x42,
-	0x44, 0xef, 0xc3, 0xb9, 0xcc, 0xfd, 0x36, 0xf5, 0x69, 0x40, 0x22, 0x1e, 0xe0, 0x73, 0xa7, 0x05,
-	0xc8, 0x48, 0x3d, 0x48, 0x99, 0xe8, 0x16, 0x9c, 0x23, 0xbe, 0x1b, 0x70, 0xe6, 0xda, 0x82, 0x38,
-	0x7b, 0xb2, 0x60, 0xaa, 0x39, 0x91, 0x4a, 0x09, 0x25, 0xbe, 0x46, 0xec, 0xaa, 0xc9, 0x56, 0x7d,
-	0x07, 0x4e, 0xb9, 0xd4, 0xb3, 0xb9, 0x88, 0xf0, 0x9c, 0xaa, 0xea, 0x85, 0x13, 0xcd, 0xef, 0xd1,
-	0x48, 0xd5, 0x72, 0x45, 0x1b, 0x29, 0x4f, 0xba, 0xd4, 0xab, 0x8b, 0x08, 0x55, 0xe4, 0x83, 0xca,
-	0x6e, 0x0c, 0xf1, 0x85, 0x62, 0xae, 0x3c, 0x7d, 0xe2, 0xea, 0xa8, 0xaf, 0xad, 0x94, 0x85, 0x96,
-	0x20, 0x0a, 0x1d, 0xe2, 0x51, 0x7b, 0x9f, 0x45, 0x1d, 0xdb, 0xf1, 0x7a, 0x61, 0x44, 0x03, 0x7c,
-	0xb1, 0x08, 0xca, 0x67, 0x2d, 0x5d, 0x79, 0x1e, 0xb1, 0xa8, 0x53, 0x8d, 0x71, 0xf4, 0x3a, 0x2c,
-	0x30, 0x3f, 0xa2, 0x81, 0x4f, 0xbc, 0xa4, 0x7f, 0x2e, 0x29, 0x66, 0x3e, 0x45, 0xe3, 0x0e, 0x9a,
-	0x87, 0x67, 0x03, 0xda, 0x67, 0x6a, 0xd8, 0x70, 0x11, 0x94, 0xcf, 0x58, 0x43, 0x1b, 0x5d, 0x87,
-	0x79, 0xde, 0x6a, 0x31, 0x87, 0x11, 0xcf, 0x6e, 0x3d, 0x71, 0x7d, 0x7c, 0x59, 0xbd, 0xc3, 0x4c,
-	0x0a, 0xae, 0x3d, 0x71, 0x7d, 0x39, 0x42, 0x5d, 0xf7, 0xad, 0xb0, 0xd7, 0xc5, 0xf3, 0xf1, 0x88,
-	0xc5, 0x16, 0x7a, 0x17, 0xce, 0xa7, 0xad, 0x19, 0x76, 0x48, 0x40, 0x5d, 0xbb, 0xcf, 0xbd, 0x5e,
-	0x97, 0xda, 0x21, 0x7b, 0x4a, 0xf1, 0xff, 0x8a, 0xa0, 0x3c, 0x61, 0x5d, 0x4a, 0x18, 0xdb, 0x8a,
-	0xf0, 0x50, 0xf9, 0xb7, 0xd9, 0x53, 0x8a, 0xca, 0x50, 0x27, 0xbd, 0x88, 0xdb, 0x22, 0xe0, 0x7d,
-	0x5b, 0x70, 0x8f, 0x39, 0x03, 0x7c, 0x45, 0x85, 0x2f, 0x48, 0xbc, 0x11, 0xf0, 0x7e, 0x43, 0xa1,
-	0xe8, 0x6d, 0x98, 0x0c, 0x44, 0x3c, 0x5a, 0x57, 0xff, 0x52, 0x04, 0x43, 0x79, 0xd5, 0x6c, 0x41,
-	0x32, 0x3c, 0xdf, 0xfb, 0x0c, 0xc8, 0x55, 0xf2, 0xfb, 0x21, 0x06, 0x1f, 0x1f, 0x61, 0xf0, 0xc5,
-	0x11, 0x06, 0x5f, 0x1f, 0x61, 0x70, 0x20, 0x7b, 0xe4, 0x18, 0x9f, 0xb5, 0x92, 0x27, 0xf8, 0xe6,
-	0x18, 0x53, 0x22, 0x84, 0x6c, 0x82, 0xfb, 0x1b, 0x74, 0xb0, 0x2c, 0x6b, 0xbe, 0x44, 0x84, 0x90,
-	0xfb, 0x48, 0x01, 0x0f, 0xe3, 0xc5, 0xb4, 0x34, 0xdc, 0x69, 0x0a, 0xcd, 0x6e, 0xbd, 0xf8, 0x4e,
-	0x92, 0x68, 0x3c, 0xa4, 0xf7, 0x57, 0xb3, 0x13, 0xa8, 0x08, 0x8b, 0x2e, 0xd4, 0x86, 0x4b, 0x00,
-	0x5d, 0x84, 0x68, 0x7d, 0xcb, 0x78, 0x60, 0xda, 0xcd, 0xc7, 0x0d, 0xd3, 0xde, 0xa9, 0x6d, 0xd4,
-	0xea, 0x8f, 0x6a, 0xfa, 0x18, 0xba, 0x00, 0xcf, 0x65, 0xf0, 0xd5, 0x7a, 0x75, 0xc3, 0xb4, 0x74,
-	0x80, 0xce, 0xc3, 0xd9, 0x0c, 0xfc, 0x61, 0xb5, 0xfe, 0x48, 0x1f, 0x7f, 0x05, 0xfc, 0xc0, 0xdc,
-	0xdc, 0xd2, 0x73, 0x8b, 0x6f, 0x42, 0x38, 0x6a, 0x4a, 0x84, 0x60, 0xa1, 0x56, 0xb7, 0x8d, 0x9d,
-	0x66, 0xdd, 0x5e, 0x35, 0x37, 0xcd, 0xa6, 0xa9, 0x8f, 0xa1, 0x59, 0x38, 0x9d, 0x05, 0xc0, 0xe2,
-	0x1e, 0x84, 0xa3, 0x27, 0x44, 0x37, 0x60, 0xc9, 0xa8, 0x56, 0xcd, 0xed, 0xed, 0xe4, 0x13, 0xcc,
-	0x35, 0x63, 0x67, 0xb3, 0x69, 0xaf, 0xd5, 0x2d, 0x7b, 0xd5, 0x6c, 0x6c, 0xd6, 0x1f, 0x6f, 0x99,
-	0xb5, 0xa6, 0x3e, 0x26, 0x33, 0x38, 0xc1, 0x5b, 0xb7, 0xcc, 0x6a, 0x53, 0x07, 0xe8, 0x2a, 0xbc,
-	0x9c, 0xc5, 0x37, 0xeb, 0xc6, 0xaa, 0xbd, 0x62, 0x6c, 0x1a, 0xb5, 0xaa, 0x69, 0xe9, 0xe3, 0xb7,
-	0x8f, 0x73, 0xea, 0xcf, 0xc5, 0x10, 0x0c, 0x3d, 0x83, 0x5a, 0x35, 0xa0, 0x24, 0xa2, 0x72, 0x4f,
-	0x17, 0x4e, 0xae, 0xe0, 0xf9, 0xec, 0x4a, 0xb6, 0xd4, 0x9f, 0x61, 0x69, 0xeb, 0xe5, 0x11, 0xae,
-	0x58, 0x34, 0xe4, 0xbd, 0xc0, 0x91, 0x77, 0xc2, 0x25, 0xc3, 0x91, 0xdb, 0x67, 0x8b, 0xf8, 0xa4,
-	0x4d, 0x97, 0x4e, 0x2d, 0xcb, 0xf3, 0x63, 0x0c, 0x3e, 0xf9, 0xf1, 0xd7, 0xaf, 0xc6, 0xf5, 0xd2,
-	0x74, 0xc5, 0x51, 0x6a, 0x15, 0x22, 0xc4, 0x3d, 0xb0, 0x88, 0x06, 0x50, 0x8b, 0x5f, 0xea, 0x1f,
-	0xca, 0xaf, 0xff, 0x0b, 0xf9, 0xa1, 0xb4, 0xab, 0x94, 0x52, 0xe9, 0x67, 0x50, 0xdb, 0x11, 0xee,
-	0x7f, 0x98, 0x79, 0x4f, 0xa9, 0xa5, 0xf2, 0x01, 0x9c, 0xda, 0xee, 0xf0, 0xfd, 0xd3, 0xc4, 0x5f,
-	0xb1, 0x4b, 0xe6, 0xcb, 0x23, 0x7c, 0xf3, 0x14, 0xe5, 0x87, 0x8c, 0xee, 0xff, 0x4d, 0xca, 0x85,
-	0x92, 0x56, 0x09, 0x3b, 0x7c, 0x3f, 0x51, 0xbc, 0x05, 0x56, 0xf4, 0x83, 0x5f, 0x16, 0xc6, 0x0e,
-	0x5e, 0x2c, 0x80, 0xe7, 0x2f, 0x16, 0xc0, 0xcf, 0x2f, 0x16, 0xc0, 0xee, 0xa4, 0x52, 0xb9, 0xf3,
-	0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0xca, 0x07, 0xbf, 0x36, 0x20, 0x09, 0x00, 0x00,
-}

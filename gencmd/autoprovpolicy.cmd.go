@@ -3,21 +3,23 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import _ "github.com/gogo/protobuf/types"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/gogo/protobuf/types"
+	"github.com/mobiledgex/edge-cloud/cli"
+	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -25,6 +27,19 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func AutoProvInfoHideTags(in *edgeproto.AutoProvInfo) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.NotifyId = 0
+	}
+}
+
 var AutoProvPolicyApiCmd edgeproto.AutoProvPolicyApiClient
 
 var CreateAutoProvPolicyCmd = &cli.Command{
@@ -40,6 +55,9 @@ var CreateAutoProvPolicyCmd = &cli.Command{
 }
 
 func runCreateAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -94,6 +112,9 @@ var DeleteAutoProvPolicyCmd = &cli.Command{
 }
 
 func runDeleteAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -148,6 +169,9 @@ var UpdateAutoProvPolicyCmd = &cli.Command{
 }
 
 func runUpdateAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -202,6 +226,9 @@ var ShowAutoProvPolicyCmd = &cli.Command{
 }
 
 func runShowAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -224,6 +251,7 @@ func ShowAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 		}
 		return fmt.Errorf("ShowAutoProvPolicy failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AutoProvPolicy, 0)
 	for {
 		obj, err := stream.Recv()
@@ -275,6 +303,9 @@ var AddAutoProvPolicyCloudletCmd = &cli.Command{
 }
 
 func runAddAutoProvPolicyCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicyCloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -329,6 +360,9 @@ var RemoveAutoProvPolicyCloudletCmd = &cli.Command{
 }
 
 func runRemoveAutoProvPolicyCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoProvPolicyCloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -380,35 +414,57 @@ var AutoProvPolicyApiCmds = []*cobra.Command{
 }
 
 var AutoProvPolicyRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"name",
 }
 var AutoProvPolicyOptionalArgs = []string{
 	"deployclientcount",
 	"deployintervalcount",
+	"cloudlets:#.key.organization",
+	"cloudlets:#.key.name",
+	"cloudlets:#.loc.latitude",
+	"cloudlets:#.loc.longitude",
+	"cloudlets:#.loc.horizontalaccuracy",
+	"cloudlets:#.loc.verticalaccuracy",
+	"cloudlets:#.loc.altitude",
+	"cloudlets:#.loc.course",
+	"cloudlets:#.loc.speed",
+	"cloudlets:#.loc.timestamp.seconds",
+	"cloudlets:#.loc.timestamp.nanos",
+	"minactiveinstances",
+	"maxinstances",
+	"undeployclientcount",
+	"undeployintervalcount",
 }
 var AutoProvPolicyAliasArgs = []string{
-	"developer=key.developer",
+	"app-org=key.organization",
 	"name=key.name",
 }
 var AutoProvPolicyComments = map[string]string{
-	"developer":                        "Name of the Developer that this policy belongs to",
-	"name":                             "Policy name",
-	"deployclientcount":                "Minimum number of clients within the auto deploy interval to trigger deployment",
-	"deployintervalcount":              "Number of intervals to check before triggering deployment",
-	"cloudlets.key.operatorkey.name":   "Company or Organization name of the operator",
-	"cloudlets.key.name":               "Name of the cloudlet",
-	"cloudlets.loc.latitude":           "latitude in WGS 84 coordinates",
-	"cloudlets.loc.longitude":          "longitude in WGS 84 coordinates",
-	"cloudlets.loc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"cloudlets.loc.verticalaccuracy":   "vertical accuracy (meters)",
-	"cloudlets.loc.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"cloudlets.loc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"cloudlets.loc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"fields":                             "Fields are used for the Update API to specify which fields to apply",
+	"app-org":                            "Name of the organization for the cluster that this policy will apply to",
+	"name":                               "Policy name",
+	"deployclientcount":                  "Minimum number of clients within the auto deploy interval to trigger deployment",
+	"deployintervalcount":                "Number of intervals to check before triggering deployment",
+	"cloudlets:#.key.organization":       "Organization of the cloudlet site",
+	"cloudlets:#.key.name":               "Name of the cloudlet",
+	"cloudlets:#.loc.latitude":           "latitude in WGS 84 coordinates",
+	"cloudlets:#.loc.longitude":          "longitude in WGS 84 coordinates",
+	"cloudlets:#.loc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
+	"cloudlets:#.loc.verticalaccuracy":   "vertical accuracy (meters)",
+	"cloudlets:#.loc.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"cloudlets:#.loc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"cloudlets:#.loc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"minactiveinstances":                 "Minimum number of active instances for High-Availability",
+	"maxinstances":                       "Maximum number of instances (active or not)",
+	"undeployclientcount":                "Number of active clients for the undeploy interval below which trigers undeployment, 0 (default) disables auto undeploy",
+	"undeployintervalcount":              "Number of intervals to check before triggering undeployment",
 }
-var AutoProvPolicySpecialArgs = map[string]string{}
+var AutoProvPolicySpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
 var AutoProvCloudletRequiredArgs = []string{
-	"key.operatorkey.name",
+	"key.organization",
 	"key.name",
 }
 var AutoProvCloudletOptionalArgs = []string{
@@ -424,7 +480,7 @@ var AutoProvCloudletOptionalArgs = []string{
 }
 var AutoProvCloudletAliasArgs = []string{}
 var AutoProvCloudletComments = map[string]string{
-	"key.operatorkey.name":   "Company or Organization name of the operator",
+	"key.organization":       "Organization of the cloudlet site",
 	"key.name":               "Name of the cloudlet",
 	"loc.latitude":           "latitude in WGS 84 coordinates",
 	"loc.longitude":          "longitude in WGS 84 coordinates",
@@ -437,31 +493,31 @@ var AutoProvCloudletComments = map[string]string{
 var AutoProvCloudletSpecialArgs = map[string]string{}
 var AutoProvCountRequiredArgs = []string{}
 var AutoProvCountOptionalArgs = []string{
-	"appkey.developerkey.name",
+	"appkey.organization",
 	"appkey.name",
 	"appkey.version",
-	"cloudletkey.operatorkey.name",
+	"cloudletkey.organization",
 	"cloudletkey.name",
 	"count",
 	"processnow",
 	"deploynowkey.clusterkey.name",
-	"deploynowkey.cloudletkey.operatorkey.name",
+	"deploynowkey.cloudletkey.organization",
 	"deploynowkey.cloudletkey.name",
-	"deploynowkey.developer",
+	"deploynowkey.organization",
 }
 var AutoProvCountAliasArgs = []string{}
 var AutoProvCountComments = map[string]string{
-	"appkey.developerkey.name":     "Organization or Company Name that a Developer is part of",
-	"appkey.name":                  "App name",
-	"appkey.version":               "App version",
-	"cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"cloudletkey.name":             "Name of the cloudlet",
-	"count":                        "FindCloudlet client count",
-	"processnow":                   "Process count immediately",
-	"deploynowkey.clusterkey.name": "Cluster name",
-	"deploynowkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"deploynowkey.cloudletkey.name":             "Name of the cloudlet",
-	"deploynowkey.developer":                    "Name of Developer that this cluster belongs to",
+	"appkey.organization":                   "App developer organization",
+	"appkey.name":                           "App name",
+	"appkey.version":                        "App version",
+	"cloudletkey.organization":              "Organization of the cloudlet site",
+	"cloudletkey.name":                      "Name of the cloudlet",
+	"count":                                 "FindCloudlet client count",
+	"processnow":                            "Process count immediately",
+	"deploynowkey.clusterkey.name":          "Cluster name",
+	"deploynowkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"deploynowkey.cloudletkey.name":         "Name of the cloudlet",
+	"deploynowkey.organization":             "Name of Developer organization that this cluster belongs to",
 }
 var AutoProvCountSpecialArgs = map[string]string{}
 var AutoProvCountsRequiredArgs = []string{}
@@ -469,62 +525,102 @@ var AutoProvCountsOptionalArgs = []string{
 	"dmenodename",
 	"timestamp.seconds",
 	"timestamp.nanos",
-	"counts.appkey.developerkey.name",
-	"counts.appkey.name",
-	"counts.appkey.version",
-	"counts.cloudletkey.operatorkey.name",
-	"counts.cloudletkey.name",
-	"counts.count",
-	"counts.processnow",
-	"counts.deploynowkey.clusterkey.name",
-	"counts.deploynowkey.cloudletkey.operatorkey.name",
-	"counts.deploynowkey.cloudletkey.name",
-	"counts.deploynowkey.developer",
+	"counts:#.appkey.organization",
+	"counts:#.appkey.name",
+	"counts:#.appkey.version",
+	"counts:#.cloudletkey.organization",
+	"counts:#.cloudletkey.name",
+	"counts:#.count",
+	"counts:#.processnow",
+	"counts:#.deploynowkey.clusterkey.name",
+	"counts:#.deploynowkey.cloudletkey.organization",
+	"counts:#.deploynowkey.cloudletkey.name",
+	"counts:#.deploynowkey.organization",
 }
 var AutoProvCountsAliasArgs = []string{}
 var AutoProvCountsComments = map[string]string{
-	"dmenodename":                                      "DME node name",
-	"timestamp.seconds":                                "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
-	"timestamp.nanos":                                  "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
-	"counts.appkey.developerkey.name":                  "Organization or Company Name that a Developer is part of",
-	"counts.appkey.name":                               "App name",
-	"counts.appkey.version":                            "App version",
-	"counts.cloudletkey.operatorkey.name":              "Company or Organization name of the operator",
-	"counts.cloudletkey.name":                          "Name of the cloudlet",
-	"counts.count":                                     "FindCloudlet client count",
-	"counts.processnow":                                "Process count immediately",
-	"counts.deploynowkey.clusterkey.name":              "Cluster name",
-	"counts.deploynowkey.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"counts.deploynowkey.cloudletkey.name":             "Name of the cloudlet",
-	"counts.deploynowkey.developer":                    "Name of Developer that this cluster belongs to",
+	"dmenodename":                                    "DME node name",
+	"timestamp.seconds":                              "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
+	"timestamp.nanos":                                "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
+	"counts:#.appkey.organization":                   "App developer organization",
+	"counts:#.appkey.name":                           "App name",
+	"counts:#.appkey.version":                        "App version",
+	"counts:#.cloudletkey.organization":              "Organization of the cloudlet site",
+	"counts:#.cloudletkey.name":                      "Name of the cloudlet",
+	"counts:#.count":                                 "FindCloudlet client count",
+	"counts:#.processnow":                            "Process count immediately",
+	"counts:#.deploynowkey.clusterkey.name":          "Cluster name",
+	"counts:#.deploynowkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"counts:#.deploynowkey.cloudletkey.name":         "Name of the cloudlet",
+	"counts:#.deploynowkey.organization":             "Name of Developer organization that this cluster belongs to",
 }
 var AutoProvCountsSpecialArgs = map[string]string{}
 var AutoProvPolicyCloudletRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"name",
 }
 var AutoProvPolicyCloudletOptionalArgs = []string{
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
 }
 var AutoProvPolicyCloudletAliasArgs = []string{
-	"developer=key.developer",
+	"app-org=key.organization",
 	"name=key.name",
-	"operator=cloudletkey.operatorkey.name",
+	"cloudlet-org=cloudletkey.organization",
 	"cloudlet=cloudletkey.name",
 }
 var AutoProvPolicyCloudletComments = map[string]string{
-	"developer": "Name of the Developer that this policy belongs to",
-	"name":      "Policy name",
-	"operator":  "Company or Organization name of the operator",
-	"cloudlet":  "Name of the cloudlet",
+	"app-org":      "Name of the organization for the cluster that this policy will apply to",
+	"name":         "Policy name",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
 }
 var AutoProvPolicyCloudletSpecialArgs = map[string]string{}
+var AutoProvInfoRequiredArgs = []string{
+	"key.organization",
+	"key.name",
+}
+var AutoProvInfoOptionalArgs = []string{
+	"notifyid",
+	"maintenancestate",
+	"completed",
+	"errors",
+}
+var AutoProvInfoAliasArgs = []string{}
+var AutoProvInfoComments = map[string]string{
+	"fields":           "Fields are used for the Update API to specify which fields to apply",
+	"key.organization": "Organization of the cloudlet site",
+	"key.name":         "Name of the cloudlet",
+	"notifyid":         "Id of client assigned by server (internal use only)",
+	"maintenancestate": "failover result state, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"completed":        "Failover actions done if any",
+	"errors":           "Errors if any",
+}
+var AutoProvInfoSpecialArgs = map[string]string{
+	"completed": "StringArray",
+	"errors":    "StringArray",
+	"fields":    "StringArray",
+}
 var CreateAutoProvPolicyRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"name",
 }
 var CreateAutoProvPolicyOptionalArgs = []string{
 	"deployclientcount",
 	"deployintervalcount",
+	"cloudlets:#.key.organization",
+	"cloudlets:#.key.name",
+	"cloudlets:#.loc.latitude",
+	"cloudlets:#.loc.longitude",
+	"cloudlets:#.loc.horizontalaccuracy",
+	"cloudlets:#.loc.verticalaccuracy",
+	"cloudlets:#.loc.altitude",
+	"cloudlets:#.loc.course",
+	"cloudlets:#.loc.speed",
+	"cloudlets:#.loc.timestamp.seconds",
+	"cloudlets:#.loc.timestamp.nanos",
+	"minactiveinstances",
+	"maxinstances",
+	"undeployclientcount",
+	"undeployintervalcount",
 }

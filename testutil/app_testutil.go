@@ -3,21 +3,24 @@
 
 package testutil
 
-import "google.golang.org/grpc"
-import "github.com/mobiledgex/edge-cloud/edgeproto"
-import "io"
-import "testing"
-import "context"
-import "time"
-import "github.com/stretchr/testify/require"
-import "github.com/mobiledgex/edge-cloud/log"
-import "github.com/mobiledgex/edge-cloud/cli"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"io"
+	math "math"
+	"testing"
+	"time"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -309,34 +312,114 @@ func FindAppData(key *edgeproto.AppKey, testData []edgeproto.App) (*edgeproto.Ap
 	return nil, false
 }
 
-func RunAppApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.App, dataMap interface{}, mode string) error {
-	appApi := edgeproto.NewAppApiClient(conn)
-	var err error
+func (r *Run) AppApi(data *[]edgeproto.App, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for App", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.App{}
+		out, err := r.client.ShowApp(r.ctx, obj)
+		if err != nil {
+			r.logErr("AppApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.App)
+			if !ok {
+				panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.App, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
 	for ii, objD := range *data {
 		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for App: %v", mode, obj.GetKey())
-		switch mode {
+		switch r.Mode {
 		case "create":
-			_, err = appApi.CreateApp(ctx, obj)
+			out, err := r.client.CreateApp(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("AppApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "delete":
-			_, err = appApi.DeleteApp(ctx, obj)
+			out, err := r.client.DeleteApp(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("AppApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "update":
+			// set specified fields
 			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
 			if err != nil {
-				return fmt.Errorf("bad dataMap for App: %v", err)
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for App", "err", err)
+				*r.Rc = false
+				return
 			}
 			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
-			_, err = appApi.UpdateApp(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for App: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+
+			out, err := r.client.UpdateApp(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("AppApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowApp(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.App)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi expected dataOut type *[]edgeproto.App, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
 		}
 	}
-	return nil
+}
+
+func (r *Run) AppApi_AppAutoProvPolicy(data *[]edgeproto.AppAutoProvPolicy, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for AppAutoProvPolicy", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "add":
+			out, err := r.client.AddAppAutoProvPolicy(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi_AppAutoProvPolicy[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_AppAutoProvPolicy expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "remove":
+			out, err := r.client.RemoveAppAutoProvPolicy(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi_AppAutoProvPolicy[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_AppAutoProvPolicy expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
 }
 
 func (s *DummyServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
@@ -376,4 +459,108 @@ func (s *DummyServer) ShowApp(in *edgeproto.App, server edgeproto.AppApi_ShowApp
 		return err
 	})
 	return err
+}
+
+func (s *ApiClient) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.CreateApp(ctx, in)
+}
+
+func (s *CliClient) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateApp")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.DeleteApp(ctx, in)
+}
+
+func (s *CliClient) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteApp")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.UpdateApp(ctx, in)
+}
+
+func (s *CliClient) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateApp")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type AppStream interface {
+	Recv() (*edgeproto.App, error)
+}
+
+func AppReadStream(stream AppStream) ([]edgeproto.App, error) {
+	output := []edgeproto.App{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read App stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	stream, err := api.ShowApp(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return AppReadStream(stream)
+}
+
+func (s *CliClient) ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error) {
+	output := []edgeproto.App{}
+	args := append(s.BaseArgs, "controller", "ShowApp")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.AddAppAutoProvPolicy(ctx, in)
+}
+
+func (s *CliClient) AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "AddAppAutoProvPolicy")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.RemoveAppAutoProvPolicy(ctx, in)
+}
+
+func (s *CliClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "RemoveAppAutoProvPolicy")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type AppApiClient interface {
+	CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
+	DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
+	UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
+	ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error)
+	AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
+	RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
 }

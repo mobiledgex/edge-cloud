@@ -88,8 +88,7 @@ sub printCloudlet{
   my $notifysrvport = 51000 + $cid;
   print ("
 - key:
-    operatorkey:
-      name: $operator
+    organization: $operator
     name: $operator-$cloudlet-$cid
   accessuri: $operator-$cloudlet.$cid
   location:
@@ -110,8 +109,7 @@ sub printCloudletInfo{
   my $cid = shift;
   print ("
 - key:
-    operatorkey:
-      name: $operator
+    organization: $operator
     name: $operator-$cloudlet-$cid
 
   state: CloudletStateReady
@@ -132,18 +130,16 @@ sub printAppinst{
   print ("
 - key:
     appkey:
-      developerkey:
-        name: $Developer
+      organization: $Developer
       name: $app
       version: \"1.0\"
     clusterinstkey:
       clusterkey:
         name: autocluster$app
       cloudletkey:
-        operatorkey:
-          name: $operator
+        organization: $operator
         name: $operator-$cloudlet-$cid
-      developer: $Developer
+      organization: $Developer
   cloudletloc:
     latitude: $lat
     longitude: $long
@@ -192,27 +188,19 @@ sub genLatLongs{
 
 sub genOperator{
   print("
-operators:
+:
 - key:
     name: $Operator
 - key:
     name: azure
 - key:
     name: gcp
+operatorcodes:
+- code: wifi
+  operatorname: $Operator
 ")
 }
 
-sub genDeveloper{
-  print("
-developers:
-- key:
-    name: $Developer
-  username: $Developer-user
-  passhash: 123456789012345670
-  address: 1234 $Developer street
-  email: $Developer\@gmail.com
-\n")
-}
 
 sub genSamsungDeveloper{
   print("
@@ -247,8 +235,7 @@ sub genApp{
   my $fqdn = lc("$app.$Developer.com");
   print(
 "- key:
-    developerkey:
-       name: $Developer
+    organization: $Developer
     name: $app
     version : \"1.0\"
   imagetype: ImageTypeDocker
@@ -272,8 +259,7 @@ sub genApp{
 sub genSamsungApp{
 print(
 "- key:
-    developerkey:
-      name: Samsung
+    organization: Samsung
     name: SamsungEnablingLayer
     version: \"1.0\"
   imagepath: registry.mobiledgex.net/dummyvalue
@@ -315,10 +301,6 @@ genOperator();
 genLatLongs("cloudlets");
 if ($GenCloudletInfo) {
   genLatLongs("cloudletinfos");
-}
-genDeveloper();
-if ($GenSamsungApp) {
-  genSamsungDeveloper();
 }
 
 print "apps:\n";

@@ -10,6 +10,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/segmentio/ksuid"
 )
 
 type ExecApi struct {
@@ -24,39 +26,131 @@ type ExecReq struct {
 
 const (
 	// For K8s/Docker based Apps
-	ShortTimeout = 6 * time.Second
+	ShortTimeout = edgeproto.Duration(6 * time.Second)
 	// For VM based Apps
-	LongTimeout = 20 * time.Second
+	LongTimeout = edgeproto.Duration(60 * time.Second)
 )
 
 var execApi = ExecApi{}
 var execRequestSendMany *notify.ExecRequestSendMany
-var execRequestTimeout = ShortTimeout
 
 func InitExecApi() {
 	execApi.requests = make(map[string]*ExecReq)
 	execRequestSendMany = notify.NewExecRequestSendMany()
 }
 
-func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
+	if req.AppInstKey.ClusterInstKey.Organization == "" {
+		req.AppInstKey.ClusterInstKey.Organization = req.AppInstKey.AppKey.Organization
+	}
+	if !appApi.Get(&req.AppInstKey.AppKey, app) {
+		return req.AppInstKey.AppKey.NotFoundError()
+	}
+	if app.Deployment == cloudcommon.DeploymentTypeVM &&
+		req.AppInstKey.ClusterInstKey.ClusterKey.Name == "" {
+		req.AppInstKey.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
+	}
 	if !appInstApi.HasKey(&req.AppInstKey) {
-		return nil, req.AppInstKey.NotFoundError()
+		return req.AppInstKey.NotFoundError()
+	}
+	return nil
+}
+
+func (s *ExecApi) ShowLogs(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	if req.Log == nil {
+		// defaults
+		req.Log = &edgeproto.ShowLog{}
 	}
 	app := edgeproto.App{}
-	if !appApi.Get(&req.AppInstKey.AppKey, &app) {
-		return nil, req.AppInstKey.AppKey.NotFoundError()
+	if err := s.getApp(req, &app); err != nil {
+		return nil, err
 	}
-	if app.Deployment == cloudcommon.AppDeploymentTypeVM {
-		execRequestTimeout = LongTimeout
-		if req.Command != "" || req.ContainerId != "" {
-			return nil, fmt.Errorf("invalid argument, command/containerid is not supported for VM based Apps")
+	req.Timeout = ShortTimeout
+	// Be very careful about validating string input. These arguments
+	// will be passed to the command line in the VM, which user should
+	// not have access to.
+	if app.Deployment == cloudcommon.DeploymentTypeDocker {
+		if req.ContainerId != "" && !util.ValidDockerName(req.ContainerId) {
+			return nil, fmt.Errorf("Invalid docker container name")
 		}
-		req.Console = true
+	} else if app.Deployment == cloudcommon.DeploymentTypeKubernetes {
+		if req.ContainerId != "" && !util.ValidKubernetesName(req.ContainerId) {
+			return nil, fmt.Errorf("Invalid kubernetes container name")
+		}
 	} else {
-		if req.Command == "" {
-			return nil, fmt.Errorf("command argument is mandatory for %s based Apps", app.Deployment)
+		return nil, fmt.Errorf("ShowLogs not available for %s deployments", app.Deployment)
+	}
+	if req.Log.Since != "" {
+		_, err := time.ParseDuration(req.Log.Since)
+		if err != nil {
+			_, err = time.Parse(time.RFC3339, req.Log.Since)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse Since field as duration or RFC3339 formatted time")
 		}
 	}
+	return s.doExchange(ctx, req)
+}
+
+func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	cmd := req.Cmd
+	if cmd == nil {
+		return nil, fmt.Errorf("No run command specified")
+	}
+	app := edgeproto.App{}
+	if err := s.getApp(req, &app); err != nil {
+		return nil, err
+	}
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
+		return nil, fmt.Errorf("RunCommand not available for VM deployments, use RunConsole instead")
+	}
+	req.Timeout = ShortTimeout
+	if cmd.Command == "" {
+		return nil, fmt.Errorf("command argument required")
+	}
+	return s.doExchange(ctx, req)
+}
+
+func (s *ExecApi) AccessCloudlet(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	cmd := req.Cmd
+	if cmd == nil {
+		return nil, fmt.Errorf("No run command specified")
+	}
+	if cmd.CloudletMgmtNode == nil {
+		return nil, fmt.Errorf("No cloudlet mgmt node specified")
+	}
+	req.Timeout = ShortTimeout
+	return s.doExchange(ctx, req)
+}
+
+func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	req.Cmd = nil
+	req.Log = nil
+	req.Console = &edgeproto.RunVMConsole{}
+
+	app := edgeproto.App{}
+	if err := s.getApp(req, &app); err != nil {
+		return nil, err
+	}
+	req.Timeout = LongTimeout
+	if app.Deployment != cloudcommon.DeploymentTypeVM {
+		return nil, fmt.Errorf("RunConsole only available for VM deployments, use RunCommand instead")
+	}
+	return s.doExchange(ctx, req)
+}
+
+func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
+	// Make sure EdgeTurn Server Address is present
+	if *edgeTurnAddr == "" {
+		return nil, fmt.Errorf("EdgeTurn server address is required to run commands")
+	}
+	req.EdgeTurnAddr = *edgeTurnAddr
+	reqId := ksuid.New()
+	req.Offer = reqId.String()
+	// Increase timeout, as for EdgeTurn based implemention,
+	// CRM connects to EdgeTurn server. Hence it can take some
+	// time to reply back
+	req.Timeout = LongTimeout
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
 	// (or if it's even present), so just broadcast to all.
@@ -68,21 +162,24 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 			reply, err = s.SendLocalRequest(ctx, req)
 		} else {
 			// connect to remote node
-			conn, err := ControllerConnect(addr)
+			conn, err := ControllerConnect(ctx, addr)
 			if err != nil {
 				return err
 			}
 			defer conn.Close()
 
 			cmd := edgeproto.NewExecApiClient(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), execRequestTimeout+2)
+			ctx, cancel := context.WithTimeout(context.Background(), req.Timeout.TimeDuration()+2)
 			defer cancel()
 			reply, err = cmd.SendLocalRequest(ctx, req)
 		}
 		if err == nil && reply != nil {
 			req.Answer = reply.Answer
 			req.Err = reply.Err
-			req.ConsoleUrl = reply.ConsoleUrl
+			if req.Console != nil && reply.Console != nil {
+				req.Console.Url = reply.Console.Url
+			}
+			req.AccessUrl = reply.AccessUrl
 		}
 		return nil
 	}, nil)
@@ -91,9 +188,6 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 	}
 	if req.Err != "" {
 		return nil, fmt.Errorf("%s", req.Err)
-	}
-	if req.Answer == "" {
-		return nil, fmt.Errorf("no one answered the offer")
 	}
 	log.DebugLog(log.DebugLevelApi, "ExecRequest answered", "req", req)
 	return req, nil
@@ -125,7 +219,7 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 		// wait for reply or timeout
 		select {
 		case <-sr.done:
-		case <-time.After(execRequestTimeout):
+		case <-time.After(req.Timeout.TimeDuration()):
 			err = fmt.Errorf("ExecRequest timed out")
 		}
 	}
@@ -141,16 +235,19 @@ func (s *ExecApi) SendLocalRequest(ctx context.Context, req *edgeproto.ExecReque
 }
 
 // Receive message from notify framework
-func (s *ExecApi) Recv(ctx context.Context, msg *edgeproto.ExecRequest) {
+func (s *ExecApi) RecvExecRequest(ctx context.Context, msg *edgeproto.ExecRequest) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	sr, ok := s.requests[msg.Offer]
 	if !ok {
-		log.DebugLog(log.DebugLevelApi, "unregistered ExecRequest recv", "msg", msg)
+		log.DebugLog(log.DebugLevelApi, "unregistered ExecRequest recv", "msg", msg, "requests", s.requests)
 		return
 	}
 	sr.req.Answer = msg.Answer
 	sr.req.Err = msg.Err
-	sr.req.ConsoleUrl = msg.ConsoleUrl
+	if sr.req.Console != nil && msg.Console != nil {
+		sr.req.Console.Url = msg.Console.Url
+	}
+	sr.req.AccessUrl = msg.AccessUrl
 	sr.done <- true
 }

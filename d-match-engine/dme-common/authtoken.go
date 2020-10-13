@@ -1,6 +1,7 @@
 package dmecommon
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -12,14 +13,14 @@ import (
 
 type authClaims struct {
 	jwt.StandardClaims
-	DevName string `json:"devname,omitempty"`
+	OrgName string `json:"orgname,omitempty"`
 	AppName string `json:"appname,omitempty"`
 	AppVers string `json:"appvers,omitempty"`
 }
 
 // VerifyAuthToken verifies the token against the provided public key.  JWT contents for devname,
 // appname and appvers must match the contents of the token
-func VerifyAuthToken(token string, pubkey string, devname string, appname string, appvers string) error {
+func VerifyAuthToken(ctx context.Context, token string, pubkey string, devname string, appname string, appvers string) error {
 	if token == "" {
 		return fmt.Errorf("empty token")
 	}
@@ -39,7 +40,7 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 	}
 
 	//check that the values in the token match
-	if devname != authClaims.DevName {
+	if devname != authClaims.OrgName {
 		return errors.New("token developer mismatch")
 	}
 	if appname != authClaims.AppName {
@@ -49,13 +50,13 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 		return errors.New("token appvers mismatch")
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "verified token", "token", token, "expires", authClaims.ExpiresAt)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "verified token", "token", token, "expires", authClaims.ExpiresAt)
 	return nil
 }
 
 // GenerateAuthToken is used only for test purposes, as the DME never
 // generates auth tokens it only verifies them
-func GenerateAuthToken(privKeyFile string, devname string, appname string, appvers string, expireTime int64) (string, error) {
+func GenerateAuthToken(privKeyFile string, appOrg string, appname string, appvers string, expireTime int64) (string, error) {
 	privkey, err := ioutil.ReadFile(privKeyFile)
 	if err != nil {
 		return "", fmt.Errorf("Cannot read private key file %s -- %v", privKeyFile, err)
@@ -65,7 +66,7 @@ func GenerateAuthToken(privKeyFile string, devname string, appname string, appve
 			StandardClaims: jwt.StandardClaims{
 				IssuedAt:  time.Now().Unix(),
 				ExpiresAt: expireTime},
-			DevName: devname,
+			OrgName: appOrg,
 			AppName: appname,
 			AppVers: appvers,
 		})

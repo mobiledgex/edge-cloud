@@ -11,14 +11,16 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 func TestNotify(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	dmecommon.SetupMatchEngine()
+	InitAppInstClients()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 
@@ -29,10 +31,10 @@ func TestNotify(t *testing.T) {
 	serverHandler := notify.NewDummyHandler()
 	serverMgr := notify.ServerMgr{}
 	serverHandler.RegisterServer(&serverMgr)
-	serverMgr.Start(addr, "")
+	serverMgr.Start("ctrl", addr, nil)
 
 	// client (dme) side
-	client := initNotifyClient(addr, "")
+	client := initNotifyClient(ctx, addr, grpc.WithInsecure())
 	client.Start()
 
 	// create data on server side
@@ -64,10 +66,8 @@ func TestNotify(t *testing.T) {
 	// update cloudletInfo for a single cloudlet and make sure it gets propagated to appInsts
 	cloudletInfo := edgeproto.CloudletInfo{
 		Key: edgeproto.CloudletKey{
-			OperatorKey: edgeproto.OperatorKey{
-				Name: dmetest.Cloudlets[2].CarrierName,
-			},
-			Name: dmetest.Cloudlets[2].Name,
+			Organization: dmetest.Cloudlets[2].CarrierName,
+			Name:         dmetest.Cloudlets[2].Name,
 		},
 		State: edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE,
 	}
@@ -84,6 +84,34 @@ func TestNotify(t *testing.T) {
 	waitForNoAppInst(appInsts[last])
 	checkAllData(t, remaining)
 
+	// add a new device - see that it makes it to the server
+	for _, reg := range dmetest.DeviceData {
+		recordDevice(ctx, &reg)
+	}
+	// verify the devices were added to the server
+	count := len(dmetest.DeviceData) - 1 // Since one is a duplicate
+	// verify that devices are in local cache
+	assert.Equal(t, count, len(platformClientsCache.Objs))
+	serverHandler.WaitForDevices(count)
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Delete all elements from local cache directly
+	for _, data := range platformClientsCache.Objs {
+		obj := data.Obj
+		delete(platformClientsCache.Objs, obj.GetKeyVal())
+		delete(platformClientsCache.List, obj.GetKeyVal())
+	}
+	assert.Equal(t, 0, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Add a single device - make sure count in local cache is updated
+	recordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	// Make sure that count in the server cache is the same
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+	// Add the same device, check that nothing is updated
+	recordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
+
 	serverMgr.Stop()
 	client.Stop()
 }
@@ -92,7 +120,7 @@ func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey) {
 	var still_enabled bool
 
 	tbl := dmecommon.DmeAppTbl
-	carrier := key.OperatorKey.Name
+	carrier := key.Organization
 	for i := 0; i < 10; i++ {
 		still_enabled = false
 		for _, app := range tbl.Apps {

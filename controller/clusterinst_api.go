@@ -56,7 +56,8 @@ func (s *ClusterInstApi) Get(key *edgeproto.ClusterInstKey, buf *edgeproto.Clust
 func (s *ClusterInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, cluster := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		cluster := data.Obj
 		if cluster.Flavor.Matches(key) {
 			return true
 		}
@@ -67,7 +68,8 @@ func (s *ClusterInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, cluster := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		cluster := data.Obj
 		if cluster.AutoScalePolicy == key.Name {
 			return true
 		}
@@ -78,8 +80,9 @@ func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
 func (s *ClusterInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, cluster := range s.cache.Objs {
-		if cluster.PrivacyPolicy == key.Name && cluster.Key.Developer == key.Developer {
+	for _, data := range s.cache.Objs {
+		cluster := data.Obj
+		if cluster.PrivacyPolicy == key.Name && cluster.Key.Organization == key.Organization {
 			return true
 		}
 	}
@@ -90,7 +93,8 @@ func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[ed
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	static := false
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.CloudletKey.Matches(in) {
 			if val.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
 				static = true
@@ -106,7 +110,8 @@ func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[ed
 func (s *ClusterInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for key, val := range s.cache.Objs {
+	for key, data := range s.cache.Objs {
+		val := data.Obj
 		if key.CloudletKey.Matches(in) {
 			if edgeproto.IsTransientState(val.State) {
 				return true
@@ -119,12 +124,68 @@ func (s *ClusterInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, val := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		val := data.Obj
 		if val.Key.ClusterKey.Matches(key) {
 			return true
 		}
 	}
 	return false
+}
+
+// validateAndDefaultIPAccess checks that the IP access type is valid if it is set.  If it is not set
+// it returns the new value based on the other parameters
+func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType edgeproto.PlatformType, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (edgeproto.IpAccess, error) {
+
+	platName := edgeproto.PlatformType_name[int32(platformType)]
+
+	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
+	if isIPAllocatedPerService(clusterInst.Key.CloudletKey.Organization) {
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for operator: " + clusterInst.Key.CloudletKey.Organization})
+			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
+		}
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for operator: %s", clusterInst.Key.CloudletKey.Organization)
+		}
+		return clusterInst.IpAccess, nil
+	}
+	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || platformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX {
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessShared for platform " + platName})
+			return edgeproto.IpAccess_IP_ACCESS_SHARED, nil
+		}
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessDedicated not supported platform: %s", platformType)
+		}
+	}
+	// Privacy Policy required dedicated
+	if clusterInst.PrivacyPolicy != "" {
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for privacy policy enabled cluster "})
+			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
+		}
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for privacy policy enabled cluster")
+		}
+		return clusterInst.IpAccess, nil
+	}
+	switch clusterInst.Deployment {
+	case cloudcommon.DeploymentTypeKubernetes:
+		fallthrough
+	case cloudcommon.DeploymentTypeHelm:
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessShared for deployment " + clusterInst.Deployment})
+			return edgeproto.IpAccess_IP_ACCESS_SHARED, nil
+		}
+		return clusterInst.IpAccess, nil
+	case cloudcommon.DeploymentTypeDocker:
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for deployment " + clusterInst.Deployment})
+			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
+		}
+	}
+	return clusterInst.IpAccess, nil
 }
 
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
@@ -140,11 +201,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-			return err
-		}
-	}
 
 	defer func() {
 		if reterr == nil {
@@ -153,38 +209,38 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	}()
 
 	ctx := cb.Context()
-	if in.Key.Developer == "" {
-		return fmt.Errorf("Developer cannot be empty")
+	if in.Key.Organization == "" {
+		return fmt.Errorf("ClusterInst Organization cannot be empty")
 	}
 	if in.Key.CloudletKey.Name == "" {
 		return fmt.Errorf("Cloudlet name cannot be empty")
 	}
-	if in.Key.CloudletKey.OperatorKey.Name == "" {
-		return fmt.Errorf("Operator name cannot be empty")
+	if in.Key.CloudletKey.Organization == "" {
+		return fmt.Errorf("Cloudlet Organization name cannot be empty")
 	}
 	if in.Key.ClusterKey.Name == "" {
 		return fmt.Errorf("Cluster name cannot be empty")
 	}
-	if in.Reservable && in.Key.Developer != cloudcommon.DeveloperMobiledgeX {
-		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.DeveloperMobiledgeX)
+	if in.Reservable && in.Key.Organization != cloudcommon.OrganizationMobiledgeX {
+		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.OrganizationMobiledgeX)
 	}
 
 	// validate deployment
 	if in.Deployment == "" {
 		// assume kubernetes, because that's what we've been doing
-		in.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+		in.Deployment = cloudcommon.DeploymentTypeKubernetes
 	}
-	if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+	if in.Deployment == cloudcommon.DeploymentTypeHelm {
 		// helm runs on kubernetes
-		in.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+		in.Deployment = cloudcommon.DeploymentTypeKubernetes
 	}
-	if in.Deployment == cloudcommon.AppDeploymentTypeVM {
+	if in.Deployment == cloudcommon.DeploymentTypeVM {
 		// friendly error message if they try to specify VM
-		return fmt.Errorf("ClusterInst is not needed for deployment type %s, just create an AppInst directly", cloudcommon.AppDeploymentTypeVM)
+		return fmt.Errorf("ClusterInst is not needed for deployment type %s, just create an AppInst directly", cloudcommon.DeploymentTypeVM)
 	}
 
 	// validate other parameters based on deployment type
-	if in.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
+	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
 		// must have at least one master, but currently don't support
 		// more than one.
 		if in.NumMasters == 0 {
@@ -194,12 +250,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.NumMasters > 1 {
 			return fmt.Errorf("NumMasters cannot be greater than 1")
 		}
-	} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
+	} else if in.Deployment == cloudcommon.DeploymentTypeDocker {
 		if in.NumMasters != 0 || in.NumNodes != 0 {
-			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.DeploymentTypeDocker)
 		}
 		if in.SharedVolumeSize != 0 {
-			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+			return fmt.Errorf("SharedVolumeSize not supported for deployment type %s", cloudcommon.DeploymentTypeDocker)
 
 		}
 	} else {
@@ -212,6 +268,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+			return err
+		}
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DELETE_ERROR && !ignoreTransient(cctx, in.State) {
 				if in.State == edgeproto.TrackedState_CREATE_ERROR {
@@ -237,66 +296,28 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
-		isSharedOnly := cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX
+		var err error
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-		if isSharedOnly {
-			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				return fmt.Errorf("IpAccess must be shared for cloudlet platform type %s", platName)
-			}
-			// override unknown
-			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
-		} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
-			// docker must be dedicated
-			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-				return fmt.Errorf("IpAccess must be dedicated for deployment type %s cloudlet platform type %s", cloudcommon.AppDeploymentTypeDocker, platName)
-			}
-			// override unknown
-			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
-		}
-
-		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE && in.SharedVolumeSize != 0 {
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK &&
+			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE &&
+			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE &&
+			in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
-		if in.PrivacyPolicy != "" {
-			if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
-				return fmt.Errorf("Privacy Policy not supported on %s", platName)
-			}
-			if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-					in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
-				} else {
-					return fmt.Errorf("PrivacyPolicy only supported for IP_ACCESS_DEDICATED")
-				}
-			}
+		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
+			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
-			if in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+			if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
 			}
 			if in.NumNodes == 0 {
 				return errors.New("NumNodes cannot be 0 for Azure or GCP")
 			}
-			if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
-				return fmt.Errorf("Cluster name limited to %d characters for GCP and Azure", cloudcommon.MaxClusterNameLength)
-			}
+
 		}
-		if in.AutoScalePolicy != "" {
-			policy := edgeproto.AutoScalePolicy{}
-			if err := autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Developer, &policy); err != nil {
-				return err
-			}
-			if in.NumNodes < policy.MinNodes {
-				in.NumNodes = policy.MinNodes
-			}
-			if in.NumNodes > policy.MaxNodes {
-				in.NumNodes = policy.MaxNodes
-			}
-		}
-		if in.PrivacyPolicy != "" {
-			policy := edgeproto.PrivacyPolicy{}
-			if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Developer, &policy); err != nil {
-				return err
-			}
+		if err := validateClusterInstUpdates(ctx, stm, in); err != nil {
+			return err
 		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
@@ -315,16 +336,43 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
-		var err error
 		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
 		if err != nil {
 			return err
 		}
+		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
+			in.OptRes = "gpu"
+		}
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
 
-		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Flavor", "vmspec", vmspec)
+		// check if MasterNodeFlavor required
+		if in.Deployment == cloudcommon.DeploymentTypeKubernetes && in.NumNodes > 0 {
+			masterFlavor := edgeproto.Flavor{}
+			masterFlavorKey := edgeproto.FlavorKey{}
+			settings := settingsApi.Get()
+			masterFlavorKey.Name = settings.MasterNodeFlavor
+
+			if flavorApi.store.STMGet(stm, &masterFlavorKey, &masterFlavor) {
+				log.SpanLog(ctx, log.DebugLevelApi, "MasterNodeFlavor found ", "MasterNodeFlavor", settings.MasterNodeFlavor)
+				vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, masterFlavor, cloudlet, info)
+				if err != nil {
+					// Unlikely with reasonably modest settings.MasterNodeFlavor sized flavor
+					log.SpanLog(ctx, log.DebugLevelApi, "Error K8s Master Node Flavor matches no eixsting OS flavor", "nodeFlavor", in.NodeFlavor)
+					return err
+				} else {
+					in.MasterNodeFlavor = vmspec.FlavorName
+					log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Master Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
+				}
+			} else {
+				// should never be non empty and not found due to validation in update
+				// revert to using NodeFlavor (pre EC-1767) and log warning
+				in.MasterNodeFlavor = in.NodeFlavor
+				log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
+			}
+		}
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
@@ -346,7 +394,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return errors.New("Not enough Disk available")
 			}
 		}
-		// allocateIP also sets in.IpAccess to either Dedicated or Shared
+		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
+		if err != nil {
+			return err
+		}
 		err = allocateIP(in, &cloudlet, &refs)
 		if err != nil {
 			return err
@@ -400,49 +451,21 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
+
+	err := in.ValidateUpdateFields()
+	if err != nil {
+		return err
+	}
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
 
-	if in.Fields == nil {
-		return fmt.Errorf("nothing specified to update")
-	}
-	allowedFields := []string{}
-	badFields := []string{}
-	for _, field := range in.Fields {
-		if field == edgeproto.ClusterInstFieldCrmOverride ||
-			field == edgeproto.ClusterInstFieldKey ||
-			in.IsKeyField(field) {
-			continue
-		} else if field == edgeproto.ClusterInstFieldNumNodes || field == edgeproto.ClusterInstFieldAutoScalePolicy {
-			allowedFields = append(allowedFields, field)
-		} else {
-			badFields = append(badFields, field)
-		}
-	}
-	if len(badFields) > 0 {
-		// cat all the bad field names and return error
-		badstrs := []string{}
-		for _, bad := range badFields {
-			badstrs = append(badstrs, edgeproto.ClusterInstAllFieldsStringMap[bad])
-		}
-		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badstrs, ","))
-	}
-	in.Fields = allowedFields
-	if len(allowedFields) == 0 {
-		return fmt.Errorf("Nothing specified to modify")
-	}
-
 	cctx.SetOverride(&in.CrmOverride)
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-			return err
-		}
-	}
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	retry := false
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
 			return in.Key.NotFoundError()
@@ -450,18 +473,25 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
 		}
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+			return err
+		}
 
 		if !cctx.Undo && inbuf.State != edgeproto.TrackedState_READY && !ignoreTransient(cctx, inbuf.State) {
 			if inbuf.State == edgeproto.TrackedState_UPDATE_ERROR {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("previous update failed, %v, trying again", inbuf.Errors)})
+				retry = true
 			} else {
 				return errors.New("ClusterInst busy, cannot update")
 			}
 		}
 		changeCount = inbuf.CopyInFields(in)
-		if changeCount == 0 {
+		if changeCount == 0 && !retry {
 			// nothing changed
 			return nil
+		}
+		if err := validateClusterInstUpdates(ctx, stm, &inbuf); err != nil {
+			return err
 		}
 		if !ignoreCRM(cctx) {
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
@@ -472,7 +502,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
-	if changeCount == 0 {
+	if changeCount == 0 && !retry {
 		return nil
 	}
 
@@ -492,23 +522,48 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	return err
 }
 
+func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst) error {
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+		return errors.New("Specified Cloudlet not found")
+	}
+	if in.PrivacyPolicy != "" {
+		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+			platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+			return fmt.Errorf("Privacy Policy not supported on %s", platName)
+		}
+		policy := edgeproto.PrivacyPolicy{}
+		if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
+			return err
+		}
+	}
+	if in.AutoScalePolicy != "" {
+		policy := edgeproto.AutoScalePolicy{}
+		if err := autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Organization, &policy); err != nil {
+			return err
+		}
+		if in.NumNodes < policy.MinNodes {
+			in.NumNodes = policy.MinNodes
+		}
+		if in.NumNodes > policy.MaxNodes {
+			in.NumNodes = policy.MaxNodes
+		}
+	}
+	return nil
+}
+
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
 	// If it is autoClusterInst and creation had failed, then deletion should proceed
 	// even though clusterinst is in use by Application Instance
-	//if !(cctx.Undo && strings.HasPrefix(in.Key.ClusterKey.Name, ClusterAutoPrefix)) {
-	if appInstApi.UsesClusterInst(&in.Key) {
-		return errors.New("ClusterInst in use by Application Instance")
-	}
-	//}
-	cctx.SetOverride(&in.CrmOverride)
-	if !ignoreCRM(cctx) {
-		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-			return err
+	if !(cctx.Undo && strings.HasPrefix(in.Key.ClusterKey.Name, ClusterAutoPrefix)) {
+		if appInstApi.UsesClusterInst(&in.Key) {
+			return errors.New("ClusterInst in use by Application Instance")
 		}
 	}
+	cctx.SetOverride(&in.CrmOverride)
 	ctx := cb.Context()
 
 	var prevState edgeproto.TrackedState
@@ -516,6 +571,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
+		}
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+			return err
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
@@ -565,6 +623,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			log.WarnLog("Delete ClusterInst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
+		}
+		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+			return errors.New("Cloudlet under maintenance, please try again later")
 		}
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
@@ -764,12 +825,14 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.ClusterInstKey, event cloudcommon.InstanceEvent, serverStatus string) {
 	metric := edgeproto.Metric{}
 	metric.Name = cloudcommon.ClusterInstEvent
-	ts, _ := types.TimestampProto(time.Now())
+	now := time.Now()
+	ts, _ := types.TimestampProto(now)
 	metric.Timestamp = *ts
-	metric.AddTag("operator", clusterInstKey.CloudletKey.OperatorKey.Name)
+	// influx requires that at least one field must be specified when querying so these cant be all tags
+	metric.AddStringVal("cloudletorg", clusterInstKey.CloudletKey.Organization)
 	metric.AddTag("cloudlet", clusterInstKey.CloudletKey.Name)
 	metric.AddTag("cluster", clusterInstKey.ClusterKey.Name)
-	metric.AddTag("dev", clusterInstKey.Developer)
+	metric.AddTag("clusterorg", clusterInstKey.Organization)
 	metric.AddStringVal("event", string(event))
 	metric.AddStringVal("status", serverStatus)
 
@@ -777,22 +840,31 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	if !ok { // if not provided (aka not recording a delete), get the flavorkey and numnodes ourself
 		info = edgeproto.ClusterInst{}
 		if !clusterInstApi.cache.Get(clusterInstKey, &info) {
-			log.SpanLog(ctx, log.DebugLevelApi, "Cannot log event for invalid clusterinst")
+			log.SpanLog(ctx, log.DebugLevelMetrics, "Cannot log event for invalid clusterinst")
 			return
 		}
+	}
+	// if this is a clusterinst use the org its reserved for instead of MobiledgeX
+	metric.AddTag("reservedBy", info.ReservedBy)
+	// org field so that influx queries are a lot simpler to retrieve reserved clusters
+	if info.ReservedBy != "" {
+		metric.AddTag("org", info.ReservedBy)
+	} else {
+		metric.AddTag("org", clusterInstKey.Organization)
 	}
 	// errors should never happen here since to get to this point the flavor should have already been checked previously, but just in case
 	nodeFlavor := edgeproto.Flavor{}
 	if !flavorApi.cache.Get(&info.Flavor, &nodeFlavor) {
-		log.SpanLog(ctx, log.DebugLevelApi, "flavor not found for recording clusterInst lifecycle", "flavor name", info.Flavor.Name)
+		log.SpanLog(ctx, log.DebugLevelMetrics, "flavor not found for recording clusterInst lifecycle", "flavor name", info.Flavor.Name)
 	} else {
 		metric.AddTag("flavor", info.Flavor.Name)
 		metric.AddIntVal("ram", nodeFlavor.Ram)
 		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
 		metric.AddIntVal("disk", nodeFlavor.Disk)
-		metric.AddIntVal("nodeCount", uint64(info.NumMasters+info.NumNodes))
+		metric.AddIntVal("nodecount", uint64(info.NumMasters+info.NumNodes))
 		metric.AddStringVal("other", fmt.Sprintf("%v", nodeFlavor.OptResMap))
 	}
+	metric.AddStringVal("ipaccess", info.IpAccess.String())
 
 	services.events.AddMetric(&metric)
 }

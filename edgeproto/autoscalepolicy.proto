@@ -8,11 +8,15 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 message PolicyKey {
-  // Name of the Developer that this policy belongs to
-  string developer = 1;
+  // Name of the organization for the cluster that this policy will apply to
+  string organization = 1 [(protogen.keytag) = "policyorg"];
   // Policy name
-  string name = 2;
+  string name = 2 [(protogen.keytag) = "policy"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -40,7 +44,8 @@ message AutoScalePolicy {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,developer=Key.Developer";
+  option (protogen.alias) = "name=Key.Name,cluster-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 service AutoScalePolicyApi {
@@ -50,8 +55,9 @@ service AutoScalePolicyApi {
       post: "/create/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "MinNodes,MaxNodes";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete an Auto Scale Policy
   rpc DeleteAutoScalePolicy(AutoScalePolicy) returns (Result) {
@@ -59,7 +65,7 @@ service AutoScalePolicyApi {
       post: "/delete/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
   // Update an Auto Scale Policy
   rpc UpdateAutoScalePolicy(AutoScalePolicy) returns (Result) {
@@ -67,7 +73,7 @@ service AutoScalePolicyApi {
       post: "/update/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
   // Show Auto Scale Policies. Any fields specified will be used to filter results.
   rpc ShowAutoScalePolicy(AutoScalePolicy) returns (stream AutoScalePolicy) {
@@ -75,6 +81,6 @@ service AutoScalePolicyApi {
       post: "/show/autoscalepolicy"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Developer";
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Organization";
   }
 }

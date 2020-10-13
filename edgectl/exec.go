@@ -2,18 +2,35 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/cli"
-	webrtcshell "github.com/mobiledgex/edge-cloud/edgectl/cli"
+	edgecli "github.com/mobiledgex/edge-cloud/edgectl/cli"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	webrtc "github.com/pion/webrtc/v2"
+	"google.golang.org/grpc"
 )
 
 var execApiCmd edgeproto.ExecApiClient
 
-func runExecRequest(c *cli.Command, args []string) error {
+type execFunc func(context.Context, *edgeproto.ExecRequest, ...grpc.CallOption) (*edgeproto.ExecRequest, error)
+
+func runRunCommand(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.RunCommand)
+}
+
+func runRunConsole(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.RunConsole)
+}
+
+func runShowLogs(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.ShowLogs)
+}
+
+func runAccessCloudlet(c *cli.Command, args []string) error {
+	return runExecRequest(c, args, execApiCmd.AccessCloudlet)
+}
+
+func runExecRequest(c *cli.Command, args []string, apiFunc execFunc) error {
 	if execApiCmd == nil {
 		return fmt.Errorf("ExecApi client not initialized")
 	}
@@ -23,31 +40,16 @@ func runExecRequest(c *cli.Command, args []string) error {
 	}
 	req := c.ReqData.(*edgeproto.ExecRequest)
 
-	exchangeFunc := func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error) {
-		offerBytes, err := json.Marshal(&offer)
-		if err != nil {
-			return nil, nil, err
-		}
-		req.Offer = string(offerBytes)
-
+	exchangeFunc := func() (*edgeproto.ExecRequest, error) {
 		ctx := context.Background()
-		reply, err := execApiCmd.RunCommand(ctx, req)
+		reply, err := apiFunc(ctx, req)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		if reply.Err != "" {
-			return nil, nil, fmt.Errorf("%s", reply.Err)
+			return nil, fmt.Errorf("%s", reply.Err)
 		}
-		if reply.Answer == "" {
-			return nil, nil, fmt.Errorf("empty answer")
-		}
-		answer := webrtc.SessionDescription{}
-		err = json.Unmarshal([]byte(reply.Answer), &answer)
-		if err != nil {
-			return nil, nil, fmt.Errorf("unable to unmarshal answer %s, %v",
-				reply.Answer, err)
-		}
-		return reply, &answer, nil
+		return reply, nil
 	}
-	return webrtcshell.RunWebrtc(req, exchangeFunc)
+	return edgecli.RunEdgeTurn(req, exchangeFunc)
 }

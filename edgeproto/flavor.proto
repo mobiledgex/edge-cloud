@@ -11,12 +11,16 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // Flavor
 //
 // FlavorKey uniquely identifies a Flavor.
 message FlavorKey {
   // Flavor name
-  string name = 1;
+  string name = 1 [(protogen.keytag) = "flavor"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -46,6 +50,7 @@ message Flavor {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name";
+  option (protogen.uses_org) = "none";
 }
 
 service FlavorApi {

@@ -3,89 +3,92 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/gogo/protobuf/gogoproto"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "errors"
-import "strconv"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// NodeType defines the type of Node
-type NodeType int32
-
-const (
-	// Unknown
-	NodeType_NODE_UNKNOWN NodeType = 0
-	// Distributed Matching Engine
-	NodeType_NODE_DME NodeType = 1
-	// Cloudlet Resource Manager
-	NodeType_NODE_CRM NodeType = 2
-	// Controller Node
-	NodeType_NODE_CONTROLLER NodeType = 3
-)
-
-var NodeType_name = map[int32]string{
-	0: "NODE_UNKNOWN",
-	1: "NODE_DME",
-	2: "NODE_CRM",
-	3: "NODE_CONTROLLER",
-}
-var NodeType_value = map[string]int32{
-	"NODE_UNKNOWN":    0,
-	"NODE_DME":        1,
-	"NODE_CRM":        2,
-	"NODE_CONTROLLER": 3,
-}
-
-func (x NodeType) String() string {
-	return proto.EnumName(NodeType_name, int32(x))
-}
-func (NodeType) EnumDescriptor() ([]byte, []int) { return fileDescriptorNode, []int{0} }
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // NodeKey uniquely identifies a DME or CRM node
 type NodeKey struct {
 	// Name or hostname of node
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Node type
-	NodeType NodeType `protobuf:"varint,2,opt,name=node_type,json=nodeType,proto3,enum=edgeproto.NodeType" json:"node_type,omitempty"`
+	Type string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
 	// Cloudlet on which node is running, or is associated with
-	CloudletKey CloudletKey `protobuf:"bytes,3,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
+	CloudletKey CloudletKey `protobuf:"bytes,3,opt,name=cloudlet_key,json=cloudletKey,proto3" json:"cloudlet_key"`
+	// Region the node is in
+	Region string `protobuf:"bytes,5,opt,name=region,proto3" json:"region,omitempty"`
 }
 
-func (m *NodeKey) Reset()                    { *m = NodeKey{} }
-func (m *NodeKey) String() string            { return proto.CompactTextString(m) }
-func (*NodeKey) ProtoMessage()               {}
-func (*NodeKey) Descriptor() ([]byte, []int) { return fileDescriptorNode, []int{0} }
+func (m *NodeKey) Reset()         { *m = NodeKey{} }
+func (m *NodeKey) String() string { return proto.CompactTextString(m) }
+func (*NodeKey) ProtoMessage()    {}
+func (*NodeKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0c843d59d2d938e7, []int{0}
+}
+func (m *NodeKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *NodeKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_NodeKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *NodeKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NodeKey.Merge(m, src)
+}
+func (m *NodeKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *NodeKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_NodeKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NodeKey proto.InternalMessageInfo
 
 // Node defines a DME (distributed matching engine) or CRM (cloudlet resource manager) instance.
 type Node struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key NodeKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key NodeKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 	// Build Master Version
@@ -96,29 +99,148 @@ type Node struct {
 	BuildAuthor string `protobuf:"bytes,6,opt,name=build_author,json=buildAuthor,proto3" json:"build_author,omitempty"`
 	// Hostname
 	Hostname string `protobuf:"bytes,7,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	// Docker edge-cloud base image version
-	ImageVersion string `protobuf:"bytes,8,opt,name=image_version,json=imageVersion,proto3" json:"image_version,omitempty"`
+	// Docker edge-cloud container version which node instance use
+	ContainerVersion string `protobuf:"bytes,8,opt,name=container_version,json=containerVersion,proto3" json:"container_version,omitempty"`
+	// Internal PKI Config
+	InternalPki string `protobuf:"bytes,9,opt,name=internal_pki,json=internalPki,proto3" json:"internal_pki,omitempty"`
 }
 
-func (m *Node) Reset()                    { *m = Node{} }
-func (m *Node) String() string            { return proto.CompactTextString(m) }
-func (*Node) ProtoMessage()               {}
-func (*Node) Descriptor() ([]byte, []int) { return fileDescriptorNode, []int{1} }
+func (m *Node) Reset()         { *m = Node{} }
+func (m *Node) String() string { return proto.CompactTextString(m) }
+func (*Node) ProtoMessage()    {}
+func (*Node) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0c843d59d2d938e7, []int{1}
+}
+func (m *Node) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Node) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Node.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Node) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Node.Merge(m, src)
+}
+func (m *Node) XXX_Size() int {
+	return m.Size()
+}
+func (m *Node) XXX_DiscardUnknown() {
+	xxx_messageInfo_Node.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Node proto.InternalMessageInfo
+
+type NodeData struct {
+	Nodes []Node `protobuf:"bytes,1,rep,name=nodes,proto3" json:"nodes"`
+}
+
+func (m *NodeData) Reset()         { *m = NodeData{} }
+func (m *NodeData) String() string { return proto.CompactTextString(m) }
+func (*NodeData) ProtoMessage()    {}
+func (*NodeData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0c843d59d2d938e7, []int{2}
+}
+func (m *NodeData) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *NodeData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_NodeData.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *NodeData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NodeData.Merge(m, src)
+}
+func (m *NodeData) XXX_Size() int {
+	return m.Size()
+}
+func (m *NodeData) XXX_DiscardUnknown() {
+	xxx_messageInfo_NodeData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NodeData proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*NodeKey)(nil), "edgeproto.NodeKey")
 	proto.RegisterType((*Node)(nil), "edgeproto.Node")
-	proto.RegisterEnum("edgeproto.NodeType", NodeType_name, NodeType_value)
+	proto.RegisterType((*NodeData)(nil), "edgeproto.NodeData")
 }
+
+func init() { proto.RegisterFile("node.proto", fileDescriptor_0c843d59d2d938e7) }
+
+var fileDescriptor_0c843d59d2d938e7 = []byte{
+	// 698 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x93, 0x41, 0x6b, 0x13, 0x4d,
+	0x18, 0xc7, 0x33, 0xcd, 0x36, 0x4d, 0x26, 0x79, 0xdb, 0xb7, 0xc3, 0x4b, 0x99, 0x37, 0x94, 0x6d,
+	0x08, 0xbc, 0xaf, 0xb5, 0xa6, 0xd9, 0x5a, 0x0f, 0x4a, 0x40, 0x24, 0xa9, 0x07, 0xa5, 0x58, 0x65,
+	0x95, 0x5e, 0xc3, 0x64, 0x77, 0xba, 0x19, 0xba, 0x99, 0x59, 0x76, 0x37, 0xd6, 0xf5, 0x24, 0x7e,
+	0x82, 0xa2, 0x17, 0xf5, 0xd4, 0xa3, 0xe0, 0x45, 0x7a, 0xec, 0x27, 0xa8, 0xb7, 0x82, 0x17, 0x4f,
+	0x52, 0x5b, 0x0f, 0xe2, 0x49, 0x68, 0x0c, 0x1e, 0x65, 0x66, 0x37, 0x69, 0x88, 0x7a, 0x59, 0x9e,
+	0x79, 0xfe, 0xbf, 0x67, 0xe6, 0x99, 0x67, 0xfe, 0x0b, 0x21, 0x17, 0x36, 0xad, 0x7a, 0xbe, 0x08,
+	0x05, 0xca, 0x51, 0xdb, 0xa1, 0x2a, 0x2c, 0xce, 0x3b, 0x42, 0x38, 0x2e, 0x35, 0x88, 0xc7, 0x0c,
+	0xc2, 0xb9, 0x08, 0x49, 0xc8, 0x04, 0x0f, 0x62, 0xb0, 0x38, 0x6d, 0xb9, 0xa2, 0x6b, 0xbb, 0x34,
+	0x4c, 0xd6, 0xff, 0x38, 0xc2, 0x11, 0x2a, 0x34, 0x64, 0x94, 0x64, 0xaf, 0x39, 0x2c, 0x6c, 0x77,
+	0x5b, 0x55, 0x4b, 0x74, 0x8c, 0x8e, 0x68, 0x31, 0x57, 0x6e, 0xff, 0xc8, 0x90, 0xdf, 0x65, 0xb5,
+	0x81, 0xa1, 0x38, 0x87, 0xf2, 0x61, 0x10, 0x57, 0x96, 0xdf, 0x01, 0x38, 0xb5, 0x21, 0x6c, 0xba,
+	0x4e, 0x23, 0xf4, 0x1f, 0xd4, 0x38, 0xe9, 0x50, 0x0c, 0x4a, 0x60, 0x31, 0xd7, 0x98, 0x3d, 0xe8,
+	0x63, 0x4d, 0xb6, 0xfc, 0x6c, 0xff, 0xdf, 0x49, 0x2e, 0xac, 0x8e, 0x67, 0x2a, 0x19, 0x95, 0xa0,
+	0x16, 0x46, 0x1e, 0xc5, 0x9a, 0xc2, 0x0a, 0x07, 0x7d, 0x9c, 0x95, 0x98, 0xcc, 0x99, 0x4a, 0x41,
+	0x37, 0x60, 0x61, 0xd0, 0x76, 0x73, 0x9b, 0x46, 0x38, 0x5d, 0x02, 0x8b, 0xf9, 0xd5, 0xb9, 0xea,
+	0xf0, 0xd2, 0xd5, 0xb5, 0x44, 0x5e, 0xa7, 0x51, 0x43, 0x3b, 0xfc, 0xb8, 0x90, 0x32, 0xf3, 0xd6,
+	0x79, 0x0a, 0xfd, 0x0f, 0x33, 0x3e, 0x75, 0x98, 0xe0, 0x78, 0x52, 0x1d, 0x32, 0x7d, 0xd0, 0xc7,
+	0x6a, 0x7c, 0x71, 0xd6, 0x4c, 0xd4, 0x5a, 0xe1, 0xcb, 0x19, 0x06, 0x3f, 0xce, 0x30, 0x78, 0xbb,
+	0xb7, 0x00, 0xca, 0x6f, 0x34, 0xa8, 0xc9, 0xbb, 0xa0, 0x39, 0x98, 0xd9, 0x62, 0xd4, 0xb5, 0x03,
+	0x0c, 0x4a, 0xe9, 0xc5, 0x9c, 0x99, 0xac, 0xd0, 0x12, 0x4c, 0xcb, 0x76, 0x26, 0x54, 0x3b, 0x68,
+	0xa4, 0x9d, 0x64, 0x02, 0x49, 0x2b, 0x12, 0x42, 0x4b, 0x30, 0xc7, 0x45, 0xc8, 0xb6, 0xa2, 0x26,
+	0xb3, 0xd5, 0x05, 0xd2, 0x8d, 0xbf, 0x5e, 0xf7, 0x30, 0x38, 0x9f, 0x46, 0x36, 0xd6, 0x6f, 0xdb,
+	0x68, 0x05, 0x16, 0x5a, 0x5d, 0xe6, 0xda, 0xcd, 0x0e, 0x09, 0x42, 0xea, 0x27, 0x93, 0x19, 0xc3,
+	0xf3, 0x0a, 0xb9, 0xa3, 0x08, 0x54, 0x81, 0x30, 0xae, 0x68, 0x53, 0x62, 0x27, 0x97, 0x1c, 0xe3,
+	0x73, 0x0a, 0xb8, 0x45, 0xc9, 0xc8, 0xfe, 0xa4, 0x1b, 0xb6, 0x85, 0x8f, 0x33, 0x7f, 0xde, 0xbf,
+	0xae, 0x08, 0x74, 0x11, 0x66, 0xdb, 0x22, 0x08, 0xd5, 0x73, 0x4e, 0xfd, 0x8e, 0x1e, 0xca, 0xe8,
+	0x32, 0x9c, 0xb5, 0x04, 0x0f, 0x09, 0xe3, 0xd4, 0x6f, 0x3e, 0xa4, 0x7e, 0x20, 0xc7, 0x9e, 0x55,
+	0x35, 0x9a, 0xac, 0x31, 0xff, 0x1e, 0xca, 0x9b, 0xb1, 0x8a, 0x2e, 0xc0, 0x02, 0xe3, 0x21, 0xf5,
+	0x39, 0x71, 0x9b, 0xde, 0x36, 0xc3, 0xb9, 0x11, 0x3a, 0x3f, 0x50, 0xee, 0x6d, 0xb3, 0xda, 0x4b,
+	0x20, 0x1f, 0xe8, 0xdb, 0x19, 0x06, 0x4f, 0x7a, 0x18, 0xec, 0xf6, 0x30, 0xd8, 0xeb, 0x61, 0x70,
+	0xdc, 0xc3, 0xe0, 0xd5, 0x77, 0xdc, 0x95, 0xc7, 0x5f, 0x5f, 0xa7, 0x51, 0x75, 0x83, 0x74, 0x68,
+	0x45, 0x3a, 0x47, 0xad, 0x1e, 0x44, 0x1e, 0xad, 0x0c, 0xdc, 0xa0, 0x32, 0x23, 0x6e, 0x89, 0xd9,
+	0x81, 0xba, 0x2c, 0x7c, 0xe7, 0x17, 0xe2, 0xae, 0xef, 0x10, 0xce, 0x1e, 0xab, 0xdf, 0xa8, 0x12,
+	0x1b, 0x45, 0x31, 0xa6, 0x0a, 0xf7, 0x95, 0xab, 0x39, 0x2d, 0xd7, 0x61, 0x56, 0x3e, 0xfb, 0x4d,
+	0x12, 0x12, 0x74, 0x09, 0x4e, 0x4a, 0x77, 0xc5, 0x7e, 0xc9, 0xaf, 0xce, 0x8c, 0x59, 0x23, 0xf1,
+	0x45, 0xcc, 0xd4, 0xb2, 0x2f, 0xfa, 0x18, 0xec, 0xf5, 0x71, 0x6a, 0xd5, 0x8f, 0xff, 0x9d, 0xba,
+	0xc7, 0x90, 0x03, 0xb3, 0xf7, 0xdb, 0x62, 0x47, 0xd9, 0x6f, 0xbc, 0xbc, 0x38, 0x9e, 0x28, 0x5f,
+	0xfd, 0xda, 0xc3, 0x45, 0x93, 0x06, 0xa2, 0xeb, 0x5b, 0x74, 0x4d, 0xf0, 0x2d, 0xe6, 0x54, 0xea,
+	0x96, 0x6c, 0x78, 0x93, 0xd1, 0x9d, 0xca, 0x6e, 0x1f, 0x83, 0xa7, 0xef, 0x3f, 0x3f, 0x9f, 0x98,
+	0x29, 0x43, 0x23, 0x68, 0x8b, 0x1d, 0x43, 0x9e, 0x5c, 0x03, 0x4b, 0x2b, 0xa0, 0x31, 0x7f, 0xf8,
+	0x49, 0x4f, 0x1d, 0x9e, 0xe8, 0xe0, 0xe8, 0x44, 0x07, 0xc7, 0x27, 0x3a, 0xd8, 0x3d, 0xd5, 0x53,
+	0x47, 0xa7, 0x7a, 0xea, 0xc3, 0xa9, 0x9e, 0x6a, 0x65, 0xd4, 0x21, 0x57, 0x7e, 0x06, 0x00, 0x00,
+	0xff, 0xff, 0xe1, 0x40, 0x39, 0xe2, 0x6c, 0x04, 0x00, 0x00,
+}
+
 func (this *NodeKey) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, "&edgeproto.NodeKey{")
 	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
-	s = append(s, "NodeType: "+fmt.Sprintf("%#v", this.NodeType)+",\n")
+	s = append(s, "Type: "+fmt.Sprintf("%#v", this.Type)+",\n")
 	s = append(s, "CloudletKey: "+strings.Replace(this.CloudletKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "Region: "+fmt.Sprintf("%#v", this.Region)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -139,11 +261,10 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for NodeApi service
-
+// NodeApiClient is the client API for NodeApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type NodeApiClient interface {
-	// Show Nodes connected locally only
-	ShowNodeLocal(ctx context.Context, in *Node, opts ...grpc.CallOption) (NodeApi_ShowNodeLocalClient, error)
 	// Show all Nodes connected to all Controllers
 	ShowNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (NodeApi_ShowNodeClient, error)
 }
@@ -156,40 +277,8 @@ func NewNodeApiClient(cc *grpc.ClientConn) NodeApiClient {
 	return &nodeApiClient{cc}
 }
 
-func (c *nodeApiClient) ShowNodeLocal(ctx context.Context, in *Node, opts ...grpc.CallOption) (NodeApi_ShowNodeLocalClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NodeApi_serviceDesc.Streams[0], c.cc, "/edgeproto.NodeApi/ShowNodeLocal", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &nodeApiShowNodeLocalClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type NodeApi_ShowNodeLocalClient interface {
-	Recv() (*Node, error)
-	grpc.ClientStream
-}
-
-type nodeApiShowNodeLocalClient struct {
-	grpc.ClientStream
-}
-
-func (x *nodeApiShowNodeLocalClient) Recv() (*Node, error) {
-	m := new(Node)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func (c *nodeApiClient) ShowNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (NodeApi_ShowNodeClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NodeApi_serviceDesc.Streams[1], c.cc, "/edgeproto.NodeApi/ShowNode", opts...)
+	stream, err := c.cc.NewStream(ctx, &_NodeApi_serviceDesc.Streams[0], "/edgeproto.NodeApi/ShowNode", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -220,38 +309,22 @@ func (x *nodeApiShowNodeClient) Recv() (*Node, error) {
 	return m, nil
 }
 
-// Server API for NodeApi service
-
+// NodeApiServer is the server API for NodeApi service.
 type NodeApiServer interface {
-	// Show Nodes connected locally only
-	ShowNodeLocal(*Node, NodeApi_ShowNodeLocalServer) error
 	// Show all Nodes connected to all Controllers
 	ShowNode(*Node, NodeApi_ShowNodeServer) error
 }
 
+// UnimplementedNodeApiServer can be embedded to have forward compatible implementations.
+type UnimplementedNodeApiServer struct {
+}
+
+func (*UnimplementedNodeApiServer) ShowNode(req *Node, srv NodeApi_ShowNodeServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowNode not implemented")
+}
+
 func RegisterNodeApiServer(s *grpc.Server, srv NodeApiServer) {
 	s.RegisterService(&_NodeApi_serviceDesc, srv)
-}
-
-func _NodeApi_ShowNodeLocal_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Node)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(NodeApiServer).ShowNodeLocal(m, &nodeApiShowNodeLocalServer{stream})
-}
-
-type NodeApi_ShowNodeLocalServer interface {
-	Send(*Node) error
-	grpc.ServerStream
-}
-
-type nodeApiShowNodeLocalServer struct {
-	grpc.ServerStream
-}
-
-func (x *nodeApiShowNodeLocalServer) Send(m *Node) error {
-	return x.ServerStream.SendMsg(m)
 }
 
 func _NodeApi_ShowNode_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -281,11 +354,6 @@ var _NodeApi_serviceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "ShowNodeLocal",
-			Handler:       _NodeApi_ShowNodeLocal_Handler,
-			ServerStreams: true,
-		},
-		{
 			StreamName:    "ShowNode",
 			Handler:       _NodeApi_ShowNode_Handler,
 			ServerStreams: true,
@@ -297,7 +365,7 @@ var _NodeApi_serviceDesc = grpc.ServiceDesc{
 func (m *NodeKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -305,36 +373,53 @@ func (m *NodeKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *NodeKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *NodeKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintNode(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+	if len(m.Region) > 0 {
+		i -= len(m.Region)
+		copy(dAtA[i:], m.Region)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.Region)))
+		i--
+		dAtA[i] = 0x2a
 	}
-	if m.NodeType != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintNode(dAtA, i, uint64(m.NodeType))
+	if len(m.Type) > 0 {
+		i -= len(m.Type)
+		copy(dAtA[i:], m.Type)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.Type)))
+		i--
+		dAtA[i] = 0x22
 	}
+	{
+		size, err := m.CloudletKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintNode(dAtA, i, uint64(size))
+	}
+	i--
 	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintNode(dAtA, i, uint64(m.CloudletKey.Size()))
-	n1, err := m.CloudletKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i += n1
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *Node) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -342,79 +427,131 @@ func (m *Node) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Node) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Node) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
+	if len(m.InternalPki) > 0 {
+		i -= len(m.InternalPki)
+		copy(dAtA[i:], m.InternalPki)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.InternalPki)))
+		i--
+		dAtA[i] = 0x4a
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintNode(dAtA, i, uint64(m.Key.Size()))
-	n2, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	if m.NotifyId != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintNode(dAtA, i, uint64(m.NotifyId))
-	}
-	if len(m.BuildMaster) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintNode(dAtA, i, uint64(len(m.BuildMaster)))
-		i += copy(dAtA[i:], m.BuildMaster)
-	}
-	if len(m.BuildHead) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintNode(dAtA, i, uint64(len(m.BuildHead)))
-		i += copy(dAtA[i:], m.BuildHead)
-	}
-	if len(m.BuildAuthor) > 0 {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintNode(dAtA, i, uint64(len(m.BuildAuthor)))
-		i += copy(dAtA[i:], m.BuildAuthor)
+	if len(m.ContainerVersion) > 0 {
+		i -= len(m.ContainerVersion)
+		copy(dAtA[i:], m.ContainerVersion)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.ContainerVersion)))
+		i--
+		dAtA[i] = 0x42
 	}
 	if len(m.Hostname) > 0 {
-		dAtA[i] = 0x3a
-		i++
+		i -= len(m.Hostname)
+		copy(dAtA[i:], m.Hostname)
 		i = encodeVarintNode(dAtA, i, uint64(len(m.Hostname)))
-		i += copy(dAtA[i:], m.Hostname)
+		i--
+		dAtA[i] = 0x3a
 	}
-	if len(m.ImageVersion) > 0 {
-		dAtA[i] = 0x42
-		i++
-		i = encodeVarintNode(dAtA, i, uint64(len(m.ImageVersion)))
-		i += copy(dAtA[i:], m.ImageVersion)
+	if len(m.BuildAuthor) > 0 {
+		i -= len(m.BuildAuthor)
+		copy(dAtA[i:], m.BuildAuthor)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.BuildAuthor)))
+		i--
+		dAtA[i] = 0x32
 	}
-	return i, nil
+	if len(m.BuildHead) > 0 {
+		i -= len(m.BuildHead)
+		copy(dAtA[i:], m.BuildHead)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.BuildHead)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.BuildMaster) > 0 {
+		i -= len(m.BuildMaster)
+		copy(dAtA[i:], m.BuildMaster)
+		i = encodeVarintNode(dAtA, i, uint64(len(m.BuildMaster)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.NotifyId != 0 {
+		i = encodeVarintNode(dAtA, i, uint64(m.NotifyId))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintNode(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintNode(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *NodeData) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NodeData) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *NodeData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Nodes) > 0 {
+		for iNdEx := len(m.Nodes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Nodes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintNode(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintNode(dAtA []byte, offset int, v uint64) int {
+	offset -= sovNode(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *NodeKey) Matches(o *NodeKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -430,13 +567,18 @@ func (m *NodeKey) Matches(o *NodeKey, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
-	if !opts.Filter || o.NodeType != 0 {
-		if o.NodeType != m.NodeType {
+	if !m.CloudletKey.Matches(&o.CloudletKey, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.Type != "" {
+		if o.Type != m.Type {
 			return false
 		}
 	}
-	if !m.CloudletKey.Matches(&o.CloudletKey, fopts...) {
-		return false
+	if !opts.Filter || o.Region != "" {
+		if o.Region != m.Region {
+			return false
+		}
 	}
 	return true
 }
@@ -447,19 +589,30 @@ func (m *NodeKey) CopyInFields(src *NodeKey) int {
 		m.Name = src.Name
 		changed++
 	}
-	if m.NodeType != src.NodeType {
-		m.NodeType = src.NodeType
-		changed++
-	}
-	if m.CloudletKey.OperatorKey.Name != src.CloudletKey.OperatorKey.Name {
-		m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
+	if m.CloudletKey.Organization != src.CloudletKey.Organization {
+		m.CloudletKey.Organization = src.CloudletKey.Organization
 		changed++
 	}
 	if m.CloudletKey.Name != src.CloudletKey.Name {
 		m.CloudletKey.Name = src.CloudletKey.Name
 		changed++
 	}
+	if m.Type != src.Type {
+		m.Type = src.Type
+		changed++
+	}
+	if m.Region != src.Region {
+		m.Region = src.Region
+		changed++
+	}
 	return changed
+}
+
+func (m *NodeKey) DeepCopyIn(src *NodeKey) {
+	m.Name = src.Name
+	m.CloudletKey.DeepCopyIn(&src.CloudletKey)
+	m.Type = src.Type
+	m.Region = src.Region
 }
 
 func (m *NodeKey) GetKeyString() string {
@@ -485,11 +638,22 @@ func (m *NodeKey) ExistsError() error {
 	return fmt.Errorf("Node key %s already exists", m.GetKeyString())
 }
 
+var NodeKeyTagName = "node"
+var NodeKeyTagType = "nodetype"
+var NodeKeyTagRegion = "noderegion"
+
+func (m *NodeKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["node"] = m.Name
+	tags["cloudletorg"] = m.CloudletKey.Organization
+	tags["cloudlet"] = m.CloudletKey.Name
+	tags["nodetype"] = m.Type
+	tags["noderegion"] = m.Region
+	return tags
+}
+
 // Helper method to check that enums have valid values
 func (m *NodeKey) ValidateEnums() error {
-	if _, ok := NodeType_name[int32(m.NodeType)]; !ok {
-		return errors.New("invalid NodeType")
-	}
 	if err := m.CloudletKey.ValidateEnums(); err != nil {
 		return err
 	}
@@ -556,8 +720,15 @@ func (m *Node) Matches(o *Node, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.IgnoreBackend {
-		if !opts.Filter || o.ImageVersion != "" {
-			if o.ImageVersion != m.ImageVersion {
+		if !opts.Filter || o.ContainerVersion != "" {
+			if o.ContainerVersion != m.ContainerVersion {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.InternalPki != "" {
+			if o.InternalPki != m.InternalPki {
 				return false
 			}
 		}
@@ -567,59 +738,66 @@ func (m *Node) Matches(o *Node, fopts ...MatchOpt) bool {
 
 const NodeFieldKey = "2"
 const NodeFieldKeyName = "2.1"
-const NodeFieldKeyNodeType = "2.2"
 const NodeFieldKeyCloudletKey = "2.3"
-const NodeFieldKeyCloudletKeyOperatorKey = "2.3.1"
-const NodeFieldKeyCloudletKeyOperatorKeyName = "2.3.1.1"
+const NodeFieldKeyCloudletKeyOrganization = "2.3.1"
 const NodeFieldKeyCloudletKeyName = "2.3.2"
+const NodeFieldKeyType = "2.4"
+const NodeFieldKeyRegion = "2.5"
 const NodeFieldNotifyId = "3"
 const NodeFieldBuildMaster = "4"
 const NodeFieldBuildHead = "5"
 const NodeFieldBuildAuthor = "6"
 const NodeFieldHostname = "7"
-const NodeFieldImageVersion = "8"
+const NodeFieldContainerVersion = "8"
+const NodeFieldInternalPki = "9"
 
 var NodeAllFields = []string{
 	NodeFieldKeyName,
-	NodeFieldKeyNodeType,
-	NodeFieldKeyCloudletKeyOperatorKeyName,
+	NodeFieldKeyCloudletKeyOrganization,
 	NodeFieldKeyCloudletKeyName,
+	NodeFieldKeyType,
+	NodeFieldKeyRegion,
 	NodeFieldNotifyId,
 	NodeFieldBuildMaster,
 	NodeFieldBuildHead,
 	NodeFieldBuildAuthor,
 	NodeFieldHostname,
-	NodeFieldImageVersion,
+	NodeFieldContainerVersion,
+	NodeFieldInternalPki,
 }
 
 var NodeAllFieldsMap = map[string]struct{}{
-	NodeFieldKeyName:                       struct{}{},
-	NodeFieldKeyNodeType:                   struct{}{},
-	NodeFieldKeyCloudletKeyOperatorKeyName: struct{}{},
-	NodeFieldKeyCloudletKeyName:            struct{}{},
-	NodeFieldNotifyId:                      struct{}{},
-	NodeFieldBuildMaster:                   struct{}{},
-	NodeFieldBuildHead:                     struct{}{},
-	NodeFieldBuildAuthor:                   struct{}{},
-	NodeFieldHostname:                      struct{}{},
-	NodeFieldImageVersion:                  struct{}{},
+	NodeFieldKeyName:                    struct{}{},
+	NodeFieldKeyCloudletKeyOrganization: struct{}{},
+	NodeFieldKeyCloudletKeyName:         struct{}{},
+	NodeFieldKeyType:                    struct{}{},
+	NodeFieldKeyRegion:                  struct{}{},
+	NodeFieldNotifyId:                   struct{}{},
+	NodeFieldBuildMaster:                struct{}{},
+	NodeFieldBuildHead:                  struct{}{},
+	NodeFieldBuildAuthor:                struct{}{},
+	NodeFieldHostname:                   struct{}{},
+	NodeFieldContainerVersion:           struct{}{},
+	NodeFieldInternalPki:                struct{}{},
 }
 
 var NodeAllFieldsStringMap = map[string]string{
-	NodeFieldKeyName:                       "Key Name",
-	NodeFieldKeyNodeType:                   "Key Node Type",
-	NodeFieldKeyCloudletKeyOperatorKeyName: "Key Cloudlet Key Operator Key Name",
-	NodeFieldKeyCloudletKeyName:            "Key Cloudlet Key Name",
-	NodeFieldNotifyId:                      "Notify Id",
-	NodeFieldBuildMaster:                   "Build Master",
-	NodeFieldBuildHead:                     "Build Head",
-	NodeFieldBuildAuthor:                   "Build Author",
-	NodeFieldHostname:                      "Hostname",
-	NodeFieldImageVersion:                  "Image Version",
+	NodeFieldKeyName:                    "Key Name",
+	NodeFieldKeyCloudletKeyOrganization: "Key Cloudlet Key Organization",
+	NodeFieldKeyCloudletKeyName:         "Key Cloudlet Key Name",
+	NodeFieldKeyType:                    "Key Type",
+	NodeFieldKeyRegion:                  "Key Region",
+	NodeFieldNotifyId:                   "Notify Id",
+	NodeFieldBuildMaster:                "Build Master",
+	NodeFieldBuildHead:                  "Build Head",
+	NodeFieldBuildAuthor:                "Build Author",
+	NodeFieldHostname:                   "Hostname",
+	NodeFieldContainerVersion:           "Container Version",
+	NodeFieldInternalPki:                "Internal Pki",
 }
 
 func (m *Node) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, NodeFieldKey+".")
+	return strings.HasPrefix(s, NodeFieldKey+".") || s == NodeFieldKey
 }
 
 func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {
@@ -627,19 +805,22 @@ func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {
 		fields[NodeFieldKeyName] = struct{}{}
 		fields[NodeFieldKey] = struct{}{}
 	}
-	if m.Key.NodeType != o.Key.NodeType {
-		fields[NodeFieldKeyNodeType] = struct{}{}
-		fields[NodeFieldKey] = struct{}{}
-	}
-	if m.Key.CloudletKey.OperatorKey.Name != o.Key.CloudletKey.OperatorKey.Name {
-		fields[NodeFieldKeyCloudletKeyOperatorKeyName] = struct{}{}
-		fields[NodeFieldKeyCloudletKeyOperatorKey] = struct{}{}
+	if m.Key.CloudletKey.Organization != o.Key.CloudletKey.Organization {
+		fields[NodeFieldKeyCloudletKeyOrganization] = struct{}{}
 		fields[NodeFieldKeyCloudletKey] = struct{}{}
 		fields[NodeFieldKey] = struct{}{}
 	}
 	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
 		fields[NodeFieldKeyCloudletKeyName] = struct{}{}
 		fields[NodeFieldKeyCloudletKey] = struct{}{}
+		fields[NodeFieldKey] = struct{}{}
+	}
+	if m.Key.Type != o.Key.Type {
+		fields[NodeFieldKeyType] = struct{}{}
+		fields[NodeFieldKey] = struct{}{}
+	}
+	if m.Key.Region != o.Key.Region {
+		fields[NodeFieldKeyRegion] = struct{}{}
 		fields[NodeFieldKey] = struct{}{}
 	}
 	if m.NotifyId != o.NotifyId {
@@ -657,8 +838,11 @@ func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {
 	if m.Hostname != o.Hostname {
 		fields[NodeFieldHostname] = struct{}{}
 	}
-	if m.ImageVersion != o.ImageVersion {
-		fields[NodeFieldImageVersion] = struct{}{}
+	if m.ContainerVersion != o.ContainerVersion {
+		fields[NodeFieldContainerVersion] = struct{}{}
+	}
+	if m.InternalPki != o.InternalPki {
+		fields[NodeFieldInternalPki] = struct{}{}
 	}
 }
 
@@ -672,19 +856,11 @@ func (m *Node) CopyInFields(src *Node) int {
 				changed++
 			}
 		}
-		if _, set := fmap["2.2"]; set {
-			if m.Key.NodeType != src.Key.NodeType {
-				m.Key.NodeType = src.Key.NodeType
-				changed++
-			}
-		}
 		if _, set := fmap["2.3"]; set {
 			if _, set := fmap["2.3.1"]; set {
-				if _, set := fmap["2.3.1.1"]; set {
-					if m.Key.CloudletKey.OperatorKey.Name != src.Key.CloudletKey.OperatorKey.Name {
-						m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
-						changed++
-					}
+				if m.Key.CloudletKey.Organization != src.Key.CloudletKey.Organization {
+					m.Key.CloudletKey.Organization = src.Key.CloudletKey.Organization
+					changed++
 				}
 			}
 			if _, set := fmap["2.3.2"]; set {
@@ -692,6 +868,18 @@ func (m *Node) CopyInFields(src *Node) int {
 					m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
 					changed++
 				}
+			}
+		}
+		if _, set := fmap["2.4"]; set {
+			if m.Key.Type != src.Key.Type {
+				m.Key.Type = src.Key.Type
+				changed++
+			}
+		}
+		if _, set := fmap["2.5"]; set {
+			if m.Key.Region != src.Key.Region {
+				m.Key.Region = src.Key.Region
+				changed++
 			}
 		}
 	}
@@ -726,12 +914,29 @@ func (m *Node) CopyInFields(src *Node) int {
 		}
 	}
 	if _, set := fmap["8"]; set {
-		if m.ImageVersion != src.ImageVersion {
-			m.ImageVersion = src.ImageVersion
+		if m.ContainerVersion != src.ContainerVersion {
+			m.ContainerVersion = src.ContainerVersion
+			changed++
+		}
+	}
+	if _, set := fmap["9"]; set {
+		if m.InternalPki != src.InternalPki {
+			m.InternalPki = src.InternalPki
 			changed++
 		}
 	}
 	return changed
+}
+
+func (m *Node) DeepCopyIn(src *Node) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.NotifyId = src.NotifyId
+	m.BuildMaster = src.BuildMaster
+	m.BuildHead = src.BuildHead
+	m.BuildAuthor = src.BuildAuthor
+	m.Hostname = src.Hostname
+	m.ContainerVersion = src.ContainerVersion
+	m.InternalPki = src.InternalPki
 }
 
 func (s *Node) HasFields() bool {
@@ -886,15 +1091,24 @@ type NodeKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type NodeCacheData struct {
+	Obj    *Node
+	ModRev int64
+}
+
 // NodeCache caches Node objects in memory in a hash table
 // and keeps them in sync with the database.
 type NodeCache struct {
-	Objs        map[NodeKey]*Node
-	Mux         util.Mutex
-	List        map[NodeKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *NodeKey, old *Node)
-	UpdatedCb   func(ctx context.Context, old *Node, new *Node)
-	KeyWatchers map[NodeKey][]*NodeKeyWatcher
+	Objs          map[NodeKey]*NodeCacheData
+	Mux           util.Mutex
+	List          map[NodeKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *NodeKey, old *Node, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Node, new *Node)
+	DeletedCbs    []func(ctx context.Context, old *Node)
+	KeyWatchers   map[NodeKey][]*NodeKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *NodeKey)
+	DeletedKeyCbs []func(ctx context.Context, key *NodeKey)
 }
 
 func NewNodeCache() *NodeCache {
@@ -904,8 +1118,13 @@ func NewNodeCache() *NodeCache {
 }
 
 func InitNodeCache(cache *NodeCache) {
-	cache.Objs = make(map[NodeKey]*Node)
+	cache.Objs = make(map[NodeKey]*NodeCacheData)
 	cache.KeyWatchers = make(map[NodeKey][]*NodeKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *NodeCache) GetTypeString() string {
@@ -913,11 +1132,17 @@ func (c *NodeCache) GetTypeString() string {
 }
 
 func (c *NodeCache) Get(key *NodeKey, valbuf *Node) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *NodeCache) GetWithRev(key *NodeKey, valbuf *Node, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -929,64 +1154,87 @@ func (c *NodeCache) HasKey(key *NodeKey) bool {
 	return found
 }
 
-func (c *NodeCache) GetAllKeys(ctx context.Context, keys map[NodeKey]context.Context) {
+func (c *NodeCache) GetAllKeys(ctx context.Context, cb func(key *NodeKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *NodeCache) Update(ctx context.Context, in *Node, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Node) (*Node, bool) {
+func (c *NodeCache) Update(ctx context.Context, in *Node, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Node) (*Node, bool) {
 		return in, true
 	})
 }
 
-func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, rev int64, modFunc func(old *Node) (new *Node, changed bool)) {
+func (c *NodeCache) UpdateModFunc(ctx context.Context, key *NodeKey, modRev int64, modFunc func(old *Node) (new *Node, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Node
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Node{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &Node{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Node", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &Node{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &NodeCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *NodeCache) Delete(ctx context.Context, in *Node, rev int64) {
+func (c *NodeCache) Delete(ctx context.Context, in *Node, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Node
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Node", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
-	notify := make(map[NodeKey]*Node)
+	notify := make(map[NodeKey]*NodeCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -994,8 +1242,18 @@ func (c *NodeCache) Prune(ctx context.Context, validKeys map[NodeKey]struct{}) {
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1008,20 +1266,32 @@ func (c *NodeCache) GetCount() int {
 }
 
 func (c *NodeCache) Flush(ctx context.Context, notifyId int64) {
-	flushed := make(map[NodeKey]*Node)
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Node", "notifyId", notifyId, "FlushAll", c.FlushAll)
+	flushed := make(map[NodeKey]*NodeCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
-		if val.NotifyId != notifyId {
+		if !c.FlushAll && val.Obj.NotifyId != notifyId {
 			continue
 		}
 		flushed[key] = c.Objs[key]
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush Node delete", "key", key)
 		delete(c.Objs, key)
 	}
 	c.Mux.Unlock()
 	if len(flushed) > 0 {
 		for key, old := range flushed {
-			if c.NotifyCb != nil {
-				c.NotifyCb(ctx, &key, old)
+			for _, cb := range c.NotifyCbs {
+				if cb != nil {
+					cb(ctx, &key, old.Obj, old.ModRev)
+				}
+			}
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
 			}
 			c.TriggerKeyWatchers(ctx, &key)
 		}
@@ -1032,13 +1302,13 @@ func (c *NodeCache) Show(filter *Node, cb func(ret *Node) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Node", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Node", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Node", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Node", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Node", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1052,12 +1322,48 @@ func NodeGenericNotifyCb(fn func(key *NodeKey, old *Node)) func(objstore.ObjKey,
 	}
 }
 
-func (c *NodeCache) SetNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *Node)) {
-	c.NotifyCb = fn
+func (c *NodeCache) SetNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *Node, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *NodeKey, old *Node, modRev int64){fn}
 }
 
 func (c *NodeCache) SetUpdatedCb(fn func(ctx context.Context, old *Node, new *Node)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Node, new *Node){fn}
+}
+
+func (c *NodeCache) SetDeletedCb(fn func(ctx context.Context, old *Node)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Node){fn}
+}
+
+func (c *NodeCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *NodeKey){fn}
+}
+
+func (c *NodeCache) SetDeletedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *NodeKey){fn}
+}
+
+func (c *NodeCache) AddUpdatedCb(fn func(ctx context.Context, old *Node, new *Node)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *NodeCache) AddDeletedCb(fn func(ctx context.Context, old *Node)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *NodeCache) AddNotifyCb(fn func(ctx context.Context, obj *NodeKey, old *Node, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *NodeCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *NodeCache) AddDeletedKeyCb(fn func(ctx context.Context, key *NodeKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *NodeCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *NodeCache) WatchKey(key *NodeKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1104,14 +1410,21 @@ func (c *NodeCache) TriggerKeyWatchers(ctx context.Context, key *NodeKey) {
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Node{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Node data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1119,11 +1432,11 @@ func (c *NodeCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) 
 	c.Mux.Unlock()
 }
 
-func (c *NodeCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *NodeCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Node{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	NodeKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *NodeCache) SyncListStart(ctx context.Context) {
@@ -1131,7 +1444,7 @@ func (c *NodeCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *NodeCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[NodeKey]*Node)
+	deleted := make(map[NodeKey]*NodeCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1141,12 +1454,26 @@ func (c *NodeCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
+}
+
+func (c *NodeCache) UsesOrg(org string) bool {
+	return false
 }
 
 func (m *Node) GetObjKey() objstore.ObjKey {
@@ -1205,107 +1532,81 @@ func IgnoreNodeFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(Node{}, names...)
 }
 
-var NodeTypeStrings = []string{
-	"NODE_UNKNOWN",
-	"NODE_DME",
-	"NODE_CRM",
-	"NODE_CONTROLLER",
-}
-
-const (
-	NodeTypeNODE_UNKNOWN    uint64 = 1 << 0
-	NodeTypeNODE_DME        uint64 = 1 << 1
-	NodeTypeNODE_CRM        uint64 = 1 << 2
-	NodeTypeNODE_CONTROLLER uint64 = 1 << 3
-)
-
-var NodeType_CamelName = map[int32]string{
-	// NODE_UNKNOWN -> NodeUnknown
-	0: "NodeUnknown",
-	// NODE_DME -> NodeDme
-	1: "NodeDme",
-	// NODE_CRM -> NodeCrm
-	2: "NodeCrm",
-	// NODE_CONTROLLER -> NodeController
-	3: "NodeController",
-}
-var NodeType_CamelValue = map[string]int32{
-	"NodeUnknown":    0,
-	"NodeDme":        1,
-	"NodeCrm":        2,
-	"NodeController": 3,
-}
-
-func (e *NodeType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
+func (m *NodeData) DeepCopyIn(src *NodeData) {
+	if src.Nodes != nil {
+		m.Nodes = make([]Node, len(src.Nodes), len(src.Nodes))
+		for ii, s := range src.Nodes {
+			m.Nodes[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Nodes = nil
 	}
-	val, ok := NodeType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = NodeType_CamelName[val]
+}
+
+// Helper method to check that enums have valid values
+func (m *NodeData) ValidateEnums() error {
+	for _, e := range m.Nodes {
+		if err := e.ValidateEnums(); err != nil {
+			return err
 		}
 	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = NodeType(val)
 	return nil
 }
 
-func (e NodeType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(NodeType_CamelName, int32(e)), nil
+func IgnoreNodeDataFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Nodes.Key.Name")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Nodes.NotifyId")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Nodes.BuildMaster")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Nodes.BuildHead")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Nodes.BuildAuthor")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Nodes.Hostname")
+	}
+	return cmpopts.IgnoreFields(NodeData{}, names...)
 }
 
-// custom JSON encoding/decoding
-func (e *NodeType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
-		val, ok := NodeType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = NodeType_CamelName[val]
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
-		}
-		*e = NodeType(val)
-		return nil
-	}
-	var val int32
-	err = json.Unmarshal(b, &val)
-	if err == nil {
-		*e = NodeType(val)
-		return nil
-	}
-	return fmt.Errorf("No enum value for %v", b)
-}
 func (m *NodeKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
 	if l > 0 {
 		n += 1 + l + sovNode(uint64(l))
 	}
-	if m.NodeType != 0 {
-		n += 1 + sovNode(uint64(m.NodeType))
-	}
 	l = m.CloudletKey.Size()
 	n += 1 + l + sovNode(uint64(l))
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNode(uint64(l))
+	}
+	l = len(m.Region)
+	if l > 0 {
+		n += 1 + l + sovNode(uint64(l))
+	}
 	return n
 }
 
 func (m *Node) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1335,22 +1636,34 @@ func (m *Node) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovNode(uint64(l))
 	}
-	l = len(m.ImageVersion)
+	l = len(m.ContainerVersion)
+	if l > 0 {
+		n += 1 + l + sovNode(uint64(l))
+	}
+	l = len(m.InternalPki)
 	if l > 0 {
 		n += 1 + l + sovNode(uint64(l))
 	}
 	return n
 }
 
-func sovNode(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
+func (m *NodeData) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Nodes) > 0 {
+		for _, e := range m.Nodes {
+			l = e.Size()
+			n += 1 + l + sovNode(uint64(l))
 		}
 	}
 	return n
+}
+
+func sovNode(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozNode(x uint64) (n int) {
 	return sovNode(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1370,7 +1683,7 @@ func (m *NodeKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1398,7 +1711,7 @@ func (m *NodeKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1408,30 +1721,14 @@ func (m *NodeKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			m.Name = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NodeType", wireType)
-			}
-			m.NodeType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNode
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NodeType |= (NodeType(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CloudletKey", wireType)
@@ -1446,7 +1743,7 @@ func (m *NodeKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1455,12 +1752,79 @@ func (m *NodeKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.CloudletKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNode
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNode
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Region", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNode
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNode
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Region = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1469,6 +1833,9 @@ func (m *NodeKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthNode
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthNode
 			}
 			if (iNdEx + skippy) > l {
@@ -1498,7 +1865,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1526,7 +1893,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1536,6 +1903,9 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1555,7 +1925,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1564,6 +1934,9 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1585,7 +1958,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NotifyId |= (int64(b) & 0x7F) << shift
+				m.NotifyId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1604,7 +1977,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1614,6 +1987,9 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1633,7 +2009,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1643,6 +2019,9 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1662,7 +2041,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1672,6 +2051,9 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1691,7 +2073,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1701,6 +2083,9 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1708,7 +2093,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ImageVersion", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContainerVersion", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1720,7 +2105,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1730,10 +2115,45 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthNode
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ImageVersion = string(dAtA[iNdEx:postIndex])
+			m.ContainerVersion = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InternalPki", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNode
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNode
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InternalPki = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1742,6 +2162,96 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthNode
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthNode
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NodeData) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNode
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NodeData: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NodeData: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nodes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNode
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNode
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthNode
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Nodes = append(m.Nodes, Node{})
+			if err := m.Nodes[len(m.Nodes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNode(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNode
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthNode
 			}
 			if (iNdEx + skippy) > l {
@@ -1759,6 +2269,7 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 func skipNode(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1790,10 +2301,8 @@ func skipNode(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1810,98 +2319,34 @@ func skipNode(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthNode
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowNode
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipNode(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupNode
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthNode
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthNode = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowNode   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthNode        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowNode          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupNode = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("node.proto", fileDescriptorNode) }
-
-var fileDescriptorNode = []byte{
-	// 620 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0x3f, 0x4f, 0xdb, 0x4e,
-	0x18, 0xc7, 0xb9, 0x24, 0x80, 0x73, 0x18, 0x62, 0x1d, 0x08, 0xdd, 0x2f, 0xfa, 0x35, 0x44, 0x99,
-	0x42, 0x44, 0x63, 0x04, 0x4b, 0xc5, 0x52, 0x11, 0x40, 0x6a, 0x05, 0x71, 0x24, 0x97, 0xd2, 0xd1,
-	0x72, 0xec, 0xc3, 0x3e, 0xd5, 0xf6, 0x59, 0xb1, 0x53, 0xea, 0xad, 0xea, 0x2b, 0xa8, 0xda, 0x37,
-	0xc0, 0xd8, 0x6e, 0x55, 0xdf, 0x40, 0x57, 0xc6, 0x4a, 0xdd, 0x2b, 0x8a, 0x3a, 0x54, 0x9d, 0x2a,
-	0xe1, 0x81, 0xb1, 0xba, 0xb3, 0x93, 0xa0, 0x88, 0x4a, 0x5d, 0xa2, 0xe7, 0xcf, 0xe7, 0xf9, 0x7e,
-	0xef, 0xf1, 0x5d, 0x20, 0x0c, 0x98, 0x4d, 0xda, 0xe1, 0x80, 0xc5, 0x0c, 0x95, 0x89, 0xed, 0x10,
-	0x11, 0x56, 0xff, 0x77, 0x18, 0x73, 0x3c, 0xa2, 0x9a, 0x21, 0x55, 0xcd, 0x20, 0x60, 0xb1, 0x19,
-	0x53, 0x16, 0x44, 0x19, 0x58, 0x5d, 0xb2, 0x3c, 0x36, 0xb4, 0x3d, 0x12, 0xe7, 0xf9, 0x8a, 0xc3,
-	0x1c, 0x26, 0x42, 0x95, 0x47, 0x79, 0xf5, 0x81, 0x43, 0x63, 0x77, 0xd8, 0x6f, 0x5b, 0xcc, 0x57,
-	0x7d, 0xd6, 0xa7, 0x1e, 0x97, 0x7f, 0xa9, 0xf2, 0xdf, 0xfb, 0x42, 0x40, 0x15, 0x9c, 0x43, 0x82,
-	0x71, 0x90, 0x4d, 0x36, 0x3e, 0x00, 0x38, 0xaf, 0x31, 0x9b, 0x1c, 0x92, 0x04, 0xdd, 0x83, 0xa5,
-	0xc0, 0xf4, 0x09, 0x06, 0x75, 0xd0, 0x2c, 0x77, 0xca, 0x6f, 0x3f, 0xfd, 0x37, 0x1b, 0x30, 0xcb,
-	0x0f, 0x75, 0x51, 0x46, 0x9b, 0xb0, 0xcc, 0x37, 0x30, 0xe2, 0x24, 0x24, 0xb8, 0x50, 0x07, 0xcd,
-	0xa5, 0xad, 0xe5, 0xf6, 0x78, 0x8f, 0x36, 0x57, 0x39, 0x4e, 0x42, 0xa2, 0x4b, 0x41, 0x1e, 0xa1,
-	0x87, 0x50, 0x1e, 0x1d, 0xdf, 0x78, 0x4e, 0x12, 0x5c, 0xac, 0x83, 0xe6, 0xc2, 0xd6, 0xea, 0xad,
-	0xa1, 0xbd, 0xbc, 0x7d, 0x48, 0x92, 0x4e, 0xe9, 0xe2, 0xdb, 0xda, 0x8c, 0xbe, 0x60, 0x4d, 0x4a,
-	0x3b, 0xf2, 0xcf, 0x6b, 0x0c, 0x6e, 0xae, 0x31, 0xf8, 0x78, 0xbe, 0x06, 0x1a, 0x37, 0x05, 0x58,
-	0xe2, 0x2e, 0x68, 0x15, 0xce, 0x9d, 0x52, 0xe2, 0xd9, 0x11, 0x06, 0xf5, 0x62, 0xb3, 0xac, 0xe7,
-	0x19, 0x6a, 0xc1, 0x22, 0xb7, 0x29, 0x08, 0x1b, 0x34, 0x75, 0xb6, 0x89, 0x05, 0x87, 0x50, 0x8b,
-	0x6f, 0x13, 0xd3, 0xd3, 0xc4, 0xa0, 0xb6, 0x38, 0x58, 0xb1, 0xb3, 0xf8, 0x3e, 0xc5, 0x60, 0xb2,
-	0xb5, 0x94, 0xf5, 0x1f, 0xdb, 0x68, 0x13, 0xca, 0xfd, 0x21, 0xf5, 0x6c, 0xc3, 0x37, 0xa3, 0x98,
-	0x0c, 0x70, 0x49, 0x7c, 0xa0, 0x29, 0x7c, 0x41, 0x20, 0x5d, 0x41, 0xa0, 0x0d, 0x08, 0xb3, 0x09,
-	0x97, 0x98, 0x36, 0x9e, 0xbd, 0x8b, 0x2f, 0x0b, 0xe0, 0x11, 0x31, 0x6f, 0xe9, 0x9b, 0xc3, 0xd8,
-	0x65, 0x03, 0x3c, 0xf7, 0x77, 0xfd, 0x5d, 0x41, 0xa0, 0x75, 0x28, 0xb9, 0x2c, 0x8a, 0xc5, 0x75,
-	0xcd, 0xdf, 0x45, 0x8f, 0xdb, 0x68, 0x1d, 0x2e, 0x52, 0xdf, 0x74, 0x88, 0xf1, 0x82, 0x0c, 0x22,
-	0xca, 0x02, 0x2c, 0x09, 0xbe, 0xc4, 0x79, 0x5d, 0x16, 0xad, 0x93, 0xac, 0xb3, 0x83, 0xf9, 0xe7,
-	0xfe, 0x7d, 0x8d, 0xc1, 0xab, 0x14, 0x83, 0x37, 0x29, 0x06, 0xe7, 0x29, 0x06, 0x97, 0x29, 0x06,
-	0xad, 0x2e, 0x94, 0x46, 0xf7, 0x8b, 0x14, 0x28, 0x6b, 0xbd, 0xfd, 0x03, 0xe3, 0xa9, 0x76, 0xa8,
-	0xf5, 0x9e, 0x69, 0xca, 0x0c, 0x92, 0xa1, 0x24, 0x2a, 0xfb, 0xdd, 0x03, 0x05, 0x8c, 0xb3, 0x3d,
-	0xbd, 0xab, 0x14, 0xd0, 0x32, 0xac, 0x64, 0x59, 0x4f, 0x3b, 0xd6, 0x7b, 0x47, 0x47, 0x07, 0xba,
-	0x52, 0xdc, 0xfa, 0x9c, 0xbf, 0xba, 0xdd, 0x90, 0xa2, 0x1e, 0x5c, 0x7c, 0xe2, 0xb2, 0x33, 0x9e,
-	0x1e, 0x31, 0xcb, 0xf4, 0x50, 0x65, 0xea, 0xe2, 0xaa, 0xd3, 0x85, 0x46, 0xf5, 0xf5, 0xd7, 0x1f,
-	0xef, 0x0a, 0x2b, 0x8d, 0x8a, 0x1a, 0xb9, 0xec, 0x4c, 0xe5, 0xef, 0xcd, 0xe3, 0xa3, 0x3b, 0xa0,
-	0xb5, 0x09, 0x90, 0x05, 0xa5, 0x91, 0xe0, 0x3f, 0x68, 0x6d, 0xff, 0x4a, 0x71, 0x55, 0x27, 0x11,
-	0x1b, 0x0e, 0x2c, 0xb2, 0xc7, 0x82, 0x53, 0xea, 0x6c, 0xec, 0x5a, 0xfc, 0x2f, 0x78, 0x42, 0xc9,
-	0xd9, 0x86, 0x70, 0xaa, 0x34, 0xe0, 0xc4, 0x49, 0x98, 0x74, 0x94, 0x8b, 0xef, 0xb5, 0x99, 0x8b,
-	0xab, 0x1a, 0xf8, 0x72, 0x55, 0x03, 0x97, 0x57, 0x35, 0xd0, 0x9f, 0x13, 0xa2, 0xdb, 0x7f, 0x02,
-	0x00, 0x00, 0xff, 0xff, 0xa9, 0x01, 0xa3, 0xad, 0xe7, 0x03, 0x00, 0x00,
-}

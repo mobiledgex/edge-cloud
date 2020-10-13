@@ -1,5 +1,7 @@
 registerclientrequest:
-  devname: Samsung
+  orgname: Samsung
   appname: SamsungEnablingLayer
   appvers: "1.0"
+  uniqueidtype: "Samsung"
+  uniqueid: "123"
 

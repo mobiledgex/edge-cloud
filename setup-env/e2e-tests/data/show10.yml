@@ -1,5 +1,6 @@
 settings:
   shepherdmetricscollectioninterval: 5s
+  shepherdalertevaluationinterval: 15s
   shepherdhealthcheckretries: 3
   shepherdhealthcheckinterval: 5s
   autodeployintervalsec: 300
@@ -12,6 +13,10 @@ settings:
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
   loadbalancermaxportrange: 50
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  cloudletmaintenancetimeout: 5m
+  updatevmpooltimeout: 20m0s
 flavors:
 - key:
     name: x1.tiny
@@ -30,10 +35,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-8
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -46,10 +50,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: gcp
+      organization: gcp
       name: gcp-cloud-10
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -62,10 +65,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-4
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -78,10 +80,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-5
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -94,10 +95,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -110,10 +110,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -126,10 +125,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -142,10 +140,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-7
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -158,10 +155,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: azure
+      organization: azure
       name: azure-cloud-9
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -174,10 +170,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-4
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -190,10 +185,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-5
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -206,10 +200,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-6
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -222,10 +215,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-6
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -238,10 +230,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-7
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -254,10 +245,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -270,10 +260,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-3
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -286,10 +275,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-3
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -302,10 +290,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-8
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -318,10 +305,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
-      operatorkey:
-        name: azure
+      organization: azure
       name: azure-cloud-9
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -334,10 +320,9 @@ clusterinsts:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
-      operatorkey:
-        name: gcp
+      organization: gcp
       name: gcp-cloud-10
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -347,32 +332,13 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
 
-operators:
-- key:
-    name: tmus
-- key:
-    name: azure
-- key:
-    name: gcp
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: AcmeAppCo-user
-  passhash: "123456789012345670"
-  address: 1234 AcmeAppCo street
-  email: AcmeAppCo@gmail.com
-- key:
-    name: Samsung
-  username: Samsung-user
-  passhash: "123456789012345670"
-  address: 1234 Samsung street
-  email: samsung@gmail.com
+operatorcodes:
+  - code: wifi
+    organization: tmus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-2
   accessuri: tmus-cloud.2
   location:
@@ -384,10 +350,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-2
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-5
   accessuri: tmus-cloud.5
   location:
@@ -399,10 +364,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-5
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-6
   accessuri: tmus-cloud.6
   location:
@@ -414,10 +378,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-6
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: azure
+    organization: azure
     name: azure-cloud-9
   accessuri: azure-cloud.9
   location:
@@ -429,10 +392,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: azure-cloud-9
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: gcp
+    organization: gcp
     name: gcp-cloud-10
   accessuri: gcp-cloud.10
   location:
@@ -444,10 +406,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: gcp-cloud-10
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-1
   accessuri: tmus-cloud.1
   location:
@@ -459,10 +420,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-1
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-3
   accessuri: tmus-cloud.3
   location:
@@ -474,10 +434,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-3
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-4
   accessuri: tmus-cloud.4
   location:
@@ -489,10 +448,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-4
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-7
   accessuri: tmus-cloud.7
   location:
@@ -504,10 +462,9 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-7
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-8
   accessuri: tmus-cloud.8
   location:
@@ -519,12 +476,203 @@ cloudlets:
   flavor:
     name: x1.tiny
   physicalname: tmus-cloud-8
-  version: 2019-10-24
+  containerversion: 2019-10-24
+
+cloudletinfos:
+- key:
+    organization: gcp
+    name: gcp-cloud-10
+  state: CloudletStateReady
+  notifyid: 49
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-2
+  state: CloudletStateReady
+  notifyid: 41
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-3
+  state: CloudletStateReady
+  notifyid: 42
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-4
+  state: CloudletStateReady
+  notifyid: 43
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-5
+  state: CloudletStateReady
+  notifyid: 44
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-6
+  state: CloudletStateReady
+  notifyid: 45
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-7
+  state: CloudletStateReady
+  notifyid: 46
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: azure
+    name: azure-cloud-9
+  state: CloudletStateReady
+  notifyid: 48
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-1
+  state: CloudletStateReady
+  notifyid: 40
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-8
+  state: CloudletStateReady
+  notifyid: 47
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
 
 apps:
 - key:
-    developerkey:
-      name: Samsung
+    organization: Samsung
     name: SamsungEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
@@ -535,13 +683,12 @@ apps:
   deployment: kubernetes
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
   imagetype: ImageTypeDocker
-  accessports: tcp:80,http:443,udp:10002
+  accessports: tcp:80,tcp:443,udp:10002
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
@@ -559,13 +706,12 @@ apps:
   androidpackagename: com.acmeappco.someapplication1
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication2
     version: "1.0"
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication2:1.0
   imagetype: ImageTypeDocker
-  accessports: tcp:80,http:443,udp:10002
+  accessports: tcp:80,tcp:443,udp:10002
   officialfqdn: someapplication2.acmeappco.com
   defaultflavor:
     name: x1.small
@@ -586,18 +732,16 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-4
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 4
@@ -607,30 +751,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-4
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 4
@@ -640,30 +785,31 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-7
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 7
@@ -673,30 +819,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 1
@@ -706,30 +853,31 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 2
@@ -739,30 +887,31 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-3
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 3
@@ -772,30 +921,31 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-6
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 6
@@ -805,30 +955,31 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-8
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 8
@@ -838,30 +989,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-3
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 3
@@ -871,30 +1023,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-5
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 5
@@ -904,30 +1057,31 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-6
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 6
@@ -937,30 +1091,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: azure
+        organization: azure
         name: azure-cloud-9
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 9
@@ -980,20 +1135,21 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: gcp
+        organization: gcp
         name: gcp-cloud-10
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 10
@@ -1013,20 +1169,21 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: gcp
+        organization: gcp
         name: gcp-cloud-10
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 10
@@ -1046,20 +1203,21 @@ appinstances:
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 1
@@ -1069,30 +1227,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 2
@@ -1102,30 +1261,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: azure
+        organization: azure
         name: azure-cloud-9
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 9
@@ -1145,20 +1305,21 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication1
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-5
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 5
@@ -1168,30 +1329,31 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-7
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 7
@@ -1201,30 +1363,31 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: autoclustersomeapplication2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-8
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 8
@@ -1234,14 +1397,72 @@ appinstances:
     internalport: 80
     publicport: 10000
     fqdnprefix: someapplication2-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication210/p443
+    publicport: 10001
+    fqdnprefix: someapplication2-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
     fqdnprefix: someapplication2-udp.
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
 
+appinstrefs:
+- key:
+    organization: Samsung
+    name: SamsungEnablingLayer
+    version: "1.0"
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-3"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-4"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-5"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-6"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-7"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-8"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: someapplication2
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-3"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-4"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-5"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-6"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-7"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-8"},"organization":"AcmeAppCo"}}'
+    : 1

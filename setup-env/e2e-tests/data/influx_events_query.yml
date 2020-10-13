@@ -1,2 +1,2 @@
 database: events
-cmd: select * from appinst,clusterinst,cloudlet where dev != 'MobiledgeX'
+cmd: select * from appinst,clusterinst,cloudlet where apporg != 'MobiledgeX'

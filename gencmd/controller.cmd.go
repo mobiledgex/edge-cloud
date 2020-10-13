@@ -3,19 +3,21 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/gogo/protobuf/gogoproto"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -59,6 +61,9 @@ var ShowControllerCmd = &cli.Command{
 }
 
 func runShowController(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Controller)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -81,6 +86,7 @@ func ShowController(c *cli.Command, in *edgeproto.Controller) error {
 		}
 		return fmt.Errorf("ShowController failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Controller, 0)
 	for {
 		obj, err := stream.Recv()
@@ -144,10 +150,13 @@ var ControllerOptionalArgs = []string{
 }
 var ControllerAliasArgs = []string{}
 var ControllerComments = map[string]string{
+	"fields":      "Fields are used for the Update API to specify which fields to apply",
 	"key.addr":    "external API address",
 	"buildmaster": "Build Master Version",
 	"buildhead":   "Build Head Version",
 	"buildauthor": "Build Author",
 	"hostname":    "Hostname",
 }
-var ControllerSpecialArgs = map[string]string{}
+var ControllerSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}

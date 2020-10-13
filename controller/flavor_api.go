@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"errors"
-	"strings"
-
+	"fmt"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"strings"
 )
 
 type FlavorApi struct {
@@ -30,12 +30,23 @@ func (s *FlavorApi) HasFlavor(key *edgeproto.FlavorKey) bool {
 
 func (s *FlavorApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
 
+	if err := in.Validate(edgeproto.FlavorAllFieldsMap); err != nil {
+		return &edgeproto.Result{}, err
+	}
+
 	if in.OptResMap != nil {
 		if ok, err := resTagTableApi.ValidateOptResMapValues(in.OptResMap); !ok {
 			return &edgeproto.Result{}, err
 		}
 	}
-	return s.store.Create(ctx, in, s.sync.syncWait)
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, nil) {
+			return in.Key.ExistsError()
+		}
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
 func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
@@ -58,6 +69,23 @@ func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 	if appInstApi.UsesFlavor(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Flavor in use by AppInst")
 	}
+	// if settings.MasterNodeFlavor == in.Key.Name it must remain
+	// until first removed from settings.MasterNodeFlavor
+	settings := edgeproto.Settings{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !settingsApi.store.STMGet(stm, &edgeproto.SettingsKeySingular, &settings) {
+			// should never happen (initDefaults)
+			return edgeproto.SettingsKeySingular.NotFoundError()
+		}
+		if settings.MasterNodeFlavor == in.Key.Name {
+			return fmt.Errorf("Flavor in use by Settings MasterNodeFlavor, change Settings.MasterNodeFlavor first")
+		}
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
 	res, err := s.store.Delete(ctx, in, s.sync.syncWait)
 	// clean up auto-apps using flavor
 	appApi.AutoDeleteApps(ctx, &in.Key)

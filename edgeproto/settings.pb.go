@@ -3,38 +3,47 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import binary "encoding/binary"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import strings "strings"
-
-import io "io"
+import (
+	context "context"
+	encoding_binary "encoding/binary"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
 // Global settings
 type Settings struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Shepherd metrics collection interval for k8s and docker appInstances (duration)
 	ShepherdMetricsCollectionInterval Duration `protobuf:"varint,2,opt,name=shepherd_metrics_collection_interval,json=shepherdMetricsCollectionInterval,proto3,casttype=Duration" json:"shepherd_metrics_collection_interval,omitempty"`
+	// Shepherd alert evaluation interval for k8s and docker appInstances (duration)
+	ShepherdAlertEvaluationInterval Duration `protobuf:"varint,20,opt,name=shepherd_alert_evaluation_interval,json=shepherdAlertEvaluationInterval,proto3,casttype=Duration" json:"shepherd_alert_evaluation_interval,omitempty"`
 	// Number of times Shepherd Health Check fails before we mark appInst down
 	ShepherdHealthCheckRetries int32 `protobuf:"varint,3,opt,name=shepherd_health_check_retries,json=shepherdHealthCheckRetries,proto3" json:"shepherd_health_check_retries,omitempty"`
 	// Health Checking probing frequency (duration)
@@ -57,17 +66,121 @@ type Settings struct {
 	UpdateClusterInstTimeout Duration `protobuf:"varint,12,opt,name=update_cluster_inst_timeout,json=updateClusterInstTimeout,proto3,casttype=Duration" json:"update_cluster_inst_timeout,omitempty"`
 	// Delete ClusterInst timeout (duration)
 	DeleteClusterInstTimeout Duration `protobuf:"varint,13,opt,name=delete_cluster_inst_timeout,json=deleteClusterInstTimeout,proto3,casttype=Duration" json:"delete_cluster_inst_timeout,omitempty"`
+	// Default flavor for k8s master VM and > 0  workers
+	MasterNodeFlavor string `protobuf:"bytes,14,opt,name=master_node_flavor,json=masterNodeFlavor,proto3" json:"master_node_flavor,omitempty"`
 	// Max IP Port range when using a load balancer
-	LoadBalancerMaxPortRange int32 `protobuf:"varint,14,opt,name=load_balancer_max_port_range,json=loadBalancerMaxPortRange,proto3" json:"load_balancer_max_port_range,omitempty"`
+	LoadBalancerMaxPortRange int32 `protobuf:"varint,15,opt,name=load_balancer_max_port_range,json=loadBalancerMaxPortRange,proto3" json:"load_balancer_max_port_range,omitempty"`
+	// Max DME clients to be tracked at the same time.
+	MaxTrackedDmeClients int32 `protobuf:"varint,16,opt,name=max_tracked_dme_clients,json=maxTrackedDmeClients,proto3" json:"max_tracked_dme_clients,omitempty"`
+	// Default chef client interval (duration)
+	ChefClientInterval Duration `protobuf:"varint,17,opt,name=chef_client_interval,json=chefClientInterval,proto3,casttype=Duration" json:"chef_client_interval,omitempty"`
+	// Default influxDB metrics retention policy (duration)
+	InfluxDbMetricsRetention Duration `protobuf:"varint,18,opt,name=influx_db_metrics_retention,json=influxDbMetricsRetention,proto3,casttype=Duration" json:"influx_db_metrics_retention,omitempty"`
+	// Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)
+	CloudletMaintenanceTimeout Duration `protobuf:"varint,19,opt,name=cloudlet_maintenance_timeout,json=cloudletMaintenanceTimeout,proto3,casttype=Duration" json:"cloudlet_maintenance_timeout,omitempty"`
+	// Update VM pool timeout (duration)
+	UpdateVmPoolTimeout Duration `protobuf:"varint,21,opt,name=update_vm_pool_timeout,json=updateVmPoolTimeout,proto3,casttype=Duration" json:"update_vm_pool_timeout,omitempty"`
 }
 
-func (m *Settings) Reset()                    { *m = Settings{} }
-func (m *Settings) String() string            { return proto.CompactTextString(m) }
-func (*Settings) ProtoMessage()               {}
-func (*Settings) Descriptor() ([]byte, []int) { return fileDescriptorSettings, []int{0} }
+func (m *Settings) Reset()         { *m = Settings{} }
+func (m *Settings) String() string { return proto.CompactTextString(m) }
+func (*Settings) ProtoMessage()    {}
+func (*Settings) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6c7cab62fa432213, []int{0}
+}
+func (m *Settings) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Settings) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Settings.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Settings) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Settings.Merge(m, src)
+}
+func (m *Settings) XXX_Size() int {
+	return m.Size()
+}
+func (m *Settings) XXX_DiscardUnknown() {
+	xxx_messageInfo_Settings.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Settings proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*Settings)(nil), "edgeproto.Settings")
+}
+
+func init() { proto.RegisterFile("settings.proto", fileDescriptor_6c7cab62fa432213) }
+
+var fileDescriptor_6c7cab62fa432213 = []byte{
+	// 921 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x95, 0x4f, 0x6f, 0xdc, 0xc4,
+	0x1b, 0xc7, 0xe3, 0xa4, 0xcd, 0x2f, 0x99, 0xfc, 0x69, 0xea, 0x6c, 0xd2, 0xf9, 0x6d, 0xc2, 0x76,
+	0x59, 0x71, 0x58, 0x41, 0x88, 0x25, 0x2a, 0x54, 0x08, 0x52, 0xa5, 0xcd, 0x06, 0x44, 0x15, 0x6d,
+	0x29, 0x4e, 0xa9, 0xc4, 0x01, 0x59, 0xb3, 0xf6, 0xb3, 0x5e, 0xab, 0xe3, 0x19, 0x33, 0x1e, 0x27,
+	0xdb, 0x1b, 0xe2, 0x15, 0x54, 0xe2, 0x9d, 0xf0, 0x16, 0xb8, 0xf4, 0x58, 0x89, 0x0b, 0x27, 0x04,
+	0x09, 0x07, 0x54, 0x71, 0x40, 0x34, 0x45, 0x88, 0x13, 0x9a, 0x19, 0xdb, 0xf9, 0xc3, 0x08, 0xc1,
+	0x25, 0x9a, 0xcc, 0xf3, 0xfd, 0x7c, 0x9e, 0x67, 0x76, 0xd7, 0x63, 0xb4, 0x9c, 0x83, 0x94, 0x09,
+	0x8b, 0xf3, 0xed, 0x4c, 0x70, 0xc9, 0xdd, 0x79, 0x88, 0x62, 0xd0, 0xcb, 0xe6, 0xa2, 0x80, 0xbc,
+	0xa0, 0xd2, 0x14, 0x9a, 0x9b, 0x31, 0xe7, 0x31, 0x05, 0x8f, 0x64, 0x89, 0x47, 0x18, 0xe3, 0x92,
+	0xc8, 0x84, 0xb3, 0x12, 0x6b, 0xbe, 0x13, 0x27, 0x72, 0x5c, 0x0c, 0xb7, 0x43, 0x9e, 0x7a, 0x29,
+	0x1f, 0x26, 0x54, 0x69, 0x26, 0x9e, 0xfa, 0xfb, 0x66, 0x48, 0x79, 0x11, 0x79, 0x3a, 0x17, 0x03,
+	0xab, 0x17, 0x25, 0xd9, 0x88, 0x79, 0xcc, 0xf5, 0xd2, 0x53, 0x2b, 0xb3, 0xdb, 0xf9, 0x66, 0x01,
+	0xcd, 0x1d, 0x94, 0x93, 0xb9, 0xeb, 0x68, 0x76, 0x94, 0x00, 0x8d, 0x72, 0xec, 0xb4, 0x67, 0xba,
+	0xf3, 0x7e, 0xf9, 0x9f, 0xfb, 0x19, 0x7a, 0x2d, 0x1f, 0x43, 0x36, 0x06, 0x11, 0x05, 0x29, 0x48,
+	0x91, 0x84, 0x79, 0x10, 0x72, 0x4a, 0x21, 0x54, 0xa3, 0x05, 0x09, 0x93, 0x20, 0x0e, 0x09, 0xc5,
+	0xd3, 0x6d, 0xa7, 0x3b, 0xb3, 0xbb, 0xf8, 0xe7, 0xf7, 0x37, 0xe7, 0xf6, 0x0a, 0xa1, 0xe7, 0xf6,
+	0x5f, 0xad, 0xc8, 0x81, 0x01, 0xfb, 0x35, 0x77, 0xb7, 0xc4, 0xdc, 0x4f, 0x51, 0xa7, 0xd6, 0x13,
+	0x0a, 0x42, 0x06, 0x70, 0x48, 0x68, 0x41, 0x2e, 0xca, 0x1b, 0x16, 0xf9, 0xcd, 0x8a, 0xeb, 0x29,
+	0xec, 0xfd, 0x9a, 0xaa, 0xd5, 0x3d, 0xf4, 0x4a, 0xad, 0x1e, 0x03, 0xa1, 0x72, 0x1c, 0x84, 0x63,
+	0x08, 0x1f, 0x05, 0x42, 0x4d, 0x03, 0x39, 0x9e, 0x69, 0x3b, 0xdd, 0xab, 0x7e, 0xb3, 0x0a, 0x7d,
+	0xa8, 0x33, 0x7d, 0x15, 0xf1, 0x4d, 0xc2, 0xfd, 0x18, 0xb5, 0xec, 0x8a, 0x7a, 0xb2, 0x2b, 0x96,
+	0xc9, 0x36, 0x2c, 0xc6, 0x7a, 0xaa, 0xdb, 0x08, 0x93, 0x42, 0xf2, 0x20, 0x82, 0x8c, 0xf2, 0xc7,
+	0xb5, 0x28, 0xc8, 0x21, 0xc4, 0x57, 0xdb, 0x4e, 0xd7, 0xf1, 0xd7, 0x54, 0x7d, 0x4f, 0x97, 0x2b,
+	0xea, 0x00, 0x42, 0xf7, 0x16, 0x5a, 0x3f, 0x0f, 0xf2, 0xd1, 0x28, 0x07, 0xa9, 0xb1, 0x59, 0x8d,
+	0xad, 0x9e, 0x61, 0x1f, 0xe9, 0x9a, 0x82, 0xde, 0x45, 0xff, 0x3f, 0x0f, 0xa5, 0x64, 0x52, 0x77,
+	0xcc, 0xf1, 0xff, 0xda, 0x4e, 0x77, 0xc9, 0x5f, 0x3f, 0xe3, 0x06, 0x64, 0x52, 0x75, 0xcc, 0xdd,
+	0x3e, 0xba, 0x11, 0x0a, 0x20, 0x12, 0x02, 0x92, 0x65, 0x41, 0xc2, 0x72, 0x19, 0xc8, 0x24, 0x05,
+	0x5e, 0x48, 0x3c, 0x67, 0x39, 0x74, 0xc3, 0x84, 0x7b, 0x59, 0x76, 0x97, 0xe5, 0xf2, 0x81, 0x49,
+	0x2a, 0x49, 0x91, 0x45, 0x56, 0xc9, 0xbc, 0x4d, 0x62, 0xc2, 0x7f, 0x97, 0x44, 0x40, 0xc1, 0x26,
+	0x41, 0x36, 0x89, 0x09, 0x5f, 0x92, 0xec, 0xa3, 0x8d, 0xf2, 0x38, 0x21, 0x2d, 0x72, 0x09, 0xe2,
+	0xa2, 0x68, 0xc1, 0x22, 0xc2, 0x06, 0xe8, 0x9b, 0xfc, 0x25, 0x59, 0x79, 0x2c, 0xab, 0x6c, 0xd1,
+	0x26, 0x33, 0x80, 0x5d, 0x56, 0x1e, 0xcf, 0x2a, 0x5b, 0xb2, 0xc9, 0x0c, 0x60, 0x91, 0x6d, 0x21,
+	0x37, 0x25, 0x5a, 0xc2, 0x78, 0x04, 0xc1, 0x88, 0x92, 0x43, 0x2e, 0xf0, 0x72, 0xdb, 0xe9, 0xce,
+	0xfb, 0x2b, 0xa6, 0x72, 0x8f, 0x47, 0xf0, 0x81, 0xde, 0x77, 0xef, 0xa0, 0x4d, 0xca, 0x49, 0x14,
+	0x0c, 0x09, 0x25, 0x2c, 0x04, 0xa1, 0x7f, 0x20, 0x19, 0x17, 0x32, 0x10, 0x84, 0xc5, 0x80, 0xaf,
+	0xe9, 0x27, 0x04, 0xab, 0xcc, 0x6e, 0x19, 0x19, 0x90, 0xc9, 0x7d, 0x2e, 0xa4, 0xaf, 0xea, 0xee,
+	0xdb, 0xe8, 0x86, 0x22, 0xa4, 0x20, 0xe1, 0x23, 0x88, 0x82, 0x28, 0x55, 0x67, 0x48, 0x80, 0xc9,
+	0x1c, 0xaf, 0x68, 0xb4, 0x91, 0x92, 0xc9, 0x03, 0x53, 0xdd, 0x4b, 0xa1, 0x6f, 0x6a, 0xee, 0x1d,
+	0xd4, 0x08, 0xc7, 0x30, 0x2a, 0xb3, 0x67, 0x0f, 0xd3, 0x75, 0xc5, 0x5c, 0x3a, 0xaa, 0xab, 0x92,
+	0x06, 0xac, 0x9f, 0xa1, 0x7d, 0xb4, 0x91, 0xb0, 0x11, 0x2d, 0x26, 0x41, 0x34, 0xac, 0x2f, 0x25,
+	0x01, 0x12, 0x98, 0x42, 0xb0, 0x6b, 0xfb, 0xc4, 0x0c, 0xb0, 0x37, 0x2c, 0xaf, 0x22, 0xbf, 0x4a,
+	0xbb, 0xf7, 0xd0, 0xa6, 0xbe, 0x3c, 0x29, 0xc8, 0x20, 0x25, 0x6a, 0x16, 0xa6, 0x0e, 0x5a, 0x7f,
+	0xfe, 0xab, 0x96, 0xa1, 0x9a, 0x15, 0x31, 0x38, 0x03, 0xaa, 0x6f, 0xa0, 0x87, 0xd6, 0xcb, 0xdf,
+	0xc6, 0x61, 0x1a, 0x64, 0x9c, 0xd3, 0xda, 0xb4, 0x66, 0x99, 0x6b, 0xd5, 0x64, 0x1f, 0xa6, 0xf7,
+	0x39, 0xa7, 0xa5, 0x62, 0xe7, 0x8d, 0x9f, 0x5f, 0x60, 0xe7, 0xd7, 0x17, 0xd8, 0xf9, 0xe2, 0x14,
+	0x3b, 0x4f, 0x4e, 0xb1, 0xf3, 0xdb, 0x4b, 0xbc, 0x50, 0xdd, 0xd4, 0xfb, 0xf0, 0xf8, 0x8f, 0x97,
+	0xd8, 0xf9, 0xfa, 0x77, 0x7c, 0x85, 0x71, 0x06, 0x6f, 0xfd, 0x32, 0x8d, 0xea, 0x5a, 0x2f, 0x4b,
+	0xdc, 0x02, 0x2d, 0x7f, 0xa2, 0x9d, 0xf5, 0xd5, 0xbe, 0xba, 0x5d, 0xbf, 0x6f, 0xb6, 0xab, 0xcd,
+	0xe6, 0xf5, 0x73, 0x9b, 0xbe, 0x7e, 0x07, 0x75, 0xde, 0x7b, 0x7e, 0x8a, 0x37, 0x7d, 0xc8, 0x79,
+	0x21, 0x42, 0xe8, 0x73, 0x36, 0x4a, 0xe2, 0xad, 0x9e, 0xbe, 0xae, 0x07, 0x84, 0x91, 0x18, 0xb6,
+	0xbe, 0xfc, 0xf6, 0xa7, 0xaf, 0xa6, 0xd7, 0x3a, 0x2b, 0x9e, 0x19, 0xda, 0xab, 0x5e, 0x6b, 0x3b,
+	0xce, 0xeb, 0x6e, 0x8e, 0x96, 0x7c, 0xd0, 0xb7, 0xce, 0x7f, 0xec, 0xba, 0xf3, 0xaf, 0xba, 0x36,
+	0x3a, 0xd7, 0x3c, 0xa1, 0xfc, 0x17, 0x9a, 0x7e, 0x8e, 0x16, 0x0f, 0xc6, 0xfc, 0xe8, 0x9f, 0x7b,
+	0xda, 0x36, 0x3b, 0xb7, 0x9f, 0x9f, 0xe2, 0xa6, 0xb5, 0xeb, 0xc3, 0x04, 0x8e, 0x4c, 0xcf, 0xd5,
+	0xce, 0xb2, 0x97, 0x8f, 0xf9, 0xd1, 0xf9, 0x96, 0xbb, 0x9b, 0x4f, 0x7f, 0x6c, 0x4d, 0x3d, 0x3d,
+	0x6e, 0x39, 0xcf, 0x8e, 0x5b, 0xce, 0x0f, 0xc7, 0x2d, 0xe7, 0xc9, 0x49, 0x6b, 0xea, 0xd9, 0x49,
+	0x6b, 0xea, 0xbb, 0x93, 0xd6, 0xd4, 0x70, 0x56, 0xb7, 0xb9, 0xf5, 0x57, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x5c, 0xf9, 0x6b, 0x0f, 0xf2, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -78,8 +191,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for SettingsApi service
-
+// SettingsApiClient is the client API for SettingsApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SettingsApiClient interface {
 	// Update settings
 	UpdateSettings(ctx context.Context, in *Settings, opts ...grpc.CallOption) (*Result, error)
@@ -99,7 +213,7 @@ func NewSettingsApiClient(cc *grpc.ClientConn) SettingsApiClient {
 
 func (c *settingsApiClient) UpdateSettings(ctx context.Context, in *Settings, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.SettingsApi/UpdateSettings", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.SettingsApi/UpdateSettings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +222,7 @@ func (c *settingsApiClient) UpdateSettings(ctx context.Context, in *Settings, op
 
 func (c *settingsApiClient) ResetSettings(ctx context.Context, in *Settings, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.SettingsApi/ResetSettings", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.SettingsApi/ResetSettings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -117,15 +231,14 @@ func (c *settingsApiClient) ResetSettings(ctx context.Context, in *Settings, opt
 
 func (c *settingsApiClient) ShowSettings(ctx context.Context, in *Settings, opts ...grpc.CallOption) (*Settings, error) {
 	out := new(Settings)
-	err := grpc.Invoke(ctx, "/edgeproto.SettingsApi/ShowSettings", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.SettingsApi/ShowSettings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for SettingsApi service
-
+// SettingsApiServer is the server API for SettingsApi service.
 type SettingsApiServer interface {
 	// Update settings
 	UpdateSettings(context.Context, *Settings) (*Result, error)
@@ -133,6 +246,20 @@ type SettingsApiServer interface {
 	ResetSettings(context.Context, *Settings) (*Result, error)
 	// Show settings
 	ShowSettings(context.Context, *Settings) (*Settings, error)
+}
+
+// UnimplementedSettingsApiServer can be embedded to have forward compatible implementations.
+type UnimplementedSettingsApiServer struct {
+}
+
+func (*UnimplementedSettingsApiServer) UpdateSettings(ctx context.Context, req *Settings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSettings not implemented")
+}
+func (*UnimplementedSettingsApiServer) ResetSettings(ctx context.Context, req *Settings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetSettings not implemented")
+}
+func (*UnimplementedSettingsApiServer) ShowSettings(ctx context.Context, req *Settings) (*Settings, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowSettings not implemented")
 }
 
 func RegisterSettingsApiServer(s *grpc.Server, srv SettingsApiServer) {
@@ -217,7 +344,7 @@ var _SettingsApi_serviceDesc = grpc.ServiceDesc{
 func (m *Settings) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -225,103 +352,153 @@ func (m *Settings) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Settings) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Settings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
+	if m.UpdateVmPoolTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.UpdateVmPoolTimeout))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xa8
 	}
-	if m.ShepherdMetricsCollectionInterval != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.ShepherdMetricsCollectionInterval))
+	if m.ShepherdAlertEvaluationInterval != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.ShepherdAlertEvaluationInterval))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xa0
 	}
-	if m.ShepherdHealthCheckRetries != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.ShepherdHealthCheckRetries))
+	if m.CloudletMaintenanceTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.CloudletMaintenanceTimeout))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x98
 	}
-	if m.ShepherdHealthCheckInterval != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.ShepherdHealthCheckInterval))
+	if m.InfluxDbMetricsRetention != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.InfluxDbMetricsRetention))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x90
 	}
-	if m.AutoDeployIntervalSec != 0 {
-		dAtA[i] = 0x29
-		i++
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.AutoDeployIntervalSec))))
-		i += 8
+	if m.ChefClientInterval != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.ChefClientInterval))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x88
 	}
-	if m.AutoDeployOffsetSec != 0 {
-		dAtA[i] = 0x31
-		i++
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.AutoDeployOffsetSec))))
-		i += 8
-	}
-	if m.AutoDeployMaxIntervals != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.AutoDeployMaxIntervals))
-	}
-	if m.CreateAppInstTimeout != 0 {
-		dAtA[i] = 0x40
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.CreateAppInstTimeout))
-	}
-	if m.UpdateAppInstTimeout != 0 {
-		dAtA[i] = 0x48
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.UpdateAppInstTimeout))
-	}
-	if m.DeleteAppInstTimeout != 0 {
-		dAtA[i] = 0x50
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.DeleteAppInstTimeout))
-	}
-	if m.CreateClusterInstTimeout != 0 {
-		dAtA[i] = 0x58
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.CreateClusterInstTimeout))
-	}
-	if m.UpdateClusterInstTimeout != 0 {
-		dAtA[i] = 0x60
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.UpdateClusterInstTimeout))
-	}
-	if m.DeleteClusterInstTimeout != 0 {
-		dAtA[i] = 0x68
-		i++
-		i = encodeVarintSettings(dAtA, i, uint64(m.DeleteClusterInstTimeout))
+	if m.MaxTrackedDmeClients != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.MaxTrackedDmeClients))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x80
 	}
 	if m.LoadBalancerMaxPortRange != 0 {
-		dAtA[i] = 0x70
-		i++
 		i = encodeVarintSettings(dAtA, i, uint64(m.LoadBalancerMaxPortRange))
+		i--
+		dAtA[i] = 0x78
 	}
-	return i, nil
+	if len(m.MasterNodeFlavor) > 0 {
+		i -= len(m.MasterNodeFlavor)
+		copy(dAtA[i:], m.MasterNodeFlavor)
+		i = encodeVarintSettings(dAtA, i, uint64(len(m.MasterNodeFlavor)))
+		i--
+		dAtA[i] = 0x72
+	}
+	if m.DeleteClusterInstTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.DeleteClusterInstTimeout))
+		i--
+		dAtA[i] = 0x68
+	}
+	if m.UpdateClusterInstTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.UpdateClusterInstTimeout))
+		i--
+		dAtA[i] = 0x60
+	}
+	if m.CreateClusterInstTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.CreateClusterInstTimeout))
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.DeleteAppInstTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.DeleteAppInstTimeout))
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.UpdateAppInstTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.UpdateAppInstTimeout))
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.CreateAppInstTimeout != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.CreateAppInstTimeout))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.AutoDeployMaxIntervals != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.AutoDeployMaxIntervals))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.AutoDeployOffsetSec != 0 {
+		i -= 8
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.AutoDeployOffsetSec))))
+		i--
+		dAtA[i] = 0x31
+	}
+	if m.AutoDeployIntervalSec != 0 {
+		i -= 8
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.AutoDeployIntervalSec))))
+		i--
+		dAtA[i] = 0x29
+	}
+	if m.ShepherdHealthCheckInterval != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.ShepherdHealthCheckInterval))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.ShepherdHealthCheckRetries != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.ShepherdHealthCheckRetries))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.ShepherdMetricsCollectionInterval != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.ShepherdMetricsCollectionInterval))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintSettings(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintSettings(dAtA []byte, offset int, v uint64) int {
+	offset -= sovSettings(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *Settings) Matches(o *Settings, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -392,8 +569,43 @@ func (m *Settings) Matches(o *Settings, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
+	if !opts.Filter || o.MasterNodeFlavor != "" {
+		if o.MasterNodeFlavor != m.MasterNodeFlavor {
+			return false
+		}
+	}
 	if !opts.Filter || o.LoadBalancerMaxPortRange != 0 {
 		if o.LoadBalancerMaxPortRange != m.LoadBalancerMaxPortRange {
+			return false
+		}
+	}
+	if !opts.Filter || o.MaxTrackedDmeClients != 0 {
+		if o.MaxTrackedDmeClients != m.MaxTrackedDmeClients {
+			return false
+		}
+	}
+	if !opts.Filter || o.ChefClientInterval != 0 {
+		if o.ChefClientInterval != m.ChefClientInterval {
+			return false
+		}
+	}
+	if !opts.Filter || o.InfluxDbMetricsRetention != 0 {
+		if o.InfluxDbMetricsRetention != m.InfluxDbMetricsRetention {
+			return false
+		}
+	}
+	if !opts.Filter || o.CloudletMaintenanceTimeout != 0 {
+		if o.CloudletMaintenanceTimeout != m.CloudletMaintenanceTimeout {
+			return false
+		}
+	}
+	if !opts.Filter || o.ShepherdAlertEvaluationInterval != 0 {
+		if o.ShepherdAlertEvaluationInterval != m.ShepherdAlertEvaluationInterval {
+			return false
+		}
+	}
+	if !opts.Filter || o.UpdateVmPoolTimeout != 0 {
+		if o.UpdateVmPoolTimeout != m.UpdateVmPoolTimeout {
 			return false
 		}
 	}
@@ -412,7 +624,14 @@ const SettingsFieldDeleteAppInstTimeout = "10"
 const SettingsFieldCreateClusterInstTimeout = "11"
 const SettingsFieldUpdateClusterInstTimeout = "12"
 const SettingsFieldDeleteClusterInstTimeout = "13"
-const SettingsFieldLoadBalancerMaxPortRange = "14"
+const SettingsFieldMasterNodeFlavor = "14"
+const SettingsFieldLoadBalancerMaxPortRange = "15"
+const SettingsFieldMaxTrackedDmeClients = "16"
+const SettingsFieldChefClientInterval = "17"
+const SettingsFieldInfluxDbMetricsRetention = "18"
+const SettingsFieldCloudletMaintenanceTimeout = "19"
+const SettingsFieldShepherdAlertEvaluationInterval = "20"
+const SettingsFieldUpdateVmPoolTimeout = "21"
 
 var SettingsAllFields = []string{
 	SettingsFieldShepherdMetricsCollectionInterval,
@@ -427,7 +646,14 @@ var SettingsAllFields = []string{
 	SettingsFieldCreateClusterInstTimeout,
 	SettingsFieldUpdateClusterInstTimeout,
 	SettingsFieldDeleteClusterInstTimeout,
+	SettingsFieldMasterNodeFlavor,
 	SettingsFieldLoadBalancerMaxPortRange,
+	SettingsFieldMaxTrackedDmeClients,
+	SettingsFieldChefClientInterval,
+	SettingsFieldInfluxDbMetricsRetention,
+	SettingsFieldCloudletMaintenanceTimeout,
+	SettingsFieldShepherdAlertEvaluationInterval,
+	SettingsFieldUpdateVmPoolTimeout,
 }
 
 var SettingsAllFieldsMap = map[string]struct{}{
@@ -443,7 +669,14 @@ var SettingsAllFieldsMap = map[string]struct{}{
 	SettingsFieldCreateClusterInstTimeout:          struct{}{},
 	SettingsFieldUpdateClusterInstTimeout:          struct{}{},
 	SettingsFieldDeleteClusterInstTimeout:          struct{}{},
+	SettingsFieldMasterNodeFlavor:                  struct{}{},
 	SettingsFieldLoadBalancerMaxPortRange:          struct{}{},
+	SettingsFieldMaxTrackedDmeClients:              struct{}{},
+	SettingsFieldChefClientInterval:                struct{}{},
+	SettingsFieldInfluxDbMetricsRetention:          struct{}{},
+	SettingsFieldCloudletMaintenanceTimeout:        struct{}{},
+	SettingsFieldShepherdAlertEvaluationInterval:   struct{}{},
+	SettingsFieldUpdateVmPoolTimeout:               struct{}{},
 }
 
 var SettingsAllFieldsStringMap = map[string]string{
@@ -459,11 +692,18 @@ var SettingsAllFieldsStringMap = map[string]string{
 	SettingsFieldCreateClusterInstTimeout:          "Create Cluster Inst Timeout",
 	SettingsFieldUpdateClusterInstTimeout:          "Update Cluster Inst Timeout",
 	SettingsFieldDeleteClusterInstTimeout:          "Delete Cluster Inst Timeout",
+	SettingsFieldMasterNodeFlavor:                  "Master Node Flavor",
 	SettingsFieldLoadBalancerMaxPortRange:          "Load Balancer Max Port Range",
+	SettingsFieldMaxTrackedDmeClients:              "Max Tracked Dme Clients",
+	SettingsFieldChefClientInterval:                "Chef Client Interval",
+	SettingsFieldInfluxDbMetricsRetention:          "Influx Db Metrics Retention",
+	SettingsFieldCloudletMaintenanceTimeout:        "Cloudlet Maintenance Timeout",
+	SettingsFieldShepherdAlertEvaluationInterval:   "Shepherd Alert Evaluation Interval",
+	SettingsFieldUpdateVmPoolTimeout:               "Update Vm Pool Timeout",
 }
 
 func (m *Settings) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, SettingsFieldShepherdMetricsCollectionInterval+".")
+	return strings.HasPrefix(s, SettingsFieldShepherdMetricsCollectionInterval+".") || s == SettingsFieldShepherdMetricsCollectionInterval
 }
 
 func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
@@ -503,9 +743,76 @@ func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
 	if m.DeleteClusterInstTimeout != o.DeleteClusterInstTimeout {
 		fields[SettingsFieldDeleteClusterInstTimeout] = struct{}{}
 	}
+	if m.MasterNodeFlavor != o.MasterNodeFlavor {
+		fields[SettingsFieldMasterNodeFlavor] = struct{}{}
+	}
 	if m.LoadBalancerMaxPortRange != o.LoadBalancerMaxPortRange {
 		fields[SettingsFieldLoadBalancerMaxPortRange] = struct{}{}
 	}
+	if m.MaxTrackedDmeClients != o.MaxTrackedDmeClients {
+		fields[SettingsFieldMaxTrackedDmeClients] = struct{}{}
+	}
+	if m.ChefClientInterval != o.ChefClientInterval {
+		fields[SettingsFieldChefClientInterval] = struct{}{}
+	}
+	if m.InfluxDbMetricsRetention != o.InfluxDbMetricsRetention {
+		fields[SettingsFieldInfluxDbMetricsRetention] = struct{}{}
+	}
+	if m.CloudletMaintenanceTimeout != o.CloudletMaintenanceTimeout {
+		fields[SettingsFieldCloudletMaintenanceTimeout] = struct{}{}
+	}
+	if m.ShepherdAlertEvaluationInterval != o.ShepherdAlertEvaluationInterval {
+		fields[SettingsFieldShepherdAlertEvaluationInterval] = struct{}{}
+	}
+	if m.UpdateVmPoolTimeout != o.UpdateVmPoolTimeout {
+		fields[SettingsFieldUpdateVmPoolTimeout] = struct{}{}
+	}
+}
+
+var UpdateSettingsFieldsMap = map[string]struct{}{
+	SettingsFieldShepherdMetricsCollectionInterval: struct{}{},
+	SettingsFieldShepherdHealthCheckRetries:        struct{}{},
+	SettingsFieldShepherdHealthCheckInterval:       struct{}{},
+	SettingsFieldAutoDeployIntervalSec:             struct{}{},
+	SettingsFieldAutoDeployOffsetSec:               struct{}{},
+	SettingsFieldAutoDeployMaxIntervals:            struct{}{},
+	SettingsFieldCreateAppInstTimeout:              struct{}{},
+	SettingsFieldUpdateAppInstTimeout:              struct{}{},
+	SettingsFieldDeleteAppInstTimeout:              struct{}{},
+	SettingsFieldCreateClusterInstTimeout:          struct{}{},
+	SettingsFieldUpdateClusterInstTimeout:          struct{}{},
+	SettingsFieldDeleteClusterInstTimeout:          struct{}{},
+	SettingsFieldMasterNodeFlavor:                  struct{}{},
+	SettingsFieldLoadBalancerMaxPortRange:          struct{}{},
+	SettingsFieldMaxTrackedDmeClients:              struct{}{},
+	SettingsFieldChefClientInterval:                struct{}{},
+	SettingsFieldInfluxDbMetricsRetention:          struct{}{},
+	SettingsFieldCloudletMaintenanceTimeout:        struct{}{},
+	SettingsFieldShepherdAlertEvaluationInterval:   struct{}{},
+	SettingsFieldUpdateVmPoolTimeout:               struct{}{},
+}
+
+func (m *Settings) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateSettingsFieldsMap[field]; !ok {
+			if _, ok := SettingsAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, SettingsAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *Settings) CopyInFields(src *Settings) int {
@@ -584,12 +891,77 @@ func (m *Settings) CopyInFields(src *Settings) int {
 		}
 	}
 	if _, set := fmap["14"]; set {
+		if m.MasterNodeFlavor != src.MasterNodeFlavor {
+			m.MasterNodeFlavor = src.MasterNodeFlavor
+			changed++
+		}
+	}
+	if _, set := fmap["15"]; set {
 		if m.LoadBalancerMaxPortRange != src.LoadBalancerMaxPortRange {
 			m.LoadBalancerMaxPortRange = src.LoadBalancerMaxPortRange
 			changed++
 		}
 	}
+	if _, set := fmap["16"]; set {
+		if m.MaxTrackedDmeClients != src.MaxTrackedDmeClients {
+			m.MaxTrackedDmeClients = src.MaxTrackedDmeClients
+			changed++
+		}
+	}
+	if _, set := fmap["17"]; set {
+		if m.ChefClientInterval != src.ChefClientInterval {
+			m.ChefClientInterval = src.ChefClientInterval
+			changed++
+		}
+	}
+	if _, set := fmap["18"]; set {
+		if m.InfluxDbMetricsRetention != src.InfluxDbMetricsRetention {
+			m.InfluxDbMetricsRetention = src.InfluxDbMetricsRetention
+			changed++
+		}
+	}
+	if _, set := fmap["19"]; set {
+		if m.CloudletMaintenanceTimeout != src.CloudletMaintenanceTimeout {
+			m.CloudletMaintenanceTimeout = src.CloudletMaintenanceTimeout
+			changed++
+		}
+	}
+	if _, set := fmap["20"]; set {
+		if m.ShepherdAlertEvaluationInterval != src.ShepherdAlertEvaluationInterval {
+			m.ShepherdAlertEvaluationInterval = src.ShepherdAlertEvaluationInterval
+			changed++
+		}
+	}
+	if _, set := fmap["21"]; set {
+		if m.UpdateVmPoolTimeout != src.UpdateVmPoolTimeout {
+			m.UpdateVmPoolTimeout = src.UpdateVmPoolTimeout
+			changed++
+		}
+	}
 	return changed
+}
+
+func (m *Settings) DeepCopyIn(src *Settings) {
+	m.ShepherdMetricsCollectionInterval = src.ShepherdMetricsCollectionInterval
+	m.ShepherdHealthCheckRetries = src.ShepherdHealthCheckRetries
+	m.ShepherdHealthCheckInterval = src.ShepherdHealthCheckInterval
+	m.AutoDeployIntervalSec = src.AutoDeployIntervalSec
+	m.AutoDeployOffsetSec = src.AutoDeployOffsetSec
+	m.AutoDeployMaxIntervals = src.AutoDeployMaxIntervals
+	m.CreateAppInstTimeout = src.CreateAppInstTimeout
+	m.UpdateAppInstTimeout = src.UpdateAppInstTimeout
+	m.DeleteAppInstTimeout = src.DeleteAppInstTimeout
+	m.CreateClusterInstTimeout = src.CreateClusterInstTimeout
+	m.UpdateClusterInstTimeout = src.UpdateClusterInstTimeout
+	m.DeleteClusterInstTimeout = src.DeleteClusterInstTimeout
+	m.MasterNodeFlavor = src.MasterNodeFlavor
+	m.LoadBalancerMaxPortRange = src.LoadBalancerMaxPortRange
+	m.MaxTrackedDmeClients = src.MaxTrackedDmeClients
+	m.ChefClientInterval = src.ChefClientInterval
+	m.InfluxDbMetricsRetention = src.InfluxDbMetricsRetention
+	m.CloudletMaintenanceTimeout = src.CloudletMaintenanceTimeout
+	m.ShepherdAlertEvaluationInterval = src.ShepherdAlertEvaluationInterval
+	m.UpdateVmPoolTimeout = src.UpdateVmPoolTimeout
 }
 
 func (s *Settings) HasFields() bool {
@@ -744,15 +1116,24 @@ type SettingsKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type SettingsCacheData struct {
+	Obj    *Settings
+	ModRev int64
+}
+
 // SettingsCache caches Settings objects in memory in a hash table
 // and keeps them in sync with the database.
 type SettingsCache struct {
-	Objs        map[SettingsKey]*Settings
-	Mux         util.Mutex
-	List        map[SettingsKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *SettingsKey, old *Settings)
-	UpdatedCb   func(ctx context.Context, old *Settings, new *Settings)
-	KeyWatchers map[SettingsKey][]*SettingsKeyWatcher
+	Objs          map[SettingsKey]*SettingsCacheData
+	Mux           util.Mutex
+	List          map[SettingsKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Settings, new *Settings)
+	DeletedCbs    []func(ctx context.Context, old *Settings)
+	KeyWatchers   map[SettingsKey][]*SettingsKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *SettingsKey)
+	DeletedKeyCbs []func(ctx context.Context, key *SettingsKey)
 }
 
 func NewSettingsCache() *SettingsCache {
@@ -762,8 +1143,13 @@ func NewSettingsCache() *SettingsCache {
 }
 
 func InitSettingsCache(cache *SettingsCache) {
-	cache.Objs = make(map[SettingsKey]*Settings)
+	cache.Objs = make(map[SettingsKey]*SettingsCacheData)
 	cache.KeyWatchers = make(map[SettingsKey][]*SettingsKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *SettingsCache) GetTypeString() string {
@@ -771,11 +1157,17 @@ func (c *SettingsCache) GetTypeString() string {
 }
 
 func (c *SettingsCache) Get(key *SettingsKey, valbuf *Settings) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *SettingsCache) GetWithRev(key *SettingsKey, valbuf *Settings, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -787,64 +1179,87 @@ func (c *SettingsCache) HasKey(key *SettingsKey) bool {
 	return found
 }
 
-func (c *SettingsCache) GetAllKeys(ctx context.Context, keys map[SettingsKey]context.Context) {
+func (c *SettingsCache) GetAllKeys(ctx context.Context, cb func(key *SettingsKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *SettingsCache) Update(ctx context.Context, in *Settings, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Settings) (*Settings, bool) {
+func (c *SettingsCache) Update(ctx context.Context, in *Settings, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Settings) (*Settings, bool) {
 		return in, true
 	})
 }
 
-func (c *SettingsCache) UpdateModFunc(ctx context.Context, key *SettingsKey, rev int64, modFunc func(old *Settings) (new *Settings, changed bool)) {
+func (c *SettingsCache) UpdateModFunc(ctx context.Context, key *SettingsKey, modRev int64, modFunc func(old *Settings) (new *Settings, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Settings
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Settings{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &Settings{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Settings", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &Settings{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &SettingsCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *SettingsCache) Delete(ctx context.Context, in *Settings, rev int64) {
+func (c *SettingsCache) Delete(ctx context.Context, in *Settings, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Settings
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Settings", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *SettingsCache) Prune(ctx context.Context, validKeys map[SettingsKey]struct{}) {
-	notify := make(map[SettingsKey]*Settings)
+	notify := make(map[SettingsKey]*SettingsCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -852,8 +1267,18 @@ func (c *SettingsCache) Prune(ctx context.Context, validKeys map[SettingsKey]str
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -872,13 +1297,13 @@ func (c *SettingsCache) Show(filter *Settings, cb func(ret *Settings) error) err
 	log.DebugLog(log.DebugLevelApi, "Show Settings", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Settings", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Settings", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Settings", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Settings", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -892,12 +1317,48 @@ func SettingsGenericNotifyCb(fn func(key *SettingsKey, old *Settings)) func(objs
 	}
 }
 
-func (c *SettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *SettingsKey, old *Settings)) {
-	c.NotifyCb = fn
+func (c *SettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64){fn}
 }
 
 func (c *SettingsCache) SetUpdatedCb(fn func(ctx context.Context, old *Settings, new *Settings)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Settings, new *Settings){fn}
+}
+
+func (c *SettingsCache) SetDeletedCb(fn func(ctx context.Context, old *Settings)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Settings){fn}
+}
+
+func (c *SettingsCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *SettingsKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *SettingsKey){fn}
+}
+
+func (c *SettingsCache) SetDeletedKeyCb(fn func(ctx context.Context, key *SettingsKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *SettingsKey){fn}
+}
+
+func (c *SettingsCache) AddUpdatedCb(fn func(ctx context.Context, old *Settings, new *Settings)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *SettingsCache) AddDeletedCb(fn func(ctx context.Context, old *Settings)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *SettingsCache) AddNotifyCb(fn func(ctx context.Context, obj *SettingsKey, old *Settings, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *SettingsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *SettingsKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *SettingsCache) AddDeletedKeyCb(fn func(ctx context.Context, key *SettingsKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *SettingsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *SettingsCache) WatchKey(key *SettingsKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -944,14 +1405,21 @@ func (c *SettingsCache) TriggerKeyWatchers(ctx context.Context, key *SettingsKey
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *SettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *SettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Settings{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Settings data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -959,11 +1427,11 @@ func (c *SettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int
 	c.Mux.Unlock()
 }
 
-func (c *SettingsCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *SettingsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Settings{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	SettingsKeyStringParse(keystr, &obj)
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *SettingsCache) SyncListStart(ctx context.Context) {
@@ -971,7 +1439,7 @@ func (c *SettingsCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *SettingsCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[SettingsKey]*Settings)
+	deleted := make(map[SettingsKey]*SettingsCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -981,12 +1449,26 @@ func (c *SettingsCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
+}
+
+func (c *SettingsCache) UsesOrg(org string) bool {
+	return false
 }
 
 // Helper method to check that enums have valid values
@@ -996,6 +1478,9 @@ func (m *Settings) ValidateEnums() error {
 }
 
 func (m *Settings) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1040,21 +1525,36 @@ func (m *Settings) Size() (n int) {
 	if m.DeleteClusterInstTimeout != 0 {
 		n += 1 + sovSettings(uint64(m.DeleteClusterInstTimeout))
 	}
+	l = len(m.MasterNodeFlavor)
+	if l > 0 {
+		n += 1 + l + sovSettings(uint64(l))
+	}
 	if m.LoadBalancerMaxPortRange != 0 {
 		n += 1 + sovSettings(uint64(m.LoadBalancerMaxPortRange))
+	}
+	if m.MaxTrackedDmeClients != 0 {
+		n += 2 + sovSettings(uint64(m.MaxTrackedDmeClients))
+	}
+	if m.ChefClientInterval != 0 {
+		n += 2 + sovSettings(uint64(m.ChefClientInterval))
+	}
+	if m.InfluxDbMetricsRetention != 0 {
+		n += 2 + sovSettings(uint64(m.InfluxDbMetricsRetention))
+	}
+	if m.CloudletMaintenanceTimeout != 0 {
+		n += 2 + sovSettings(uint64(m.CloudletMaintenanceTimeout))
+	}
+	if m.ShepherdAlertEvaluationInterval != 0 {
+		n += 2 + sovSettings(uint64(m.ShepherdAlertEvaluationInterval))
+	}
+	if m.UpdateVmPoolTimeout != 0 {
+		n += 2 + sovSettings(uint64(m.UpdateVmPoolTimeout))
 	}
 	return n
 }
 
 func sovSettings(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozSettings(x uint64) (n int) {
 	return sovSettings(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1074,7 +1574,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1102,7 +1602,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1112,6 +1612,9 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthSettings
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSettings
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1131,7 +1634,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ShepherdMetricsCollectionInterval |= (Duration(b) & 0x7F) << shift
+				m.ShepherdMetricsCollectionInterval |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1150,7 +1653,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ShepherdHealthCheckRetries |= (int32(b) & 0x7F) << shift
+				m.ShepherdHealthCheckRetries |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1169,7 +1672,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ShepherdHealthCheckInterval |= (Duration(b) & 0x7F) << shift
+				m.ShepherdHealthCheckInterval |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1182,7 +1685,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 			m.AutoDeployIntervalSec = float64(math.Float64frombits(v))
 		case 6:
@@ -1193,7 +1696,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 			m.AutoDeployOffsetSec = float64(math.Float64frombits(v))
 		case 7:
@@ -1210,7 +1713,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AutoDeployMaxIntervals |= (uint32(b) & 0x7F) << shift
+				m.AutoDeployMaxIntervals |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1229,7 +1732,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CreateAppInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.CreateAppInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1248,7 +1751,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UpdateAppInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.UpdateAppInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1267,7 +1770,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DeleteAppInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.DeleteAppInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1286,7 +1789,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CreateClusterInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.CreateClusterInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1305,7 +1808,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UpdateClusterInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.UpdateClusterInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1324,12 +1827,44 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DeleteClusterInstTimeout |= (Duration(b) & 0x7F) << shift
+				m.DeleteClusterInstTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MasterNodeFlavor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSettings
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSettings
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MasterNodeFlavor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 15:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LoadBalancerMaxPortRange", wireType)
 			}
@@ -1343,7 +1878,121 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LoadBalancerMaxPortRange |= (int32(b) & 0x7F) << shift
+				m.LoadBalancerMaxPortRange |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxTrackedDmeClients", wireType)
+			}
+			m.MaxTrackedDmeClients = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxTrackedDmeClients |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChefClientInterval", wireType)
+			}
+			m.ChefClientInterval = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChefClientInterval |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InfluxDbMetricsRetention", wireType)
+			}
+			m.InfluxDbMetricsRetention = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InfluxDbMetricsRetention |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CloudletMaintenanceTimeout", wireType)
+			}
+			m.CloudletMaintenanceTimeout = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CloudletMaintenanceTimeout |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 20:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShepherdAlertEvaluationInterval", wireType)
+			}
+			m.ShepherdAlertEvaluationInterval = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ShepherdAlertEvaluationInterval |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 21:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdateVmPoolTimeout", wireType)
+			}
+			m.UpdateVmPoolTimeout = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UpdateVmPoolTimeout |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1355,6 +2004,9 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthSettings
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthSettings
 			}
 			if (iNdEx + skippy) > l {
@@ -1372,6 +2024,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 func skipSettings(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1403,10 +2056,8 @@ func skipSettings(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1423,103 +2074,34 @@ func skipSettings(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthSettings
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowSettings
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipSettings(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupSettings
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthSettings
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthSettings = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowSettings   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthSettings        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowSettings          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupSettings = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("settings.proto", fileDescriptorSettings) }
-
-var fileDescriptorSettings = []byte{
-	// 700 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x4d, 0x6f, 0xd3, 0x4c,
-	0x14, 0x85, 0x5f, 0xb7, 0x6f, 0xbf, 0xa6, 0x69, 0x28, 0xee, 0x07, 0x43, 0x5a, 0x42, 0x08, 0x2c,
-	0x22, 0x54, 0x62, 0x89, 0x2e, 0x0a, 0x45, 0x42, 0x4a, 0xd3, 0x05, 0x55, 0x15, 0x01, 0x2e, 0xb0,
-	0x43, 0xd6, 0xc4, 0xbe, 0xb1, 0x2d, 0x1c, 0x8f, 0x99, 0x19, 0xd3, 0x74, 0x87, 0xf8, 0x05, 0x48,
-	0xfc, 0xa9, 0x2e, 0x91, 0x58, 0x22, 0x21, 0xa8, 0x58, 0xa0, 0x8a, 0x05, 0xa2, 0xa9, 0x84, 0x58,
-	0x21, 0x8f, 0x1d, 0x37, 0x2d, 0x23, 0x04, 0x9b, 0x68, 0x72, 0xef, 0x39, 0xcf, 0xb9, 0x37, 0xb1,
-	0x07, 0x15, 0x39, 0x08, 0xe1, 0x87, 0x2e, 0xaf, 0x47, 0x8c, 0x0a, 0xaa, 0x4f, 0x81, 0xe3, 0x82,
-	0x3c, 0x96, 0x0a, 0x0c, 0x78, 0x1c, 0x88, 0xb4, 0x51, 0x5a, 0x76, 0x29, 0x75, 0x03, 0x30, 0x48,
-	0xe4, 0x1b, 0x24, 0x0c, 0xa9, 0x20, 0xc2, 0xa7, 0x61, 0x66, 0x2b, 0xdd, 0x72, 0x7d, 0xe1, 0xc5,
-	0xed, 0xba, 0x4d, 0xbb, 0x46, 0x97, 0xb6, 0xfd, 0x20, 0xc1, 0xf4, 0x8c, 0xe4, 0xf3, 0x86, 0x1d,
-	0xd0, 0xd8, 0x31, 0xa4, 0xce, 0x85, 0x30, 0x3f, 0x64, 0xce, 0x79, 0x97, 0xba, 0x54, 0x1e, 0x8d,
-	0xe4, 0x94, 0x56, 0xab, 0xef, 0x27, 0xd0, 0xe4, 0x4e, 0x36, 0x99, 0xbe, 0x88, 0xc6, 0x3b, 0x3e,
-	0x04, 0x0e, 0xc7, 0x5a, 0x65, 0xb4, 0x36, 0x65, 0x66, 0xdf, 0xf4, 0xa7, 0xe8, 0x1a, 0xf7, 0x20,
-	0xf2, 0x80, 0x39, 0x56, 0x17, 0x04, 0xf3, 0x6d, 0x6e, 0xd9, 0x34, 0x08, 0xc0, 0x4e, 0x46, 0xb3,
-	0xfc, 0x50, 0x00, 0x7b, 0x41, 0x02, 0x3c, 0x52, 0xd1, 0x6a, 0xa3, 0x1b, 0x85, 0x9f, 0x1f, 0x2e,
-	0x4f, 0x6e, 0xc6, 0x4c, 0xce, 0x6d, 0x5e, 0x19, 0x38, 0x5b, 0xa9, 0xb1, 0x99, 0xfb, 0xb6, 0x32,
-	0x9b, 0xde, 0x40, 0x97, 0x72, 0xbc, 0x07, 0x24, 0x10, 0x9e, 0x65, 0x7b, 0x60, 0x3f, 0xb3, 0x58,
-	0x62, 0x01, 0x8e, 0x47, 0x2b, 0x5a, 0x6d, 0xcc, 0x2c, 0x0d, 0x44, 0xf7, 0xa4, 0xa6, 0x99, 0x48,
-	0xcc, 0x54, 0xa1, 0x3f, 0x44, 0x65, 0x35, 0x22, 0x9f, 0xed, 0x7f, 0xc5, 0x6c, 0x4b, 0x0a, 0x62,
-	0x3e, 0xd5, 0x1a, 0xc2, 0x24, 0x16, 0xd4, 0x72, 0x20, 0x0a, 0xe8, 0x5e, 0x0e, 0xb2, 0x38, 0xd8,
-	0x78, 0xac, 0xa2, 0xd5, 0x34, 0x73, 0x21, 0xe9, 0x6f, 0xca, 0xf6, 0xc0, 0xb5, 0x03, 0xb6, 0xbe,
-	0x8a, 0x16, 0x87, 0x8d, 0xb4, 0xd3, 0xe1, 0x20, 0xa4, 0x6d, 0x5c, 0xda, 0xe6, 0x4e, 0x6c, 0xf7,
-	0x65, 0x2f, 0x31, 0xdd, 0x46, 0x17, 0x87, 0x4d, 0x5d, 0xd2, 0xcb, 0x13, 0x39, 0x9e, 0xa8, 0x68,
-	0xb5, 0x19, 0x73, 0xf1, 0xc4, 0xd7, 0x22, 0xbd, 0x41, 0x22, 0xd7, 0x9b, 0xe8, 0x82, 0xcd, 0x80,
-	0x08, 0xb0, 0x48, 0x14, 0x59, 0x7e, 0xc8, 0x85, 0x25, 0xfc, 0x2e, 0xd0, 0x58, 0xe0, 0x49, 0xc5,
-	0xd2, 0xf3, 0xa9, 0xb8, 0x11, 0x45, 0x5b, 0x21, 0x17, 0x8f, 0x52, 0x65, 0x02, 0x89, 0x23, 0x47,
-	0x09, 0x99, 0x52, 0x41, 0x52, 0xf1, 0xef, 0x10, 0x07, 0x02, 0x50, 0x41, 0x90, 0x0a, 0x92, 0x8a,
-	0xcf, 0x40, 0xb6, 0xd1, 0x52, 0xb6, 0x8e, 0x1d, 0xc4, 0x5c, 0x00, 0x3b, 0x0d, 0x9a, 0x56, 0x80,
-	0x70, 0x6a, 0x68, 0xa6, 0xfa, 0x33, 0xb0, 0x6c, 0x2d, 0x25, 0xac, 0xa0, 0x82, 0xa5, 0x06, 0x35,
-	0x2c, 0x5b, 0x4f, 0x09, 0x9b, 0x51, 0xc1, 0x52, 0x83, 0x02, 0x76, 0x17, 0x2d, 0x07, 0x94, 0x38,
-	0x56, 0x9b, 0x04, 0x24, 0xb4, 0x81, 0xc9, 0xbf, 0x3c, 0xa2, 0x4c, 0x58, 0x8c, 0x84, 0x2e, 0xe0,
-	0xa2, 0x7c, 0xe6, 0x71, 0xa2, 0xd9, 0xc8, 0x24, 0x2d, 0xd2, 0x7b, 0x40, 0x99, 0x30, 0x93, 0xfe,
-	0xfa, 0xd5, 0x2f, 0x47, 0x58, 0xfb, 0x76, 0x84, 0xb5, 0x97, 0x7d, 0xac, 0xbd, 0xee, 0x63, 0xed,
-	0xfb, 0x31, 0x9e, 0x1e, 0xbc, 0xc9, 0xdb, 0xb0, 0xf7, 0xe3, 0x18, 0x6b, 0x37, 0xbf, 0x8e, 0xa0,
-	0xbc, 0xd6, 0x88, 0x7c, 0x3d, 0x46, 0xc5, 0xc7, 0x72, 0xbb, 0xfc, 0x95, 0x9f, 0xab, 0xe7, 0xf7,
-	0x50, 0x7d, 0x50, 0x2c, 0x9d, 0x1f, 0x2a, 0x9a, 0xf2, 0x6e, 0xaa, 0xde, 0x39, 0xec, 0xe3, 0x65,
-	0x13, 0x38, 0x8d, 0x99, 0x0d, 0x4d, 0x1a, 0x76, 0x7c, 0x77, 0xa5, 0x21, 0x5f, 0xe3, 0x16, 0x09,
-	0x89, 0x0b, 0x2b, 0xaf, 0xde, 0x7d, 0x7e, 0x33, 0xb2, 0x50, 0x9d, 0x35, 0xd2, 0x9f, 0xcf, 0x18,
-	0x5c, 0x77, 0xeb, 0xda, 0x75, 0x9d, 0xa3, 0x19, 0x13, 0xe4, 0x83, 0xfe, 0x8f, 0xa9, 0xeb, 0x7f,
-	0x95, 0x3a, 0x5f, 0x3d, 0x67, 0xb0, 0x84, 0x7f, 0x2a, 0xf4, 0x39, 0x2a, 0xec, 0x78, 0x74, 0xf7,
-	0xcf, 0x99, 0xaa, 0x62, 0x75, 0xed, 0xb0, 0x8f, 0x4b, 0xca, 0xd4, 0x27, 0x3e, 0xec, 0xa6, 0x99,
-	0x73, 0xd5, 0xa2, 0xc1, 0x3d, 0xba, 0x3b, 0x1c, 0xb9, 0x31, 0xbb, 0xff, 0xa9, 0xfc, 0xdf, 0xfe,
-	0x41, 0x59, 0x7b, 0x7b, 0x50, 0xd6, 0x3e, 0x1e, 0x94, 0xb5, 0xf6, 0xb8, 0x44, 0xaf, 0xfe, 0x0a,
-	0x00, 0x00, 0xff, 0xff, 0x84, 0xf7, 0xff, 0x26, 0xfe, 0x05, 0x00, 0x00,
-}

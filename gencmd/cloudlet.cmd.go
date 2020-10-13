@@ -3,20 +3,22 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -52,6 +54,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Config = edgeproto.PlatformConfig{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Deployment = ""
 	}
 }
 
@@ -92,6 +97,9 @@ var CreateCloudletCmd = &cli.Command{
 }
 
 func runCreateCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Cloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -114,6 +122,8 @@ func CreateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 		}
 		return fmt.Errorf("CreateCloudlet failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -127,8 +137,16 @@ func CreateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			}
 			return fmt.Errorf("CreateCloudlet recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -160,6 +178,9 @@ var DeleteCloudletCmd = &cli.Command{
 }
 
 func runDeleteCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Cloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -182,6 +203,8 @@ func DeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 		}
 		return fmt.Errorf("DeleteCloudlet failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -195,8 +218,16 @@ func DeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			}
 			return fmt.Errorf("DeleteCloudlet recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -217,8 +248,8 @@ func DeleteCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 
 var UpdateCloudletCmd = &cli.Command{
 	Use:          "UpdateCloudlet",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	RequiredArgs: strings.Join(UpdateCloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(UpdateCloudletOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
 	SpecialArgs:  &CloudletSpecialArgs,
 	Comments:     CloudletComments,
@@ -228,6 +259,9 @@ var UpdateCloudletCmd = &cli.Command{
 }
 
 func runUpdateCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Cloudlet)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -251,6 +285,8 @@ func UpdateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 		}
 		return fmt.Errorf("UpdateCloudlet failed: %s", errstr)
 	}
+
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -264,8 +300,16 @@ func UpdateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			}
 			return fmt.Errorf("UpdateCloudlet recv failed: %s", errstr)
 		}
-		c.WriteOutput(obj, cli.OutputFormat)
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
 	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -296,6 +340,9 @@ var ShowCloudletCmd = &cli.Command{
 }
 
 func runShowCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Cloudlet)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -318,6 +365,7 @@ func ShowCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 		}
 		return fmt.Errorf("ShowCloudlet failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Cloudlet, 0)
 	for {
 		obj, err := stream.Recv()
@@ -357,6 +405,120 @@ func ShowCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 	}
 }
 
+var GetCloudletManifestCmd = &cli.Command{
+	Use:          "GetCloudletManifest",
+	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
+	SpecialArgs:  &CloudletSpecialArgs,
+	Comments:     CloudletComments,
+	ReqData:      &edgeproto.Cloudlet{},
+	ReplyData:    &edgeproto.CloudletManifest{},
+	Run:          runGetCloudletManifest,
+}
+
+func runGetCloudletManifest(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.Cloudlet)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletManifest(c, obj)
+}
+
+func GetCloudletManifest(c *cli.Command, in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletManifest(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletManifest failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletManifests(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletManifest %v\n", data[ii])
+		myerr := GetCloudletManifest(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var GetCloudletPropsCmd = &cli.Command{
+	Use:          "GetCloudletProps",
+	RequiredArgs: strings.Join(GetCloudletPropsRequiredArgs, " "),
+	OptionalArgs: strings.Join(GetCloudletPropsOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletPropsAliasArgs, " "),
+	SpecialArgs:  &CloudletPropsSpecialArgs,
+	Comments:     CloudletPropsComments,
+	ReqData:      &edgeproto.CloudletProps{},
+	ReplyData:    &edgeproto.CloudletProps{},
+	Run:          runGetCloudletProps,
+}
+
+func runGetCloudletProps(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletProps)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletProps(c, obj)
+}
+
+func GetCloudletProps(c *cli.Command, in *edgeproto.CloudletProps) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletProps(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletProps failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletPropss(c *cli.Command, data []edgeproto.CloudletProps, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletProps %v\n", data[ii])
+		myerr := GetCloudletProps(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AddCloudletResMappingCmd = &cli.Command{
 	Use:          "AddCloudletResMapping",
 	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
@@ -370,6 +532,9 @@ var AddCloudletResMappingCmd = &cli.Command{
 }
 
 func runAddCloudletResMapping(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletResMap)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -424,6 +589,9 @@ var RemoveCloudletResMappingCmd = &cli.Command{
 }
 
 func runRemoveCloudletResMapping(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletResMap)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -478,6 +646,9 @@ var FindFlavorMatchCmd = &cli.Command{
 }
 
 func runFindFlavorMatch(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.FlavorMatch)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -524,6 +695,8 @@ var CloudletApiCmds = []*cobra.Command{
 	DeleteCloudletCmd.GenCmd(),
 	UpdateCloudletCmd.GenCmd(),
 	ShowCloudletCmd.GenCmd(),
+	GetCloudletManifestCmd.GenCmd(),
+	GetCloudletPropsCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
@@ -543,6 +716,9 @@ var ShowCloudletInfoCmd = &cli.Command{
 }
 
 func runShowCloudletInfo(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -565,6 +741,7 @@ func ShowCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 		}
 		return fmt.Errorf("ShowCloudletInfo failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.CloudletInfo, 0)
 	for {
 		obj, err := stream.Recv()
@@ -617,6 +794,9 @@ var InjectCloudletInfoCmd = &cli.Command{
 }
 
 func runInjectCloudletInfo(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -671,6 +851,9 @@ var EvictCloudletInfoCmd = &cli.Command{
 }
 
 func runEvictCloudletInfo(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletInfo)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -732,6 +915,9 @@ var ShowCloudletMetricsCmd = &cli.Command{
 }
 
 func runShowCloudletMetrics(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletMetrics)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -754,6 +940,7 @@ func ShowCloudletMetrics(c *cli.Command, in *edgeproto.CloudletMetrics) error {
 		}
 		return fmt.Errorf("ShowCloudletMetrics failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.CloudletMetrics, 0)
 	for {
 		obj, err := stream.Recv()
@@ -798,15 +985,13 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 
 var CloudletKeyRequiredArgs = []string{}
 var CloudletKeyOptionalArgs = []string{
-	"operator",
+	"organization",
 	"name",
 }
-var CloudletKeyAliasArgs = []string{
-	"operator=operatorkey.name",
-}
+var CloudletKeyAliasArgs = []string{}
 var CloudletKeyComments = map[string]string{
-	"operator": "Company or Organization name of the operator",
-	"name":     "Name of the cloudlet",
+	"organization": "Organization of the cloudlet site",
+	"name":         "Name of the cloudlet",
 }
 var CloudletKeySpecialArgs = map[string]string{}
 var OperationTimeLimitsRequiredArgs = []string{}
@@ -828,176 +1013,92 @@ var OperationTimeLimitsComments = map[string]string{
 	"deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 }
 var OperationTimeLimitsSpecialArgs = map[string]string{}
-var CloudletInfraCommonRequiredArgs = []string{}
-var CloudletInfraCommonOptionalArgs = []string{
-	"dockerregistry",
-	"dnszone",
-	"registryfileserver",
-	"cfkey",
-	"cfuser",
-	"dockerregpass",
-	"networkscheme",
-	"dockerregistrysecret",
-}
-var CloudletInfraCommonAliasArgs = []string{}
-var CloudletInfraCommonComments = map[string]string{
-	"dockerregistry":       "the mex docker registry, e.g.  registry.mobiledgex.net:5000.",
-	"dnszone":              "DNS Zone",
-	"registryfileserver":   "registry file server contains files which get pulled on instantiation such as certs and images",
-	"cfkey":                "Cloudflare key",
-	"cfuser":               "Cloudflare key",
-	"dockerregpass":        "Docker registry password",
-	"networkscheme":        "network scheme",
-	"dockerregistrysecret": "the name of the docker registry secret, e.g. mexgitlabsecret",
-}
-var CloudletInfraCommonSpecialArgs = map[string]string{}
-var AzurePropertiesRequiredArgs = []string{}
-var AzurePropertiesOptionalArgs = []string{
-	"location",
-	"resourcegroup",
-	"username",
-	"password",
-}
-var AzurePropertiesAliasArgs = []string{}
-var AzurePropertiesComments = map[string]string{
-	"location":      "azure region e.g. uswest2",
-	"resourcegroup": "azure resource group",
-	"username":      "azure username",
-	"password":      "azure password",
-}
-var AzurePropertiesSpecialArgs = map[string]string{}
-var GcpPropertiesRequiredArgs = []string{}
-var GcpPropertiesOptionalArgs = []string{
-	"project",
-	"zone",
-	"serviceaccount",
-	"gcpauthkeyurl",
-}
-var GcpPropertiesAliasArgs = []string{}
-var GcpPropertiesComments = map[string]string{
-	"project":        "gcp project for billing",
-	"zone":           "availability zone",
-	"serviceaccount": "service account to login with",
-	"gcpauthkeyurl":  "vault credentials link",
-}
-var GcpPropertiesSpecialArgs = map[string]string{}
-var OpenStackPropertiesRequiredArgs = []string{}
-var OpenStackPropertiesOptionalArgs = []string{
-	"osexternalnetworkname",
-	"osimagename",
-	"osexternalroutername",
-	"osmexnetwork",
-	"openrcvars",
-}
-var OpenStackPropertiesAliasArgs = []string{}
-var OpenStackPropertiesComments = map[string]string{
-	"osexternalnetworkname": "name of the external network, e.g. external-network-shared",
-	"osimagename":           "openstack image , e.g. mobiledgex",
-	"osexternalroutername":  "openstack router",
-	"osmexnetwork":          "openstack internal network",
-	"openrcvars":            "openrc env vars",
-}
-var OpenStackPropertiesSpecialArgs = map[string]string{
-	"openrcvars": "StringToString",
-}
-var CloudletInfraPropertiesRequiredArgs = []string{}
-var CloudletInfraPropertiesOptionalArgs = []string{
-	"cloudletkind",
-	"mexoscontainerimagename",
-	"openstackproperties.osexternalnetworkname",
-	"openstackproperties.osimagename",
-	"openstackproperties.osexternalroutername",
-	"openstackproperties.osmexnetwork",
-	"openstackproperties.openrcvars",
-	"azureproperties.location",
-	"azureproperties.resourcegroup",
-	"azureproperties.username",
-	"azureproperties.password",
-	"gcpproperties.project",
-	"gcpproperties.zone",
-	"gcpproperties.serviceaccount",
-	"gcpproperties.gcpauthkeyurl",
-}
-var CloudletInfraPropertiesAliasArgs = []string{}
-var CloudletInfraPropertiesComments = map[string]string{
-	"cloudletkind":                              "what kind of infrastructure: Azure, GCP, Openstack",
-	"mexoscontainerimagename":                   "name and version of the docker image container image that mexos runs in",
-	"openstackproperties.osexternalnetworkname": "name of the external network, e.g. external-network-shared",
-	"openstackproperties.osimagename":           "openstack image , e.g. mobiledgex",
-	"openstackproperties.osexternalroutername":  "openstack router",
-	"openstackproperties.osmexnetwork":          "openstack internal network",
-	"openstackproperties.openrcvars":            "openrc env vars",
-	"azureproperties.location":                  "azure region e.g. uswest2",
-	"azureproperties.resourcegroup":             "azure resource group",
-	"azureproperties.username":                  "azure username",
-	"azureproperties.password":                  "azure password",
-	"gcpproperties.project":                     "gcp project for billing",
-	"gcpproperties.zone":                        "availability zone",
-	"gcpproperties.serviceaccount":              "service account to login with",
-	"gcpproperties.gcpauthkeyurl":               "vault credentials link",
-}
-var CloudletInfraPropertiesSpecialArgs = map[string]string{
-	"openstackproperties.openrcvars": "StringToString",
-}
 var PlatformConfigRequiredArgs = []string{}
 var PlatformConfigOptionalArgs = []string{
-	"registrypath",
-	"imagepath",
+	"containerregistrypath",
+	"cloudletvmimagepath",
 	"notifyctrladdrs",
 	"vaultaddr",
 	"tlscertfile",
+	"tlskeyfile",
+	"tlscafile",
 	"envvar",
 	"platformtag",
 	"testmode",
 	"span",
 	"cleanupmode",
 	"region",
+	"commercialcerts",
+	"usevaultcerts",
+	"usevaultcas",
+	"appdnsroot",
+	"chefserverpath",
+	"chefclientinterval",
+	"deploymenttag",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
-	"registrypath":    "Path to Docker registry holding edge-cloud image",
-	"imagepath":       "Path to platform base image",
-	"notifyctrladdrs": "Address of controller notify port (can be multiple of these)",
-	"vaultaddr":       "Vault address",
-	"tlscertfile":     "TLS cert file",
-	"envvar":          "Environment variables",
-	"platformtag":     "Tag of edge-cloud image",
-	"testmode":        "Internal Test flag",
-	"span":            "Span string",
-	"cleanupmode":     "Internal cleanup flag",
-	"region":          "Region",
+	"containerregistrypath": "Path to Docker registry holding edge-cloud image",
+	"cloudletvmimagepath":   "Path to platform base image",
+	"notifyctrladdrs":       "Address of controller notify port (can be multiple of these)",
+	"vaultaddr":             "Vault address",
+	"tlscertfile":           "TLS cert file",
+	"tlskeyfile":            "TLS key file",
+	"tlscafile":             "TLS ca file",
+	"envvar":                "Environment variables",
+	"platformtag":           "Tag of edge-cloud image",
+	"testmode":              "Internal Test flag",
+	"span":                  "Span string",
+	"cleanupmode":           "Internal cleanup flag",
+	"region":                "Region",
+	"commercialcerts":       "Get certs from vault or generate your own for the root load balancer",
+	"usevaultcerts":         "Use Vault certs for internal TLS communication",
+	"usevaultcas":           "Use Vault CAs to authenticate TLS communication",
+	"appdnsroot":            "App domain name root",
+	"chefserverpath":        "Path to Chef Server",
+	"chefclientinterval":    "Chef client interval",
+	"deploymenttag":         "Deployment Tag",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
 }
 var CloudletResMapRequiredArgs = []string{
-	"operator",
-	"name",
+	"cloudlet-org",
+	"cloudlet",
 	"mapping",
 }
 var CloudletResMapOptionalArgs = []string{}
 var CloudletResMapAliasArgs = []string{
-	"operator=key.operatorkey.name",
-	"name=key.name",
+	"cloudlet-org=key.organization",
+	"cloudlet=key.name",
 }
 var CloudletResMapComments = map[string]string{
-	"operator": "Company or Organization name of the operator",
-	"name":     "Name of the cloudlet",
-	"mapping":  "Resource mapping info",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"mapping":      "Resource mapping info",
 }
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
 }
+var InfraConfigRequiredArgs = []string{}
+var InfraConfigOptionalArgs = []string{
+	"externalnetworkname",
+	"flavorname",
+}
+var InfraConfigAliasArgs = []string{}
+var InfraConfigComments = map[string]string{
+	"externalnetworkname": "Infra specific external network name",
+	"flavorname":          "Infra specific flavor name",
+}
+var InfraConfigSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
-	"operator",
-	"name",
+	"cloudlet-org",
+	"cloudlet",
 }
 var CloudletOptionalArgs = []string{
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"numdynamicips",
@@ -1007,27 +1108,34 @@ var CloudletOptionalArgs = []string{
 	"timelimits.createappinsttimeout",
 	"timelimits.updateappinsttimeout",
 	"timelimits.deleteappinsttimeout",
-	"errors",
-	"state",
 	"crmoverride",
 	"deploymentlocal",
 	"platformtype",
 	"flavor.name",
 	"physicalname",
 	"envvar",
-	"version",
-	"restagmap.key",
-	"restagmap.value.name",
-	"restagmap.value.operatorkey.name",
+	"containerversion",
+	"restagmap:#.key",
+	"restagmap:#.value.name",
+	"restagmap:#.value.organization",
 	"accessvars",
+	"vmimageversion",
+	"deployment",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
+	"maintenancestate",
+	"overridepolicycontainerversion",
+	"vmpool",
 }
 var CloudletAliasArgs = []string{
-	"operator=key.operatorkey.name",
-	"name=key.name",
+	"cloudlet-org=key.organization",
+	"cloudlet=key.name",
 }
 var CloudletComments = map[string]string{
-	"operator":                            "Company or Organization name of the operator",
-	"name":                                "Name of the cloudlet",
+	"fields":                              "Fields are used for the Update API to specify which fields to apply",
+	"cloudlet-org":                        "Organization of the cloudlet site",
+	"cloudlet":                            "Name of the cloudlet",
 	"location.latitude":                   "latitude in WGS 84 coordinates",
 	"location.longitude":                  "longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy":         "horizontal accuracy (radius in meters)",
@@ -1048,35 +1156,55 @@ var CloudletComments = map[string]string{
 	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra",
+	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAws, PlatformTypeVmPool",
 	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
 	"envvar":                              "Single Key-Value pair of env var to be passed to CRM",
-	"version":                             "Cloudlet version",
-	"config.registrypath":                 "Path to Docker registry holding edge-cloud image",
-	"config.imagepath":                    "Path to platform base image",
+	"containerversion":                    "Cloudlet container version",
+	"config.containerregistrypath":        "Path to Docker registry holding edge-cloud image",
+	"config.cloudletvmimagepath":          "Path to platform base image",
 	"config.notifyctrladdrs":              "Address of controller notify port (can be multiple of these)",
 	"config.vaultaddr":                    "Vault address",
 	"config.tlscertfile":                  "TLS cert file",
+	"config.tlskeyfile":                   "TLS key file",
+	"config.tlscafile":                    "TLS ca file",
 	"config.envvar":                       "Environment variables",
 	"config.platformtag":                  "Tag of edge-cloud image",
 	"config.testmode":                     "Internal Test flag",
 	"config.span":                         "Span string",
 	"config.cleanupmode":                  "Internal cleanup flag",
 	"config.region":                       "Region",
-	"restagmap.value.name":                "Resource Table Name",
-	"restagmap.value.operatorkey.name":    "Company or Organization name of the operator",
+	"config.commercialcerts":              "Get certs from vault or generate your own for the root load balancer",
+	"config.usevaultcerts":                "Use Vault certs for internal TLS communication",
+	"config.usevaultcas":                  "Use Vault CAs to authenticate TLS communication",
+	"config.appdnsroot":                   "App domain name root",
+	"config.chefserverpath":               "Path to Chef Server",
+	"config.chefclientinterval":           "Chef client interval",
+	"config.deploymenttag":                "Deployment Tag",
+	"restagmap:#.value.name":              "Resource Table Name",
+	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",
+	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
+	"deployment":                          "Deployment type to bring up CRM services (docker, kubernetes)",
+	"infraapiaccess":                      "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
+	"infraconfig.externalnetworkname":     "Infra specific external network name",
+	"infraconfig.flavorname":              "Infra specific flavor name",
+	"chefclientkey":                       "Chef client key",
+	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"overridepolicycontainerversion":      "Override container version from policy file",
+	"vmpool":                              "VM Pool",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
+	"chefclientkey": "StringToString",
 	"config.envvar": "StringToString",
 	"envvar":        "StringToString",
 	"errors":        "StringArray",
+	"fields":        "StringArray",
 }
 var FlavorMatchRequiredArgs = []string{
-	"operator",
+	"cloudlet-org",
 	"cloudlet",
 }
 var FlavorMatchOptionalArgs = []string{
@@ -1084,15 +1212,65 @@ var FlavorMatchOptionalArgs = []string{
 	"availabilityzone",
 }
 var FlavorMatchAliasArgs = []string{
-	"operator=key.operatorkey.name",
+	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
 	"flavor=flavorname",
 }
 var FlavorMatchComments = map[string]string{
-	"operator": "Company or Organization name of the operator",
-	"cloudlet": "Name of the cloudlet",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
 }
 var FlavorMatchSpecialArgs = map[string]string{}
+var CloudletManifestRequiredArgs = []string{}
+var CloudletManifestOptionalArgs = []string{
+	"manifest",
+}
+var CloudletManifestAliasArgs = []string{}
+var CloudletManifestComments = map[string]string{
+	"manifest": "Manifest to bringup cloudlet VM and services.",
+}
+var CloudletManifestSpecialArgs = map[string]string{}
+var PropertyInfoRequiredArgs = []string{}
+var PropertyInfoOptionalArgs = []string{
+	"name",
+	"description",
+	"value",
+	"secret",
+	"mandatory",
+	"internal",
+}
+var PropertyInfoAliasArgs = []string{}
+var PropertyInfoComments = map[string]string{
+	"name":        "Name of the property",
+	"description": "Description of the property",
+	"value":       "Default value of the property",
+	"secret":      "Is the property a secret value, will be hidden",
+	"mandatory":   "Is the property mandatory",
+	"internal":    "Is the property internal, not to be set by Operator",
+}
+var PropertyInfoSpecialArgs = map[string]string{}
+var CloudletPropsRequiredArgs = []string{}
+var CloudletPropsOptionalArgs = []string{
+	"platformtype",
+	"properties:#.key",
+	"properties:#.value.name",
+	"properties:#.value.description",
+	"properties:#.value.value",
+	"properties:#.value.secret",
+	"properties:#.value.mandatory",
+	"properties:#.value.internal",
+}
+var CloudletPropsAliasArgs = []string{}
+var CloudletPropsComments = map[string]string{
+	"platformtype":                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAws, PlatformTypeVmPool",
+	"properties:#.value.name":        "Name of the property",
+	"properties:#.value.description": "Description of the property",
+	"properties:#.value.value":       "Default value of the property",
+	"properties:#.value.secret":      "Is the property a secret value, will be hidden",
+	"properties:#.value.mandatory":   "Is the property mandatory",
+	"properties:#.value.internal":    "Is the property internal, not to be set by Operator",
+}
+var CloudletPropsSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -1136,8 +1314,8 @@ var OSImageComments = map[string]string{
 }
 var OSImageSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
-	"operator",
-	"name",
+	"cloudlet-org",
+	"cloudlet",
 }
 var CloudletInfoOptionalArgs = []string{
 	"state",
@@ -1147,51 +1325,57 @@ var CloudletInfoOptionalArgs = []string{
 	"osmaxvcores",
 	"osmaxvolgb",
 	"errors",
-	"flavors.name",
-	"flavors.vcpus",
-	"flavors.ram",
-	"flavors.disk",
-	"flavors.propmap",
+	"flavors:#.name",
+	"flavors:#.vcpus",
+	"flavors:#.ram",
+	"flavors:#.disk",
+	"flavors:#.propmap",
 	"status.tasknumber",
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
-	"version",
-	"availabilityzones.name",
-	"availabilityzones.status",
-	"osimages.name",
-	"osimages.tags",
-	"osimages.properties",
-	"osimages.diskformat",
+	"containerversion",
+	"availabilityzones:#.name",
+	"availabilityzones:#.status",
+	"osimages:#.name",
+	"osimages:#.tags",
+	"osimages:#.properties",
+	"osimages:#.diskformat",
+	"controllercachereceived",
+	"maintenancestate",
 }
 var CloudletInfoAliasArgs = []string{
-	"operator=key.operatorkey.name",
-	"name=key.name",
+	"cloudlet-org=key.organization",
+	"cloudlet=key.name",
 }
 var CloudletInfoComments = map[string]string{
-	"operator":            "Company or Organization name of the operator",
-	"name":                "Name of the cloudlet",
-	"state":               "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade",
-	"notifyid":            "Id of client assigned by server (internal use only)",
-	"controller":          "Connected controller unique id",
-	"osmaxram":            "Maximum Ram in MB on the Cloudlet",
-	"osmaxvcores":         "Maximum number of VCPU cores on the Cloudlet",
-	"osmaxvolgb":          "Maximum amount of disk in GB on the Cloudlet",
-	"errors":              "Any errors encountered while making changes to the Cloudlet",
-	"flavors.name":        "Name of the flavor on the Cloudlet",
-	"flavors.vcpus":       "Number of VCPU cores on the Cloudlet",
-	"flavors.ram":         "Ram in MB on the Cloudlet",
-	"flavors.disk":        "Amount of disk in GB on the Cloudlet",
-	"flavors.propmap":     "OS Flavor Properties, if any",
-	"version":             "Cloudlet version",
-	"osimages.name":       "image name",
-	"osimages.tags":       "optional tags present on image",
-	"osimages.properties": "image properties/metadata",
-	"osimages.diskformat": "format qcow2, img, etc",
+	"fields":                  "Fields are used for the Update API to specify which fields to apply",
+	"cloudlet-org":            "Organization of the cloudlet site",
+	"cloudlet":                "Name of the cloudlet",
+	"state":                   "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
+	"notifyid":                "Id of client assigned by server (internal use only)",
+	"controller":              "Connected controller unique id",
+	"osmaxram":                "Maximum Ram in MB on the Cloudlet",
+	"osmaxvcores":             "Maximum number of VCPU cores on the Cloudlet",
+	"osmaxvolgb":              "Maximum amount of disk in GB on the Cloudlet",
+	"errors":                  "Any errors encountered while making changes to the Cloudlet",
+	"flavors:#.name":          "Name of the flavor on the Cloudlet",
+	"flavors:#.vcpus":         "Number of VCPU cores on the Cloudlet",
+	"flavors:#.ram":           "Ram in MB on the Cloudlet",
+	"flavors:#.disk":          "Amount of disk in GB on the Cloudlet",
+	"flavors:#.propmap":       "OS Flavor Properties, if any",
+	"containerversion":        "Cloudlet container version",
+	"osimages:#.name":         "image name",
+	"osimages:#.tags":         "optional tags present on image",
+	"osimages:#.properties":   "image properties/metadata",
+	"osimages:#.diskformat":   "format qcow2, img, etc",
+	"controllercachereceived": "Indicates all controller data has been sent to CRM",
+	"maintenancestate":        "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 }
 var CloudletInfoSpecialArgs = map[string]string{
-	"errors":          "StringArray",
-	"flavors.propmap": "StringToString",
+	"errors":            "StringArray",
+	"fields":            "StringArray",
+	"flavors:#.propmap": "StringToString",
 }
 var CloudletMetricsRequiredArgs = []string{}
 var CloudletMetricsOptionalArgs = []string{
@@ -1203,16 +1387,14 @@ var CloudletMetricsComments = map[string]string{
 }
 var CloudletMetricsSpecialArgs = map[string]string{}
 var CreateCloudletRequiredArgs = []string{
-	"operator",
-	"name",
+	"cloudlet-org",
+	"cloudlet",
 	"location.latitude",
 	"location.longitude",
 	"numdynamicips",
 }
 var CreateCloudletOptionalArgs = []string{
 	"location.altitude",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
 	"ipsupport",
 	"staticips",
 	"timelimits.createclusterinsttimeout",
@@ -1221,17 +1403,49 @@ var CreateCloudletOptionalArgs = []string{
 	"timelimits.createappinsttimeout",
 	"timelimits.updateappinsttimeout",
 	"timelimits.deleteappinsttimeout",
-	"errors",
-	"state",
 	"crmoverride",
 	"deploymentlocal",
 	"platformtype",
 	"flavor.name",
 	"physicalname",
 	"envvar",
-	"version",
-	"restagmap.key",
-	"restagmap.value.name",
-	"restagmap.value.operatorkey.name",
+	"containerversion",
+	"restagmap:#.key",
+	"restagmap:#.value.name",
+	"restagmap:#.value.organization",
 	"accessvars",
+	"vmimageversion",
+	"deployment",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
+	"maintenancestate",
+	"overridepolicycontainerversion",
+	"vmpool",
 }
+var UpdateCloudletRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+}
+var UpdateCloudletOptionalArgs = []string{
+	"location.latitude",
+	"location.longitude",
+	"location.altitude",
+	"ipsupport",
+	"staticips",
+	"numdynamicips",
+	"timelimits.createclusterinsttimeout",
+	"timelimits.updateclusterinsttimeout",
+	"timelimits.deleteclusterinsttimeout",
+	"timelimits.createappinsttimeout",
+	"timelimits.updateappinsttimeout",
+	"timelimits.deleteappinsttimeout",
+	"crmoverride",
+	"envvar",
+	"accessvars",
+	"maintenancestate",
+}
+var GetCloudletPropsRequiredArgs = []string{
+	"platformtype",
+}
+var GetCloudletPropsOptionalArgs = []string{}

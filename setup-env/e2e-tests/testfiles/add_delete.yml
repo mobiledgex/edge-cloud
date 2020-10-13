@@ -26,6 +26,14 @@ tests:
     yaml2: "{{datadir}}/nodes.yml"
     filetype: appdata
 
+- name: check orgs in use
+  apifile: "{{datadir}}/orgsinuse.yml"
+  actions: [ctrlapi-organizationinuse]
+  compareyaml:
+    yaml1: "{{outputdir}}/api-output.yml"
+    yaml2: "{{datadir}}/orgsinuse_show.yml"
+    filetype: orgdata
+
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata.yml"
@@ -63,7 +71,21 @@ tests:
 
 - name: test run command against app data
   apifile: "{{datadir}}/runcommand.yml"
-  actions: [runcommand]
+  actions: [exec-runcommand]
+
+- name: test show logs against app data
+  apifile: "{{datadir}}/showlogs.yml"
+  actions: [exec-showlogs]
+
+- name: test run console against app data
+  apifile: "{{datadir}}/runconsole.yml"
+  actions: [exec-runconsole]
+
+- name: test access cloudlet
+  apifile: "{{datadir}}/accesscloudlet.yml"
+  actions: [exec-accesscloudlet]
+
+- includefile: debugtest.yml
 
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]

@@ -9,49 +9,27 @@ It translates gRPC into RESTful JSON APIs.
 package edgeproto
 
 import (
+	"context"
 	"io"
 	"net/http"
 
+	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
+// Suppress "imported and not used" errors
 var _ codes.Code
 var _ io.Reader
 var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
-
-func request_NodeApi_ShowNodeLocal_0(ctx context.Context, marshaler runtime.Marshaler, client NodeApiClient, req *http.Request, pathParams map[string]string) (NodeApi_ShowNodeLocalClient, runtime.ServerMetadata, error) {
-	var protoReq Node
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	stream, err := client.ShowNodeLocal(ctx, &protoReq)
-	if err != nil {
-		return nil, metadata, err
-	}
-	header, err := stream.Header()
-	if err != nil {
-		return nil, metadata, err
-	}
-	metadata.HeaderMD = header
-	return stream, metadata, nil
-
-}
+var _ = descriptor.ForMessage
 
 func request_NodeApi_ShowNode_0(ctx context.Context, marshaler runtime.Marshaler, client NodeApiClient, req *http.Request, pathParams map[string]string) (NodeApi_ShowNodeClient, runtime.ServerMetadata, error) {
 	var protoReq Node
@@ -76,6 +54,21 @@ func request_NodeApi_ShowNode_0(ctx context.Context, marshaler runtime.Marshaler
 	metadata.HeaderMD = header
 	return stream, metadata, nil
 
+}
+
+// RegisterNodeApiHandlerServer registers the http handlers for service NodeApi to "mux".
+// UnaryRPC     :call NodeApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterNodeApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server NodeApiServer) error {
+
+	mux.Handle("POST", pattern_NodeApi_ShowNode_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
 }
 
 // RegisterNodeApiHandlerFromEndpoint is same as RegisterNodeApiHandler but
@@ -116,26 +109,6 @@ func RegisterNodeApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *gr
 // "NodeApiClient" to call the correct interceptors.
 func RegisterNodeApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client NodeApiClient) error {
 
-	mux.Handle("POST", pattern_NodeApi_ShowNodeLocal_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_NodeApi_ShowNodeLocal_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_NodeApi_ShowNodeLocal_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("POST", pattern_NodeApi_ShowNode_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -160,13 +133,9 @@ func RegisterNodeApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 }
 
 var (
-	pattern_NodeApi_ShowNodeLocal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "nodelocal"}, ""))
-
-	pattern_NodeApi_ShowNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "node"}, ""))
+	pattern_NodeApi_ShowNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "node"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
-	forward_NodeApi_ShowNodeLocal_0 = runtime.ForwardResponseStream
-
 	forward_NodeApi_ShowNode_0 = runtime.ForwardResponseStream
 )

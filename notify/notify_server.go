@@ -19,13 +19,15 @@ package notify
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net"
+	"reflect"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -59,6 +61,7 @@ type ServerMgr struct {
 	notifyId int64
 	serv     *grpc.Server
 	name     string
+	regServ  func(s *grpc.Server)
 }
 
 // NotifySendMany and NotifyRecvMany are implemented by auto-generated code.
@@ -69,7 +72,7 @@ type ServerMgr struct {
 
 type NotifySendMany interface {
 	// Allocate a new Send object
-	NewSend(peerAddr string) NotifySend
+	NewSend(peerAddr string, notifyId int64) NotifySend
 	// Free a Send object
 	DoneSend(peerAddr string, send NotifySend)
 }
@@ -83,12 +86,6 @@ type NotifyRecvMany interface {
 
 var ServerMgrOne ServerMgr
 
-func (mgr *ServerMgr) Init() {
-	mgr.sends = make([]NotifySendMany, 0)
-	mgr.recvs = make([]NotifyRecvMany, 0)
-	mgr.name = "server"
-}
-
 func (mgr *ServerMgr) RegisterSend(sendMany NotifySendMany) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
@@ -101,13 +98,19 @@ func (mgr *ServerMgr) RegisterRecv(recvMany NotifyRecvMany) {
 	mgr.recvs = append(mgr.recvs, recvMany)
 }
 
-func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
+func (mgr *ServerMgr) RegisterServerCb(registerServer func(s *grpc.Server)) {
+	mgr.regServ = registerServer
+}
+
+func (mgr *ServerMgr) Start(name, addr string, tlsConfig *tls.Config) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 
 	if mgr.table != nil {
 		return
 	}
+	mgr.name = name
+	mgr.notifyId = 1
 	mgr.table = make(map[string]*Server)
 
 	lis, err := net.Listen("tcp", addr)
@@ -115,12 +118,16 @@ func (mgr *ServerMgr) Start(addr string, tlsCertFile string) {
 		log.FatalLog("ServerMgr listen failed", "err", err)
 	}
 
-	creds, err := tls.GetTLSServerCreds(tlsCertFile, true)
-	if err != nil {
-		log.FatalLog("Failed to get TLS creds", "err", err)
-	}
-	mgr.serv = grpc.NewServer(grpc.Creds(creds), grpc.KeepaliveParams(serverParams), grpc.KeepaliveEnforcementPolicy(serverEnforcement))
+	mgr.serv = grpc.NewServer(cloudcommon.GrpcCreds(tlsConfig),
+		grpc.KeepaliveParams(serverParams),
+		grpc.KeepaliveEnforcementPolicy(serverEnforcement),
+		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
+		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor),
+	)
 	edgeproto.RegisterNotifyApiServer(mgr.serv, mgr)
+	if mgr.regServ != nil {
+		mgr.regServ(mgr.serv)
+	}
 	log.DebugLog(log.DebugLevelNotify, "ServerMgr listening", "addr", addr)
 	go func() {
 		err = mgr.serv.Serve(lis)
@@ -158,13 +165,14 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	server := Server{}
 	server.peerAddr = peerAddr
 	server.running = make(chan struct{})
-	server.sendrecv.init(mgr.name)
+	server.sendrecv.init("server")
 	server.sendrecv.peerAddr = peerAddr
-	server.sendrecv.cliserv = "server"
 
 	mgr.mux.Lock()
+	server.notifyId = mgr.notifyId
+	mgr.notifyId++
 	for _, sendMany := range mgr.sends {
-		send := sendMany.NewSend(peerAddr)
+		send := sendMany.NewSend(peerAddr, server.notifyId)
 		server.sendrecv.registerSend(send)
 	}
 	for _, recvMany := range mgr.recvs {
@@ -174,7 +182,7 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	mgr.mux.Unlock()
 
 	// do initial version exchange
-	err := server.negotiate(stream)
+	err := server.negotiate(spctx, stream, mgr.name)
 	if err != nil {
 		server.logDisconnect(spctx, err)
 		close(server.running)
@@ -185,8 +193,6 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	// register server by client addr
 	mgr.mux.Lock()
 	mgr.table[peerAddr] = &server
-	server.notifyId = mgr.notifyId
-	mgr.notifyId++
 	mgr.mux.Unlock()
 
 	span.Finish()
@@ -246,7 +252,16 @@ func (mgr *ServerMgr) GetStats(peerAddr string) *Stats {
 	return stats
 }
 
-func (s *Server) negotiate(stream edgeproto.NotifyApi_StreamNoticeServer) error {
+// Get order of sends based on SendAll type
+func (s *ServerMgr) GetSendOrder() map[reflect.Type]int {
+	order := make(map[reflect.Type]int)
+	for ii, send := range s.sends {
+		order[reflect.TypeOf(send)] = ii
+	}
+	return order
+}
+
+func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_StreamNoticeServer, name string) error {
 	var notice edgeproto.Notice
 	// initial connection is version exchange
 	// this also sets the connection Id so we can ignore spurious old
@@ -263,24 +278,40 @@ func (s *Server) negotiate(stream edgeproto.NotifyApi_StreamNoticeServer) error 
 	}
 	s.sendrecv.setRemoteWanted(req.WantObjs)
 	s.sendrecv.filterCloudletKeys = req.FilterCloudletKey
+	if s.sendrecv.filterCloudletKeys {
+		s.sendrecv.sendAllEnd = false
+		s.sendrecv.manualSendAllEnd = true
+	} else {
+		s.sendrecv.sendAllEnd = true
+	}
 	// use lowest common version
 	if req.Version > NotifyVersion {
 		s.version = req.Version
 	} else {
 		s.version = NotifyVersion
 	}
+	if req.Tags != nil {
+		if peer, found := req.Tags["name"]; found {
+			s.sendrecv.peer = peer
+		}
+	}
+
 	// send back my version
 	notice.Action = edgeproto.NoticeAction_VERSION
 	notice.Version = s.version
 	notice.WantObjs = s.sendrecv.localWanted
+	notice.Tags = map[string]string{
+		"name": name,
+	}
 	err = stream.Send(&notice)
 	if err != nil {
 		s.sendrecv.stats.NegotiateErrors++
 		return err
 	}
-	log.DebugLog(log.DebugLevelNotify, "Notify server connected",
-		"client", s.peerAddr, "version", s.version,
+	log.SpanLog(ctx, log.DebugLevelNotify, "Notify server connected",
+		"client", s.peerAddr, "peer", s.sendrecv.peer, "version", s.version,
 		"supported-version", NotifyVersion,
+		"notifyid", s.notifyId,
 		"remoteWanted", s.sendrecv.remoteWanted,
 		"filterCloudletKey", s.sendrecv.filterCloudletKeys)
 	return nil
@@ -298,9 +329,9 @@ func (s *Server) logDisconnect(ctx context.Context, err error) {
 	st, ok := status.FromError(err)
 	if err == context.Canceled || (ok && st.Code() == codes.Canceled || err == nil) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Notify server connection closed",
-			"client", s.peerAddr, "err", err)
+			"client", s.peerAddr, "peer", s.sendrecv.peer, "err", err)
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Notify server connection failed",
-			"client", s.peerAddr, "err", err)
+			"client", s.peerAddr, "peer", s.sendrecv.peer, "err", err)
 	}
 }

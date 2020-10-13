@@ -26,6 +26,7 @@ var (
 	specStr     *string
 	modsStr     *string
 	outputDir   string
+	stopOnFail  *bool
 )
 
 //re-init the flags because otherwise we inherit a bunch of flags from the testing
@@ -35,6 +36,7 @@ func init() {
 	configStr = flag.String("testConfig", "", "json formatted TestConfig")
 	specStr = flag.String("testSpec", "", "json formatted TestSpec")
 	modsStr = flag.String("mods", "", "json formatted mods")
+	stopOnFail = flag.Bool("stop", false, "stop on failures")
 }
 
 //this is possible actions and optional parameters
@@ -46,10 +48,11 @@ var actionChoices = map[string]string{
 	"ctrlinfo":   "procname",
 	"dmeapi":     "procname",
 	"influxapi":  "procname",
-	"runcommand": "",
+	"exec":       "",
 	"cleanup":    "",
 	"gencerts":   "",
 	"cleancerts": "",
+	"cmds":       "",
 	"sleep":      "seconds",
 }
 
@@ -109,9 +112,10 @@ func validateArgs(config *e2eapi.TestConfig, spec *setupmex.TestSpec) {
 
 func main() {
 	flag.Parse()
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
+	util.SetLogFormat()
 
 	config := e2eapi.TestConfig{}
 	spec := setupmex.TestSpec{}
@@ -146,19 +150,46 @@ func main() {
 		util.DeploymentReplacementVars = config.Vars
 	}
 
+	retry := setupmex.NewRetry(spec.RetryCount, spec.RetryIntervalSec, len(spec.Actions))
 	ranTest := false
-	for _, a := range spec.Actions {
-		util.PrintStepBanner("running action: " + a)
-		errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars)
-		errors = append(errors, errs...)
-		ranTest = true
-	}
-	if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
-		if !util.CompareYamlFiles(spec.CompareYaml.Yaml1,
-			spec.CompareYaml.Yaml2, spec.CompareYaml.FileType) {
-			errors = append(errors, "compare yaml failed")
+	for {
+		tryErrs := []string{}
+		for ii, a := range spec.Actions {
+			if !retry.ShouldRunAction(ii) {
+				continue
+			}
+			util.PrintStepBanner("running action: " + a + retry.Tries())
+			actionretry := false
+			errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &actionretry)
+			tryErrs = append(tryErrs, errs...)
+			ranTest = true
+			if *stopOnFail && len(errs) > 0 && !actionretry {
+				errors = append(errors, tryErrs...)
+				break
+			}
+			retry.SetActionRetry(ii, actionretry)
 		}
-		ranTest = true
+		if len(errors) > 0 {
+			// stopOnFail case
+			break
+		}
+		if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
+			pass := util.CompareYamlFiles(spec.CompareYaml.Yaml1,
+				spec.CompareYaml.Yaml2, spec.CompareYaml.FileType)
+			if !pass {
+				tryErrs = append(tryErrs, "compare yaml failed")
+			}
+			ranTest = true
+		}
+		if len(tryErrs) == 0 || retry.Done() {
+			errors = append(errors, tryErrs...)
+			break
+		}
+		fmt.Printf("encountered failures, will retry:\n")
+		for _, e := range tryErrs {
+			fmt.Printf("- %s\n", e)
+		}
+		fmt.Printf("")
 	}
 	if !ranTest {
 		errors = append(errors, "no test content")

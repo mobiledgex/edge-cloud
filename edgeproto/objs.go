@@ -7,62 +7,47 @@ import (
 	"sort"
 	"strconv"
 	strings "strings"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
+	context "golang.org/x/net/context"
 )
-
-//TODO - need to move out Errors into a separate package
 
 var AutoScaleMaxNodes uint32 = 10
 
 var minPort uint32 = 1
 var maxPort uint32 = 65535
 
-// contains sets of each applications for yaml marshalling
-type ApplicationData struct {
-	Operators               []Operator               `yaml:"operators"`
-	OperatorCodes           []OperatorCode           `yaml:"operatorcodes"`
-	Cloudlets               []Cloudlet               `yaml:"cloudlets"`
-	Flavors                 []Flavor                 `yaml:"flavors"`
-	ClusterInsts            []ClusterInst            `yaml:"clusterinsts"`
-	Developers              []Developer              `yaml:"developers"`
-	Applications            []App                    `yaml:"apps"`
-	AppInstances            []AppInst                `yaml:"appinstances"`
-	CloudletInfos           []CloudletInfo           `yaml:"cloudletinfos"`
-	AppInstInfos            []AppInstInfo            `yaml:"appinstinfos"`
-	ClusterInstInfos        []ClusterInstInfo        `yaml:"clusterinstinfos"`
-	Nodes                   []Node                   `yaml:"nodes"`
-	CloudletPools           []CloudletPool           `yaml:"cloudletpools"`
-	CloudletPoolMembers     []CloudletPoolMember     `yaml:"cloudletpoolmembers"`
-	AutoScalePolicies       []AutoScalePolicy        `yaml:"autoscalepolicies"`
-	AutoProvPolicies        []AutoProvPolicy         `yaml:"autoprovpolicies"`
-	AutoProvPolicyCloudlets []AutoProvPolicyCloudlet `yaml:"autoprovpolicycloudlets"`
-	PrivacyPolicies         []PrivacyPolicy          `yaml:"privacypolicies"`
-	ResTagTables            []ResTagTable            `ymal:"restagtables"`
-	Settings                *Settings                `yaml:"settings"`
+const (
+	AppConfigHelmYaml      = "helmCustomizationYaml"
+	AppAccessCustomization = "appAccessCustomization"
+	AppConfigEnvYaml       = "envVarsYaml"
+)
+
+var ValidConfigKinds = map[string]struct{}{
+	AppConfigHelmYaml:      struct{}{},
+	AppAccessCustomization: struct{}{},
+	AppConfigEnvYaml:       struct{}{},
 }
 
-type ApplicationDataMap map[string]interface{}
+var ReservedPlatformPorts = map[string]string{
+	"tcp:22": "Platform inter-node SSH",
+}
 
 // sort each slice by key
-func (a *ApplicationData) Sort() {
+func (a *AllData) Sort() {
 	sort.Slice(a.AppInstances[:], func(i, j int) bool {
 		return a.AppInstances[i].Key.GetKeyString() < a.AppInstances[j].Key.GetKeyString()
 	})
-	sort.Slice(a.Applications[:], func(i, j int) bool {
-		return a.Applications[i].Key.GetKeyString() < a.Applications[j].Key.GetKeyString()
+	sort.Slice(a.Apps[:], func(i, j int) bool {
+		return a.Apps[i].Key.GetKeyString() < a.Apps[j].Key.GetKeyString()
 	})
 	sort.Slice(a.Cloudlets[:], func(i, j int) bool {
 		return a.Cloudlets[i].Key.GetKeyString() < a.Cloudlets[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Developers[:], func(i, j int) bool {
-		return a.Developers[i].Key.GetKeyString() < a.Developers[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Operators[:], func(i, j int) bool {
-		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
 	})
 	sort.Slice(a.OperatorCodes[:], func(i, j int) bool {
 		return a.OperatorCodes[i].GetKey().GetKeyString() < a.OperatorCodes[j].GetKey().GetKeyString()
@@ -76,20 +61,8 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
 	})
-	sort.Slice(a.AppInstInfos[:], func(i, j int) bool {
-		return a.AppInstInfos[i].Key.GetKeyString() < a.AppInstInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.ClusterInstInfos[:], func(i, j int) bool {
-		return a.ClusterInstInfos[i].Key.GetKeyString() < a.ClusterInstInfos[j].Key.GetKeyString()
-	})
-	sort.Slice(a.Nodes[:], func(i, j int) bool {
-		return a.Nodes[i].Key.GetKeyString() < a.Nodes[j].Key.GetKeyString()
-	})
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
-	})
-	sort.Slice(a.CloudletPoolMembers[:], func(i, j int) bool {
-		return a.CloudletPoolMembers[i].GetKeyString() < a.CloudletPoolMembers[j].GetKeyString()
 	})
 	sort.Slice(a.AutoScalePolicies[:], func(i, j int) bool {
 		return a.AutoScalePolicies[i].Key.GetKeyString() < a.AutoScalePolicies[j].Key.GetKeyString()
@@ -109,34 +82,26 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.ResTagTables[:], func(i, j int) bool {
 		return a.ResTagTables[i].Key.GetKeyString() < a.ResTagTables[j].Key.GetKeyString()
 	})
+	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
+		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
+	})
+	sort.Slice(a.VmPools[:], func(i, j int) bool {
+		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
+	})
+}
+
+func (a *NodeData) Sort() {
+	sort.Slice(a.Nodes[:], func(i, j int) bool {
+		// ignore name for sorting because it is ignored for comparison
+		ikey := a.Nodes[i].Key
+		ikey.Name = ""
+		jkey := a.Nodes[j].Key
+		jkey.Name = ""
+		return ikey.GetKeyString() < jkey.GetKeyString()
+	})
 }
 
 // Validate functions to validate user input
-
-func (key *DeveloperKey) ValidateKey() error {
-	if err := util.ValidObjName(key.Name); err != nil {
-		errstring := err.Error()
-		// lowercase the first letter of the error message
-		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Invalid developer name, " + errstring)
-	}
-	return nil
-}
-
-func (s *Developer) Validate(fields map[string]struct{}) error {
-	return s.GetKey().ValidateKey()
-}
-
-func (key *OperatorKey) ValidateKey() error {
-	if !util.ValidName(key.Name) {
-		return errors.New("Invalid operator name")
-	}
-	return nil
-}
-
-func (s *Operator) Validate(fields map[string]struct{}) error {
-	return s.GetKey().ValidateKey()
-}
 
 func (key *OperatorCodeKey) ValidateKey() error {
 	if key.GetKeyString() == "" {
@@ -149,8 +114,8 @@ func (s *OperatorCode) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if s.OperatorName == "" {
-		return errors.New("No operator name specified")
+	if s.Organization == "" {
+		return errors.New("No organization specified")
 	}
 	return nil
 }
@@ -207,8 +172,17 @@ func (key *AppKey) ValidateKey() error {
 	if !util.ValidName(key.Version) {
 		return errors.New("Invalid app version string")
 	}
-	if err := key.DeveloperKey.ValidateKey(); err != nil {
-		return err
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
+	return nil
+}
+
+func validateCustomizationConfigs(configs []*ConfigFile) error {
+	for _, cfg := range configs {
+		if _, found := ValidConfigKinds[cfg.Kind]; !found {
+			return fmt.Errorf("Invalid Config Kind - %s", cfg.Kind)
+		}
 	}
 	return nil
 }
@@ -223,24 +197,33 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	}
 	if _, found := fields[AppFieldAccessPorts]; found {
 		if s.AccessPorts != "" {
-			_, err := ParseAppPorts(s.AccessPorts)
+			_, err = ParseAppPorts(s.AccessPorts)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	if s.AuthPublicKey != "" {
-		_, err := util.ValidatePublicKey(s.AuthPublicKey)
+		_, err = util.ValidatePublicKey(s.AuthPublicKey)
 		if err != nil {
 			return err
 		}
+	}
+	if s.TemplateDelimiter != "" {
+		out := strings.Split(s.TemplateDelimiter, " ")
+		if len(out) != 2 {
+			return fmt.Errorf("invalid app template delimiter %s, valid format '<START-DELIM> <END-DELIM>'", s.TemplateDelimiter)
+		}
+	}
+	if err = validateCustomizationConfigs(s.Configs); err != nil {
+		return err
 	}
 	return nil
 }
 
 func (key *CloudletKey) ValidateKey() error {
-	if err := key.OperatorKey.ValidateKey(); err != nil {
-		return err
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
 	}
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid cloudlet name")
@@ -262,6 +245,16 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 			return errors.New("Invalid longitude value")
 		}
 	}
+	if _, found := fields[CloudletFieldMaintenanceState]; found {
+		if s.MaintenanceState != MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != MaintenanceState_MAINTENANCE_START && s.MaintenanceState != MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
+			return errors.New("Invalid maintenance state, only normal operation and maintenance start states are allowed")
+		}
+	}
+	if s.VmImageVersion != "" {
+		if err := util.ValidateImageVersion(s.VmImageVersion); err != nil {
+			return err
+		}
+	}
 	if err := s.ValidateEnums(); err != nil {
 		return err
 	}
@@ -274,6 +267,9 @@ func (s *CloudletInfo) Validate(fields map[string]struct{}) error {
 }
 
 func (key *CloudletPoolKey) ValidateKey() error {
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid Cloudlet Pool name")
 	}
@@ -287,18 +283,86 @@ func (s *CloudletPool) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (key *CloudletPoolMember) ValidateKey() error {
-	if err := key.CloudletKey.ValidateKey(); err != nil {
+func (s *VM) ValidateName() error {
+	if s.Name == "" {
+		return errors.New("Missing VM name")
+	}
+	if !util.ValidName(s.Name) {
+		return errors.New("Invalid VM name")
+	}
+	return nil
+}
+
+func (s *VM) Validate() error {
+	if err := s.ValidateName(); err != nil {
 		return err
 	}
-	if err := key.PoolKey.ValidateKey(); err != nil {
+	if s.NetInfo.ExternalIp != "" && net.ParseIP(s.NetInfo.ExternalIp) == nil {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+	}
+	if s.NetInfo.InternalIp == "" {
+		return fmt.Errorf("Missing internal IP for VM: %s", s.Name)
+	}
+	if net.ParseIP(s.NetInfo.InternalIp) == nil {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.InternalIp)
+	}
+	return nil
+}
+
+func (key *VMPoolKey) ValidateKey() error {
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid VM pool name")
+	}
+	return nil
+}
+
+func (s *VMPool) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := s.ValidateEnums(); err != nil {
+		return err
+	}
+	externalIPMap := make(map[string]struct{})
+	internalIPMap := make(map[string]struct{})
+	for _, v := range s.Vms {
+		if err := v.Validate(); err != nil {
+			return err
+		}
+		if v.NetInfo.ExternalIp != "" {
+			if _, ok := externalIPMap[v.NetInfo.ExternalIp]; ok {
+				return fmt.Errorf("VM with same external IP %s already exists", v.NetInfo.ExternalIp)
+			}
+			externalIPMap[v.NetInfo.ExternalIp] = struct{}{}
+		}
+		if v.NetInfo.InternalIp != "" {
+			if _, ok := internalIPMap[v.NetInfo.InternalIp]; ok {
+				return fmt.Errorf("VM with same internal IP %s already exists", v.NetInfo.InternalIp)
+			}
+			internalIPMap[v.NetInfo.InternalIp] = struct{}{}
+		}
+		if v.State != VMState_VM_FREE && v.State != VMState_VM_FORCE_FREE {
+			return errors.New("Invalid VM state, only VmForceFree state is allowed")
+		}
+	}
+	return nil
+}
+
+func (s *VMPoolMember) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := s.Vm.Validate(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *CloudletPoolMember) Validate(fields map[string]struct{}) error {
-	return s.ValidateKey()
+func (s *VMPoolInfo) Validate(fields map[string]struct{}) error {
+	return nil
 }
 
 func (key *ResTagTableKey) ValidateKey() error {
@@ -327,6 +391,9 @@ func (key *AppInstKey) ValidateKey() error {
 
 func (s *AppInst) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := validateCustomizationConfigs(s.Configs); err != nil {
 		return err
 	}
 	return nil
@@ -381,17 +448,25 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (s *AppInstRefs) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func (key *PolicyKey) ValidateKey() error {
-	if err := util.ValidObjName(key.Developer); err != nil {
+	if err := util.ValidObjName(key.Organization); err != nil {
 		errstring := err.Error()
 		// lowercase the first letter of the error message
 		errstring = strings.ToLower(string(errstring[0])) + errstring[1:len(errstring)]
-		return fmt.Errorf("Invalid developer name, " + errstring)
+		return fmt.Errorf("Invalid organization, " + errstring)
 	}
 	if key.Name == "" {
 		return errors.New("Policy name cannot be empty")
 	}
 	return nil
+}
+
+func (s *AppInstClientKey) Validate(fields map[string]struct{}) error {
+	return s.Key.ValidateKey()
 }
 
 // Validate fields. Note that specified fields is ignored, so this function
@@ -428,14 +503,16 @@ func (s *AutoProvPolicy) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
-	if s.DeployClientCount <= 0 {
-		return errors.New("Deploy client count must be greater than 0")
+	if s.MinActiveInstances > s.MaxInstances && s.MaxInstances != 0 {
+		return fmt.Errorf("Minimum active instances cannot be larger than Maximum Instances")
 	}
-	/*
-		if s.AutoDeployIntervalCount <= 0 {
-			return errors.New("Auto deploy interval count must be greater than 0")
-		}
-	*/
+	if s.MinActiveInstances == 0 && s.DeployClientCount == 0 {
+		return fmt.Errorf("One of deploy client count and minimum active instances must be specified")
+	}
+	return nil
+}
+
+func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
@@ -455,6 +532,9 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 			if o.PortRangeMin < minPort || o.PortRangeMin > maxPort {
 				return fmt.Errorf("Invalid min port range: %d", o.PortRangeMin)
 			}
+			if o.PortRangeMax > maxPort {
+				return fmt.Errorf("Invalid max port range: %d", o.PortRangeMax)
+			}
 			if o.PortRangeMin > o.PortRangeMax {
 				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", o.PortRangeMin, o.PortRangeMax)
 			}
@@ -464,6 +544,25 @@ func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// Always valid
+func (s *DeviceReport) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
+func (key *DeviceKey) ValidateKey() error {
+	if key.UniqueId == "" || key.UniqueIdType == "" {
+		return errors.New("Device id cannot be empty")
+	}
+	return nil
+}
+func (s *Device) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	// TODO - we might want to validate timestamp in the future
 	return nil
 }
 
@@ -536,10 +635,8 @@ func GetLProto(s string) (dme.LProto, error) {
 		return dme.LProto_L_PROTO_TCP, nil
 	case "udp":
 		return dme.LProto_L_PROTO_UDP, nil
-	case "http":
-		return dme.LProto_L_PROTO_HTTP, nil
 	}
-	return 0, fmt.Errorf("%s is not a supported Protocol", s)
+	return 0, fmt.Errorf("Unsupported protocol: %s", s)
 }
 
 func LProtoStr(proto dme.LProto) (string, error) {
@@ -548,16 +645,12 @@ func LProtoStr(proto dme.LProto) (string, error) {
 		return "tcp", nil
 	case dme.LProto_L_PROTO_UDP:
 		return "udp", nil
-	case dme.LProto_L_PROTO_HTTP:
-		return "http", nil
 	}
 	return "", fmt.Errorf("Invalid proto %d", proto)
 }
 
 func L4ProtoStr(proto dme.LProto) (string, error) {
 	switch proto {
-	case dme.LProto_L_PROTO_HTTP:
-		fallthrough
 	case dme.LProto_L_PROTO_TCP:
 		return "tcp", nil
 	case dme.LProto_L_PROTO_UDP:
@@ -567,63 +660,68 @@ func L4ProtoStr(proto dme.LProto) (string, error) {
 }
 
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
-	var baseport int64
-	var endport int64
-	var err error
-
 	appports := make([]dme.AppPort, 0)
 	if ports == "" {
 		return appports, nil
 	}
-	strs := strings.Split(ports, ",")
-	for _, str := range strs {
-		vals := strings.Split(str, ":")
-		// within each vals, we may have a hyphenated range of ports ex: udp:M-N inclusive
-		if len(vals) != 2 {
-			// either case len is 2 if a valid string ex: udp:4500[-500]
-			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port[-endport] but was %s", vals[0])
-		}
-		// within each pp[1], we may have a hyphenated range of ports ex: udp:M-N inclusive
-		portrange := strings.Split(vals[1], "-")
-		// len of portrange is 2 if a range, 1 if simple single port value
-		// in either case, baseport is the first elem of portrange
 
-		baseport, err = strconv.ParseInt(portrange[0], 10, 32)
-		if len(portrange) == 2 {
-			endport, err = strconv.ParseInt(portrange[1], 10, 32)
-			if err != nil {
-				return nil, fmt.Errorf("unable to convert port range base value")
-			}
-		} else {
-			// accomodate tests below
-			endport = baseport
-		}
+	portSpecs, err := util.ParsePorts(ports)
+	if err != nil {
+		return nil, err
+	}
 
-		if (baseport < 1 || baseport > 65535) ||
-			(endport < 1 || endport > 65535) {
-			return nil, fmt.Errorf("App ports out of range")
-		}
-		if endport < baseport {
-			// after some debate, error on this potential typo/
-			// don't second guess the client, make 'em fix it.
-			return nil, fmt.Errorf("App ports out of range")
-		}
-		if baseport == endport {
-			// ex: tcp:5000-5000 or a single value.
-			endport = 0
-		}
-		proto, err := GetLProto(vals[0])
+	var proto dme.LProto
+	var baseport int64
+	var endport int64
+
+	for _, portSpec := range portSpecs {
+		proto, err = GetLProto(portSpec.Proto)
 		if err != nil {
 			return nil, err
 		}
+		baseport, err = strconv.ParseInt(portSpec.Port, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("unable to convert port range base value")
+		}
+		endport, err = strconv.ParseInt(portSpec.EndPort, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("unable to convert port range end value")
+		}
+
+		// loop through to verify we are not using a platform reserved port
+		lastPort := endport
+		if lastPort == 0 {
+			lastPort = baseport
+		}
+		for pnum := baseport; pnum <= lastPort; pnum++ {
+			pstring := fmt.Sprintf("%s:%d", strings.ToLower(portSpec.Proto), pnum)
+			desc, reserved := ReservedPlatformPorts[pstring]
+			if reserved {
+				return nil, fmt.Errorf("App cannot use port %s - reserved for %s", pstring, desc)
+			}
+		}
+
 		p := dme.AppPort{
 			Proto:        proto,
 			InternalPort: int32(baseport),
 			EndPort:      int32(endport),
+			Tls:          portSpec.Tls,
+			Nginx:        portSpec.Nginx,
 		}
+
 		appports = append(appports, p)
 	}
 	return appports, nil
+}
+
+func CmpSortDebugReply(a DebugReply, b DebugReply) bool {
+	// e2e tests ignore Name for comparison, so name cannot
+	// be used to sort.
+	aKey := a.Node
+	aKey.Name = ""
+	bKey := b.Node
+	bKey.Name = ""
+	return aKey.GetKeyString() < bKey.GetKeyString()
 }
 
 func IgnoreTaggedFields(taglist string) []cmp.Option {
@@ -635,6 +733,7 @@ func IgnoreTaggedFields(taglist string) []cmp.Option {
 	opts = append(opts, IgnoreClusterInstInfoFields(taglist))
 	opts = append(opts, IgnoreCloudletFields(taglist))
 	opts = append(opts, IgnoreCloudletInfoFields(taglist))
+	opts = append(opts, IgnoreNodeFields(taglist))
 	return opts
 }
 
@@ -643,8 +742,6 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortApp))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudlet))
-	opts = append(opts, cmpopts.SortSlices(CmpSortDeveloper))
-	opts = append(opts, cmpopts.SortSlices(CmpSortOperator))
 	opts = append(opts, cmpopts.SortSlices(CmpSortOperatorCode))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortFlavor))
@@ -656,24 +753,117 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletPoolMember))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	opts = append(opts, cmpopts.SortSlices(CmpSortResTagTable))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstRefs))
 	return opts
 }
 
 func GetOrg(obj interface{}) string {
 	switch v := obj.(type) {
-	case *Operator:
-		return v.Key.Name
-	case *Developer:
-		return v.Key.Name
+	case *OperatorCode:
+		return v.Organization
 	case *Cloudlet:
-		return v.Key.OperatorKey.Name
+		return v.Key.Organization
 	case *ClusterInst:
-		return v.Key.Developer
+		return v.Key.Organization
 	case *App:
-		return v.Key.DeveloperKey.Name
+		return v.Key.Organization
 	case *AppInst:
-		return v.Key.AppKey.DeveloperKey.Name
+		return v.Key.AppKey.Organization
 	default:
 		return "mobiledgex"
 	}
+}
+
+func GetTags(obj interface{}) map[string]string {
+	switch v := obj.(type) {
+	case objstore.Obj:
+		return v.GetObjKey().GetTags()
+	case objstore.ObjKey:
+		return v.GetTags()
+	default:
+		return map[string]string{}
+	}
+}
+
+func (c *ClusterInstCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, cd := range c.Objs {
+		val := cd.Obj
+		if val.Key.Organization == org || val.Key.CloudletKey.Organization == org || (val.Reservable && val.ReservedBy == org) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState CloudletState, timeout time.Duration) error {
+	curState := CloudletState_CLOUDLET_STATE_UNKNOWN
+	done := make(chan bool, 1)
+
+	checkState := func(key *CloudletKey) {
+		info := CloudletInfo{}
+		if c.Get(key, &info) {
+			curState = info.State
+		}
+		if curState == targetState {
+			done <- true
+		}
+	}
+
+	cancel := c.WatchKey(key, func(ctx context.Context) {
+		checkState(key)
+	})
+	defer cancel()
+
+	// After setting up watch, check current state,
+	// as it may have already changed to target state.
+	checkState(key)
+
+	select {
+	case <-done:
+	case <-time.After(timeout):
+		return fmt.Errorf("Timed out; expected state %s buf is %s",
+			CloudletState_CamelName[int32(targetState)],
+			CloudletState_CamelName[int32(curState)])
+	}
+	return nil
+}
+
+func (s *App) GetAutoProvPolicies() map[string]struct{} {
+	policies := make(map[string]struct{})
+	if s.AutoProvPolicy != "" {
+		policies[s.AutoProvPolicy] = struct{}{}
+	}
+	for _, name := range s.AutoProvPolicies {
+		policies[name] = struct{}{}
+	}
+	return policies
+}
+
+func (s *App) GetAutoProvPolicys() map[PolicyKey]struct{} {
+	policies := make(map[PolicyKey]struct{})
+	if s.AutoProvPolicy != "" {
+		key := PolicyKey{
+			Name:         s.AutoProvPolicy,
+			Organization: s.Key.Organization,
+		}
+		policies[key] = struct{}{}
+	}
+	for _, name := range s.AutoProvPolicies {
+		key := PolicyKey{
+			Name:         name,
+			Organization: s.Key.Organization,
+		}
+		policies[key] = struct{}{}
+	}
+	return policies
+}
+
+func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
+	keys := make(map[CloudletKey]struct{})
+	for _, cl := range s.Cloudlets {
+		keys[cl.Key] = struct{}{}
+	}
+	return keys
 }

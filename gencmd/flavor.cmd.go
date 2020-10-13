@@ -3,19 +3,21 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -38,6 +40,9 @@ var CreateFlavorCmd = &cli.Command{
 }
 
 func runCreateFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +97,9 @@ var DeleteFlavorCmd = &cli.Command{
 }
 
 func runDeleteFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +154,9 @@ var UpdateFlavorCmd = &cli.Command{
 }
 
 func runUpdateFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +211,9 @@ var ShowFlavorCmd = &cli.Command{
 }
 
 func runShowFlavor(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +236,7 @@ func ShowFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("ShowFlavor failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Flavor, 0)
 	for {
 		obj, err := stream.Recv()
@@ -273,6 +288,9 @@ var AddFlavorResCmd = &cli.Command{
 }
 
 func runAddFlavorRes(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -327,6 +345,9 @@ var RemoveFlavorResCmd = &cli.Command{
 }
 
 func runRemoveFlavorRes(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Flavor)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -399,6 +420,7 @@ var FlavorAliasArgs = []string{
 	"name=key.name",
 }
 var FlavorComments = map[string]string{
+	"fields":    "Fields are used for the Update API to specify which fields to apply",
 	"name":      "Flavor name",
 	"ram":       "RAM in megabytes",
 	"vcpus":     "Number of virtual CPUs",
@@ -406,6 +428,7 @@ var FlavorComments = map[string]string{
 	"optresmap": "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1",
 }
 var FlavorSpecialArgs = map[string]string{
+	"fields":    "StringArray",
 	"optresmap": "StringToString",
 }
 var CreateFlavorRequiredArgs = []string{

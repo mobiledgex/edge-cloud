@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"os/exec"
 	"testing"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
@@ -15,7 +18,7 @@ import (
 
 func TestClusterInstApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
@@ -31,6 +34,8 @@ func TestClusterInstApi(t *testing.T) {
 		&appInstInfoApi, &clusterInstInfoApi)
 
 	reduceInfoTimeouts(t, ctx)
+	InfluxUsageUnitTestSetup(t)
+	defer InfluxUsageUnitTestStop()
 
 	// cannot create insts without cluster/cloudlet
 	for _, obj := range testutil.ClusterInstData {
@@ -40,7 +45,6 @@ func TestClusterInstApi(t *testing.T) {
 
 	// create support data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -88,6 +92,26 @@ func TestClusterInstApi(t *testing.T) {
 	err = clusterInstApi.DeleteClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkClusterInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+
+	// test update of autoscale policy
+	obj = testutil.ClusterInstData[0]
+	obj.Key.Organization = testutil.AutoScalePolicyData[1].Key.Organization
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "create ClusterInst")
+	check := edgeproto.ClusterInst{}
+	found := clusterInstApi.cache.Get(&obj.Key, &check)
+	require.True(t, found)
+	require.Equal(t, 2, int(check.NumNodes))
+
+	obj.AutoScalePolicy = testutil.AutoScalePolicyData[1].Key.Name
+	obj.Fields = []string{edgeproto.ClusterInstFieldAutoScalePolicy}
+	err = clusterInstApi.UpdateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
+	check = edgeproto.ClusterInst{}
+	found = clusterInstApi.cache.Get(&obj.Key, &check)
+	require.True(t, found)
+	require.Equal(t, testutil.AutoScalePolicyData[1].Key.Name, check.AutoScalePolicy)
+	require.Equal(t, 4, int(check.NumNodes))
 
 	// override CRM error
 	responder.SetSimulateClusterCreateFailure(true)
@@ -138,6 +162,7 @@ func reduceInfoTimeouts(t *testing.T, ctx context.Context) {
 	settings.CreateAppInstTimeout = edgeproto.Duration(1 * time.Second)
 	settings.UpdateAppInstTimeout = edgeproto.Duration(1 * time.Second)
 	settings.DeleteAppInstTimeout = edgeproto.Duration(1 * time.Second)
+	settings.CloudletMaintenanceTimeout = edgeproto.Duration(2 * time.Second)
 
 	settings.Fields = []string{
 		edgeproto.SettingsFieldCreateAppInstTimeout,
@@ -146,6 +171,7 @@ func reduceInfoTimeouts(t *testing.T, ctx context.Context) {
 		edgeproto.SettingsFieldCreateClusterInstTimeout,
 		edgeproto.SettingsFieldUpdateClusterInstTimeout,
 		edgeproto.SettingsFieldDeleteClusterInstTimeout,
+		edgeproto.SettingsFieldCloudletMaintenanceTimeout,
 	}
 	_, err = settingsApi.UpdateSettings(ctx, settings)
 	require.Nil(t, err)
@@ -197,25 +223,25 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	appinst.Key.ClusterInstKey = cinst.Key
 	err := appInstApi.CreateAppInst(&appinst, streamOut)
 	require.Nil(t, err, "create AppInst")
-	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.DeveloperKey.Name)
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.Organization)
 
 	// Cannot create another AppInst on it from different developer
 	appinst2 := edgeproto.AppInst{}
 	appinst2.Key.AppKey = testutil.AppData[10].Key
 	appinst2.Key.ClusterInstKey = cinst.Key
-	require.NotEqual(t, appinst.Key.AppKey.DeveloperKey.Name, appinst2.Key.AppKey.DeveloperKey.Name)
+	require.NotEqual(t, appinst.Key.AppKey.Organization, appinst2.Key.AppKey.Organization)
 	err = appInstApi.CreateAppInst(&appinst2, streamOut)
 	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
 	// Cannot create another AppInst on it from the same developer
 	appinst3 := edgeproto.AppInst{}
 	appinst3.Key.AppKey = testutil.AppData[1].Key
 	appinst3.Key.ClusterInstKey = cinst.Key
-	require.Equal(t, appinst.Key.AppKey.DeveloperKey.Name, appinst3.Key.AppKey.DeveloperKey.Name)
+	require.Equal(t, appinst.Key.AppKey.Organization, appinst3.Key.AppKey.Organization)
 	err = appInstApi.CreateAppInst(&appinst3, streamOut)
 	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
 
 	// Make sure above changes have not affected ReservedBy setting
-	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.DeveloperKey.Name)
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.Organization)
 
 	// Deleting AppInst should removed ReservedBy
 	err = appInstApi.DeleteAppInst(&appinst, streamOut)
@@ -225,7 +251,7 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	// Can now create AppInst from different developer
 	err = appInstApi.CreateAppInst(&appinst2, streamOut)
 	require.Nil(t, err, "create AppInst on reservable ClusterInst")
-	checkReservedBy(t, ctx, api, &cinst.Key, appinst2.Key.AppKey.DeveloperKey.Name)
+	checkReservedBy(t, ctx, api, &cinst.Key, appinst2.Key.AppKey.Organization)
 
 	// Delete AppInst
 	err = appInstApi.DeleteAppInst(&appinst2, streamOut)
@@ -245,7 +271,7 @@ func checkReservedBy(t *testing.T, ctx context.Context, api *testutil.ClusterIns
 	require.True(t, found, "get ClusterInst")
 	require.True(t, cinst.Reservable)
 	require.Equal(t, expected, cinst.ReservedBy)
-	require.Equal(t, cloudcommon.DeveloperMobiledgeX, cinst.Key.Developer)
+	require.Equal(t, cloudcommon.OrganizationMobiledgeX, cinst.Key.Organization)
 }
 
 // Test that Crm Override for Delete ClusterInst overrides any failures
@@ -305,4 +331,36 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 
 	_, err = appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err, "delete App")
+}
+
+var testInfluxProc *process.Influx
+
+func InfluxUsageUnitTestSetup(t *testing.T) {
+	addr := "http://127.0.0.1:8086"
+
+	// start influxd if not already running
+	_, err := exec.Command("sh", "-c", "pgrep -x influxd").Output()
+	if err != nil {
+		p := process.Influx{}
+		p.Common.Name = "influx-test"
+		p.HttpAddr = addr
+		p.DataDir = "/var/tmp/.influxdb"
+		// start influx
+		err = p.StartLocal("/var/tmp/influxdb.log",
+			process.WithCleanStartup())
+		require.Nil(t, err, "start InfluxDB server")
+		testInfluxProc = &p
+	}
+	q := influxq.NewInfluxQ(cloudcommon.EventsDbName, "", "")
+	err = q.Start(addr)
+	if err != nil {
+		testInfluxProc.StopLocal()
+	}
+	require.Nil(t, err, "new influx q")
+	services.events = q
+}
+
+func InfluxUsageUnitTestStop() {
+	services.events.Stop()
+	testInfluxProc.StopLocal()
 }

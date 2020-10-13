@@ -10,6 +10,8 @@ type PortSpec struct {
 	Proto   string
 	Port    string
 	EndPort string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
+	Tls     bool
+	Nginx   bool
 }
 
 func ParsePorts(accessPorts string) ([]PortSpec, error) {
@@ -22,8 +24,23 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 
 	for _, pstr := range pstrs {
 		pp := strings.Split(pstr, ":")
-		if len(pp) != 2 {
-			return nil, fmt.Errorf("invalid AccessPorts format %s", pstr)
+		if len(pp) < 2 {
+			return nil, fmt.Errorf("invalid AccessPorts format '%s'", pstr)
+		}
+		annotations := make(map[string]string)
+		for _, kv := range pp[2:] {
+			if kv == "" {
+				return nil, fmt.Errorf("invalid AccessPorts annotation %s for port %s, expected format is either key or key=val", kv, pp[1])
+			}
+			keyval := strings.Split(kv, "=")
+			if len(keyval) == 1 {
+				// boolean annotation
+				annotations[kv] = "true"
+			} else if len(keyval) == 2 {
+				annotations[keyval[0]] = keyval[1]
+			} else {
+				return nil, fmt.Errorf("invalid AccessPorts annotation %s for port %s, expected format is either key or key=val", kv, pp[1])
+			}
 		}
 		// within each pp[1], we may have a hypenated range of ports ex: udp:M-N inclusive
 		portrange := strings.Split(pp[1], "-")
@@ -44,7 +61,7 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 
 		if (baseport < 1 || baseport > 65535) ||
 			(endport < 1 || endport > 65535) {
-			return nil, fmt.Errorf("Range ports out of range")
+			return nil, fmt.Errorf("App ports out of range")
 		}
 		if endport < baseport {
 			// after some debate, error on this potential typo len(portrange)
@@ -56,10 +73,31 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			endport = 0
 		}
 
+		proto := strings.ToLower(pp[0])
+		if proto != "tcp" && proto != "udp" {
+			return nil, fmt.Errorf("Unsupported protocol: %s", pp[0])
+		}
+
 		portSpec := PortSpec{
-			Proto:   strings.ToLower(pp[0]),
+			Proto:   proto,
 			Port:    strconv.FormatInt(baseport, 10),
 			EndPort: strconv.FormatInt(endport, 10),
+		}
+		for key, val := range annotations {
+			switch key {
+			case "tls":
+				if portSpec.Proto != "tcp" {
+					return nil, fmt.Errorf("Invalid protocol %s, not available for tls support", portSpec.Proto)
+				}
+				portSpec.Tls = true
+			case "nginx":
+				if portSpec.Proto != "udp" {
+					return nil, fmt.Errorf("Invalid annotation \"nginx\" for %s ports", portSpec.Proto)
+				}
+				portSpec.Nginx = true
+			default:
+				return nil, fmt.Errorf("unrecognized annotation %s for port %s", key+"="+val, pp[1])
+			}
 		}
 		ports = append(ports, portSpec)
 	}

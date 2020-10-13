@@ -18,32 +18,47 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterRecvAppCache(&cd.AppCache)
 	client.RegisterRecvAppInstCache(&cd.AppInstCache)
 	client.RegisterRecvCloudletCache(&cd.CloudletCache)
+	client.RegisterRecvVMPoolCache(&cd.VMPoolCache)
 	client.RegisterRecvClusterInstCache(&cd.ClusterInstCache)
 	client.RegisterRecv(notify.NewExecRequestRecv(cd.ExecReqHandler))
+	client.RegisterRecvResTagTableCache(&cd.ResTagTableCache)
 	client.RegisterSendCloudletInfoCache(&cd.CloudletInfoCache)
+	client.RegisterSendVMPoolInfoCache(&cd.VMPoolInfoCache)
 	client.RegisterSendAppInstInfoCache(&cd.AppInstInfoCache)
 	client.RegisterSendClusterInstInfoCache(&cd.ClusterInstInfoCache)
-	client.RegisterSendNodeCache(&cd.NodeCache)
 	client.RegisterSend(cd.ExecReqSend)
 	sendMetric = notify.NewMetricSend()
 	client.RegisterSend(sendMetric)
 	client.RegisterSendAlertCache(&cd.AlertCache)
 	client.RegisterRecvPrivacyPolicyCache(&cd.PrivacyPolicyCache)
-
+	client.RegisterRecvAutoProvPolicyCache(&cd.AutoProvPolicyCache)
+	client.RegisterSendAllRecv(cd)
+	nodeMgr.RegisterClient(client)
 }
 
 func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendSettingsCache(&controllerData.SettingsCache)
+	notifyServer.RegisterSendVMPoolCache(&controllerData.VMPoolCache)
+	notifyServer.RegisterSendVMPoolInfoCache(&controllerData.VMPoolInfoCache)
+	notifyServer.RegisterSendCloudletCache(&controllerData.CloudletCache)
+	notifyServer.RegisterSendAutoProvPolicyCache(&controllerData.AutoProvPolicyCache)
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
+
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)
+	// Dummy CloudletInfoCache receiver to avoid sending
+	// cloudletInfo updates to controller from Shepherd
+	var DummyCloudletInfoRecvCache edgeproto.CloudletInfoCache
+	edgeproto.InitCloudletInfoCache(&DummyCloudletInfoRecvCache)
+	notifyServer.RegisterRecvCloudletInfoCache(&DummyCloudletInfoRecvCache)
+	nodeMgr.RegisterServer(notifyServer)
 }
 
 type CrmMetricsReceiver struct{}
 
 // forward to controller
-func (r *CrmMetricsReceiver) Recv(ctx context.Context, metric *edgeproto.Metric) {
+func (r *CrmMetricsReceiver) RecvMetric(ctx context.Context, metric *edgeproto.Metric) {
 	sendMetric.Update(ctx, metric)
 }

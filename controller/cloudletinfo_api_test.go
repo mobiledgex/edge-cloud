@@ -11,7 +11,7 @@ import (
 
 func TestCloudletInfo(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
@@ -25,7 +25,6 @@ func TestCloudletInfo(t *testing.T) {
 	defer sync.Done()
 
 	// create supporting data
-	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)

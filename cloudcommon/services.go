@@ -30,28 +30,44 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	envVars := make(map[string]string)
 	notifyCtrlAddrs := ""
 	tlsCertFile := ""
+	tlsKeyFile := ""
+	tlsCAFile := ""
 	vaultAddr := ""
 	testMode := false
 	span := ""
-	cleanupMode := false
+	cloudletVMImagePath := ""
 	region := ""
+	commercialCerts := false
+	useVaultCAs := false
+	useVaultCerts := false
+	appDNSRoot := ""
+	chefServerPath := ""
+	deploymentTag := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
 		}
 		notifyCtrlAddrs = pfConfig.NotifyCtrlAddrs
 		tlsCertFile = pfConfig.TlsCertFile
+		tlsKeyFile = pfConfig.TlsKeyFile
+		tlsCAFile = pfConfig.TlsCaFile
 		vaultAddr = pfConfig.VaultAddr
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
-		cleanupMode = pfConfig.CleanupMode
+		cloudletVMImagePath = pfConfig.CloudletVmImagePath
 		region = pfConfig.Region
+		commercialCerts = pfConfig.CommercialCerts
+		useVaultCAs = pfConfig.UseVaultCas
+		useVaultCerts = pfConfig.UseVaultCerts
+		appDNSRoot = pfConfig.AppDnsRoot
+		chefServerPath = pfConfig.ChefServerPath
+		deploymentTag = pfConfig.DeploymentTag
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
 	}
 
-	opts = append(opts, process.WithDebug("api,mexos,notify,info"))
+	opts = append(opts, process.WithDebug("api,infra,notify,info"))
 
 	return &process.Crm{
 		NotifyAddrs:   notifyCtrlAddrs,
@@ -64,14 +80,23 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		},
 		TLS: process.TLSCerts{
 			ServerCert: tlsCertFile,
+			ServerKey:  tlsKeyFile,
+			CACert:     tlsCAFile,
 		},
-		VaultAddr:    vaultAddr,
-		PhysicalName: cloudlet.PhysicalName,
-		TestMode:     testMode,
-		Span:         span,
-		CleanupMode:  cleanupMode,
-		Version:      cloudlet.Version,
-		Region:       region,
+		VaultAddr:           vaultAddr,
+		PhysicalName:        cloudlet.PhysicalName,
+		TestMode:            testMode,
+		Span:                span,
+		ContainerVersion:    cloudlet.ContainerVersion,
+		VMImageVersion:      cloudlet.VmImageVersion,
+		CloudletVMImagePath: cloudletVMImagePath,
+		Region:              region,
+		CommercialCerts:     commercialCerts,
+		UseVaultCAs:         useVaultCAs,
+		UseVaultCerts:       useVaultCerts,
+		AppDNSRoot:          appDNSRoot,
+		ChefServerPath:      chefServerPath,
+		DeploymentTag:       deploymentTag,
 	}, opts, nil
 }
 
@@ -82,6 +107,15 @@ func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig)
 	}
 
 	return crmProc.String(opts...), &crmProc.Common.EnvVars, nil
+}
+
+func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) ([]string, *map[string]string, error) {
+	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return crmProc.GetArgs(opts...), &crmProc.Common.EnvVars, nil
 }
 
 var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
@@ -131,7 +165,7 @@ func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
 	c := make(chan string)
 	go process.KillProcessesByName("crmserver", maxwait, args, c)
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "stopped crmserver", "msg", <-c)
+	log.SpanLog(ctx, log.DebugLevelInfra, "stopped crmserver", "msg", <-c)
 
 	// After above, processes will be in Zombie state. Hence use wait to cleanup the processes
 	if cloudlet != nil {

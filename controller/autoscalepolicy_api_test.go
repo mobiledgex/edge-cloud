@@ -12,7 +12,7 @@ import (
 
 func TestAutoScalePolicyApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
@@ -29,7 +29,7 @@ func TestAutoScalePolicyApi(t *testing.T) {
 
 	policy := edgeproto.AutoScalePolicy{}
 	policy.Key.Name = "auto-scale-policy-name"
-	policy.Key.Developer = "dev1"
+	policy.Key.Organization = "dev1"
 	policy.MinNodes = 1
 	policy.MaxNodes = 2
 	policy.ScaleUpCpuThresh = 80

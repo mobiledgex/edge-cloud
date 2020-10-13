@@ -78,6 +78,9 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if argSpecified(arg.Name, notreqMap) {
 			// explicity not required
 			continue
+		} else if _, found := noconfigMap[arg.Name]; found {
+			// part of no config
+			continue
 		} else if argSpecified(arg.Name, alsoreqMap) {
 			// explicity required
 		} else if strings.HasPrefix(arg.Name, "Key.") || GetObjAndKey(message) {
@@ -107,10 +110,24 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if _, found := requiredMap[arg.Name]; found {
 			continue
 		}
-		if _, found := noconfigMap[arg.Name]; found {
+		parts := strings.Split(arg.Name, ".")
+		checkStr := ""
+		noconfigFound := false
+		for _, part := range parts {
+			if checkStr == "" {
+				checkStr = part
+			} else {
+				checkStr = checkStr + "." + part
+			}
+			if _, found := noconfigMap[checkStr]; found {
+				noconfigFound = true
+				break
+			}
+		}
+		if noconfigFound {
 			continue
 		}
-		parts := strings.Split(arg.Name, ".")
+		parts = strings.Split(arg.Name, ":")
 		if _, found := noconfigMap[parts[0]]; found {
 			continue
 		}
@@ -130,9 +147,6 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	// generate aliases
 	g.P("var ", msgname, "AliasArgs = []string{")
 	for _, arg := range allargs {
-		if arg.Name == "Fields" {
-			continue
-		}
 		// keep noconfig ones here because aliases
 		// may be used for tabular output later.
 
@@ -158,7 +172,7 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	// generate comments
 	g.P("var ", msgname, "Comments = map[string]string{")
 	for _, arg := range allargs {
-		if arg.Name == "Fields" || arg.Comment == "" {
+		if arg.Comment == "" {
 			continue
 		}
 		alias, ok := aliasMap[arg.Name]
@@ -179,6 +193,9 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	sort.Strings(keys)
 	for _, arg := range keys {
 		argType := specialArgs[arg]
+		if prefixMessageToAlias {
+			arg = *message.Name + "." + arg
+		}
 		g.P("\"", strings.ToLower(arg), "\": \"", argType, "\",")
 	}
 	g.P("}")
@@ -194,7 +211,7 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 		}
 		name := generator.CamelCase(*field.Name)
 		hierName := strings.Join(append(parents, name), ".")
-		comment := support.GetComments(desc.File(), fmt.Sprintf("%s,2,%d", desc.Path(), i))
+		comment := support.GetComments(desc.File().GetName(), fmt.Sprintf("%s,2,%d", desc.Path(), i))
 		comment = strings.TrimSpace(strings.Map(RemoveNewLines, comment))
 		arg := Arg{
 			Name:    hierName,
@@ -206,6 +223,9 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			allargs = append(allargs, arg)
 		} else if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 			subDesc := GetDesc(g, field.GetTypeName())
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				name = name + ":#"
+			}
 			subArgs, subSpecialArgs := GetArgs(g, support, append(parents, name), subDesc)
 			allargs = append(allargs, subArgs...)
 			for k, v := range subSpecialArgs {
@@ -216,6 +236,9 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			en := enumDesc.EnumDescriptorProto
 			strs := make([]string, 0, len(en.Value))
 			for _, val := range en.Value {
+				if GetEnumBackend(val) {
+					continue
+				}
 				strs = append(strs, util.CamelCase(*val.Name))
 			}
 			text := "one of"
@@ -225,7 +248,7 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			arg.Comment = arg.Comment + ", " + text + " " + strings.Join(strs, ", ")
 			allargs = append(allargs, arg)
 		} else {
-			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_STRING && name != "Fields" {
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_STRING {
 				specialArgs[hierName] = "StringArray"
 			}
 			allargs = append(allargs, arg)
@@ -269,13 +292,17 @@ func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
 }
 
 func GetNoConfig(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {
+	noConfigStr := GetStringExtension(message.Options, protogen.E_Noconfig, "")
 	if method != nil {
 		str, found := FindStringExtension(method.Options, protogen.E_MethodNoconfig)
 		if found {
-			return str
+			if noConfigStr != "" && str != "" {
+				noConfigStr += ","
+			}
+			noConfigStr += str
 		}
 	}
-	return GetStringExtension(message.Options, protogen.E_Noconfig, "")
+	return noConfigStr
 }
 
 func GetNotreq(message *descriptor.DescriptorProto, method *descriptor.MethodDescriptorProto) string {

@@ -15,20 +15,17 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 // Nginx is used to proxy connections from the external network to
 // the internal cloudlet clusters. It is not doing any load-balancing.
-// L7 proxying is handled by a single L7 nginx instance since only
-// one instance can bind to port 443.
-// All other access to an AppInst is handled by a per-AppInst dedicated
+// Access to an AppInst is handled by a per-AppInst dedicated
 // nginx instance for better isolation.
 
-var NginxL7Dir = "nginxL7"
 var NginxL7Name = "nginxL7"
 
 var nginxConfT *template.Template
-var nginxL7ConfT *template.Template
 
 // defaultConcurrentConnsPerIP is the default DOS protection setting for connections per source IP
 const defaultConcurrentConnsPerIP uint64 = 100
@@ -48,7 +45,7 @@ func getTCPConcurrentConnections() (uint64, error) {
 	return conns, nil
 }
 
-func getUDPConcurrentConnectionsPerIP() (uint64, error) {
+func getUDPConcurrentConnections() (uint64, error) {
 	var err error
 	connStr := os.Getenv("MEX_LB_CONCURRENT_UDP_CONNS")
 	conns := defaultConcurrentConnsPerIP
@@ -63,24 +60,25 @@ func getUDPConcurrentConnectionsPerIP() (uint64, error) {
 
 func init() {
 	nginxConfT = template.Must(template.New("conf").Parse(nginxConf))
-	nginxL7ConfT = template.Must(template.New("l7app").Parse(nginxL7Conf))
 }
 
-func InitL7Proxy(ctx context.Context, client pc.PlatformClient, ops ...Op) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "InitL7Proxy")
-	out, err := client.Output("docker ps --format '{{.Names}}'")
-	if err != nil {
-		return err
+// This actually deletes the L7 proxy for backwards compatibility, so it doesnt conflict with tcp:443 apps
+func InitL7Proxy(ctx context.Context, client ssh.Client, ops ...Op) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "InitL7Proxy")
+
+	out, err := client.Output("docker kill " + NginxL7Name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "kill nginx result", "out", out, "err", err)
+
+	if err != nil && strings.Contains(string(out), "No such container") {
+		return nil
 	}
-	for _, line := range strings.Split(string(out), "\n") {
-		if strings.TrimSpace(line) == NginxL7Name {
-			// already running
-			return nil
-		}
+	// container should autoremove on kill but just in case
+	out, err = client.Output("docker rm " + NginxL7Name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "rm nginx result", "out", out, "err", err)
+	if err != nil && strings.Contains(string(out), "No such container") {
+		return nil
 	}
-	listenIP := ""
-	backendIP := ""
-	return CreateNginxProxy(ctx, client, NginxL7Name, listenIP, backendIP, []dme.AppPort{}, ops...)
+	return err
 }
 
 func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
@@ -88,45 +86,41 @@ func CheckProtocols(name string, ports []dme.AppPort) (bool, bool) {
 	needNginx := false
 	for _, p := range ports {
 		switch p.Proto {
-		case dme.LProto_L_PROTO_HTTP:
-			needNginx = true
 		case dme.LProto_L_PROTO_TCP:
-			needEnvoy = true // have envoy handle the tcp stuff
+			needEnvoy = true
 		case dme.LProto_L_PROTO_UDP:
-			needNginx = true
+			if p.Nginx {
+				needNginx = true
+			} else {
+				needEnvoy = true
+			}
 		}
-	}
-	if name == NginxL7Name {
-		needNginx = true
 	}
 	return needEnvoy, needNginx
 }
 
 func getNginxContainerName(name string) string {
-	if name == NginxL7Name {
-		return name
-	}
 	return "nginx" + name
 }
 
-func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, listenIP, destIP string, ports []dme.AppPort, ops ...Op) error {
+func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, destIP string, ports []dme.AppPort, skipHcPorts string, ops ...Op) error {
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
+	log.SpanLog(ctx, log.DebugLevelInfra, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
 	containerName := getNginxContainerName(name)
 
 	// check to see whether nginx or envoy is needed (or both)
 	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
 	if envoyNeeded {
-		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, ops...)
+		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, skipHcPorts, ops...)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "CreateEnvoyProxy failed ", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "CreateEnvoyProxy failed ", "err", err)
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
 		}
 	}
 	if !nginxNeeded {
 		return nil
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", ports)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -137,62 +131,54 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, liste
 	pwd := strings.TrimSpace(string(out))
 
 	dir := pwd + "/nginx/" + name
-	log.SpanLog(ctx, log.DebugLevelMexos, "nginx remote dir", "name", name, "dir", dir)
-	l7dir := pwd + "/" + NginxL7Dir
+	log.SpanLog(ctx, log.DebugLevelInfra, "nginx remote dir", "name", name, "dir", dir)
 
 	err = pc.Run(client, "mkdir -p "+dir)
 	if err != nil {
 		return err
 	}
 
-	useTLS := false
+	usesTLS := false
 	err = pc.Run(client, "ls cert.pem && ls key.pem")
 	if err == nil {
-		useTLS = true
+		usesTLS = true
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "nginx certs check",
-		"name", name, "useTLS", useTLS)
+	log.SpanLog(ctx, log.DebugLevelInfra, "nginx certs check",
+		"name", name, "usesTLS", usesTLS)
 
 	errlogFile := dir + "/err.log"
 	err = pc.Run(client, "touch "+errlogFile)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelInfra,
 			"nginx %s can't create file %s", name, errlogFile)
 		return err
 	}
 	accesslogFile := dir + "/access.log"
 	err = pc.Run(client, "touch "+accesslogFile)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelInfra,
 			"nginx %s can't create file %s", name, accesslogFile)
 		return err
 	}
 	nconfName := dir + "/nginx.conf"
-	err = createNginxConf(ctx, client, nconfName, name, l7dir, listenIP, destIP, ports, useTLS)
+	err = createNginxConf(ctx, client, nconfName, name, listenIP, destIP, ports, usesTLS)
 	if err != nil {
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
 
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", containerName}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_UDP, listenIP)...)
-		if name == NginxL7Name {
-			// Special case. When the L7 nginx instance is created,
-			// there are no configs yet for L7. Expose the L7 port manually.
-			pstr := fmt.Sprintf("%d:%d/tcp", cloudcommon.RootLBL7Port, cloudcommon.RootLBL7Port)
-			cmdArgs = append(cmdArgs, "-p", pstr)
-		}
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dockermgmt.NginxProxy, listenIP)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
-	if useTLS {
+	if usesTLS {
 		cmdArgs = append(cmdArgs, "-v", pwd+"/cert.pem:/etc/ssl/certs/server.crt")
 		cmdArgs = append(cmdArgs, "-v", pwd+"/key.pem:/etc/ssl/certs/server.key")
 	}
 	cmdArgs = append(cmdArgs, []string{
-		"-v", l7dir + ":/etc/nginx/L7",
 		"-v", dir + ":/var/www/.cache",
 		"-v", "/etc/ssl/certs:/etc/ssl/certs",
 		"-v", errlogFile + ":/var/log/nginx/error.log",
@@ -200,48 +186,37 @@ func CreateNginxProxy(ctx context.Context, client pc.PlatformClient, name, liste
 		"-v", nconfName + ":/etc/nginx/nginx.conf",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/nginx-with-curl"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
-	log.SpanLog(ctx, log.DebugLevelMexos, "nginx docker command", "containerName", containerName,
+	log.SpanLog(ctx, log.DebugLevelInfra, "nginx docker command", "containerName", containerName,
 		"cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't create nginx container %s, %s, %v", name, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "created nginx container", "containerName", containerName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "created nginx container", "containerName", containerName)
 	return nil
 }
 
-func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, name, l7dir, listenIP, backendIP string, ports []dme.AppPort, useTLS bool) error {
+func createNginxConf(ctx context.Context, client ssh.Client, confname, name, listenIP, backendIP string, ports []dme.AppPort, usesTLS bool) error {
 	spec := ProxySpec{
 		Name:       name,
-		UseTLS:     useTLS,
+		UsesTLS:    usesTLS,
 		MetricPort: cloudcommon.ProxyMetricsPort,
 	}
-	httpPorts := []HTTPSpecDetail{}
 
-	udpconns, err := getUDPConcurrentConnectionsPerIP()
+	udpconns, err := getUDPConcurrentConnections()
 	if err != nil {
 		return err
 	}
 	for _, p := range ports {
-		switch p.Proto {
-		case dme.LProto_L_PROTO_HTTP:
-			httpPort := HTTPSpecDetail{
-				ListenIP:    listenIP,
-				ListenPort:  p.PublicPort,
-				BackendIP:   backendIP,
-				BackendPort: p.InternalPort,
-				PathPrefix:  p.PathPrefix,
+		if p.Proto == dme.LProto_L_PROTO_UDP {
+			if !p.Nginx { // use envoy
+				continue
 			}
-			httpPorts = append(httpPorts, httpPort)
-			continue
-		case dme.LProto_L_PROTO_TCP:
-			continue // have envoy handle the tcp stuff
-		case dme.LProto_L_PROTO_UDP:
 			udpPort := UDPSpecDetail{
-				ListenIP:             listenIP,
-				BackendIP:            backendIP,
-				BackendPort:          p.InternalPort,
-				ConcurrentConnsPerIP: udpconns,
+				ListenIP:        listenIP,
+				BackendIP:       backendIP,
+				BackendPort:     p.InternalPort,
+				ConcurrentConns: udpconns,
 			}
 			endPort := p.EndPort
 			if endPort == 0 {
@@ -253,26 +228,18 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 				}
 			}
 			for pnum := p.PublicPort; pnum <= endPort; pnum++ {
-				udpPort.ListenPorts = append(udpPort.ListenPorts, pnum)
+				udpPort.NginxListenPorts = append(udpPort.NginxListenPorts, pnum)
+			}
+			// if there is more than one listen port, we don't use the backend port as the
+			// listen port is used as the backend port in the case of a range
+			if len(udpPort.NginxListenPorts) > 1 {
+				udpPort.BackendPort = 0
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
-			spec.L4 = true
 		}
 	}
 
-	if name == NginxL7Name {
-		// this is the L7 nginx instance, generate L7 config
-		spec.L4 = false
-		spec.L7 = true
-		spec.L7Port = cloudcommon.RootLBL7Port
-		// this is where all other Apps will store their L7 config
-		err := pc.Run(client, "mkdir -p "+l7dir)
-		if err != nil {
-			return err
-		}
-	}
-
-	log.SpanLog(ctx, log.DebugLevelMexos, "create nginx conf", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create nginx conf", "name", name)
 	buf := bytes.Buffer{}
 	err = nginxConfT.Execute(&buf, &spec)
 	if err != nil {
@@ -280,52 +247,20 @@ func createNginxConf(ctx context.Context, client pc.PlatformClient, confname, na
 	}
 	err = pc.WriteFile(client, confname, buf.String(), "nginx.conf", pc.NoSudo)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "write nginx.conf failed",
+		log.SpanLog(ctx, log.DebugLevelInfra, "write nginx.conf failed",
 			"name", name, "err", err)
 		return err
-	}
-
-	if len(httpPorts) > 0 {
-		// add L7 config to L7 nginx instance
-		log.SpanLog(ctx, log.DebugLevelMexos, "create L7 nginx conf", "name", name)
-		buf := bytes.Buffer{}
-		err = nginxL7ConfT.Execute(&buf, httpPorts)
-		if err != nil {
-			return err
-		}
-		err = pc.WriteFile(client, l7dir+"/"+name+".conf", buf.String(), "nginx L7 conf", pc.NoSudo)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos,
-				"write nginx L7 conf failed",
-				"name", name, "err", err)
-			return err
-		}
-		err = reloadNginxL7(client)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
 
-func reloadNginxL7(client pc.PlatformClient) error {
-	err := pc.Run(client, "docker exec "+NginxL7Name+" nginx -s reload")
-	if err != nil {
-		log.DebugLog(log.DebugLevelMexos,
-			"reload L7 nginx config failed", "err", err)
-	}
-	return err
-}
-
 type ProxySpec struct {
 	Name       string
-	L4, L7     bool
 	UDPSpec    []*UDPSpecDetail
 	TCPSpec    []*TCPSpecDetail
-	L7Port     int32
-	UseTLS     bool // To be removed
+	UsesTLS    bool // To be removed
 	MetricPort int32
-	Cert       *access.TLSCert
+	CertName   string
 }
 
 type TCPSpecDetail struct {
@@ -334,22 +269,17 @@ type TCPSpecDetail struct {
 	BackendIP       string
 	BackendPort     int32
 	ConcurrentConns uint64
+	UseTLS          bool // for port specific TLS termination
+	HealthCheck     bool
 }
 
 type UDPSpecDetail struct {
-	ListenIP             string
-	ListenPorts          []int32
-	BackendIP            string
-	BackendPort          int32
-	ConcurrentConnsPerIP uint64
-}
-
-type HTTPSpecDetail struct {
-	ListenIP    string
-	ListenPort  int32
-	BackendIP   string
-	BackendPort int32
-	PathPrefix  string
+	ListenIP         string
+	ListenPort       int32
+	NginxListenPorts []int32
+	BackendIP        string
+	BackendPort      int32
+	ConcurrentConns  uint64
 }
 
 var nginxConf = `
@@ -363,97 +293,45 @@ events {
     worker_connections  1024;
 }
 
-{{if .L7 -}}
-http {
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
-    access_log  /var/log/nginx/access.log  main;
-    keepalive_timeout  65;
-    server_tokens off;
-    server {
-        listen {{.L7Port}}{{if .UseTLS}} ssl{{end}};
-{{- if .UseTLS}}
-        ssl_certificate        /etc/ssl/certs/server.crt;
-        ssl_certificate_key    /etc/ssl/certs/server.key;
-{{- end}}
-        include /etc/nginx/L7/*.conf;
-	}
-    server {
-        listen 127.0.0.1:{{.MetricPort}};
-        server_name 127.0.0.1:{{.MetricPort}};
-        location /nginx_metrics {
-            stub_status;
-            allow 127.0.0.1;
-            deny all;
-		}
-	}
-}
-{{- end}}
-
-{{if .L4 -}}
 stream { 
     limit_conn_zone $binary_remote_addr zone=ipaddr:10m;
 	{{- range .UDPSpec}}
 	server {
-		limit_conn ipaddr {{.ConcurrentConnsPerIP}}; 
-		{{range $portnum := .ListenPorts}}
+		limit_conn ipaddr {{.ConcurrentConns}}; 
+		{{range $portnum := .NginxListenPorts}}
 		listen {{$portnum}} udp; 
 		{{end}}
+		{{if eq .BackendPort 0}}
 		proxy_pass {{.BackendIP}}:$server_port;
+		{{- end}}
+		{{if ne .BackendPort 0}}
+		proxy_pass {{.BackendIP}}:{{.BackendPort}};
+		{{- end}}
 	}
 	{{- end}}
 }
-{{- end}}
 `
 
-var nginxL7Conf = `
-{{- range .}}
-location /{{.PathPrefix}}/ {
-	proxy_pass http://{{.BackendIP}}/;
-}
-{{- end}}
-`
-
-func DeleteNginxProxy(ctx context.Context, client pc.PlatformClient, name string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx", "name", name)
+func DeleteNginxProxy(ctx context.Context, client ssh.Client, name string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete nginx", "name", name)
 	containerName := getNginxContainerName(name)
 	out, err := client.Output("docker kill " + containerName)
-	deleteContainer := false
-	if err == nil {
-		deleteContainer = true
-	} else {
-		if strings.Contains(string(out), "No such container") {
-			log.SpanLog(ctx, log.DebugLevelMexos,
-				"nginx LB container already gone", "containerName", containerName)
-		} else {
-			return fmt.Errorf("can't delete nginx container %s, %s, %v", name, out, err)
-		}
-	}
-	l7conf := NginxL7Dir + "/" + name + ".conf"
-	out, err = client.Output("rm " + l7conf)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx L7 conf",
-			"name", name, "l7conf", l7conf, "out", out, "err", err)
-	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "kill nginx result", "out", out, "err", err)
+
 	nginxDir := "nginx/" + name
 	out, err = client.Output("rm -rf " + nginxDir)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "delete nginx dir", "name", name, "dir", nginxDir, "out", out, "err", err)
-	}
-	if deleteContainer {
-		out, err = client.Output("docker rm " + containerName)
-		if err != nil && !strings.Contains(string(out), "No such container") {
-			return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
-		}
-	}
-	reloadNginxL7(client)
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete nginx dir result", "name", name, "dir", nginxDir, "out", out, "err", err)
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted nginx", "containerName", containerName)
-	DeleteEnvoyProxy(ctx, client, name)
-	return nil
+	out, err = client.Output("docker rm -f " + containerName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "rm nginx result", "out", out, "err", err)
+	if err != nil && !strings.Contains(string(out), "No such container") {
+		// delete the envoy proxy for best effort
+		DeleteEnvoyProxy(ctx, client, name)
+		return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
+	}
+
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleted nginx", "containerName", containerName)
+	return DeleteEnvoyProxy(ctx, client, name)
 }
 
 type Options struct {

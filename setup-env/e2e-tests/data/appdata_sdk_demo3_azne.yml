@@ -1,8 +1,7 @@
 
 cloudlets:
 - key:
-    operatorkey:
-      name: azure
+    organization: azure
     name: aznortheuropecloudlet
   accessuri:
   location:
@@ -16,8 +15,7 @@ clusterinsts:
     clusterkey:
       name: jlmappcluster
     cloudletkey:
-      operatorkey:
-        name: azure
+      organization: azure
       name: aznortheuropecloudlet
   flavor:
     name: x1.medium
@@ -26,16 +24,14 @@ clusterinsts:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
+      organization: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: jlmappcluster
       cloudletkey:
-        operatorkey:
-          name: azure
+        organization: azure
         name: aznortheuropecloudlet
   liveness: LivenessStatic
   flavor:

@@ -3,33 +3,40 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/gogo/protobuf/gogoproto"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "github.com/google/go-cmp/cmp"
-import "github.com/google/go-cmp/cmp/cmpopts"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // ControllerKey uniquely defines a Controller
 type ControllerKey struct {
@@ -37,17 +44,45 @@ type ControllerKey struct {
 	Addr string `protobuf:"bytes,1,opt,name=addr,proto3" json:"addr,omitempty"`
 }
 
-func (m *ControllerKey) Reset()                    { *m = ControllerKey{} }
-func (m *ControllerKey) String() string            { return proto.CompactTextString(m) }
-func (*ControllerKey) ProtoMessage()               {}
-func (*ControllerKey) Descriptor() ([]byte, []int) { return fileDescriptorController, []int{0} }
+func (m *ControllerKey) Reset()         { *m = ControllerKey{} }
+func (m *ControllerKey) String() string { return proto.CompactTextString(m) }
+func (*ControllerKey) ProtoMessage()    {}
+func (*ControllerKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{0}
+}
+func (m *ControllerKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ControllerKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ControllerKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ControllerKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ControllerKey.Merge(m, src)
+}
+func (m *ControllerKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *ControllerKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_ControllerKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ControllerKey proto.InternalMessageInfo
 
 // A Controller is a service that manages the edge-cloud data and controls other edge-cloud micro-services.
 type Controller struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key ControllerKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key ControllerKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Build Master Version
 	BuildMaster string `protobuf:"bytes,4,opt,name=build_master,json=buildMaster,proto3" json:"build_master,omitempty"`
 	// Build Head Version
@@ -58,15 +93,78 @@ type Controller struct {
 	Hostname string `protobuf:"bytes,7,opt,name=hostname,proto3" json:"hostname,omitempty"`
 }
 
-func (m *Controller) Reset()                    { *m = Controller{} }
-func (m *Controller) String() string            { return proto.CompactTextString(m) }
-func (*Controller) ProtoMessage()               {}
-func (*Controller) Descriptor() ([]byte, []int) { return fileDescriptorController, []int{1} }
+func (m *Controller) Reset()         { *m = Controller{} }
+func (m *Controller) String() string { return proto.CompactTextString(m) }
+func (*Controller) ProtoMessage()    {}
+func (*Controller) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{1}
+}
+func (m *Controller) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Controller) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Controller.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Controller) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Controller.Merge(m, src)
+}
+func (m *Controller) XXX_Size() int {
+	return m.Size()
+}
+func (m *Controller) XXX_DiscardUnknown() {
+	xxx_messageInfo_Controller.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Controller proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*ControllerKey)(nil), "edgeproto.ControllerKey")
 	proto.RegisterType((*Controller)(nil), "edgeproto.Controller")
 }
+
+func init() { proto.RegisterFile("controller.proto", fileDescriptor_ed7f10298fa1d90f) }
+
+var fileDescriptor_ed7f10298fa1d90f = []byte{
+	// 437 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0x4f, 0x6b, 0xd4, 0x40,
+	0x18, 0xc6, 0x33, 0xdb, 0xed, 0xea, 0x4e, 0xff, 0x50, 0x86, 0x56, 0xc6, 0xb5, 0xa4, 0xcb, 0x1e,
+	0x64, 0x15, 0xcd, 0x2c, 0xf5, 0x22, 0x7b, 0xeb, 0x8a, 0x20, 0x88, 0x97, 0x78, 0x16, 0x99, 0x64,
+	0xc6, 0x24, 0x98, 0xcc, 0x1b, 0x92, 0x09, 0xb5, 0x37, 0xf1, 0x13, 0x88, 0x7e, 0x01, 0x8f, 0x7a,
+	0x93, 0x1e, 0xfd, 0x04, 0x7b, 0x2c, 0x78, 0xf1, 0x24, 0xba, 0xeb, 0xc1, 0xa3, 0xb0, 0xa5, 0x78,
+	0x94, 0xcc, 0x96, 0xa4, 0x42, 0x7a, 0x09, 0x4f, 0xde, 0xf7, 0xf7, 0x3e, 0x3c, 0x79, 0x82, 0xb7,
+	0x7c, 0x50, 0x3a, 0x83, 0x38, 0x96, 0x99, 0x93, 0x66, 0xa0, 0x81, 0x74, 0xa5, 0x08, 0xa4, 0x91,
+	0xbd, 0xdd, 0x00, 0x20, 0x88, 0x25, 0xe3, 0x69, 0xc4, 0xb8, 0x52, 0xa0, 0xb9, 0x8e, 0x40, 0xe5,
+	0x4b, 0xb0, 0xb7, 0x1d, 0x40, 0x00, 0x46, 0xb2, 0x52, 0x9d, 0x4f, 0xef, 0x07, 0x91, 0x0e, 0x0b,
+	0xcf, 0xf1, 0x21, 0x61, 0x09, 0x78, 0x51, 0x5c, 0xda, 0xbd, 0x62, 0xe5, 0xf3, 0xae, 0x1f, 0x43,
+	0x21, 0x98, 0xe1, 0x02, 0xa9, 0x2a, 0xb1, 0xbc, 0x1c, 0x3c, 0xc4, 0x1b, 0x0f, 0xaa, 0x30, 0x8f,
+	0xe5, 0x11, 0xb9, 0x89, 0xdb, 0x5c, 0x88, 0x8c, 0xa2, 0x3e, 0x1a, 0x76, 0x27, 0xe4, 0xcb, 0x19,
+	0xdd, 0xac, 0xd3, 0x96, 0x1b, 0xd7, 0xec, 0xc7, 0xeb, 0xbf, 0x17, 0x14, 0xfd, 0x5d, 0x50, 0xf4,
+	0xf9, 0xc3, 0x1e, 0x1a, 0x7c, 0x6a, 0x61, 0x5c, 0xfb, 0x90, 0x6b, 0xb8, 0xf3, 0x22, 0x92, 0xb1,
+	0xc8, 0x29, 0xea, 0xaf, 0x0c, 0xbb, 0xee, 0xf9, 0x1b, 0x19, 0xe1, 0x95, 0x97, 0xf2, 0x88, 0xb6,
+	0xfa, 0x68, 0xb8, 0xb6, 0x4f, 0x9d, 0xea, 0xa3, 0x9d, 0xff, 0x32, 0x4c, 0xda, 0xd3, 0xef, 0x7b,
+	0x96, 0x5b, 0xa2, 0x64, 0x84, 0xd7, 0xbd, 0x22, 0x8a, 0xc5, 0xf3, 0x84, 0xe7, 0x5a, 0x66, 0xb4,
+	0x6d, 0x62, 0x6d, 0x7c, 0x3c, 0xa5, 0xe8, 0xdd, 0xf1, 0xf5, 0x55, 0x05, 0x7e, 0x92, 0xba, 0x6b,
+	0x06, 0x79, 0x62, 0x08, 0x72, 0x07, 0xe3, 0xe5, 0x45, 0x28, 0xb9, 0xa0, 0xab, 0x4d, 0x7c, 0xd7,
+	0x00, 0x8f, 0x24, 0x17, 0xb5, 0x3f, 0x2f, 0x74, 0x08, 0x19, 0xed, 0x5c, 0xee, 0x7f, 0x60, 0x08,
+	0x72, 0x0b, 0x5f, 0x0d, 0x21, 0xd7, 0x8a, 0x27, 0x92, 0x5e, 0x69, 0xa2, 0xab, 0xf5, 0x78, 0xbb,
+	0xec, 0xe8, 0xcf, 0x82, 0xa2, 0xd7, 0xa7, 0x14, 0x1d, 0x9f, 0xd1, 0xb6, 0x02, 0x25, 0xf7, 0xd5,
+	0xc5, 0xca, 0x0f, 0xd2, 0x88, 0x3c, 0xc3, 0x9b, 0x4f, 0x43, 0x38, 0xbc, 0xd0, 0xdf, 0x4e, 0x63,
+	0x35, 0xbd, 0xe6, 0xf1, 0xe0, 0xc6, 0x9b, 0xaf, 0xbf, 0xde, 0xb7, 0x76, 0x06, 0x5b, 0x2c, 0x0f,
+	0xe1, 0x90, 0xd5, 0xbf, 0x6b, 0x8c, 0x6e, 0x8f, 0xd0, 0x64, 0x77, 0xfa, 0xd3, 0xb6, 0xa6, 0x33,
+	0x1b, 0x9d, 0xcc, 0x6c, 0xf4, 0x63, 0x66, 0xa3, 0xb7, 0x73, 0xdb, 0x3a, 0x99, 0xdb, 0xd6, 0xb7,
+	0xb9, 0x6d, 0x79, 0x1d, 0x63, 0x77, 0xef, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xb5, 0x8d, 0x12,
+	0xc2, 0x94, 0x02, 0x00, 0x00,
+}
+
 func (this *ControllerKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -94,8 +192,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for ControllerApi service
-
+// ControllerApiClient is the client API for ControllerApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ControllerApiClient interface {
 	// Show Controllers
 	ShowController(ctx context.Context, in *Controller, opts ...grpc.CallOption) (ControllerApi_ShowControllerClient, error)
@@ -110,7 +209,7 @@ func NewControllerApiClient(cc *grpc.ClientConn) ControllerApiClient {
 }
 
 func (c *controllerApiClient) ShowController(ctx context.Context, in *Controller, opts ...grpc.CallOption) (ControllerApi_ShowControllerClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ControllerApi_serviceDesc.Streams[0], c.cc, "/edgeproto.ControllerApi/ShowController", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ControllerApi_serviceDesc.Streams[0], "/edgeproto.ControllerApi/ShowController", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,11 +240,18 @@ func (x *controllerApiShowControllerClient) Recv() (*Controller, error) {
 	return m, nil
 }
 
-// Server API for ControllerApi service
-
+// ControllerApiServer is the server API for ControllerApi service.
 type ControllerApiServer interface {
 	// Show Controllers
 	ShowController(*Controller, ControllerApi_ShowControllerServer) error
+}
+
+// UnimplementedControllerApiServer can be embedded to have forward compatible implementations.
+type UnimplementedControllerApiServer struct {
+}
+
+func (*UnimplementedControllerApiServer) ShowController(req *Controller, srv ControllerApi_ShowControllerServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowController not implemented")
 }
 
 func RegisterControllerApiServer(s *grpc.Server, srv ControllerApiServer) {
@@ -190,7 +296,7 @@ var _ControllerApi_serviceDesc = grpc.ServiceDesc{
 func (m *ControllerKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -198,23 +304,29 @@ func (m *ControllerKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ControllerKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ControllerKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.Addr) > 0 {
-		dAtA[i] = 0xa
-		i++
+		i -= len(m.Addr)
+		copy(dAtA[i:], m.Addr)
 		i = encodeVarintController(dAtA, i, uint64(len(m.Addr)))
-		i += copy(dAtA[i:], m.Addr)
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *Controller) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -222,68 +334,75 @@ func (m *Controller) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Controller) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Controller) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintController(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if len(m.BuildMaster) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintController(dAtA, i, uint64(len(m.BuildMaster)))
-		i += copy(dAtA[i:], m.BuildMaster)
-	}
-	if len(m.BuildHead) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintController(dAtA, i, uint64(len(m.BuildHead)))
-		i += copy(dAtA[i:], m.BuildHead)
+	if len(m.Hostname) > 0 {
+		i -= len(m.Hostname)
+		copy(dAtA[i:], m.Hostname)
+		i = encodeVarintController(dAtA, i, uint64(len(m.Hostname)))
+		i--
+		dAtA[i] = 0x3a
 	}
 	if len(m.BuildAuthor) > 0 {
-		dAtA[i] = 0x32
-		i++
+		i -= len(m.BuildAuthor)
+		copy(dAtA[i:], m.BuildAuthor)
 		i = encodeVarintController(dAtA, i, uint64(len(m.BuildAuthor)))
-		i += copy(dAtA[i:], m.BuildAuthor)
+		i--
+		dAtA[i] = 0x32
 	}
-	if len(m.Hostname) > 0 {
-		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintController(dAtA, i, uint64(len(m.Hostname)))
-		i += copy(dAtA[i:], m.Hostname)
+	if len(m.BuildHead) > 0 {
+		i -= len(m.BuildHead)
+		copy(dAtA[i:], m.BuildHead)
+		i = encodeVarintController(dAtA, i, uint64(len(m.BuildHead)))
+		i--
+		dAtA[i] = 0x2a
 	}
-	return i, nil
+	if len(m.BuildMaster) > 0 {
+		i -= len(m.BuildMaster)
+		copy(dAtA[i:], m.BuildMaster)
+		i = encodeVarintController(dAtA, i, uint64(len(m.BuildMaster)))
+		i--
+		dAtA[i] = 0x22
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintController(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintController(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintController(dAtA []byte, offset int, v uint64) int {
+	offset -= sovController(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *ControllerKey) Matches(o *ControllerKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -311,6 +430,10 @@ func (m *ControllerKey) CopyInFields(src *ControllerKey) int {
 	return changed
 }
 
+func (m *ControllerKey) DeepCopyIn(src *ControllerKey) {
+	m.Addr = src.Addr
+}
+
 func (m *ControllerKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
@@ -332,6 +455,14 @@ func (m *ControllerKey) NotFoundError() error {
 
 func (m *ControllerKey) ExistsError() error {
 	return fmt.Errorf("Controller key %s already exists", m.GetKeyString())
+}
+
+var ControllerKeyTagAddr = "controlleraddr"
+
+func (m *ControllerKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["controlleraddr"] = m.Addr
+	return tags
 }
 
 // Helper method to check that enums have valid values
@@ -414,7 +545,7 @@ var ControllerAllFieldsStringMap = map[string]string{
 }
 
 func (m *Controller) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, ControllerFieldKey+".")
+	return strings.HasPrefix(s, ControllerFieldKey+".") || s == ControllerFieldKey
 }
 
 func (m *Controller) DiffFields(o *Controller, fields map[string]struct{}) {
@@ -472,6 +603,14 @@ func (m *Controller) CopyInFields(src *Controller) int {
 		}
 	}
 	return changed
+}
+
+func (m *Controller) DeepCopyIn(src *Controller) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.BuildMaster = src.BuildMaster
+	m.BuildHead = src.BuildHead
+	m.BuildAuthor = src.BuildAuthor
+	m.Hostname = src.Hostname
 }
 
 func (s *Controller) HasFields() bool {
@@ -626,15 +765,24 @@ type ControllerKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type ControllerCacheData struct {
+	Obj    *Controller
+	ModRev int64
+}
+
 // ControllerCache caches Controller objects in memory in a hash table
 // and keeps them in sync with the database.
 type ControllerCache struct {
-	Objs        map[ControllerKey]*Controller
-	Mux         util.Mutex
-	List        map[ControllerKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *ControllerKey, old *Controller)
-	UpdatedCb   func(ctx context.Context, old *Controller, new *Controller)
-	KeyWatchers map[ControllerKey][]*ControllerKeyWatcher
+	Objs          map[ControllerKey]*ControllerCacheData
+	Mux           util.Mutex
+	List          map[ControllerKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *ControllerKey, old *Controller, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Controller, new *Controller)
+	DeletedCbs    []func(ctx context.Context, old *Controller)
+	KeyWatchers   map[ControllerKey][]*ControllerKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *ControllerKey)
+	DeletedKeyCbs []func(ctx context.Context, key *ControllerKey)
 }
 
 func NewControllerCache() *ControllerCache {
@@ -644,8 +792,13 @@ func NewControllerCache() *ControllerCache {
 }
 
 func InitControllerCache(cache *ControllerCache) {
-	cache.Objs = make(map[ControllerKey]*Controller)
+	cache.Objs = make(map[ControllerKey]*ControllerCacheData)
 	cache.KeyWatchers = make(map[ControllerKey][]*ControllerKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *ControllerCache) GetTypeString() string {
@@ -653,11 +806,17 @@ func (c *ControllerCache) GetTypeString() string {
 }
 
 func (c *ControllerCache) Get(key *ControllerKey, valbuf *Controller) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *ControllerCache) GetWithRev(key *ControllerKey, valbuf *Controller, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -669,64 +828,87 @@ func (c *ControllerCache) HasKey(key *ControllerKey) bool {
 	return found
 }
 
-func (c *ControllerCache) GetAllKeys(ctx context.Context, keys map[ControllerKey]context.Context) {
+func (c *ControllerCache) GetAllKeys(ctx context.Context, cb func(key *ControllerKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *ControllerCache) Update(ctx context.Context, in *Controller, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Controller) (*Controller, bool) {
+func (c *ControllerCache) Update(ctx context.Context, in *Controller, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Controller) (*Controller, bool) {
 		return in, true
 	})
 }
 
-func (c *ControllerCache) UpdateModFunc(ctx context.Context, key *ControllerKey, rev int64, modFunc func(old *Controller) (new *Controller, changed bool)) {
+func (c *ControllerCache) UpdateModFunc(ctx context.Context, key *ControllerKey, modRev int64, modFunc func(old *Controller) (new *Controller, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Controller
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Controller{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &Controller{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Controller", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &Controller{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &ControllerCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *ControllerCache) Delete(ctx context.Context, in *Controller, rev int64) {
+func (c *ControllerCache) Delete(ctx context.Context, in *Controller, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Controller
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Controller", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *ControllerCache) Prune(ctx context.Context, validKeys map[ControllerKey]struct{}) {
-	notify := make(map[ControllerKey]*Controller)
+	notify := make(map[ControllerKey]*ControllerCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -734,8 +916,18 @@ func (c *ControllerCache) Prune(ctx context.Context, validKeys map[ControllerKey
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -754,13 +946,13 @@ func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) erro
 	log.DebugLog(log.DebugLevelApi, "Show Controller", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Controller", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Controller", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Controller", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Controller", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -774,12 +966,48 @@ func ControllerGenericNotifyCb(fn func(key *ControllerKey, old *Controller)) fun
 	}
 }
 
-func (c *ControllerCache) SetNotifyCb(fn func(ctx context.Context, obj *ControllerKey, old *Controller)) {
-	c.NotifyCb = fn
+func (c *ControllerCache) SetNotifyCb(fn func(ctx context.Context, obj *ControllerKey, old *Controller, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *ControllerKey, old *Controller, modRev int64){fn}
 }
 
 func (c *ControllerCache) SetUpdatedCb(fn func(ctx context.Context, old *Controller, new *Controller)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Controller, new *Controller){fn}
+}
+
+func (c *ControllerCache) SetDeletedCb(fn func(ctx context.Context, old *Controller)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Controller){fn}
+}
+
+func (c *ControllerCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *ControllerKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *ControllerKey){fn}
+}
+
+func (c *ControllerCache) SetDeletedKeyCb(fn func(ctx context.Context, key *ControllerKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *ControllerKey){fn}
+}
+
+func (c *ControllerCache) AddUpdatedCb(fn func(ctx context.Context, old *Controller, new *Controller)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *ControllerCache) AddDeletedCb(fn func(ctx context.Context, old *Controller)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *ControllerCache) AddNotifyCb(fn func(ctx context.Context, obj *ControllerKey, old *Controller, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *ControllerCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *ControllerKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *ControllerCache) AddDeletedKeyCb(fn func(ctx context.Context, key *ControllerKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *ControllerCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ControllerCache) WatchKey(key *ControllerKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -826,14 +1054,21 @@ func (c *ControllerCache) TriggerKeyWatchers(ctx context.Context, key *Controlle
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *ControllerCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *ControllerCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Controller{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Controller data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -841,11 +1076,11 @@ func (c *ControllerCache) SyncUpdate(ctx context.Context, key, val []byte, rev i
 	c.Mux.Unlock()
 }
 
-func (c *ControllerCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *ControllerCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Controller{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	ControllerKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *ControllerCache) SyncListStart(ctx context.Context) {
@@ -853,7 +1088,7 @@ func (c *ControllerCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *ControllerCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[ControllerKey]*Controller)
+	deleted := make(map[ControllerKey]*ControllerCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -863,12 +1098,26 @@ func (c *ControllerCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
+}
+
+func (c *ControllerCache) UsesOrg(org string) bool {
+	return false
 }
 
 func (m *Controller) GetObjKey() objstore.ObjKey {
@@ -922,6 +1171,9 @@ func IgnoreControllerFields(taglist string) cmp.Option {
 }
 
 func (m *ControllerKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Addr)
@@ -932,6 +1184,9 @@ func (m *ControllerKey) Size() (n int) {
 }
 
 func (m *Controller) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -962,14 +1217,7 @@ func (m *Controller) Size() (n int) {
 }
 
 func sovController(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozController(x uint64) (n int) {
 	return sovController(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -989,7 +1237,7 @@ func (m *ControllerKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1017,7 +1265,7 @@ func (m *ControllerKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1027,6 +1275,9 @@ func (m *ControllerKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthController
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthController
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1039,6 +1290,9 @@ func (m *ControllerKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthController
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthController
 			}
 			if (iNdEx + skippy) > l {
@@ -1068,7 +1322,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1096,7 +1350,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1106,6 +1360,9 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthController
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthController
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1125,7 +1382,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1134,6 +1391,9 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthController
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthController
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1155,7 +1415,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1165,6 +1425,9 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthController
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthController
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1184,7 +1447,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1194,6 +1457,9 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthController
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthController
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1213,7 +1479,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1223,6 +1489,9 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthController
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthController
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1242,7 +1511,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1252,6 +1521,9 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthController
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthController
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1264,6 +1536,9 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthController
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthController
 			}
 			if (iNdEx + skippy) > l {
@@ -1281,6 +1556,7 @@ func (m *Controller) Unmarshal(dAtA []byte) error {
 func skipController(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1312,10 +1588,8 @@ func skipController(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1332,85 +1606,34 @@ func skipController(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthController
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowController
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipController(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupController
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthController
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthController = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowController   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthController        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowController          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupController = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("controller.proto", fileDescriptorController) }
-
-var fileDescriptorController = []byte{
-	// 404 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0x31, 0x8f, 0xd3, 0x30,
-	0x14, 0xc7, 0xcf, 0xbd, 0x5e, 0x21, 0xbe, 0x3b, 0x54, 0x59, 0x1c, 0x32, 0x05, 0xe5, 0xaa, 0x4c,
-	0x05, 0x41, 0x5c, 0x8e, 0x05, 0x75, 0x6b, 0x59, 0x90, 0x10, 0x4b, 0x98, 0x11, 0x72, 0x62, 0x93,
-	0x44, 0x24, 0x7e, 0x51, 0xe2, 0xa8, 0x74, 0x43, 0x7c, 0x04, 0xf8, 0x02, 0xb0, 0x31, 0x22, 0x3e,
-	0x45, 0x47, 0x24, 0x76, 0x04, 0x15, 0x03, 0x23, 0x52, 0x3b, 0x30, 0xa2, 0x38, 0x55, 0x5a, 0xa4,
-	0xb0, 0x58, 0x7f, 0x3f, 0xff, 0xde, 0xdf, 0xcf, 0x7f, 0x19, 0xf7, 0x03, 0x50, 0x3a, 0x87, 0x24,
-	0x91, 0xb9, 0x9b, 0xe5, 0xa0, 0x81, 0x58, 0x52, 0x84, 0xd2, 0xc8, 0xc1, 0xcd, 0x10, 0x20, 0x4c,
-	0x24, 0xe3, 0x59, 0xcc, 0xb8, 0x52, 0xa0, 0xb9, 0x8e, 0x41, 0x15, 0x35, 0x38, 0xb8, 0x1a, 0x42,
-	0x08, 0x46, 0xb2, 0x4a, 0x6d, 0xab, 0x0f, 0xc2, 0x58, 0x47, 0xa5, 0xef, 0x06, 0x90, 0xb2, 0x14,
-	0xfc, 0x38, 0xa9, 0xec, 0x5e, 0xb1, 0x6a, 0xbd, 0x1b, 0x24, 0x50, 0x0a, 0x66, 0xb8, 0x50, 0xaa,
-	0x46, 0xd4, 0x9d, 0xce, 0x3d, 0x7c, 0xfa, 0xb0, 0x19, 0xe6, 0xb1, 0x5c, 0x10, 0x82, 0xbb, 0x5c,
-	0x88, 0x9c, 0xa2, 0x21, 0x1a, 0x59, 0x9e, 0xd1, 0x93, 0x93, 0x5f, 0x6b, 0x8a, 0xfe, 0xac, 0x29,
-	0xfa, 0xf4, 0xfe, 0x1c, 0x39, 0x1f, 0x3a, 0x18, 0xef, 0x7a, 0xc8, 0x35, 0xdc, 0x7b, 0x11, 0xcb,
-	0x44, 0x14, 0x14, 0x0d, 0x0f, 0x47, 0x96, 0xb7, 0xdd, 0x91, 0x31, 0x3e, 0x7c, 0x29, 0x17, 0xb4,
-	0x33, 0x44, 0xa3, 0xe3, 0x0b, 0xea, 0x36, 0x0f, 0x74, 0xff, 0xb9, 0x6f, 0xd6, 0x5d, 0x7e, 0x3b,
-	0x3f, 0xf0, 0x2a, 0x94, 0x8c, 0xf1, 0x89, 0x5f, 0xc6, 0x89, 0x78, 0x9e, 0xf2, 0x42, 0xcb, 0x9c,
-	0x76, 0xab, 0x11, 0x66, 0xa7, 0x1f, 0x37, 0x14, 0xbd, 0xfd, 0x7c, 0xfd, 0x48, 0x41, 0x90, 0x66,
-	0xde, 0xb1, 0x41, 0x9e, 0x18, 0x82, 0xdc, 0xc1, 0xb8, 0xee, 0x88, 0x24, 0x17, 0xf4, 0xa8, 0x8d,
-	0xb7, 0x0c, 0xf0, 0x48, 0x72, 0xb1, 0xf3, 0xe7, 0xa5, 0x8e, 0x20, 0xa7, 0xbd, 0xff, 0xfb, 0x4f,
-	0x0d, 0x41, 0x6e, 0xe1, 0xcb, 0x11, 0x14, 0x5a, 0xf1, 0x54, 0xd2, 0x4b, 0x6d, 0x74, 0x73, 0x5c,
-	0x67, 0xf4, 0x7b, 0x4d, 0xd1, 0xeb, 0x0d, 0x45, 0x17, 0x6a, 0x3f, 0xd6, 0x69, 0x16, 0x93, 0x67,
-	0xf8, 0xca, 0xd3, 0x08, 0xe6, 0x7b, 0xb9, 0x9d, 0xb5, 0x46, 0x32, 0x68, 0x2f, 0x3b, 0x37, 0xde,
-	0x7c, 0xfd, 0xf9, 0xae, 0x73, 0xe6, 0xf4, 0x59, 0x11, 0xc1, 0x9c, 0xed, 0x3e, 0xd0, 0x04, 0xdd,
-	0x1e, 0xa3, 0x59, 0x7f, 0xf9, 0xc3, 0x3e, 0x58, 0xae, 0x6c, 0xf4, 0x65, 0x65, 0xa3, 0xef, 0x2b,
-	0x1b, 0xf9, 0x3d, 0x63, 0x71, 0xff, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4d, 0x25, 0xb4, 0xa1,
-	0x6c, 0x02, 0x00, 0x00,
-}

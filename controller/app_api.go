@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -40,21 +42,11 @@ func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
 }
 
-func (s *AppApi) UsesDeveloper(in *edgeproto.DeveloperKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for key, app := range s.cache.Objs {
-		if key.DeveloperKey.Matches(in) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
 		if app.DefaultFlavor.Matches(key) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
 			return true
 		}
@@ -65,20 +57,41 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
-		if app.Key.DeveloperKey.Name == key.Developer && app.AutoProvPolicy == key.Name {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
+		if app.Key.Organization == key.Organization {
+			if app.AutoProvPolicy == key.Name {
+				return true
+			}
+			for _, name := range app.AutoProvPolicies {
+				if name == key.Name {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func (s *AppApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		app := data.Obj
+		if app.Key.Organization == key.Organization && app.DefaultPrivacyPolicy == key.Name {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *AppApi) AutoDeleteAppsForDeveloper(ctx context.Context, key *edgeproto.DeveloperKey) {
+func (s *AppApi) AutoDeleteAppsForOrganization(ctx context.Context, org string) {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
-	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "developer", key)
+	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "org", org)
 	s.cache.Mux.Lock()
-	for k, app := range s.cache.Objs {
-		if app.Key.DeveloperKey.Matches(key) && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+	for k, data := range s.cache.Objs {
+		app := data.Obj
+		if app.Key.Organization == org && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
 			apps[k] = app
 		}
 	}
@@ -95,7 +108,8 @@ func (s *AppApi) AutoDeleteApps(ctx context.Context, key *edgeproto.FlavorKey) {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "flavor", key)
 	s.cache.Mux.Lock()
-	for k, app := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
+		app := data.Obj
 		if app.DefaultFlavor.Matches(key) && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
 			apps[k] = app
 		}
@@ -118,9 +132,10 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	}
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, app := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
+		app := data.Obj
 		if app.AndroidPackageName == a.AndroidPackageName {
-			if (a.Key.DeveloperKey.Name != app.Key.DeveloperKey.Name) || (a.Key.Name != app.Key.Name) {
+			if (a.Key.Organization != app.Key.Organization) || (a.Key.Name != app.Key.Name) {
 				return true
 			}
 		}
@@ -128,12 +143,17 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
-func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType) error {
+func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType, deploymentType string) error {
 	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
 	for ii, _ := range ports {
+		// dont allow tls on vms or docker with direct access
+		if ports[ii].Tls && accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT &&
+			(deploymentType == cloudcommon.DeploymentTypeVM || deploymentType == cloudcommon.DeploymentTypeDocker) {
+			return fmt.Errorf("TLS unsupported on VM and docker deployments with direct access")
+		}
 		ports[ii].PublicPort = ports[ii].InternalPort
 		if ports[ii].EndPort != 0 {
-			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort
+			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort + 1
 			// this is checked in app_api also, but this in case there are pre-existing apps which violate this new restriction
 			if accessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > maxPorts {
 				return fmt.Errorf("Port range greater than max of %d for load balanced application", maxPorts)
@@ -144,15 +164,24 @@ func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.Ac
 }
 
 // updates fields that need manipulation on setting, or fetched remotely
-func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) error {
+func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) error {
+	// for update, trigger regenerating deployment manifest
+	if in.DeploymentGenerator != "" {
+		in.DeploymentManifest = ""
+	}
 
 	if in.ImagePath == "" {
-		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
+		// ImagePath is required unless the image path is contained
+		// within a DeploymentManifest specified by the user.
+		// For updates where the controller generated a deployment
+		// manifest, DeploymentManifest will be cleared because
+		// DeploymentGenerator will have been set during create.
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER && in.DeploymentManifest == "" {
 			if *registryFQDN == "" {
 				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *registryFQDN + "/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
+				util.DockerSanitize(in.Key.Organization) + "/images/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
 		} else if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
@@ -163,17 +192,15 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 				return fmt.Errorf("No image path specified and no default artifactoryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *artifactoryFQDN + "repo-" +
-				in.Key.DeveloperKey.Name + "/" +
+				in.Key.Organization + "/" +
 				in.Key.Name + ".qcow2#md5:" + in.Md5Sum
-		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+		} else if in.Deployment == cloudcommon.DeploymentTypeHelm {
 			if *registryFQDN == "" {
 				return fmt.Errorf("No image path specified and no default registryFQDN to fall back upon. Please specify the image path")
 			}
 			in.ImagePath = *registryFQDN + "/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
+				util.DockerSanitize(in.Key.Organization) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
-		} else {
-			in.ImagePath = "image path required"
 		}
 		log.DebugLog(log.DebugLevelApi, "derived imagepath", "imagepath", in.ImagePath)
 	}
@@ -186,17 +213,21 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 		}
 	}
 
-	if in.ScaleWithCluster && in.Deployment != cloudcommon.AppDeploymentTypeKubernetes {
+	if in.ScaleWithCluster && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
 	}
 
-	if !cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
-		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
+	if !cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) {
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER && in.ImagePath != "" {
 			parts := strings.Split(in.ImagePath, "/")
-			// Append default registry address for internal image paths
-			if len(parts) < 2 || !strings.Contains(parts[0], ".") {
-				in.ImagePath = cloudcommon.DockerHub + "/" + in.ImagePath
-				log.SpanLog(ctx, log.DebugLevelApi, "Using default docker registry", "ImagePath", in.ImagePath)
+			if parts[0] == "localhost" {
+				in.ImagePath = strings.Replace(in.ImagePath, "localhost/", "", -1)
+			} else {
+				// Append default registry address for internal image paths
+				if len(parts) < 2 || !strings.Contains(parts[0], ".") {
+					in.ImagePath = cloudcommon.DockerHub + "/" + in.ImagePath
+					log.SpanLog(ctx, log.DebugLevelApi, "Using default docker registry", "ImagePath", in.ImagePath)
+				}
 			}
 		}
 	}
@@ -217,7 +248,8 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 	}
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
-		!cloudcommon.IsPlatformApp(in.Key.DeveloperKey.Name, in.Key.Name) {
+		!cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) &&
+		in.ImagePath != "" {
 		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, vaultConfig)
 		if err != nil {
 			if *testMode {
@@ -227,13 +259,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision int32) err
 			}
 		}
 	}
-
-	// for update, trigger regenerating deployment manifest
-	if in.DeploymentGenerator != "" {
-		in.DeploymentManifest = ""
-	}
-
-	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
+	deploymf, err := cloudcommon.GetAppDeploymentManifest(ctx, vaultConfig, in)
 	if err != nil {
 		return err
 	}
@@ -265,13 +291,22 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return &edgeproto.Result{}, err
 		}
 	}
-	if !cloudcommon.IsValidDeploymentType(in.Deployment) {
-		return &edgeproto.Result{}, fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidDeployments)
+	if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidAppDeployments) {
+		return &edgeproto.Result{}, fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidAppDeployments)
 	}
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("Deployment is not valid for image type")
 	}
-	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment)
+	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
+		return &edgeproto.Result{}, err
+	}
+	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
+		_, err := k8smgmt.GetAppEnvVars(ctx, in, vaultConfig, &k8smgmt.TestReplacementVars)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
+	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -279,15 +314,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		log.SpanLog(ctx, log.DebugLevelApi, "updating access type", "newAccessType", newAccessType)
 		in.AccessType = newAccessType
 	}
-	if in.Deployment == cloudcommon.AppDeploymentTypeDocker || in.Deployment == cloudcommon.AppDeploymentTypeVM {
-		if strings.Contains(strings.ToLower(in.AccessPorts), "http") {
-			return &edgeproto.Result{}, fmt.Errorf("Deployment Type and HTTP access ports are incompatible")
-		}
-	}
-	if in.Deployment == cloudcommon.AppDeploymentTypeVM && in.Command != "" {
+
+	if in.Deployment == cloudcommon.DeploymentTypeVM && in.Command != "" {
 		return &edgeproto.Result{}, fmt.Errorf("Invalid argument, command is not supported for VM based deployments")
 	}
-	err = updateAppFields(ctx, in, 0)
+	err = updateAppFields(ctx, in, in.Revision)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
@@ -295,13 +326,20 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	// check that health check skip ports are parsable
+	if in.SkipHcPorts != "all" {
+		_, err = edgeproto.ParseAppPorts(in.SkipHcPorts)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
 	if in.DeploymentManifest != "" {
 		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest, ports)
 		if err != nil {
 			return &edgeproto.Result{}, fmt.Errorf("Invalid deployment manifest, %v", err)
 		}
 	}
-	err = validatePortRangeForAccessType(ports, in.AccessType)
+	err = validatePortRangeForAccessType(ports, in.AccessType, in.Deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -310,37 +348,35 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
+		if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
 			return in.DefaultFlavor.NotFoundError()
 		}
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
-		if in.AutoProvPolicy != "" {
+		if err := s.validatePolicies(stm, in); err != nil {
+			return err
+		}
+		if in.DefaultPrivacyPolicy != "" {
 			apKey := edgeproto.PolicyKey{}
-			apKey.Developer = in.Key.DeveloperKey.Name
-			apKey.Name = in.AutoProvPolicy
-			if !autoProvPolicyApi.store.STMGet(stm, &apKey, nil) {
+			apKey.Organization = in.Key.Organization
+			apKey.Name = in.DefaultPrivacyPolicy
+			if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
 				return apKey.NotFoundError()
 			}
 		}
+		appInstRefsApi.createRef(stm, &in.Key)
 		s.store.STMPut(stm, in)
 		return nil
 	})
 	return &edgeproto.Result{}, err
 }
 
-func getDockerDeployType(manifest string) string {
-	if manifest == "" {
-		return "docker"
-	}
-	if strings.HasSuffix(manifest, ".zip") {
-		return "docker-compose-zip"
-	}
-	return "docker-compose"
-}
-
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	err := in.ValidateUpdateFields()
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
 	}
@@ -350,45 +386,90 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 	appInstExists := false
 	for _, field := range in.Fields {
-		if field == edgeproto.AppFieldDeployment {
-			return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified")
-		}
 		if appInstApi.UsesApp(&in.Key, dynInsts) {
 			appInstExists = true
-			if field == edgeproto.AppFieldAccessPorts {
+			if field == edgeproto.AppFieldAccessPorts || field == edgeproto.AppFieldSkipHcPorts {
 				return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified when AppInsts exist")
 			}
 		}
 	}
-	if err := in.Validate(edgeproto.MakeFieldMap(in.Fields)); err != nil {
+	fields := edgeproto.MakeFieldMap(in.Fields)
+	if err := in.Validate(fields); err != nil {
 		return &edgeproto.Result{}, err
 	}
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
 
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
 		if appInstExists {
-			if cur.Deployment != cloudcommon.AppDeploymentTypeKubernetes &&
-				cur.Deployment != cloudcommon.AppDeploymentTypeDocker &&
-				cur.Deployment != cloudcommon.AppDeploymentTypeHelm {
+			if cur.Deployment != cloudcommon.DeploymentTypeKubernetes &&
+				cur.Deployment != cloudcommon.DeploymentTypeDocker &&
+				cur.Deployment != cloudcommon.DeploymentTypeHelm {
 				return fmt.Errorf("Update App not supported for deployment: %s when AppInsts exist", cur.Deployment)
 			}
 			// don't allow change from regular docker to docker-compose or docker-compose zip if instances exist
-			if cur.Deployment == cloudcommon.AppDeploymentTypeDocker {
-				curType := getDockerDeployType(cur.DeploymentManifest)
-				newType := getDockerDeployType(in.DeploymentManifest)
+			if cur.Deployment == cloudcommon.DeploymentTypeDocker {
+				curType := cloudcommon.GetDockerDeployType(cur.DeploymentManifest)
+				newType := cloudcommon.GetDockerDeployType(in.DeploymentManifest)
 				if curType != newType {
 					return fmt.Errorf("Cannot change App manifest from : %s to: %s when AppInsts exist", curType, newType)
 				}
 			}
 		}
-
+		// If config is being updated, make sure that it's valid for the DeploymentType
+		if _, found := fields[edgeproto.AppFieldConfigs]; found {
+			if err := validateAppConfigsForDeployment(in.Configs, cur.Deployment); err != nil {
+				return err
+			}
+		}
+		if in.DeploymentManifest != "" {
+			// reset the deployment generator
+			cur.DeploymentGenerator = ""
+		} else if in.AccessPorts != "" {
+			if cur.DeploymentGenerator == "" && cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
+				// No generator means the user previously provided a manifest.  Force them to do so again when changing ports so
+				// that they do not accidentally lose their provided manifest details
+				return fmt.Errorf("kubernetes manifest which was previously specified must be provided again when changing access ports")
+			} else if cur.Deployment == cloudcommon.DeploymentTypeDocker {
+				// there's no way to tell if we generated this manifest or it was provided, so disallow this change
+				return fmt.Errorf("Changing access ports on docker apps not allowed unless manifest is specified")
+			}
+			// force regeneration of manifest
+			cur.DeploymentManifest = ""
+		}
 		cur.CopyInFields(in)
-		newRevision := cur.Revision + 1
+		if err := s.validatePolicies(stm, &cur); err != nil {
+			return err
+		}
+		ports, err := edgeproto.ParseAppPorts(cur.AccessPorts)
+		if err != nil {
+			return err
+		}
+		newRevision := in.Revision
+		if newRevision == "" {
+			newRevision = time.Now().Format("2006-01-02T150405")
+			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
+		}
 		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
+			return err
+		}
+		if in.DeploymentManifest != "" {
+			err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, cur.DeploymentManifest, ports)
+			if err != nil {
+				return fmt.Errorf("Invalid deployment manifest, %v", err)
+			}
+		}
+		if cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
+			_, err := k8smgmt.GetAppEnvVars(ctx, &cur, vaultConfig, &k8smgmt.TestReplacementVars)
+			if err != nil {
+				return err
+			}
+		}
+		err = validatePortRangeForAccessType(ports, cur.AccessType, cur.Deployment)
+		if err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)
@@ -402,12 +483,59 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// key doesn't exist
 		return &edgeproto.Result{}, in.Key.NotFoundError()
 	}
-	dynInsts := make(map[edgeproto.AppInstKey]struct{})
-	if appInstApi.UsesApp(&in.Key, dynInsts) {
-		// disallow delete if static instances are present
-		return &edgeproto.Result{}, errors.New("Application in use by static AppInst")
-	}
+
+	// set state to prevent new AppInsts from being created from this App
+	var dynInsts map[edgeproto.AppInstKey]*edgeproto.AppInst
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return in.Key.NotFoundError()
+		}
+		// use refs to check existing AppInsts to avoid race conditions
+		dynInsts = make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+		refs := edgeproto.AppInstRefs{}
+		appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
+		for k, _ := range refs.Insts {
+			// disallow delete if static instances are present
+			inst := edgeproto.AppInst{}
+			edgeproto.AppInstKeyStringParse(k, &inst.Key)
+			if !appInstApi.store.STMGet(stm, &inst.Key, &inst) {
+				// no inst?
+				log.SpanLog(ctx, log.DebugLevelApi, "AppInst not found by refs, skipping for delete", "AppInst", inst.Key)
+				continue
+			}
+			if inst.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
+				return errors.New("Application in use by static AppInst")
+			}
+			dynInsts[inst.Key] = &inst
+		}
+
+		in.DeletePrepare = true
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
+	// delete auto-appinsts
+	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in.Key)
+	if err = appInstApi.AutoDelete(ctx, dynInsts); err != nil {
+		// failed, so remove delete prepare and don't delete
+		unseterr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			if !s.store.STMGet(stm, &in.Key, in) {
+				return in.Key.NotFoundError()
+			}
+			in.DeletePrepare = false
+			s.store.STMPut(stm, in)
+			return nil
+		})
+		if unseterr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Delete App unset delete prepare", "unseterr", unseterr)
+		}
+		return &edgeproto.Result{}, err
+	}
+
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		app := edgeproto.App{}
 		if !s.store.STMGet(stm, &in.Key, &app) {
 			// already deleted
@@ -415,23 +543,10 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		// delete app
 		s.store.STMDel(stm, &in.Key)
+		// delete refs
+		appInstRefsApi.deleteRef(stm, &in.Key)
 		return nil
 	})
-	if err == nil && len(dynInsts) > 0 {
-		// delete dynamic instances
-		for key, _ := range dynInsts {
-			appInst := edgeproto.AppInst{Key: key}
-			stream := streamoutAppInst{}
-			stream.ctx = ctx
-			stream.debugLvl = log.DebugLevelApi
-			derr := appInstApi.DeleteAppInst(&appInst, &stream)
-			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
-					"Failed to delete dynamic AppInst",
-					"err", derr)
-			}
-		}
-	}
 	return &edgeproto.Result{}, err
 }
 
@@ -441,4 +556,76 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 		return err
 	})
 	return err
+}
+
+func (s *AppApi) AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	cur := edgeproto.App{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.AppKey, &cur) {
+			return in.AppKey.NotFoundError()
+		}
+		for _, name := range cur.AutoProvPolicies {
+			if name == in.AutoProvPolicy {
+				return fmt.Errorf("AutoProvPolicy %s already on App", name)
+			}
+		}
+		cur.AutoProvPolicies = append(cur.AutoProvPolicies, in.AutoProvPolicy)
+		if err := s.validatePolicies(stm, &cur); err != nil {
+			return err
+		}
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
+}
+
+func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error) {
+	cur := edgeproto.App{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.AppKey, &cur) {
+			return in.AppKey.NotFoundError()
+		}
+		changed := false
+		for ii, name := range cur.AutoProvPolicies {
+			if name != in.AutoProvPolicy {
+				continue
+			}
+			cur.AutoProvPolicies = append(cur.AutoProvPolicies[:ii], cur.AutoProvPolicies[ii+1:]...)
+			changed = true
+			break
+		}
+		if cur.AutoProvPolicy == in.AutoProvPolicy {
+			cur.AutoProvPolicy = ""
+			changed = true
+		}
+		if !changed {
+			return nil
+		}
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
+}
+
+func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment string) error {
+	for _, cfg := range configs {
+		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.DeploymentTypeHelm {
+			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
+		}
+	}
+	return nil
+}
+
+func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error {
+	// make sure policies exist
+	for name, _ := range app.GetAutoProvPolicies() {
+		policyKey := edgeproto.PolicyKey{}
+		policyKey.Organization = app.Key.Organization
+		policyKey.Name = name
+		policy := edgeproto.AutoProvPolicy{}
+		if !autoProvPolicyApi.store.STMGet(stm, &policyKey, &policy) {
+			return policyKey.NotFoundError()
+		}
+	}
+	return nil
 }

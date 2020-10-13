@@ -8,7 +8,12 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  influxdbmetricsretention: 2h
+  cloudletmaintenancetimeout: 2s
 flavors:
 - key:
     name: x1.tiny
@@ -25,10 +30,9 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
 privacypolicies:
 -  key:
-      developer: AcmeAppCo
+      organization: AcmeAppCo
       name: PrivPolicy1
    outboundsecurityrules:
     - protocol:  tcp
@@ -49,10 +53,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -65,10 +68,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -77,30 +79,13 @@ clusterinsts:
   numnodes: 2
   privacypolicy: PrivPolicy1
 
-operators:
-- key:
-    name: tmus
-- key:
-    name: azure
-- key:
-    name: gcp
-
 operatorcodes:
 - code: 31026
-  operatorname: tmus
-
-developers:
-- key:
-    name: AcmeAppCo
-- key:
-    name: AcmeAppCo1
-- key:
-    name: Samsung
+  organization: tmus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-1
   location:
     latitude: 31
@@ -109,8 +94,7 @@ cloudlets:
   numdynamicips: 254
   platformtype: PlatformTypeFake
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-2
   location:
     latitude: 35
@@ -119,8 +103,7 @@ cloudlets:
   numdynamicips: 254
   platformtype: PlatformTypeFake
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-3
   location:
     latitude: 35
@@ -129,8 +112,7 @@ cloudlets:
   numdynamicips: 254
   platformtype: PlatformTypeFake
 - key:
-    operatorkey:
-      name: azure
+    organization: azure
     name: azure-cloud-4
   location:
     latitude: 32
@@ -139,8 +121,7 @@ cloudlets:
   numdynamicips: 254
   platformtype: PlatformTypeFake
 - key:
-    operatorkey:
-      name: gcp
+    organization: gcp
     name: gcp-cloud-5
   location:
     latitude: 36
@@ -151,8 +132,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -160,13 +140,12 @@ apps:
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
-  accessports: "tcp:80,http:443,udp:10002"
+  accessports: "tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls"
   officialfqdn: someapplication1.acmeappco.com
   androidpackagename: com.acme.someapplication1
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
@@ -178,8 +157,7 @@ apps:
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 
 - key:
-    developerkey:
-      name: Samsung
+    organization: Samsung
     name: SamsungEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
@@ -190,8 +168,7 @@ apps:
   accessports: "tcp:64000"
 
 - key:
-    developerkey:
-      name: AcmeAppCo1
+    organization: AcmeAppCo1
     name: vmapp1
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
@@ -202,8 +179,7 @@ apps:
   accessports: "tcp:80,tcp:443,udp:10002"
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 - key:
-    developerkey:
-      name: AcmeAppCo1
+    organization: AcmeAppCo1
     name: vmapp2
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
@@ -213,8 +189,7 @@ apps:
     name: x1.small
   accessports: "tcp:80,tcp:443,udp:10002"
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: NoPortsApp
     version: "1.0"
   imagepath: http://registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
@@ -227,18 +202,16 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -247,18 +220,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -267,18 +238,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: helmApplication
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -287,16 +256,14 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo1
+      organization: AcmeAppCo1
       name: vmapp1
       version: "1.0"
     clusterinstkey:
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo1
+      organization: AcmeAppCo1
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -305,16 +272,14 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo1
+      organization: AcmeAppCo1
       name: vmapp2
       version: "1.0"
     clusterinstkey:
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo1
+      organization: AcmeAppCo1
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -323,18 +288,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: NoPortsApp
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91

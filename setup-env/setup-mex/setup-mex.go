@@ -24,10 +24,12 @@ import (
 )
 
 type TestSpec struct {
-	ApiType     string      `json:"api" yaml:"api"`
-	ApiFile     string      `json:"apifile" yaml:"apifile"`
-	Actions     []string    `json:"actions" yaml:"actions"`
-	CompareYaml CompareYaml `json:"compareyaml" yaml:"compareyaml"`
+	ApiType          string      `json:"api" yaml:"api"`
+	ApiFile          string      `json:"apifile" yaml:"apifile"`
+	Actions          []string    `json:"actions" yaml:"actions"`
+	RetryCount       int         `json:"retrycount" yaml:"retrycount"`
+	RetryIntervalSec float64     `json:"retryintervalsec" yaml:"retryintervalsec"`
+	CompareYaml      CompareYaml `json:"compareyaml" yaml:"compareyaml"`
 }
 
 type CompareYaml struct {
@@ -62,7 +64,7 @@ func GetActionArgs(a string) []string {
 
 // actions can be split with a dash like ctrlapi-show
 func GetActionSubtype(a string) (string, string) {
-	argslice := strings.Split(a, "-")
+	argslice := strings.SplitN(a, "-", 2)
 	action := argslice[0]
 	actionSubtype := ""
 	if len(argslice) > 1 {
@@ -145,15 +147,18 @@ func ReadSetupFile(setupfile string, deployment interface{}, vars map[string]str
 	//to get these variables, and then ingest again to parse the setup data with the variables
 	var setupVars util.SetupVariables
 
-	//{{tlsoutdir}} is relative to the GO dir.
-	goPath := os.Getenv("GOPATH")
-	if goPath == "" {
-		fmt.Fprintf(os.Stderr, "GOPATH not set, cannot calculate tlsoutdir")
-		return false
+	_, exist := vars["tlsoutdir"]
+	if !exist {
+		//{{tlsoutdir}} is relative to the GO dir.
+		goPath := os.Getenv("GOPATH")
+		if goPath == "" {
+			fmt.Fprintf(os.Stderr, "GOPATH not set, cannot calculate tlsoutdir")
+			return false
+		}
+		tlsDir = goPath + "/src/github.com/mobiledgex/edge-cloud/tls"
+		tlsOutDir = tlsDir + "/out"
+		vars["tlsoutdir"] = tlsOutDir
 	}
-	tlsDir = goPath + "/src/github.com/mobiledgex/edge-cloud/tls"
-	tlsOutDir = tlsDir + "/out"
-	vars["tlsoutdir"] = tlsOutDir
 
 	setupdir := filepath.Dir(setupfile)
 	vars["setupdir"] = setupdir
@@ -417,16 +422,6 @@ func StartLocal(processName, outputDir string, p process.Process, opts ...proces
 	if !IsLocalIP(p.GetHostname()) {
 		return true
 	}
-	envvars := p.GetEnvVars()
-	if envvars != nil {
-		for k, v := range envvars {
-			// doing it this way means the variable is set for
-			// other commands too. Not ideal but not
-			// problematic, and only will happen on local
-			// process deploy
-			os.Setenv(k, v)
-		}
-	}
 	typ := process.GetTypeString(p)
 	log.Printf("Starting %s %s+v\n", typ, p)
 	logfile := getLogFile(p.GetName(), outputDir)
@@ -471,6 +466,11 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.ElasticSearchs {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Jaegers {
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
@@ -481,27 +481,41 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.NotifyRoots {
+		opts = append(opts, process.WithDebug("api,notify,events"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.EdgeTurns {
+		opts = append(opts, process.WithRolesFile(rolesfile))
+		opts = append(opts, process.WithDebug("api,notify"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Controllers {
-		opts = append(opts, process.WithDebug("etcd,api,notify,metrics"))
+		opts = append(opts, process.WithDebug("etcd,api,notify,metrics,infra,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.Dmes {
 		opts = append(opts, process.WithRolesFile(rolesfile))
-		opts = append(opts, process.WithDebug("locapi,dmedb,dmereq,notify,metrics"))
+		opts = append(opts, process.WithDebug("locapi,dmedb,dmereq,notify,metrics,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.ClusterSvcs {
-		opts = append(opts, process.WithDebug("notify,mexos,api"))
+		opts = append(opts, process.WithRolesFile(rolesfile))
+		opts = append(opts, process.WithDebug("notify,infra,api,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
 	}
 	for _, p := range util.Deployment.Crms {
-		opts = append(opts, process.WithDebug("notify,mexos,api"))
+		opts = append(opts, process.WithDebug("notify,infra,api,events"))
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
@@ -545,7 +559,7 @@ func Cleanup(ctx context.Context) error {
 	return CleanupDIND()
 }
 
-func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string, vars map[string]string) []string {
+func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string, vars map[string]string, retry *bool) []string {
 	var actionArgs []string
 
 	act, actionParam := GetActionParam(actionSpec)
@@ -610,11 +624,11 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			}
 		}
 	case "ctrlapi":
-		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir, mods) {
+		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir, mods, retry) {
 			log.Printf("Unable to run api for %s, %v\n", action, mods)
 			errors = append(errors, "controller api failed")
 		}
-	case "runcommand":
+	case "exec":
 		if !apis.RunCommandAPI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
 			log.Printf("Unable to run RunCommand api for %s, %v\n", action, mods)
 			errors = append(errors, "controller RunCommand api failed")
@@ -629,20 +643,90 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			log.Printf("Unable to run influx api for %s\n", action)
 			errors = append(errors, "influx api failed")
 		}
+	case "cmds":
+		if !apis.RunCommands(spec.ApiFile, outputDir) {
+			log.Printf("Unable to run commands for %s\n", action)
+			errors = append(errors, "commands failed")
+		}
 	case "cleanup":
 		err := Cleanup(ctx)
 		if err != nil {
 			errors = append(errors, err.Error())
 		}
 	case "sleep":
-		t, err := strconv.ParseUint(actionParam, 10, 32)
+		t, err := strconv.ParseFloat(actionParam, 64)
 		if err == nil {
 			time.Sleep(time.Second * time.Duration(t))
 		} else {
-			errors = append(errors, "Error in parsing sleeptime")
+			errors = append(errors, fmt.Sprintf("Error in parsing sleeptime: %v", err))
 		}
 	default:
 		errors = append(errors, fmt.Sprintf("invalid action %s", action))
 	}
 	return errors
+}
+
+type Retry struct {
+	Enable    bool
+	Count     int // number of retries (does not include first try)
+	Interval  time.Duration
+	Try       int
+	runAction []bool
+}
+
+func NewRetry(count int, intervalSec float64, numActions int) *Retry {
+	r := Retry{}
+	r.Try = 1
+	r.Count = count
+	r.Interval = time.Duration(float64(time.Second) * intervalSec)
+	r.runAction = make([]bool, numActions, numActions)
+	if r.Count > 0 {
+		r.Enable = true
+	}
+	if r.Enable && r.Interval == 0 {
+		log.Fatal("Retry interval cannot be zero")
+	}
+	return &r
+}
+
+func (r *Retry) Tries() string {
+	return fmt.Sprintf(" (try %d of %d)", r.Try, r.Try+r.Count)
+}
+
+func (r *Retry) SetActionRetry(ii int, retry bool) {
+	// set whether or not to run the specific action on retries
+	r.runAction[ii] = retry
+	if !retry {
+		return
+	}
+	// enable retries
+	if r.Enable {
+		return
+	}
+	r.Enable = true
+	// set defaults
+	r.Count = 5
+	r.Interval = 200 * time.Millisecond
+}
+
+func (r *Retry) ShouldRunAction(ii int) bool {
+	if r.Try == 1 {
+		// always run actions the first iteration
+		return true
+	}
+	return r.runAction[ii]
+}
+
+func (r *Retry) WillRetry() bool {
+	return r.Count > 0
+}
+
+func (r *Retry) Done() bool {
+	if r.Count == 0 {
+		return true
+	}
+	r.Count--
+	r.Try++
+	time.Sleep(r.Interval)
+	return false
 }

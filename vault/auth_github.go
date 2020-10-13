@@ -94,7 +94,7 @@ func FindKeychainSecret(account, server string) (string, error) {
 		cmd = exec.Command("security", args...)
 		out, err = cmd.CombinedOutput()
 		if err != nil {
-			return "", fmt.Errorf("find secret (%v) failed, %s, %v", args, string(out), err)
+			return "", fmt.Errorf("find secret (%v) failed, %s, %v\nTo add secret, use 'security add-internet-password -a \"%s\" -s %s -T \"\" -w'", args, string(out), err, account, server)
 		}
 	}
 	secret := strings.TrimSpace(string(out))

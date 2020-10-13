@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"os/exec"
 	"regexp"
@@ -19,6 +21,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	influxclient "github.com/influxdata/influxdb/client/v2"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -87,19 +90,22 @@ type TLSCertInfo struct {
 }
 
 type DeploymentData struct {
-	TLSCerts    []*TLSCertInfo        `yaml:"tlscerts"`
-	Locsims     []*process.LocApiSim  `yaml:"locsims"`
-	Toksims     []*process.TokSrvSim  `yaml:"toksims"`
-	Vaults      []*process.Vault      `yaml:"vaults"`
-	Etcds       []*process.Etcd       `yaml:"etcds"`
-	Controllers []*process.Controller `yaml:"controllers"`
-	Dmes        []*process.Dme        `yaml:"dmes"`
-	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
-	Influxs     []*process.Influx     `yaml:"influxs"`
-	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
-	Crms        []*process.Crm        `yaml:"crms"`
-	Jaegers     []*process.Jaeger     `yaml:"jaegers"`
-	Traefiks    []*process.Traefik    `yaml:"traefiks"`
+	TLSCerts       []*TLSCertInfo           `yaml:"tlscerts"`
+	Locsims        []*process.LocApiSim     `yaml:"locsims"`
+	Toksims        []*process.TokSrvSim     `yaml:"toksims"`
+	Vaults         []*process.Vault         `yaml:"vaults"`
+	Etcds          []*process.Etcd          `yaml:"etcds"`
+	Controllers    []*process.Controller    `yaml:"controllers"`
+	Dmes           []*process.Dme           `yaml:"dmes"`
+	SampleApps     []*process.SampleApp     `yaml:"sampleapps"`
+	Influxs        []*process.Influx        `yaml:"influxs"`
+	ClusterSvcs    []*process.ClusterSvc    `yaml:"clustersvcs"`
+	Crms           []*process.Crm           `yaml:"crms"`
+	Jaegers        []*process.Jaeger        `yaml:"jaegers"`
+	Traefiks       []*process.Traefik       `yaml:"traefiks"`
+	NotifyRoots    []*process.NotifyRoot    `yaml:"notifyroots"`
+	EdgeTurns      []*process.EdgeTurn      `yaml:"edgeturns"`
+	ElasticSearchs []*process.ElasticSearch `yaml:"elasticsearchs"`
 }
 
 type errorReply struct {
@@ -141,6 +147,15 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.Traefiks {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.NotifyRoots {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.EdgeTurns {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.ElasticSearchs {
 		all = append(all, p)
 	}
 	return all
@@ -308,6 +323,10 @@ func connectOnlineController(delay time.Duration) *grpc.ClientConn {
 	return nil
 }
 
+func SetLogFormat() {
+	log.SetFlags(log.Flags() | log.Ltime | log.Lmicroseconds)
+}
+
 func PrintStartBanner(label string) {
 	log.Printf("\n\n   *** %s\n", label)
 }
@@ -450,15 +469,40 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	var y2 interface{}
 	copts := []cmp.Option{}
 
-	if fileType == "appdata" {
-		//for appdata, use the ApplicationData type so we can sort it
-		var a1 edgeproto.ApplicationData
-		var a2 edgeproto.ApplicationData
+	if fileType == "appdata" || fileType == "appdata-showcmp" {
+		//for appdata, use the AllData type so we can sort it
+		var a1 edgeproto.AllData
+		var a2 edgeproto.AllData
 
 		err1 = ReadYamlFile(firstYamlFile, &a1)
 		err2 = ReadYamlFile(secondYamlFile, &a2)
 		a1.Sort()
 		a2.Sort()
+
+		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
+		if fileType == "appdata" {
+			copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
+		}
+		if fileType == "appdata-showcmp" {
+			// need to clear controller field of CloudletInfo
+			// because it depends on local hostname.
+			clearCloudletInfoNocmp(&a1)
+			clearCloudletInfoNocmp(&a2)
+		}
+
+		y1 = a1
+		y2 = a2
+	} else if fileType == "appdata-output" {
+		var a1 testutil.AllDataOut
+		var a2 testutil.AllDataOut
+
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
+		// remove results for AppInst/ClusterInst/Cloudlet because
+		// they are non-deterministic
+		ClearAppDataOutputStatus(&a1)
+		ClearAppDataOutputStatus(&a2)
+
 		y1 = a1
 		y2 = a2
 	} else if fileType == "findcloudlet" {
@@ -469,12 +513,26 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &f2)
 
 		//publicport is variable so we nil it out for comparison purposes.
-		for _, p := range f1.Ports {
-			p.PublicPort = 0
+		clearFindCloudletPorts(&f1)
+		clearFindCloudletPorts(&f2)
+
+		y1 = f1
+		y2 = f2
+	} else if fileType == "findcloudlets" {
+		var f1 []*dmeproto.FindCloudletReply
+		var f2 []*dmeproto.FindCloudletReply
+
+		err1 = ReadYamlFile(firstYamlFile, &f1)
+		err2 = ReadYamlFile(secondYamlFile, &f2)
+
+		//publicport is variable so we nil it out for comparison purposes.
+		for _, reply := range f1 {
+			clearFindCloudletPorts(reply)
 		}
-		for _, p := range f2.Ports {
-			p.PublicPort = 0
+		for _, reply := range f2 {
+			clearFindCloudletPorts(reply)
 		}
+
 		y1 = f1
 		y2 = f2
 	} else if fileType == "getqospositionkpi" {
@@ -514,6 +572,49 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = r1
 		y2 = r2
+	} else if fileType == "deviceshow" {
+		var r1 edgeproto.DeviceData
+		var r2 edgeproto.DeviceData
+
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = []cmp.Option{
+			edgeproto.IgnoreDeviceFields("nocmp"),
+			cmpopts.SortSlices(func(a edgeproto.Device, b edgeproto.Device) bool {
+				return a.GetKey().GetKeyString() < b.GetKey().GetKeyString()
+			}),
+		}
+		y1 = r1
+		y2 = r2
+	} else if fileType == "debugoutput" {
+		var r1 testutil.DebugDataOut
+		var r2 testutil.DebugDataOut
+
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = append(copts, edgeproto.IgnoreDebugReplyFields("nocmp"))
+		copts = append(copts, cmpopts.SortSlices(edgeproto.CmpSortDebugReply))
+		y1 = r1
+		y2 = r2
+	} else if fileType == "nodedata" {
+		var r1 edgeproto.NodeData
+		var r2 edgeproto.NodeData
+
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = []cmp.Option{
+			edgeproto.IgnoreNodeFields("nocmp"),
+			cmpopts.SortSlices(func(a edgeproto.Node, b edgeproto.Node) bool {
+				// ignore nocmp fields, include internalPki
+				// because one controller has a different
+				// one and the keys end up being the same.
+				ca := a.Key.Type + a.Key.Region + a.Key.CloudletKey.GetKeyString() + a.InternalPki
+				cb := b.Key.Type + b.Key.Region + b.Key.CloudletKey.GetKeyString() + b.InternalPki
+				return ca < cb
+			}),
+		}
+		y1 = r1
+		y2 = r2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)
@@ -538,8 +639,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 func ControllerCLI(ctrl *process.Controller, args ...string) ([]byte, error) {
 	cmdargs := []string{"--addr", ctrl.ApiAddr, "controller"}
-	if ctrl.TLS.ClientCert != "" {
-		cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
+	tlsFile := ctrl.GetTlsFile()
+	if tlsFile != "" {
+		cmdargs = append(cmdargs, "--tls", tlsFile)
 	}
 	cmdargs = append(cmdargs, args...)
 	log.Printf("Running: edgectl %v\n", cmdargs)
@@ -604,4 +706,71 @@ func clearInfluxTime(results []influxclient.Result) {
 			}
 		}
 	}
+}
+
+func clearCloudletInfoNocmp(data *edgeproto.AllData) {
+	for ii, _ := range data.CloudletInfos {
+		data.CloudletInfos[ii].Controller = ""
+		data.CloudletInfos[ii].NotifyId = 0
+	}
+}
+
+func clearFindCloudletPorts(reply *dmeproto.FindCloudletReply) {
+	for _, p := range reply.Ports {
+		p.PublicPort = 0
+	}
+}
+
+func ClearAppDataOutputStatus(output *testutil.AllDataOut) {
+	output.Cloudlets = testutil.FilterStreamResults(output.Cloudlets)
+	output.ClusterInsts = testutil.FilterStreamResults(output.ClusterInsts)
+	output.AppInstances = testutil.FilterStreamResults(output.AppInstances)
+}
+
+func ReadConsoleURL(consoleUrl string, cookies []*http.Cookie) (string, error) {
+	req, err := http.NewRequest("GET", consoleUrl, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if cookies != nil {
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+	}
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	options := cookiejar.Options{}
+
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Jar:       jar,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	// For some reason this client is not getting 302,
+	// instead it gets 502. It works fine for curl & wget
+	if resp.StatusCode == http.StatusBadGateway {
+		if resp.Request.URL.String() != consoleUrl {
+			return ReadConsoleURL(resp.Request.URL.String(), resp.Cookies())
+		}
+	}
+	return string(contents), nil
 }

@@ -6,25 +6,27 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
-import "operator.proto";
 import "result.proto";
 import "restagtable.proto";
 import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // Cloudlet unique key
 //
 // CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
-  // Operator of the cloudlet site
-  OperatorKey operator_key = 1 [(gogoproto.nullable) = false];
+  // Organization of the cloudlet site
+  string organization = 1 [(protogen.keytag) = "cloudletorg"];
   // Name of the cloudlet
-  string name = 2;
+  string name = 2 [(protogen.keytag) = "cloudlet"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
-  option (protogen.alias) = "operator=OperatorKey.Name";
 }
 
 // Operation time limits
@@ -45,88 +47,23 @@ message OperationTimeLimits{
     int64 delete_app_inst_timeout = 6 [(gogoproto.casttype) = "Duration"];
 }
 
-// properites common to all cloudlets
-message CloudletInfraCommon{
-    // the mex docker registry, e.g.  registry.mobiledgex.net:5000. 
-    string docker_registry = 1;
-    // DNS Zone
-    string dns_zone = 2;
-    // registry file server contains files which get pulled on instantiation such as certs and images
-    string registry_file_server = 3;
-    // Cloudflare key
-    string cf_key = 4; //MEX_CF_KEY
-    // Cloudflare key
-    string cf_user = 5; //MEX_CF_KEY
-    // Docker registry password
-    string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
-    // network scheme
-    string network_scheme = 7;
-    // the name of the docker registry secret, e.g. mexgitlabsecret
-    string docker_registry_secret = 8;
-}
-
-message AzureProperties{
-  // azure region e.g. uswest2
-  string location = 1;
-  // azure resource group
-  string resource_group = 2;
-  // azure username
-  string user_name = 3;
-  // azure password
-  string password = 4;
-}
-
-message GcpProperties{
-  // gcp project for billing
-  string project = 1;
-  // availability zone
-  string zone = 2;
-  // service account to login with
-  string service_account = 3;
-  // vault credentials link
-  string gcp_auth_key_url = 4;
-}
-
-message OpenStackProperties{
-  // name of the external network, e.g. external-network-shared
-  string os_external_network_name = 1; 
-  //openstack image , e.g. mobiledgex
-  string os_image_name = 2;
-  // openstack router
-  string os_external_router_name = 3;
-  // openstack internal network
-  string os_mex_network = 4;
-  // openrc env vars 
-  map<string, string> open_rc_vars = 5;
-}
-
-message CloudletInfraProperties{
-    // what kind of infrastructure: Azure, GCP, Openstack
-    string cloudlet_kind = 1;
-    //name and version of the docker image container image that mexos runs in
-    string mexos_container_image_name = 2;
-    // openstack
-    OpenStackProperties openstack_properties = 3;
-    // azure
-    AzureProperties azure_properties = 4;
-    // gcp
-    GcpProperties gcp_properties = 5;
-}
-
-// Platform Configuration
 //
 // Platform specific configuration required for Cloudlet management
 message PlatformConfig {
   // Path to Docker registry holding edge-cloud image
-  string registry_path = 1;
+  string container_registry_path = 1;
   // Path to platform base image
-  string image_path = 2;
+  string cloudlet_vm_image_path = 2;
   // Address of controller notify port (can be multiple of these)
   string notify_ctrl_addrs = 3;
   // Vault address
   string vault_addr  = 4;
   // TLS cert file
   string tls_cert_file = 5;
+  // TLS key file
+  string tls_key_file = 20;
+  // TLS ca file
+  string tls_ca_file = 21;
   // Environment variables
   map<string, string> env_var = 6;
   // Tag of edge-cloud image
@@ -139,6 +76,20 @@ message PlatformConfig {
   bool cleanup_mode = 11;
   // Region
   string region = 12;
+  // Get certs from vault or generate your own for the root load balancer
+  bool commercial_certs = 13;
+  // Use Vault certs for internal TLS communication
+  bool use_vault_certs = 14;
+  // Use Vault CAs to authenticate TLS communication
+  bool use_vault_cas = 15;
+  // App domain name root
+  string app_dns_root = 16;
+  // Path to Chef Server
+  string chef_server_path = 17;
+  // Chef client interval
+  int32 chef_client_interval = 18  [(gogoproto.casttype) = "Duration"];
+  // Deployment Tag
+  string deployment_tag = 19;
 }
 
 // Platform Type
@@ -159,6 +110,12 @@ enum PlatformType {
   PLATFORM_TYPE_EDGEBOX = 5;
   // Fake Infra Cloudlet
   PLATFORM_TYPE_FAKEINFRA = 6;
+   // VMWare VSphere (ESXi)
+  PLATFORM_TYPE_VSPHERE = 7;
+  // AWS Cloudlet
+  PLATFORM_TYPE_AWS = 8;
+  // VM Pool Cloudlet
+  PLATFORM_TYPE_VM_POOL = 9;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
@@ -167,8 +124,26 @@ message CloudletResMap {
   CloudletKey key = 1[(gogoproto.nullable) = false];
   // Resource mapping info
   map<string, string> mapping = 2;
-  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.also_required) = "Mapping";
+}
+
+// Infra API Access
+//
+// InfraApiAccess is the type of access available to Infra API endpoint
+enum InfraApiAccess {
+	// Infra API endpoint is accessible from public network
+	DIRECT_ACCESS = 0;
+	// Infra API endpoint is not accessible from public network
+	RESTRICTED_ACCESS = 1;
+}
+
+// Infra specific configuration used for Cloudlet deployments
+message InfraConfig {
+  // Infra specific external network name
+  string external_network_name = 1;
+  // Infra specific flavor name
+  string flavor_name = 2;
 }
 
 // Cloudlet
@@ -210,15 +185,30 @@ message Cloudlet {
   string physical_name = 18;
   // Single Key-Value pair of env var to be passed to CRM
   map<string, string> env_var = 19;
-  // Cloudlet version 
-  string version = 20;
+  // Cloudlet container version 
+  string container_version = 20;
   // Platform Config Info
   PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Optional resource to restagtbl key map key values = [gpu, nas, nic]
   map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true];
   // Variables required to access cloudlet
   map<string, string> access_vars = 23;
-
+  // MobiledgeX baseimage version where CRM services reside
+  string vm_image_version = 24;
+  // Deployment type to bring up CRM services (docker, kubernetes)
+  string deployment = 26 [(protogen.hidetag) = "nocmp"];
+  // Infra Access Type is the type of access available to Infra API Endpoint
+  InfraApiAccess infra_api_access = 27;
+  // Infra specific config
+  InfraConfig infra_config = 28 [(gogoproto.nullable) = false];
+  // Chef client key
+  map<string, string> chef_client_key = 29 [(protogen.backend) = true];
+  // State for maintenance
+  MaintenanceState maintenance_state = 30;
+  // Override container version from policy file
+  bool override_policy_container_version = 31;
+  // VM Pool
+  string vm_pool = 32;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -227,8 +217,9 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr";
-  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
 }
 
 message FlavorMatch {
@@ -236,42 +227,74 @@ message FlavorMatch {
   CloudletKey key = 1 [(gogoproto.nullable) = false];
   string flavor_name = 3;
   string availability_zone = 4;
- option (protogen.alias) = "cloudlet=Key.Name,operator=Key.OperatorKey.Name,flavor=FlavorName";
+ option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName";
+}
+
+message CloudletManifest {
+  // Manifest to bringup cloudlet VM and services.
+  string manifest = 2;
+}
+
+message PropertyInfo {
+  // Name of the property
+  string name = 1;
+  // Description of the property
+  string description = 2;
+  // Default value of the property
+  string value = 3;
+  // Is the property a secret value, will be hidden
+  bool secret = 4;
+  // Is the property mandatory
+  bool mandatory = 5;
+  // Is the property internal, not to be set by Operator
+  bool internal = 6;
+}
+
+message CloudletProps {
+  // Platform type
+  PlatformType platform_type = 1;
+  // Single Key-Value pair of env var to be passed to CRM
+  map<string, PropertyInfo> properties = 2;
 }
 
 service CloudletApi {
-  // Create Cloudlet. Sets up cloudlet services on Operator's compute
-  // resources and makes it part of MobiledgeX edge resource portfolio.
-  // These resources will now be managed from edge controller
+  // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
+  // and integrated as part of MobiledgeX edge resource portfolio.
+  // These resources are managed from the Edge Controller.
   rpc CreateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/cloudlet"
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
+    option (protogen.mc2_streamer_cache) = true;
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
-  // Delete Cloudlet. Removes cloudlet services and will no longer be
-  // managed from edge controller
+  // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
+  // from the Edge Controller.
   rpc DeleteCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/cloudet"
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Update Cloudlet. Updates cloudlet config and also manages upgrade of cloudlet services
+  // Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/cloudlet"
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool";
+    option (protogen.mc2_streamer_cache) = true;
   }
-  // Show Cloudlets. Lists all the cloudlets managed from edge controller
+  // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
     option (google.api.http) = {
       post: "/show/cloudlet"
@@ -280,6 +303,24 @@ service CloudletApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
     option (protogen.mc2_custom_authz) = true;
   }
+  // Get Cloudlet Manifest. Shows deployment manifest required to setup cloudlet
+  rpc GetCloudletManifest(Cloudlet) returns (CloudletManifest) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/manifest"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Get Cloudlet Properties. Shows all the infra properties used to setup cloudlet
+  rpc GetCloudletProps(CloudletProps) returns (CloudletProps) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/props"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.method_noconfig) = "Properties";
+    option (protogen.method_also_required) = "PlatformType";
+  }
 
   // Add Optional Resource tag table
   rpc AddCloudletResMapping(CloudletResMap) returns (Result) {
@@ -287,7 +328,7 @@ service CloudletApi {
     post: "/addmapping/cloudlet"
     body: "*"
   };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
   // Add Optional Resource tag table
   rpc RemoveCloudletResMapping(CloudletResMap) returns (Result) {
@@ -295,7 +336,7 @@ service CloudletApi {
       post: "/rmmapping/cloudlet"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
 
   // Discover if flavor produces a matching platform flavor
@@ -304,7 +345,7 @@ service CloudletApi {
     post: "/findmapping/cloudlet"
     body: "*"
   };
-  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
 }
 
@@ -324,6 +365,8 @@ enum CloudletState {
   CLOUDLET_STATE_INIT = 5;
   // Cloudlet is upgrading
   CLOUDLET_STATE_UPGRADE = 6;
+  // Cloudlet needs data to synchronize
+  CLOUDLET_STATE_NEED_SYNC = 7;  
 }
 
 // Flavor details from the Cloudlet
@@ -379,12 +422,16 @@ message CloudletInfo {
   repeated FlavorInfo flavors = 10;
   // status is used to reflect progress of creation or other events
   StatusInfo status = 11 [(gogoproto.nullable) = false];
-  // Cloudlet version
-  string version = 12;
+  // Cloudlet container version
+  string container_version = 12;
   // Availability Zones if any
   repeated OSAZone availability_zones = 13;
   // Local Images availble to cloudlet
   repeated OSImage os_images = 14;
+  // Indicates all controller data has been sent to CRM
+  bool controller_cache_received = 15;
+  // State for maintenance
+  MaintenanceState maintenance_state = 16;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
@@ -392,7 +439,8 @@ message CloudletInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "none";
 }
 
 service CloudletInfoApi {
@@ -402,12 +450,16 @@ service CloudletInfoApi {
       post: "/show/cloudletinfo"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.Organization";
   }
   // Inject (create) a CloudletInfo for regression testing
-  rpc InjectCloudletInfo(CloudletInfo) returns (Result) {}
+  rpc InjectCloudletInfo(CloudletInfo) returns (Result) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
   // Evict (delete) a CloudletInfo for regression testing
-  rpc EvictCloudletInfo(CloudletInfo) returns (Result) {}
+  rpc EvictCloudletInfo(CloudletInfo) returns (Result) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
 }
 
 // (TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.

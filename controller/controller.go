@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	ctls "crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -19,6 +18,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -44,20 +44,26 @@ var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
 var externalApiAddr = flag.String("externalApiAddr", "", "External API listener address if behind proxy/LB. Defaults to apiAddr")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
-var vaultAddr = flag.String("vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
+var notifyRootAddrs = flag.String("notifyRootAddrs", "", "Comma separated list of notifyroots")
+var notifyParentAddrs = flag.String("notifyParentAddrs", "", "Comma separated list of notify parents")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
+var edgeTurnAddr = flag.String("edgeTurnAddr", "127.0.0.1:6080", "Address to EdgeTurn Server")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file. Keyfile and CA file must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
 var registryFQDN = flag.String("registryFQDN", "", "default docker image registry FQDN")
 var artifactoryFQDN = flag.String("artifactoryFQDN", "", "default VM image registry (artifactory) FQDN")
 var cloudletRegistryPath = flag.String("cloudletRegistryPath", "", "edge-cloud image registry path for deploying cloudlet services")
 var cloudletVMImagePath = flag.String("cloudletVMImagePath", "", "VM image for deploying cloudlet services")
+var chefServerPath = flag.String("chefServerPath", "", "Path to chef server organization")
 var versionTag = flag.String("versionTag", "", "edge-cloud image tag indicating controller version")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
+var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
+var checkpointInterval = flag.String("checkpointInterval", "MONTH", "Interval at which to checkpoint cluster usage")
+var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
+
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
 
@@ -71,6 +77,7 @@ var ErrCtrlUpgradeRequired = errors.New("data mode upgrade required")
 var sigChan chan os.Signal
 var services Services
 var vaultConfig *vault.Config
+var nodeMgr node.NodeMgr
 
 type Services struct {
 	etcdLocal       *process.Etcd
@@ -80,9 +87,11 @@ type Services struct {
 	notifyServerMgr bool
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
+	notifyClient    *notify.Client
 }
 
 func main() {
+	nodeMgr.InitFlags()
 	flag.Parse()
 
 	err := startServices()
@@ -125,12 +134,6 @@ func validateFields(ctx context.Context) error {
 			return err
 		}
 	}
-	if *cloudletVMImagePath != "" {
-		err := util.ValidateImagePath(*cloudletVMImagePath)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -140,25 +143,17 @@ func startServices() error {
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *externalApiAddr == "" {
-		*externalApiAddr = *apiAddr
-		host, port, err := net.SplitHostPort(*externalApiAddr)
+		*externalApiAddr, err = util.GetExternalApiAddr(*apiAddr)
 		if err != nil {
-			return fmt.Errorf("Failed to parse externalApiAddr %s, %v", *externalApiAddr, err)
-		}
-		if host == "0.0.0.0" {
-			addr, err := resolveExternalAddr()
-			if err == nil {
-				*externalApiAddr = addr + ":" + port
-			}
+			return err
 		}
 	}
-	log.InitTracer(*tlsCertFile)
-	span := log.StartSpan(log.DebugLevelInfo, "main")
-	span.SetTag("level", "init")
-	defer span.Finish()
-	ctx := log.ContextWithSpan(context.Background(), span)
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "nohostname"
+	}
+	ControllerId = hostname + "@" + *externalApiAddr
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	// region number for etcd is a deprecated concept since we decided
 	// etcd is per-region.
 	objstore.InitRegion(uint32(1))
@@ -166,12 +161,14 @@ func startServices() error {
 		return fmt.Errorf("invalid region name")
 	}
 
-	vaultConfig, err = vault.BestConfig(*vaultAddr)
+	ctx, span, err := nodeMgr.Init(node.NodeTypeController, node.CertIssuerRegional, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfo, "vault auth", "type", vaultConfig.Auth.Type())
+	defer span.Finish()
+	vaultConfig = nodeMgr.VaultConfig
 
+	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	err = validateFields(ctx)
 	if err != nil {
 		return err
@@ -249,6 +246,7 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.influxQ = influxQ
+	services.influxQ.UpdateDefaultRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration())
 	// events influx
 	events := influxq.NewInfluxQ(cloudcommon.EventsDbName, influxAuth.User, influxAuth.Pass)
 	err = events.Start(*influxAddr)
@@ -258,41 +256,73 @@ func startServices() error {
 	}
 	services.events = events
 
-	InitNotify(influxQ)
-	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
+	InitNotify(influxQ, &appInstClientApi)
+	if *notifyParentAddrs != "" {
+		addrs := strings.Split(*notifyParentAddrs, ",")
+		tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+			nodeMgr.CommonName(),
+			node.CertIssuerRegional,
+			[]node.MatchCA{node.GlobalMatchCA()})
+		if err != nil {
+			return err
+		}
+		dialOption := tls.GetGrpcDialOption(tlsConfig)
+		notifyClient := notify.NewClient(nodeMgr.Name(), addrs, dialOption)
+		notifyClient.RegisterSendAlertCache(&alertApi.cache)
+		nodeMgr.RegisterClient(notifyClient)
+		notifyClient.Start()
+		services.notifyClient = notifyClient
+	}
+	notifyServerTls, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{
+			node.SameRegionalMatchCA(),
+			node.SameRegionalCloudletMatchCA(),
+		})
+	if err != nil {
+		return err
+	}
+	notify.ServerMgrOne.Start(nodeMgr.Name(), *notifyAddr, notifyServerTls)
 	services.notifyServerMgr = true
 
-	creds, err := tls.GetTLSServerCreds(*tlsCertFile, true)
+	apiTlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{
+			node.GlobalMatchCA(),
+			node.SameRegionalMatchCA(),
+		})
 	if err != nil {
-		return fmt.Errorf("get TLS Credentials failed, %v", err)
+		return err
 	}
-	server := grpc.NewServer(grpc.Creds(creds),
-		grpc.UnaryInterceptor(AuditUnaryInterceptor),
-		grpc.StreamInterceptor(AuditStreamInterceptor))
-	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
+	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
+		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
+		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor))
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
-	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
+	edgeproto.RegisterVMPoolApiServer(server, &vmPoolApi)
 	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
+	edgeproto.RegisterAppInstRefsApiServer(server, &appInstRefsApi)
 	edgeproto.RegisterControllerApiServer(server, &controllerApi)
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
 	edgeproto.RegisterExecApiServer(server, &execApi)
 	edgeproto.RegisterCloudletPoolApiServer(server, &cloudletPoolApi)
-	edgeproto.RegisterCloudletPoolMemberApiServer(server, &cloudletPoolMemberApi)
-	edgeproto.RegisterCloudletPoolShowApiServer(server, &cloudletPoolMemberApi)
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterPrivacyPolicyApiServer(server, &privacyPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
-
-	log.RegisterDebugApiServer(server, &log.Api{})
+	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
+	edgeproto.RegisterDebugApiServer(server, &debugApi)
+	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
+	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -305,29 +335,29 @@ func startServices() error {
 	// REST gateway
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
-		ApiAddr:     *apiAddr,
-		TlsCertFile: *tlsCertFile,
+		ApiAddr: *apiAddr,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
-			edgeproto.RegisterDeveloperApiHandler,
 			edgeproto.RegisterAppApiHandler,
 			edgeproto.RegisterAppInstApiHandler,
-			edgeproto.RegisterOperatorApiHandler,
 			edgeproto.RegisterOperatorCodeApiHandler,
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
+			edgeproto.RegisterVMPoolApiHandler,
 			edgeproto.RegisterFlavorApiHandler,
 			edgeproto.RegisterClusterInstApiHandler,
 			edgeproto.RegisterControllerApiHandler,
 			edgeproto.RegisterNodeApiHandler,
 			edgeproto.RegisterCloudletPoolApiHandler,
-			edgeproto.RegisterCloudletPoolMemberApiHandler,
-			edgeproto.RegisterCloudletPoolShowApiHandler,
 			edgeproto.RegisterAlertApiHandler,
 			edgeproto.RegisterAutoScalePolicyApiHandler,
 			edgeproto.RegisterAutoProvPolicyApiHandler,
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterPrivacyPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
+			edgeproto.RegisterAppInstClientApiHandler,
+			edgeproto.RegisterDebugApiHandler,
+			edgeproto.RegisterDeviceApiHandler,
+			edgeproto.RegisterOrganizationApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -335,19 +365,6 @@ func startServices() error {
 		return fmt.Errorf("Failed to create grpc gateway, %v", err)
 	}
 	mux.Handle("/", gw)
-	tlscfg := &ctls.Config{
-		MinVersion:               ctls.VersionTLS12,
-		CurvePreferences:         []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256},
-		PreferServerCipherSuites: true,
-		CipherSuites: []uint16{
-			ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-			ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-			ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		},
-	}
-
 	// Suppress contant stream of TLS error logs due to LB health check. There is discussion in the community
 	//to get rid of some of these logs, but as of now this a the way around it.   We could miss other logs here but
 	// the excessive error logs are drowning out everthing else.
@@ -357,11 +374,28 @@ func startServices() error {
 	httpServer := &http.Server{
 		Addr:      *httpAddr,
 		Handler:   mux,
-		TLSConfig: tlscfg,
+		TLSConfig: apiTlsConfig,
 		ErrorLog:  &nullLogger,
 	}
-	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
+	go func() {
+		var err error
+		if httpServer.TLSConfig == nil {
+			err = httpServer.ListenAndServe()
+		} else {
+			err = httpServer.ListenAndServeTLS("", "")
+		}
+		if err != nil && err != http.ErrServerClosed {
+			log.FatalLog("Failed to server grpc gateway", "err", err)
+		}
+	}()
 	services.httpServer = httpServer
+
+	// start the checkpointer
+	err = checkInterval()
+	if err != nil {
+		return err
+	}
+	go runCheckpoints(ctx)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
@@ -377,6 +411,9 @@ func stopServices() {
 	if services.notifyServerMgr {
 		notify.ServerMgrOne.Stop()
 	}
+	if services.notifyClient != nil {
+		services.notifyClient.Stop()
+	}
 	if services.influxQ != nil {
 		services.influxQ.Stop()
 	}
@@ -389,7 +426,7 @@ func stopServices() {
 	if services.etcdLocal != nil {
 		services.etcdLocal.StopLocal()
 	}
-	log.FinishTracer()
+	nodeMgr.Finish()
 }
 
 // Helper function to verify the compatibility of etcd version and
@@ -420,40 +457,41 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 }
 
 func InitApis(sync *Sync) {
-	InitDeveloperApi(sync)
 	InitAppApi(sync)
-	InitOperatorApi(sync)
 	InitOperatorCodeApi(sync)
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
 	InitClusterInstApi(sync)
 	InitCloudletInfoApi(sync)
+	InitVMPoolApi(sync)
+	InitVMPoolInfoApi(sync)
 	InitAppInstInfoApi(sync)
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
+	InitAppInstRefsApi(sync)
 	InitControllerApi(sync)
-	InitNodeApi(sync)
 	InitCloudletPoolApi(sync)
-	InitCloudletPoolMemberApi(sync)
 	InitExecApi()
 	InitAlertApi(sync)
 	InitAutoScalePolicyApi(sync)
 	InitAutoProvPolicyApi(sync)
+	InitAutoProvInfoApi(sync)
 	InitResTagTableApi(sync)
 	InitPrivacyPolicyApi(sync)
 	InitSettingsApi(sync)
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "nohostname"
-	}
-	ControllerId = hostname + "@" + *externalApiAddr
+	InitAppInstClientKeyApi(sync)
+	InitAppInstClientApi()
+	InitDeviceApi(sync)
+	InitOrganizationApi(sync)
 }
 
-func InitNotify(influxQ *influxq.InfluxQ) {
+func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
+	notify.ServerMgrOne.RegisterSendVMPoolCache(&vmPoolApi.cache)
+	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
@@ -462,33 +500,23 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
-	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
+	nodeMgr.RegisterServer(&notify.ServerMgrOne)
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(&vmPoolInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
-	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
 	autoProvPolicyApi.SetInfluxQ(influxQ)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
-}
-
-// This is for figuring out the "external" address when
-// running under kubernetes, which is really the internal CNI
-// address that containers can use to talk to each other.
-func resolveExternalAddr() (string, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "", err
-	}
-	addrs, err := net.LookupHost(hostname)
-	if err != nil {
-		return "", err
-	}
-	return addrs[0], nil
+	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
+	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
 }

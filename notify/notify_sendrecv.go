@@ -58,6 +58,13 @@ type NotifyRecv interface {
 	RecvAllEnd(ctx context.Context, cleanup Cleanup)
 }
 
+type SendAllRecv interface {
+	// Called when SendAllStart is received
+	RecvAllStart()
+	// Called when SendAllEnd is received
+	RecvAllEnd(ctx context.Context)
+}
+
 type StreamNotify interface {
 	Send(*edgeproto.Notice) error
 	Recv() (*edgeproto.Notice, error)
@@ -100,6 +107,7 @@ const (
 type SendRecv struct {
 	cliserv            string // client or server
 	peerAddr           string
+	peer               string
 	sendlist           []NotifySend
 	recvmap            map[string]NotifyRecv
 	started            bool
@@ -108,6 +116,7 @@ type SendRecv struct {
 	remoteWanted       map[string]struct{}
 	filterCloudletKeys bool
 	cloudletKeys       map[edgeproto.CloudletKey]struct{}
+	cloudletReady      bool
 	appSend            *AppSend
 	cloudletSend       *CloudletSend
 	clusterInstSend    *ClusterInstSend
@@ -117,6 +126,9 @@ type SendRecv struct {
 	signal             chan bool
 	stats              Stats
 	mux                sync.Mutex
+	sendAllEnd         bool
+	manualSendAllEnd   bool
+	sendAllRecvHandler SendAllRecv
 }
 
 func (s *SendRecv) init(cliserv string) {
@@ -161,11 +173,26 @@ func (s *SendRecv) registerRecv(recv NotifyRecv) {
 	recv.SetSendRecv(s)
 }
 
+func (s *SendRecv) registerSendAllRecv(handler SendAllRecv) {
+	s.sendAllRecvHandler = handler
+}
+
 func (s *SendRecv) setRemoteWanted(names []string) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	for _, name := range names {
 		s.remoteWanted[name] = struct{}{}
+	}
+}
+
+func (s *SendRecv) triggerSendAllEnd() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	// we only allow sendAllEnd to be triggered once
+	if s.manualSendAllEnd {
+		s.sendAllEnd = true
+		s.manualSendAllEnd = false
+		s.wakeup()
 	}
 }
 
@@ -182,7 +209,8 @@ func (s *SendRecv) send(stream StreamNotify) {
 
 	sendAll := true
 	sendAllSpan := log.StartSpan(log.DebugLevelNotify, "notify-send-all")
-	sendAllSpan.SetTag("peer", s.peerAddr)
+	sendAllSpan.SetTag("peerAddr", s.peerAddr)
+	sendAllSpan.SetTag("peer", s.peer)
 	sendAllSpan.SetTag("cliserv", s.cliserv)
 	sendAllCtx := opentracing.ContextWithSpan(context.Background(), sendAllSpan)
 
@@ -218,14 +246,14 @@ func (s *SendRecv) send(stream StreamNotify) {
 				hasData = true
 			}
 		}
-		if !hasData && !s.done && !sendAll {
+		if !hasData && !s.done && !sendAll && !s.sendAllEnd {
 			continue
 		}
 		if s.done {
 			break
 		}
 		if sendAll {
-			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all")
+			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all", "peer", s.peer)
 			s.stats.SendAll++
 		}
 		// Note that order is important here, as some objects
@@ -241,18 +269,22 @@ func (s *SendRecv) send(stream StreamNotify) {
 		if err != nil {
 			break
 		}
-		if sendAll {
+		if s.sendAllEnd {
+			s.sendAllEnd = false
+			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all end", "peer", s.peer)
 			notice.Action = edgeproto.NoticeAction_SENDALL_END
 			notice.Any = types.Any{}
 			err = stream.Send(&notice)
 			if err != nil {
 				log.SpanLog(sendAllCtx, log.DebugLevelNotify,
-					"send all end", "err", err)
+					"send all end", "peer", s.peer, "err", err)
 				break
 			}
-			sendAll = false
 			sendAllSpan.Finish()
 			sendAllSpan = nil
+		}
+		if sendAll {
+			sendAll = false
 		}
 		if err != nil {
 			break
@@ -266,6 +298,13 @@ func (s *SendRecv) send(stream StreamNotify) {
 
 func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 	recvAll := true
+	// Note we never actually receive a SendAll_Start message,
+	// it's implicit on the rx side when the connection is established.
+	sendAllRecv := s.sendAllRecvHandler
+	if sendAllRecv != nil {
+		sendAllRecv.RecvAllStart()
+	}
+
 	for _, recv := range s.recvmap {
 		recv.RecvAllStart()
 	}
@@ -293,12 +332,16 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 				ctx = opentracing.ContextWithSpan(ctx, span)
 			}
 			if err != nil && notice.Action != edgeproto.NoticeAction_SENDALL_END {
-				log.SpanLog(ctx, log.DebugLevelNotify, "err", err)
+				log.SpanLog(ctx, log.DebugLevelNotify, "hit error", "peer", s.peer, "err", err)
 				return
 			}
 			if recvAll && notice.Action == edgeproto.NoticeAction_SENDALL_END {
 				for _, recv := range s.recvmap {
 					recv.RecvAllEnd(ctx, cleanup)
+				}
+				sendAllRecv := s.sendAllRecvHandler
+				if sendAllRecv != nil {
+					sendAllRecv.RecvAllEnd(ctx)
 				}
 				recvAll = false
 				return
@@ -309,7 +352,8 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 			} else {
 				log.DebugLog(log.DebugLevelNotify,
 					fmt.Sprintf("%s recv unhandled", s.cliserv),
-					"peer", s.peerAddr,
+					"peerAddr", s.peerAddr,
+					"peer", s.peer,
 					"action", notice.Action,
 					"name", name)
 			}

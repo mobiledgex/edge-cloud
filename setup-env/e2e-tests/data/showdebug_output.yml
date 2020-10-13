@@ -1,0 +1,69 @@
+replies:
+- - node:
+      type: notifyroot
+    output: api,notify
+  - node:
+      type: controller
+      region: local
+    output: etcd,api,notify,metrics,infra
+  - node:
+      type: controller
+      region: local
+    output: etcd,api,notify,metrics,infra
+  - node:
+      type: dme
+      region: local
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-1
+    output: notify,dmedb,dmereq,locapi,metrics
+  - node:
+      type: dme
+      region: local
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-2
+    output: notify,dmedb,dmereq,locapi,metrics
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-1
+    output: api,notify,infra,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-2
+    output: api,notify,infra,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-3
+    output: api,notify,infra,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        organization: azure
+        name: azure-cloud-4
+    output: api,notify,infra,info
+  - node:
+      type: crm
+      region: local
+      cloudletkey:
+        organization: gcp
+        name: gcp-cloud-5
+    output: api,notify,infra,info
+  - node:
+      type: cluster-svc
+      region: local
+    output: api,notify,infra
+  - node:
+      type: cluster-svc
+      region: local
+    output: api,notify,infra

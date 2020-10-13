@@ -8,26 +8,20 @@ import "cloudlet.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 
-// NodeType defines the type of Node
-enum NodeType {
-  // Unknown
-  NODE_UNKNOWN = 0;
-  // Distributed Matching Engine
-  NODE_DME = 1;
-  // Cloudlet Resource Manager
-  NODE_CRM = 2;
-  // Controller Node
-  NODE_CONTROLLER = 3;
-}
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
 
 // NodeKey uniquely identifies a DME or CRM node
 message NodeKey {
   // Name or hostname of node
-  string name = 1 [(protogen.hidetag) = "nocmp"];
+  string name = 1 [(protogen.hidetag) = "nocmp", (protogen.keytag) = "node"];
   // Node type
-  NodeType node_type = 2;
+  string type = 4 [(protogen.keytag) = "nodetype"];
   // Cloudlet on which node is running, or is associated with
   CloudletKey cloudlet_key = 3 [(gogoproto.nullable) = false];
+  // Region the node is in
+  string region = 5 [(protogen.keytag) = "noderegion"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -49,24 +43,21 @@ message Node {
   string build_author = 6 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Hostname
   string hostname = 7 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Docker edge-cloud base image version
-  string image_version= 8 [(protogen.backend) = true];
+  // Docker edge-cloud container version which node instance use
+  string container_version = 8 [(protogen.backend) = true];
+  // Internal PKI Config
+  string internal_pki = 9 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
+  option (protogen.alias) = "name=Key.Name,type=Key.Type,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,region=Key.Region";
+  option (protogen.uses_org) = "none";
 }
 
 service NodeApi {
-  // Show Nodes connected locally only
-  rpc ShowNodeLocal(Node) returns (stream Node) {
-    option (google.api.http) = {
-      post: "/show/nodelocal"
-      body: "*"
-    };
-  }
   // Show all Nodes connected to all Controllers
   rpc ShowNode(Node) returns (stream Node) {
     option (google.api.http) = {
@@ -74,5 +65,12 @@ service NodeApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+    option (protogen.mc2_api_notifyroot) = true;
   }
+}
+
+message NodeData {
+  repeated Node nodes = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
 }

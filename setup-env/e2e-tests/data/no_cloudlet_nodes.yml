@@ -1,19 +1,29 @@
 nodes:
 - key:
-    nodetype: NodeController
-  imageversion: 2019-10-24
+    type: notifyroot
 - key:
-    nodetype: NodeController
-  imageversion: 2019-10-24
+    type: controller
+    region: local
+  containerversion: 2019-10-24
 - key:
-    nodetype: NodeDme
+    type: controller
+    region: local
+  containerversion: 2019-10-24
+- key:
+    type: dme
+    region: local
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
 - key:
-    nodetype: NodeDme
+    type: dme
+    region: local
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
+- key:
+    type: cluster-svc
+    region: local
+- key:
+    type: cluster-svc
+    region: local

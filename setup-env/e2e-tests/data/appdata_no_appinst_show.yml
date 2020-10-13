@@ -1,5 +1,6 @@
 settings:
   shepherdmetricscollectioninterval: 1s
+  shepherdalertevaluationinterval: 15s
   shepherdhealthcheckretries: 3
   shepherdhealthcheckinterval: 5s
   autodeployintervalsec: 1
@@ -11,7 +12,12 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  cloudletmaintenancetimeout: 2s
+  updatevmpooltimeout: 20m0s
 flavors:
 - key:
     name: x1.tiny
@@ -34,10 +40,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -49,10 +54,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -64,10 +68,9 @@ clusterinsts:
     clusterkey:
       name: ReservableCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: MobiledgeX
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -80,10 +83,9 @@ clusterinsts:
     clusterkey:
       name: ReservableCluster2
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: MobiledgeX
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -93,42 +95,13 @@ clusterinsts:
   numnodes: 1
   reservable: true
 
-operators:
-- key:
-    name: tmus
-- key:
-    name: azure
-- key:
-    name: gcp
-
 operatorcodes:
 - code: 31026
-  operatorname: tmus
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: AcmeAppCo1
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: Samsung
-  username: sammy
-  passhash: aaaabbbccdfdfad444449941
-  address: 1 Samstreet, Samsung Town, South Korea
-  email: samsung@xxxx.com
+  organization: tmus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-1
   accessuri: cloud1.tmo
   location:
@@ -140,10 +113,9 @@ cloudlets:
   flavor:
     name: x1.small
   physicalname: tmus-cloud-1
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-2
   accessuri: cloud2.tmo
   location:
@@ -155,10 +127,23 @@ cloudlets:
   flavor:
     name: x1.small
   physicalname: tmus-cloud-2
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: azure
+    organization: att
+    name: att-cloud-1
+  accessuri: cloud1.att
+  location:
+    latitude: 37
+    longitude: -99
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  flavor:
+    name: x1.small
+  physicalname: att-cloud-1
+  containerversion: 2019-10-24
+- key:
+    organization: azure
     name: azure-cloud-4
   accessuri: cloud4.azure
   location:
@@ -170,10 +155,9 @@ cloudlets:
   flavor:
     name: x1.small
   physicalname: azure-cloud-4
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: gcp
+    organization: gcp
     name: gcp-cloud-5
   accessuri: cloud5.gcp
   location:
@@ -185,12 +169,108 @@ cloudlets:
   flavor:
     name: x1.small
   physicalname: gcp-cloud-5
-  version: 2019-10-24
+  containerversion: 2019-10-24
+
+cloudletinfos:
+- key:
+    organization: tmus
+    name: tmus-cloud-1
+  state: CloudletStateReady
+  notifyid: 3
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-2
+  state: CloudletStateReady
+  notifyid: 4
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: att
+    name: att-cloud-1
+  state: CloudletStateReady
+  notifyid: 5
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: azure
+    name: azure-cloud-4
+  state: CloudletStateReady
+  notifyid: 5
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: gcp
+    name: gcp-cloud-5
+  state: CloudletStateReady
+  notifyid: 6
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -200,13 +280,13 @@ apps:
     name: x1.small
   cluster:
     name: SmallCluster
-  accessports: "tcp:80,http:443,udp:10002"
+  accessports: "tcp:80,tcp:443,udp:10002"
   androidpackagename: com.acme.someapplication1
+  officialfqdn: someapplication1.acmeappco.com
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: autoprovapp
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -217,9 +297,9 @@ apps:
   deployment: kubernetes
   autoprovpolicy: autoprov1
   accesstype: AccessTypeLoadBalancer
+  officialfqdn: autoprovapp.acmeappco.com
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: autoprovapp2
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -232,9 +312,9 @@ apps:
   accessports: "tcp:82"
   autoprovpolicy: autoprov2
   accesstype: AccessTypeLoadBalancer
+  officialfqdn: autoprovapp2.acmeappco.com
 - key:
-    developerkey:
-      name: Samsung
+    organization: Samsung
     name: SamsungEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
@@ -247,8 +327,7 @@ apps:
   accessports: "tcp:64000"
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -261,7 +340,7 @@ apps:
   deployment: helm
   accesstype: AccessTypeLoadBalancer
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:
@@ -299,22 +378,23 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
 
 appinstances:
 - key:
     appkey:
       name: MEXPrometheusAppName
       version: "1.0"
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -324,21 +404,19 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
       name: MEXPrometheusAppName
       version: "1.0"
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -348,21 +426,19 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: ReservableCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: MobiledgeX
+      organization: MobiledgeX
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -372,21 +448,19 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: ReservableCluster2
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: MobiledgeX
+      organization: MobiledgeX
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -396,39 +470,67 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 
 autoprovpolicies:
 - key:
     name: autoprov1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   deployclientcount: 1
   deployintervalcount: 1
   cloudlets:
   - key:
       name: tmus-cloud-1
-      operatorkey:
-        name: tmus
+      organization: tmus
     loc:
       latitude: 31
       longitude: -91
   - key:
       name: tmus-cloud-2
-      operatorkey:
-        name: tmus
+      organization: tmus
     loc:
       latitude: 35
       longitude: -95
 - key:
     name: autoprov2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   deployclientcount: 10
   deployintervalcount: 4
   cloudlets:
   - key:
       name: tmus-cloud-1
-      operatorkey:
-        name: tmus
+      organization: tmus
     loc:
       latitude: 31
       longitude: -91
+
+appinstrefs:
+- key:
+    organization: Samsung
+    name: SamsungEnablingLayer
+    version: "1.0"
+- key:
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"ReservableCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"MobiledgeX"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"ReservableCluster2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+- key:
+    organization: AcmeAppCo
+    name: autoprovapp
+    version: "1.0"
+- key:
+    organization: AcmeAppCo
+    name: autoprovapp2
+    version: "1.0"

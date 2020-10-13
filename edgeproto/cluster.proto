@@ -4,17 +4,17 @@
 syntax = "proto3";
 package edgeproto;
 
-import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "result.proto";
-import "developer.proto";
-import "flavor.proto";
 import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
 
 // ClusterKey uniquely identifies a Cluster.
 message ClusterKey {
   // Cluster name
-  string name = 1;
+  string name = 1 [(protogen.keytag) = "cluster"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

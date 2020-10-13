@@ -3,29 +3,37 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import strings "strings"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type OutboundSecurityRule struct {
 	// tcp, udp, icmp
@@ -42,28 +50,127 @@ func (m *OutboundSecurityRule) Reset()         { *m = OutboundSecurityRule{} }
 func (m *OutboundSecurityRule) String() string { return proto.CompactTextString(m) }
 func (*OutboundSecurityRule) ProtoMessage()    {}
 func (*OutboundSecurityRule) Descriptor() ([]byte, []int) {
-	return fileDescriptorPrivacypolicy, []int{0}
+	return fileDescriptor_66d34ae35d090dc3, []int{0}
 }
+func (m *OutboundSecurityRule) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OutboundSecurityRule) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OutboundSecurityRule.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OutboundSecurityRule) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OutboundSecurityRule.Merge(m, src)
+}
+func (m *OutboundSecurityRule) XXX_Size() int {
+	return m.Size()
+}
+func (m *OutboundSecurityRule) XXX_DiscardUnknown() {
+	xxx_messageInfo_OutboundSecurityRule.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OutboundSecurityRule proto.InternalMessageInfo
 
 // PrivacyPolicy defines security restrictions for cluster instances
 // nodes scaled up or down.
 type PrivacyPolicy struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key PolicyKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key PolicyKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// list of outbound security rules for whitelisting traffic
-	OutboundSecurityRules []OutboundSecurityRule `protobuf:"bytes,3,rep,name=outbound_security_rules,json=outboundSecurityRules" json:"outbound_security_rules"`
+	OutboundSecurityRules []OutboundSecurityRule `protobuf:"bytes,3,rep,name=outbound_security_rules,json=outboundSecurityRules,proto3" json:"outbound_security_rules"`
 }
 
-func (m *PrivacyPolicy) Reset()                    { *m = PrivacyPolicy{} }
-func (m *PrivacyPolicy) String() string            { return proto.CompactTextString(m) }
-func (*PrivacyPolicy) ProtoMessage()               {}
-func (*PrivacyPolicy) Descriptor() ([]byte, []int) { return fileDescriptorPrivacypolicy, []int{1} }
+func (m *PrivacyPolicy) Reset()         { *m = PrivacyPolicy{} }
+func (m *PrivacyPolicy) String() string { return proto.CompactTextString(m) }
+func (*PrivacyPolicy) ProtoMessage()    {}
+func (*PrivacyPolicy) Descriptor() ([]byte, []int) {
+	return fileDescriptor_66d34ae35d090dc3, []int{1}
+}
+func (m *PrivacyPolicy) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PrivacyPolicy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PrivacyPolicy.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PrivacyPolicy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PrivacyPolicy.Merge(m, src)
+}
+func (m *PrivacyPolicy) XXX_Size() int {
+	return m.Size()
+}
+func (m *PrivacyPolicy) XXX_DiscardUnknown() {
+	xxx_messageInfo_PrivacyPolicy.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PrivacyPolicy proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*OutboundSecurityRule)(nil), "edgeproto.OutboundSecurityRule")
 	proto.RegisterType((*PrivacyPolicy)(nil), "edgeproto.PrivacyPolicy")
+}
+
+func init() { proto.RegisterFile("privacypolicy.proto", fileDescriptor_66d34ae35d090dc3) }
+
+var fileDescriptor_66d34ae35d090dc3 = []byte{
+	// 623 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x93, 0xbf, 0x4b, 0x1c, 0x4f,
+	0x18, 0xc6, 0x6f, 0x3c, 0xbf, 0xf2, 0x75, 0xd4, 0xa0, 0x7b, 0x9a, 0x0c, 0x87, 0xac, 0xc7, 0x91,
+	0xe2, 0x90, 0xf3, 0x36, 0x28, 0x81, 0x20, 0x58, 0xf8, 0xa3, 0x13, 0xa3, 0xac, 0x28, 0xa4, 0x08,
+	0xc7, 0xdc, 0xee, 0x9b, 0x75, 0x70, 0x76, 0x67, 0x99, 0xdd, 0x51, 0x37, 0x55, 0x48, 0x9d, 0x42,
+	0x48, 0x13, 0x02, 0x21, 0x69, 0x93, 0x2e, 0xf9, 0x2b, 0x2c, 0x85, 0x34, 0xa9, 0x42, 0xa2, 0x29,
+	0x82, 0x55, 0xc0, 0x8b, 0x75, 0xd8, 0xb9, 0xe5, 0x38, 0xcf, 0x4b, 0x08, 0x49, 0x91, 0x66, 0x79,
+	0xe7, 0x79, 0x9f, 0x79, 0xe7, 0x33, 0x0f, 0xb3, 0xb8, 0x10, 0x4a, 0xb6, 0x47, 0x9d, 0x24, 0x14,
+	0x9c, 0x39, 0x49, 0x2d, 0x94, 0x22, 0x16, 0xc6, 0x20, 0xb8, 0x1e, 0xe8, 0xb2, 0x38, 0xe9, 0x09,
+	0xe1, 0x71, 0xb0, 0x68, 0xc8, 0x2c, 0x1a, 0x04, 0x22, 0xa6, 0x31, 0x13, 0x41, 0xd4, 0x32, 0x16,
+	0x87, 0x25, 0x44, 0x8a, 0xc7, 0xd9, 0xea, 0x8e, 0xc7, 0xe2, 0x1d, 0xd5, 0xa8, 0x39, 0xc2, 0xb7,
+	0x7c, 0xd1, 0x60, 0x3c, 0x1d, 0x73, 0x60, 0xa5, 0xdf, 0x19, 0x87, 0x0b, 0xe5, 0x5a, 0xda, 0xe7,
+	0x41, 0xd0, 0x2e, 0xb2, 0x9d, 0xe3, 0x9e, 0xf0, 0x84, 0x2e, 0xad, 0xb4, 0xca, 0xd4, 0x09, 0xaa,
+	0x62, 0x11, 0x39, 0x94, 0x43, 0x27, 0x5d, 0xf9, 0x25, 0xc2, 0xe3, 0xeb, 0x2a, 0x6e, 0x08, 0x15,
+	0xb8, 0x9b, 0xe0, 0x28, 0xc9, 0xe2, 0xc4, 0x56, 0x1c, 0x8c, 0x22, 0xfe, 0x5f, 0x3b, 0x1c, 0xc1,
+	0x09, 0x2a, 0xa1, 0xca, 0xa0, 0xdd, 0x5e, 0x1b, 0x37, 0xf1, 0xb5, 0x50, 0xc8, 0xb8, 0x2e, 0x69,
+	0xe0, 0x41, 0xdd, 0x67, 0x01, 0xe9, 0x2b, 0xa1, 0xca, 0x88, 0x3d, 0x9c, 0xaa, 0x76, 0x2a, 0xae,
+	0xb1, 0xa0, 0xdb, 0x45, 0x0f, 0x48, 0xbe, 0xdb, 0x45, 0x0f, 0x8c, 0x29, 0x3c, 0x24, 0xc1, 0x17,
+	0x31, 0xd4, 0x1d, 0xe6, 0x4a, 0xd2, 0xaf, 0x8f, 0xc2, 0x2d, 0x69, 0x99, 0xb9, 0xb2, 0xfc, 0xa4,
+	0x0f, 0x8f, 0x6c, 0xb4, 0x72, 0xdd, 0xd0, 0xe4, 0xc6, 0x75, 0x3c, 0xf0, 0x80, 0x01, 0x77, 0x23,
+	0x82, 0x4a, 0xf9, 0xca, 0xa0, 0x9d, 0xad, 0x8c, 0x2a, 0xce, 0xef, 0x42, 0xa2, 0x59, 0x86, 0x66,
+	0xc7, 0x6b, 0xed, 0xdc, 0x6b, 0xad, 0x7d, 0xab, 0x90, 0x2c, 0xf5, 0x1f, 0x7d, 0x9c, 0xca, 0xd9,
+	0xa9, 0xcd, 0xb8, 0x8f, 0x6f, 0x88, 0xec, 0xe2, 0xf5, 0x28, 0xbb, 0x79, 0x5d, 0x2a, 0x0e, 0x11,
+	0xc9, 0x97, 0xf2, 0x95, 0xa1, 0xd9, 0xa9, 0x8e, 0x09, 0xbd, 0x22, 0xca, 0x86, 0x4d, 0x88, 0x1e,
+	0xbd, 0x68, 0x7e, 0xfb, 0xeb, 0x39, 0x41, 0xdf, 0xce, 0x09, 0x7a, 0xd4, 0x24, 0xe8, 0xb0, 0x49,
+	0xd0, 0xb3, 0x26, 0x41, 0xcf, 0xbf, 0x93, 0xe9, 0x80, 0xfa, 0xb0, 0xb0, 0x0a, 0x49, 0xed, 0x2e,
+	0xf5, 0xa1, 0xea, 0x70, 0x15, 0xc5, 0x20, 0x67, 0x84, 0xf4, 0xb4, 0xb8, 0x2e, 0x3d, 0x1a, 0xb0,
+	0x87, 0xfa, 0x61, 0xbc, 0xbb, 0x20, 0xa3, 0xbb, 0x90, 0x2c, 0x74, 0x6a, 0xb3, 0xaf, 0xff, 0xc3,
+	0xa3, 0x97, 0xe2, 0x58, 0x0c, 0x99, 0xf1, 0x16, 0xe1, 0xc2, 0xb2, 0x04, 0x1a, 0xc3, 0xe5, 0xa4,
+	0x48, 0x67, 0x08, 0x9d, 0x9d, 0xe2, 0x58, 0x47, 0xc7, 0xd6, 0xef, 0xae, 0xec, 0x9f, 0x35, 0xc9,
+	0x6d, 0x1b, 0x22, 0xa1, 0xa4, 0x03, 0x2b, 0xb0, 0x07, 0x5c, 0x84, 0x20, 0x5b, 0xfe, 0xea, 0xa2,
+	0x93, 0x9e, 0xbe, 0x46, 0x03, 0xea, 0x41, 0xb5, 0x1b, 0xf4, 0xcd, 0x05, 0x19, 0xed, 0xd6, 0x1e,
+	0xbf, 0xff, 0xf2, 0xb4, 0xaf, 0x58, 0x9e, 0xb0, 0x1c, 0xcd, 0x65, 0x5d, 0xfa, 0x35, 0xe6, 0xd1,
+	0xb4, 0xf1, 0x02, 0xe1, 0xc2, 0x0a, 0x70, 0xf8, 0x2b, 0xe6, 0x7b, 0x7f, 0xcc, 0xdc, 0xe6, 0x73,
+	0x35, 0x43, 0x6f, 0xbe, 0xad, 0xd0, 0xa5, 0xff, 0x9a, 0x4f, 0x69, 0x86, 0xab, 0x7c, 0xaf, 0x10,
+	0x1e, 0xdb, 0xdc, 0x11, 0xfb, 0xbf, 0x4b, 0xf7, 0xd3, 0x4e, 0x79, 0xeb, 0xac, 0x49, 0xe6, 0x7e,
+	0x0d, 0xb9, 0xcd, 0x60, 0xbf, 0x37, 0x22, 0x29, 0x17, 0xac, 0x68, 0x47, 0xec, 0x5f, 0x01, 0xbc,
+	0x85, 0x96, 0x26, 0x8f, 0x3e, 0x9b, 0xb9, 0xa3, 0x13, 0x13, 0x1d, 0x9f, 0x98, 0xe8, 0xd3, 0x89,
+	0x89, 0x0e, 0x4f, 0xcd, 0xdc, 0xf1, 0xa9, 0x99, 0xfb, 0x70, 0x6a, 0xe6, 0x1a, 0x03, 0x9a, 0x65,
+	0xee, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0x11, 0x9d, 0x20, 0x67, 0x36, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -74,8 +181,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for PrivacyPolicyApi service
-
+// PrivacyPolicyApiClient is the client API for PrivacyPolicyApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type PrivacyPolicyApiClient interface {
 	// Create a Privacy Policy
 	CreatePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error)
@@ -97,7 +205,7 @@ func NewPrivacyPolicyApiClient(cc *grpc.ClientConn) PrivacyPolicyApiClient {
 
 func (c *privacyPolicyApiClient) CreatePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.PrivacyPolicyApi/CreatePrivacyPolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.PrivacyPolicyApi/CreatePrivacyPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +214,7 @@ func (c *privacyPolicyApiClient) CreatePrivacyPolicy(ctx context.Context, in *Pr
 
 func (c *privacyPolicyApiClient) DeletePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.PrivacyPolicyApi/DeletePrivacyPolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.PrivacyPolicyApi/DeletePrivacyPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +223,7 @@ func (c *privacyPolicyApiClient) DeletePrivacyPolicy(ctx context.Context, in *Pr
 
 func (c *privacyPolicyApiClient) UpdatePrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.PrivacyPolicyApi/UpdatePrivacyPolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.PrivacyPolicyApi/UpdatePrivacyPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +231,7 @@ func (c *privacyPolicyApiClient) UpdatePrivacyPolicy(ctx context.Context, in *Pr
 }
 
 func (c *privacyPolicyApiClient) ShowPrivacyPolicy(ctx context.Context, in *PrivacyPolicy, opts ...grpc.CallOption) (PrivacyPolicyApi_ShowPrivacyPolicyClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_PrivacyPolicyApi_serviceDesc.Streams[0], c.cc, "/edgeproto.PrivacyPolicyApi/ShowPrivacyPolicy", opts...)
+	stream, err := c.cc.NewStream(ctx, &_PrivacyPolicyApi_serviceDesc.Streams[0], "/edgeproto.PrivacyPolicyApi/ShowPrivacyPolicy", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -154,8 +262,7 @@ func (x *privacyPolicyApiShowPrivacyPolicyClient) Recv() (*PrivacyPolicy, error)
 	return m, nil
 }
 
-// Server API for PrivacyPolicyApi service
-
+// PrivacyPolicyApiServer is the server API for PrivacyPolicyApi service.
 type PrivacyPolicyApiServer interface {
 	// Create a Privacy Policy
 	CreatePrivacyPolicy(context.Context, *PrivacyPolicy) (*Result, error)
@@ -165,6 +272,23 @@ type PrivacyPolicyApiServer interface {
 	UpdatePrivacyPolicy(context.Context, *PrivacyPolicy) (*Result, error)
 	// Show Privacy Policies. Any fields specified will be used to filter results.
 	ShowPrivacyPolicy(*PrivacyPolicy, PrivacyPolicyApi_ShowPrivacyPolicyServer) error
+}
+
+// UnimplementedPrivacyPolicyApiServer can be embedded to have forward compatible implementations.
+type UnimplementedPrivacyPolicyApiServer struct {
+}
+
+func (*UnimplementedPrivacyPolicyApiServer) CreatePrivacyPolicy(ctx context.Context, req *PrivacyPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePrivacyPolicy not implemented")
+}
+func (*UnimplementedPrivacyPolicyApiServer) DeletePrivacyPolicy(ctx context.Context, req *PrivacyPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePrivacyPolicy not implemented")
+}
+func (*UnimplementedPrivacyPolicyApiServer) UpdatePrivacyPolicy(ctx context.Context, req *PrivacyPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePrivacyPolicy not implemented")
+}
+func (*UnimplementedPrivacyPolicyApiServer) ShowPrivacyPolicy(req *PrivacyPolicy, srv PrivacyPolicyApi_ShowPrivacyPolicyServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowPrivacyPolicy not implemented")
 }
 
 func RegisterPrivacyPolicyApiServer(s *grpc.Server, srv PrivacyPolicyApiServer) {
@@ -276,7 +400,7 @@ var _PrivacyPolicyApi_serviceDesc = grpc.ServiceDesc{
 func (m *OutboundSecurityRule) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -284,39 +408,46 @@ func (m *OutboundSecurityRule) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *OutboundSecurityRule) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OutboundSecurityRule) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Protocol) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintPrivacypolicy(dAtA, i, uint64(len(m.Protocol)))
-		i += copy(dAtA[i:], m.Protocol)
-	}
-	if m.PortRangeMin != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintPrivacypolicy(dAtA, i, uint64(m.PortRangeMin))
+	if len(m.RemoteCidr) > 0 {
+		i -= len(m.RemoteCidr)
+		copy(dAtA[i:], m.RemoteCidr)
+		i = encodeVarintPrivacypolicy(dAtA, i, uint64(len(m.RemoteCidr)))
+		i--
+		dAtA[i] = 0x22
 	}
 	if m.PortRangeMax != 0 {
-		dAtA[i] = 0x18
-		i++
 		i = encodeVarintPrivacypolicy(dAtA, i, uint64(m.PortRangeMax))
+		i--
+		dAtA[i] = 0x18
 	}
-	if len(m.RemoteCidr) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintPrivacypolicy(dAtA, i, uint64(len(m.RemoteCidr)))
-		i += copy(dAtA[i:], m.RemoteCidr)
+	if m.PortRangeMin != 0 {
+		i = encodeVarintPrivacypolicy(dAtA, i, uint64(m.PortRangeMin))
+		i--
+		dAtA[i] = 0x10
 	}
-	return i, nil
+	if len(m.Protocol) > 0 {
+		i -= len(m.Protocol)
+		copy(dAtA[i:], m.Protocol)
+		i = encodeVarintPrivacypolicy(dAtA, i, uint64(len(m.Protocol)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *PrivacyPolicy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -324,56 +455,61 @@ func (m *PrivacyPolicy) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *PrivacyPolicy) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PrivacyPolicy) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintPrivacypolicy(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
 	if len(m.OutboundSecurityRules) > 0 {
-		for _, msg := range m.OutboundSecurityRules {
-			dAtA[i] = 0x1a
-			i++
-			i = encodeVarintPrivacypolicy(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
+		for iNdEx := len(m.OutboundSecurityRules) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.OutboundSecurityRules[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintPrivacypolicy(dAtA, i, uint64(size))
 			}
-			i += n
+			i--
+			dAtA[i] = 0x1a
 		}
 	}
-	return i, nil
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintPrivacypolicy(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintPrivacypolicy(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintPrivacypolicy(dAtA []byte, offset int, v uint64) int {
+	offset -= sovPrivacypolicy(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *OutboundSecurityRule) CopyInFields(src *OutboundSecurityRule) int {
 	changed := 0
@@ -394,6 +530,13 @@ func (m *OutboundSecurityRule) CopyInFields(src *OutboundSecurityRule) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *OutboundSecurityRule) DeepCopyIn(src *OutboundSecurityRule) {
+	m.Protocol = src.Protocol
+	m.PortRangeMin = src.PortRangeMin
+	m.PortRangeMax = src.PortRangeMax
+	m.RemoteCidr = src.RemoteCidr
 }
 
 // Helper method to check that enums have valid values
@@ -428,7 +571,7 @@ func (m *PrivacyPolicy) Matches(o *PrivacyPolicy, fopts ...MatchOpt) bool {
 }
 
 const PrivacyPolicyFieldKey = "2"
-const PrivacyPolicyFieldKeyDeveloper = "2.1"
+const PrivacyPolicyFieldKeyOrganization = "2.1"
 const PrivacyPolicyFieldKeyName = "2.2"
 const PrivacyPolicyFieldOutboundSecurityRules = "3"
 const PrivacyPolicyFieldOutboundSecurityRulesProtocol = "3.1"
@@ -437,7 +580,7 @@ const PrivacyPolicyFieldOutboundSecurityRulesPortRangeMax = "3.3"
 const PrivacyPolicyFieldOutboundSecurityRulesRemoteCidr = "3.4"
 
 var PrivacyPolicyAllFields = []string{
-	PrivacyPolicyFieldKeyDeveloper,
+	PrivacyPolicyFieldKeyOrganization,
 	PrivacyPolicyFieldKeyName,
 	PrivacyPolicyFieldOutboundSecurityRulesProtocol,
 	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMin,
@@ -446,7 +589,7 @@ var PrivacyPolicyAllFields = []string{
 }
 
 var PrivacyPolicyAllFieldsMap = map[string]struct{}{
-	PrivacyPolicyFieldKeyDeveloper:                      struct{}{},
+	PrivacyPolicyFieldKeyOrganization:                   struct{}{},
 	PrivacyPolicyFieldKeyName:                           struct{}{},
 	PrivacyPolicyFieldOutboundSecurityRulesProtocol:     struct{}{},
 	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMin: struct{}{},
@@ -455,7 +598,7 @@ var PrivacyPolicyAllFieldsMap = map[string]struct{}{
 }
 
 var PrivacyPolicyAllFieldsStringMap = map[string]string{
-	PrivacyPolicyFieldKeyDeveloper:                      "Key Developer",
+	PrivacyPolicyFieldKeyOrganization:                   "Key Organization",
 	PrivacyPolicyFieldKeyName:                           "Key Name",
 	PrivacyPolicyFieldOutboundSecurityRulesProtocol:     "Outbound Security Rules Protocol",
 	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMin: "Outbound Security Rules Port Range Min",
@@ -464,12 +607,12 @@ var PrivacyPolicyAllFieldsStringMap = map[string]string{
 }
 
 func (m *PrivacyPolicy) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, PrivacyPolicyFieldKey+".")
+	return strings.HasPrefix(s, PrivacyPolicyFieldKey+".") || s == PrivacyPolicyFieldKey
 }
 
 func (m *PrivacyPolicy) DiffFields(o *PrivacyPolicy, fields map[string]struct{}) {
-	if m.Key.Developer != o.Key.Developer {
-		fields[PrivacyPolicyFieldKeyDeveloper] = struct{}{}
+	if m.Key.Organization != o.Key.Organization {
+		fields[PrivacyPolicyFieldKeyOrganization] = struct{}{}
 		fields[PrivacyPolicyFieldKey] = struct{}{}
 	}
 	if m.Key.Name != o.Key.Name {
@@ -500,13 +643,44 @@ func (m *PrivacyPolicy) DiffFields(o *PrivacyPolicy, fields map[string]struct{})
 	}
 }
 
+var UpdatePrivacyPolicyFieldsMap = map[string]struct{}{
+	PrivacyPolicyFieldOutboundSecurityRules:             struct{}{},
+	PrivacyPolicyFieldOutboundSecurityRulesProtocol:     struct{}{},
+	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMin: struct{}{},
+	PrivacyPolicyFieldOutboundSecurityRulesPortRangeMax: struct{}{},
+	PrivacyPolicyFieldOutboundSecurityRulesRemoteCidr:   struct{}{},
+}
+
+func (m *PrivacyPolicy) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdatePrivacyPolicyFieldsMap[field]; !ok {
+			if _, ok := PrivacyPolicyAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, PrivacyPolicyAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
 func (m *PrivacyPolicy) CopyInFields(src *PrivacyPolicy) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			if m.Key.Developer != src.Key.Developer {
-				m.Key.Developer = src.Key.Developer
+			if m.Key.Organization != src.Key.Organization {
+				m.Key.Organization = src.Key.Organization
 				changed++
 			}
 		}
@@ -518,38 +692,27 @@ func (m *PrivacyPolicy) CopyInFields(src *PrivacyPolicy) int {
 		}
 	}
 	if _, set := fmap["3"]; set {
-		if m.OutboundSecurityRules == nil || len(m.OutboundSecurityRules) != len(src.OutboundSecurityRules) {
-			m.OutboundSecurityRules = make([]OutboundSecurityRule, len(src.OutboundSecurityRules))
+		if src.OutboundSecurityRules != nil {
+			m.OutboundSecurityRules = src.OutboundSecurityRules
 			changed++
-		}
-		for i0 := 0; i0 < len(src.OutboundSecurityRules); i0++ {
-			if _, set := fmap["3.1"]; set {
-				if m.OutboundSecurityRules[i0].Protocol != src.OutboundSecurityRules[i0].Protocol {
-					m.OutboundSecurityRules[i0].Protocol = src.OutboundSecurityRules[i0].Protocol
-					changed++
-				}
-			}
-			if _, set := fmap["3.2"]; set {
-				if m.OutboundSecurityRules[i0].PortRangeMin != src.OutboundSecurityRules[i0].PortRangeMin {
-					m.OutboundSecurityRules[i0].PortRangeMin = src.OutboundSecurityRules[i0].PortRangeMin
-					changed++
-				}
-			}
-			if _, set := fmap["3.3"]; set {
-				if m.OutboundSecurityRules[i0].PortRangeMax != src.OutboundSecurityRules[i0].PortRangeMax {
-					m.OutboundSecurityRules[i0].PortRangeMax = src.OutboundSecurityRules[i0].PortRangeMax
-					changed++
-				}
-			}
-			if _, set := fmap["3.4"]; set {
-				if m.OutboundSecurityRules[i0].RemoteCidr != src.OutboundSecurityRules[i0].RemoteCidr {
-					m.OutboundSecurityRules[i0].RemoteCidr = src.OutboundSecurityRules[i0].RemoteCidr
-					changed++
-				}
-			}
+		} else if m.OutboundSecurityRules != nil {
+			m.OutboundSecurityRules = nil
+			changed++
 		}
 	}
 	return changed
+}
+
+func (m *PrivacyPolicy) DeepCopyIn(src *PrivacyPolicy) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.OutboundSecurityRules != nil {
+		m.OutboundSecurityRules = make([]OutboundSecurityRule, len(src.OutboundSecurityRules), len(src.OutboundSecurityRules))
+		for ii, s := range src.OutboundSecurityRules {
+			m.OutboundSecurityRules[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.OutboundSecurityRules = nil
+	}
 }
 
 func (s *PrivacyPolicy) HasFields() bool {
@@ -704,15 +867,24 @@ type PrivacyPolicyKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type PrivacyPolicyCacheData struct {
+	Obj    *PrivacyPolicy
+	ModRev int64
+}
+
 // PrivacyPolicyCache caches PrivacyPolicy objects in memory in a hash table
 // and keeps them in sync with the database.
 type PrivacyPolicyCache struct {
-	Objs        map[PolicyKey]*PrivacyPolicy
-	Mux         util.Mutex
-	List        map[PolicyKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy)
-	UpdatedCb   func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)
-	KeyWatchers map[PolicyKey][]*PrivacyPolicyKeyWatcher
+	Objs          map[PolicyKey]*PrivacyPolicyCacheData
+	Mux           util.Mutex
+	List          map[PolicyKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)
+	DeletedCbs    []func(ctx context.Context, old *PrivacyPolicy)
+	KeyWatchers   map[PolicyKey][]*PrivacyPolicyKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *PolicyKey)
+	DeletedKeyCbs []func(ctx context.Context, key *PolicyKey)
 }
 
 func NewPrivacyPolicyCache() *PrivacyPolicyCache {
@@ -722,8 +894,13 @@ func NewPrivacyPolicyCache() *PrivacyPolicyCache {
 }
 
 func InitPrivacyPolicyCache(cache *PrivacyPolicyCache) {
-	cache.Objs = make(map[PolicyKey]*PrivacyPolicy)
+	cache.Objs = make(map[PolicyKey]*PrivacyPolicyCacheData)
 	cache.KeyWatchers = make(map[PolicyKey][]*PrivacyPolicyKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *PrivacyPolicyCache) GetTypeString() string {
@@ -731,11 +908,17 @@ func (c *PrivacyPolicyCache) GetTypeString() string {
 }
 
 func (c *PrivacyPolicyCache) Get(key *PolicyKey, valbuf *PrivacyPolicy) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *PrivacyPolicyCache) GetWithRev(key *PolicyKey, valbuf *PrivacyPolicy, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -747,64 +930,87 @@ func (c *PrivacyPolicyCache) HasKey(key *PolicyKey) bool {
 	return found
 }
 
-func (c *PrivacyPolicyCache) GetAllKeys(ctx context.Context, keys map[PolicyKey]context.Context) {
+func (c *PrivacyPolicyCache) GetAllKeys(ctx context.Context, cb func(key *PolicyKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *PrivacyPolicyCache) Update(ctx context.Context, in *PrivacyPolicy, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *PrivacyPolicy) (*PrivacyPolicy, bool) {
+func (c *PrivacyPolicyCache) Update(ctx context.Context, in *PrivacyPolicy, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *PrivacyPolicy) (*PrivacyPolicy, bool) {
 		return in, true
 	})
 }
 
-func (c *PrivacyPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, rev int64, modFunc func(old *PrivacyPolicy) (new *PrivacyPolicy, changed bool)) {
+func (c *PrivacyPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, modRev int64, modFunc func(old *PrivacyPolicy) (new *PrivacyPolicy, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *PrivacyPolicy
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &PrivacyPolicy{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &PrivacyPolicy{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate PrivacyPolicy", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &PrivacyPolicy{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &PrivacyPolicyCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *PrivacyPolicyCache) Delete(ctx context.Context, in *PrivacyPolicy, rev int64) {
+func (c *PrivacyPolicyCache) Delete(ctx context.Context, in *PrivacyPolicy, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *PrivacyPolicy
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete PrivacyPolicy", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *PrivacyPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey]struct{}) {
-	notify := make(map[PolicyKey]*PrivacyPolicy)
+	notify := make(map[PolicyKey]*PrivacyPolicyCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -812,8 +1018,18 @@ func (c *PrivacyPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey]
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -832,13 +1048,13 @@ func (c *PrivacyPolicyCache) Show(filter *PrivacyPolicy, cb func(ret *PrivacyPol
 	log.DebugLog(log.DebugLevelApi, "Show PrivacyPolicy", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare PrivacyPolicy", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare PrivacyPolicy", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show PrivacyPolicy", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show PrivacyPolicy", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -852,12 +1068,48 @@ func PrivacyPolicyGenericNotifyCb(fn func(key *PolicyKey, old *PrivacyPolicy)) f
 	}
 }
 
-func (c *PrivacyPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy)) {
-	c.NotifyCb = fn
+func (c *PrivacyPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy, modRev int64){fn}
 }
 
 func (c *PrivacyPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy){fn}
+}
+
+func (c *PrivacyPolicyCache) SetDeletedCb(fn func(ctx context.Context, old *PrivacyPolicy)) {
+	c.DeletedCbs = []func(ctx context.Context, old *PrivacyPolicy){fn}
+}
+
+func (c *PrivacyPolicyCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *PolicyKey){fn}
+}
+
+func (c *PrivacyPolicyCache) SetDeletedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *PolicyKey){fn}
+}
+
+func (c *PrivacyPolicyCache) AddUpdatedCb(fn func(ctx context.Context, old *PrivacyPolicy, new *PrivacyPolicy)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *PrivacyPolicyCache) AddDeletedCb(fn func(ctx context.Context, old *PrivacyPolicy)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *PrivacyPolicyCache) AddNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *PrivacyPolicy, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *PrivacyPolicyCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *PrivacyPolicyCache) AddDeletedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *PrivacyPolicyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *PrivacyPolicyCache) WatchKey(key *PolicyKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -904,14 +1156,21 @@ func (c *PrivacyPolicyCache) TriggerKeyWatchers(ctx context.Context, key *Policy
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *PrivacyPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *PrivacyPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := PrivacyPolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse PrivacyPolicy data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -919,11 +1178,11 @@ func (c *PrivacyPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, re
 	c.Mux.Unlock()
 }
 
-func (c *PrivacyPolicyCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *PrivacyPolicyCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := PrivacyPolicy{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	PolicyKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *PrivacyPolicyCache) SyncListStart(ctx context.Context) {
@@ -931,7 +1190,7 @@ func (c *PrivacyPolicyCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *PrivacyPolicyCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[PolicyKey]*PrivacyPolicy)
+	deleted := make(map[PolicyKey]*PrivacyPolicyCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -941,12 +1200,33 @@ func (c *PrivacyPolicyCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *PrivacyPolicyCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if key.Organization == org {
+			return true
 		}
 	}
+	return false
 }
 
 func (m *PrivacyPolicy) GetObjKey() objstore.ObjKey {
@@ -984,6 +1264,9 @@ func (m *PrivacyPolicy) ValidateEnums() error {
 }
 
 func (m *OutboundSecurityRule) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Protocol)
@@ -1004,6 +1287,9 @@ func (m *OutboundSecurityRule) Size() (n int) {
 }
 
 func (m *PrivacyPolicy) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1024,14 +1310,7 @@ func (m *PrivacyPolicy) Size() (n int) {
 }
 
 func sovPrivacypolicy(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozPrivacypolicy(x uint64) (n int) {
 	return sovPrivacypolicy(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1051,7 +1330,7 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1079,7 +1358,7 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1089,6 +1368,9 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthPrivacypolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPrivacypolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1108,7 +1390,7 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PortRangeMin |= (uint32(b) & 0x7F) << shift
+				m.PortRangeMin |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1127,7 +1409,7 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PortRangeMax |= (uint32(b) & 0x7F) << shift
+				m.PortRangeMax |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1146,7 +1428,7 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1156,6 +1438,9 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthPrivacypolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPrivacypolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1168,6 +1453,9 @@ func (m *OutboundSecurityRule) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthPrivacypolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthPrivacypolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -1197,7 +1485,7 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1225,7 +1513,7 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1235,6 +1523,9 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthPrivacypolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPrivacypolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1254,7 +1545,7 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1263,6 +1554,9 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthPrivacypolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPrivacypolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1284,7 +1578,7 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1293,6 +1587,9 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthPrivacypolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPrivacypolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1310,6 +1607,9 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthPrivacypolicy
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthPrivacypolicy
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1325,6 +1625,7 @@ func (m *PrivacyPolicy) Unmarshal(dAtA []byte) error {
 func skipPrivacypolicy(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1356,10 +1657,8 @@ func skipPrivacypolicy(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1376,95 +1675,34 @@ func skipPrivacypolicy(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthPrivacypolicy
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowPrivacypolicy
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipPrivacypolicy(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupPrivacypolicy
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthPrivacypolicy
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthPrivacypolicy = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowPrivacypolicy   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthPrivacypolicy        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowPrivacypolicy          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupPrivacypolicy = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("privacypolicy.proto", fileDescriptorPrivacypolicy) }
-
-var fileDescriptorPrivacypolicy = []byte{
-	// 565 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x92, 0xcf, 0x6b, 0x13, 0x41,
-	0x14, 0xc7, 0x3b, 0x4d, 0x2d, 0x76, 0xda, 0x4a, 0xbb, 0x6d, 0x75, 0x08, 0x92, 0x86, 0x45, 0x21,
-	0x48, 0xcc, 0x96, 0x78, 0x91, 0x42, 0x0f, 0xfd, 0x71, 0x2b, 0xd5, 0xb2, 0xc5, 0xde, 0x24, 0x4c,
-	0x76, 0x9f, 0x9b, 0xc1, 0xd9, 0x7d, 0xcb, 0xec, 0x6e, 0x93, 0xbd, 0x89, 0x37, 0x6f, 0x82, 0x17,
-	0x29, 0x88, 0xff, 0x4e, 0x8e, 0x82, 0x77, 0xd1, 0xe0, 0x41, 0x7a, 0x12, 0x12, 0xef, 0xb2, 0x93,
-	0x35, 0x24, 0x6d, 0x14, 0x6f, 0xbd, 0x0c, 0xef, 0xc7, 0x77, 0xde, 0xfb, 0xbc, 0xc7, 0xa3, 0x6b,
-	0xa1, 0x12, 0x67, 0xdc, 0x49, 0x43, 0x94, 0xc2, 0x49, 0x6b, 0xa1, 0xc2, 0x18, 0x8d, 0x05, 0x70,
-	0x3d, 0xd0, 0x66, 0xf1, 0xae, 0x87, 0xe8, 0x49, 0xb0, 0x78, 0x28, 0x2c, 0x1e, 0x04, 0x18, 0xf3,
-	0x58, 0x60, 0x10, 0x0d, 0x85, 0xc5, 0x25, 0x05, 0x51, 0x22, 0xe3, 0xdc, 0x7b, 0xec, 0x89, 0xb8,
-	0x95, 0x34, 0x6b, 0x0e, 0xfa, 0x96, 0x8f, 0x4d, 0x21, 0xb3, 0x32, 0x1d, 0x2b, 0x7b, 0x1f, 0x3a,
-	0x12, 0x13, 0xd7, 0xd2, 0x3a, 0x0f, 0x82, 0x91, 0x91, 0xff, 0x5c, 0xf7, 0xd0, 0x43, 0x6d, 0x5a,
-	0x99, 0x95, 0x47, 0x37, 0x78, 0x12, 0x63, 0xe4, 0x70, 0x09, 0xe3, 0x74, 0xe6, 0x47, 0x42, 0xd7,
-	0x9f, 0x26, 0x71, 0x13, 0x93, 0xc0, 0x3d, 0x01, 0x27, 0x51, 0x22, 0x4e, 0xed, 0x44, 0x82, 0x51,
-	0xa4, 0x37, 0xb5, 0xc2, 0x41, 0xc9, 0x48, 0x99, 0x54, 0x16, 0xec, 0x91, 0x6f, 0xdc, 0xa3, 0xb7,
-	0x42, 0x54, 0x71, 0x43, 0xf1, 0xc0, 0x83, 0x86, 0x2f, 0x02, 0x36, 0x5b, 0x26, 0x95, 0x65, 0x7b,
-	0x29, 0x8b, 0xda, 0x59, 0xf0, 0x48, 0x04, 0x97, 0x55, 0xbc, 0xc3, 0x0a, 0x97, 0x55, 0xbc, 0x63,
-	0x6c, 0xd2, 0x45, 0x05, 0x3e, 0xc6, 0xd0, 0x70, 0x84, 0xab, 0xd8, 0x9c, 0x6e, 0x45, 0x87, 0xa1,
-	0x7d, 0xe1, 0x2a, 0xb3, 0x4f, 0xe8, 0xf2, 0xf1, 0x70, 0xaf, 0xc7, 0x9a, 0xdc, 0xb8, 0x4d, 0xe7,
-	0x5f, 0x08, 0x90, 0x6e, 0xc4, 0x48, 0xb9, 0x50, 0x59, 0xb0, 0x73, 0xcf, 0xa8, 0xd2, 0xc2, 0x4b,
-	0x48, 0x35, 0xcb, 0x62, 0x7d, 0xbd, 0x36, 0xda, 0x7b, 0x6d, 0xf8, 0xef, 0x10, 0xd2, 0xbd, 0xb9,
-	0xee, 0x97, 0xcd, 0x19, 0x3b, 0x93, 0x19, 0xcf, 0xe9, 0x1d, 0xcc, 0x07, 0x6f, 0x44, 0xf9, 0xe4,
-	0x0d, 0x95, 0x48, 0x88, 0x58, 0xa1, 0x5c, 0xa8, 0x2c, 0xd6, 0x37, 0xc7, 0x2a, 0x4c, 0x5b, 0x51,
-	0x5e, 0x6c, 0x03, 0xa7, 0xe4, 0xa2, 0xed, 0x9d, 0x1f, 0x7d, 0x46, 0x7e, 0xf6, 0x19, 0x79, 0x35,
-	0x60, 0xe4, 0xed, 0x80, 0x91, 0xf7, 0x03, 0x46, 0xce, 0x7f, 0xb1, 0xfb, 0x01, 0xf7, 0x61, 0xe7,
-	0x10, 0xd2, 0xda, 0x13, 0xee, 0x43, 0xd5, 0x85, 0x33, 0x90, 0x18, 0x82, 0xd2, 0xa1, 0x83, 0x3f,
-	0x5e, 0xfd, 0xcd, 0x0d, 0xba, 0x32, 0x31, 0xf5, 0x6e, 0x28, 0x8c, 0x73, 0x42, 0xd7, 0xf6, 0x15,
-	0xf0, 0x18, 0x26, 0x17, 0xc2, 0xc6, 0x67, 0x1d, 0xcf, 0x14, 0x57, 0xc7, 0x32, 0xb6, 0x3e, 0x2f,
-	0xf3, 0xf4, 0x62, 0xc0, 0xea, 0x36, 0x44, 0x98, 0x28, 0x07, 0x46, 0x0d, 0x87, 0xfa, 0xea, 0xae,
-	0x93, 0x5d, 0xe4, 0x11, 0x0f, 0xb8, 0x07, 0xd5, 0x09, 0xa2, 0xd7, 0x9f, 0xbf, 0xbf, 0x9b, 0x2d,
-	0x9a, 0x1b, 0x96, 0xa3, 0x01, 0xac, 0x89, 0x53, 0xdf, 0x26, 0x0f, 0x34, 0xdc, 0x01, 0x48, 0xb8,
-	0x56, 0x38, 0x57, 0x03, 0x4c, 0x87, 0x7b, 0x16, 0xba, 0xd7, 0xbb, 0xb9, 0x44, 0x03, 0x5c, 0x85,
-	0xfb, 0x40, 0xe8, 0xea, 0x49, 0x0b, 0xdb, 0xff, 0x8b, 0xf6, 0xd7, 0x8c, 0x69, 0x5f, 0x0c, 0xd8,
-	0xd6, 0xbf, 0x09, 0x4f, 0x05, 0xb4, 0xa7, 0xf0, 0x31, 0x73, 0xcd, 0x8a, 0x5a, 0xd8, 0xbe, 0x42,
-	0xb7, 0x45, 0xf6, 0x56, 0xba, 0xdf, 0x4a, 0x33, 0xdd, 0x5e, 0x89, 0x7c, 0xea, 0x95, 0xc8, 0xd7,
-	0x5e, 0x89, 0x34, 0xe7, 0x75, 0xf3, 0x47, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x31, 0x00, 0xbd,
-	0xbc, 0xf1, 0x04, 0x00, 0x00,
-}

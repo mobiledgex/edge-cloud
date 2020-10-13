@@ -9,7 +9,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -19,20 +18,21 @@ import (
 )
 
 type Client struct {
-	sendrecv    SendRecv
-	addrs       []string
-	tlsCertFile string
-	version     uint32
-	stats       ClientStats
-	addrIdx     int
-	mux         util.Mutex
-	conn        *grpc.ClientConn
-	cancel      context.CancelFunc
-	running     chan struct{}
+	sendrecv      SendRecv
+	addrs         []string
+	tlsDialOption grpc.DialOption
+	version       uint32
+	stats         ClientStats
+	addrIdx       int
+	mux           util.Mutex
+	conn          *grpc.ClientConn
+	cancel        context.CancelFunc
+	running       chan struct{}
 	// localAddr has its own lock because its called in some
 	// grpc interceptor context
 	localAddr    string
 	localAddrMux util.Mutex
+	name         string
 }
 
 type ClientStats struct {
@@ -40,10 +40,14 @@ type ClientStats struct {
 
 func cancelNoop() {}
 
-func NewClient(addrs []string, tlsCertFile string) *Client {
+func NewClient(name string, addrs []string, tlsDialOption grpc.DialOption) *Client {
 	s := Client{}
+	s.name = name
 	s.addrs = addrs
-	s.tlsCertFile = tlsCertFile
+	if tlsDialOption == nil {
+		tlsDialOption = grpc.WithInsecure()
+	}
+	s.tlsDialOption = tlsDialOption
 	s.sendrecv.init("client")
 	return &s
 }
@@ -76,6 +80,10 @@ func (s *Client) RegisterSend(send NotifySend) {
 
 func (s *Client) RegisterRecv(recv NotifyRecv) {
 	s.sendrecv.registerRecv(recv)
+}
+
+func (s *Client) RegisterSendAllRecv(handler SendAllRecv) {
+	s.sendrecv.registerSendAllRecv(handler)
 }
 
 func (s *Client) run() {
@@ -124,19 +132,15 @@ func (s *Client) connect() (StreamNotify, error) {
 	s.mux.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), NotifyRetryTime)
-	dialOption, err := tls.GetTLSClientDialOption(addr, s.tlsCertFile, false)
-	if err != nil {
-		return nil, err
-	}
 	conn, err := grpc.DialContext(ctx, addr,
-		dialOption,
+		s.tlsDialOption,
 		grpc.WithStatsHandler(&grpcStatsHandler{client: s}),
 		grpc.WithKeepaliveParams(clientParams))
 	cancel()
 	if err != nil {
 		return nil, err
 	}
-	log.DebugLog(log.DebugLevelNotify, "creating notify client", "addr", addr, "tlsCert", s.tlsCertFile)
+	log.DebugLog(log.DebugLevelNotify, "creating notify client", "addr", addr)
 
 	api := edgeproto.NewNotifyApiClient(conn)
 	ctx, cancel = context.WithCancel(context.Background())
@@ -185,6 +189,9 @@ func (s *Client) negotiate(stream StreamNotify) error {
 	request.Action = edgeproto.NoticeAction_VERSION
 	request.WantObjs = s.sendrecv.localWanted
 	request.FilterCloudletKey = s.sendrecv.filterCloudletKeys
+	request.Tags = map[string]string{
+		"name": s.name,
+	}
 	err := stream.Send(&request)
 	if err != nil {
 		s.sendrecv.stats.NegotiateErrors++
@@ -201,12 +208,17 @@ func (s *Client) negotiate(stream StreamNotify) error {
 		s.version = request.Version
 	}
 	s.sendrecv.setRemoteWanted(reply.WantObjs)
+	if reply.Tags != nil {
+		if peer, found := reply.Tags["name"]; found {
+			s.sendrecv.peer = peer
+		}
+	}
 
 	s.mux.Lock()
 	addr := s.addrs[s.addrIdx]
 	s.mux.Unlock()
 	log.DebugLog(log.DebugLevelNotify, "Notify client connected",
-		"server", addr, "local", s.GetLocalAddr(),
+		"server", addr, "peer", s.sendrecv.peer, "local", s.GetLocalAddr(),
 		"version", s.version, "supported-version", NotifyVersion,
 		"remoteWanted", s.sendrecv.remoteWanted,
 		"filterCloudletKey", s.sendrecv.filterCloudletKeys,

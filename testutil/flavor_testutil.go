@@ -3,21 +3,24 @@
 
 package testutil
 
-import "google.golang.org/grpc"
-import "github.com/mobiledgex/edge-cloud/edgeproto"
-import "io"
-import "testing"
-import "context"
-import "time"
-import "github.com/stretchr/testify/require"
-import "github.com/mobiledgex/edge-cloud/log"
-import "github.com/mobiledgex/edge-cloud/cli"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"io"
+	math "math"
+	"testing"
+	"time"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -309,38 +312,107 @@ func FindFlavorData(key *edgeproto.FlavorKey, testData []edgeproto.Flavor) (*edg
 	return nil, false
 }
 
-func RunFlavorApi(conn *grpc.ClientConn, ctx context.Context, data *[]edgeproto.Flavor, dataMap interface{}, mode string) error {
-	flavorApi := edgeproto.NewFlavorApiClient(conn)
-	var err error
+func (r *Run) FlavorApi(data *[]edgeproto.Flavor, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for Flavor", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.Flavor{}
+		out, err := r.client.ShowFlavor(r.ctx, obj)
+		if err != nil {
+			r.logErr("FlavorApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.Flavor)
+			if !ok {
+				panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Flavor, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
 	for ii, objD := range *data {
 		obj := &objD
-		log.DebugLog(log.DebugLevelApi, "API %v for Flavor: %v", mode, obj.GetKey())
-		switch mode {
+		switch r.Mode {
 		case "create":
-			_, err = flavorApi.CreateFlavor(ctx, obj)
+			out, err := r.client.CreateFlavor(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("FlavorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "delete":
-			_, err = flavorApi.DeleteFlavor(ctx, obj)
+			out, err := r.client.DeleteFlavor(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("FlavorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "update":
+			// set specified fields
 			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
 			if err != nil {
-				return fmt.Errorf("bad dataMap for Flavor: %v", err)
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for Flavor", "err", err)
+				*r.Rc = false
+				return
 			}
 			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
-			_, err = flavorApi.UpdateFlavor(ctx, obj)
-		case "add":
-			_, err = flavorApi.AddFlavorRes(ctx, obj)
-		case "remove":
-			_, err = flavorApi.RemoveFlavorRes(ctx, obj)
-		default:
-			log.DebugLog(log.DebugLevelApi, "Unsupported API %v for Flavor: %v", mode, obj.GetKey())
-			return nil
-		}
-		err = ignoreExpectedErrors(mode, obj.GetKey(), err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, obj.GetKey(), err)
+
+			out, err := r.client.UpdateFlavor(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("FlavorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowFlavor(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("FlavorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Flavor)
+				if !ok {
+					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Flavor, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		case "addflavorres":
+			out, err := r.client.AddFlavorRes(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("FlavorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "removeflavorres":
+			out, err := r.client.RemoveFlavorRes(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("FlavorApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunFlavorApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		}
 	}
-	return nil
 }
 
 func (s *DummyServer) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
@@ -394,4 +466,108 @@ func (s *DummyServer) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor)
 		return &edgeproto.Result{}, nil
 	}
 	return &edgeproto.Result{}, nil
+}
+
+func (s *ApiClient) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	api := edgeproto.NewFlavorApiClient(s.Conn)
+	return api.CreateFlavor(ctx, in)
+}
+
+func (s *CliClient) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateFlavor")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	api := edgeproto.NewFlavorApiClient(s.Conn)
+	return api.DeleteFlavor(ctx, in)
+}
+
+func (s *CliClient) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteFlavor")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	api := edgeproto.NewFlavorApiClient(s.Conn)
+	return api.UpdateFlavor(ctx, in)
+}
+
+func (s *CliClient) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateFlavor")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type FlavorStream interface {
+	Recv() (*edgeproto.Flavor, error)
+}
+
+func FlavorReadStream(stream FlavorStream) ([]edgeproto.Flavor, error) {
+	output := []edgeproto.Flavor{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read Flavor stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowFlavor(ctx context.Context, in *edgeproto.Flavor) ([]edgeproto.Flavor, error) {
+	api := edgeproto.NewFlavorApiClient(s.Conn)
+	stream, err := api.ShowFlavor(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return FlavorReadStream(stream)
+}
+
+func (s *CliClient) ShowFlavor(ctx context.Context, in *edgeproto.Flavor) ([]edgeproto.Flavor, error) {
+	output := []edgeproto.Flavor{}
+	args := append(s.BaseArgs, "controller", "ShowFlavor")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	api := edgeproto.NewFlavorApiClient(s.Conn)
+	return api.AddFlavorRes(ctx, in)
+}
+
+func (s *CliClient) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "AddFlavorRes")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	api := edgeproto.NewFlavorApiClient(s.Conn)
+	return api.RemoveFlavorRes(ctx, in)
+}
+
+func (s *CliClient) RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "RemoveFlavorRes")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type FlavorApiClient interface {
+	CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error)
+	DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error)
+	UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error)
+	ShowFlavor(ctx context.Context, in *edgeproto.Flavor) ([]edgeproto.Flavor, error)
+	AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error)
+	RemoveFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error)
 }

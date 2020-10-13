@@ -13,14 +13,14 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-var AppDNSRoot = "mobiledgex.net"
-
 // special operator types
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
+var OperatorAWS = "aws"
 
-var DeveloperSamsung = "Samsung"
-var DeveloperMobiledgeX = "MobiledgeX"
+var OrganizationSamsung = "Samsung"
+var OrganizationMobiledgeX = "MobiledgeX"
+var OrganizationEdgeBox = "EdgeBox"
 
 const DefaultVMCluster string = "DefaultVMCluster"
 
@@ -30,6 +30,7 @@ var SamsungEnablingLayer = "SamsungEnablingLayer"
 // cloudlet types
 var CloudletKindOpenStack = "openstack"
 var CloudletKindAzure = "azure"
+var CloudletKindAws = "aws"
 var CloudletKindGCP = "gcp"
 var CloudletKindDIND = "dind"
 var CloudletKindFake = "fake"
@@ -49,17 +50,26 @@ var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
 var AutoProvMeasurement = "auto-prov-counts"
 
+// AppLabels for the application containers
+var MexAppNameLabel = "mexAppName"
+var MexAppVersionLabel = "mexAppVersion"
+
 // Instance Lifecycle variables
 var EventsDbName = "events"
 var CloudletEvent = "cloudlet"
 var ClusterInstEvent = "clusterinst"
+var ClusterInstCheckpoints = "clusterinst-checkpoints"
 var AppInstEvent = "appinst"
-
+var AppInstCheckpoints = "appinst-checkpoints"
+var MonthlyInterval = "MONTH"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
-var IPAddrDockerHost = "172.17.0.1"
+var RemoteServerNone = ""
 
+// Client type to access cluster nodes
+var ClientTypeRootLB string = "rootlb"
+var ClientTypeClusterVM string = "clustervm"
 
 type InstanceEvent string
 
@@ -69,9 +79,11 @@ const (
 	UPDATE_ERROR      InstanceEvent = "UPDATE_ERROR"
 	UPDATE_COMPLETE   InstanceEvent = "UPDATE_COMPLETE"
 	DELETED           InstanceEvent = "DELETED"
-	DELETE_ERROR	  InstanceEvent = "DELETE_ERROR"
+	DELETE_ERROR      InstanceEvent = "DELETE_ERROR"
 	HEALTH_CHECK_FAIL InstanceEvent = "HEALTH_CHECK_FAIL"
 	HEALTH_CHECK_OK   InstanceEvent = "HEALTH_CHECK_OK"
+	RESERVED          InstanceEvent = "RESERVED"
+	UNRESERVED        InstanceEvent = "UNRESERVED"
 )
 
 var InstanceUp = "UP"
@@ -88,7 +100,7 @@ const MaxClusterNameLength = 40
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
 var platformApps = map[string]bool{
-	DeveloperSamsung + ":" + SamsungEnablingLayer: true,
+	OrganizationSamsung + ":" + SamsungEnablingLayer: true,
 }
 
 // Common regular expression for quoted strings parse
@@ -102,45 +114,43 @@ func IsPlatformApp(devname string, appname string) bool {
 
 var AllocatedIpDynamic = "dynamic"
 
-var RootLBL7Port int32 = 443
-
 // GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
 // for apps using "shared" IP access.
-func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
+func GetRootLBFQDN(key *edgeproto.CloudletKey, domain string) string {
 	loc := util.DNSSanitize(key.Name)
-	oper := util.DNSSanitize(key.OperatorKey.Name)
-	return fmt.Sprintf("%s.%s.%s", loc, oper, AppDNSRoot)
+	oper := util.DNSSanitize(key.Organization)
+	return fmt.Sprintf("%s.%s.%s", loc, oper, domain)
 }
 
 // GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
 // for clusters using "dedicated" IP access.
-func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
+func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
 	clust := util.DNSSanitize(clusterKey.Name)
 	loc := util.DNSSanitize(cloudletKey.Name)
-	oper := util.DNSSanitize(cloudletKey.OperatorKey.Name)
-	return fmt.Sprintf("%s.%s.%s.%s", clust, loc, oper, AppDNSRoot)
+	oper := util.DNSSanitize(cloudletKey.Organization)
+	return fmt.Sprintf("%s.%s.%s.%s", clust, loc, oper, domain)
 }
 
 // Get Fully Qualified Name for the App i.e. with developer & version info
 func GetAppFQN(key *edgeproto.AppKey) string {
 	app := util.DNSSanitize(key.Name)
-	dev := util.DNSSanitize(key.DeveloperKey.Name)
+	dev := util.DNSSanitize(key.Organization)
 	ver := util.DNSSanitize(key.Version)
 	return fmt.Sprintf("%s%s%s", dev, app, ver)
 }
 
 // GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
 // for apps using "dedicated" IP access.
-func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
-	lb := GetDedicatedLBFQDN(cloudletKey, clusterKey)
+func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
+	lb := GetDedicatedLBFQDN(cloudletKey, clusterKey, domain)
 	appFQN := GetAppFQN(&key.AppKey)
 	return fmt.Sprintf("%s.%s", appFQN, lb)
 }
 
 // GetVMAppFQDN gets the app-specific Fully Qualified Domain Name
 // for VM based apps
-func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey) string {
-	lb := GetRootLBFQDN(cloudletKey)
+func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, domain string) string {
+	lb := GetRootLBFQDN(cloudletKey, domain)
 	appFQN := GetAppFQN(&key.AppKey)
 	return fmt.Sprintf("%s.%s", appFQN, lb)
 }
@@ -151,16 +161,6 @@ func FqdnPrefix(svcName string) string {
 
 func ServiceFQDN(svcName, baseFQDN string) string {
 	return fmt.Sprintf("%s%s", FqdnPrefix(svcName), baseFQDN)
-}
-
-// GetL7Path gets the L7 path for L7 access behind the "shared"
-// global Load Balancer (reverse proxy). This only the path and
-// does not include the Fqdn and port.
-func GetL7Path(key *edgeproto.AppInstKey, internalPort int32) string {
-	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
-	app := util.DNSSanitize(key.AppKey.Name)
-	ver := util.DNSSanitize(key.AppKey.Version)
-	return fmt.Sprintf("%s/%s%s/p%d", dev, app, ver, internalPort)
 }
 
 // For the DME and CRM that require a cloudlet key to be specified
@@ -188,24 +188,12 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 
 	err = mykey.ValidateKey()
 	if err != nil {
-		log.FatalLog("Invalid cloudletKey", "err", err)
+		log.FatalLog("Invalid cloudletKey", "key", mykey, "err", err)
 	}
-}
-
-func SetNodeKey(hostname *string, nodeType edgeproto.NodeType, cloudletKey *edgeproto.CloudletKey, key *edgeproto.NodeKey) {
-	if *hostname == "" {
-		*hostname, _ = os.Hostname()
-		if *hostname == "" {
-			*hostname = "nohostname"
-		}
-	}
-	key.Name = *hostname
-	key.NodeType = nodeType
-	key.CloudletKey = *cloudletKey
 }
 
 func IsClusterInstReqd(app *edgeproto.App) bool {
-	if app.Deployment == AppDeploymentTypeVM {
+	if app.Deployment == DeploymentTypeVM {
 		return false
 	}
 	return true
@@ -217,4 +205,17 @@ func Hostname() string {
 		return "nohostname"
 	}
 	return hostname
+}
+
+func GetAppClientType(app *edgeproto.App) string {
+	clientType := ClientTypeRootLB
+	if app.Deployment == DeploymentTypeDocker &&
+		app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
+		// docker commands can be run on either the rootlb or on the docker
+		// vm. The default is to run on the rootlb client
+		// If using a load balancer access, a separate VM is always used for
+		// docker vs the LB, and we always use host networking mode
+		clientType = ClientTypeClusterVM
+	}
+	return clientType
 }

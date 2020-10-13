@@ -3,15 +3,17 @@
 
 package gencmd
 
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	"context"
+	fmt "fmt"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -34,6 +36,9 @@ var SendToGroupCmd = &cli.Command{
 }
 
 func runSendToGroup(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*distributed_match_engine.DlgMessage)
 	_, err := c.ParseInput(args)
 	if err != nil {

@@ -3,6 +3,7 @@ package cli_test
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/cli"
@@ -17,36 +18,96 @@ type TestObj struct {
 	Inner1     InnerObj
 	Inner2     *InnerObj
 	unexported string
-	Arr        []string          // unsupported
-	Mmm        map[string]string // unsupported
+	Arr        []string
+	Mmm        map[string]string
+	ObjArr     []InnerObj
 }
 
 type InnerObj struct {
+	Name    string
+	Val     int
+	Mmm     map[string]string
+	Sublist []SublistObj
+}
+
+type SublistObj struct {
 	Name string
-	Val  int
 }
 
 func TestParseArgs(t *testing.T) {
 	var args []string
-	input := &cli.Input{}
+
+	spargs := cli.GetSpecialArgs(TestObj{})
+	expectSpArgs := map[string]string{
+		"mmm":        "StringToString",
+		"arr":        "StringArray",
+		"inner1.mmm": "StringToString",
+		"inner2.mmm": "StringToString",
+	}
+	require.Equal(t, expectSpArgs, spargs, "GetSpecialArgs")
+
+	input := &cli.Input{
+		SpecialArgs: &spargs,
+	}
 
 	ex := TestObj{
 		Inner1: InnerObj{
 			Name: "name1",
 			Val:  1,
+			Mmm: map[string]string{
+				"xkey": "xx",
+			},
+			Sublist: []SublistObj{
+				SublistObj{
+					Name: "sublist0",
+				},
+				SublistObj{
+					Name: "sublist1",
+				},
+			},
 		},
 		Inner2: &InnerObj{
 			Name: "name2",
 			Val:  2,
 		},
+		Arr: []string{"foo", "bar", "baz"},
+		Mmm: map[string]string{
+			"key1":         "val1",
+			"key.with.dot": "val.with.dot",
+			"keye":         "val=with=equals",
+			// key with equals not supported
+			//"key=with=equals": "val=with=equals",
+		},
+		ObjArr: []InnerObj{
+			InnerObj{
+				Name: "arrin1",
+				Val:  3,
+			},
+			InnerObj{
+				Name: "arrin2",
+				Val:  4,
+			},
+		},
 	}
-	args = []string{"inner1.name=name1", "inner1.val=1", "inner2.name=name2", "inner2.val=2"}
-	testParseArgs(t, input, args, &ex, &TestObj{}, &TestObj{})
 
-	// fails because of unsupported arrays/maps
-	args = []string{"inner1.name=name1", "inner1.val=1", "inner2.name=name2", "inner2.val=2", "unexported=err", "arr=bad-array", "mmm=badmap"}
-	_, err := input.ParseArgs(args, &TestObj{})
-	assert.NotNil(t, err)
+	args = []string{"inner1.name=name1", "inner1.val=1", "inner2.name=name2", "inner2.val=2", "inner1.mmm=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "inner1.sublist:0.name=sublist0", "inner1.sublist:1.name=sublist1"}
+	testConversion(t, input, &ex, &TestObj{}, &TestObj{}, args)
+
+	// test with alias args
+	inputAliased := &cli.Input{
+		SpecialArgs: &spargs,
+		AliasArgs: []string{
+			"name1=inner1.name",
+			"name2=inner2.name",
+			"val1=inner1.val",
+			"val2=inner2.val",
+			"mmm1=inner1.mmm",
+			"mmm2=inner2.mmm",
+			"sublist1:#.name=inner1.sublist:#.name",
+		},
+	}
+	args = []string{"name1=name1", "val1=1", "name2=name2", "val2=2", "mmm1=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "sublist1:0.name=sublist0", "sublist1:1.name=sublist1"}
+	testConversion(t, inputAliased, &ex, &TestObj{}, &TestObj{}, args)
 
 	rf := edgeproto.Flavor{
 		Key: edgeproto.FlavorKey{
@@ -62,7 +123,7 @@ func TestParseArgs(t *testing.T) {
 
 	// required args
 	input.RequiredArgs = []string{"regionx"}
-	_, err = input.ParseArgs(args, &edgeproto.Flavor{})
+	_, err := input.ParseArgs(args, &edgeproto.Flavor{})
 	require.NotNil(t, err)
 
 	input.RequiredArgs = []string{"key.name"}
@@ -117,39 +178,50 @@ func testParseArgs(t *testing.T, input *cli.Input, args []string, expected, buf1
 
 func TestConversion(t *testing.T) {
 	// test converting obj to args and then back to obj
-
-	for _, flavor := range testutil.FlavorData {
-		testConversion(t, &flavor, &edgeproto.Flavor{}, &edgeproto.Flavor{})
+	input := &cli.Input{
+		DecodeHook: edgeproto.DecodeHook,
+		SpecialArgs: &map[string]string{
+			"fields":           "StringArray",
+			"autoprovpolicies": "StringArray",
+		},
 	}
-	for _, dev := range testutil.DevData {
-		testConversion(t, &dev, &edgeproto.Developer{}, &edgeproto.Developer{})
+	for _, flavor := range testutil.FlavorData {
+		testConversion(t, input, &flavor, &edgeproto.Flavor{}, &edgeproto.Flavor{}, nil)
 	}
 	for _, app := range testutil.AppData {
-		testConversion(t, &app, &edgeproto.App{}, &edgeproto.App{})
-	}
-	for _, op := range testutil.OperatorData {
-		testConversion(t, &op, &edgeproto.Operator{}, &edgeproto.Operator{})
+		testConversion(t, input, &app, &edgeproto.App{}, &edgeproto.App{}, nil)
 	}
 	for _, cloudlet := range testutil.CloudletData {
-		testConversion(t, &cloudlet, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
+		testConversion(t, input, &cloudlet, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{}, nil)
 	}
 	for _, cinst := range testutil.ClusterInstData {
-		testConversion(t, &cinst, &edgeproto.ClusterInst{}, &edgeproto.ClusterInst{})
+		testConversion(t, input, &cinst, &edgeproto.ClusterInst{}, &edgeproto.ClusterInst{}, nil)
 	}
 	for _, appinst := range testutil.AppInstData {
-		testConversion(t, &appinst, &edgeproto.AppInst{}, &edgeproto.AppInst{})
+		testConversion(t, input, &appinst, &edgeproto.AppInst{}, &edgeproto.AppInst{}, nil)
 	}
+	for _, pp := range testutil.PrivacyPolicyData {
+		testConversion(t, input, &pp, &edgeproto.PrivacyPolicy{}, &edgeproto.PrivacyPolicy{}, nil)
+	}
+	settings := edgeproto.GetDefaultSettings()
+	settings.Fields = []string{"16", "4", "9", "2.2"}
+	testConversion(t, input, settings, &edgeproto.Settings{}, &edgeproto.Settings{}, nil)
 	// CloudletInfo and CloudletRefs have arrays which aren't supported yet.
 }
 
-func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
+func testConversion(t *testing.T, input *cli.Input, obj interface{}, buf, buf2 interface{}, expectedArgs []string) {
 	// marshal object to args
-	args, err := cli.MarshalArgs(obj, nil)
+	args, err := cli.MarshalArgs(obj, nil, input.AliasArgs)
 	require.Nil(t, err, "marshal %v", obj)
-	input := cli.Input{
-		DecodeHook: edgeproto.EnumDecodeHook,
-	}
+
 	fmt.Printf("args: %v\n", args)
+	if expectedArgs != nil {
+		sortargs := make([]string, len(args))
+		copy(sortargs, args)
+		sort.Strings(expectedArgs)
+		sort.Strings(sortargs)
+		require.Equal(t, expectedArgs, sortargs)
+	}
 
 	// parse args into buf, generate args map - should match original
 	dat, err := input.ParseArgs(args, buf)
@@ -165,6 +237,7 @@ func testConversion(t *testing.T, obj interface{}, buf, buf2 interface{}) {
 	// simulate client to server, check that matches original
 	byt, err := json.Marshal(jsmap)
 	require.Nil(t, err, "marshal")
+	fmt.Printf("json string: %s\n", string(byt))
 	err = json.Unmarshal(byt, buf2)
 	require.Nil(t, err, "unmarshal")
 	require.Equal(t, obj, buf2)
@@ -204,10 +277,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -219,10 +291,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -258,19 +329,17 @@ clusterinsts:
          "disk": 4
       }
    ],
-   "clusterinsts": [
+   "cluster_insts": [
       {
          "key": {
             "cluster_key": {
                "name": "SmallCluster"
             },
             "cloudlet_key": {
-               "operator_key": {
-                  "name": "tmus"
-               },
+               "organization": "tmus",
                "name": "tmus-cloud-1"
             },
-            "developer": "AcmeAppCo"
+            "organization": "AcmeAppCo"
          },
          "flavor": {
             "name": "x1.small"
@@ -286,12 +355,10 @@ clusterinsts:
                "name": "SmallCluster"
             },
             "cloudlet_key": {
-               "operator_key": {
-                  "name": "tmus"
-               },
+               "organization": "tmus",
                "name": "tmus-cloud-2"
             },
-            "developer": "AcmeAppCo"
+            "organization": "AcmeAppCo"
          },
          "flavor": {
             "name": "x1.small"
@@ -303,10 +370,10 @@ clusterinsts:
       }
    ]
 }`,
-		obj1: &edgeproto.ApplicationData{},
-		obj2: &edgeproto.ApplicationData{},
-		obj3: &edgeproto.ApplicationData{},
-		obj4: &edgeproto.ApplicationData{},
+		obj1: &edgeproto.AllData{},
+		obj2: &edgeproto.AllData{},
+		obj3: &edgeproto.AllData{},
+		obj4: &edgeproto.AllData{},
 	},
 }
 

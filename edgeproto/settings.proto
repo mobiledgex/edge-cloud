@@ -6,12 +6,18 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
 // Global settings
 message Settings {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Shepherd metrics collection interval for k8s and docker appInstances (duration)
   int64 shepherd_metrics_collection_interval = 2 [(gogoproto.casttype) = "Duration"];
+  // Shepherd alert evaluation interval for k8s and docker appInstances (duration)
+  int64 shepherd_alert_evaluation_interval = 20 [(gogoproto.casttype) = "Duration"];
   // Number of times Shepherd Health Check fails before we mark appInst down
   int32 shepherd_health_check_retries = 3;
   // Health Checking probing frequency (duration)
@@ -34,14 +40,27 @@ message Settings {
   int64 update_cluster_inst_timeout = 12 [(gogoproto.casttype) = "Duration"];
   // Delete ClusterInst timeout (duration)
   int64 delete_cluster_inst_timeout = 13 [(gogoproto.casttype) = "Duration"];
+  // Default flavor for k8s master VM and > 0  workers
+  string master_node_flavor = 14;
   // Max IP Port range when using a load balancer
-  int32 load_balancer_max_port_range = 14;
+  int32 load_balancer_max_port_range = 15;
+  // Max DME clients to be tracked at the same time.
+  int32 max_tracked_dme_clients = 16;
+  // Default chef client interval (duration)
+  int32 chef_client_interval = 17 [(gogoproto.casttype) = "Duration"];
+  // Default influxDB metrics retention policy (duration)
+  int64 influx_db_metrics_retention = 18 [(gogoproto.casttype) = "Duration"];
+  // Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)
+  int32 cloudlet_maintenance_timeout = 19 [(gogoproto.casttype) = "Duration"];
+  // Update VM pool timeout (duration)
+  int64 update_vm_pool_timeout = 21 [(gogoproto.casttype) = "Duration"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.custom_key_type) = "SettingsKey";
   option (protogen.singular_data) = true;
+  option (protogen.uses_org) = "none";
 }
 
 service SettingsApi {

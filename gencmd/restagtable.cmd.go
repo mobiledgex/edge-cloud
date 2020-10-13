@@ -3,19 +3,21 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -38,6 +40,9 @@ var CreateResTagTableCmd = &cli.Command{
 }
 
 func runCreateResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +97,9 @@ var DeleteResTagTableCmd = &cli.Command{
 }
 
 func runDeleteResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +154,9 @@ var UpdateResTagTableCmd = &cli.Command{
 }
 
 func runUpdateResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +211,9 @@ var ShowResTagTableCmd = &cli.Command{
 }
 
 func runShowResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +236,7 @@ func ShowResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 		}
 		return fmt.Errorf("ShowResTagTable failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.ResTagTable, 0)
 	for {
 		obj, err := stream.Recv()
@@ -273,6 +288,9 @@ var AddResTagCmd = &cli.Command{
 }
 
 func runAddResTag(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -327,6 +345,9 @@ var RemoveResTagCmd = &cli.Command{
 }
 
 func runRemoveResTag(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTable)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -381,6 +402,9 @@ var GetResTagTableCmd = &cli.Command{
 }
 
 func runGetResTagTable(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.ResTagTableKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -435,19 +459,17 @@ var ResTagTableApiCmds = []*cobra.Command{
 var ResTagTableKeyRequiredArgs = []string{}
 var ResTagTableKeyOptionalArgs = []string{
 	"name",
-	"operator",
+	"organization",
 }
-var ResTagTableKeyAliasArgs = []string{
-	"operator=operatorkey.name",
-}
+var ResTagTableKeyAliasArgs = []string{}
 var ResTagTableKeyComments = map[string]string{
-	"name":     "Resource Table Name",
-	"operator": "Company or Organization name of the operator",
+	"name":         "Resource Table Name",
+	"organization": "Operator organization of the cloudlet site.",
 }
 var ResTagTableKeySpecialArgs = map[string]string{}
 var ResTagTableRequiredArgs = []string{
 	"res",
-	"operator",
+	"organization",
 	"tags",
 }
 var ResTagTableOptionalArgs = []string{
@@ -455,14 +477,15 @@ var ResTagTableOptionalArgs = []string{
 }
 var ResTagTableAliasArgs = []string{
 	"res=key.name",
-	"operator=key.operatorkey.name",
+	"organization=key.organization",
 }
 var ResTagTableComments = map[string]string{
-	"res":      "Resource Table Name",
-	"operator": "Company or Organization name of the operator",
-	"tags":     "one or more string tags",
-	"azone":    "availability zone(s) of resource if required",
+	"res":          "Resource Table Name",
+	"organization": "Operator organization of the cloudlet site.",
+	"tags":         "one or more string tags",
+	"azone":        "availability zone(s) of resource if required",
 }
 var ResTagTableSpecialArgs = map[string]string{
-	"tags": "StringToString",
+	"fields": "StringArray",
+	"tags":   "StringToString",
 }

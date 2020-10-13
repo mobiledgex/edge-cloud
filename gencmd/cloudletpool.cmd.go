@@ -3,19 +3,21 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -38,6 +40,9 @@ var CreateCloudletPoolCmd = &cli.Command{
 }
 
 func runCreateCloudletPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +97,9 @@ var DeleteCloudletPoolCmd = &cli.Command{
 }
 
 func runDeleteCloudletPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -133,6 +141,64 @@ func DeleteCloudletPools(c *cli.Command, data []edgeproto.CloudletPool, err *err
 	}
 }
 
+var UpdateCloudletPoolCmd = &cli.Command{
+	Use:          "UpdateCloudletPool",
+	RequiredArgs: strings.Join(CloudletPoolRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletPoolOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletPoolAliasArgs, " "),
+	SpecialArgs:  &CloudletPoolSpecialArgs,
+	Comments:     CloudletPoolComments,
+	ReqData:      &edgeproto.CloudletPool{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateCloudletPool,
+}
+
+func runUpdateCloudletPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletPool)
+	jsonMap, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	return UpdateCloudletPool(c, obj)
+}
+
+func UpdateCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
+	if CloudletPoolApiCmd == nil {
+		return fmt.Errorf("CloudletPoolApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletPoolApiCmd.UpdateCloudletPool(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateCloudletPool failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateCloudletPools(c *cli.Command, data []edgeproto.CloudletPool, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateCloudletPool %v\n", data[ii])
+		myerr := UpdateCloudletPool(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var ShowCloudletPoolCmd = &cli.Command{
 	Use:          "ShowCloudletPool",
 	OptionalArgs: strings.Join(append(CloudletPoolRequiredArgs, CloudletPoolOptionalArgs...), " "),
@@ -145,6 +211,9 @@ var ShowCloudletPoolCmd = &cli.Command{
 }
 
 func runShowCloudletPool(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.CloudletPool)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -167,6 +236,7 @@ func ShowCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 		}
 		return fmt.Errorf("ShowCloudletPool failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.CloudletPool, 0)
 	for {
 		obj, err := stream.Recv()
@@ -205,387 +275,176 @@ func ShowCloudletPools(c *cli.Command, data []edgeproto.CloudletPool, err *error
 	}
 }
 
+var AddCloudletPoolMemberCmd = &cli.Command{
+	Use:          "AddCloudletPoolMember",
+	RequiredArgs: strings.Join(CloudletPoolMemberRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletPoolMemberOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletPoolMemberAliasArgs, " "),
+	SpecialArgs:  &CloudletPoolMemberSpecialArgs,
+	Comments:     CloudletPoolMemberComments,
+	ReqData:      &edgeproto.CloudletPoolMember{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddCloudletPoolMember,
+}
+
+func runAddCloudletPoolMember(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddCloudletPoolMember(c, obj)
+}
+
+func AddCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) error {
+	if CloudletPoolApiCmd == nil {
+		return fmt.Errorf("CloudletPoolApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletPoolApiCmd.AddCloudletPoolMember(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddCloudletPoolMember failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddCloudletPoolMembers(c *cli.Command, data []edgeproto.CloudletPoolMember, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddCloudletPoolMember %v\n", data[ii])
+		myerr := AddCloudletPoolMember(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RemoveCloudletPoolMemberCmd = &cli.Command{
+	Use:          "RemoveCloudletPoolMember",
+	RequiredArgs: strings.Join(CloudletPoolMemberRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletPoolMemberOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletPoolMemberAliasArgs, " "),
+	SpecialArgs:  &CloudletPoolMemberSpecialArgs,
+	Comments:     CloudletPoolMemberComments,
+	ReqData:      &edgeproto.CloudletPoolMember{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRemoveCloudletPoolMember,
+}
+
+func runRemoveCloudletPoolMember(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RemoveCloudletPoolMember(c, obj)
+}
+
+func RemoveCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) error {
+	if CloudletPoolApiCmd == nil {
+		return fmt.Errorf("CloudletPoolApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletPoolApiCmd.RemoveCloudletPoolMember(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RemoveCloudletPoolMember failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RemoveCloudletPoolMembers(c *cli.Command, data []edgeproto.CloudletPoolMember, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RemoveCloudletPoolMember %v\n", data[ii])
+		myerr := RemoveCloudletPoolMember(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var CloudletPoolApiCmds = []*cobra.Command{
 	CreateCloudletPoolCmd.GenCmd(),
 	DeleteCloudletPoolCmd.GenCmd(),
+	UpdateCloudletPoolCmd.GenCmd(),
 	ShowCloudletPoolCmd.GenCmd(),
-}
-
-var CloudletPoolMemberApiCmd edgeproto.CloudletPoolMemberApiClient
-
-var CreateCloudletPoolMemberCmd = &cli.Command{
-	Use:          "CreateCloudletPoolMember",
-	RequiredArgs: strings.Join(CloudletPoolMemberRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletPoolMemberOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletPoolMemberAliasArgs, " "),
-	SpecialArgs:  &CloudletPoolMemberSpecialArgs,
-	Comments:     CloudletPoolMemberComments,
-	ReqData:      &edgeproto.CloudletPoolMember{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runCreateCloudletPoolMember,
-}
-
-func runCreateCloudletPoolMember(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return CreateCloudletPoolMember(c, obj)
-}
-
-func CreateCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) error {
-	if CloudletPoolMemberApiCmd == nil {
-		return fmt.Errorf("CloudletPoolMemberApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := CloudletPoolMemberApiCmd.CreateCloudletPoolMember(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("CreateCloudletPoolMember failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func CreateCloudletPoolMembers(c *cli.Command, data []edgeproto.CloudletPoolMember, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("CreateCloudletPoolMember %v\n", data[ii])
-		myerr := CreateCloudletPoolMember(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var DeleteCloudletPoolMemberCmd = &cli.Command{
-	Use:          "DeleteCloudletPoolMember",
-	RequiredArgs: strings.Join(CloudletPoolMemberRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletPoolMemberOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletPoolMemberAliasArgs, " "),
-	SpecialArgs:  &CloudletPoolMemberSpecialArgs,
-	Comments:     CloudletPoolMemberComments,
-	ReqData:      &edgeproto.CloudletPoolMember{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runDeleteCloudletPoolMember,
-}
-
-func runDeleteCloudletPoolMember(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return DeleteCloudletPoolMember(c, obj)
-}
-
-func DeleteCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) error {
-	if CloudletPoolMemberApiCmd == nil {
-		return fmt.Errorf("CloudletPoolMemberApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := CloudletPoolMemberApiCmd.DeleteCloudletPoolMember(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("DeleteCloudletPoolMember failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func DeleteCloudletPoolMembers(c *cli.Command, data []edgeproto.CloudletPoolMember, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("DeleteCloudletPoolMember %v\n", data[ii])
-		myerr := DeleteCloudletPoolMember(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var ShowCloudletPoolMemberCmd = &cli.Command{
-	Use:          "ShowCloudletPoolMember",
-	OptionalArgs: strings.Join(append(CloudletPoolMemberRequiredArgs, CloudletPoolMemberOptionalArgs...), " "),
-	AliasArgs:    strings.Join(CloudletPoolMemberAliasArgs, " "),
-	SpecialArgs:  &CloudletPoolMemberSpecialArgs,
-	Comments:     CloudletPoolMemberComments,
-	ReqData:      &edgeproto.CloudletPoolMember{},
-	ReplyData:    &edgeproto.CloudletPoolMember{},
-	Run:          runShowCloudletPoolMember,
-}
-
-func runShowCloudletPoolMember(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.CloudletPoolMember)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowCloudletPoolMember(c, obj)
-}
-
-func ShowCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) error {
-	if CloudletPoolMemberApiCmd == nil {
-		return fmt.Errorf("CloudletPoolMemberApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := CloudletPoolMemberApiCmd.ShowCloudletPoolMember(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowCloudletPoolMember failed: %s", errstr)
-	}
-	objs := make([]*edgeproto.CloudletPoolMember, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowCloudletPoolMember recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowCloudletPoolMembers(c *cli.Command, data []edgeproto.CloudletPoolMember, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowCloudletPoolMember %v\n", data[ii])
-		myerr := ShowCloudletPoolMember(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var CloudletPoolMemberApiCmds = []*cobra.Command{
-	CreateCloudletPoolMemberCmd.GenCmd(),
-	DeleteCloudletPoolMemberCmd.GenCmd(),
-	ShowCloudletPoolMemberCmd.GenCmd(),
-}
-
-var CloudletPoolShowApiCmd edgeproto.CloudletPoolShowApiClient
-
-var ShowPoolsForCloudletCmd = &cli.Command{
-	Use:          "ShowPoolsForCloudlet",
-	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
-	SpecialArgs:  &CloudletKeySpecialArgs,
-	Comments:     CloudletKeyComments,
-	ReqData:      &edgeproto.CloudletKey{},
-	ReplyData:    &edgeproto.CloudletPool{},
-	Run:          runShowPoolsForCloudlet,
-}
-
-func runShowPoolsForCloudlet(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.CloudletKey)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowPoolsForCloudlet(c, obj)
-}
-
-func ShowPoolsForCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
-	if CloudletPoolShowApiCmd == nil {
-		return fmt.Errorf("CloudletPoolShowApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := CloudletPoolShowApiCmd.ShowPoolsForCloudlet(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowPoolsForCloudlet failed: %s", errstr)
-	}
-	objs := make([]*edgeproto.CloudletPool, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowPoolsForCloudlet recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowPoolsForCloudlets(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowPoolsForCloudlet %v\n", data[ii])
-		myerr := ShowPoolsForCloudlet(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var ShowCloudletsForPoolCmd = &cli.Command{
-	Use:          "ShowCloudletsForPool",
-	RequiredArgs: strings.Join(CloudletPoolKeyRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletPoolKeyOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletPoolKeyAliasArgs, " "),
-	SpecialArgs:  &CloudletPoolKeySpecialArgs,
-	Comments:     CloudletPoolKeyComments,
-	ReqData:      &edgeproto.CloudletPoolKey{},
-	ReplyData:    &edgeproto.Cloudlet{},
-	Run:          runShowCloudletsForPool,
-}
-
-func runShowCloudletsForPool(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.CloudletPoolKey)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowCloudletsForPool(c, obj)
-}
-
-func ShowCloudletsForPool(c *cli.Command, in *edgeproto.CloudletPoolKey) error {
-	if CloudletPoolShowApiCmd == nil {
-		return fmt.Errorf("CloudletPoolShowApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := CloudletPoolShowApiCmd.ShowCloudletsForPool(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowCloudletsForPool failed: %s", errstr)
-	}
-	objs := make([]*edgeproto.Cloudlet, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowCloudletsForPool recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowCloudletsForPools(c *cli.Command, data []edgeproto.CloudletPoolKey, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowCloudletsForPool %v\n", data[ii])
-		myerr := ShowCloudletsForPool(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var CloudletPoolShowApiCmds = []*cobra.Command{
-	ShowPoolsForCloudletCmd.GenCmd(),
-	ShowCloudletsForPoolCmd.GenCmd(),
+	AddCloudletPoolMemberCmd.GenCmd(),
+	RemoveCloudletPoolMemberCmd.GenCmd(),
 }
 
 var CloudletPoolKeyRequiredArgs = []string{}
 var CloudletPoolKeyOptionalArgs = []string{
+	"organization",
 	"name",
 }
 var CloudletPoolKeyAliasArgs = []string{}
 var CloudletPoolKeyComments = map[string]string{
-	"name": "CloudletPool Name",
+	"organization": "Name of the organization this pool belongs to",
+	"name":         "CloudletPool Name",
 }
 var CloudletPoolKeySpecialArgs = map[string]string{}
 var CloudletPoolRequiredArgs = []string{
+	"org",
 	"name",
 }
-var CloudletPoolOptionalArgs = []string{}
+var CloudletPoolOptionalArgs = []string{
+	"cloudlets",
+}
 var CloudletPoolAliasArgs = []string{
+	"org=key.organization",
 	"name=key.name",
 }
 var CloudletPoolComments = map[string]string{
-	"name": "CloudletPool Name",
+	"fields":    "Fields are used for the Update API to specify which fields to apply",
+	"org":       "Name of the organization this pool belongs to",
+	"name":      "CloudletPool Name",
+	"cloudlets": "Cloudlets part of the pool",
 }
-var CloudletPoolSpecialArgs = map[string]string{}
+var CloudletPoolSpecialArgs = map[string]string{
+	"cloudlets": "StringArray",
+	"fields":    "StringArray",
+}
 var CloudletPoolMemberRequiredArgs = []string{
+	"org",
 	"pool",
-	"operator",
+}
+var CloudletPoolMemberOptionalArgs = []string{
 	"cloudlet",
 }
-var CloudletPoolMemberOptionalArgs = []string{}
 var CloudletPoolMemberAliasArgs = []string{
-	"pool=poolkey.name",
-	"operator=cloudletkey.operatorkey.name",
-	"cloudlet=cloudletkey.name",
+	"org=key.organization",
+	"pool=key.name",
+	"cloudlet=cloudletname",
 }
 var CloudletPoolMemberComments = map[string]string{
+	"org":      "Name of the organization this pool belongs to",
 	"pool":     "CloudletPool Name",
-	"operator": "Company or Organization name of the operator",
-	"cloudlet": "Name of the cloudlet",
+	"cloudlet": "Cloudlet key",
 }
 var CloudletPoolMemberSpecialArgs = map[string]string{}

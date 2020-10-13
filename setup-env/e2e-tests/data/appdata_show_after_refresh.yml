@@ -1,5 +1,6 @@
 settings:
   shepherdmetricscollectioninterval: 1s
+  shepherdalertevaluationinterval: 15s
   shepherdhealthcheckretries: 3
   shepherdhealthcheckinterval: 5s
   autodeployintervalsec: 1
@@ -11,7 +12,13 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  influxdbmetricsretention: 2h
+  cloudletmaintenancetimeout: 2s
+  updatevmpooltimeout: 20m0s
 flavors:
 - key:
     name: x1.tiny
@@ -31,7 +38,7 @@ flavors:
 
 privacypolicies:
 - key:
-    developer: AcmeAppCo
+    organization: AcmeAppCo
     name: PrivPolicy1
   outboundsecurityrules:
   - protocol: tcp
@@ -54,10 +61,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-1
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   sharedvolumesize: 100
@@ -70,10 +76,9 @@ clusterinsts:
     clusterkey:
       name: SmallCluster
     cloudletkey:
-      operatorkey:
-        name: tmus
+      organization: tmus
       name: tmus-cloud-2
-    developer: AcmeAppCo
+    organization: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -83,42 +88,13 @@ clusterinsts:
   numnodes: 2
   privacypolicy: PrivPolicy1
 
-operators:
-- key:
-    name: tmus
-- key:
-    name: azure
-- key:
-    name: gcp
-
 operatorcodes:
 - code: 31026
-  operatorname: tmus
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: AcmeAppCo1
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: Samsung
-  username: sammy
-  passhash: aaaabbbccdfdfad444449941
-  address: 1 Samstreet, Samsung Town, South Korea
-  email: samsung@xxxx.com
+  organization: tmus
 
 cloudlets:
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-1
   location:
     latitude: 31
@@ -129,10 +105,9 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
-  version: 2020-10-10
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-2
   location:
     latitude: 35
@@ -143,10 +118,9 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-2
-  version: 2020-10-10
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: tmus
+    organization: tmus
     name: tmus-cloud-3
   location:
     latitude: 35
@@ -157,10 +131,9 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-3
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: azure
+    organization: azure
     name: azure-cloud-4
   location:
     latitude: 32
@@ -171,10 +144,9 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: azure-cloud-4
-  version: 2019-10-24
+  containerversion: 2019-10-24
 - key:
-    operatorkey:
-      name: gcp
+    organization: gcp
     name: gcp-cloud-5
   location:
     latitude: 36
@@ -185,17 +157,113 @@ cloudlets:
   flavor:
     name: DefaultPlatformFlavor
   physicalname: gcp-cloud-5
-  version: 2019-10-24
+  containerversion: 2019-10-24
+
+cloudletinfos:
+- key:
+    organization: gcp
+    name: gcp-cloud-5
+  state: CloudletStateReady
+  notifyid: 34
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-1
+  state: CloudletStateReady
+  notifyid: 35
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-2
+  state: CloudletStateReady
+  notifyid: 36
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: tmus
+    name: tmus-cloud-3
+  state: CloudletStateReady
+  notifyid: 32
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+- key:
+    organization: azure
+    name: azure-cloud-4
+  state: CloudletStateReady
+  notifyid: 33
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 500
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.small
+    vcpus: 10
+    ram: 101024
+    disk: 500
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
 
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:2.0
   imagetype: ImageTypeDocker
-  accessports: tcp:80,http:443,udp:10002
+  accessports: tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
@@ -216,8 +284,7 @@ apps:
   revision: 1
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
@@ -241,8 +308,7 @@ apps:
   androidpackagename: com.acme.helmApplication
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: NFSAutoProvision
     version: "1.0"
   imagepath: stable/nfs-client-provisioner
@@ -253,7 +319,7 @@ apps:
   deployment: helm
   accesstype: AccessTypeLoadBalancer
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       nfs:
         path: /share
@@ -263,8 +329,7 @@ apps:
         defaultClass: true
   internalports: true
 - key:
-    developerkey:
-      name: Samsung
+    organization: Samsung
     name: SamsungEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
@@ -277,8 +342,7 @@ apps:
   deployment: kubernetes
   accesstype: AccessTypeLoadBalancer
 - key:
-    developerkey:
-      name: MobiledgeX
+    organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -291,7 +355,7 @@ apps:
   deployment: helm
   accesstype: AccessTypeLoadBalancer
   configs:
-  - kind: hemlCustomizationYaml
+  - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:
@@ -329,9 +393,11 @@ apps:
         enabled: false
       alertmanager:
         enabled: false
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
 - key:
-    developerkey:
-      name: AcmeAppCo1
+    organization: AcmeAppCo1
     name: vmapp1
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
@@ -354,8 +420,7 @@ apps:
   deployment: vm
   accesstype: AccessTypeDirect
 - key:
-    developerkey:
-      name: AcmeAppCo1
+    organization: AcmeAppCo1
     name: vmapp2
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
@@ -368,8 +433,7 @@ apps:
   deployment: vm
   accesstype: AccessTypeDirect
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: NoPortsApp
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
@@ -383,18 +447,16 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -404,21 +466,19 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -428,31 +488,43 @@ appinstances:
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHttp
+  - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
+  - proto: LProtoTcp
+    internalport: 81
+    publicport: 81
+    fqdnprefix: someapplication1-tcp.
+    tls: true
+  - proto: LProtoTcp
+    internalport: 444
+    publicport: 444
+    fqdnprefix: someapplication1-tcp.
+    tls: true
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
   revision: 1
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -462,41 +534,37 @@ appinstances:
     internalport: 9090
     publicport: 9090
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: MobiledgeX
+      organization: MobiledgeX
       name: NFSAutoProvision
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
   liveness: LivenessStatic
   flavor:
-    name: x1.medium
+    name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -514,22 +582,34 @@ appinstances:
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
+  - proto: LProtoTcp
+    internalport: 81
+    publicport: 81
+    fqdnprefix: someapplication1-tcp.
+    tls: true
+  - proto: LProtoTcp
+    internalport: 444
+    publicport: 444
+    fqdnprefix: someapplication1-tcp.
+    tls: true
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: helmApplication
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -542,18 +622,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo1
+      organization: AcmeAppCo1
       name: vmapp1
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: DefaultVMCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo1
+      organization: AcmeAppCo1
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -572,18 +650,16 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo1
+      organization: AcmeAppCo1
       name: vmapp2
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: DefaultVMCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-2
-      developer: AcmeAppCo1
+      organization: AcmeAppCo1
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -602,21 +678,82 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: NoPortsApp
       version: "1.0"
     clusterinstkey:
       clusterkey:
         name: SmallCluster
       cloudletkey:
-        operatorkey:
-          name: tmus
+        organization: tmus
         name: tmus-cloud-1
-      developer: AcmeAppCo
+      organization: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
   liveness: LivenessStatic
   flavor:
     name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
+
+appinstrefs:
+- key:
+    organization: Samsung
+    name: SamsungEnablingLayer
+    version: "1.0"
+- key:
+    organization: AcmeAppCo1
+    name: vmapp1
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo1"}}'
+    : 1
+- key:
+    organization: AcmeAppCo1
+    name: vmapp2
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo1"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: NoPortsApp
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"NoPortsApp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: MobiledgeX
+    name: NFSAutoProvision
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"MobiledgeX","name":"NFSAutoProvision","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    : 1
+- key:
+    organization: AcmeAppCo
+    name: helmApplication
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"helmApplication","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    : 1

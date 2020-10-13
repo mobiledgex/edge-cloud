@@ -3,112 +3,318 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import google_protobuf1 "github.com/gogo/protobuf/types"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import strings "strings"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	"errors"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	types "github.com/gogo/protobuf/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dme_proto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
 // AutoProvPolicy defines the automated provisioning policy
 type AutoProvPolicy struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key PolicyKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key PolicyKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Minimum number of clients within the auto deploy interval to trigger deployment
 	DeployClientCount uint32 `protobuf:"varint,3,opt,name=deploy_client_count,json=deployClientCount,proto3" json:"deploy_client_count,omitempty"`
 	// Number of intervals to check before triggering deployment
 	DeployIntervalCount uint32 `protobuf:"varint,4,opt,name=deploy_interval_count,json=deployIntervalCount,proto3" json:"deploy_interval_count,omitempty"`
 	// Allowed deployment locations
-	Cloudlets []*AutoProvCloudlet `protobuf:"bytes,5,rep,name=cloudlets" json:"cloudlets,omitempty"`
+	Cloudlets []*AutoProvCloudlet `protobuf:"bytes,5,rep,name=cloudlets,proto3" json:"cloudlets,omitempty"`
+	// Minimum number of active instances for High-Availability
+	MinActiveInstances uint32 `protobuf:"varint,6,opt,name=min_active_instances,json=minActiveInstances,proto3" json:"min_active_instances,omitempty"`
+	// Maximum number of instances (active or not)
+	MaxInstances uint32 `protobuf:"varint,7,opt,name=max_instances,json=maxInstances,proto3" json:"max_instances,omitempty"`
+	// Number of active clients for the undeploy interval below which trigers undeployment, 0 (default) disables auto undeploy
+	UndeployClientCount uint32 `protobuf:"varint,8,opt,name=undeploy_client_count,json=undeployClientCount,proto3" json:"undeploy_client_count,omitempty"`
+	// Number of intervals to check before triggering undeployment
+	UndeployIntervalCount uint32 `protobuf:"varint,9,opt,name=undeploy_interval_count,json=undeployIntervalCount,proto3" json:"undeploy_interval_count,omitempty"`
 }
 
-func (m *AutoProvPolicy) Reset()                    { *m = AutoProvPolicy{} }
-func (m *AutoProvPolicy) String() string            { return proto.CompactTextString(m) }
-func (*AutoProvPolicy) ProtoMessage()               {}
-func (*AutoProvPolicy) Descriptor() ([]byte, []int) { return fileDescriptorAutoprovpolicy, []int{0} }
+func (m *AutoProvPolicy) Reset()         { *m = AutoProvPolicy{} }
+func (m *AutoProvPolicy) String() string { return proto.CompactTextString(m) }
+func (*AutoProvPolicy) ProtoMessage()    {}
+func (*AutoProvPolicy) Descriptor() ([]byte, []int) {
+	return fileDescriptor_199b84e2b69e837c, []int{0}
+}
+func (m *AutoProvPolicy) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutoProvPolicy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutoProvPolicy.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutoProvPolicy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutoProvPolicy.Merge(m, src)
+}
+func (m *AutoProvPolicy) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutoProvPolicy) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutoProvPolicy.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutoProvPolicy proto.InternalMessageInfo
 
 // AutoProvCloudlet stores the potential cloudlet and location for DME lookup
 type AutoProvCloudlet struct {
 	// Cloudlet key
-	Key CloudletKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Cloudlet location
-	Loc distributed_match_engine.Loc `protobuf:"bytes,2,opt,name=loc" json:"loc"`
+	Loc dme_proto.Loc `protobuf:"bytes,2,opt,name=loc,proto3" json:"loc"`
 }
 
-func (m *AutoProvCloudlet) Reset()                    { *m = AutoProvCloudlet{} }
-func (m *AutoProvCloudlet) String() string            { return proto.CompactTextString(m) }
-func (*AutoProvCloudlet) ProtoMessage()               {}
-func (*AutoProvCloudlet) Descriptor() ([]byte, []int) { return fileDescriptorAutoprovpolicy, []int{1} }
+func (m *AutoProvCloudlet) Reset()         { *m = AutoProvCloudlet{} }
+func (m *AutoProvCloudlet) String() string { return proto.CompactTextString(m) }
+func (*AutoProvCloudlet) ProtoMessage()    {}
+func (*AutoProvCloudlet) Descriptor() ([]byte, []int) {
+	return fileDescriptor_199b84e2b69e837c, []int{1}
+}
+func (m *AutoProvCloudlet) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutoProvCloudlet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutoProvCloudlet.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutoProvCloudlet) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutoProvCloudlet.Merge(m, src)
+}
+func (m *AutoProvCloudlet) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutoProvCloudlet) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutoProvCloudlet.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutoProvCloudlet proto.InternalMessageInfo
 
 // AutoProvCount is used to send potential cloudlet and location counts from DME to Controller
 type AutoProvCount struct {
 	// Target app
-	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey" json:"app_key"`
+	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey,proto3" json:"app_key"`
 	// Target cloudlet
-	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
+	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey,proto3" json:"cloudlet_key"`
 	// FindCloudlet client count
 	Count uint64 `protobuf:"varint,3,opt,name=count,proto3" json:"count,omitempty"`
 	// Process count immediately
 	ProcessNow bool `protobuf:"varint,4,opt,name=process_now,json=processNow,proto3" json:"process_now,omitempty"`
 	// Immediately deploy to clusterinst
-	DeployNowKey ClusterInstKey `protobuf:"bytes,5,opt,name=deploy_now_key,json=deployNowKey" json:"deploy_now_key"`
+	DeployNowKey ClusterInstKey `protobuf:"bytes,5,opt,name=deploy_now_key,json=deployNowKey,proto3" json:"deploy_now_key"`
 }
 
-func (m *AutoProvCount) Reset()                    { *m = AutoProvCount{} }
-func (m *AutoProvCount) String() string            { return proto.CompactTextString(m) }
-func (*AutoProvCount) ProtoMessage()               {}
-func (*AutoProvCount) Descriptor() ([]byte, []int) { return fileDescriptorAutoprovpolicy, []int{2} }
+func (m *AutoProvCount) Reset()         { *m = AutoProvCount{} }
+func (m *AutoProvCount) String() string { return proto.CompactTextString(m) }
+func (*AutoProvCount) ProtoMessage()    {}
+func (*AutoProvCount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_199b84e2b69e837c, []int{2}
+}
+func (m *AutoProvCount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutoProvCount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutoProvCount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutoProvCount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutoProvCount.Merge(m, src)
+}
+func (m *AutoProvCount) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutoProvCount) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutoProvCount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutoProvCount proto.InternalMessageInfo
 
 // AutoProvCounts is used to send potential cloudlet and location counts from DME to Controller
 type AutoProvCounts struct {
 	// DME node name
 	DmeNodeName string `protobuf:"bytes,1,opt,name=dme_node_name,json=dmeNodeName,proto3" json:"dme_node_name,omitempty"`
 	// Timestamp when the metric was captured
-	Timestamp google_protobuf1.Timestamp `protobuf:"bytes,2,opt,name=timestamp" json:"timestamp"`
+	Timestamp types.Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp"`
 	// List of DmeCount from DME
-	Counts []*AutoProvCount `protobuf:"bytes,3,rep,name=counts" json:"counts,omitempty"`
+	Counts []*AutoProvCount `protobuf:"bytes,3,rep,name=counts,proto3" json:"counts,omitempty"`
 }
 
-func (m *AutoProvCounts) Reset()                    { *m = AutoProvCounts{} }
-func (m *AutoProvCounts) String() string            { return proto.CompactTextString(m) }
-func (*AutoProvCounts) ProtoMessage()               {}
-func (*AutoProvCounts) Descriptor() ([]byte, []int) { return fileDescriptorAutoprovpolicy, []int{3} }
+func (m *AutoProvCounts) Reset()         { *m = AutoProvCounts{} }
+func (m *AutoProvCounts) String() string { return proto.CompactTextString(m) }
+func (*AutoProvCounts) ProtoMessage()    {}
+func (*AutoProvCounts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_199b84e2b69e837c, []int{3}
+}
+func (m *AutoProvCounts) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutoProvCounts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutoProvCounts.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutoProvCounts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutoProvCounts.Merge(m, src)
+}
+func (m *AutoProvCounts) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutoProvCounts) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutoProvCounts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutoProvCounts proto.InternalMessageInfo
 
 // AutoProvPolicyCloudlet is used to add and remove Cloudlets from the Auto Provisioning Policy
 type AutoProvPolicyCloudlet struct {
 	// Unique policy identifier key
-	Key PolicyKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key PolicyKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Cloudlet identifier key
-	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
+	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey,proto3" json:"cloudlet_key"`
 }
 
 func (m *AutoProvPolicyCloudlet) Reset()         { *m = AutoProvPolicyCloudlet{} }
 func (m *AutoProvPolicyCloudlet) String() string { return proto.CompactTextString(m) }
 func (*AutoProvPolicyCloudlet) ProtoMessage()    {}
 func (*AutoProvPolicyCloudlet) Descriptor() ([]byte, []int) {
-	return fileDescriptorAutoprovpolicy, []int{4}
+	return fileDescriptor_199b84e2b69e837c, []int{4}
 }
+func (m *AutoProvPolicyCloudlet) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutoProvPolicyCloudlet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutoProvPolicyCloudlet.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutoProvPolicyCloudlet) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutoProvPolicyCloudlet.Merge(m, src)
+}
+func (m *AutoProvPolicyCloudlet) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutoProvPolicyCloudlet) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutoProvPolicyCloudlet.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutoProvPolicyCloudlet proto.InternalMessageInfo
+
+type AutoProvInfo struct {
+	// Fields are used for the Update API to specify which fields to apply
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
+	// Cloudlet Key
+	Key CloudletKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
+	// Id of client assigned by server (internal use only)
+	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
+	// failover result state
+	MaintenanceState MaintenanceState `protobuf:"varint,4,opt,name=maintenance_state,json=maintenanceState,proto3,enum=edgeproto.MaintenanceState" json:"maintenance_state,omitempty"`
+	// Failover actions done if any
+	Completed []string `protobuf:"bytes,5,rep,name=completed,proto3" json:"completed,omitempty"`
+	// Errors if any
+	Errors []string `protobuf:"bytes,6,rep,name=errors,proto3" json:"errors,omitempty"`
+}
+
+func (m *AutoProvInfo) Reset()         { *m = AutoProvInfo{} }
+func (m *AutoProvInfo) String() string { return proto.CompactTextString(m) }
+func (*AutoProvInfo) ProtoMessage()    {}
+func (*AutoProvInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_199b84e2b69e837c, []int{5}
+}
+func (m *AutoProvInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutoProvInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutoProvInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutoProvInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutoProvInfo.Merge(m, src)
+}
+func (m *AutoProvInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutoProvInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutoProvInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutoProvInfo proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*AutoProvPolicy)(nil), "edgeproto.AutoProvPolicy")
@@ -116,6 +322,90 @@ func init() {
 	proto.RegisterType((*AutoProvCount)(nil), "edgeproto.AutoProvCount")
 	proto.RegisterType((*AutoProvCounts)(nil), "edgeproto.AutoProvCounts")
 	proto.RegisterType((*AutoProvPolicyCloudlet)(nil), "edgeproto.AutoProvPolicyCloudlet")
+	proto.RegisterType((*AutoProvInfo)(nil), "edgeproto.AutoProvInfo")
+}
+
+func init() { proto.RegisterFile("autoprovpolicy.proto", fileDescriptor_199b84e2b69e837c) }
+
+var fileDescriptor_199b84e2b69e837c = []byte{
+	// 1229 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x4d, 0x6c, 0xdc, 0x44,
+	0x14, 0xce, 0x64, 0x93, 0x34, 0x3b, 0xf9, 0x51, 0xe2, 0x6e, 0xc3, 0x24, 0x0d, 0x9b, 0x60, 0xa4,
+	0x2a, 0x42, 0x1b, 0x3b, 0x4a, 0x55, 0x54, 0x22, 0x15, 0x94, 0xa4, 0x48, 0x44, 0x25, 0xa1, 0x72,
+	0xa1, 0x07, 0x0e, 0x58, 0xb3, 0xf6, 0x8b, 0x63, 0x6a, 0xcf, 0x58, 0xfe, 0xd9, 0xcd, 0x72, 0xaa,
+	0xb8, 0xc0, 0xb1, 0x82, 0x0b, 0xaa, 0x38, 0x80, 0xc4, 0x89, 0x13, 0xea, 0x09, 0x71, 0x42, 0x9c,
+	0x72, 0x01, 0x55, 0xe2, 0xc2, 0x09, 0x95, 0x94, 0x03, 0xea, 0xa9, 0x52, 0x37, 0x39, 0x23, 0x8f,
+	0xed, 0xb5, 0x77, 0xd9, 0xb4, 0x55, 0xc3, 0x65, 0x35, 0x33, 0xef, 0x7b, 0xf3, 0xbe, 0xf7, 0xcd,
+	0x7b, 0xcf, 0x8b, 0x2b, 0x34, 0x0a, 0xb9, 0xe7, 0xf3, 0x86, 0xc7, 0x1d, 0xdb, 0x68, 0x29, 0x9e,
+	0xcf, 0x43, 0x2e, 0x95, 0xc1, 0xb4, 0x40, 0x2c, 0xe7, 0xe6, 0x2d, 0xce, 0x2d, 0x07, 0x54, 0xea,
+	0xd9, 0x2a, 0x65, 0x8c, 0x87, 0x34, 0xb4, 0x39, 0x0b, 0x12, 0xe0, 0xdc, 0xb8, 0x0f, 0x41, 0xe4,
+	0x84, 0xe9, 0xee, 0xb2, 0x65, 0x87, 0x7b, 0x51, 0x5d, 0x31, 0xb8, 0xab, 0xba, 0xbc, 0x6e, 0x3b,
+	0xf1, 0x35, 0xfb, 0x6a, 0xfc, 0xbb, 0x6c, 0x38, 0x3c, 0x32, 0x55, 0x81, 0xb3, 0x80, 0x75, 0x16,
+	0xa9, 0x67, 0xc5, 0xe2, 0x16, 0x17, 0x4b, 0x35, 0x5e, 0xa5, 0xa7, 0xe7, 0x62, 0x72, 0x81, 0x41,
+	0x1d, 0x28, 0xb2, 0x9b, 0x9b, 0x14, 0x77, 0x39, 0x90, 0x85, 0x2d, 0x53, 0xcf, 0x4b, 0x97, 0xd3,
+	0x86, 0x13, 0x05, 0x21, 0xf8, 0x36, 0x0b, 0x32, 0xeb, 0xb8, 0xc1, 0x5d, 0x97, 0x67, 0x81, 0x36,
+	0x9f, 0x49, 0xd1, 0x5c, 0x76, 0x69, 0x68, 0xec, 0x2d, 0x03, 0xb3, 0x6c, 0x06, 0xaa, 0xe9, 0xc2,
+	0x72, 0x42, 0xcc, 0xe1, 0x46, 0x7a, 0xc9, 0x42, 0xaa, 0x89, 0xd8, 0xd5, 0xa3, 0x5d, 0x35, 0xb4,
+	0x5d, 0x08, 0x42, 0xea, 0xa6, 0x34, 0xe4, 0x6f, 0x87, 0xf0, 0xe4, 0x7a, 0x14, 0xf2, 0xeb, 0x3e,
+	0x6f, 0x5c, 0x17, 0xd4, 0xa5, 0x19, 0x3c, 0xb2, 0x6b, 0x83, 0x63, 0x06, 0x04, 0x2d, 0x96, 0x96,
+	0xca, 0x5a, 0xba, 0x93, 0x6a, 0xb8, 0x74, 0x0b, 0x5a, 0x64, 0x70, 0x11, 0x2d, 0x8d, 0xad, 0x56,
+	0x94, 0x8e, 0xf0, 0x4a, 0xe2, 0x77, 0x0d, 0x5a, 0x1b, 0x43, 0x07, 0x7f, 0x2e, 0x0c, 0x68, 0x31,
+	0x4c, 0x52, 0xf0, 0x59, 0x13, 0x3c, 0x87, 0xb7, 0x74, 0xc3, 0xb1, 0x81, 0x85, 0xba, 0xc1, 0x23,
+	0x16, 0x92, 0xd2, 0x22, 0x5a, 0x9a, 0xd0, 0xa6, 0x13, 0xd3, 0xa6, 0xb0, 0x6c, 0xc6, 0x06, 0xe9,
+	0x32, 0x3e, 0x97, 0xe2, 0x6d, 0x16, 0x82, 0xdf, 0xa0, 0x4e, 0xea, 0x31, 0x14, 0x7b, 0x6c, 0x0c,
+	0x7d, 0xde, 0x26, 0x48, 0x4b, 0xaf, 0xdc, 0x4a, 0x11, 0x89, 0xe7, 0x1b, 0xb8, 0x9c, 0xc9, 0x1c,
+	0x90, 0xe1, 0xc5, 0xd2, 0xd2, 0xd8, 0xea, 0xf9, 0x02, 0xbb, 0x2c, 0xbb, 0xcd, 0x14, 0xa3, 0xe5,
+	0x68, 0x69, 0x05, 0x57, 0x5c, 0x9b, 0xe9, 0xd4, 0x08, 0xed, 0x06, 0xe8, 0xf1, 0x53, 0x50, 0x66,
+	0x40, 0x40, 0x46, 0x04, 0x4b, 0xc9, 0xb5, 0xd9, 0xba, 0x30, 0x6d, 0x65, 0x16, 0xe9, 0x55, 0x3c,
+	0xe1, 0xd2, 0xfd, 0x02, 0xf4, 0x8c, 0x80, 0x8e, 0xbb, 0x74, 0x3f, 0x07, 0xad, 0xe2, 0x73, 0x11,
+	0xeb, 0x97, 0xfd, 0xa8, 0x00, 0x9f, 0xcd, 0x8c, 0xc5, 0xfc, 0x5f, 0xc7, 0x2f, 0x75, 0x7c, 0x7a,
+	0x14, 0x28, 0x0b, 0xaf, 0xce, 0x95, 0x5d, 0xd9, 0xaf, 0xd1, 0x7f, 0x9e, 0x10, 0xf4, 0xf8, 0x09,
+	0x41, 0xb7, 0xdb, 0x04, 0xdd, 0x69, 0x13, 0xf4, 0x55, 0x9b, 0xa0, 0xbb, 0x47, 0xe4, 0x02, 0xa3,
+	0x2e, 0x5c, 0xb9, 0x06, 0x2d, 0x65, 0x87, 0xba, 0x50, 0xa3, 0x9e, 0xb7, 0xcc, 0x7d, 0x4b, 0x1c,
+	0xbc, 0xe7, 0x5b, 0x94, 0xd9, 0x9f, 0x88, 0xf6, 0xb8, 0x77, 0x4c, 0xa6, 0x6e, 0x41, 0xeb, 0x4a,
+	0xf1, 0xec, 0x97, 0x63, 0x32, 0x96, 0xa9, 0x75, 0x0d, 0x5a, 0x72, 0x0b, 0x4f, 0xf5, 0x8a, 0x28,
+	0x29, 0x49, 0x31, 0x20, 0x51, 0x0c, 0x33, 0x05, 0xb9, 0x0b, 0x8e, 0xc5, 0x72, 0xb8, 0x84, 0x4b,
+	0x0e, 0x37, 0xd2, 0xe2, 0x79, 0x59, 0x31, 0xed, 0x20, 0xf4, 0xed, 0x7a, 0x14, 0x82, 0xa9, 0x8b,
+	0x22, 0xd6, 0x93, 0x22, 0x56, 0xde, 0xe5, 0x46, 0xe6, 0xe6, 0x70, 0x43, 0xbe, 0x3d, 0x88, 0x27,
+	0x3a, 0xb1, 0x85, 0x4e, 0x2b, 0xf8, 0x0c, 0xf5, 0x3c, 0x3d, 0x0f, 0x3e, 0x5d, 0x7c, 0x6b, 0xcf,
+	0xcb, 0xe3, 0x8e, 0x50, 0xb1, 0x93, 0xde, 0xc2, 0xe3, 0xd9, 0x8b, 0xeb, 0x79, 0x01, 0x3f, 0x9d,
+	0xf3, 0x98, 0x91, 0x1f, 0x49, 0x15, 0x3c, 0x9c, 0x17, 0xef, 0x90, 0x96, 0x6c, 0xa4, 0x05, 0x3c,
+	0xe6, 0xf9, 0xdc, 0x80, 0x20, 0xd0, 0x19, 0x6f, 0x8a, 0x32, 0x1d, 0xd5, 0x70, 0x7a, 0xb4, 0xc3,
+	0x9b, 0xd2, 0xdb, 0x78, 0x32, 0x7d, 0x4f, 0xc6, 0x9b, 0x22, 0xf2, 0xb0, 0x88, 0x3c, 0xdb, 0x15,
+	0x59, 0x0c, 0x81, 0xb8, 0x74, 0xf2, 0xe0, 0xe3, 0x89, 0xdb, 0x0e, 0x6f, 0xc6, 0xea, 0xff, 0x80,
+	0xf2, 0x0e, 0x15, 0x12, 0x04, 0x92, 0x8c, 0x27, 0x4c, 0x17, 0x74, 0xc6, 0x4d, 0xd0, 0xe3, 0x67,
+	0x16, 0x4a, 0x94, 0xb5, 0x31, 0xd3, 0x85, 0x1d, 0x6e, 0x42, 0xfc, 0xe0, 0xd2, 0x9b, 0xb8, 0xdc,
+	0xe9, 0xf5, 0x34, 0xe5, 0x39, 0x25, 0x99, 0x06, 0x4a, 0x36, 0x0d, 0x94, 0xf7, 0x33, 0x44, 0x1a,
+	0x39, 0x77, 0x91, 0x56, 0xf0, 0x88, 0xc8, 0x33, 0x20, 0x25, 0xd1, 0x52, 0xa4, 0x5f, 0x4b, 0xc5,
+	0x00, 0x2d, 0xc5, 0xad, 0x8d, 0xfe, 0xdc, 0x26, 0xe8, 0x71, 0x9b, 0x0c, 0xc8, 0x4f, 0x10, 0x9e,
+	0xe9, 0x1e, 0x2a, 0x9d, 0xba, 0xa9, 0x15, 0xeb, 0xe6, 0x99, 0x43, 0xe4, 0xb4, 0x4f, 0xb7, 0xf6,
+	0xf1, 0xdd, 0x23, 0xb2, 0xfb, 0x7c, 0x9d, 0x50, 0xcb, 0xfc, 0xae, 0x14, 0xee, 0x4c, 0x5c, 0x32,
+	0x8b, 0xf0, 0x2b, 0x5a, 0x8b, 0xfe, 0xf2, 0xd7, 0x83, 0x78, 0x3c, 0xcb, 0x7a, 0x8b, 0xed, 0xf2,
+	0x13, 0x07, 0xa9, 0x52, 0x1c, 0xa4, 0xcf, 0xd1, 0x3b, 0x17, 0x70, 0x99, 0xf1, 0xd0, 0xde, 0x6d,
+	0xe9, 0xb6, 0x29, 0x6a, 0xb0, 0xb4, 0x51, 0xfe, 0xe2, 0xde, 0xec, 0x30, 0xe3, 0x86, 0xeb, 0x69,
+	0xa3, 0x89, 0x6d, 0xcb, 0x94, 0xde, 0xc1, 0xd3, 0x2e, 0x8d, 0x67, 0x07, 0x8b, 0xc7, 0x90, 0x1e,
+	0x84, 0x34, 0x04, 0x51, 0x97, 0x93, 0x5d, 0x03, 0x71, 0x3b, 0xc7, 0xdc, 0x88, 0x21, 0xda, 0x94,
+	0xdb, 0x73, 0x22, 0xcd, 0xe3, 0xb2, 0xc1, 0x5d, 0xcf, 0x81, 0x10, 0x4c, 0x31, 0x52, 0xcb, 0x5a,
+	0x7e, 0x10, 0xe7, 0x05, 0xbe, 0xcf, 0xfd, 0x78, 0x4e, 0x8a, 0xbc, 0x92, 0xdd, 0xda, 0x7c, 0xef,
+	0x28, 0x7a, 0xd0, 0x26, 0xe8, 0xde, 0x31, 0x19, 0x62, 0x9c, 0xc1, 0xea, 0xaf, 0xa3, 0x78, 0xba,
+	0xbb, 0x28, 0xd6, 0x3d, 0x5b, 0xfa, 0x0d, 0xe1, 0xca, 0xa6, 0x0f, 0x34, 0x84, 0x9e, 0xaf, 0xd0,
+	0x6c, 0x9f, 0x7a, 0x4b, 0x4c, 0x73, 0xc5, 0x8e, 0xd7, 0xc4, 0x57, 0x5d, 0xfe, 0x0c, 0x3d, 0x6a,
+	0x93, 0x4b, 0x1a, 0x04, 0x3c, 0xf2, 0x0d, 0xb8, 0x0a, 0x0d, 0x70, 0xb8, 0x07, 0x7e, 0xe2, 0x50,
+	0x8b, 0x87, 0x38, 0x67, 0xdb, 0x94, 0x51, 0x0b, 0x6a, 0xbd, 0xef, 0x76, 0xff, 0x88, 0xa0, 0xc3,
+	0x23, 0x32, 0xbd, 0x6d, 0xb3, 0xb8, 0x79, 0x82, 0xda, 0x36, 0xdd, 0x17, 0x8b, 0xef, 0x8f, 0xc9,
+	0x54, 0x2f, 0xf8, 0xd3, 0xdf, 0xff, 0xfe, 0x72, 0xf0, 0xbc, 0x3c, 0xa3, 0x1a, 0x82, 0xb3, 0xda,
+	0xfd, 0x9f, 0x64, 0x0d, 0xbd, 0x26, 0x7d, 0x83, 0x70, 0xe5, 0x2a, 0xc4, 0x42, 0x9d, 0x2a, 0xa1,
+	0x0f, 0x5f, 0x38, 0x9f, 0x0e, 0x45, 0x53, 0xb0, 0xe8, 0x43, 0xf1, 0x3b, 0x84, 0x2b, 0x1f, 0x78,
+	0xe6, 0x69, 0x35, 0xff, 0xe8, 0x54, 0x92, 0x77, 0x68, 0x46, 0x82, 0x49, 0x7f, 0x9a, 0xd2, 0x8d,
+	0x3d, 0xde, 0x7c, 0x7e, 0x92, 0x27, 0x9b, 0xe4, 0x9b, 0x8f, 0xda, 0xe4, 0xe2, 0xd3, 0xc9, 0xde,
+	0xb4, 0xa1, 0xd9, 0x5f, 0xcd, 0x59, 0xb9, 0xa2, 0x06, 0x7b, 0xbc, 0xf9, 0x5f, 0x92, 0x2b, 0x48,
+	0xfa, 0x09, 0xe1, 0xd9, 0x75, 0xd3, 0x3c, 0x61, 0xde, 0xbd, 0x72, 0x22, 0xa5, 0x0c, 0xd2, 0x4f,
+	0x5a, 0xeb, 0x85, 0xa5, 0x3d, 0x38, 0x22, 0xa8, 0x23, 0xef, 0xa2, 0x7c, 0x5e, 0xa5, 0xa6, 0xd9,
+	0x43, 0x3b, 0x9b, 0x66, 0xb1, 0xc6, 0x3f, 0x22, 0x3c, 0xaf, 0x81, 0xcb, 0x1b, 0xf0, 0xbf, 0xf2,
+	0xaf, 0x9f, 0x8a, 0xbf, 0xe0, 0xbe, 0x20, 0xcf, 0xa9, 0xbe, 0x7b, 0x32, 0xf5, 0x8d, 0xf9, 0x83,
+	0xbf, 0xaa, 0x03, 0x07, 0x87, 0x55, 0x74, 0xff, 0xb0, 0x8a, 0x1e, 0x1c, 0x56, 0xd1, 0x9d, 0x87,
+	0xd5, 0x81, 0xfb, 0x0f, 0xab, 0x03, 0x7f, 0x3c, 0xac, 0x0e, 0xd4, 0x47, 0x04, 0x9f, 0x8b, 0xff,
+	0x06, 0x00, 0x00, 0xff, 0xff, 0x75, 0x1f, 0xcd, 0xfd, 0x36, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -126,8 +416,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for AutoProvPolicyApi service
-
+// AutoProvPolicyApiClient is the client API for AutoProvPolicyApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AutoProvPolicyApiClient interface {
 	// Create an Auto Provisioning Policy
 	CreateAutoProvPolicy(ctx context.Context, in *AutoProvPolicy, opts ...grpc.CallOption) (*Result, error)
@@ -153,7 +444,7 @@ func NewAutoProvPolicyApiClient(cc *grpc.ClientConn) AutoProvPolicyApiClient {
 
 func (c *autoProvPolicyApiClient) CreateAutoProvPolicy(ctx context.Context, in *AutoProvPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/CreateAutoProvPolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/CreateAutoProvPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +453,7 @@ func (c *autoProvPolicyApiClient) CreateAutoProvPolicy(ctx context.Context, in *
 
 func (c *autoProvPolicyApiClient) DeleteAutoProvPolicy(ctx context.Context, in *AutoProvPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/DeleteAutoProvPolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/DeleteAutoProvPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +462,7 @@ func (c *autoProvPolicyApiClient) DeleteAutoProvPolicy(ctx context.Context, in *
 
 func (c *autoProvPolicyApiClient) UpdateAutoProvPolicy(ctx context.Context, in *AutoProvPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/UpdateAutoProvPolicy", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/UpdateAutoProvPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +470,7 @@ func (c *autoProvPolicyApiClient) UpdateAutoProvPolicy(ctx context.Context, in *
 }
 
 func (c *autoProvPolicyApiClient) ShowAutoProvPolicy(ctx context.Context, in *AutoProvPolicy, opts ...grpc.CallOption) (AutoProvPolicyApi_ShowAutoProvPolicyClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AutoProvPolicyApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AutoProvPolicyApi/ShowAutoProvPolicy", opts...)
+	stream, err := c.cc.NewStream(ctx, &_AutoProvPolicyApi_serviceDesc.Streams[0], "/edgeproto.AutoProvPolicyApi/ShowAutoProvPolicy", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +503,7 @@ func (x *autoProvPolicyApiShowAutoProvPolicyClient) Recv() (*AutoProvPolicy, err
 
 func (c *autoProvPolicyApiClient) AddAutoProvPolicyCloudlet(ctx context.Context, in *AutoProvPolicyCloudlet, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/AddAutoProvPolicyCloudlet", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/AddAutoProvPolicyCloudlet", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -221,15 +512,14 @@ func (c *autoProvPolicyApiClient) AddAutoProvPolicyCloudlet(ctx context.Context,
 
 func (c *autoProvPolicyApiClient) RemoveAutoProvPolicyCloudlet(ctx context.Context, in *AutoProvPolicyCloudlet, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/RemoveAutoProvPolicyCloudlet", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AutoProvPolicyApi/RemoveAutoProvPolicyCloudlet", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for AutoProvPolicyApi service
-
+// AutoProvPolicyApiServer is the server API for AutoProvPolicyApi service.
 type AutoProvPolicyApiServer interface {
 	// Create an Auto Provisioning Policy
 	CreateAutoProvPolicy(context.Context, *AutoProvPolicy) (*Result, error)
@@ -243,6 +533,29 @@ type AutoProvPolicyApiServer interface {
 	AddAutoProvPolicyCloudlet(context.Context, *AutoProvPolicyCloudlet) (*Result, error)
 	// Remove a Cloudlet from the Auto Provisioning Policy
 	RemoveAutoProvPolicyCloudlet(context.Context, *AutoProvPolicyCloudlet) (*Result, error)
+}
+
+// UnimplementedAutoProvPolicyApiServer can be embedded to have forward compatible implementations.
+type UnimplementedAutoProvPolicyApiServer struct {
+}
+
+func (*UnimplementedAutoProvPolicyApiServer) CreateAutoProvPolicy(ctx context.Context, req *AutoProvPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAutoProvPolicy not implemented")
+}
+func (*UnimplementedAutoProvPolicyApiServer) DeleteAutoProvPolicy(ctx context.Context, req *AutoProvPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAutoProvPolicy not implemented")
+}
+func (*UnimplementedAutoProvPolicyApiServer) UpdateAutoProvPolicy(ctx context.Context, req *AutoProvPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutoProvPolicy not implemented")
+}
+func (*UnimplementedAutoProvPolicyApiServer) ShowAutoProvPolicy(req *AutoProvPolicy, srv AutoProvPolicyApi_ShowAutoProvPolicyServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowAutoProvPolicy not implemented")
+}
+func (*UnimplementedAutoProvPolicyApiServer) AddAutoProvPolicyCloudlet(ctx context.Context, req *AutoProvPolicyCloudlet) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddAutoProvPolicyCloudlet not implemented")
+}
+func (*UnimplementedAutoProvPolicyApiServer) RemoveAutoProvPolicyCloudlet(ctx context.Context, req *AutoProvPolicyCloudlet) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveAutoProvPolicyCloudlet not implemented")
 }
 
 func RegisterAutoProvPolicyApiServer(s *grpc.Server, srv AutoProvPolicyApiServer) {
@@ -398,7 +711,7 @@ var _AutoProvPolicyApi_serviceDesc = grpc.ServiceDesc{
 func (m *AutoProvPolicy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -406,62 +719,85 @@ func (m *AutoProvPolicy) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AutoProvPolicy) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutoProvPolicy) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
+	if m.UndeployIntervalCount != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.UndeployIntervalCount))
+		i--
+		dAtA[i] = 0x48
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if m.UndeployClientCount != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.UndeployClientCount))
+		i--
+		dAtA[i] = 0x40
 	}
-	i += n1
-	if m.DeployClientCount != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.DeployClientCount))
+	if m.MaxInstances != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.MaxInstances))
+		i--
+		dAtA[i] = 0x38
 	}
-	if m.DeployIntervalCount != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.DeployIntervalCount))
+	if m.MinActiveInstances != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.MinActiveInstances))
+		i--
+		dAtA[i] = 0x30
 	}
 	if len(m.Cloudlets) > 0 {
-		for _, msg := range m.Cloudlets {
-			dAtA[i] = 0x2a
-			i++
-			i = encodeVarintAutoprovpolicy(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
+		for iNdEx := len(m.Cloudlets) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Cloudlets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
 			}
-			i += n
+			i--
+			dAtA[i] = 0x2a
 		}
 	}
-	return i, nil
+	if m.DeployIntervalCount != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.DeployIntervalCount))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.DeployClientCount != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.DeployClientCount))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintAutoprovpolicy(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *AutoProvCloudlet) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -469,33 +805,42 @@ func (m *AutoProvCloudlet) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AutoProvCloudlet) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutoProvCloudlet) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.Key.Size()))
-	n2, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	{
+		size, err := m.Loc.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
 	}
-	i += n2
+	i--
 	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.Loc.Size()))
-	n3, err := m.Loc.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
 	}
-	i += n3
-	return i, nil
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *AutoProvCount) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -503,56 +848,67 @@ func (m *AutoProvCount) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AutoProvCount) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutoProvCount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.AppKey.Size()))
-	n4, err := m.AppKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	{
+		size, err := m.DeployNowKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
 	}
-	i += n4
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.CloudletKey.Size()))
-	n5, err := m.CloudletKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n5
-	if m.Count != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.Count))
-	}
+	i--
+	dAtA[i] = 0x2a
 	if m.ProcessNow {
-		dAtA[i] = 0x20
-		i++
+		i--
 		if m.ProcessNow {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
 		}
-		i++
+		i--
+		dAtA[i] = 0x20
 	}
-	dAtA[i] = 0x2a
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.DeployNowKey.Size()))
-	n6, err := m.DeployNowKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if m.Count != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.Count))
+		i--
+		dAtA[i] = 0x18
 	}
-	i += n6
-	return i, nil
+	{
+		size, err := m.CloudletKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.AppKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *AutoProvCounts) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -560,43 +916,53 @@ func (m *AutoProvCounts) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AutoProvCounts) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutoProvCounts) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.DmeNodeName) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(len(m.DmeNodeName)))
-		i += copy(dAtA[i:], m.DmeNodeName)
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.Timestamp.Size()))
-	n7, err := m.Timestamp.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n7
 	if len(m.Counts) > 0 {
-		for _, msg := range m.Counts {
-			dAtA[i] = 0x1a
-			i++
-			i = encodeVarintAutoprovpolicy(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
+		for iNdEx := len(m.Counts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Counts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
 			}
-			i += n
+			i--
+			dAtA[i] = 0x1a
 		}
 	}
-	return i, nil
+	{
+		size, err := m.Timestamp.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.DmeNodeName) > 0 {
+		i -= len(m.DmeNodeName)
+		copy(dAtA[i:], m.DmeNodeName)
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(len(m.DmeNodeName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *AutoProvPolicyCloudlet) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -604,37 +970,118 @@ func (m *AutoProvPolicyCloudlet) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AutoProvPolicyCloudlet) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutoProvPolicyCloudlet) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.Key.Size()))
-	n8, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	{
+		size, err := m.CloudletKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
 	}
-	i += n8
+	i--
 	dAtA[i] = 0x12
-	i++
-	i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.CloudletKey.Size()))
-	n9, err := m.CloudletKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
 	}
-	i += n9
-	return i, nil
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *AutoProvInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoProvInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutoProvInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Errors) > 0 {
+		for iNdEx := len(m.Errors) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Errors[iNdEx])
+			copy(dAtA[i:], m.Errors[iNdEx])
+			i = encodeVarintAutoprovpolicy(dAtA, i, uint64(len(m.Errors[iNdEx])))
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if len(m.Completed) > 0 {
+		for iNdEx := len(m.Completed) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Completed[iNdEx])
+			copy(dAtA[i:], m.Completed[iNdEx])
+			i = encodeVarintAutoprovpolicy(dAtA, i, uint64(len(m.Completed[iNdEx])))
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if m.MaintenanceState != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.MaintenanceState))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.NotifyId != 0 {
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(m.NotifyId))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAutoprovpolicy(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintAutoprovpolicy(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintAutoprovpolicy(dAtA []byte, offset int, v uint64) int {
+	offset -= sovAutoprovpolicy(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *AutoProvPolicy) Matches(o *AutoProvPolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -669,18 +1116,37 @@ func (m *AutoProvPolicy) Matches(o *AutoProvPolicy, fopts ...MatchOpt) bool {
 			}
 		}
 	}
+	if !opts.Filter || o.MinActiveInstances != 0 {
+		if o.MinActiveInstances != m.MinActiveInstances {
+			return false
+		}
+	}
+	if !opts.Filter || o.MaxInstances != 0 {
+		if o.MaxInstances != m.MaxInstances {
+			return false
+		}
+	}
+	if !opts.Filter || o.UndeployClientCount != 0 {
+		if o.UndeployClientCount != m.UndeployClientCount {
+			return false
+		}
+	}
+	if !opts.Filter || o.UndeployIntervalCount != 0 {
+		if o.UndeployIntervalCount != m.UndeployIntervalCount {
+			return false
+		}
+	}
 	return true
 }
 
 const AutoProvPolicyFieldKey = "2"
-const AutoProvPolicyFieldKeyDeveloper = "2.1"
+const AutoProvPolicyFieldKeyOrganization = "2.1"
 const AutoProvPolicyFieldKeyName = "2.2"
 const AutoProvPolicyFieldDeployClientCount = "3"
 const AutoProvPolicyFieldDeployIntervalCount = "4"
 const AutoProvPolicyFieldCloudlets = "5"
 const AutoProvPolicyFieldCloudletsKey = "5.1"
-const AutoProvPolicyFieldCloudletsKeyOperatorKey = "5.1.1"
-const AutoProvPolicyFieldCloudletsKeyOperatorKeyName = "5.1.1.1"
+const AutoProvPolicyFieldCloudletsKeyOrganization = "5.1.1"
 const AutoProvPolicyFieldCloudletsKeyName = "5.1.2"
 const AutoProvPolicyFieldCloudletsLoc = "5.2"
 const AutoProvPolicyFieldCloudletsLocLatitude = "5.2.1"
@@ -693,13 +1159,17 @@ const AutoProvPolicyFieldCloudletsLocSpeed = "5.2.7"
 const AutoProvPolicyFieldCloudletsLocTimestamp = "5.2.8"
 const AutoProvPolicyFieldCloudletsLocTimestampSeconds = "5.2.8.1"
 const AutoProvPolicyFieldCloudletsLocTimestampNanos = "5.2.8.2"
+const AutoProvPolicyFieldMinActiveInstances = "6"
+const AutoProvPolicyFieldMaxInstances = "7"
+const AutoProvPolicyFieldUndeployClientCount = "8"
+const AutoProvPolicyFieldUndeployIntervalCount = "9"
 
 var AutoProvPolicyAllFields = []string{
-	AutoProvPolicyFieldKeyDeveloper,
+	AutoProvPolicyFieldKeyOrganization,
 	AutoProvPolicyFieldKeyName,
 	AutoProvPolicyFieldDeployClientCount,
 	AutoProvPolicyFieldDeployIntervalCount,
-	AutoProvPolicyFieldCloudletsKeyOperatorKeyName,
+	AutoProvPolicyFieldCloudletsKeyOrganization,
 	AutoProvPolicyFieldCloudletsKeyName,
 	AutoProvPolicyFieldCloudletsLocLatitude,
 	AutoProvPolicyFieldCloudletsLocLongitude,
@@ -710,14 +1180,18 @@ var AutoProvPolicyAllFields = []string{
 	AutoProvPolicyFieldCloudletsLocSpeed,
 	AutoProvPolicyFieldCloudletsLocTimestampSeconds,
 	AutoProvPolicyFieldCloudletsLocTimestampNanos,
+	AutoProvPolicyFieldMinActiveInstances,
+	AutoProvPolicyFieldMaxInstances,
+	AutoProvPolicyFieldUndeployClientCount,
+	AutoProvPolicyFieldUndeployIntervalCount,
 }
 
 var AutoProvPolicyAllFieldsMap = map[string]struct{}{
-	AutoProvPolicyFieldKeyDeveloper:                   struct{}{},
+	AutoProvPolicyFieldKeyOrganization:                struct{}{},
 	AutoProvPolicyFieldKeyName:                        struct{}{},
 	AutoProvPolicyFieldDeployClientCount:              struct{}{},
 	AutoProvPolicyFieldDeployIntervalCount:            struct{}{},
-	AutoProvPolicyFieldCloudletsKeyOperatorKeyName:    struct{}{},
+	AutoProvPolicyFieldCloudletsKeyOrganization:       struct{}{},
 	AutoProvPolicyFieldCloudletsKeyName:               struct{}{},
 	AutoProvPolicyFieldCloudletsLocLatitude:           struct{}{},
 	AutoProvPolicyFieldCloudletsLocLongitude:          struct{}{},
@@ -728,14 +1202,18 @@ var AutoProvPolicyAllFieldsMap = map[string]struct{}{
 	AutoProvPolicyFieldCloudletsLocSpeed:              struct{}{},
 	AutoProvPolicyFieldCloudletsLocTimestampSeconds:   struct{}{},
 	AutoProvPolicyFieldCloudletsLocTimestampNanos:     struct{}{},
+	AutoProvPolicyFieldMinActiveInstances:             struct{}{},
+	AutoProvPolicyFieldMaxInstances:                   struct{}{},
+	AutoProvPolicyFieldUndeployClientCount:            struct{}{},
+	AutoProvPolicyFieldUndeployIntervalCount:          struct{}{},
 }
 
 var AutoProvPolicyAllFieldsStringMap = map[string]string{
-	AutoProvPolicyFieldKeyDeveloper:                   "Key Developer",
+	AutoProvPolicyFieldKeyOrganization:                "Key Organization",
 	AutoProvPolicyFieldKeyName:                        "Key Name",
 	AutoProvPolicyFieldDeployClientCount:              "Deploy Client Count",
 	AutoProvPolicyFieldDeployIntervalCount:            "Deploy Interval Count",
-	AutoProvPolicyFieldCloudletsKeyOperatorKeyName:    "Cloudlets Key Operator Key Name",
+	AutoProvPolicyFieldCloudletsKeyOrganization:       "Cloudlets Key Organization",
 	AutoProvPolicyFieldCloudletsKeyName:               "Cloudlets Key Name",
 	AutoProvPolicyFieldCloudletsLocLatitude:           "Cloudlets Loc Latitude",
 	AutoProvPolicyFieldCloudletsLocLongitude:          "Cloudlets Loc Longitude",
@@ -746,15 +1224,19 @@ var AutoProvPolicyAllFieldsStringMap = map[string]string{
 	AutoProvPolicyFieldCloudletsLocSpeed:              "Cloudlets Loc Speed",
 	AutoProvPolicyFieldCloudletsLocTimestampSeconds:   "Cloudlets Loc Timestamp Seconds",
 	AutoProvPolicyFieldCloudletsLocTimestampNanos:     "Cloudlets Loc Timestamp Nanos",
+	AutoProvPolicyFieldMinActiveInstances:             "Min Active Instances",
+	AutoProvPolicyFieldMaxInstances:                   "Max Instances",
+	AutoProvPolicyFieldUndeployClientCount:            "Undeploy Client Count",
+	AutoProvPolicyFieldUndeployIntervalCount:          "Undeploy Interval Count",
 }
 
 func (m *AutoProvPolicy) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, AutoProvPolicyFieldKey+".")
+	return strings.HasPrefix(s, AutoProvPolicyFieldKey+".") || s == AutoProvPolicyFieldKey
 }
 
 func (m *AutoProvPolicy) DiffFields(o *AutoProvPolicy, fields map[string]struct{}) {
-	if m.Key.Developer != o.Key.Developer {
-		fields[AutoProvPolicyFieldKeyDeveloper] = struct{}{}
+	if m.Key.Organization != o.Key.Organization {
+		fields[AutoProvPolicyFieldKeyOrganization] = struct{}{}
 		fields[AutoProvPolicyFieldKey] = struct{}{}
 	}
 	if m.Key.Name != o.Key.Name {
@@ -772,9 +1254,8 @@ func (m *AutoProvPolicy) DiffFields(o *AutoProvPolicy, fields map[string]struct{
 			fields[AutoProvPolicyFieldCloudlets] = struct{}{}
 		} else {
 			for i0 := 0; i0 < len(m.Cloudlets); i0++ {
-				if m.Cloudlets[i0].Key.OperatorKey.Name != o.Cloudlets[i0].Key.OperatorKey.Name {
-					fields[AutoProvPolicyFieldCloudletsKeyOperatorKeyName] = struct{}{}
-					fields[AutoProvPolicyFieldCloudletsKeyOperatorKey] = struct{}{}
+				if m.Cloudlets[i0].Key.Organization != o.Cloudlets[i0].Key.Organization {
+					fields[AutoProvPolicyFieldCloudletsKeyOrganization] = struct{}{}
 					fields[AutoProvPolicyFieldCloudletsKey] = struct{}{}
 					fields[AutoProvPolicyFieldCloudlets] = struct{}{}
 				}
@@ -841,6 +1322,62 @@ func (m *AutoProvPolicy) DiffFields(o *AutoProvPolicy, fields map[string]struct{
 	} else if (m.Cloudlets != nil && o.Cloudlets == nil) || (m.Cloudlets == nil && o.Cloudlets != nil) {
 		fields[AutoProvPolicyFieldCloudlets] = struct{}{}
 	}
+	if m.MinActiveInstances != o.MinActiveInstances {
+		fields[AutoProvPolicyFieldMinActiveInstances] = struct{}{}
+	}
+	if m.MaxInstances != o.MaxInstances {
+		fields[AutoProvPolicyFieldMaxInstances] = struct{}{}
+	}
+	if m.UndeployClientCount != o.UndeployClientCount {
+		fields[AutoProvPolicyFieldUndeployClientCount] = struct{}{}
+	}
+	if m.UndeployIntervalCount != o.UndeployIntervalCount {
+		fields[AutoProvPolicyFieldUndeployIntervalCount] = struct{}{}
+	}
+}
+
+var UpdateAutoProvPolicyFieldsMap = map[string]struct{}{
+	AutoProvPolicyFieldDeployClientCount:              struct{}{},
+	AutoProvPolicyFieldDeployIntervalCount:            struct{}{},
+	AutoProvPolicyFieldCloudlets:                      struct{}{},
+	AutoProvPolicyFieldCloudletsLoc:                   struct{}{},
+	AutoProvPolicyFieldCloudletsLocLatitude:           struct{}{},
+	AutoProvPolicyFieldCloudletsLocLongitude:          struct{}{},
+	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy: struct{}{},
+	AutoProvPolicyFieldCloudletsLocVerticalAccuracy:   struct{}{},
+	AutoProvPolicyFieldCloudletsLocAltitude:           struct{}{},
+	AutoProvPolicyFieldCloudletsLocCourse:             struct{}{},
+	AutoProvPolicyFieldCloudletsLocSpeed:              struct{}{},
+	AutoProvPolicyFieldCloudletsLocTimestamp:          struct{}{},
+	AutoProvPolicyFieldCloudletsLocTimestampSeconds:   struct{}{},
+	AutoProvPolicyFieldCloudletsLocTimestampNanos:     struct{}{},
+	AutoProvPolicyFieldMinActiveInstances:             struct{}{},
+	AutoProvPolicyFieldMaxInstances:                   struct{}{},
+	AutoProvPolicyFieldUndeployClientCount:            struct{}{},
+	AutoProvPolicyFieldUndeployIntervalCount:          struct{}{},
+}
+
+func (m *AutoProvPolicy) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateAutoProvPolicyFieldsMap[field]; !ok {
+			if _, ok := AutoProvPolicyAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, AutoProvPolicyAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *AutoProvPolicy) CopyInFields(src *AutoProvPolicy) int {
@@ -848,8 +1385,8 @@ func (m *AutoProvPolicy) CopyInFields(src *AutoProvPolicy) int {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			if m.Key.Developer != src.Key.Developer {
-				m.Key.Developer = src.Key.Developer
+			if m.Key.Organization != src.Key.Organization {
+				m.Key.Organization = src.Key.Organization
 				changed++
 			}
 		}
@@ -874,99 +1411,58 @@ func (m *AutoProvPolicy) CopyInFields(src *AutoProvPolicy) int {
 	}
 	if _, set := fmap["5"]; set {
 		if src.Cloudlets != nil {
-			if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
-				m.Cloudlets = make([]*AutoProvCloudlet, len(src.Cloudlets))
-				changed++
-			}
-			for i0 := 0; i0 < len(src.Cloudlets); i0++ {
-				m.Cloudlets[i0] = &AutoProvCloudlet{}
-				if _, set := fmap["5.1"]; set {
-					if _, set := fmap["5.1.1"]; set {
-						if _, set := fmap["5.1.1.1"]; set {
-							if m.Cloudlets[i0].Key.OperatorKey.Name != src.Cloudlets[i0].Key.OperatorKey.Name {
-								m.Cloudlets[i0].Key.OperatorKey.Name = src.Cloudlets[i0].Key.OperatorKey.Name
-								changed++
-							}
-						}
-					}
-					if _, set := fmap["5.1.2"]; set {
-						if m.Cloudlets[i0].Key.Name != src.Cloudlets[i0].Key.Name {
-							m.Cloudlets[i0].Key.Name = src.Cloudlets[i0].Key.Name
-							changed++
-						}
-					}
-				}
-				if _, set := fmap["5.2"]; set {
-					if _, set := fmap["5.2.1"]; set {
-						if m.Cloudlets[i0].Loc.Latitude != src.Cloudlets[i0].Loc.Latitude {
-							m.Cloudlets[i0].Loc.Latitude = src.Cloudlets[i0].Loc.Latitude
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.2"]; set {
-						if m.Cloudlets[i0].Loc.Longitude != src.Cloudlets[i0].Loc.Longitude {
-							m.Cloudlets[i0].Loc.Longitude = src.Cloudlets[i0].Loc.Longitude
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.3"]; set {
-						if m.Cloudlets[i0].Loc.HorizontalAccuracy != src.Cloudlets[i0].Loc.HorizontalAccuracy {
-							m.Cloudlets[i0].Loc.HorizontalAccuracy = src.Cloudlets[i0].Loc.HorizontalAccuracy
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.4"]; set {
-						if m.Cloudlets[i0].Loc.VerticalAccuracy != src.Cloudlets[i0].Loc.VerticalAccuracy {
-							m.Cloudlets[i0].Loc.VerticalAccuracy = src.Cloudlets[i0].Loc.VerticalAccuracy
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.5"]; set {
-						if m.Cloudlets[i0].Loc.Altitude != src.Cloudlets[i0].Loc.Altitude {
-							m.Cloudlets[i0].Loc.Altitude = src.Cloudlets[i0].Loc.Altitude
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.6"]; set {
-						if m.Cloudlets[i0].Loc.Course != src.Cloudlets[i0].Loc.Course {
-							m.Cloudlets[i0].Loc.Course = src.Cloudlets[i0].Loc.Course
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.7"]; set {
-						if m.Cloudlets[i0].Loc.Speed != src.Cloudlets[i0].Loc.Speed {
-							m.Cloudlets[i0].Loc.Speed = src.Cloudlets[i0].Loc.Speed
-							changed++
-						}
-					}
-					if _, set := fmap["5.2.8"]; set {
-						if src.Cloudlets[i0].Loc.Timestamp != nil {
-							m.Cloudlets[i0].Loc.Timestamp = &distributed_match_engine.Timestamp{}
-							if _, set := fmap["5.2.8.1"]; set {
-								if m.Cloudlets[i0].Loc.Timestamp.Seconds != src.Cloudlets[i0].Loc.Timestamp.Seconds {
-									m.Cloudlets[i0].Loc.Timestamp.Seconds = src.Cloudlets[i0].Loc.Timestamp.Seconds
-									changed++
-								}
-							}
-							if _, set := fmap["5.2.8.2"]; set {
-								if m.Cloudlets[i0].Loc.Timestamp.Nanos != src.Cloudlets[i0].Loc.Timestamp.Nanos {
-									m.Cloudlets[i0].Loc.Timestamp.Nanos = src.Cloudlets[i0].Loc.Timestamp.Nanos
-									changed++
-								}
-							}
-						} else if m.Cloudlets[i0].Loc.Timestamp != nil {
-							m.Cloudlets[i0].Loc.Timestamp = nil
-							changed++
-						}
-					}
-				}
-			}
+			m.Cloudlets = src.Cloudlets
+			changed++
 		} else if m.Cloudlets != nil {
 			m.Cloudlets = nil
 			changed++
 		}
 	}
+	if _, set := fmap["6"]; set {
+		if m.MinActiveInstances != src.MinActiveInstances {
+			m.MinActiveInstances = src.MinActiveInstances
+			changed++
+		}
+	}
+	if _, set := fmap["7"]; set {
+		if m.MaxInstances != src.MaxInstances {
+			m.MaxInstances = src.MaxInstances
+			changed++
+		}
+	}
+	if _, set := fmap["8"]; set {
+		if m.UndeployClientCount != src.UndeployClientCount {
+			m.UndeployClientCount = src.UndeployClientCount
+			changed++
+		}
+	}
+	if _, set := fmap["9"]; set {
+		if m.UndeployIntervalCount != src.UndeployIntervalCount {
+			m.UndeployIntervalCount = src.UndeployIntervalCount
+			changed++
+		}
+	}
 	return changed
+}
+
+func (m *AutoProvPolicy) DeepCopyIn(src *AutoProvPolicy) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.DeployClientCount = src.DeployClientCount
+	m.DeployIntervalCount = src.DeployIntervalCount
+	if src.Cloudlets != nil {
+		m.Cloudlets = make([]*AutoProvCloudlet, len(src.Cloudlets), len(src.Cloudlets))
+		for ii, s := range src.Cloudlets {
+			var tmp_s AutoProvCloudlet
+			tmp_s.DeepCopyIn(s)
+			m.Cloudlets[ii] = &tmp_s
+		}
+	} else {
+		m.Cloudlets = nil
+	}
+	m.MinActiveInstances = src.MinActiveInstances
+	m.MaxInstances = src.MaxInstances
+	m.UndeployClientCount = src.UndeployClientCount
+	m.UndeployIntervalCount = src.UndeployIntervalCount
 }
 
 func (s *AutoProvPolicy) HasFields() bool {
@@ -1121,15 +1617,24 @@ type AutoProvPolicyKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type AutoProvPolicyCacheData struct {
+	Obj    *AutoProvPolicy
+	ModRev int64
+}
+
 // AutoProvPolicyCache caches AutoProvPolicy objects in memory in a hash table
 // and keeps them in sync with the database.
 type AutoProvPolicyCache struct {
-	Objs        map[PolicyKey]*AutoProvPolicy
-	Mux         util.Mutex
-	List        map[PolicyKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy)
-	UpdatedCb   func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)
-	KeyWatchers map[PolicyKey][]*AutoProvPolicyKeyWatcher
+	Objs          map[PolicyKey]*AutoProvPolicyCacheData
+	Mux           util.Mutex
+	List          map[PolicyKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)
+	DeletedCbs    []func(ctx context.Context, old *AutoProvPolicy)
+	KeyWatchers   map[PolicyKey][]*AutoProvPolicyKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *PolicyKey)
+	DeletedKeyCbs []func(ctx context.Context, key *PolicyKey)
 }
 
 func NewAutoProvPolicyCache() *AutoProvPolicyCache {
@@ -1139,8 +1644,13 @@ func NewAutoProvPolicyCache() *AutoProvPolicyCache {
 }
 
 func InitAutoProvPolicyCache(cache *AutoProvPolicyCache) {
-	cache.Objs = make(map[PolicyKey]*AutoProvPolicy)
+	cache.Objs = make(map[PolicyKey]*AutoProvPolicyCacheData)
 	cache.KeyWatchers = make(map[PolicyKey][]*AutoProvPolicyKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *AutoProvPolicyCache) GetTypeString() string {
@@ -1148,11 +1658,17 @@ func (c *AutoProvPolicyCache) GetTypeString() string {
 }
 
 func (c *AutoProvPolicyCache) Get(key *PolicyKey, valbuf *AutoProvPolicy) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AutoProvPolicyCache) GetWithRev(key *PolicyKey, valbuf *AutoProvPolicy, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -1164,64 +1680,87 @@ func (c *AutoProvPolicyCache) HasKey(key *PolicyKey) bool {
 	return found
 }
 
-func (c *AutoProvPolicyCache) GetAllKeys(ctx context.Context, keys map[PolicyKey]context.Context) {
+func (c *AutoProvPolicyCache) GetAllKeys(ctx context.Context, cb func(key *PolicyKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *AutoProvPolicyCache) Update(ctx context.Context, in *AutoProvPolicy, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *AutoProvPolicy) (*AutoProvPolicy, bool) {
+func (c *AutoProvPolicyCache) Update(ctx context.Context, in *AutoProvPolicy, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AutoProvPolicy) (*AutoProvPolicy, bool) {
 		return in, true
 	})
 }
 
-func (c *AutoProvPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, rev int64, modFunc func(old *AutoProvPolicy) (new *AutoProvPolicy, changed bool)) {
+func (c *AutoProvPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey, modRev int64, modFunc func(old *AutoProvPolicy) (new *AutoProvPolicy, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *AutoProvPolicy
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &AutoProvPolicy{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &AutoProvPolicy{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AutoProvPolicy", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &AutoProvPolicy{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &AutoProvPolicyCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *AutoProvPolicyCache) Delete(ctx context.Context, in *AutoProvPolicy, rev int64) {
+func (c *AutoProvPolicyCache) Delete(ctx context.Context, in *AutoProvPolicy, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *AutoProvPolicy
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete AutoProvPolicy", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *AutoProvPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey]struct{}) {
-	notify := make(map[PolicyKey]*AutoProvPolicy)
+	notify := make(map[PolicyKey]*AutoProvPolicyCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1229,8 +1768,18 @@ func (c *AutoProvPolicyCache) Prune(ctx context.Context, validKeys map[PolicyKey
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1249,13 +1798,13 @@ func (c *AutoProvPolicyCache) Show(filter *AutoProvPolicy, cb func(ret *AutoProv
 	log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AutoProvPolicy", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare AutoProvPolicy", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1269,12 +1818,48 @@ func AutoProvPolicyGenericNotifyCb(fn func(key *PolicyKey, old *AutoProvPolicy))
 	}
 }
 
-func (c *AutoProvPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy)) {
-	c.NotifyCb = fn
+func (c *AutoProvPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64){fn}
 }
 
 func (c *AutoProvPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy){fn}
+}
+
+func (c *AutoProvPolicyCache) SetDeletedCb(fn func(ctx context.Context, old *AutoProvPolicy)) {
+	c.DeletedCbs = []func(ctx context.Context, old *AutoProvPolicy){fn}
+}
+
+func (c *AutoProvPolicyCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *PolicyKey){fn}
+}
+
+func (c *AutoProvPolicyCache) SetDeletedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *PolicyKey){fn}
+}
+
+func (c *AutoProvPolicyCache) AddUpdatedCb(fn func(ctx context.Context, old *AutoProvPolicy, new *AutoProvPolicy)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AutoProvPolicyCache) AddDeletedCb(fn func(ctx context.Context, old *AutoProvPolicy)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AutoProvPolicyCache) AddNotifyCb(fn func(ctx context.Context, obj *PolicyKey, old *AutoProvPolicy, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *AutoProvPolicyCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AutoProvPolicyCache) AddDeletedKeyCb(fn func(ctx context.Context, key *PolicyKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *AutoProvPolicyCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *AutoProvPolicyCache) WatchKey(key *PolicyKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1321,14 +1906,21 @@ func (c *AutoProvPolicyCache) TriggerKeyWatchers(ctx context.Context, key *Polic
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *AutoProvPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AutoProvPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := AutoProvPolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse AutoProvPolicy data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1336,11 +1928,11 @@ func (c *AutoProvPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, r
 	c.Mux.Unlock()
 }
 
-func (c *AutoProvPolicyCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *AutoProvPolicyCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := AutoProvPolicy{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	PolicyKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *AutoProvPolicyCache) SyncListStart(ctx context.Context) {
@@ -1348,7 +1940,7 @@ func (c *AutoProvPolicyCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *AutoProvPolicyCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[PolicyKey]*AutoProvPolicy)
+	deleted := make(map[PolicyKey]*AutoProvPolicyCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1358,12 +1950,116 @@ func (c *AutoProvPolicyCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *AutoProvPolicyCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if key.Organization == org {
+			return true
 		}
 	}
+	return false
+}
+
+type AutoProvPolicyByCloudletKey struct {
+	CloudletKeys map[CloudletKey]map[PolicyKey]struct{}
+	Mux          util.Mutex
+}
+
+func (s *AutoProvPolicyByCloudletKey) Init() {
+	s.CloudletKeys = make(map[CloudletKey]map[PolicyKey]struct{})
+}
+
+func (s *AutoProvPolicyByCloudletKey) Updated(old *AutoProvPolicy, new *AutoProvPolicy) map[CloudletKey]struct{} {
+	// the below func must be implemented by the user:
+	// AutoProvPolicy.GetCloudletKeys() map[CloudletKey]struct{}
+	oldCloudletKeys := make(map[CloudletKey]struct{})
+	if old != nil {
+		oldCloudletKeys = old.GetCloudletKeys()
+	}
+	newCloudletKeys := new.GetCloudletKeys()
+
+	for lookup, _ := range oldCloudletKeys {
+		if _, found := newCloudletKeys[lookup]; found {
+			delete(oldCloudletKeys, lookup)
+			delete(newCloudletKeys, lookup)
+		}
+	}
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	changed := make(map[CloudletKey]struct{})
+	for lookup, _ := range oldCloudletKeys {
+		// remove
+		s.removeRef(lookup, old.GetKeyVal())
+		changed[lookup] = struct{}{}
+	}
+	for lookup, _ := range newCloudletKeys {
+		// add
+		s.addRef(lookup, new.GetKeyVal())
+		changed[lookup] = struct{}{}
+	}
+	return changed
+}
+
+func (s *AutoProvPolicyByCloudletKey) Deleted(old *AutoProvPolicy) {
+	oldCloudletKeys := old.GetCloudletKeys()
+
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	for lookup, _ := range oldCloudletKeys {
+		s.removeRef(lookup, old.GetKeyVal())
+	}
+}
+
+func (s *AutoProvPolicyByCloudletKey) addRef(lookup CloudletKey, key PolicyKey) {
+	PolicyKeys, found := s.CloudletKeys[lookup]
+	if !found {
+		PolicyKeys = make(map[PolicyKey]struct{})
+		s.CloudletKeys[lookup] = PolicyKeys
+	}
+	PolicyKeys[key] = struct{}{}
+}
+
+func (s *AutoProvPolicyByCloudletKey) removeRef(lookup CloudletKey, key PolicyKey) {
+	PolicyKeys, found := s.CloudletKeys[lookup]
+	if found {
+		delete(PolicyKeys, key)
+		if len(PolicyKeys) == 0 {
+			delete(s.CloudletKeys, lookup)
+		}
+	}
+}
+
+func (s *AutoProvPolicyByCloudletKey) Find(lookup CloudletKey) []PolicyKey {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	list := []PolicyKey{}
+	for k, _ := range s.CloudletKeys[lookup] {
+		list = append(list, k)
+	}
+	return list
 }
 
 func (m *AutoProvPolicy) GetObjKey() objstore.ObjKey {
@@ -1402,8 +2098,8 @@ func (m *AutoProvPolicy) ValidateEnums() error {
 
 func (m *AutoProvCloudlet) CopyInFields(src *AutoProvCloudlet) int {
 	changed := 0
-	if m.Key.OperatorKey.Name != src.Key.OperatorKey.Name {
-		m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
 		changed++
 	}
 	if m.Key.Name != src.Key.Name {
@@ -1455,6 +2151,11 @@ func (m *AutoProvCloudlet) CopyInFields(src *AutoProvCloudlet) int {
 	return changed
 }
 
+func (m *AutoProvCloudlet) DeepCopyIn(src *AutoProvCloudlet) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.Loc = src.Loc
+}
+
 func (m *AutoProvCloudlet) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
@@ -1485,8 +2186,8 @@ func (m *AutoProvCloudlet) ValidateEnums() error {
 
 func (m *AutoProvCount) CopyInFields(src *AutoProvCount) int {
 	changed := 0
-	if m.AppKey.DeveloperKey.Name != src.AppKey.DeveloperKey.Name {
-		m.AppKey.DeveloperKey.Name = src.AppKey.DeveloperKey.Name
+	if m.AppKey.Organization != src.AppKey.Organization {
+		m.AppKey.Organization = src.AppKey.Organization
 		changed++
 	}
 	if m.AppKey.Name != src.AppKey.Name {
@@ -1497,8 +2198,8 @@ func (m *AutoProvCount) CopyInFields(src *AutoProvCount) int {
 		m.AppKey.Version = src.AppKey.Version
 		changed++
 	}
-	if m.CloudletKey.OperatorKey.Name != src.CloudletKey.OperatorKey.Name {
-		m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
+	if m.CloudletKey.Organization != src.CloudletKey.Organization {
+		m.CloudletKey.Organization = src.CloudletKey.Organization
 		changed++
 	}
 	if m.CloudletKey.Name != src.CloudletKey.Name {
@@ -1517,19 +2218,27 @@ func (m *AutoProvCount) CopyInFields(src *AutoProvCount) int {
 		m.DeployNowKey.ClusterKey.Name = src.DeployNowKey.ClusterKey.Name
 		changed++
 	}
-	if m.DeployNowKey.CloudletKey.OperatorKey.Name != src.DeployNowKey.CloudletKey.OperatorKey.Name {
-		m.DeployNowKey.CloudletKey.OperatorKey.Name = src.DeployNowKey.CloudletKey.OperatorKey.Name
+	if m.DeployNowKey.CloudletKey.Organization != src.DeployNowKey.CloudletKey.Organization {
+		m.DeployNowKey.CloudletKey.Organization = src.DeployNowKey.CloudletKey.Organization
 		changed++
 	}
 	if m.DeployNowKey.CloudletKey.Name != src.DeployNowKey.CloudletKey.Name {
 		m.DeployNowKey.CloudletKey.Name = src.DeployNowKey.CloudletKey.Name
 		changed++
 	}
-	if m.DeployNowKey.Developer != src.DeployNowKey.Developer {
-		m.DeployNowKey.Developer = src.DeployNowKey.Developer
+	if m.DeployNowKey.Organization != src.DeployNowKey.Organization {
+		m.DeployNowKey.Organization = src.DeployNowKey.Organization
 		changed++
 	}
 	return changed
+}
+
+func (m *AutoProvCount) DeepCopyIn(src *AutoProvCount) {
+	m.AppKey.DeepCopyIn(&src.AppKey)
+	m.CloudletKey.DeepCopyIn(&src.CloudletKey)
+	m.Count = src.Count
+	m.ProcessNow = src.ProcessNow
+	m.DeployNowKey.DeepCopyIn(&src.DeployNowKey)
 }
 
 // Helper method to check that enums have valid values
@@ -1561,62 +2270,28 @@ func (m *AutoProvCounts) CopyInFields(src *AutoProvCounts) int {
 		changed++
 	}
 	if src.Counts != nil {
-		if m.Counts == nil || len(m.Counts) != len(src.Counts) {
-			m.Counts = make([]*AutoProvCount, len(src.Counts))
-			changed++
-		}
-		for i0 := 0; i0 < len(src.Counts); i0++ {
-			m.Counts[i0] = &AutoProvCount{}
-			if m.Counts[i0].AppKey.DeveloperKey.Name != src.Counts[i0].AppKey.DeveloperKey.Name {
-				m.Counts[i0].AppKey.DeveloperKey.Name = src.Counts[i0].AppKey.DeveloperKey.Name
-				changed++
-			}
-			if m.Counts[i0].AppKey.Name != src.Counts[i0].AppKey.Name {
-				m.Counts[i0].AppKey.Name = src.Counts[i0].AppKey.Name
-				changed++
-			}
-			if m.Counts[i0].AppKey.Version != src.Counts[i0].AppKey.Version {
-				m.Counts[i0].AppKey.Version = src.Counts[i0].AppKey.Version
-				changed++
-			}
-			if m.Counts[i0].CloudletKey.OperatorKey.Name != src.Counts[i0].CloudletKey.OperatorKey.Name {
-				m.Counts[i0].CloudletKey.OperatorKey.Name = src.Counts[i0].CloudletKey.OperatorKey.Name
-				changed++
-			}
-			if m.Counts[i0].CloudletKey.Name != src.Counts[i0].CloudletKey.Name {
-				m.Counts[i0].CloudletKey.Name = src.Counts[i0].CloudletKey.Name
-				changed++
-			}
-			if m.Counts[i0].Count != src.Counts[i0].Count {
-				m.Counts[i0].Count = src.Counts[i0].Count
-				changed++
-			}
-			if m.Counts[i0].ProcessNow != src.Counts[i0].ProcessNow {
-				m.Counts[i0].ProcessNow = src.Counts[i0].ProcessNow
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.ClusterKey.Name != src.Counts[i0].DeployNowKey.ClusterKey.Name {
-				m.Counts[i0].DeployNowKey.ClusterKey.Name = src.Counts[i0].DeployNowKey.ClusterKey.Name
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.CloudletKey.OperatorKey.Name != src.Counts[i0].DeployNowKey.CloudletKey.OperatorKey.Name {
-				m.Counts[i0].DeployNowKey.CloudletKey.OperatorKey.Name = src.Counts[i0].DeployNowKey.CloudletKey.OperatorKey.Name
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.CloudletKey.Name != src.Counts[i0].DeployNowKey.CloudletKey.Name {
-				m.Counts[i0].DeployNowKey.CloudletKey.Name = src.Counts[i0].DeployNowKey.CloudletKey.Name
-				changed++
-			}
-			if m.Counts[i0].DeployNowKey.Developer != src.Counts[i0].DeployNowKey.Developer {
-				m.Counts[i0].DeployNowKey.Developer = src.Counts[i0].DeployNowKey.Developer
-				changed++
-			}
-		}
+		m.Counts = src.Counts
+		changed++
 	} else if m.Counts != nil {
 		m.Counts = nil
 		changed++
 	}
 	return changed
+}
+
+func (m *AutoProvCounts) DeepCopyIn(src *AutoProvCounts) {
+	m.DmeNodeName = src.DmeNodeName
+	m.Timestamp = src.Timestamp
+	if src.Counts != nil {
+		m.Counts = make([]*AutoProvCount, len(src.Counts), len(src.Counts))
+		for ii, s := range src.Counts {
+			var tmp_s AutoProvCount
+			tmp_s.DeepCopyIn(s)
+			m.Counts[ii] = &tmp_s
+		}
+	} else {
+		m.Counts = nil
+	}
 }
 
 // Helper method to check that enums have valid values
@@ -1631,16 +2306,16 @@ func (m *AutoProvCounts) ValidateEnums() error {
 
 func (m *AutoProvPolicyCloudlet) CopyInFields(src *AutoProvPolicyCloudlet) int {
 	changed := 0
-	if m.Key.Developer != src.Key.Developer {
-		m.Key.Developer = src.Key.Developer
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
 		changed++
 	}
 	if m.Key.Name != src.Key.Name {
 		m.Key.Name = src.Key.Name
 		changed++
 	}
-	if m.CloudletKey.OperatorKey.Name != src.CloudletKey.OperatorKey.Name {
-		m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
+	if m.CloudletKey.Organization != src.CloudletKey.Organization {
+		m.CloudletKey.Organization = src.CloudletKey.Organization
 		changed++
 	}
 	if m.CloudletKey.Name != src.CloudletKey.Name {
@@ -1648,6 +2323,11 @@ func (m *AutoProvPolicyCloudlet) CopyInFields(src *AutoProvPolicyCloudlet) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *AutoProvPolicyCloudlet) DeepCopyIn(src *AutoProvPolicyCloudlet) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.CloudletKey.DeepCopyIn(&src.CloudletKey)
 }
 
 func (m *AutoProvPolicyCloudlet) GetObjKey() objstore.ObjKey {
@@ -1681,7 +2361,792 @@ func (m *AutoProvPolicyCloudlet) ValidateEnums() error {
 	return nil
 }
 
+func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.NotifyId != 0 {
+		if o.NotifyId != m.NotifyId {
+			return false
+		}
+	}
+	if !opts.Filter || o.MaintenanceState != 0 {
+		if o.MaintenanceState != m.MaintenanceState {
+			return false
+		}
+	}
+	if !opts.Filter || o.Completed != nil {
+		if m.Completed == nil && o.Completed != nil || m.Completed != nil && o.Completed == nil {
+			return false
+		} else if m.Completed != nil && o.Completed != nil {
+			if len(m.Completed) != len(o.Completed) {
+				return false
+			}
+			for i := 0; i < len(m.Completed); i++ {
+				if o.Completed[i] != m.Completed[i] {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.Errors != nil {
+		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+			return false
+		} else if m.Errors != nil && o.Errors != nil {
+			if len(m.Errors) != len(o.Errors) {
+				return false
+			}
+			for i := 0; i < len(m.Errors); i++ {
+				if o.Errors[i] != m.Errors[i] {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+const AutoProvInfoFieldKey = "2"
+const AutoProvInfoFieldKeyOrganization = "2.1"
+const AutoProvInfoFieldKeyName = "2.2"
+const AutoProvInfoFieldNotifyId = "3"
+const AutoProvInfoFieldMaintenanceState = "4"
+const AutoProvInfoFieldCompleted = "5"
+const AutoProvInfoFieldErrors = "6"
+
+var AutoProvInfoAllFields = []string{
+	AutoProvInfoFieldKeyOrganization,
+	AutoProvInfoFieldKeyName,
+	AutoProvInfoFieldNotifyId,
+	AutoProvInfoFieldMaintenanceState,
+	AutoProvInfoFieldCompleted,
+	AutoProvInfoFieldErrors,
+}
+
+var AutoProvInfoAllFieldsMap = map[string]struct{}{
+	AutoProvInfoFieldKeyOrganization:  struct{}{},
+	AutoProvInfoFieldKeyName:          struct{}{},
+	AutoProvInfoFieldNotifyId:         struct{}{},
+	AutoProvInfoFieldMaintenanceState: struct{}{},
+	AutoProvInfoFieldCompleted:        struct{}{},
+	AutoProvInfoFieldErrors:           struct{}{},
+}
+
+var AutoProvInfoAllFieldsStringMap = map[string]string{
+	AutoProvInfoFieldKeyOrganization:  "Key Organization",
+	AutoProvInfoFieldKeyName:          "Key Name",
+	AutoProvInfoFieldNotifyId:         "Notify Id",
+	AutoProvInfoFieldMaintenanceState: "Maintenance State",
+	AutoProvInfoFieldCompleted:        "Completed",
+	AutoProvInfoFieldErrors:           "Errors",
+}
+
+func (m *AutoProvInfo) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, AutoProvInfoFieldKey+".") || s == AutoProvInfoFieldKey
+}
+
+func (m *AutoProvInfo) DiffFields(o *AutoProvInfo, fields map[string]struct{}) {
+	if m.Key.Organization != o.Key.Organization {
+		fields[AutoProvInfoFieldKeyOrganization] = struct{}{}
+		fields[AutoProvInfoFieldKey] = struct{}{}
+	}
+	if m.Key.Name != o.Key.Name {
+		fields[AutoProvInfoFieldKeyName] = struct{}{}
+		fields[AutoProvInfoFieldKey] = struct{}{}
+	}
+	if m.NotifyId != o.NotifyId {
+		fields[AutoProvInfoFieldNotifyId] = struct{}{}
+	}
+	if m.MaintenanceState != o.MaintenanceState {
+		fields[AutoProvInfoFieldMaintenanceState] = struct{}{}
+	}
+	if len(m.Completed) != len(o.Completed) {
+		fields[AutoProvInfoFieldCompleted] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Completed); i0++ {
+			if m.Completed[i0] != o.Completed[i0] {
+				fields[AutoProvInfoFieldCompleted] = struct{}{}
+				break
+			}
+		}
+	}
+	if len(m.Errors) != len(o.Errors) {
+		fields[AutoProvInfoFieldErrors] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Errors); i0++ {
+			if m.Errors[i0] != o.Errors[i0] {
+				fields[AutoProvInfoFieldErrors] = struct{}{}
+				break
+			}
+		}
+	}
+}
+
+func (m *AutoProvInfo) CopyInFields(src *AutoProvInfo) int {
+	changed := 0
+	fmap := MakeFieldMap(src.Fields)
+	if _, set := fmap["2"]; set {
+		if _, set := fmap["2.1"]; set {
+			if m.Key.Organization != src.Key.Organization {
+				m.Key.Organization = src.Key.Organization
+				changed++
+			}
+		}
+		if _, set := fmap["2.2"]; set {
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
+		}
+	}
+	if _, set := fmap["3"]; set {
+		if m.NotifyId != src.NotifyId {
+			m.NotifyId = src.NotifyId
+			changed++
+		}
+	}
+	if _, set := fmap["4"]; set {
+		if m.MaintenanceState != src.MaintenanceState {
+			m.MaintenanceState = src.MaintenanceState
+			changed++
+		}
+	}
+	if _, set := fmap["5"]; set {
+		if src.Completed != nil {
+			m.Completed = src.Completed
+			changed++
+		} else if m.Completed != nil {
+			m.Completed = nil
+			changed++
+		}
+	}
+	if _, set := fmap["6"]; set {
+		if src.Errors != nil {
+			m.Errors = src.Errors
+			changed++
+		} else if m.Errors != nil {
+			m.Errors = nil
+			changed++
+		}
+	}
+	return changed
+}
+
+func (m *AutoProvInfo) DeepCopyIn(src *AutoProvInfo) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.NotifyId = src.NotifyId
+	m.MaintenanceState = src.MaintenanceState
+	if src.Completed != nil {
+		m.Completed = make([]string, len(src.Completed), len(src.Completed))
+		for ii, s := range src.Completed {
+			m.Completed[ii] = s
+		}
+	} else {
+		m.Completed = nil
+	}
+	if src.Errors != nil {
+		m.Errors = make([]string, len(src.Errors), len(src.Errors))
+		for ii, s := range src.Errors {
+			m.Errors[ii] = s
+		}
+	} else {
+		m.Errors = nil
+	}
+}
+
+func (s *AutoProvInfo) HasFields() bool {
+	return true
+}
+
+type AutoProvInfoStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewAutoProvInfoStore(kvstore objstore.KVStore) AutoProvInfoStore {
+	return AutoProvInfoStore{kvstore: kvstore}
+}
+
+func (s *AutoProvInfoStore) Create(ctx context.Context, m *AutoProvInfo, wait func(int64)) (*Result, error) {
+	err := m.Validate(AutoProvInfoAllFieldsMap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AutoProvInfo", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AutoProvInfoStore) Update(ctx context.Context, m *AutoProvInfo, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AutoProvInfo", m.GetKey())
+	var vers int64 = 0
+	curBytes, vers, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	var cur AutoProvInfo
+	err = json.Unmarshal(curBytes, &cur)
+	if err != nil {
+		return nil, err
+	}
+	cur.CopyInFields(m)
+	// never save fields
+	cur.Fields = nil
+	val, err := json.Marshal(cur)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AutoProvInfoStore) Put(ctx context.Context, m *AutoProvInfo, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(AutoProvInfoAllFieldsMap)
+	m.Fields = nil
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AutoProvInfo", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AutoProvInfoStore) Delete(ctx context.Context, m *AutoProvInfo, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AutoProvInfo", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AutoProvInfoStore) LoadOne(key string) (*AutoProvInfo, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj AutoProvInfo
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AutoProvInfo data", "val", string(val), "err", err)
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *AutoProvInfoStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *AutoProvInfo) bool {
+	keystr := objstore.DbKeyString("AutoProvInfo", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *AutoProvInfoStore) STMPut(stm concurrency.STM, obj *AutoProvInfo, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("AutoProvInfo", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("AutoProvInfo json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *AutoProvInfoStore) STMDel(stm concurrency.STM, key *CloudletKey) {
+	keystr := objstore.DbKeyString("AutoProvInfo", key)
+	stm.Del(keystr)
+}
+
+type AutoProvInfoKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+type AutoProvInfoCacheData struct {
+	Obj    *AutoProvInfo
+	ModRev int64
+}
+
+// AutoProvInfoCache caches AutoProvInfo objects in memory in a hash table
+// and keeps them in sync with the database.
+type AutoProvInfoCache struct {
+	Objs          map[CloudletKey]*AutoProvInfoCacheData
+	Mux           util.Mutex
+	List          map[CloudletKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *AutoProvInfo, new *AutoProvInfo)
+	DeletedCbs    []func(ctx context.Context, old *AutoProvInfo)
+	KeyWatchers   map[CloudletKey][]*AutoProvInfoKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *CloudletKey)
+	DeletedKeyCbs []func(ctx context.Context, key *CloudletKey)
+}
+
+func NewAutoProvInfoCache() *AutoProvInfoCache {
+	cache := AutoProvInfoCache{}
+	InitAutoProvInfoCache(&cache)
+	return &cache
+}
+
+func InitAutoProvInfoCache(cache *AutoProvInfoCache) {
+	cache.Objs = make(map[CloudletKey]*AutoProvInfoCacheData)
+	cache.KeyWatchers = make(map[CloudletKey][]*AutoProvInfoKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
+}
+
+func (c *AutoProvInfoCache) GetTypeString() string {
+	return "AutoProvInfo"
+}
+
+func (c *AutoProvInfoCache) Get(key *CloudletKey, valbuf *AutoProvInfo) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AutoProvInfoCache) GetWithRev(key *CloudletKey, valbuf *AutoProvInfo, modRev *int64) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
+	}
+	return found
+}
+
+func (c *AutoProvInfoCache) HasKey(key *CloudletKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *AutoProvInfoCache) GetAllKeys(ctx context.Context, cb func(key *CloudletKey, modRev int64)) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
+	}
+}
+
+func (c *AutoProvInfoCache) Update(ctx context.Context, in *AutoProvInfo, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AutoProvInfo) (*AutoProvInfo, bool) {
+		return in, true
+	})
+}
+
+func (c *AutoProvInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey, modRev int64, modFunc func(old *AutoProvInfo) (new *AutoProvInfo, changed bool)) {
+	c.Mux.Lock()
+	var old *AutoProvInfo
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &AutoProvInfo{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
+	}
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &AutoProvInfo{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &AutoProvInfoCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *AutoProvInfoCache) Delete(ctx context.Context, in *AutoProvInfo, modRev int64) {
+	c.Mux.Lock()
+	var old *AutoProvInfo
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	c.Mux.Unlock()
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *AutoProvInfoCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
+	notify := make(map[CloudletKey]*AutoProvInfoCacheData)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *AutoProvInfoCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *AutoProvInfoCache) Flush(ctx context.Context, notifyId int64) {
+	log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AutoProvInfo", "notifyId", notifyId, "FlushAll", c.FlushAll)
+	flushed := make(map[CloudletKey]*AutoProvInfoCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if !c.FlushAll && val.Obj.NotifyId != notifyId {
+			continue
+		}
+		flushed[key] = c.Objs[key]
+		log.SpanLog(ctx, log.DebugLevelApi, "CacheFlush AutoProvInfo delete", "key", key)
+		delete(c.Objs, key)
+	}
+	c.Mux.Unlock()
+	if len(flushed) > 0 {
+		for key, old := range flushed {
+			for _, cb := range c.NotifyCbs {
+				if cb != nil {
+					cb(ctx, &key, old.Obj, old.ModRev)
+				}
+			}
+			for _, cb := range c.DeletedKeyCbs {
+				cb(ctx, &key)
+			}
+			if old.Obj != nil {
+				for _, cb := range c.DeletedCbs {
+					cb(ctx, old.Obj)
+				}
+			}
+			c.TriggerKeyWatchers(ctx, &key)
+		}
+	}
+}
+
+func (c *AutoProvInfoCache) Show(filter *AutoProvInfo, cb func(ret *AutoProvInfo) error) error {
+	log.DebugLog(log.DebugLevelApi, "Show AutoProvInfo", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare AutoProvInfo", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		log.DebugLog(log.DebugLevelApi, "Show AutoProvInfo", "obj", data.Obj)
+		err := cb(data.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AutoProvInfoGenericNotifyCb(fn func(key *CloudletKey, old *AutoProvInfo)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*CloudletKey), obj.(*AutoProvInfo))
+	}
+}
+
+func (c *AutoProvInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64){fn}
+}
+
+func (c *AutoProvInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *AutoProvInfo, new *AutoProvInfo)) {
+	c.UpdatedCbs = []func(ctx context.Context, old *AutoProvInfo, new *AutoProvInfo){fn}
+}
+
+func (c *AutoProvInfoCache) SetDeletedCb(fn func(ctx context.Context, old *AutoProvInfo)) {
+	c.DeletedCbs = []func(ctx context.Context, old *AutoProvInfo){fn}
+}
+
+func (c *AutoProvInfoCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+}
+
+func (c *AutoProvInfoCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+}
+
+func (c *AutoProvInfoCache) AddUpdatedCb(fn func(ctx context.Context, old *AutoProvInfo, new *AutoProvInfo)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AutoProvInfoCache) AddDeletedCb(fn func(ctx context.Context, old *AutoProvInfo)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AutoProvInfoCache) AddNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *AutoProvInfo, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *AutoProvInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AutoProvInfoCache) AddDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *AutoProvInfoCache) SetFlushAll() {
+	c.FlushAll = true
+}
+
+func (c *AutoProvInfoCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*AutoProvInfoKeyWatcher, 0)
+	}
+	watcher := AutoProvInfoKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching AutoProvInfo", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *AutoProvInfoCache) TriggerKeyWatchers(ctx context.Context, key *CloudletKey) {
+	watchers := make([]*AutoProvInfoKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AutoProvInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := AutoProvInfo{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse AutoProvInfo data", "val", string(val), "err", err)
+		return
+	}
+	c.Update(ctx, &obj, modRev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *AutoProvInfoCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := AutoProvInfo{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	CloudletKeyStringParse(keystr, obj.GetKey())
+	c.Delete(ctx, &obj, modRev)
+}
+
+func (c *AutoProvInfoCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[CloudletKey]struct{})
+}
+
+func (c *AutoProvInfoCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[CloudletKey]*AutoProvInfoCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *AutoProvInfoCache) UsesOrg(org string) bool {
+	return false
+}
+
+func (m *AutoProvInfo) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *AutoProvInfo) GetKey() *CloudletKey {
+	return &m.Key
+}
+
+func (m *AutoProvInfo) GetKeyVal() CloudletKey {
+	return m.Key
+}
+
+func (m *AutoProvInfo) SetKey(key *CloudletKey) {
+	m.Key = *key
+}
+
+func CmpSortAutoProvInfo(a AutoProvInfo, b AutoProvInfo) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *AutoProvInfo) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := MaintenanceState_name[int32(m.MaintenanceState)]; !ok {
+		return errors.New("invalid MaintenanceState")
+	}
+	return nil
+}
+
+func IgnoreAutoProvInfoFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "NotifyId")
+	}
+	return cmpopts.IgnoreFields(AutoProvInfo{}, names...)
+}
+
 func (m *AutoProvPolicy) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1704,10 +3169,25 @@ func (m *AutoProvPolicy) Size() (n int) {
 			n += 1 + l + sovAutoprovpolicy(uint64(l))
 		}
 	}
+	if m.MinActiveInstances != 0 {
+		n += 1 + sovAutoprovpolicy(uint64(m.MinActiveInstances))
+	}
+	if m.MaxInstances != 0 {
+		n += 1 + sovAutoprovpolicy(uint64(m.MaxInstances))
+	}
+	if m.UndeployClientCount != 0 {
+		n += 1 + sovAutoprovpolicy(uint64(m.UndeployClientCount))
+	}
+	if m.UndeployIntervalCount != 0 {
+		n += 1 + sovAutoprovpolicy(uint64(m.UndeployIntervalCount))
+	}
 	return n
 }
 
 func (m *AutoProvCloudlet) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -1718,6 +3198,9 @@ func (m *AutoProvCloudlet) Size() (n int) {
 }
 
 func (m *AutoProvCount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.AppKey.Size()
@@ -1736,6 +3219,9 @@ func (m *AutoProvCount) Size() (n int) {
 }
 
 func (m *AutoProvCounts) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.DmeNodeName)
@@ -1754,6 +3240,9 @@ func (m *AutoProvCounts) Size() (n int) {
 }
 
 func (m *AutoProvPolicyCloudlet) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -1763,15 +3252,43 @@ func (m *AutoProvPolicyCloudlet) Size() (n int) {
 	return n
 }
 
-func sovAutoprovpolicy(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
+func (m *AutoProvInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			l = len(s)
+			n += 1 + l + sovAutoprovpolicy(uint64(l))
+		}
+	}
+	l = m.Key.Size()
+	n += 1 + l + sovAutoprovpolicy(uint64(l))
+	if m.NotifyId != 0 {
+		n += 1 + sovAutoprovpolicy(uint64(m.NotifyId))
+	}
+	if m.MaintenanceState != 0 {
+		n += 1 + sovAutoprovpolicy(uint64(m.MaintenanceState))
+	}
+	if len(m.Completed) > 0 {
+		for _, s := range m.Completed {
+			l = len(s)
+			n += 1 + l + sovAutoprovpolicy(uint64(l))
+		}
+	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			l = len(s)
+			n += 1 + l + sovAutoprovpolicy(uint64(l))
 		}
 	}
 	return n
+}
+
+func sovAutoprovpolicy(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozAutoprovpolicy(x uint64) (n int) {
 	return sovAutoprovpolicy(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1791,7 +3308,7 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1819,7 +3336,7 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1829,6 +3346,9 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1848,7 +3368,7 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1857,6 +3377,9 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1878,7 +3401,7 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DeployClientCount |= (uint32(b) & 0x7F) << shift
+				m.DeployClientCount |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1897,7 +3420,7 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DeployIntervalCount |= (uint32(b) & 0x7F) << shift
+				m.DeployIntervalCount |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1916,7 +3439,7 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1925,6 +3448,9 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1933,6 +3459,82 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinActiveInstances", wireType)
+			}
+			m.MinActiveInstances = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MinActiveInstances |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxInstances", wireType)
+			}
+			m.MaxInstances = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxInstances |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UndeployClientCount", wireType)
+			}
+			m.UndeployClientCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UndeployClientCount |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UndeployIntervalCount", wireType)
+			}
+			m.UndeployIntervalCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UndeployIntervalCount |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAutoprovpolicy(dAtA[iNdEx:])
@@ -1940,6 +3542,9 @@ func (m *AutoProvPolicy) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -1969,7 +3574,7 @@ func (m *AutoProvCloudlet) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1997,7 +3602,7 @@ func (m *AutoProvCloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2006,6 +3611,9 @@ func (m *AutoProvCloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2027,7 +3635,7 @@ func (m *AutoProvCloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2036,6 +3644,9 @@ func (m *AutoProvCloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2050,6 +3661,9 @@ func (m *AutoProvCloudlet) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -2079,7 +3693,7 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2107,7 +3721,7 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2116,6 +3730,9 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2137,7 +3754,7 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2146,6 +3763,9 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2167,7 +3787,7 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Count |= (uint64(b) & 0x7F) << shift
+				m.Count |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2186,7 +3806,7 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2206,7 +3826,7 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2215,6 +3835,9 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2229,6 +3852,9 @@ func (m *AutoProvCount) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -2258,7 +3884,7 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2286,7 +3912,7 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2296,6 +3922,9 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2315,7 +3944,7 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2324,6 +3953,9 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2345,7 +3977,7 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2354,6 +3986,9 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2369,6 +4004,9 @@ func (m *AutoProvCounts) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -2398,7 +4036,7 @@ func (m *AutoProvPolicyCloudlet) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2426,7 +4064,7 @@ func (m *AutoProvPolicyCloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2435,6 +4073,9 @@ func (m *AutoProvPolicyCloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2456,7 +4097,7 @@ func (m *AutoProvPolicyCloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2465,6 +4106,9 @@ func (m *AutoProvPolicyCloudlet) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2479,6 +4123,229 @@ func (m *AutoProvPolicyCloudlet) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoProvInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAutoprovpolicy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoProvInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoProvInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NotifyId", wireType)
+			}
+			m.NotifyId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NotifyId |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaintenanceState", wireType)
+			}
+			m.MaintenanceState = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaintenanceState |= MaintenanceState(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Completed", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Completed = append(m.Completed, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAutoprovpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Errors = append(m.Errors, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAutoprovpolicy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAutoprovpolicy
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAutoprovpolicy
 			}
 			if (iNdEx + skippy) > l {
@@ -2496,6 +4363,7 @@ func (m *AutoProvPolicyCloudlet) Unmarshal(dAtA []byte) error {
 func skipAutoprovpolicy(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -2527,10 +4395,8 @@ func skipAutoprovpolicy(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -2547,120 +4413,34 @@ func skipAutoprovpolicy(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthAutoprovpolicy
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowAutoprovpolicy
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipAutoprovpolicy(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupAutoprovpolicy
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthAutoprovpolicy
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthAutoprovpolicy = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowAutoprovpolicy   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthAutoprovpolicy        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowAutoprovpolicy          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupAutoprovpolicy = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("autoprovpolicy.proto", fileDescriptorAutoprovpolicy) }
-
-var fileDescriptorAutoprovpolicy = []byte{
-	// 973 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x95, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xc7, 0x33, 0x71, 0x12, 0xe2, 0x71, 0x12, 0xd5, 0x8b, 0x1b, 0x4d, 0x9c, 0x92, 0x98, 0x95,
-	0x90, 0x22, 0xe4, 0xec, 0x46, 0x41, 0x48, 0x25, 0x52, 0x41, 0x89, 0xcb, 0xa1, 0x84, 0x84, 0x6a,
-	0xcb, 0x8f, 0xe3, 0x32, 0xde, 0x79, 0x75, 0x56, 0xec, 0xee, 0xac, 0x76, 0x67, 0xed, 0xfa, 0x56,
-	0x71, 0xe2, 0x88, 0xe0, 0x82, 0x22, 0x71, 0xe0, 0x3f, 0x40, 0x20, 0xee, 0xdc, 0xc8, 0x11, 0x89,
-	0x3b, 0x82, 0x88, 0x03, 0xea, 0xa9, 0xa2, 0xf6, 0x1d, 0xed, 0xec, 0xac, 0x7f, 0x04, 0xbb, 0xad,
-	0x12, 0xa4, 0x5e, 0xac, 0x99, 0x79, 0xef, 0xcd, 0xfb, 0xcc, 0xf7, 0xbd, 0xe7, 0xc5, 0x15, 0x9a,
-	0x08, 0x1e, 0x46, 0xbc, 0x1d, 0x72, 0xcf, 0x75, 0xba, 0x46, 0x18, 0x71, 0xc1, 0xb5, 0x22, 0xb0,
-	0x16, 0xc8, 0x65, 0xf5, 0x46, 0x8b, 0xf3, 0x96, 0x07, 0x26, 0x0d, 0x5d, 0x93, 0x06, 0x01, 0x17,
-	0x54, 0xb8, 0x3c, 0x88, 0x33, 0xc7, 0xea, 0x52, 0x04, 0x71, 0xe2, 0x09, 0xb5, 0xbb, 0xd9, 0x72,
-	0xc5, 0x49, 0xd2, 0x34, 0x1c, 0xee, 0x9b, 0x3e, 0x6f, 0xba, 0x5e, 0x7a, 0xcd, 0x03, 0x33, 0xfd,
-	0xdd, 0x76, 0x3c, 0x9e, 0x30, 0x53, 0xfa, 0xb5, 0x20, 0x18, 0x2c, 0x54, 0x64, 0xa5, 0xc5, 0x5b,
-	0x5c, 0x2e, 0xcd, 0x74, 0xa5, 0x4e, 0xaf, 0xa7, 0x70, 0xb1, 0x43, 0x3d, 0x18, 0xa5, 0xab, 0xae,
-	0xc8, 0xbb, 0x3c, 0xc8, 0xd3, 0x16, 0x69, 0x18, 0xaa, 0x65, 0xd9, 0xf1, 0x92, 0x58, 0x40, 0xe4,
-	0x06, 0x71, 0x6e, 0x6d, 0x3c, 0x13, 0x8a, 0x6d, 0xfb, 0x54, 0x38, 0x27, 0xdb, 0x10, 0xb4, 0xdc,
-	0x00, 0x4c, 0xe6, 0xc3, 0x76, 0x86, 0xe2, 0x71, 0x47, 0x5d, 0xb2, 0xa9, 0x54, 0x90, 0xbb, 0x66,
-	0x72, 0xdf, 0x14, 0xae, 0x0f, 0xb1, 0xa0, 0xbe, 0x4a, 0xac, 0xff, 0x32, 0x8b, 0x57, 0xf6, 0x13,
-	0xc1, 0xef, 0x46, 0xbc, 0x7d, 0x57, 0xc2, 0x6a, 0xab, 0x78, 0xe1, 0xbe, 0x0b, 0x1e, 0x8b, 0x09,
-	0xaa, 0x15, 0xb6, 0x8a, 0x96, 0xda, 0x69, 0x75, 0x5c, 0xf8, 0x0c, 0xba, 0x64, 0xb6, 0x86, 0xb6,
-	0x4a, 0xbb, 0x15, 0x63, 0x20, 0xb5, 0x91, 0xc5, 0x1d, 0x42, 0xf7, 0x60, 0xee, 0xec, 0xf7, 0xcd,
-	0x19, 0x2b, 0x75, 0xd3, 0x0c, 0xfc, 0x32, 0x83, 0xd0, 0xe3, 0x5d, 0xdb, 0xf1, 0x5c, 0x08, 0x84,
-	0xed, 0xf0, 0x24, 0x10, 0xa4, 0x50, 0x43, 0x5b, 0xcb, 0x56, 0x39, 0x33, 0x35, 0xa4, 0xa5, 0x91,
-	0x1a, 0xb4, 0x9b, 0xf8, 0xba, 0xf2, 0x77, 0x03, 0x01, 0x51, 0x9b, 0x7a, 0x2a, 0x62, 0x2e, 0x8d,
-	0x38, 0x98, 0xfb, 0xa2, 0x47, 0x90, 0xa5, 0xae, 0xbc, 0xa3, 0x3c, 0xb2, 0xc8, 0xb7, 0x70, 0x31,
-	0x17, 0x36, 0x26, 0xf3, 0xb5, 0xc2, 0x56, 0x69, 0x77, 0x7d, 0x84, 0x2e, 0x7f, 0x5d, 0x43, 0xf9,
-	0x58, 0x43, 0xef, 0xbd, 0xf7, 0xfe, 0x7e, 0x42, 0xd0, 0xe3, 0x27, 0x04, 0x3d, 0xec, 0x11, 0xf4,
-	0x65, 0x8f, 0xa0, 0x6f, 0x7a, 0x04, 0x7d, 0xd5, 0x27, 0xc5, 0xdc, 0x39, 0x3e, 0xed, 0x93, 0xd7,
-	0x02, 0xea, 0xc3, 0xad, 0x43, 0xe8, 0x1a, 0xc7, 0xd4, 0x87, 0x3a, 0x83, 0x36, 0x78, 0x3c, 0x84,
-	0x48, 0x1e, 0xdd, 0xce, 0x77, 0x7a, 0x17, 0x5f, 0xbb, 0x98, 0x4a, 0x33, 0x32, 0xc9, 0x90, 0x94,
-	0x6c, 0x75, 0x04, 0x2a, 0xf7, 0xb8, 0x20, 0xda, 0x9b, 0xb8, 0xe0, 0x71, 0x47, 0x49, 0xfc, 0x8a,
-	0xc1, 0xdc, 0x58, 0x44, 0x6e, 0x33, 0x11, 0xc0, 0x6c, 0x59, 0x6a, 0x3b, 0x2b, 0xb5, 0xf1, 0x3e,
-	0x77, 0xf2, 0x30, 0x8f, 0x3b, 0xfa, 0xc3, 0x59, 0xbc, 0x3c, 0xc8, 0x2d, 0x35, 0xd9, 0xc1, 0x2f,
-	0xd1, 0x30, 0xb4, 0x87, 0xc9, 0xcb, 0xa3, 0x8a, 0x84, 0xe1, 0x30, 0xef, 0x02, 0x95, 0x3b, 0xed,
-	0x1d, 0xbc, 0x94, 0xeb, 0x62, 0x0f, 0xcb, 0xfc, 0x74, 0xe6, 0x92, 0x33, 0x3c, 0xd2, 0x2a, 0x78,
-	0x7e, 0x58, 0xe2, 0x39, 0x2b, 0xdb, 0x68, 0x9b, 0xb8, 0x14, 0x46, 0xdc, 0x81, 0x38, 0xb6, 0x03,
-	0xde, 0x91, 0xc5, 0x5c, 0xb4, 0xb0, 0x3a, 0x3a, 0xe6, 0x1d, 0xed, 0x5d, 0xbc, 0xa2, 0xea, 0x1e,
-	0xf0, 0x8e, 0xcc, 0x3c, 0x2f, 0x33, 0xaf, 0x8d, 0x65, 0x96, 0xc3, 0x71, 0x27, 0x88, 0x47, 0x92,
-	0x2f, 0x65, 0x61, 0xc7, 0xbc, 0x73, 0x08, 0x5d, 0xfd, 0x7b, 0x34, 0xec, 0x63, 0x29, 0x41, 0xac,
-	0xe9, 0x78, 0x99, 0xf9, 0x60, 0x07, 0x9c, 0x81, 0x9d, 0x96, 0x50, 0x2a, 0x51, 0xb4, 0x4a, 0xcc,
-	0x87, 0x63, 0xce, 0x20, 0x2d, 0xa6, 0xf6, 0x36, 0x2e, 0x0e, 0x26, 0x42, 0x3d, 0xb9, 0x6a, 0x64,
-	0x33, 0x63, 0xe4, 0x33, 0x63, 0x7c, 0x98, 0x7b, 0xa8, 0xcc, 0xc3, 0x10, 0x6d, 0x07, 0x2f, 0xc8,
-	0x77, 0xc6, 0xa4, 0x20, 0x1b, 0x8f, 0x4c, 0x6a, 0xbc, 0xd4, 0xc1, 0x52, 0x7e, 0x7b, 0x8b, 0x3f,
-	0xf7, 0x08, 0x7a, 0xdc, 0x23, 0x33, 0xfa, 0x3f, 0x08, 0xaf, 0x8e, 0x8f, 0xde, 0xa0, 0x6f, 0xea,
-	0xa3, 0x7d, 0xf3, 0xcc, 0x51, 0xbb, 0x6a, 0xe9, 0xf6, 0xdc, 0xd3, 0x3e, 0x81, 0xe7, 0xea, 0xf2,
-	0x7a, 0x1e, 0x76, 0x6b, 0xe4, 0xca, 0x2c, 0x22, 0x35, 0x53, 0xc1, 0xa3, 0x31, 0xcb, 0x07, 0xea,
-	0x30, 0xf7, 0xda, 0x3d, 0x5d, 0xc4, 0xe5, 0xf1, 0x47, 0xef, 0x87, 0xae, 0xf6, 0x03, 0xc2, 0x95,
-	0x46, 0x04, 0x54, 0xc0, 0x85, 0xff, 0xa2, 0xb5, 0x09, 0x7a, 0x66, 0xa6, 0xea, 0x68, 0x47, 0x5b,
-	0xf2, 0xdf, 0x5c, 0xf7, 0x1e, 0xf5, 0xc8, 0xae, 0x05, 0x31, 0x4f, 0x22, 0x07, 0x06, 0xcc, 0x99,
-	0x7f, 0x7d, 0xdf, 0x49, 0x3f, 0x00, 0x47, 0x34, 0xa0, 0x2d, 0xa8, 0x8f, 0x3d, 0xea, 0xbc, 0x4f,
-	0xca, 0x47, 0x6e, 0x90, 0x36, 0x45, 0x5c, 0x3f, 0xa2, 0x0f, 0xe4, 0xe2, 0xf3, 0xdf, 0xfe, 0xfa,
-	0x7a, 0x76, 0x5d, 0x5f, 0x35, 0x1d, 0xc9, 0x65, 0x8e, 0x7f, 0x6f, 0xf6, 0xd0, 0xeb, 0xda, 0xb7,
-	0x08, 0x57, 0x6e, 0x83, 0x07, 0x57, 0x84, 0xfe, 0xe4, 0x72, 0xd0, 0x03, 0x3e, 0x26, 0x11, 0xa6,
-	0xf0, 0x7d, 0x14, 0x32, 0xfa, 0x82, 0xf9, 0x12, 0x89, 0x30, 0x81, 0xef, 0x3b, 0x84, 0xb5, 0x7b,
-	0x27, 0xbc, 0xf3, 0xfc, 0x74, 0xd3, 0x4d, 0xfa, 0xbd, 0x47, 0x3d, 0xb2, 0xf3, 0x74, 0xca, 0x8f,
-	0x5d, 0xe8, 0x4c, 0x60, 0x5c, 0xd3, 0x2b, 0x66, 0x7c, 0xc2, 0x3b, 0xff, 0x25, 0xdc, 0x41, 0xda,
-	0x8f, 0x08, 0xaf, 0xed, 0x33, 0x36, 0x65, 0x4c, 0x5f, 0x9d, 0xca, 0x93, 0xbb, 0x4c, 0x12, 0xf4,
-	0xd3, 0xcb, 0x09, 0x7a, 0xd6, 0x27, 0x48, 0x02, 0xd7, 0xf4, 0x75, 0x93, 0x32, 0x76, 0x81, 0x37,
-	0x1f, 0xcc, 0x54, 0xd9, 0x9f, 0x10, 0xbe, 0x61, 0x81, 0xcf, 0xdb, 0xf0, 0xbf, 0x82, 0xdb, 0x57,
-	0x04, 0xdf, 0xd4, 0xab, 0x66, 0xe4, 0x4f, 0xe7, 0x3e, 0xb8, 0x76, 0xf6, 0xe7, 0xc6, 0xcc, 0xd9,
-	0xf9, 0x06, 0xfa, 0xf5, 0x7c, 0x03, 0xfd, 0x71, 0xbe, 0x81, 0x9a, 0x0b, 0x12, 0xe0, 0x8d, 0x7f,
-	0x03, 0x00, 0x00, 0xff, 0xff, 0x95, 0x8d, 0x13, 0x81, 0xef, 0x09, 0x00, 0x00,
-}

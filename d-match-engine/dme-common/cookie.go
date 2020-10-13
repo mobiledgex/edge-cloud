@@ -13,6 +13,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
@@ -32,7 +33,7 @@ func InitVault(addr, region string) error {
 
 type CookieKey struct {
 	PeerIP       string `json:"peerip,omitempty"`
-	DevName      string `json:"devname,omitempty"`
+	OrgName      string `json:"orgname,omitempty"`
 	AppName      string `json:"appname,omitempty"`
 	AppVers      string `json:"appvers,omitempty"`
 	UniqueIdType string `json:"uniqueidtype,omitempty"`
@@ -59,7 +60,7 @@ func (d *dmeClaims) SetKid(kid int) {
 }
 
 // returns Peer IP or Error
-func VerifyCookie(cookie string) (*CookieKey, error) {
+func VerifyCookie(ctx context.Context, cookie string) (*CookieKey, error) {
 
 	claims := dmeClaims{}
 	token, err := Jwks.VerifyCookie(cookie, &claims)
@@ -77,10 +78,10 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 	}
 	// It is possible that the App was deleted after this cookie was issued.  If so, the cookie is no longer valid
 	// Note that returning an error from from here will result in an Unauthorized error code, rather than a NotFound
-	if !AppExists(claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers) {
-		return nil, fmt.Errorf("app not found -- developer: %s, app: %s, appvers: %s", claims.Key.DevName, claims.Key.AppName, claims.Key.AppVers)
+	if !AppExists(claims.Key.OrgName, claims.Key.AppName, claims.Key.AppVers) {
+		return nil, fmt.Errorf("app not found -- developer: %s, app: %s, appvers: %s", claims.Key.OrgName, claims.Key.AppName, claims.Key.AppVers)
 	}
-	log.DebugLog(log.DebugLevelDmereq, "verified cookie", "cookie", cookie, "expires", claims.ExpiresAt)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "verified cookie", "cookie", cookie, "expires", claims.ExpiresAt)
 	return claims.Key, nil
 }
 
@@ -109,7 +110,7 @@ func GenerateCookie(key *CookieKey, ctx context.Context, cookieExpiration *time.
 	}
 
 	cookie, err := Jwks.GenerateCookie(&claims)
-	log.DebugLog(log.DebugLevelDmereq, "generated cookie", "key", key, "cookie", cookie, "err", err)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "generated cookie", "key", key, "cookie", cookie, "err", err)
 	return cookie, err
 }
 
@@ -128,6 +129,8 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		allow = true
 	case *dme.FindCloudletRequest:
 		cookie = typ.SessionCookie
+	case *dme.PlatformFindCloudletRequest:
+		cookie = typ.SessionCookie
 	case *dme.VerifyLocationRequest:
 		cookie = typ.SessionCookie
 	case *dme.GetLocationRequest:
@@ -138,10 +141,12 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		cookie = typ.SessionCookie
 	case *dme.FqdnListRequest:
 		cookie = typ.SessionCookie
+	case *dme.AppOfficialFqdnRequest:
+		cookie = typ.SessionCookie
 	}
 	if !allow {
 		// Verify session cookie, add decoded CookieKey to context
-		ckey, err := VerifyCookie(cookie)
+		ckey, err := VerifyCookie(ctx, cookie)
 		if err != nil {
 			return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
@@ -164,10 +169,10 @@ func CookieFromContext(ctx context.Context) (ckey *CookieKey, ok bool) {
 }
 
 // PeerContext is a helper function to a context with peer info
-func PeerContext(ctx context.Context, ip string, port int) context.Context {
+func PeerContext(ctx context.Context, ip string, port int, span opentracing.Span) context.Context {
 	addr := net.TCPAddr{}
 	addr.IP = net.ParseIP(ip)
 	addr.Port = port
 	pr := peer.Peer{Addr: &addr}
-	return peer.NewContext(ctx, &pr)
+	return log.ContextWithSpan(peer.NewContext(ctx, &pr), span)
 }

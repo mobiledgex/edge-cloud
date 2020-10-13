@@ -1,5 +1,6 @@
 settings:
   shepherdmetricscollectioninterval: 5s
+  shepherdalertevaluationinterval: 15s
   shepherdhealthcheckretries: 3
   shepherdhealthcheckinterval: 5s
   autodeployintervalsec: 300
@@ -12,11 +13,12 @@ settings:
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
   loadbalancermaxportrange: 50
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  cloudletmaintenancetimeout: 5m
+  updatevmpooltimeout: 20m0s
+
 flavors:
-
-operators:
-
-developers:
 
 cloudlets:
 

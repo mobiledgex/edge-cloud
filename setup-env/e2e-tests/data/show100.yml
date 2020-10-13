@@ -1,5 +1,6 @@
 settings:
   shepherdmetricscollectioninterval: 5s
+  shepherdalertevaluationinterval: 15s
   shepherdhealthcheckretries: 3
   shepherdhealthcheckinterval: 5s
   autodeployintervalsec: 300
@@ -12,6 +13,10 @@ settings:
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
   loadbalancermaxportrange: 100
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  cloudletmaintenancetimeout: 5m
+  updatevmpooltimeout: 20m0s
 flavors:
 - key:
     name: x1.tiny
@@ -42,8 +47,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-35
   flavor:
     name: x1.small
@@ -53,8 +57,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-39
   flavor:
     name: x1.small
@@ -64,8 +67,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-7
   flavor:
     name: x1.small
@@ -75,8 +77,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-13
   flavor:
     name: x1.small
@@ -86,8 +87,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-19
   flavor:
     name: x1.small
@@ -97,8 +97,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-21
   flavor:
     name: x1.small
@@ -108,8 +107,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-28
   flavor:
     name: x1.small
@@ -119,8 +117,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-33
   flavor:
     name: x1.small
@@ -130,8 +127,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-52
   flavor:
     name: x1.small
@@ -141,8 +137,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-65
   flavor:
     name: x1.small
@@ -152,8 +147,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-10
   flavor:
     name: x1.small
@@ -163,8 +157,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-21
   flavor:
     name: x1.small
@@ -174,8 +167,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-64
   flavor:
     name: x1.small
@@ -185,8 +177,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-64
   flavor:
     name: x1.small
@@ -196,8 +187,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-85
   flavor:
     name: x1.small
@@ -207,8 +197,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-30
   flavor:
     name: x1.small
@@ -218,8 +207,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-46
   flavor:
     name: x1.small
@@ -229,8 +217,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-49
   flavor:
     name: x1.small
@@ -240,8 +227,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-76
   flavor:
     name: x1.small
@@ -251,8 +237,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-72
   flavor:
     name: x1.small
@@ -262,8 +247,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-94
   flavor:
     name: x1.small
@@ -273,8 +257,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-1
   flavor:
     name: x1.small
@@ -284,8 +267,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-15
   flavor:
     name: x1.small
@@ -295,8 +277,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-33
   flavor:
     name: x1.small
@@ -306,8 +287,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-52
   flavor:
     name: x1.small
@@ -317,8 +297,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-57
   flavor:
     name: x1.small
@@ -328,8 +307,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-58
   flavor:
     name: x1.small
@@ -339,8 +317,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-75
   flavor:
     name: x1.small
@@ -350,8 +327,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-77
   flavor:
     name: x1.small
@@ -361,8 +337,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-79
   flavor:
     name: x1.small
@@ -372,8 +347,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-23
   flavor:
     name: x1.small
@@ -383,8 +357,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-36
   flavor:
     name: x1.small
@@ -394,8 +367,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-43
   flavor:
     name: x1.small
@@ -405,8 +377,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-86
   flavor:
     name: x1.small
@@ -416,8 +387,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-66
   flavor:
     name: x1.small
@@ -427,8 +397,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-69
   flavor:
     name: x1.small
@@ -438,8 +407,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-2
   flavor:
     name: x1.small
@@ -449,8 +417,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-18
   flavor:
     name: x1.small
@@ -460,8 +427,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-32
   flavor:
     name: x1.small
@@ -471,8 +437,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-48
   flavor:
     name: x1.small
@@ -482,8 +447,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-51
   flavor:
     name: x1.small
@@ -493,8 +457,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-62
   flavor:
     name: x1.small
@@ -504,8 +467,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-69
   flavor:
     name: x1.small
@@ -515,8 +477,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-80
   flavor:
     name: x1.small
@@ -526,8 +487,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-80
   flavor:
     name: x1.small
@@ -537,8 +497,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-6
   flavor:
     name: x1.small
@@ -548,8 +507,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-18
   flavor:
     name: x1.small
@@ -559,8 +517,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-49
   flavor:
     name: x1.small
@@ -570,8 +527,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-67
   flavor:
     name: x1.small
@@ -581,8 +537,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-100
   flavor:
     name: x1.small
@@ -592,8 +547,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-13
   flavor:
     name: x1.small
@@ -603,8 +557,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-20
   flavor:
     name: x1.small
@@ -614,8 +567,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-83
   flavor:
     name: x1.small
@@ -625,8 +577,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-98
   flavor:
     name: x1.small
@@ -636,8 +587,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-4
   flavor:
     name: x1.small
@@ -647,8 +597,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-19
   flavor:
     name: x1.small
@@ -658,8 +607,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-38
   flavor:
     name: x1.small
@@ -669,8 +617,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-42
   flavor:
     name: x1.small
@@ -680,8 +627,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-53
   flavor:
     name: x1.small
@@ -691,8 +637,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-90
   flavor:
     name: x1.small
@@ -702,8 +647,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-95
   flavor:
     name: x1.small
@@ -713,8 +657,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-4
   flavor:
     name: x1.small
@@ -724,8 +667,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-25
   flavor:
     name: x1.small
@@ -735,8 +677,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-44
   flavor:
     name: x1.small
@@ -746,8 +687,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-54
   flavor:
     name: x1.small
@@ -757,8 +697,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-59
   flavor:
     name: x1.small
@@ -768,8 +707,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-78
   flavor:
     name: x1.small
@@ -779,8 +717,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-30
   flavor:
     name: x1.small
@@ -790,8 +727,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-31
   flavor:
     name: x1.small
@@ -801,8 +737,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-7
   flavor:
     name: x1.small
@@ -812,8 +747,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-9
   flavor:
     name: x1.small
@@ -823,8 +757,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-9
   flavor:
     name: x1.small
@@ -834,8 +767,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-20
   flavor:
     name: x1.small
@@ -845,8 +777,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-23
   flavor:
     name: x1.small
@@ -856,8 +787,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-29
   flavor:
     name: x1.small
@@ -867,8 +797,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-82
   flavor:
     name: x1.small
@@ -878,8 +807,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-41
   flavor:
     name: x1.small
@@ -889,8 +817,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-42
   flavor:
     name: x1.small
@@ -900,8 +827,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-57
   flavor:
     name: x1.small
@@ -911,8 +837,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-68
   flavor:
     name: x1.small
@@ -922,8 +847,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-71
   flavor:
     name: x1.small
@@ -933,8 +857,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-79
   flavor:
     name: x1.small
@@ -944,8 +867,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-45
   flavor:
     name: x1.small
@@ -955,8 +877,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-55
   flavor:
     name: x1.small
@@ -966,8 +887,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-55
   flavor:
     name: x1.small
@@ -977,8 +897,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-65
   flavor:
     name: x1.small
@@ -988,8 +907,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-77
   flavor:
     name: x1.small
@@ -999,8 +917,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-6
   flavor:
     name: x1.small
@@ -1010,8 +927,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-22
   flavor:
     name: x1.small
@@ -1021,8 +937,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-67
   flavor:
     name: x1.small
@@ -1032,8 +947,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-84
   flavor:
     name: x1.small
@@ -1043,8 +957,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-93
   flavor:
     name: x1.small
@@ -1054,8 +967,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-56
   flavor:
     name: x1.small
@@ -1065,8 +977,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-56
   flavor:
     name: x1.small
@@ -1076,8 +987,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-5
   flavor:
     name: x1.small
@@ -1087,8 +997,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-12
   flavor:
     name: x1.small
@@ -1098,8 +1007,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-14
   flavor:
     name: x1.small
@@ -1109,8 +1017,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-14
   flavor:
     name: x1.small
@@ -1120,8 +1027,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-22
   flavor:
     name: x1.small
@@ -1131,8 +1037,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-25
   flavor:
     name: x1.small
@@ -1142,8 +1047,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-61
   flavor:
     name: x1.small
@@ -1153,8 +1057,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-74
   flavor:
     name: x1.small
@@ -1164,8 +1067,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-88
   flavor:
     name: x1.small
@@ -1175,8 +1077,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-97
   flavor:
     name: x1.small
@@ -1186,8 +1087,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-2
   flavor:
     name: x1.small
@@ -1197,8 +1097,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-26
   flavor:
     name: x1.small
@@ -1208,8 +1107,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-29
   flavor:
     name: x1.small
@@ -1219,8 +1117,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-63
   flavor:
     name: x1.small
@@ -1230,8 +1127,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-60
   flavor:
     name: x1.small
@@ -1241,8 +1137,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-68
   flavor:
     name: x1.small
@@ -1252,8 +1147,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-3
   flavor:
     name: x1.small
@@ -1263,8 +1157,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-34
   flavor:
     name: x1.small
@@ -1274,8 +1167,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-35
   flavor:
     name: x1.small
@@ -1285,8 +1177,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-38
   flavor:
     name: x1.small
@@ -1296,8 +1187,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-45
   flavor:
     name: x1.small
@@ -1307,8 +1197,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-51
   flavor:
     name: x1.small
@@ -1318,8 +1207,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-34
   flavor:
     name: x1.small
@@ -1329,8 +1217,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-40
   flavor:
     name: x1.small
@@ -1340,8 +1227,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-63
   flavor:
     name: x1.small
@@ -1351,8 +1237,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-5
   flavor:
     name: x1.small
@@ -1362,8 +1247,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-54
   flavor:
     name: x1.small
@@ -1373,8 +1257,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-75
   flavor:
     name: x1.small
@@ -1384,8 +1267,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-83
   flavor:
     name: x1.small
@@ -1395,8 +1277,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-86
   flavor:
     name: x1.small
@@ -1406,8 +1287,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-90
   flavor:
     name: x1.small
@@ -1417,8 +1297,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-81
   flavor:
     name: x1.small
@@ -1428,8 +1307,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-89
   flavor:
     name: x1.small
@@ -1439,8 +1317,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-39
   flavor:
     name: x1.small
@@ -1450,8 +1327,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-46
   flavor:
     name: x1.small
@@ -1461,8 +1337,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-58
   flavor:
     name: x1.small
@@ -1472,8 +1347,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-70
   flavor:
     name: x1.small
@@ -1483,8 +1357,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-71
   flavor:
     name: x1.small
@@ -1494,8 +1367,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-78
   flavor:
     name: x1.small
@@ -1505,8 +1377,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-96
   flavor:
     name: x1.small
@@ -1516,8 +1387,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-16
   flavor:
     name: x1.small
@@ -1527,8 +1397,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-82
   flavor:
     name: x1.small
@@ -1538,8 +1407,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-10
   flavor:
     name: x1.small
@@ -1549,8 +1417,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-11
   flavor:
     name: x1.small
@@ -1560,8 +1427,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-48
   flavor:
     name: x1.small
@@ -1571,8 +1437,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-81
   flavor:
     name: x1.small
@@ -1582,8 +1447,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-84
   flavor:
     name: x1.small
@@ -1593,8 +1457,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-93
   flavor:
     name: x1.small
@@ -1604,8 +1467,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-24
   flavor:
     name: x1.small
@@ -1615,8 +1477,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-98
   flavor:
     name: x1.small
@@ -1626,8 +1487,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-15
   flavor:
     name: x1.small
@@ -1637,8 +1497,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-31
   flavor:
     name: x1.small
@@ -1648,8 +1507,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-50
   flavor:
     name: x1.small
@@ -1659,8 +1517,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-59
   flavor:
     name: x1.small
@@ -1670,8 +1527,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-66
   flavor:
     name: x1.small
@@ -1681,8 +1537,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-87
   flavor:
     name: x1.small
@@ -1692,8 +1547,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-17
   flavor:
     name: x1.small
@@ -1703,8 +1557,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-26
   flavor:
     name: x1.small
@@ -1714,8 +1567,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-28
   flavor:
     name: x1.small
@@ -1725,8 +1577,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-44
   flavor:
     name: x1.small
@@ -1736,8 +1587,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-99
   flavor:
     name: x1.small
@@ -1747,8 +1597,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-27
   flavor:
     name: x1.small
@@ -1758,8 +1607,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-37
   flavor:
     name: x1.small
@@ -1769,8 +1617,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-50
   flavor:
     name: x1.small
@@ -1780,8 +1627,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-76
   flavor:
     name: x1.small
@@ -1791,8 +1637,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-92
   flavor:
     name: x1.small
@@ -1802,8 +1647,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-96
   flavor:
     name: x1.small
@@ -1813,8 +1657,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-72
   flavor:
     name: x1.small
@@ -1824,8 +1667,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-89
   flavor:
     name: x1.small
@@ -1835,8 +1677,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-1
   flavor:
     name: x1.small
@@ -1846,8 +1687,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-3
   flavor:
     name: x1.small
@@ -1857,8 +1697,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-16
   flavor:
     name: x1.small
@@ -1868,8 +1707,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-24
   flavor:
     name: x1.small
@@ -1879,8 +1717,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-40
   flavor:
     name: x1.small
@@ -1890,8 +1727,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-53
   flavor:
     name: x1.small
@@ -1901,8 +1737,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-92
   flavor:
     name: x1.small
@@ -1912,8 +1747,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-100
   flavor:
     name: x1.small
@@ -1923,8 +1757,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-99
   flavor:
     name: x1.small
@@ -1934,8 +1767,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-8
   flavor:
     name: x1.small
@@ -1945,8 +1777,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-41
   flavor:
     name: x1.small
@@ -1956,8 +1787,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-47
   flavor:
     name: x1.small
@@ -1967,8 +1797,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-62
   flavor:
     name: x1.small
@@ -1978,8 +1807,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-70
   flavor:
     name: x1.small
@@ -1989,8 +1817,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-97
   flavor:
     name: x1.small
@@ -2000,8 +1827,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-27
   flavor:
     name: x1.small
@@ -2011,8 +1837,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-43
   flavor:
     name: x1.small
@@ -2022,8 +1847,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-88
   flavor:
     name: x1.small
@@ -2033,8 +1857,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-11
   flavor:
     name: x1.small
@@ -2044,8 +1867,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-60
   flavor:
     name: x1.small
@@ -2055,8 +1877,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-61
   flavor:
     name: x1.small
@@ -2066,8 +1887,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-73
   flavor:
     name: x1.small
@@ -2077,8 +1897,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-74
   flavor:
     name: x1.small
@@ -2088,8 +1907,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-95
   flavor:
     name: x1.small
@@ -2099,8 +1917,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-12
   flavor:
     name: x1.small
@@ -2110,8 +1927,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-17
   flavor:
     name: x1.small
@@ -2121,8 +1937,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-36
   flavor:
     name: x1.small
@@ -2132,8 +1947,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-37
   flavor:
     name: x1.small
@@ -2143,8 +1957,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-85
   flavor:
     name: x1.small
@@ -2154,8 +1967,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-94
   flavor:
     name: x1.small
@@ -2165,8 +1977,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-91
   flavor:
     name: x1.small
@@ -2176,8 +1987,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-8
   flavor:
     name: x1.small
@@ -2187,8 +1997,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-32
   flavor:
     name: x1.small
@@ -2198,8 +2007,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-47
   flavor:
     name: x1.small
@@ -2209,8 +2017,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-73
   flavor:
     name: x1.small
@@ -2220,8 +2027,7 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-87
   flavor:
     name: x1.small
@@ -2231,30 +2037,16 @@ clusterinsts:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-91
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
-
-operators:
-- key:
-    name: OP1
-
-developers:
-- key:
-    name: Dev1
-  username: Dev1-user
-  passhash: "123456789012345670"
-  address: 1234 Dev1 street
-  email: Dev1@gmail.com
 
 cloudlets:
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-32
   accessuri: OP1.cloudlet-32
   location:
@@ -2262,8 +2054,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-60
   accessuri: OP1.cloudlet-60
   location:
@@ -2271,8 +2062,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-65
   accessuri: OP1.cloudlet-65
   location:
@@ -2280,8 +2070,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-66
   accessuri: OP1.cloudlet-66
   location:
@@ -2289,8 +2078,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-73
   accessuri: OP1.cloudlet-73
   location:
@@ -2298,8 +2086,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-4
   accessuri: OP1.cloudlet-4
   location:
@@ -2307,8 +2094,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-18
   accessuri: OP1.cloudlet-18
   location:
@@ -2316,8 +2102,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-29
   accessuri: OP1.cloudlet-29
   location:
@@ -2325,8 +2110,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-81
   accessuri: OP1.cloudlet-81
   location:
@@ -2334,8 +2118,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-55
   accessuri: OP1.cloudlet-55
   location:
@@ -2343,8 +2126,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-58
   accessuri: OP1.cloudlet-58
   location:
@@ -2352,8 +2134,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-9
   accessuri: OP1.cloudlet-9
   location:
@@ -2361,8 +2142,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-13
   accessuri: OP1.cloudlet-13
   location:
@@ -2370,8 +2150,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-37
   accessuri: OP1.cloudlet-37
   location:
@@ -2379,8 +2158,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-25
   accessuri: OP1.cloudlet-25
   location:
@@ -2388,8 +2166,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-28
   accessuri: OP1.cloudlet-28
   location:
@@ -2397,8 +2174,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-72
   accessuri: OP1.cloudlet-72
   location:
@@ -2406,8 +2182,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-1
   accessuri: OP1.cloudlet-1
   location:
@@ -2415,8 +2190,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-11
   accessuri: OP1.cloudlet-11
   location:
@@ -2424,8 +2198,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-20
   accessuri: OP1.cloudlet-20
   location:
@@ -2433,8 +2206,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-50
   accessuri: OP1.cloudlet-50
   location:
@@ -2442,8 +2214,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-52
   accessuri: OP1.cloudlet-52
   location:
@@ -2451,8 +2222,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-71
   accessuri: OP1.cloudlet-71
   location:
@@ -2460,8 +2230,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-76
   accessuri: OP1.cloudlet-76
   location:
@@ -2469,8 +2238,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-83
   accessuri: OP1.cloudlet-83
   location:
@@ -2478,8 +2246,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-26
   accessuri: OP1.cloudlet-26
   location:
@@ -2487,8 +2254,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-27
   accessuri: OP1.cloudlet-27
   location:
@@ -2496,8 +2262,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-36
   accessuri: OP1.cloudlet-36
   location:
@@ -2505,8 +2270,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-90
   accessuri: OP1.cloudlet-90
   location:
@@ -2514,8 +2278,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-95
   accessuri: OP1.cloudlet-95
   location:
@@ -2523,8 +2286,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-84
   accessuri: OP1.cloudlet-84
   location:
@@ -2532,8 +2294,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-85
   accessuri: OP1.cloudlet-85
   location:
@@ -2541,8 +2302,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-100
   accessuri: OP1.cloudlet-100
   location:
@@ -2550,8 +2310,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-10
   accessuri: OP1.cloudlet-10
   location:
@@ -2559,8 +2318,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-34
   accessuri: OP1.cloudlet-34
   location:
@@ -2568,8 +2326,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-44
   accessuri: OP1.cloudlet-44
   location:
@@ -2577,8 +2334,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-70
   accessuri: OP1.cloudlet-70
   location:
@@ -2586,8 +2342,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-80
   accessuri: OP1.cloudlet-80
   location:
@@ -2595,8 +2350,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-82
   accessuri: OP1.cloudlet-82
   location:
@@ -2604,8 +2358,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-89
   accessuri: OP1.cloudlet-89
   location:
@@ -2613,8 +2366,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-6
   accessuri: OP1.cloudlet-6
   location:
@@ -2622,8 +2374,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-24
   accessuri: OP1.cloudlet-24
   location:
@@ -2631,8 +2382,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-67
   accessuri: OP1.cloudlet-67
   location:
@@ -2640,8 +2390,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-38
   accessuri: OP1.cloudlet-38
   location:
@@ -2649,8 +2398,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-98
   accessuri: OP1.cloudlet-98
   location:
@@ -2658,8 +2406,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-5
   accessuri: OP1.cloudlet-5
   location:
@@ -2667,8 +2414,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-22
   accessuri: OP1.cloudlet-22
   location:
@@ -2676,8 +2422,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-33
   accessuri: OP1.cloudlet-33
   location:
@@ -2685,8 +2430,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-39
   accessuri: OP1.cloudlet-39
   location:
@@ -2694,8 +2438,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-40
   accessuri: OP1.cloudlet-40
   location:
@@ -2703,8 +2446,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-42
   accessuri: OP1.cloudlet-42
   location:
@@ -2712,8 +2454,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-54
   accessuri: OP1.cloudlet-54
   location:
@@ -2721,8 +2462,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-59
   accessuri: OP1.cloudlet-59
   location:
@@ -2730,8 +2470,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-3
   accessuri: OP1.cloudlet-3
   location:
@@ -2739,8 +2478,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-30
   accessuri: OP1.cloudlet-30
   location:
@@ -2748,8 +2486,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-35
   accessuri: OP1.cloudlet-35
   location:
@@ -2757,8 +2494,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-51
   accessuri: OP1.cloudlet-51
   location:
@@ -2766,8 +2502,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-69
   accessuri: OP1.cloudlet-69
   location:
@@ -2775,8 +2510,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-99
   accessuri: OP1.cloudlet-99
   location:
@@ -2784,8 +2518,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-8
   accessuri: OP1.cloudlet-8
   location:
@@ -2793,8 +2526,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-45
   accessuri: OP1.cloudlet-45
   location:
@@ -2802,8 +2534,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-46
   accessuri: OP1.cloudlet-46
   location:
@@ -2811,8 +2542,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-2
   accessuri: OP1.cloudlet-2
   location:
@@ -2820,8 +2550,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-79
   accessuri: OP1.cloudlet-79
   location:
@@ -2829,8 +2558,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-92
   accessuri: OP1.cloudlet-92
   location:
@@ -2838,8 +2566,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-68
   accessuri: OP1.cloudlet-68
   location:
@@ -2847,8 +2574,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-74
   accessuri: OP1.cloudlet-74
   location:
@@ -2856,8 +2582,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-77
   accessuri: OP1.cloudlet-77
   location:
@@ -2865,8 +2590,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-14
   accessuri: OP1.cloudlet-14
   location:
@@ -2874,8 +2598,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-43
   accessuri: OP1.cloudlet-43
   location:
@@ -2883,8 +2606,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-56
   accessuri: OP1.cloudlet-56
   location:
@@ -2892,8 +2614,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-31
   accessuri: OP1.cloudlet-31
   location:
@@ -2901,8 +2622,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-47
   accessuri: OP1.cloudlet-47
   location:
@@ -2910,8 +2630,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-48
   accessuri: OP1.cloudlet-48
   location:
@@ -2919,8 +2638,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-63
   accessuri: OP1.cloudlet-63
   location:
@@ -2928,8 +2646,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-78
   accessuri: OP1.cloudlet-78
   location:
@@ -2937,8 +2654,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-7
   accessuri: OP1.cloudlet-7
   location:
@@ -2946,8 +2662,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-15
   accessuri: OP1.cloudlet-15
   location:
@@ -2955,8 +2670,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-17
   accessuri: OP1.cloudlet-17
   location:
@@ -2964,8 +2678,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-93
   accessuri: OP1.cloudlet-93
   location:
@@ -2973,8 +2686,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-97
   accessuri: OP1.cloudlet-97
   location:
@@ -2982,8 +2694,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-62
   accessuri: OP1.cloudlet-62
   location:
@@ -2991,8 +2702,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-64
   accessuri: OP1.cloudlet-64
   location:
@@ -3000,8 +2710,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-16
   accessuri: OP1.cloudlet-16
   location:
@@ -3009,8 +2718,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-19
   accessuri: OP1.cloudlet-19
   location:
@@ -3018,8 +2726,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-23
   accessuri: OP1.cloudlet-23
   location:
@@ -3027,8 +2734,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-87
   accessuri: OP1.cloudlet-87
   location:
@@ -3036,8 +2742,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-94
   accessuri: OP1.cloudlet-94
   location:
@@ -3045,8 +2750,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-96
   accessuri: OP1.cloudlet-96
   location:
@@ -3054,8 +2758,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-12
   accessuri: OP1.cloudlet-12
   location:
@@ -3063,8 +2766,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-75
   accessuri: OP1.cloudlet-75
   location:
@@ -3072,8 +2774,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-86
   accessuri: OP1.cloudlet-86
   location:
@@ -3081,8 +2782,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-88
   accessuri: OP1.cloudlet-88
   location:
@@ -3090,8 +2790,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-91
   accessuri: OP1.cloudlet-91
   location:
@@ -3099,8 +2798,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-21
   accessuri: OP1.cloudlet-21
   location:
@@ -3108,8 +2806,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-41
   accessuri: OP1.cloudlet-41
   location:
@@ -3117,8 +2814,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-53
   accessuri: OP1.cloudlet-53
   location:
@@ -3126,8 +2822,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-49
   accessuri: OP1.cloudlet-49
   location:
@@ -3135,8 +2830,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-57
   accessuri: OP1.cloudlet-57
   location:
@@ -3144,8 +2838,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
-    operatorkey:
-      name: OP1
+    organization: OP1
     name: cloudlet-61
   accessuri: OP1.cloudlet-61
   location:
@@ -3155,8 +2848,7 @@ cloudlets:
 
 apps:
 - key:
-    developerkey:
-      name: Dev1
+    organization: Dev1
     name: app1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3168,8 +2860,7 @@ apps:
   cluster:
     name: AutoClusterapp1
 - key:
-    developerkey:
-      name: Dev1
+    organization: Dev1
     name: app2
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3184,13 +2875,11 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-45
     id: 45
   cloudletloc:
@@ -3199,8 +2888,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-45
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3211,13 +2899,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-53
     id: 53
   cloudletloc:
@@ -3226,8 +2912,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-53
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3238,13 +2923,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-72
     id: 72
   cloudletloc:
@@ -3253,8 +2936,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-72
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3265,13 +2947,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-96
     id: 96
   cloudletloc:
@@ -3280,8 +2960,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-96
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3292,13 +2971,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-100
     id: 100
   cloudletloc:
@@ -3307,8 +2984,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-100
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3319,13 +2995,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-14
     id: 14
   cloudletloc:
@@ -3334,8 +3008,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-14
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3346,13 +3019,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-21
     id: 21
   cloudletloc:
@@ -3361,8 +3032,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-21
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3373,13 +3043,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-83
     id: 83
   cloudletloc:
@@ -3388,8 +3056,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-83
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3400,13 +3067,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-90
     id: 90
   cloudletloc:
@@ -3415,8 +3080,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-90
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3427,13 +3091,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-93
     id: 93
   cloudletloc:
@@ -3442,8 +3104,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-93
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3454,13 +3115,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-30
     id: 30
   cloudletloc:
@@ -3469,8 +3128,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-30
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3481,13 +3139,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-32
     id: 32
   cloudletloc:
@@ -3496,8 +3152,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-32
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3508,13 +3163,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-54
     id: 54
   cloudletloc:
@@ -3523,8 +3176,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-54
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3535,13 +3187,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-85
     id: 85
   cloudletloc:
@@ -3550,8 +3200,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-85
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3562,13 +3211,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-2
     id: 2
   cloudletloc:
@@ -3577,8 +3224,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-2
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3589,13 +3235,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-19
     id: 19
   cloudletloc:
@@ -3604,8 +3248,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-19
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3616,13 +3259,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-35
     id: 35
   cloudletloc:
@@ -3631,8 +3272,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-35
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3643,13 +3283,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-56
     id: 56
   cloudletloc:
@@ -3658,8 +3296,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-56
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3670,13 +3307,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-87
     id: 87
   cloudletloc:
@@ -3685,8 +3320,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-87
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3697,13 +3331,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-97
     id: 97
   cloudletloc:
@@ -3712,8 +3344,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-97
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3724,13 +3355,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-97
     id: 97
   cloudletloc:
@@ -3739,8 +3368,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-97
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3751,13 +3379,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-11
     id: 11
   cloudletloc:
@@ -3766,8 +3392,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-11
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3778,13 +3403,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-18
     id: 18
   cloudletloc:
@@ -3793,8 +3416,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-18
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3805,13 +3427,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-25
     id: 25
   cloudletloc:
@@ -3820,8 +3440,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-25
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3832,13 +3451,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-31
     id: 31
   cloudletloc:
@@ -3847,8 +3464,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-31
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3859,13 +3475,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-37
     id: 37
   cloudletloc:
@@ -3874,8 +3488,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-37
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3886,13 +3499,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-41
     id: 41
   cloudletloc:
@@ -3901,8 +3512,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-41
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3913,13 +3523,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-82
     id: 82
   cloudletloc:
@@ -3928,8 +3536,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-82
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3940,13 +3547,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-5
     id: 5
   cloudletloc:
@@ -3955,8 +3560,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-5
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -3967,13 +3571,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-33
     id: 33
   cloudletloc:
@@ -3982,8 +3584,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-33
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -3994,13 +3595,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-46
     id: 46
   cloudletloc:
@@ -4009,8 +3608,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-46
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4021,13 +3619,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-77
     id: 77
   cloudletloc:
@@ -4036,8 +3632,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-77
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4048,13 +3643,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-78
     id: 78
   cloudletloc:
@@ -4063,8 +3656,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-78
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4075,13 +3667,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-3
     id: 3
   cloudletloc:
@@ -4090,8 +3680,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-3
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4102,13 +3691,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-20
     id: 20
   cloudletloc:
@@ -4117,8 +3704,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-20
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4129,13 +3715,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-36
     id: 36
   cloudletloc:
@@ -4144,8 +3728,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-36
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4156,13 +3739,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-36
     id: 36
   cloudletloc:
@@ -4171,8 +3752,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-36
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4183,13 +3763,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-46
     id: 46
   cloudletloc:
@@ -4198,8 +3776,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-46
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4210,13 +3787,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-59
     id: 59
   cloudletloc:
@@ -4225,8 +3800,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-59
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4237,13 +3811,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-61
     id: 61
   cloudletloc:
@@ -4252,8 +3824,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-61
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4264,13 +3835,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-74
     id: 74
   cloudletloc:
@@ -4279,8 +3848,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-74
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4291,13 +3859,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-84
     id: 84
   cloudletloc:
@@ -4306,8 +3872,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-84
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4318,13 +3883,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-7
     id: 7
   cloudletloc:
@@ -4333,8 +3896,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-7
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4345,13 +3907,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-12
     id: 12
   cloudletloc:
@@ -4360,8 +3920,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-12
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4372,13 +3931,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-17
     id: 17
   cloudletloc:
@@ -4387,8 +3944,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-17
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4399,13 +3955,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-50
     id: 50
   cloudletloc:
@@ -4414,8 +3968,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-50
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4426,13 +3979,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-76
     id: 76
   cloudletloc:
@@ -4441,8 +3992,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-76
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4453,13 +4003,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-100
     id: 100
   cloudletloc:
@@ -4468,8 +4016,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-100
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4480,13 +4027,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-13
     id: 13
   cloudletloc:
@@ -4495,8 +4040,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-13
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4507,13 +4051,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-65
     id: 65
   cloudletloc:
@@ -4522,8 +4064,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-65
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4534,13 +4075,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-73
     id: 73
   cloudletloc:
@@ -4549,8 +4088,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-73
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4561,13 +4099,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-9
     id: 9
   cloudletloc:
@@ -4576,8 +4112,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-9
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4588,13 +4123,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-10
     id: 10
   cloudletloc:
@@ -4603,8 +4136,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-10
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4615,13 +4147,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-16
     id: 16
   cloudletloc:
@@ -4630,8 +4160,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-16
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4642,13 +4171,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-19
     id: 19
   cloudletloc:
@@ -4657,8 +4184,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-19
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4669,13 +4195,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-23
     id: 23
   cloudletloc:
@@ -4684,8 +4208,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-23
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4696,13 +4219,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-34
     id: 34
   cloudletloc:
@@ -4711,8 +4232,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-34
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4723,13 +4243,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-39
     id: 39
   cloudletloc:
@@ -4738,8 +4256,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-39
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4750,13 +4267,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-48
     id: 48
   cloudletloc:
@@ -4765,8 +4280,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-48
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4777,13 +4291,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-53
     id: 53
   cloudletloc:
@@ -4792,8 +4304,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-53
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4804,13 +4315,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-62
     id: 62
   cloudletloc:
@@ -4819,8 +4328,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-62
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4831,13 +4339,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-17
     id: 17
   cloudletloc:
@@ -4846,8 +4352,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-17
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4858,13 +4363,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-22
     id: 22
   cloudletloc:
@@ -4873,8 +4376,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-22
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4885,13 +4387,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-25
     id: 25
   cloudletloc:
@@ -4900,8 +4400,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-25
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4912,13 +4411,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-35
     id: 35
   cloudletloc:
@@ -4927,8 +4424,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-35
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -4939,13 +4435,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-47
     id: 47
   cloudletloc:
@@ -4954,8 +4448,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-47
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4966,13 +4459,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-88
     id: 88
   cloudletloc:
@@ -4981,8 +4472,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-88
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -4993,13 +4483,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-3
     id: 3
   cloudletloc:
@@ -5008,8 +4496,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-3
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5020,13 +4507,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-9
     id: 9
   cloudletloc:
@@ -5035,8 +4520,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-9
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5047,13 +4531,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-43
     id: 43
   cloudletloc:
@@ -5062,8 +4544,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-43
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5074,13 +4555,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-71
     id: 71
   cloudletloc:
@@ -5089,8 +4568,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-71
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5101,13 +4579,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-86
     id: 86
   cloudletloc:
@@ -5116,8 +4592,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-86
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5128,13 +4603,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-98
     id: 98
   cloudletloc:
@@ -5143,8 +4616,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-98
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5155,13 +4627,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-13
     id: 13
   cloudletloc:
@@ -5170,8 +4640,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-13
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5182,13 +4651,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-20
     id: 20
   cloudletloc:
@@ -5197,8 +4664,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-20
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5209,13 +4675,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-28
     id: 28
   cloudletloc:
@@ -5224,8 +4688,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-28
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5236,13 +4699,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-30
     id: 30
   cloudletloc:
@@ -5251,8 +4712,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-30
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5263,13 +4723,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-31
     id: 31
   cloudletloc:
@@ -5278,8 +4736,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-31
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5290,13 +4747,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-87
     id: 87
   cloudletloc:
@@ -5305,8 +4760,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-87
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5317,13 +4771,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-37
     id: 37
   cloudletloc:
@@ -5332,8 +4784,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-37
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5344,13 +4795,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-79
     id: 79
   cloudletloc:
@@ -5359,8 +4808,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-79
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5371,13 +4819,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-91
     id: 91
   cloudletloc:
@@ -5386,8 +4832,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-91
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5398,13 +4843,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-99
     id: 99
   cloudletloc:
@@ -5413,8 +4856,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-99
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5425,13 +4867,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-1
     id: 1
   cloudletloc:
@@ -5440,8 +4880,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-1
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5452,13 +4891,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-33
     id: 33
   cloudletloc:
@@ -5467,8 +4904,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-33
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5479,13 +4915,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-47
     id: 47
   cloudletloc:
@@ -5494,8 +4928,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-47
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5506,13 +4939,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-51
     id: 51
   cloudletloc:
@@ -5521,8 +4952,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-51
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5533,13 +4963,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-61
     id: 61
   cloudletloc:
@@ -5548,8 +4976,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-61
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5560,13 +4987,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-68
     id: 68
   cloudletloc:
@@ -5575,8 +5000,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-68
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5587,13 +5011,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-7
     id: 7
   cloudletloc:
@@ -5602,8 +5024,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-7
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5614,13 +5035,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-8
     id: 8
   cloudletloc:
@@ -5629,8 +5048,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-8
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5641,13 +5059,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-18
     id: 18
   cloudletloc:
@@ -5656,8 +5072,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-18
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5668,13 +5083,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-40
     id: 40
   cloudletloc:
@@ -5683,8 +5096,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-40
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5695,13 +5107,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-55
     id: 55
   cloudletloc:
@@ -5710,8 +5120,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-55
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5722,13 +5131,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-56
     id: 56
   cloudletloc:
@@ -5737,8 +5144,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-56
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5749,13 +5155,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-80
     id: 80
   cloudletloc:
@@ -5764,8 +5168,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-80
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5776,13 +5179,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-98
     id: 98
   cloudletloc:
@@ -5791,8 +5192,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-98
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5803,13 +5203,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-48
     id: 48
   cloudletloc:
@@ -5818,8 +5216,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-48
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -5830,13 +5227,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-63
     id: 63
   cloudletloc:
@@ -5845,8 +5240,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-63
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5857,13 +5251,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-85
     id: 85
   cloudletloc:
@@ -5872,8 +5264,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-85
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5884,13 +5275,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-11
     id: 11
   cloudletloc:
@@ -5899,8 +5288,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-11
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5911,13 +5299,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-12
     id: 12
   cloudletloc:
@@ -5926,8 +5312,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-12
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5938,13 +5323,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-26
     id: 26
   cloudletloc:
@@ -5953,8 +5336,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-26
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5965,13 +5347,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-44
     id: 44
   cloudletloc:
@@ -5980,8 +5360,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-44
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -5992,13 +5371,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-50
     id: 50
   cloudletloc:
@@ -6007,8 +5384,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-50
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6019,13 +5395,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-82
     id: 82
   cloudletloc:
@@ -6034,8 +5408,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-82
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6046,13 +5419,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-95
     id: 95
   cloudletloc:
@@ -6061,8 +5432,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-95
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6073,13 +5443,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-99
     id: 99
   cloudletloc:
@@ -6088,8 +5456,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-99
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6100,13 +5467,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-1
     id: 1
   cloudletloc:
@@ -6115,8 +5480,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-1
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6127,13 +5491,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-32
     id: 32
   cloudletloc:
@@ -6142,8 +5504,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-32
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6154,13 +5515,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-42
     id: 42
   cloudletloc:
@@ -6169,8 +5528,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-42
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6181,13 +5539,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-44
     id: 44
   cloudletloc:
@@ -6196,8 +5552,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-44
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6208,13 +5563,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-54
     id: 54
   cloudletloc:
@@ -6223,8 +5576,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-54
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6235,13 +5587,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-70
     id: 70
   cloudletloc:
@@ -6250,8 +5600,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-70
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6262,13 +5611,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-91
     id: 91
   cloudletloc:
@@ -6277,8 +5624,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-91
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6289,13 +5635,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-92
     id: 92
   cloudletloc:
@@ -6304,8 +5648,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-92
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6316,13 +5659,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-4
     id: 4
   cloudletloc:
@@ -6331,8 +5672,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-4
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6343,13 +5683,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-52
     id: 52
   cloudletloc:
@@ -6358,8 +5696,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-52
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6370,13 +5707,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-66
     id: 66
   cloudletloc:
@@ -6385,8 +5720,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-66
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6397,13 +5731,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-67
     id: 67
   cloudletloc:
@@ -6412,8 +5744,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-67
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6424,13 +5755,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-69
     id: 69
   cloudletloc:
@@ -6439,8 +5768,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-69
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6451,13 +5779,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-69
     id: 69
   cloudletloc:
@@ -6466,8 +5792,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-69
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6478,13 +5803,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-72
     id: 72
   cloudletloc:
@@ -6493,8 +5816,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-72
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6505,13 +5827,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-75
     id: 75
   cloudletloc:
@@ -6520,8 +5840,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-75
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6532,13 +5851,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-24
     id: 24
   cloudletloc:
@@ -6547,8 +5864,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-24
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6559,13 +5875,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-27
     id: 27
   cloudletloc:
@@ -6574,8 +5888,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-27
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6586,13 +5899,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-29
     id: 29
   cloudletloc:
@@ -6601,8 +5912,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-29
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6613,13 +5923,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-60
     id: 60
   cloudletloc:
@@ -6628,8 +5936,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-60
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6640,13 +5947,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-94
     id: 94
   cloudletloc:
@@ -6655,8 +5960,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-94
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6667,13 +5971,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-16
     id: 16
   cloudletloc:
@@ -6682,8 +5984,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-16
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6694,13 +5995,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-41
     id: 41
   cloudletloc:
@@ -6709,8 +6008,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-41
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6721,13 +6019,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-43
     id: 43
   cloudletloc:
@@ -6736,8 +6032,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-43
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6748,13 +6043,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-59
     id: 59
   cloudletloc:
@@ -6763,8 +6056,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-59
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6775,13 +6067,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-73
     id: 73
   cloudletloc:
@@ -6790,8 +6080,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-73
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6802,13 +6091,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-75
     id: 75
   cloudletloc:
@@ -6817,8 +6104,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-75
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6829,13 +6115,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-84
     id: 84
   cloudletloc:
@@ -6844,8 +6128,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-84
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6856,13 +6139,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-8
     id: 8
   cloudletloc:
@@ -6871,8 +6152,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-8
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6883,13 +6163,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-29
     id: 29
   cloudletloc:
@@ -6898,8 +6176,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-29
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6910,13 +6187,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-34
     id: 34
   cloudletloc:
@@ -6925,8 +6200,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-34
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6937,13 +6211,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-49
     id: 49
   cloudletloc:
@@ -6952,8 +6224,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-49
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -6964,13 +6235,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-65
     id: 65
   cloudletloc:
@@ -6979,8 +6248,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-65
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -6991,13 +6259,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-86
     id: 86
   cloudletloc:
@@ -7006,8 +6272,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-86
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7018,13 +6283,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-89
     id: 89
   cloudletloc:
@@ -7033,8 +6296,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-89
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7045,13 +6307,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-93
     id: 93
   cloudletloc:
@@ -7060,8 +6320,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-93
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7072,13 +6331,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-94
     id: 94
   cloudletloc:
@@ -7087,8 +6344,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-94
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7099,13 +6355,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-22
     id: 22
   cloudletloc:
@@ -7114,8 +6368,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-22
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7126,13 +6379,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-45
     id: 45
   cloudletloc:
@@ -7141,8 +6392,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-45
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7153,13 +6403,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-51
     id: 51
   cloudletloc:
@@ -7168,8 +6416,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-51
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7180,13 +6427,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-76
     id: 76
   cloudletloc:
@@ -7195,8 +6440,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-76
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7207,13 +6451,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-5
     id: 5
   cloudletloc:
@@ -7222,8 +6464,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-5
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7234,13 +6475,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-14
     id: 14
   cloudletloc:
@@ -7249,8 +6488,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-14
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7261,13 +6499,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-57
     id: 57
   cloudletloc:
@@ -7276,8 +6512,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-57
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7288,13 +6523,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-78
     id: 78
   cloudletloc:
@@ -7303,8 +6536,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-78
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7315,13 +6547,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-6
     id: 6
   cloudletloc:
@@ -7330,8 +6560,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-6
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7342,13 +6571,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-27
     id: 27
   cloudletloc:
@@ -7357,8 +6584,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-27
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7369,13 +6595,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-49
     id: 49
   cloudletloc:
@@ -7384,8 +6608,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-49
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7396,13 +6619,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-58
     id: 58
   cloudletloc:
@@ -7411,8 +6632,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-58
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7423,13 +6643,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-81
     id: 81
   cloudletloc:
@@ -7438,8 +6656,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-81
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7450,13 +6667,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-92
     id: 92
   cloudletloc:
@@ -7465,8 +6680,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-92
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7477,13 +6691,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-10
     id: 10
   cloudletloc:
@@ -7492,8 +6704,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-10
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7504,13 +6715,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-23
     id: 23
   cloudletloc:
@@ -7519,8 +6728,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-23
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7531,13 +6739,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-26
     id: 26
   cloudletloc:
@@ -7546,8 +6752,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-26
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7558,13 +6763,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-64
     id: 64
   cloudletloc:
@@ -7573,8 +6776,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-64
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7585,13 +6787,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-64
     id: 64
   cloudletloc:
@@ -7600,8 +6800,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-64
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7612,13 +6811,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-68
     id: 68
   cloudletloc:
@@ -7627,8 +6824,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-68
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7639,13 +6835,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-77
     id: 77
   cloudletloc:
@@ -7654,8 +6848,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-77
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7666,13 +6859,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-83
     id: 83
   cloudletloc:
@@ -7681,8 +6872,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-83
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7693,13 +6883,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-88
     id: 88
   cloudletloc:
@@ -7708,8 +6896,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-88
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7720,13 +6907,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-95
     id: 95
   cloudletloc:
@@ -7735,8 +6920,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-95
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7747,13 +6931,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-96
     id: 96
   cloudletloc:
@@ -7762,8 +6944,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-96
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7774,13 +6955,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-24
     id: 24
   cloudletloc:
@@ -7789,8 +6968,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-24
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7801,13 +6979,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-38
     id: 38
   cloudletloc:
@@ -7816,8 +6992,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-38
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7828,13 +7003,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-63
     id: 63
   cloudletloc:
@@ -7843,8 +7016,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-63
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7855,13 +7027,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-67
     id: 67
   cloudletloc:
@@ -7870,8 +7040,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-67
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7882,13 +7051,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-4
     id: 4
   cloudletloc:
@@ -7897,8 +7064,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-4
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7909,13 +7075,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-6
     id: 6
   cloudletloc:
@@ -7924,8 +7088,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-6
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7936,13 +7099,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-42
     id: 42
   cloudletloc:
@@ -7951,8 +7112,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-42
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -7963,13 +7123,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-58
     id: 58
   cloudletloc:
@@ -7978,8 +7136,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-58
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -7990,13 +7147,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-74
     id: 74
   cloudletloc:
@@ -8005,8 +7160,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-74
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8017,13 +7171,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-52
     id: 52
   cloudletloc:
@@ -8032,8 +7184,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-52
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8044,13 +7195,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-62
     id: 62
   cloudletloc:
@@ -8059,8 +7208,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-62
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8071,13 +7219,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-80
     id: 80
   cloudletloc:
@@ -8086,8 +7232,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-80
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8098,13 +7243,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-90
     id: 90
   cloudletloc:
@@ -8113,8 +7256,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-90
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8125,13 +7267,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-2
     id: 2
   cloudletloc:
@@ -8140,8 +7280,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-2
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8152,13 +7291,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-15
     id: 15
   cloudletloc:
@@ -8167,8 +7304,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-15
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8179,13 +7315,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-15
     id: 15
   cloudletloc:
@@ -8194,8 +7328,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-15
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8206,13 +7339,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-21
     id: 21
   cloudletloc:
@@ -8221,8 +7352,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-21
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8233,13 +7363,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-28
     id: 28
   cloudletloc:
@@ -8248,8 +7376,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-28
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8260,13 +7387,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-40
     id: 40
   cloudletloc:
@@ -8275,8 +7400,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-40
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8287,13 +7411,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-55
     id: 55
   cloudletloc:
@@ -8302,8 +7424,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-55
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8314,13 +7435,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-57
     id: 57
   cloudletloc:
@@ -8329,8 +7448,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-57
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8341,13 +7459,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-60
     id: 60
   cloudletloc:
@@ -8356,8 +7472,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-60
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8368,13 +7483,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-66
     id: 66
   cloudletloc:
@@ -8383,8 +7496,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-66
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8395,13 +7507,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-70
     id: 70
   cloudletloc:
@@ -8410,8 +7520,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-70
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8422,13 +7531,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-71
     id: 71
   cloudletloc:
@@ -8437,8 +7544,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-71
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8449,13 +7555,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-79
     id: 79
   cloudletloc:
@@ -8464,8 +7568,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-79
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8476,13 +7579,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-81
     id: 81
   cloudletloc:
@@ -8491,8 +7592,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-81
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8503,13 +7603,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-38
     id: 38
   cloudletloc:
@@ -8518,8 +7616,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-38
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
@@ -8530,13 +7627,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app2
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-39
     id: 39
   cloudletloc:
@@ -8545,8 +7640,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp2
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-39
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
@@ -8557,13 +7651,11 @@ appinstances:
   accesslayer: AccessLayerL7
 - key:
     appkey:
-      developerkey:
-        name: Dev1
+      organization: Dev1
       name: app1
       version: "1.0"
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-89
     id: 89
   cloudletloc:
@@ -8572,8 +7664,7 @@ appinstances:
     clusterkey:
       name: AutoClusterapp1
     cloudletkey:
-      operatorkey:
-        name: OP1
+      organization: OP1
       name: cloudlet-89
   liveness: LivenessStatic
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0

@@ -8,7 +8,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
-	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -62,9 +61,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
 	}
-	gencmd.DeveloperApiCmd = edgeproto.NewDeveloperApiClient(conn)
 	gencmd.AppApiCmd = edgeproto.NewAppApiClient(conn)
-	gencmd.OperatorApiCmd = edgeproto.NewOperatorApiClient(conn)
 	gencmd.OperatorCodeApiCmd = edgeproto.NewOperatorCodeApiClient(conn)
 	gencmd.FlavorApiCmd = edgeproto.NewFlavorApiClient(conn)
 	gencmd.AutoScalePolicyApiCmd = edgeproto.NewAutoScalePolicyApiClient(conn)
@@ -72,20 +69,26 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.PrivacyPolicyApiCmd = edgeproto.NewPrivacyPolicyApiClient(conn)
 	gencmd.ClusterInstApiCmd = edgeproto.NewClusterInstApiClient(conn)
 	gencmd.CloudletApiCmd = edgeproto.NewCloudletApiClient(conn)
+	gencmd.VMPoolApiCmd = edgeproto.NewVMPoolApiClient(conn)
 	gencmd.AppInstApiCmd = edgeproto.NewAppInstApiClient(conn)
 	gencmd.CloudletInfoApiCmd = edgeproto.NewCloudletInfoApiClient(conn)
 	gencmd.AppInstInfoApiCmd = edgeproto.NewAppInstInfoApiClient(conn)
 	gencmd.ClusterInstInfoApiCmd = edgeproto.NewClusterInstInfoApiClient(conn)
 	gencmd.MatchEngineApiCmd = dme.NewMatchEngineApiClient(conn)
-	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
+	gencmd.DebugApiCmd = edgeproto.NewDebugApiClient(conn)
 	gencmd.ControllerApiCmd = edgeproto.NewControllerApiClient(conn)
 	gencmd.NodeApiCmd = edgeproto.NewNodeApiClient(conn)
 	gencmd.CloudletPoolApiCmd = edgeproto.NewCloudletPoolApiClient(conn)
-	gencmd.CloudletPoolMemberApiCmd = edgeproto.NewCloudletPoolMemberApiClient(conn)
 	gencmd.AlertApiCmd = edgeproto.NewAlertApiClient(conn)
 	gencmd.ResTagTableApiCmd = edgeproto.NewResTagTableApiClient(conn)
 	gencmd.SettingsApiCmd = edgeproto.NewSettingsApiClient(conn)
 	execApiCmd = edgeproto.NewExecApiClient(conn)
+	gencmd.AppInstClientApiCmd = edgeproto.NewAppInstClientApiClient(conn)
+	gencmd.DeviceApiCmd = edgeproto.NewDeviceApiClient(conn)
+	gencmd.OrganizationApiCmd = edgeproto.NewOrganizationApiClient(conn)
+	gencmd.CloudletRefsApiCmd = edgeproto.NewCloudletRefsApiClient(conn)
+	gencmd.ClusterRefsApiCmd = edgeproto.NewClusterRefsApiClient(conn)
+	gencmd.AppInstRefsApiCmd = edgeproto.NewAppInstRefsApiClient(conn)
 	return nil
 }
 
@@ -108,9 +111,7 @@ func main() {
 	cli.AddDebugFlag(rootCmd.PersistentFlags())
 	cli.AddHideTagsFormatFlag(rootCmd.PersistentFlags())
 
-	controllerCmd.AddCommand(gencmd.DeveloperApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppApiCmds...)
-	controllerCmd.AddCommand(gencmd.OperatorApiCmds...)
 	controllerCmd.AddCommand(gencmd.OperatorCodeApiCmds...)
 	controllerCmd.AddCommand(gencmd.FlavorApiCmds...)
 	controllerCmd.AddCommand(gencmd.AutoScalePolicyApiCmds...)
@@ -118,21 +119,30 @@ func main() {
 	controllerCmd.AddCommand(gencmd.PrivacyPolicyApiCmds...)
 	controllerCmd.AddCommand(gencmd.ClusterInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
+	controllerCmd.AddCommand(gencmd.VMPoolApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.DebugApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletInfoApiCmds...)
 	controllerCmd.AddCommand(gencmd.ControllerApiCmds...)
 	controllerCmd.AddCommand(gencmd.NodeApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletPoolApiCmds...)
-	controllerCmd.AddCommand(gencmd.CloudletPoolMemberApiCmds...)
 	controllerCmd.AddCommand(gencmd.AlertApiCmds...)
 	controllerCmd.AddCommand(gencmd.ResTagTableApiCmds...)
 	controllerCmd.AddCommand(gencmd.SettingsApiCmds...)
+	controllerCmd.AddCommand(gencmd.AppInstClientApiCmds...)
+	controllerCmd.AddCommand(gencmd.DeviceApiCmds...)
+	controllerCmd.AddCommand(gencmd.OrganizationApiCmds...)
+	controllerCmd.AddCommand(gencmd.CloudletRefsApiCmds...)
+	controllerCmd.AddCommand(gencmd.ClusterRefsApiCmds...)
+	controllerCmd.AddCommand(gencmd.AppInstRefsApiCmds...)
 
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())
-	gencmd.RunCommandCmd.Run = runExecRequest
-	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd())
+	gencmd.RunCommandCmd.Run = runRunCommand
+	gencmd.ShowLogsCmd.Run = runShowLogs
+	gencmd.RunConsoleCmd.Run = runRunConsole
+	gencmd.AccessCloudletCmd.Run = runAccessCloudlet
+	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd(), gencmd.RunConsoleCmd.GenCmd(), gencmd.ShowLogsCmd.GenCmd(), gencmd.AccessCloudletCmd.GenCmd())
 
 	dmeCmd.AddCommand(gencmd.MatchEngineApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)

@@ -1,15 +1,16 @@
 package dmetest
 
 import (
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 type App struct {
-	Id        uint64
-	Name      string
-	Vers      string
-	Developer string
+	Id           uint64
+	Name         string
+	Vers         string
+	Organization string
 }
 type Cloudlet struct {
 	Id          uint64
@@ -23,34 +24,40 @@ type Cloudlet struct {
 
 var Apps = []App{
 	App{
-		Id:        5000,
-		Name:      "1000realities",
-		Vers:      "1.1",
-		Developer: "1000realities",
+		Id:           5000,
+		Name:         "1000realities",
+		Vers:         "1.1",
+		Organization: "1000realities",
 	},
 	App{
-		Id:        5005,
-		Name:      "Pokemon-go",
-		Vers:      "2.1",
-		Developer: "Niantic Labs",
+		Id:           5005,
+		Name:         "Pokemon-go",
+		Vers:         "2.1",
+		Organization: "Niantic Labs",
 	},
 	App{
-		Id:        5006,
-		Name:      "HarryPotter-go",
-		Vers:      "1.0",
-		Developer: "Niantic Labs",
+		Id:           5006,
+		Name:         "HarryPotter-go",
+		Vers:         "1.0",
+		Organization: "Niantic Labs",
 	},
 	App{
-		Id:        5010,
-		Name:      "Ever",
-		Vers:      "1.7",
-		Developer: "Ever.AI",
+		Id:           5010,
+		Name:         "Ever",
+		Vers:         "1.7",
+		Organization: "Ever.AI",
 	},
 	App{
-		Id:        5011,
-		Name:      "EmptyMatchEngineApp",
-		Vers:      "1",
-		Developer: "EmptyMatchEngineApp",
+		Id:           5011,
+		Name:         "EmptyMatchEngineApp",
+		Vers:         "1",
+		Organization: "EmptyMatchEngineApp",
+	},
+	App{
+		Id:           5012,
+		Name:         cloudcommon.SamsungEnablingLayer,
+		Vers:         "1.1",
+		Organization: cloudcommon.OrganizationSamsung,
 	},
 }
 
@@ -95,21 +102,22 @@ var Cloudlets = []Cloudlet{
 
 func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	inst := edgeproto.AppInst{}
-	inst.Key.AppKey.DeveloperKey.Name = a.Developer
+	inst.Key.AppKey.Organization = a.Organization
 	inst.Key.AppKey.Name = a.Name
 	inst.Key.AppKey.Version = a.Vers
-	inst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name = c.CarrierName
+	inst.Key.ClusterInstKey.CloudletKey.Organization = c.CarrierName
 	inst.Key.ClusterInstKey.CloudletKey.Name = c.Name
 	inst.Key.ClusterInstKey.ClusterKey.Name = "testcluster" //TODO - change the testdata to also have clusterInst information
 	inst.CloudletLoc = c.Location
 	inst.Uri = c.Uri
 	inst.State = edgeproto.TrackedState_READY
+	inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK // HEALTH_CHECK_OK is not default now
 	return &inst
 }
 
 func MakeCloudletInfo(c *Cloudlet) *edgeproto.CloudletInfo {
 	info := edgeproto.CloudletInfo{}
-	info.Key.OperatorKey.Name = c.CarrierName
+	info.Key.Organization = c.CarrierName
 	info.Key.Name = c.Name
 	info.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 	return &info
@@ -120,7 +128,7 @@ func GenerateApps() []*edgeproto.App {
 	for _, a := range Apps {
 		app := &edgeproto.App{}
 		app.Key.Name = a.Name
-		app.Key.DeveloperKey.Name = a.Developer
+		app.Key.Organization = a.Organization
 		app.Key.Version = a.Vers
 		apps = append(apps, app)
 	}

@@ -3,31 +3,38 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import strings "strings"
-import reflect "reflect"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Flavor
 //
@@ -37,19 +44,47 @@ type FlavorKey struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *FlavorKey) Reset()                    { *m = FlavorKey{} }
-func (m *FlavorKey) String() string            { return proto.CompactTextString(m) }
-func (*FlavorKey) ProtoMessage()               {}
-func (*FlavorKey) Descriptor() ([]byte, []int) { return fileDescriptorFlavor, []int{0} }
+func (m *FlavorKey) Reset()         { *m = FlavorKey{} }
+func (m *FlavorKey) String() string { return proto.CompactTextString(m) }
+func (*FlavorKey) ProtoMessage()    {}
+func (*FlavorKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_827a674ddbd1f38f, []int{0}
+}
+func (m *FlavorKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FlavorKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FlavorKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FlavorKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlavorKey.Merge(m, src)
+}
+func (m *FlavorKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *FlavorKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlavorKey.DiscardUnknown(m)
+}
 
-// Flavors define the compute, memory, and storage capacity of computing instances.
-// To put it simply, a flavor is an available hardware configuration for a server.
-// It defines the size of a virtual server that can be launched.
+var xxx_messageInfo_FlavorKey proto.InternalMessageInfo
+
+//Flavors define the compute, memory, and storage capacity of computing instances.
+//To put it simply, a flavor is an available hardware configuration for a server.
+//It defines the size of a virtual server that can be launched.
 type Flavor struct {
 	// Fields are used for the Update API to specify which fields to apply
-	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique key for the new flavor.
-	Key FlavorKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Key FlavorKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// RAM in megabytes
 	Ram uint64 `protobuf:"varint,3,opt,name=ram,proto3" json:"ram,omitempty"`
 	// Number of virtual CPUs
@@ -58,18 +93,94 @@ type Flavor struct {
 	Disk uint64 `protobuf:"varint,5,opt,name=disk,proto3" json:"disk,omitempty"`
 	// Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci]
 	// form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1
-	OptResMap map[string]string `protobuf:"bytes,6,rep,name=opt_res_map,json=optResMap" json:"opt_res_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	OptResMap map[string]string `protobuf:"bytes,6,rep,name=opt_res_map,json=optResMap,proto3" json:"opt_res_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
-func (m *Flavor) Reset()                    { *m = Flavor{} }
-func (m *Flavor) String() string            { return proto.CompactTextString(m) }
-func (*Flavor) ProtoMessage()               {}
-func (*Flavor) Descriptor() ([]byte, []int) { return fileDescriptorFlavor, []int{1} }
+func (m *Flavor) Reset()         { *m = Flavor{} }
+func (m *Flavor) String() string { return proto.CompactTextString(m) }
+func (*Flavor) ProtoMessage()    {}
+func (*Flavor) Descriptor() ([]byte, []int) {
+	return fileDescriptor_827a674ddbd1f38f, []int{1}
+}
+func (m *Flavor) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Flavor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Flavor.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Flavor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Flavor.Merge(m, src)
+}
+func (m *Flavor) XXX_Size() int {
+	return m.Size()
+}
+func (m *Flavor) XXX_DiscardUnknown() {
+	xxx_messageInfo_Flavor.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Flavor proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*FlavorKey)(nil), "edgeproto.FlavorKey")
 	proto.RegisterType((*Flavor)(nil), "edgeproto.Flavor")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Flavor.OptResMapEntry")
 }
+
+func init() { proto.RegisterFile("flavor.proto", fileDescriptor_827a674ddbd1f38f) }
+
+var fileDescriptor_827a674ddbd1f38f = []byte{
+	// 633 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x92, 0x41, 0x6b, 0x13, 0x41,
+	0x14, 0xc7, 0x33, 0x49, 0x1a, 0xc8, 0x34, 0x56, 0xbb, 0x96, 0x32, 0x84, 0xba, 0x0d, 0x7b, 0x90,
+	0x20, 0x69, 0x56, 0xea, 0xa5, 0x06, 0x0b, 0xa6, 0x56, 0x2f, 0xb5, 0x0a, 0x23, 0xf6, 0x5a, 0xa6,
+	0xbb, 0xaf, 0xdb, 0x25, 0xbb, 0x3b, 0xcb, 0xce, 0x6e, 0x62, 0x6e, 0xd2, 0x4f, 0x50, 0xf0, 0x22,
+	0x9e, 0xfc, 0x08, 0xe2, 0x4d, 0x3f, 0x41, 0x8f, 0x05, 0x0f, 0x7a, 0x12, 0x4d, 0x3d, 0x48, 0x4f,
+	0x42, 0xd3, 0xe2, 0x51, 0x66, 0x36, 0x8d, 0x0d, 0x15, 0x6c, 0x41, 0x2f, 0xe1, 0xbd, 0x7f, 0xe6,
+	0xcd, 0xef, 0xff, 0xfe, 0xb3, 0xb8, 0xb4, 0xe9, 0xb1, 0x36, 0x8f, 0xea, 0x61, 0xc4, 0x63, 0xae,
+	0x15, 0xc1, 0x76, 0x40, 0x95, 0xe5, 0x19, 0x87, 0x73, 0xc7, 0x03, 0x93, 0x85, 0xae, 0xc9, 0x82,
+	0x80, 0xc7, 0x2c, 0x76, 0x79, 0x20, 0xd2, 0x83, 0xe5, 0x05, 0xc7, 0x8d, 0xb7, 0x92, 0x8d, 0xba,
+	0xc5, 0x7d, 0xd3, 0xe7, 0x1b, 0xae, 0x27, 0x07, 0x9f, 0x99, 0xf2, 0x77, 0xce, 0xf2, 0x78, 0x62,
+	0x9b, 0xea, 0x9c, 0x03, 0xc1, 0xb0, 0x18, 0x4c, 0x96, 0x22, 0x10, 0x89, 0x17, 0x0f, 0xba, 0x29,
+	0x87, 0x3b, 0x5c, 0x95, 0xa6, 0xac, 0x52, 0xd5, 0xb8, 0x8d, 0x8b, 0x0f, 0x94, 0xad, 0x15, 0xe8,
+	0x6a, 0x3a, 0xce, 0x07, 0xcc, 0x07, 0x82, 0x2a, 0xa8, 0x5a, 0x5c, 0xc2, 0xef, 0x8f, 0x49, 0x21,
+	0xf5, 0x4c, 0x95, 0xde, 0x28, 0x7d, 0x3f, 0x24, 0xe8, 0xe7, 0x21, 0x41, 0x6f, 0x5e, 0xcf, 0x22,
+	0xe3, 0x5d, 0x16, 0x17, 0xd2, 0x59, 0x6d, 0x1a, 0x17, 0x36, 0x5d, 0xf0, 0x6c, 0x41, 0x50, 0x25,
+	0x57, 0x2d, 0xd2, 0x41, 0xa7, 0xd5, 0x70, 0xae, 0x05, 0x5d, 0x92, 0xad, 0xa0, 0xea, 0xf8, 0xfc,
+	0x54, 0x7d, 0xb8, 0x72, 0x7d, 0xc8, 0x5c, 0xca, 0xef, 0x7e, 0x9e, 0xcd, 0x50, 0x79, 0x4c, 0xbb,
+	0x82, 0x73, 0x11, 0xf3, 0x49, 0xae, 0x82, 0xaa, 0x79, 0x2a, 0x4b, 0x6d, 0x0a, 0x8f, 0xb5, 0xad,
+	0x30, 0x11, 0x24, 0xaf, 0xb4, 0xb4, 0xd1, 0x34, 0x9c, 0xb7, 0x5d, 0xd1, 0x22, 0x63, 0x4a, 0x54,
+	0xb5, 0x76, 0x17, 0x8f, 0xf3, 0x30, 0x5e, 0x8f, 0x40, 0xac, 0xfb, 0x2c, 0x24, 0x85, 0x4a, 0xae,
+	0x3a, 0x3e, 0x5f, 0x39, 0x43, 0xac, 0x3f, 0x0e, 0x63, 0x0a, 0x62, 0x95, 0x85, 0xf7, 0x83, 0x38,
+	0xea, 0xd2, 0x22, 0x3f, 0xe9, 0xcb, 0x77, 0xf0, 0xc4, 0xe8, 0x9f, 0xd2, 0x8f, 0x74, 0xaf, 0xd2,
+	0x48, 0x1d, 0x4a, 0x3f, 0xcc, 0x4b, 0x40, 0x6d, 0x54, 0xa4, 0x69, 0xd3, 0xc8, 0x2e, 0xa0, 0xc6,
+	0x9c, 0x8c, 0xe6, 0xc7, 0x21, 0x41, 0xcf, 0xfb, 0x04, 0xed, 0xf4, 0x09, 0x7a, 0xd9, 0x27, 0xe8,
+	0xd5, 0x11, 0xb9, 0x24, 0x83, 0x5b, 0x5c, 0x81, 0x6e, 0xfd, 0x11, 0xf3, 0xe1, 0xed, 0x31, 0xc9,
+	0x07, 0x3c, 0x80, 0xf9, 0x8f, 0x63, 0x27, 0xb9, 0x37, 0x43, 0x57, 0xdb, 0x46, 0xb8, 0x74, 0x2f,
+	0x02, 0x16, 0xc3, 0x20, 0xcf, 0xc9, 0x33, 0xc6, 0xcb, 0xa7, 0x25, 0xaa, 0xde, 0xd5, 0x78, 0x78,
+	0xd0, 0x27, 0xd7, 0x28, 0x08, 0x9e, 0x44, 0xd6, 0x60, 0x52, 0xd4, 0x9a, 0x96, 0xfc, 0x78, 0x56,
+	0x59, 0xc0, 0x1c, 0xa8, 0xf5, 0x8e, 0xc8, 0x04, 0x65, 0x7e, 0x6d, 0x4d, 0xe6, 0x56, 0x5b, 0x76,
+	0x45, 0x6b, 0xfb, 0xc3, 0xb7, 0x17, 0xd9, 0xab, 0xc6, 0x84, 0x69, 0x29, 0x9e, 0x99, 0xbe, 0x6f,
+	0x03, 0xdd, 0xd0, 0x42, 0x5c, 0x5a, 0x06, 0x0f, 0x2e, 0xe8, 0xa1, 0xf1, 0x57, 0x0f, 0x43, 0xa2,
+	0xad, 0x6e, 0x1f, 0x25, 0x3e, 0x0d, 0x6d, 0xf6, 0xff, 0x88, 0x89, 0xba, 0xfd, 0x14, 0xb1, 0x83,
+	0xf1, 0x93, 0x2d, 0xde, 0x39, 0x1f, 0x2f, 0x95, 0x8c, 0xe6, 0x41, 0x9f, 0x5c, 0xff, 0x33, 0x6f,
+	0xcd, 0x85, 0x4e, 0x4d, 0xb4, 0xdc, 0x10, 0x82, 0x4d, 0x1e, 0x59, 0xa0, 0xc0, 0x93, 0x46, 0xc9,
+	0x14, 0x5b, 0xbc, 0xf3, 0x1b, 0x7b, 0x13, 0xc9, 0x55, 0x9b, 0xb6, 0x9d, 0x4e, 0x53, 0x10, 0xff,
+	0x7e, 0x55, 0x66, 0xdb, 0x11, 0x88, 0x53, 0xab, 0xb6, 0xf1, 0x65, 0x0a, 0x3e, 0x6f, 0xc3, 0x45,
+	0xa1, 0x8b, 0xe7, 0x83, 0x4e, 0x1b, 0x93, 0x66, 0xa4, 0x00, 0x23, 0xdc, 0xa5, 0x99, 0xdd, 0xaf,
+	0x7a, 0x66, 0xb7, 0xa7, 0xa3, 0xbd, 0x9e, 0x8e, 0xbe, 0xf4, 0x74, 0xb4, 0xb3, 0xaf, 0x67, 0xf6,
+	0xf6, 0xf5, 0xcc, 0xa7, 0x7d, 0x3d, 0xb3, 0x51, 0x50, 0xa8, 0x5b, 0xbf, 0x02, 0x00, 0x00, 0xff,
+	0xff, 0xdd, 0x68, 0x91, 0x62, 0x0c, 0x05, 0x00, 0x00,
+}
+
 func (this *FlavorKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -97,8 +208,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for FlavorApi service
-
+// FlavorApiClient is the client API for FlavorApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type FlavorApiClient interface {
 	// Create a Flavor
 	CreateFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error)
@@ -124,7 +236,7 @@ func NewFlavorApiClient(cc *grpc.ClientConn) FlavorApiClient {
 
 func (c *flavorApiClient) CreateFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.FlavorApi/CreateFlavor", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.FlavorApi/CreateFlavor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +245,7 @@ func (c *flavorApiClient) CreateFlavor(ctx context.Context, in *Flavor, opts ...
 
 func (c *flavorApiClient) DeleteFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.FlavorApi/DeleteFlavor", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.FlavorApi/DeleteFlavor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +254,7 @@ func (c *flavorApiClient) DeleteFlavor(ctx context.Context, in *Flavor, opts ...
 
 func (c *flavorApiClient) UpdateFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.FlavorApi/UpdateFlavor", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.FlavorApi/UpdateFlavor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +262,7 @@ func (c *flavorApiClient) UpdateFlavor(ctx context.Context, in *Flavor, opts ...
 }
 
 func (c *flavorApiClient) ShowFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (FlavorApi_ShowFlavorClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_FlavorApi_serviceDesc.Streams[0], c.cc, "/edgeproto.FlavorApi/ShowFlavor", opts...)
+	stream, err := c.cc.NewStream(ctx, &_FlavorApi_serviceDesc.Streams[0], "/edgeproto.FlavorApi/ShowFlavor", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +295,7 @@ func (x *flavorApiShowFlavorClient) Recv() (*Flavor, error) {
 
 func (c *flavorApiClient) AddFlavorRes(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.FlavorApi/AddFlavorRes", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.FlavorApi/AddFlavorRes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -192,15 +304,14 @@ func (c *flavorApiClient) AddFlavorRes(ctx context.Context, in *Flavor, opts ...
 
 func (c *flavorApiClient) RemoveFlavorRes(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.FlavorApi/RemoveFlavorRes", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.FlavorApi/RemoveFlavorRes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for FlavorApi service
-
+// FlavorApiServer is the server API for FlavorApi service.
 type FlavorApiServer interface {
 	// Create a Flavor
 	CreateFlavor(context.Context, *Flavor) (*Result, error)
@@ -214,6 +325,29 @@ type FlavorApiServer interface {
 	AddFlavorRes(context.Context, *Flavor) (*Result, error)
 	// Remove Optional Resource
 	RemoveFlavorRes(context.Context, *Flavor) (*Result, error)
+}
+
+// UnimplementedFlavorApiServer can be embedded to have forward compatible implementations.
+type UnimplementedFlavorApiServer struct {
+}
+
+func (*UnimplementedFlavorApiServer) CreateFlavor(ctx context.Context, req *Flavor) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateFlavor not implemented")
+}
+func (*UnimplementedFlavorApiServer) DeleteFlavor(ctx context.Context, req *Flavor) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFlavor not implemented")
+}
+func (*UnimplementedFlavorApiServer) UpdateFlavor(ctx context.Context, req *Flavor) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateFlavor not implemented")
+}
+func (*UnimplementedFlavorApiServer) ShowFlavor(req *Flavor, srv FlavorApi_ShowFlavorServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowFlavor not implemented")
+}
+func (*UnimplementedFlavorApiServer) AddFlavorRes(ctx context.Context, req *Flavor) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddFlavorRes not implemented")
+}
+func (*UnimplementedFlavorApiServer) RemoveFlavorRes(ctx context.Context, req *Flavor) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveFlavorRes not implemented")
 }
 
 func RegisterFlavorApiServer(s *grpc.Server, srv FlavorApiServer) {
@@ -369,7 +503,7 @@ var _FlavorApi_serviceDesc = grpc.ServiceDesc{
 func (m *FlavorKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -377,23 +511,29 @@ func (m *FlavorKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *FlavorKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FlavorKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
 		i = encodeVarintFlavor(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *Flavor) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -401,76 +541,81 @@ func (m *Flavor) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Flavor) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Flavor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
+	if len(m.OptResMap) > 0 {
+		for k := range m.OptResMap {
+			v := m.OptResMap[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintFlavor(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintFlavor(dAtA, i, uint64(len(k)))
+			i--
 			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+			i = encodeVarintFlavor(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x32
 		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintFlavor(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if m.Ram != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintFlavor(dAtA, i, uint64(m.Ram))
-	}
-	if m.Vcpus != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintFlavor(dAtA, i, uint64(m.Vcpus))
 	}
 	if m.Disk != 0 {
-		dAtA[i] = 0x28
-		i++
 		i = encodeVarintFlavor(dAtA, i, uint64(m.Disk))
+		i--
+		dAtA[i] = 0x28
 	}
-	if len(m.OptResMap) > 0 {
-		for k, _ := range m.OptResMap {
-			dAtA[i] = 0x32
-			i++
-			v := m.OptResMap[k]
-			mapSize := 1 + len(k) + sovFlavor(uint64(len(k))) + 1 + len(v) + sovFlavor(uint64(len(v)))
-			i = encodeVarintFlavor(dAtA, i, uint64(mapSize))
+	if m.Vcpus != 0 {
+		i = encodeVarintFlavor(dAtA, i, uint64(m.Vcpus))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Ram != 0 {
+		i = encodeVarintFlavor(dAtA, i, uint64(m.Ram))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintFlavor(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintFlavor(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
 			dAtA[i] = 0xa
-			i++
-			i = encodeVarintFlavor(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintFlavor(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
 		}
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintFlavor(dAtA []byte, offset int, v uint64) int {
+	offset -= sovFlavor(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *FlavorKey) Matches(o *FlavorKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -498,6 +643,10 @@ func (m *FlavorKey) CopyInFields(src *FlavorKey) int {
 	return changed
 }
 
+func (m *FlavorKey) DeepCopyIn(src *FlavorKey) {
+	m.Name = src.Name
+}
+
 func (m *FlavorKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
@@ -519,6 +668,14 @@ func (m *FlavorKey) NotFoundError() error {
 
 func (m *FlavorKey) ExistsError() error {
 	return fmt.Errorf("Flavor key %s already exists", m.GetKeyString())
+}
+
+var FlavorKeyTagName = "flavor"
+
+func (m *FlavorKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["flavor"] = m.Name
+	return tags
 }
 
 // Helper method to check that enums have valid values
@@ -611,7 +768,7 @@ var FlavorAllFieldsStringMap = map[string]string{
 }
 
 func (m *Flavor) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, FlavorFieldKey+".")
+	return strings.HasPrefix(s, FlavorFieldKey+".") || s == FlavorFieldKey
 }
 
 func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
@@ -647,6 +804,37 @@ func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
 	} else if (m.OptResMap != nil && o.OptResMap == nil) || (m.OptResMap == nil && o.OptResMap != nil) {
 		fields[FlavorFieldOptResMap] = struct{}{}
 	}
+}
+
+var UpdateFlavorFieldsMap = map[string]struct{}{
+	FlavorFieldRam:            struct{}{},
+	FlavorFieldVcpus:          struct{}{},
+	FlavorFieldDisk:           struct{}{},
+	FlavorFieldOptResMap:      struct{}{},
+	FlavorFieldOptResMapValue: struct{}{},
+}
+
+func (m *Flavor) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateFlavorFieldsMap[field]; !ok {
+			if _, ok := FlavorAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, FlavorAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
 }
 
 func (m *Flavor) CopyInFields(src *Flavor) int {
@@ -690,6 +878,21 @@ func (m *Flavor) CopyInFields(src *Flavor) int {
 		}
 	}
 	return changed
+}
+
+func (m *Flavor) DeepCopyIn(src *Flavor) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.Ram = src.Ram
+	m.Vcpus = src.Vcpus
+	m.Disk = src.Disk
+	if src.OptResMap != nil {
+		m.OptResMap = make(map[string]string)
+		for k, v := range src.OptResMap {
+			m.OptResMap[k] = v
+		}
+	} else {
+		m.OptResMap = nil
+	}
 }
 
 func (s *Flavor) HasFields() bool {
@@ -844,15 +1047,24 @@ type FlavorKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type FlavorCacheData struct {
+	Obj    *Flavor
+	ModRev int64
+}
+
 // FlavorCache caches Flavor objects in memory in a hash table
 // and keeps them in sync with the database.
 type FlavorCache struct {
-	Objs        map[FlavorKey]*Flavor
-	Mux         util.Mutex
-	List        map[FlavorKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *FlavorKey, old *Flavor)
-	UpdatedCb   func(ctx context.Context, old *Flavor, new *Flavor)
-	KeyWatchers map[FlavorKey][]*FlavorKeyWatcher
+	Objs          map[FlavorKey]*FlavorCacheData
+	Mux           util.Mutex
+	List          map[FlavorKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *FlavorKey, old *Flavor, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *Flavor, new *Flavor)
+	DeletedCbs    []func(ctx context.Context, old *Flavor)
+	KeyWatchers   map[FlavorKey][]*FlavorKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *FlavorKey)
+	DeletedKeyCbs []func(ctx context.Context, key *FlavorKey)
 }
 
 func NewFlavorCache() *FlavorCache {
@@ -862,8 +1074,13 @@ func NewFlavorCache() *FlavorCache {
 }
 
 func InitFlavorCache(cache *FlavorCache) {
-	cache.Objs = make(map[FlavorKey]*Flavor)
+	cache.Objs = make(map[FlavorKey]*FlavorCacheData)
 	cache.KeyWatchers = make(map[FlavorKey][]*FlavorKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *FlavorCache) GetTypeString() string {
@@ -871,11 +1088,17 @@ func (c *FlavorCache) GetTypeString() string {
 }
 
 func (c *FlavorCache) Get(key *FlavorKey, valbuf *Flavor) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *FlavorCache) GetWithRev(key *FlavorKey, valbuf *Flavor, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -887,64 +1110,87 @@ func (c *FlavorCache) HasKey(key *FlavorKey) bool {
 	return found
 }
 
-func (c *FlavorCache) GetAllKeys(ctx context.Context, keys map[FlavorKey]context.Context) {
+func (c *FlavorCache) GetAllKeys(ctx context.Context, cb func(key *FlavorKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *FlavorCache) Update(ctx context.Context, in *Flavor, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *Flavor) (*Flavor, bool) {
+func (c *FlavorCache) Update(ctx context.Context, in *Flavor, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *Flavor) (*Flavor, bool) {
 		return in, true
 	})
 }
 
-func (c *FlavorCache) UpdateModFunc(ctx context.Context, key *FlavorKey, rev int64, modFunc func(old *Flavor) (new *Flavor, changed bool)) {
+func (c *FlavorCache) UpdateModFunc(ctx context.Context, key *FlavorKey, modRev int64, modFunc func(old *Flavor) (new *Flavor, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *Flavor
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Flavor{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &Flavor{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Flavor", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &Flavor{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &FlavorCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *FlavorCache) Delete(ctx context.Context, in *Flavor, rev int64) {
+func (c *FlavorCache) Delete(ctx context.Context, in *Flavor, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *Flavor
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Flavor", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *FlavorCache) Prune(ctx context.Context, validKeys map[FlavorKey]struct{}) {
-	notify := make(map[FlavorKey]*Flavor)
+	notify := make(map[FlavorKey]*FlavorCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -952,8 +1198,18 @@ func (c *FlavorCache) Prune(ctx context.Context, validKeys map[FlavorKey]struct{
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -972,13 +1228,13 @@ func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Flavor", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Flavor", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare Flavor", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Flavor", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show Flavor", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -992,12 +1248,48 @@ func FlavorGenericNotifyCb(fn func(key *FlavorKey, old *Flavor)) func(objstore.O
 	}
 }
 
-func (c *FlavorCache) SetNotifyCb(fn func(ctx context.Context, obj *FlavorKey, old *Flavor)) {
-	c.NotifyCb = fn
+func (c *FlavorCache) SetNotifyCb(fn func(ctx context.Context, obj *FlavorKey, old *Flavor, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *FlavorKey, old *Flavor, modRev int64){fn}
 }
 
 func (c *FlavorCache) SetUpdatedCb(fn func(ctx context.Context, old *Flavor, new *Flavor)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *Flavor, new *Flavor){fn}
+}
+
+func (c *FlavorCache) SetDeletedCb(fn func(ctx context.Context, old *Flavor)) {
+	c.DeletedCbs = []func(ctx context.Context, old *Flavor){fn}
+}
+
+func (c *FlavorCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *FlavorKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *FlavorKey){fn}
+}
+
+func (c *FlavorCache) SetDeletedKeyCb(fn func(ctx context.Context, key *FlavorKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *FlavorKey){fn}
+}
+
+func (c *FlavorCache) AddUpdatedCb(fn func(ctx context.Context, old *Flavor, new *Flavor)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *FlavorCache) AddDeletedCb(fn func(ctx context.Context, old *Flavor)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *FlavorCache) AddNotifyCb(fn func(ctx context.Context, obj *FlavorKey, old *Flavor, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *FlavorCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *FlavorKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *FlavorCache) AddDeletedKeyCb(fn func(ctx context.Context, key *FlavorKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *FlavorCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *FlavorCache) WatchKey(key *FlavorKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1044,14 +1336,21 @@ func (c *FlavorCache) TriggerKeyWatchers(ctx context.Context, key *FlavorKey) {
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *FlavorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *FlavorCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := Flavor{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse Flavor data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1059,11 +1358,11 @@ func (c *FlavorCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64
 	c.Mux.Unlock()
 }
 
-func (c *FlavorCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *FlavorCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := Flavor{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	FlavorKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *FlavorCache) SyncListStart(ctx context.Context) {
@@ -1071,7 +1370,7 @@ func (c *FlavorCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *FlavorCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[FlavorKey]*Flavor)
+	deleted := make(map[FlavorKey]*FlavorCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1081,12 +1380,26 @@ func (c *FlavorCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
+}
+
+func (c *FlavorCache) UsesOrg(org string) bool {
+	return false
 }
 
 func (m *Flavor) GetObjKey() objstore.ObjKey {
@@ -1119,6 +1432,9 @@ func (m *Flavor) ValidateEnums() error {
 }
 
 func (m *FlavorKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
@@ -1129,6 +1445,9 @@ func (m *FlavorKey) Size() (n int) {
 }
 
 func (m *Flavor) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1160,14 +1479,7 @@ func (m *Flavor) Size() (n int) {
 }
 
 func sovFlavor(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozFlavor(x uint64) (n int) {
 	return sovFlavor(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1187,7 +1499,7 @@ func (m *FlavorKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1215,7 +1527,7 @@ func (m *FlavorKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1225,6 +1537,9 @@ func (m *FlavorKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthFlavor
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthFlavor
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1237,6 +1552,9 @@ func (m *FlavorKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthFlavor
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthFlavor
 			}
 			if (iNdEx + skippy) > l {
@@ -1266,7 +1584,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1294,7 +1612,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1304,6 +1622,9 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthFlavor
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthFlavor
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1323,7 +1644,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1332,6 +1653,9 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthFlavor
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthFlavor
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1353,7 +1677,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Ram |= (uint64(b) & 0x7F) << shift
+				m.Ram |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1372,7 +1696,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Vcpus |= (uint64(b) & 0x7F) << shift
+				m.Vcpus |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1391,7 +1715,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Disk |= (uint64(b) & 0x7F) << shift
+				m.Disk |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1410,7 +1734,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1419,6 +1743,9 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthFlavor
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthFlavor
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1439,7 +1766,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1456,7 +1783,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1466,6 +1793,9 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthFlavor
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthFlavor
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -1482,7 +1812,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1492,6 +1822,9 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthFlavor
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthFlavor
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -1523,6 +1856,9 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthFlavor
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthFlavor
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1538,6 +1874,7 @@ func (m *Flavor) Unmarshal(dAtA []byte) error {
 func skipFlavor(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1569,10 +1906,8 @@ func skipFlavor(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1589,97 +1924,34 @@ func skipFlavor(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthFlavor
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowFlavor
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipFlavor(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupFlavor
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthFlavor
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthFlavor = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowFlavor   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthFlavor        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowFlavor          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupFlavor = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("flavor.proto", fileDescriptorFlavor) }
-
-var fileDescriptorFlavor = []byte{
-	// 605 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x92, 0xc1, 0x6b, 0x13, 0x4f,
-	0x14, 0xc7, 0x3b, 0x49, 0x1a, 0xc8, 0x74, 0x7f, 0xfd, 0xb5, 0x6b, 0x29, 0x43, 0xd0, 0x74, 0x59,
-	0x50, 0x82, 0x6c, 0x77, 0xa5, 0x5e, 0x4a, 0xb0, 0x60, 0x6a, 0xf5, 0x52, 0xab, 0x30, 0x62, 0xaf,
-	0x65, 0xba, 0xfb, 0xba, 0x5d, 0xb2, 0xbb, 0xb3, 0xec, 0xec, 0x26, 0xe6, 0x26, 0xfd, 0x0b, 0x04,
-	0x2f, 0xe2, 0xc9, 0x3f, 0x41, 0xff, 0x8b, 0x1e, 0x05, 0x0f, 0xde, 0x44, 0x83, 0x07, 0xe9, 0x49,
-	0x68, 0x0a, 0x1e, 0x65, 0x66, 0xd3, 0xd8, 0x50, 0xc1, 0x16, 0xf4, 0x12, 0xbe, 0xef, 0xe5, 0xbd,
-	0xf7, 0xf9, 0xbe, 0xb7, 0x83, 0xb5, 0xbd, 0x90, 0x75, 0x79, 0x6a, 0x27, 0x29, 0xcf, 0xb8, 0x5e,
-	0x03, 0xcf, 0x07, 0x25, 0xeb, 0x57, 0x7d, 0xce, 0xfd, 0x10, 0x1c, 0x96, 0x04, 0x0e, 0x8b, 0x63,
-	0x9e, 0xb1, 0x2c, 0xe0, 0xb1, 0x28, 0x0a, 0xeb, 0xab, 0x7e, 0x90, 0xed, 0xe7, 0xbb, 0xb6, 0xcb,
-	0x23, 0x27, 0xe2, 0xbb, 0x41, 0x28, 0x1b, 0x9f, 0x39, 0xf2, 0x77, 0xd9, 0x0d, 0x79, 0xee, 0x39,
-	0xaa, 0xce, 0x87, 0x78, 0x2c, 0x46, 0x9d, 0x5a, 0x0a, 0x22, 0x0f, 0xb3, 0x51, 0xb4, 0xe0, 0x73,
-	0x9f, 0x2b, 0xe9, 0x48, 0x55, 0x64, 0xcd, 0x65, 0x5c, 0x7b, 0xa0, 0x6c, 0x6d, 0x42, 0x5f, 0xd7,
-	0x71, 0x25, 0x66, 0x11, 0x10, 0x64, 0xa0, 0x66, 0x8d, 0x2a, 0xdd, 0xd2, 0xbe, 0x1d, 0x13, 0xf4,
-	0xe3, 0x98, 0xa0, 0xb7, 0x6f, 0x96, 0x90, 0xf9, 0xae, 0x84, 0xab, 0x45, 0xbd, 0xbe, 0x88, 0xab,
-	0x7b, 0x01, 0x84, 0x9e, 0x20, 0xc8, 0x28, 0x37, 0x6b, 0x74, 0x14, 0xe9, 0x16, 0x2e, 0x77, 0xa0,
-	0x4f, 0x4a, 0x06, 0x6a, 0xce, 0xac, 0x2c, 0xd8, 0xe3, 0x35, 0xed, 0x31, 0x67, 0xbd, 0x72, 0xf8,
-	0x69, 0x69, 0x8a, 0xca, 0x32, 0x7d, 0x0e, 0x97, 0x53, 0x16, 0x91, 0xb2, 0x81, 0x9a, 0x15, 0x2a,
-	0xa5, 0xbe, 0x80, 0xa7, 0xbb, 0x6e, 0x92, 0x0b, 0x52, 0x51, 0xb9, 0x22, 0x90, 0xd6, 0xbc, 0x40,
-	0x74, 0xc8, 0xb4, 0x4a, 0x2a, 0xad, 0xdf, 0xc5, 0x33, 0x3c, 0xc9, 0x76, 0x52, 0x10, 0x3b, 0x11,
-	0x4b, 0x48, 0xd5, 0x28, 0x37, 0x67, 0x56, 0x8c, 0x73, 0x44, 0xfb, 0x71, 0x92, 0x51, 0x10, 0x5b,
-	0x2c, 0xb9, 0x1f, 0x67, 0x69, 0x9f, 0xd6, 0xf8, 0x69, 0x5c, 0xbf, 0x83, 0x67, 0x27, 0xff, 0x94,
-	0x7e, 0xa4, 0xfb, 0xe2, 0x02, 0xca, 0xa1, 0xf4, 0xc3, 0xc2, 0x1c, 0xd4, 0x46, 0x35, 0x5a, 0x04,
-	0xad, 0xd2, 0x2a, 0x6a, 0x5d, 0x97, 0xa7, 0xf9, 0x7e, 0x4c, 0xd0, 0xf3, 0x21, 0x41, 0x2f, 0x86,
-	0x04, 0xbd, 0x1a, 0x12, 0xf4, 0xfa, 0x84, 0xfc, 0x27, 0x0f, 0xb7, 0xb6, 0x09, 0x7d, 0xfb, 0x11,
-	0x8b, 0x60, 0xe5, 0xe3, 0xf4, 0xe9, 0x8d, 0xdb, 0x49, 0xa0, 0x1f, 0x20, 0xac, 0xdd, 0x4b, 0x81,
-	0x65, 0x30, 0xba, 0xe3, 0xfc, 0x39, 0xc3, 0xf5, 0xb3, 0x29, 0xaa, 0xbe, 0xa1, 0xf9, 0xf0, 0x68,
-	0x48, 0xae, 0x51, 0x10, 0x3c, 0x4f, 0xdd, 0x51, 0xa7, 0xb0, 0xda, 0xae, 0x7c, 0x28, 0x5b, 0x2c,
-	0x66, 0x3e, 0x58, 0x83, 0x13, 0x32, 0x4b, 0x59, 0x64, 0x6d, 0xcb, 0x7b, 0x59, 0x1b, 0x81, 0xe8,
-	0x1c, 0x7c, 0xf8, 0xfa, 0xb2, 0x74, 0xc5, 0x9c, 0x75, 0x5c, 0xc5, 0x73, 0x8a, 0xf7, 0xd7, 0x42,
-	0x37, 0xf5, 0x04, 0x6b, 0x1b, 0x10, 0xc2, 0x25, 0x3d, 0xb4, 0xfe, 0xe8, 0x61, 0x4c, 0xf4, 0xd4,
-	0xf4, 0x49, 0xe2, 0xd3, 0xc4, 0x63, 0xff, 0x8e, 0x98, 0xab, 0xe9, 0x67, 0x88, 0x3d, 0x8c, 0x9f,
-	0xec, 0xf3, 0xde, 0xc5, 0x78, 0x45, 0xca, 0x6c, 0x1f, 0x0d, 0xc9, 0x8d, 0xdf, 0xf3, 0xb6, 0x03,
-	0xe8, 0x59, 0xa2, 0x13, 0x24, 0x10, 0xef, 0xf1, 0xd4, 0x05, 0x05, 0x9e, 0x37, 0x35, 0x47, 0xec,
-	0xf3, 0xde, 0x2f, 0xec, 0x2d, 0x24, 0x57, 0x6d, 0x7b, 0x5e, 0xd1, 0x4d, 0x41, 0xfc, 0xfd, 0x55,
-	0x99, 0xe7, 0xa5, 0x20, 0xce, 0xac, 0xda, 0xc5, 0xff, 0x53, 0x88, 0x78, 0x17, 0x2e, 0x0b, 0x5d,
-	0xbb, 0x18, 0x74, 0xd1, 0x9c, 0x77, 0x52, 0x05, 0x98, 0xe0, 0xae, 0xcf, 0x1d, 0x7e, 0x69, 0x4c,
-	0x1d, 0x0e, 0x1a, 0xe8, 0xfd, 0xa0, 0x81, 0x3e, 0x0f, 0x1a, 0x68, 0xb7, 0xaa, 0xc6, 0xdf, 0xfe,
-	0x19, 0x00, 0x00, 0xff, 0xff, 0x33, 0xf2, 0xb6, 0x9e, 0xec, 0x04, 0x00, 0x00,
-}

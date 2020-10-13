@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
@@ -122,14 +123,18 @@ func (s *PluginSupport) SetPbGoPackage(pkgName string) {
 	s.PbGoPackage = pkgName
 }
 
-func (s *PluginSupport) GetPackage(obj generator.Object) string {
+func (s *PluginSupport) GetPackageName(obj generator.Object) string {
 	pkg := *obj.File().Package
 	if pkg == s.PbGoPackage {
 		pkg = ""
 	}
-	pkg = strings.Replace(pkg, ".", "_", -1)
+	return strings.Replace(pkg, ".", "_", -1)
+}
+
+func (s *PluginSupport) GetPackage(obj generator.Object) string {
+	pkg := s.GetPackageName(obj)
 	if pkg != "" {
-		s.UsedPkgs[pkg] = obj.File()
+		s.UsedPkgs[pkg] = obj.File().FileDescriptorProto
 		pkg += "."
 	}
 	return pkg
@@ -167,13 +172,13 @@ func (s *PluginSupport) PrintUsedImports(g *generator.Generator) {
 			// Timestamp, Empty, etc.
 			ipath = builtinPath
 		}
-		g.PrintImport(pkg, ipath)
+		g.PrintImport(generator.GoPackageName(pkg), generator.GoImportPath(ipath))
 	}
 }
 
 // See generator.GetComments(). The path is a comma separated list of integers.
-func (s *PluginSupport) GetComments(file *descriptor.FileDescriptorProto, path string) string {
-	comments, ok := s.Comments[file.GetName()]
+func (s *PluginSupport) GetComments(fileName string, path string) string {
+	comments, ok := s.Comments[fileName]
 	if !ok {
 		return ""
 	}
@@ -333,8 +338,43 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 	return false
 }
 
+func FindField(message *descriptor.DescriptorProto, camelCaseName string) *descriptor.FieldDescriptorProto {
+	for _, field := range message.Field {
+		name := generator.CamelCase(*field.Name)
+		if name == camelCaseName {
+			return field
+		}
+	}
+	return nil
+}
+
+func FindHierField(g *generator.Generator, message *descriptor.DescriptorProto, camelCaseHierName string) (*descriptor.DescriptorProto, *descriptor.FieldDescriptorProto, error) {
+	names := strings.Split(camelCaseHierName, ".")
+	for {
+		name := names[0]
+		field := FindField(message, name)
+		if field == nil {
+			return message, field, fmt.Errorf("No field %s on %s", *field.Name, *message.Name)
+		}
+		if len(names) == 1 {
+			return message, field, nil
+		}
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := GetDesc(g, field.GetTypeName())
+			message = subDesc.DescriptorProto
+			names = names[1:]
+		} else {
+			return message, field, fmt.Errorf("Field %s on %s is not a message and has no children", strings.Join(names, "."), *message.Name)
+		}
+	}
+}
+
 func GetObjAndKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_ObjAndKey, false)
+}
+
+func GetE2edata(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_E2Edata, false)
 }
 
 func GetCustomKeyType(message *descriptor.DescriptorProto) string {
@@ -531,67 +571,96 @@ func ServerStreaming(method *descriptor.MethodDescriptorProto) bool {
 	return *method.ServerStreaming
 }
 
+func IsShow(method *descriptor.MethodDescriptorProto) bool {
+	if GetNonStandardShow(method) {
+		return false
+	}
+	return GetCamelCasePrefix(*method.Name) == "Show"
+}
+
+func GetEnumBackend(enumVal *descriptor.EnumValueDescriptorProto) bool {
+	return proto.GetBoolExtension(enumVal.Options, protogen.E_EnumBackend, false)
+}
+
+func GetNonStandardShow(method *descriptor.MethodDescriptorProto) bool {
+	return proto.GetBoolExtension(method.Options, protogen.E_NonStandardShow, false)
+}
+
 type MethodInfo struct {
-	Name   string
-	Action string
-	Stream bool
-	Mc2Api bool
-	Method *descriptor.MethodDescriptorProto
+	Name     string
+	Prefix   string
+	Stream   bool
+	Mc2Api   bool
+	IsShow   bool
+	IsUpdate bool
+	Method   *descriptor.MethodDescriptorProto
+	Out      *generator.Descriptor
+	OutType  string
 }
 
 type MethodGroup struct {
+	ServiceName  string
 	MethodInfos  []*MethodInfo
 	InType       string
 	In           *generator.Descriptor
 	HasStream    bool
 	HasUpdate    bool
 	HasMc2Api    bool
+	HasShow      bool
 	SingularData bool
 	Suffix       string
 }
 
-func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorProto, actions map[string]string) (*generator.Descriptor, *MethodInfo) {
+func (m *MethodGroup) ApiName() string {
+	return m.ServiceName + m.Suffix
+}
+
+func GetCamelCasePrefix(name string) string {
+	if name == "" {
+		return ""
+	}
+	for ii := 1; ii < len(name); ii++ {
+		if unicode.IsUpper(rune(name[ii])) {
+			return name[:ii]
+		}
+	}
+	return name
+}
+
+func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorProto) (*generator.Descriptor, *MethodInfo) {
 	in := GetDesc(g, method.GetInputType())
 
 	info := MethodInfo{}
-	for k, v := range actions {
-		if strings.HasPrefix(*method.Name, k) {
-			info.Action = v
-			break
-		}
-	}
 	info.Name = *method.Name
-	if info.Action == "" {
-		// ignore
-		return nil, nil
+	prefix := GetCamelCasePrefix(*method.Name)
+	if *method.Name == prefix+*in.DescriptorProto.Name {
+		// use prefixes only when prefixed against input object type
+		info.Prefix = prefix
+	} else {
+		info.Prefix = *method.Name
 	}
+	info.Out = GetDesc(g, method.GetOutputType())
+	info.OutType = *info.Out.DescriptorProto.Name
 	if ServerStreaming(method) {
 		info.Stream = true
 	}
 	if GetStringExtension(method.Options, protogen.E_Mc2Api, "") != "" {
 		info.Mc2Api = true
 	}
+	if IsShow(method) {
+		info.IsShow = true
+	}
+	if info.Prefix == "Update" {
+		info.IsUpdate = true
+	}
 	return in, &info
 }
 
 // group methods by input type
-func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto, actions map[string]string) []*MethodGroup {
-	if actions == nil {
-		actions = map[string]string{
-			"Create":  "create",
-			"Inject":  "create",
-			"Update":  "update",
-			"Delete":  "delete",
-			"Evict":   "delete",
-			"Refresh": "refresh",
-			"Add":     "add",
-			"Remove":  "remove",
-			"Reset":   "reset",
-		}
-	}
+func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto) []*MethodGroup {
 	groups := make(map[string]*MethodGroup)
 	for _, method := range service.Method {
-		in, info := GetMethodInfo(g, method, actions)
+		in, info := GetMethodInfo(g, method)
 		if info == nil {
 			continue
 		}
@@ -599,6 +668,7 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 		group, found := groups[inType]
 		if !found {
 			group = &MethodGroup{}
+			group.ServiceName = *service.Name
 			group.In = in
 			group.InType = inType
 			group.SingularData = GetSingularData(in.DescriptorProto)
@@ -611,11 +681,14 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 		if info.Stream {
 			group.HasStream = true
 		}
-		if info.Action == "update" {
+		if info.IsUpdate {
 			group.HasUpdate = true
 		}
 		if info.Mc2Api {
 			group.HasMc2Api = true
+		}
+		if info.IsShow {
+			group.HasShow = true
 		}
 	}
 	groupsSorted := make([]*MethodGroup, 0)

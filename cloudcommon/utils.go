@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -11,8 +12,26 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
+type SessionInfo struct {
+	Token      string
+	AccessPort string
+}
+
+type ExecReqInfo struct {
+	Type    ExecReqType
+	InitURL *url.URL
+	Cookies []*http.Cookie
+}
+
+type ExecReqType int
+
+const (
+	ExecReqConsole ExecReqType = 0
+	ExecReqShell   ExecReqType = 1
+)
+
 func GetFileNameWithExt(fileUrlPath string) (string, error) {
-	log.DebugLog(log.DebugLevelMexos, "get file name with extension from url", "file-url", fileUrlPath)
+	log.DebugLog(log.DebugLevelInfra, "get file name with extension from url", "file-url", fileUrlPath)
 	fileUrl, err := url.Parse(fileUrlPath)
 	if err != nil {
 		return "", fmt.Errorf("Error parsing file URL %s, %v", fileUrlPath, err)
@@ -23,7 +42,7 @@ func GetFileNameWithExt(fileUrlPath string) (string, error) {
 }
 
 func GetFileName(fileUrlPath string) (string, error) {
-	log.DebugLog(log.DebugLevelMexos, "get file name from url", "file-url", fileUrlPath)
+	log.DebugLog(log.DebugLevelInfra, "get file name from url", "file-url", fileUrlPath)
 	fileName, err := GetFileNameWithExt(fileUrlPath)
 	if err != nil {
 		return "", err
@@ -37,10 +56,10 @@ func GetDockerBaseImageVersion() (string, error) {
 		return "", err
 	}
 	out := strings.Fields(string(dat))
-	if len(out) != 2 {
+	if len(out) != 3 {
 		return "", fmt.Errorf("invalid version details: %s", out)
 	}
-	return out[1], nil
+	return out[2], nil
 }
 
 func GetAvailablePort(ipaddr string) (string, error) {

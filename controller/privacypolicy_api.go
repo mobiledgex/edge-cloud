@@ -43,6 +43,22 @@ func (s *PrivacyPolicyApi) CreatePrivacyPolicy(ctx context.Context, in *edgeprot
 func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(ctx context.Context, in *edgeproto.PrivacyPolicy) (*edgeproto.Result, error) {
 	cur := edgeproto.PrivacyPolicy{}
 	changed := 0
+
+	// Updates not allowed if the policy is in use by a cluster or app inst.  Use by an App is OK.
+	if clusterInstApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Update not allowed because policy in use by Cluster Inst")
+	}
+	if appInstApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Update not allowed because policy in use by AppInst")
+	}
+	// port range max is optional, set it to min if min is present but not max
+	for i, o := range in.OutboundSecurityRules {
+		if o.PortRangeMax == 0 {
+			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin)
+			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
+		}
+	}
+
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
@@ -67,6 +83,12 @@ func (s *PrivacyPolicyApi) DeletePrivacyPolicy(ctx context.Context, in *edgeprot
 	if clusterInstApi.UsesPrivacyPolicy(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("Policy in use by ClusterInst")
 	}
+	if appApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Policy in use by App")
+	}
+	if appInstApi.UsesPrivacyPolicy(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("Policy in use by AppInst")
+	}
 	return s.store.Delete(ctx, in, s.sync.syncWait)
 }
 
@@ -81,7 +103,7 @@ func (s *PrivacyPolicyApi) ShowPrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edg
 func (s *PrivacyPolicyApi) STMFind(stm concurrency.STM, name, dev string, policy *edgeproto.PrivacyPolicy) error {
 	key := edgeproto.PolicyKey{}
 	key.Name = name
-	key.Developer = dev
+	key.Organization = dev
 	if !s.store.STMGet(stm, &key, policy) {
 		return fmt.Errorf("PrivacyPolicy %s for developer %s not found", name, dev)
 	}

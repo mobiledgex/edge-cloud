@@ -13,7 +13,7 @@ build-vers:
 	(cd version; ./version.sh)
 
 check-vers: build-vers
-	@if test $(GOVERS) != go1.12; then \
+	@if test $(GOVERS) != go1.15; then \
 		echo "Go version is $(GOVERS)"; \
 		echo "See https://mobiledgex.atlassian.net/wiki/spaces/SWDEV/pages/307986555/Upgrade+to+go+1.12"; \
 		exit 2; \
@@ -21,6 +21,7 @@ check-vers: build-vers
 
 
 build: check-vers
+	make -f Makefile.tools
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
@@ -40,7 +41,7 @@ build-linux:
 
 build-docker:
 	rsync --checksum .dockerignore ../.dockerignore
-	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d')" \
+	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d'), ${TAG}" \
 		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
@@ -70,6 +71,7 @@ external-doc:
 	make -C edgeproto external-doc
 
 lint:
+	(cd $(GOPATH)/src/github.com/uber/prototool; go install ./cmd/prototool)
 	$(RM) link-gogo-protobuf
 	$(RM) link-grpc-gateway
 	ln -s $(GOGOPROTO) link-gogo-protobuf
@@ -79,7 +81,7 @@ lint:
 
 UNIT_TEST_LOG = /tmp/edge-cloud-unit-test.log
 
-unit-test: lint
+unit-test:
 	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
 
 test:

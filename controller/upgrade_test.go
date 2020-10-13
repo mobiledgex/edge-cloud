@@ -10,8 +10,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var upgradeTestFileLocation = "./upgrade_testfiles"
@@ -83,13 +84,20 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 		fileObjCount++
 	}
 	// count objects in etcd
-	err = objStore.List("", func(key, val []byte, rev int64) error {
+	fileExpected, err := os.Create(upgradeTestFileLocation + "/" + funcName + "_expected.etcd")
+	if err != nil {
+		return err
+	}
+	err = objStore.List("", func(key, val []byte, rev, modRev int64) error {
+		fileExpected.WriteString(string(key) + "\n")
+		fileExpected.WriteString(string(val) + "\n")
 		dbObjCount++
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+	fileExpected.Close()
 	if fileObjCount != dbObjCount {
 		return fmt.Errorf("Number of objects in the etcd db[%d] doesn't match the number of expected objects[%d]\n",
 			dbObjCount, fileObjCount)
@@ -130,21 +138,31 @@ func compareString(funcName, key, expected, actual string) error {
 // Run each upgrade function after populating dummy etcd with test data.
 // Verify that the resulting content in etcd matches expected
 func TestAllUpgradeFuncs(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelUpgrade | log.DebugLevelApi)
 	objStore := dummyEtcd{}
 	objstore.InitRegion(1)
-	ctx := context.Background()
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	for ii, fn := range edgeproto.VersionHash_UpgradeFuncs {
 		if fn == nil {
 			continue
 		}
 		objStore.Start()
 		err := buildDbFromTestData(&objStore, edgeproto.VersionHash_UpgradeFuncNames[ii])
-		assert.Nil(t, err, "Unable to build db from testData")
+		require.Nil(t, err, "Unable to build db from testData")
 		err = edgeproto.RunSingleUpgrade(ctx, &objStore, fn)
-		assert.Nil(t, err, "Upgrade failed")
+		require.Nil(t, err, "Upgrade failed")
 		err = compareDbToExpected(&objStore, edgeproto.VersionHash_UpgradeFuncNames[ii])
-		assert.Nil(t, err, "Unexpected result from upgrade function")
+		require.Nil(t, err, "Unexpected result from upgrade function")
 		// Stop it, so it's re-created again
 		objStore.Stop()
 	}
+	//manually test a failure of checkHttpPorts upgrade
+	objStore.Start()
+	err := buildDbFromTestData(&objStore, "CheckForHttpPortsFail")
+	require.Nil(t, err, "Unable to build db from testData")
+	err = edgeproto.RunSingleUpgrade(ctx, &objStore, edgeproto.CheckForHttpPorts)
+	require.NotNil(t, err, "Upgrade did not fail")
+	objStore.Stop()
 }

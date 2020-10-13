@@ -12,8 +12,7 @@ import (
 var oldPrometheusControllerApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
 	ImagePath:     "stable/prometheus-operator",
-	Deployment:    cloudcommon.AppDeploymentTypeHelm,
-	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
+	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
 }

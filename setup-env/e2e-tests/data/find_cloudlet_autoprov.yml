@@ -1,5 +1,5 @@
 registerclientrequest:
-  devname: AcmeAppCo
+  orgname: AcmeAppCo
   appname: autoprovapp
   appvers: "1.0"
   cellid: 1234

@@ -3,39 +3,53 @@ package cloudcommon
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vault"
 	yaml "github.com/mobiledgex/yaml/v2"
 	v1 "k8s.io/api/core/v1"
 )
 
-var AppDeploymentTypeKubernetes = "kubernetes"
-var AppDeploymentTypeVM = "vm"
-var AppDeploymentTypeHelm = "helm"
-var AppDeploymentTypeDocker = "docker"
+var DeploymentTypeKubernetes = "kubernetes"
+var DeploymentTypeVM = "vm"
+var DeploymentTypeHelm = "helm"
+var DeploymentTypeDocker = "docker"
 
-var ValidDeployments = []string{
-	AppDeploymentTypeKubernetes,
-	AppDeploymentTypeVM,
-	AppDeploymentTypeHelm,
-	AppDeploymentTypeDocker,
+var Download = "download"
+var NoDownload = "nodownload"
+
+var ValidAppDeployments = []string{
+	DeploymentTypeKubernetes,
+	DeploymentTypeVM,
+	DeploymentTypeHelm,
+	DeploymentTypeDocker,
+}
+
+var ValidCloudletDeployments = []string{
+	DeploymentTypeDocker,
+	DeploymentTypeKubernetes,
 }
 
 type DockerManifest struct {
 	DockerComposeFiles []string
 }
 
-func IsValidDeploymentType(appDeploymentType string) bool {
-	for _, d := range ValidDeployments {
-		if appDeploymentType == d {
+func IsValidDeploymentType(DeploymentType string, validDeployments []string) bool {
+	for _, d := range validDeployments {
+		if DeploymentType == d {
 			return true
 		}
 	}
@@ -45,36 +59,46 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
 	switch imageType {
 	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
-		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeKubernetes || deployment == DeploymentTypeDocker {
 			return true
 		}
 	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
-		if deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeVM {
 			return true
 		}
 	case edgeproto.ImageType_IMAGE_TYPE_HELM:
-		if deployment == AppDeploymentTypeHelm {
+		if deployment == DeploymentTypeHelm {
 			return true
 		}
 	}
 	return false
 }
 
+func GetDockerDeployType(manifest string) string {
+	if manifest == "" {
+		return "docker"
+	}
+	if strings.HasSuffix(manifest, ".zip") {
+		return "docker-compose-zip"
+	}
+	return "docker-compose"
+}
+
 // GetMappedAccessType gets the default access type for the deployment if AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT
 // is specified.  It returns an error if the access type is not valid for the deployment
-func GetMappedAccessType(accessType edgeproto.AccessType, deployment string) (edgeproto.AccessType, error) {
+func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deploymentManifest string) (edgeproto.AccessType, error) {
 	switch accessType {
 
 	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
-		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeHelm || deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeKubernetes || deployment == DeploymentTypeHelm || deployment == DeploymentTypeDocker || deployment == DeploymentTypeVM {
 			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DIRECT:
-		if deployment == AppDeploymentTypeVM || deployment == AppDeploymentTypeDocker {
+		if deployment == DeploymentTypeVM || deployment == DeploymentTypeDocker {
 			return accessType, nil
 		}
 	case edgeproto.AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT:
-		if deployment == AppDeploymentTypeVM {
+		if deployment == DeploymentTypeVM {
 			return edgeproto.AccessType_ACCESS_TYPE_DIRECT, nil
 		}
 		// all others default to LB
@@ -83,8 +107,8 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment string) (ed
 	return accessType, fmt.Errorf("Invalid access type for deployment")
 }
 
-func IsValidDeploymentManifest(appDeploymentType, command, manifest string, ports []dme.AppPort) error {
-	if appDeploymentType == AppDeploymentTypeVM {
+func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports []dme.AppPort) error {
+	if DeploymentType == DeploymentTypeVM {
 		if command != "" {
 			return fmt.Errorf("both deploymentmanifest and command cannot be used together for VM based deployment")
 		}
@@ -92,7 +116,7 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 			return nil
 		}
 		return fmt.Errorf("only cloud-init script support, must start with '#cloud-config'")
-	} else if appDeploymentType == AppDeploymentTypeKubernetes {
+	} else if DeploymentType == DeploymentTypeKubernetes {
 		objs, _, err := DecodeK8SYaml(manifest)
 		if err != nil {
 			return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
@@ -111,13 +135,12 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 					log.DebugLog(log.DebugLevelApi, "unrecognized port protocol in kubernetes manifest", "proto", string(kp.Protocol))
 					continue
 				}
-				appPort.InternalPort = int32(kp.TargetPort.IntValue())
+				appPort.InternalPort = kp.Port
 				objPorts[appPort.String()] = struct{}{}
 			}
 		}
 		missingPorts := []string{}
 		for _, appPort := range ports {
-			// http is mapped to tcp
 			if appPort.EndPort != 0 {
 				// We have a range-port notation on the dme.AppPort
 				// while our manifest exhaustively enumerates each as a kubePort
@@ -130,9 +153,6 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 						InternalPort: int32(i),
 						EndPort:      int32(0),
 					}
-					if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-						appPort.Proto = dme.LProto_L_PROTO_TCP
-					}
 
 					if _, found := objPorts[tp.String()]; found {
 						continue
@@ -142,17 +162,18 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 				}
 				continue
 			}
-			if appPort.Proto == dme.LProto_L_PROTO_HTTP {
-				appPort.Proto = dme.LProto_L_PROTO_TCP
-			}
-			if _, found := objPorts[appPort.String()]; found {
+			tp := appPort
+			// No need to test TLS or nginx as part of manifest
+			tp.Tls = false
+			tp.Nginx = false
+			if _, found := objPorts[tp.String()]; found {
 				continue
 			}
-			protoStr, _ := edgeproto.LProtoStr(appPort.Proto)
-			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, appPort.InternalPort))
+			protoStr, _ := edgeproto.LProtoStr(tp.Proto)
+			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
 		}
 		if len(missingPorts) > 0 {
-			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest (note http is mapped to tcp)", strings.Join(missingPorts, ","))
+			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest", strings.Join(missingPorts, ","))
 		}
 	}
 	return nil
@@ -161,24 +182,24 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string, port
 func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	switch imageType {
 	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
-		return AppDeploymentTypeKubernetes, nil
+		return DeploymentTypeKubernetes, nil
 	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
-		return AppDeploymentTypeVM, nil
+		return DeploymentTypeVM, nil
 	case edgeproto.ImageType_IMAGE_TYPE_HELM:
-		return AppDeploymentTypeHelm, nil
+		return DeploymentTypeHelm, nil
 	}
 	return "", fmt.Errorf("unknown image type %s", imageType)
 }
 
 func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 	switch deployment {
-	case AppDeploymentTypeDocker:
+	case DeploymentTypeDocker:
 		fallthrough
-	case AppDeploymentTypeKubernetes:
+	case DeploymentTypeKubernetes:
 		return edgeproto.ImageType_IMAGE_TYPE_DOCKER, nil
-	case AppDeploymentTypeHelm:
+	case DeploymentTypeHelm:
 		return edgeproto.ImageType_IMAGE_TYPE_HELM, nil
-	case AppDeploymentTypeVM:
+	case DeploymentTypeVM:
 		// could be different formats
 		fallthrough
 	default:
@@ -187,12 +208,12 @@ func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 }
 
 // GetAppDeploymentManifest gets the deployment-specific manifest.
-func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
+func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App) (string, error) {
 	if app.DeploymentManifest != "" {
-		return GetDeploymentManifest(app.DeploymentManifest)
+		return GetDeploymentManifest(ctx, vaultConfig, app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {
 		return GenerateManifest(app)
-	} else if app.Deployment == AppDeploymentTypeKubernetes {
+	} else if app.Deployment == DeploymentTypeKubernetes {
 		// kubernetes requires a deployment yaml. Use default generator.
 		app.DeploymentGenerator = deploygen.KubernetesBasic
 		str, err := GenerateManifest(app)
@@ -205,59 +226,83 @@ func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 	return "", nil
 }
 
-func validateRemoteZipManifest(manifest string) error {
-	zipfile := "/tmp/temp.zip"
-	err := GetRemoteManifestToFile(manifest, zipfile)
-	if err != nil {
-		return fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config, manifest, zipfile, downloadAction string) ([]map[string]DockerContainer, error) {
+	if zipfile == "" {
+		zipfile = "/var/tmp/temp.zip"
+	}
+	if downloadAction == Download {
+		err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
+		}
 	}
 	defer os.Remove(zipfile)
 	r, err := zip.OpenReader(zipfile)
 	if err != nil {
-		return fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
+		return nil, fmt.Errorf("cannot read zipfile from manifest %s, %v", manifest, err)
 	}
 	defer r.Close()
 	foundManifest := false
-	var filesInManifest = make(map[string]bool)
+	var filesInManifest = make(map[string]*zip.File)
 	var dm DockerManifest
 	for _, f := range r.File {
-		filesInManifest[f.Name] = true
+		filesInManifest[f.Name] = f
 		if f.Name == "manifest.yml" {
 			foundManifest = true
 			rc, err := f.Open()
 			if err != nil {
-				return fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
+				return nil, fmt.Errorf("cannot open manifest.yml in zipfile: %v", err)
 			}
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(rc)
 			rc.Close()
 			err = yaml.Unmarshal(buf.Bytes(), &dm)
 			if err != nil {
-				return fmt.Errorf("unmarshalling manifest.yml: %v", err)
+				return nil, fmt.Errorf("unmarshalling manifest.yml: %v", err)
 			}
 		}
 	}
 	if !foundManifest {
-		return fmt.Errorf("no manifest.yml in zipfile %s", manifest)
+		return nil, fmt.Errorf("no manifest.yml in zipfile %s", manifest)
 	}
+	var zipContainers []map[string]DockerContainer
 	for _, dc := range dm.DockerComposeFiles {
-		_, ok := filesInManifest[dc]
+		f, ok := filesInManifest[dc]
 		if !ok {
-			return fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
+			return nil, fmt.Errorf("docker-compose file specified in manifest but not in zip: %s", dc)
 		}
+		rc, err := f.Open()
+		if err != nil {
+			return nil, fmt.Errorf("cannot open docker compose file %s in zipfile: %v", dc, err)
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(rc)
+		rc.Close()
+
+		content := buf.String()
+		containers, err := DecodeDockerComposeYaml(content)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse %s manifest file with contents %s: %v", dc, content, err)
+		}
+		zipContainers = append(zipContainers, containers)
 	}
-	return nil
+	return zipContainers, nil
 }
 
-func GetDeploymentManifest(manifest string) (string, error) {
+func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) error {
+	_, err := GetRemoteZipDockerManifests(ctx, vaultConfig, manifest, "", Download)
+	return err
+}
+
+func GetDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) (string, error) {
 	// manifest may be remote target or inline json/yaml
 	if strings.HasPrefix(manifest, "http://") || strings.HasPrefix(manifest, "https://") {
 
 		if strings.HasSuffix(manifest, ".zip") {
 			log.DebugLog(log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
-			return manifest, validateRemoteZipManifest(manifest)
+			return manifest, validateRemoteZipManifest(ctx, vaultConfig, manifest)
 		}
-		mf, err := GetRemoteManifest(manifest)
+		mf, err := GetRemoteManifest(ctx, vaultConfig, manifest)
 		if err != nil {
 			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
 		}
@@ -281,34 +326,93 @@ func GenerateManifest(app *edgeproto.App) (string, error) {
 	return "", fmt.Errorf("invalid deployment generator %s", target)
 }
 
-func GetRemoteManifest(target string) (string, error) {
-	resp, err := http.Get(target)
+func GetRemoteManifest(ctx context.Context, vaultConfig *vault.Config, target string) (string, error) {
+	var content string
+	err := DownloadFile(ctx, vaultConfig, target, "", &content)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
-	}
-	manifestBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(manifestBytes), nil
+	return content, nil
 }
 
-func GetRemoteManifestToFile(target string, filename string) error {
-	resp, err := http.Get(target)
+func GetRemoteManifestToFile(ctx context.Context, vaultConfig *vault.Config, target string, filename string) error {
+	return DownloadFile(ctx, vaultConfig, target, filename, nil)
+}
+
+// 5GB = 10minutes
+func GetTimeout(cLen int) time.Duration {
+	fileSizeInGB := float64(cLen) / (1024.0 * 1024.0 * 1024.0)
+	timeoutUnit := int(math.Ceil(fileSizeInGB / 5.0))
+	if fileSizeInGB > 5 {
+		return time.Duration(timeoutUnit) * 10 * time.Minute
+	}
+	return 15 * time.Minute
+}
+
+func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath string, filePath string, content *string) error {
+	var reqConfig *RequestConfig
+
+	log.SpanLog(ctx, log.DebugLevelApi, "attempt to download file", "file-url", fileUrlPath)
+
+	// Adjust request timeout based on File Size
+	//  - Timeout is increased by 10min for every 5GB
+	//  - If less than 5GB, then use default timeout
+	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, vaultConfig, nil)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
+	contentLength := resp.Header.Get("Content-Length")
+	cLen, err := strconv.Atoi(contentLength)
+	if err == nil && cLen > 0 {
+		timeout := GetTimeout(cLen)
+		if timeout > 0 {
+			reqConfig = &RequestConfig{
+				Timeout: timeout,
+			}
+			log.SpanLog(ctx, log.DebugLevelApi, "increased request timeout", "file-url", fileUrlPath, "timeout", timeout.String())
+		}
 	}
-	manifestBytes, err := ioutil.ReadAll(resp.Body)
+
+	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, vaultConfig, reqConfig)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, manifestBytes, 0644)
+	defer resp.Body.Close()
+	// Check server response
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	if filePath != "" {
+		// Create the file
+		out, err := os.Create(filePath)
+		if err != nil {
+			return err
+		}
+		defer out.Close()
+
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to download file %v", err)
+		}
+	}
+
+	if content != nil {
+		contentBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		*content = string(contentBytes)
+	}
+
+	return nil
+}
+
+// Transform AppInst deployment type to ClusterInst deployment type
+func AppInstToClusterDeployment(deployment string) string {
+	if deployment == DeploymentTypeHelm {
+		deployment = DeploymentTypeKubernetes
+	}
+	return deployment
 }

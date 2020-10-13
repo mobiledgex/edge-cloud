@@ -23,19 +23,21 @@ import (
 )
 
 type dmeApiRequest struct {
-	Rcreq            dmeproto.RegisterClientRequest  `yaml:"registerclientrequest"`
-	Fcreq            dmeproto.FindCloudletRequest    `yaml:"findcloudletrequest"`
-	Vlreq            dmeproto.VerifyLocationRequest  `yaml:"verifylocationrequest"`
-	Glreq            dmeproto.GetLocationRequest     `yaml:"getlocationrequest"`
-	Dlreq            dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
-	Aireq            dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
-	Fqreq            dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
-	Qosreq           dmeproto.QosPositionRequest     `yaml:"qospositionrequest"`
-	TokenServerPath  string                          `yaml:"token-server-path"`
-	ErrorExpected    string                          `yaml:"error-expected"`
-	Repeat           int                             `yaml:"repeat"`
-	RunAtIntervalSec float64                         `yaml:"runatintervalsec"`
-	RunAtOffsetSec   float64                         `yaml:"runatoffsetsec"`
+	Rcreq            dmeproto.RegisterClientRequest       `yaml:"registerclientrequest"`
+	Fcreq            dmeproto.FindCloudletRequest         `yaml:"findcloudletrequest"`
+	Pfcreq           dmeproto.PlatformFindCloudletRequest `yaml:"platformfindcloudletrequest"`
+	Vlreq            dmeproto.VerifyLocationRequest       `yaml:"verifylocationrequest"`
+	Glreq            dmeproto.GetLocationRequest          `yaml:"getlocationrequest"`
+	Dlreq            dmeproto.DynamicLocGroupRequest      `yaml:"dynamiclocgrouprequest"`
+	Aireq            dmeproto.AppInstListRequest          `yaml:"appinstlistrequest"`
+	Fqreq            dmeproto.FqdnListRequest             `yaml:"fqdnlistrequest"`
+	Qosreq           dmeproto.QosPositionRequest          `yaml:"qospositionrequest"`
+	AppOFqreq        dmeproto.AppOfficialFqdnRequest      `yaml:"appofficialfqdnrequest"`
+	TokenServerPath  string                               `yaml:"token-server-path"`
+	ErrorExpected    string                               `yaml:"error-expected"`
+	Repeat           int                                  `yaml:"repeat"`
+	RunAtIntervalSec float64                              `yaml:"runatintervalsec"`
+	RunAtOffsetSec   float64                              `yaml:"runatoffsetsec"`
 }
 
 type registration struct {
@@ -48,7 +50,8 @@ type RegisterReplyWithError struct {
 	dmeproto.RegisterClientReply
 }
 
-var apiRequest dmeApiRequest
+var apiRequests []*dmeApiRequest
+var singleRequest bool
 
 // REST client implementation of MatchEngineApiClient interface
 type dmeRestClient struct {
@@ -73,6 +76,17 @@ func (c *dmeRestClient) RegisterClient(ctx context.Context, in *dmeproto.Registe
 func (c *dmeRestClient) FindCloudlet(ctx context.Context, in *dmeproto.FindCloudletRequest, opts ...grpc.CallOption) (*dmeproto.FindCloudletReply, error) {
 	out := new(dmeproto.FindCloudletReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/findcloudlet",
+		c.client, in, out)
+	if err != nil {
+		log.Printf("findcloudlet rest API failed\n")
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dmeRestClient) PlatformFindCloudlet(ctx context.Context, in *dmeproto.PlatformFindCloudletRequest, opts ...grpc.CallOption) (*dmeproto.FindCloudletReply, error) {
+	out := new(dmeproto.FindCloudletReply)
+	err := util.CallRESTPost("https://"+c.addr+"/v1/platformfindcloudlet",
 		c.client, in, out)
 	if err != nil {
 		log.Printf("findcloudlet rest API failed\n")
@@ -140,8 +154,26 @@ func (c *dmeRestClient) GetAppInstList(ctx context.Context, in *dmeproto.AppInst
 	return out, nil
 }
 
+func (c *dmeRestClient) GetAppOfficialFqdn(ctx context.Context, in *dmeproto.AppOfficialFqdnRequest, opts ...grpc.CallOption) (*dmeproto.AppOfficialFqdnReply, error) {
+	out := new(dmeproto.AppOfficialFqdnReply)
+	err := util.CallRESTPost("https://"+c.addr+"/v1/getappofficialfqdn",
+		c.client, in, out)
+	if err != nil {
+		log.Printf("getappofficialfqdn rest API failed\n")
+		return nil, err
+	}
+	return out, nil
+}
+
 func readDMEApiFile(apifile string) {
-	err := util.ReadYamlFile(apifile, &apiRequest, util.ValidateReplacedVars())
+	err := util.ReadYamlFile(apifile, &apiRequests, util.ValidateReplacedVars())
+	if err != nil && !util.IsYamlOk(err, "dmeapi") {
+		// old yaml files are not arrayed dmeApiRequests
+		apiRequest := dmeApiRequest{}
+		apiRequests = append(apiRequests, &apiRequest)
+		err = util.ReadYamlFile(apifile, &apiRequest, util.ValidateReplacedVars())
+		singleRequest = true
+	}
 	if err != nil {
 		if !util.IsYamlOk(err, "dmeapi") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apifile)
@@ -184,9 +216,42 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		client = dmeproto.NewMatchEngineApiClient(conn)
 
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
 
+	rc := true
+	replies := make([]interface{}, 0)
+
+	for ii, apiRequest := range apiRequests {
+		timeout := time.Duration(float64(time.Second) * (1.0 + apiRequest.RunAtIntervalSec))
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		log.Printf("RunDmeAPIiter[%d]\n", ii)
+		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client)
+		if !ok {
+			rc = false
+			continue
+		}
+		replies = append(replies, reply)
+	}
+	if !rc {
+		return false
+	}
+
+	var out []byte
+	var ymlerror error
+	if singleRequest && len(replies) == 1 {
+		out, ymlerror = yaml.Marshal(replies[0])
+	} else {
+		out, ymlerror = yaml.Marshal(replies)
+	}
+	if ymlerror != nil {
+		fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
+		return false
+	}
+	util.PrintToFile(api+".yml", outputDir, string(out), true)
+	return true
+}
+
+func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiRequest *dmeApiRequest, client dmeproto.MatchEngineApiClient) (bool, interface{}) {
 	//generic struct so we can do the marshal in one place even though return types are different
 	var dmereply interface{}
 	var dmeerror error
@@ -198,15 +263,21 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		//if the current app is different, re-register
 		readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
 		if apiRequest.Rcreq.AppName != "" &&
-			(registerStatus.Req.DevName != apiRequest.Rcreq.DevName ||
+			(registerStatus.Req.OrgName != apiRequest.Rcreq.OrgName ||
 				registerStatus.Req.AppName != apiRequest.Rcreq.AppName ||
 				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers ||
 				time.Since(registerStatus.At) > time.Hour) {
 			log.Printf("Re-registering for api %s - %+v\n", api, apiRequest.Rcreq)
-			ok := RunDmeAPI("register", procname, apiFile, apiType, outputDir)
+			ok, reply := runDmeAPIiter(ctx, "register", apiFile, outputDir, apiRequest, client)
 			if !ok {
-				return false
+				return false, nil
 			}
+			out, ymlerror := yaml.Marshal(reply)
+			if ymlerror != nil {
+				fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
+				return false, nil
+			}
+			util.PrintToFile("register.yml", outputDir, string(out), true)
 			readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
 		}
 		sessionCookie = registerStatus.Reply.SessionCookie
@@ -214,6 +285,18 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	}
 
 	switch api {
+	case "platformfindcloudlet":
+		log.Printf("reading AppOfficialFqdn response to get token for platformfindcloudlet")
+		var fqdnreply dmeproto.AppOfficialFqdnReply
+		err := util.ReadYamlFile(outputDir+"/getappofficialfqdn.yml", &fqdnreply)
+		if err != nil {
+			log.Printf("error reading AppOfficialFqdn response - %v", err)
+			return false, nil
+		}
+		apiRequest.Pfcreq.SessionCookie = sessionCookie
+		apiRequest.Pfcreq.ClientToken = fqdnreply.ClientToken
+		log.Printf("platformfindcloudlet using client token: %s\n", apiRequest.Pfcreq.ClientToken)
+		fallthrough
 	case "findcloudlet":
 		apiRequest.Fcreq.SessionCookie = sessionCookie
 		if apiRequest.Repeat == 0 {
@@ -224,14 +307,21 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			time.Sleep(dur)
 		}
 		for ii := 0; ii < apiRequest.Repeat; ii++ {
-			log.Printf("fcreq %v\n", apiRequest.Fcreq)
-			fc, err := client.FindCloudlet(ctx, &apiRequest.Fcreq)
-			if fc != nil {
-				sort.Slice(fc.Ports, func(i, j int) bool {
-					return fc.Ports[i].InternalPort < fc.Ports[j].InternalPort
+			var reply *dmeproto.FindCloudletReply
+			var err error
+			if api == "platformfindcloudlet" {
+				log.Printf("platformfindcloudlet %v\n", apiRequest.Pfcreq)
+				reply, err = client.PlatformFindCloudlet(ctx, &apiRequest.Pfcreq)
+			} else {
+				log.Printf("fcreq %v\n", apiRequest.Fcreq)
+				reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)
+			}
+			if reply != nil {
+				sort.Slice(reply.Ports, func(i, j int) bool {
+					return reply.Ports[i].InternalPort < reply.Ports[j].InternalPort
 				})
 			}
-			dmereply = fc
+			dmereply = reply
 			dmeerror = err
 			if err != nil {
 				break
@@ -242,14 +332,14 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
 			privKeyFile := filepath.Dir(apiFile) + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
 			expTime := time.Now().Add(time.Duration(expirySeconds) * time.Second).Unix()
-			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.DevName,
+			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.OrgName,
 				apiRequest.Rcreq.AppName, apiRequest.Rcreq.AppVers, expTime)
 			if err == nil {
 				log.Printf("Got AuthToken: %s\n", token)
 				apiRequest.Rcreq.AuthToken = token
 			} else {
 				log.Printf("Error getting AuthToken: %v\n", err)
-				return false
+				return false, nil
 			}
 		}
 		reply := new(dmeproto.RegisterClientReply)
@@ -261,7 +351,6 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				At:    time.Now(),
 			}
 		}
-
 	case "verifylocation":
 		tokSrvUrl := registerStatus.Reply.TokenServerUri
 		log.Printf("found token server url from register response %s\n", tokSrvUrl)
@@ -277,7 +366,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				u, err := url.Parse(tokSrvUrl)
 				if err != nil {
 					log.Printf("unable to parse tokserv url %s -- %v\n", tokSrvUrl, err)
-					return false
+					return false, nil
 				}
 				u.Path = apiRequest.TokenServerPath
 				tokSrvUrl = u.String()
@@ -285,7 +374,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			token = GetTokenFromTokSrv(tokSrvUrl)
 			if token == "" {
 				log.Printf("fail to get token from token server")
-				return false
+				return false, nil
 			}
 		}
 		apiRequest.Vlreq.SessionCookie = sessionCookie
@@ -323,6 +412,13 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		dmereply = resp
 		dmeerror = err
 
+	case "getappofficialfqdn":
+		apiRequest.AppOFqreq.SessionCookie = sessionCookie
+		log.Printf("AppOfficialFqdnRequest: %+v\n", apiRequest.AppOFqreq)
+		resp, err := client.GetAppOfficialFqdn(ctx, &apiRequest.AppOFqreq)
+		dmereply = resp
+		dmeerror = err
+
 	case "getqospositionkpi":
 		apiRequest.Qosreq.SessionCookie = sessionCookie
 		log.Printf("getqospositionkpi request: %+v\n", apiRequest.Qosreq)
@@ -333,13 +429,13 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		dmeerror = err
 	default:
 		log.Printf("Unsupported dme api %s\n", api)
-		return false
+		return false, nil
 	}
 	if dmeerror == nil {
 		// if the test is looking for an error, it needs to be there
 		if apiRequest.ErrorExpected != "" {
 			log.Printf("Missing error in DME API: %s", apiRequest.ErrorExpected)
-			return false
+			return false, nil
 		}
 	} else {
 		// see if the error was expected
@@ -348,21 +444,13 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 				log.Printf("found expected error string in api response: %s", apiRequest.ErrorExpected)
 			} else {
 				log.Printf("Mismatched error in DME API: %s Expected: %s", dmeerror.Error(), apiRequest.ErrorExpected)
-				return false
+				return false, nil
 			}
 		} else {
 			log.Printf("Unexpected error in DME API: %s -- %v\n", api, dmeerror)
-			return false
+			return false, nil
 		}
 	}
-
 	log.Printf("DME REPLY %v\n", dmereply)
-	out, ymlerror := yaml.Marshal(dmereply)
-	if ymlerror != nil {
-		fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
-		return false
-	}
-
-	util.PrintToFile(api+".yml", outputDir, string(out), true)
-	return true
+	return true, dmereply
 }

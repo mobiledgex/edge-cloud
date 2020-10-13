@@ -34,6 +34,10 @@ func (m SettingsKey) ExistsError() error {
 	return nil
 }
 
+func (m SettingsKey) GetTags() map[string]string {
+	return map[string]string{}
+}
+
 func (m *Settings) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
@@ -57,6 +61,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		switch f {
 		case SettingsFieldShepherdMetricsCollectionInterval:
 			v.CheckGT(f, int64(s.ShepherdMetricsCollectionInterval), 0)
+		case SettingsFieldShepherdAlertEvaluationInterval:
+			v.CheckGT(f, int64(s.ShepherdAlertEvaluationInterval), 0)
 		case SettingsFieldShepherdHealthCheckRetries:
 			v.CheckGT(f, int64(s.ShepherdHealthCheckRetries), 0)
 		case SettingsFieldShepherdHealthCheckInterval:
@@ -77,6 +83,10 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.UpdateClusterInstTimeout), 0)
 		case SettingsFieldDeleteClusterInstTimeout:
 			v.CheckGT(f, int64(s.DeleteClusterInstTimeout), 0)
+		case SettingsFieldCloudletMaintenanceTimeout:
+			v.CheckGT(f, int64(s.CloudletMaintenanceTimeout), 0)
+		case SettingsFieldUpdateVmPoolTimeout:
+			v.CheckGT(f, int64(s.UpdateVmPoolTimeout), 0)
 		}
 	}
 	return v.err
@@ -86,6 +96,7 @@ func GetDefaultSettings() *Settings {
 	s := Settings{}
 	// Set default values
 	s.ShepherdMetricsCollectionInterval = Duration(5 * time.Second)
+	s.ShepherdAlertEvaluationInterval = Duration(15 * time.Second)
 	s.ShepherdHealthCheckRetries = 3
 	s.ShepherdHealthCheckInterval = Duration(5 * time.Second)
 	s.AutoDeployIntervalSec = 300
@@ -98,6 +109,11 @@ func GetDefaultSettings() *Settings {
 	s.CreateClusterInstTimeout = Duration(30 * time.Minute)
 	s.UpdateClusterInstTimeout = Duration(20 * time.Minute)
 	s.DeleteClusterInstTimeout = Duration(20 * time.Minute)
+	s.MasterNodeFlavor = ""
+	s.MaxTrackedDmeClients = 100
+	s.ChefClientInterval = Duration(10 * time.Minute)
+	s.CloudletMaintenanceTimeout = Duration(5 * time.Minute)
+	s.UpdateVmPoolTimeout = Duration(20 * time.Minute)
 	return &s
 }
 

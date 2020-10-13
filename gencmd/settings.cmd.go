@@ -3,18 +3,20 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -37,6 +39,9 @@ var UpdateSettingsCmd = &cli.Command{
 }
 
 func runUpdateSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Settings)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -89,6 +94,9 @@ var ResetSettingsCmd = &cli.Command{
 }
 
 func runResetSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Settings)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -139,6 +147,9 @@ var ShowSettingsCmd = &cli.Command{
 }
 
 func runShowSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Settings)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -186,6 +197,7 @@ var SettingsApiCmds = []*cobra.Command{
 var SettingsRequiredArgs = []string{}
 var SettingsOptionalArgs = []string{
 	"shepherdmetricscollectioninterval",
+	"shepherdalertevaluationinterval",
 	"shepherdhealthcheckretries",
 	"shepherdhealthcheckinterval",
 	"autodeployintervalsec",
@@ -197,11 +209,19 @@ var SettingsOptionalArgs = []string{
 	"createclusterinsttimeout",
 	"updateclusterinsttimeout",
 	"deleteclusterinsttimeout",
+	"masternodeflavor",
 	"loadbalancermaxportrange",
+	"maxtrackeddmeclients",
+	"chefclientinterval",
+	"influxdbmetricsretention",
+	"cloudletmaintenancetimeout",
+	"updatevmpooltimeout",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
+	"fields":                            "Fields are used for the Update API to specify which fields to apply",
 	"shepherdmetricscollectioninterval": "Shepherd metrics collection interval for k8s and docker appInstances (duration)",
+	"shepherdalertevaluationinterval":   "Shepherd alert evaluation interval for k8s and docker appInstances (duration)",
 	"shepherdhealthcheckretries":        "Number of times Shepherd Health Check fails before we mark appInst down",
 	"shepherdhealthcheckinterval":       "Health Checking probing frequency (duration)",
 	"autodeployintervalsec":             "Auto Provisioning Stats push and analysis interval (seconds)",
@@ -213,6 +233,14 @@ var SettingsComments = map[string]string{
 	"createclusterinsttimeout":          "Create ClusterInst timeout (duration)",
 	"updateclusterinsttimeout":          "Update ClusterInst timeout (duration)",
 	"deleteclusterinsttimeout":          "Delete ClusterInst timeout (duration)",
+	"masternodeflavor":                  "Default flavor for k8s master VM and > 0  workers",
 	"loadbalancermaxportrange":          "Max IP Port range when using a load balancer",
+	"maxtrackeddmeclients":              "Max DME clients to be tracked at the same time.",
+	"chefclientinterval":                "Default chef client interval (duration)",
+	"influxdbmetricsretention":          "Default influxDB metrics retention policy (duration)",
+	"cloudletmaintenancetimeout":        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
+	"updatevmpooltimeout":               "Update VM pool timeout (duration)",
 }
-var SettingsSpecialArgs = map[string]string{}
+var SettingsSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}

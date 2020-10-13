@@ -1,0 +1,14 @@
+request:
+  appinstkey:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: tmus
+        name: tmus-cloud-1
+      organization: AcmeAppCo
+expectedoutput: here's some logs

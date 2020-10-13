@@ -4,233 +4,150 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"net"
-	"net/url"
+	"net/http"
 	"os"
 	"os/signal"
-	"strings"
+	"sync"
+	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	mextls "github.com/mobiledgex/edge-cloud/tls"
-	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/mobiledgex/edge-cloud/util/webrtcutil"
-	webrtc "github.com/pion/webrtc/v2"
-	"github.com/xtaci/smux"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func WebrtcTunnel(conn net.Listener, dataChan *webrtc.DataChannel, errchan chan error, openurl chan bool) error {
-	var sess *smux.Session
-	dataChan.OnOpen(func() {
-		dcconn, err := webrtcutil.WrapDataChannel(dataChan)
-		if err != nil {
-			errchan <- fmt.Errorf("failed to wrap data channel, %v", err)
-			return
-		}
-		sess, err = smux.Client(dcconn, nil)
-		if err != nil {
-			errchan <- fmt.Errorf("failed to create smux client, %v", err)
-			return
-		}
-
-		openurl <- true
-
-		go func() {
-			for {
-				client, err := conn.Accept()
-				if err != nil {
-					errchan <- fmt.Errorf("failed to accept connections from %s, %v", conn.Addr().String(), err)
-					return
-				}
-				stream, err := sess.OpenStream()
-				if err != nil {
-					errchan <- fmt.Errorf("failed to open smux stream, %v", err)
-					return
-				}
-				go func(client net.Conn, stream *smux.Stream) {
-					buf := make([]byte, 1500)
-					for {
-						n, err := stream.Read(buf)
-						if err != nil {
-							break
-						}
-						client.Write(buf[:n])
-					}
-					stream.Close()
-					client.Close()
-				}(client, stream)
-
-				go func(client net.Conn, stream *smux.Stream) {
-					buf := make([]byte, 1500)
-					for {
-						n, err := client.Read(buf)
-						if err != nil {
-							break
-						}
-						stream.Write(buf[:n])
-					}
-					stream.Close()
-					client.Close()
-				}(client, stream)
-			}
-		}()
-	})
-
-	dataChan.OnClose(func() {
-		if sess != nil {
-			sess.Close()
-		}
-		errchan <- nil
-	})
-
-	return nil
+type ConsoleProxyObj struct {
+	mux      sync.Mutex
+	proxyMap map[string]string
 }
 
-func WebrtcShell(dataChan *webrtc.DataChannel, errchan chan error) error {
-	interactive := false
-	if terminal.IsTerminal(int(os.Stdin.Fd())) {
-		// Set stdin and Stdout to raw
-		sinOldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
-		if err != nil {
-			return err
-		}
-		defer func() {
-			terminal.Restore(int(os.Stdin.Fd()), sinOldState)
-		}()
-		soutOldState, err := terminal.MakeRaw(int(os.Stdout.Fd()))
-		if err != nil {
-			return err
-		}
-		defer func() {
-			terminal.Restore(int(os.Stdout.Fd()), soutOldState)
-		}()
-		interactive = true
+var ConsoleProxy = &ConsoleProxyObj{}
+
+func (cp *ConsoleProxyObj) Add(token, port string) {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if len(cp.proxyMap) == 0 {
+		cp.proxyMap = make(map[string]string)
 	}
-
-	wr := webrtcutil.NewDataChanWriter(dataChan)
-
-	dataChan.OnOpen(func() {
-		go func() {
-			// send stdin to data channel
-			io.Copy(wr, os.Stdin)
-			// close data channel if input stream is closed
-			// in interactive mode. In non-interactive mode,
-			// os.Stdin is already closed. Instead we wait
-			// until remote end closes data channel.
-			// We could also add a timeout for non-interactive mode.
-			if interactive {
-				dataChan.Close()
-			}
-		}()
-	})
-	dataChan.OnMessage(func(msg webrtc.DataChannelMessage) {
-		os.Stdout.Write(msg.Data)
-	})
-	dataChan.OnClose(func() {
-		errchan <- nil
-	})
-
-	return nil
+	cp.proxyMap[token] = port
 }
 
-func RunWebrtc(req *edgeproto.ExecRequest, exchangeFunc func(offer webrtc.SessionDescription) (*edgeproto.ExecRequest, *webrtc.SessionDescription, error)) error {
+func (cp *ConsoleProxyObj) Remove(token string) {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if _, ok := cp.proxyMap[token]; ok {
+		delete(cp.proxyMap, token)
+	}
+}
+
+func (cp *ConsoleProxyObj) Get(token string) string {
+	cp.mux.Lock()
+	defer cp.mux.Unlock()
+	if out, ok := cp.proxyMap[token]; ok {
+		return out
+	}
+	return ""
+}
+
+type WSStreamPayload struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func() (*edgeproto.ExecRequest, error)) error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
-	// hard code config for now
-	config := webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{
-			{
-				URLs: []string{
-					"turn:stun.mobiledgex.net:19302",
-				},
-				Username:       "fake",
-				Credential:     "fake",
-				CredentialType: webrtc.ICECredentialTypePassword,
-			},
-		},
-	}
-
-	// create a new peer connection
-	peerConn, err := webrtc.NewPeerConnection(config)
-	if err != nil {
-		return fmt.Errorf("failed to establish peer connection, %v", err)
-	}
-
-	dataChan, err := peerConn.CreateDataChannel("data", nil)
-	if err != nil {
-		return fmt.Errorf("failed to create data channel, %v", err)
-	}
-
-	offer, err := peerConn.CreateOffer(nil)
+	reply, err := exchangeFunc()
 	if err != nil {
 		return err
 	}
 
-	err = peerConn.SetLocalDescription(offer)
-	if err != nil {
-		return err
+	if reply.AccessUrl == "" {
+		return fmt.Errorf("unable to fetch access URL")
 	}
 
-	reply, answer, err := exchangeFunc(offer)
-	if err != nil {
-		return err
-	}
-
-	err = peerConn.SetRemoteDescription(*answer)
-	if err != nil {
-		return err
-	}
-
-	errchan := make(chan error, 1)
-	openurl := make(chan bool, 1)
-
-	if reply.Console {
-		if reply.ConsoleUrl == "" {
-			return fmt.Errorf("unable to fetch console URL from webrtc reply")
-		}
-		urlObj, err := url.Parse(reply.ConsoleUrl)
-		if err != nil {
-			return fmt.Errorf("unable to parse console url, %s, %v", reply.ConsoleUrl, err)
-		}
-		tlsConfig, err := mextls.GetLocalTLSConfig()
-		if err != nil {
-			return fmt.Errorf("unable to fetch tls local server config, %v", err)
-		}
-
-		conn, err := tls.Listen("tcp", "0.0.0.0:0", tlsConfig)
-		if err != nil {
-			return fmt.Errorf("failed to start server, %v", err)
-		}
-		defer conn.Close()
-
-		connAddr := conn.Addr().String()
-		ports := strings.Split(connAddr, ":")
-		connAddr = "127.0.0.1:" + ports[len(ports)-1]
-
-		err = WebrtcTunnel(conn, dataChan, errchan, openurl)
-		if err != nil {
-			return err
-		}
-		go func() {
-			<-openurl
-			proxyUrl := strings.Replace(reply.ConsoleUrl, urlObj.Host, connAddr, 1)
-			proxyUrl = strings.Replace(proxyUrl, "http:", "https:", 1)
-			util.OpenUrl(proxyUrl)
-			fmt.Println("Press Ctrl-C to exit")
-		}()
+	if reply.Console != nil {
+		fmt.Println(reply.AccessUrl)
 	} else {
-		err = WebrtcShell(dataChan, errchan)
+		d := websocket.Dialer{
+			Proxy:            http.ProxyFromEnvironment,
+			HandshakeTimeout: 45 * time.Second,
+			TLSClientConfig:  &tls.Config{InsecureSkipVerify: true},
+		}
+		ws, _, err := d.Dial(reply.AccessUrl, nil)
 		if err != nil {
+			return err
+		}
+		defer ws.Close()
+
+		if terminal.IsTerminal(int(os.Stdin.Fd())) {
+			// Set stdin and Stdout to raw
+			sinOldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				terminal.Restore(int(os.Stdin.Fd()), sinOldState)
+			}()
+			soutOldState, err := terminal.MakeRaw(int(os.Stdout.Fd()))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				terminal.Restore(int(os.Stdout.Fd()), soutOldState)
+			}()
+		}
+
+		errChan := make(chan error, 2)
+		go func() {
+			buf := make([]byte, 1500)
+			for {
+				n, err := os.Stdin.Read(buf)
+				if err != nil {
+					if err != io.EOF {
+						errChan <- err
+					}
+					break
+				}
+				err = ws.WriteMessage(websocket.TextMessage, buf[:n])
+				if err != nil {
+					if _, ok := err.(*websocket.CloseError); ok {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
+			}
+		}()
+		go func() {
+			for {
+				_, msg, err := ws.ReadMessage()
+				if err != nil {
+					if _, ok := err.(*websocket.CloseError); ok {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
+				_, err = os.Stdout.Write(msg)
+				if err != nil {
+					if err == io.EOF {
+						errChan <- nil
+					} else {
+						errChan <- err
+					}
+					break
+				}
+			}
+		}()
+		select {
+		case <-signalChan:
+		case err = <-errChan:
 			return err
 		}
 	}
 
-	go func() {
-		<-signalChan
-		dataChan.Close()
-	}()
-
-	// wait for connection to complete
-	return <-errchan
+	return nil
 }

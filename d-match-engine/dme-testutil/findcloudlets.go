@@ -16,7 +16,7 @@ type FindCloudletRR struct {
 var FindCloudletData = []FindCloudletRR{
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "1000realities",
+			OrgName: "1000realities",
 			AppName: "1000realities",
 			AppVers: "1.1",
 		},
@@ -34,9 +34,11 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "1000realities",
-			AppName: "1000realities",
-			AppVers: "1.1",
+			OrgName:      "1000realities",
+			AppName:      "1000realities",
+			AppVers:      "1.1",
+			UniqueId:     "123",
+			UniqueIdType: "1000Realities",
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
@@ -52,9 +54,11 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "1000realities",
-			AppName: "1000realities",
-			AppVers: "1.1",
+			OrgName:      "1000realities",
+			AppName:      "1000realities",
+			AppVers:      "1.1",
+			UniqueId:     "1234",
+			UniqueIdType: "1000Realities",
 		}, // ATT does not exist and so should return default cloudlet
 		Req: dme.FindCloudletRequest{
 			CarrierName: "ATT",
@@ -66,7 +70,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "1000realities",
+			OrgName: "1000realities",
 			AppName: "1000realities",
 			AppVers: "1.1",
 		},
@@ -84,7 +88,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Niantic Labs",
+			OrgName: "Niantic Labs",
 			AppName: "Pokemon-go",
 			AppVers: "2.1",
 		},
@@ -102,7 +106,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Niantic Labs",
+			OrgName: "Niantic Labs",
 			AppName: "HarryPotter-go",
 			AppVers: "1.0",
 		},
@@ -120,7 +124,7 @@ var FindCloudletData = []FindCloudletRR{
 	},
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{
-			DevName: "Ever.AI",
+			OrgName: "Ever.AI",
 			AppName: "Ever",
 			AppVers: "1.7",
 		},
@@ -136,12 +140,48 @@ var FindCloudletData = []FindCloudletRR{
 		ReplyCarrier:  Cloudlets[3].CarrierName,
 		ReplyCloudlet: Cloudlets[3].Name,
 	},
+	FindCloudletRR{
+		Reg: dme.RegisterClientRequest{
+			OrgName: "Ever.AI",
+			AppName: "Ever",
+			AppVers: "1.7",
+		},
+		Req: dme.FindCloudletRequest{
+			CarrierName: "",
+			GpsLocation: &dme.Loc{Latitude: 47.75, Longitude: 122.9050},
+		},
+		Reply: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[3].Uri,
+			CloudletLocation: &Cloudlets[3].Location,
+			Status:           1,
+		},
+		ReplyCarrier:  Cloudlets[3].CarrierName,
+		ReplyCloudlet: Cloudlets[3].Name,
+	},
+	FindCloudletRR{
+		Reg: dme.RegisterClientRequest{
+			OrgName: "Ever.AI",
+			AppName: "Ever",
+			AppVers: "1.7",
+		},
+		Req: dme.FindCloudletRequest{
+			CarrierName: "",
+			GpsLocation: &dme.Loc{Latitude: 48.31, Longitude: 11.66},
+		},
+		Reply: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[2].Uri,
+			CloudletLocation: &Cloudlets[2].Location,
+			Status:           1,
+		},
+		ReplyCarrier:  Cloudlets[2].CarrierName,
+		ReplyCloudlet: Cloudlets[2].Name,
+	},
 }
 
 // copy of FindCloudletData[3] with a changed reply to Munich cloudlet
 var DisabledCloudletRR = FindCloudletRR{
 	Reg: dme.RegisterClientRequest{
-		DevName: "1000realities",
+		OrgName: "1000realities",
 		AppName: "1000realities",
 		AppVers: "1.1",
 	},

@@ -3,14 +3,14 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/types"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/gogo/protobuf/types"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -28,6 +28,8 @@ var NoticeOptionalArgs = []string{
 	"wantobjs",
 	"filtercloudletkey",
 	"span",
+	"modrev",
+	"tags",
 }
 var NoticeAliasArgs = []string{}
 var NoticeComments = map[string]string{
@@ -38,7 +40,10 @@ var NoticeComments = map[string]string{
 	"wantobjs":          "Wanted Objects",
 	"filtercloudletkey": "Filter by cloudlet key",
 	"span":              "Opentracing span",
+	"modrev":            "Database revision for which object was last modified",
+	"tags":              "Extra tags",
 }
 var NoticeSpecialArgs = map[string]string{
+	"tags":     "StringToString",
 	"wantobjs": "StringArray",
 }

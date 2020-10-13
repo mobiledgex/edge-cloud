@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/e2eapi"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -242,7 +243,11 @@ func runTests(dirName, fileName, progName string, depth int, mods []string) (int
 				}
 				continue
 			}
-			cmdstr := fmt.Sprintf("%s -testConfig '%s' -testSpec '%s' -mods '%s'", progName, configStr, string(testSpec), string(modsSpec))
+			sof := ""
+			if *stopOnFail {
+				sof = "-stop"
+			}
+			cmdstr := fmt.Sprintf("%s -testConfig '%s' -testSpec '%s' -mods '%s' %s", progName, configStr, string(testSpec), string(modsSpec), sof)
 			cmd := exec.Command("sh", "-c", cmdstr)
 			var out bytes.Buffer
 			var stderr bytes.Buffer
@@ -287,8 +292,9 @@ func main() {
 	if *testFile != "" {
 		dirName := path.Dir(*testFile)
 		fileName := path.Base(*testFile)
+		start := time.Now()
 		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, defaultProgram, 0, []string{})
-		fmt.Printf("\nTotal Run: %d passed: %d failed: %d\n", totalRun, totalPassed, totalFailed)
+		fmt.Printf("\nTotal Run: %d, passed: %d, failed: %d, took: %s\n", totalRun, totalPassed, totalFailed, time.Since(start).String())
 		if totalFailed > 0 {
 			fmt.Printf("Failed Tests: ")
 			for t, f := range failedTests {

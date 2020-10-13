@@ -12,7 +12,7 @@ vaults:
 influxs:
 - name: influx1
   datadir: /var/tmp/edge-cloud-local-influx/influx1
-  httpaddr: "http://127.0.0.1:8086"
+  httpaddr: "127.0.0.1:8086"
   hostname: "127.0.0.1"
 
 etcds:
@@ -46,11 +46,20 @@ controllers:
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   registryfqdn: "docker.mobiledgex.net"
   testmode: true
   versiontag: "2019-10-24"
+  notifyparentaddrs: "127.0.0.1:53001"
+  usevaultcas: true
+  edgeturnaddr: "127.0.0.1:6080"
+  appdnsroot: localtest.net
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    E2ETEST_TLS: true
 
 - name: ctrl2
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -60,53 +69,82 @@ controllers:
   vaultaddr: "http://127.0.0.1:8200"
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   registryfqdn: "docker.mobiledgex.net"
   testmode: true
   versiontag: "2019-10-24"
+  notifyparentaddrs: "127.0.0.1:53001"
+  usevaultcerts: true
+  edgeturnaddr: "127.0.0.1:6080"
+  appdnsroot: localtest.net
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    E2ETEST_TLS: true
 
 clustersvcs:
 - name: cluster-svc1
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   ctrladdrs: "127.0.0.1:55001"
+  vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    E2ETEST_TLS: true
 
 - name: cluster-svc2
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   ctrladdrs: "127.0.0.1:55002"
+  vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    E2ETEST_TLS: true
 
 dmes:
 - name: dme1
   apiaddr: "0.0.0.0:50051"
   httpaddr: "0.0.0.0:38001"
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
+  cloudletkey: '{"organization":"tmus","name":"tmus-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    E2ETEST_TLS: true
 
 - name: dme2
   apiaddr: "0.0.0.0:50052"
   httpaddr: "0.0.0.0:38002"
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
+  cloudletkey: '{"organization":"tmus","name":"tmus-cloud-2"}'
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
+  envvars:
+    ES_SERVER_URLS: https://localhost:9201
+    E2ETEST_TLS: true
 
 traefiks:
 - name: traefik-e2e
@@ -116,6 +154,51 @@ traefiks:
     cacert: "{{tlsoutdir}}/mex-ca.crt"
   hostname: "127.0.0.1"
 
+elasticsearchs:
+- name: elasticsearch-e2e
+  hostname: "127.0.0.1"
+- name: kibana-e2e
+  type: kibana
+  links:
+  - elasticsearch-e2e:elasticsearch
+  hostname: "127.0.0.1"
+- name: es-proxy
+  type: nginx-proxy
+  links:
+  - elasticsearch-e2e
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
+  hostname: "127.0.0.1"
+
 jaegers:
 - name: jaeger-e2e
+  links:
+  - elasticsearch-e2e
   hostname: "127.0.0.1"
+  dockerenvvars:
+    SPAN_STORAGE_TYPE: elasticsearch
+    ES_SERVER_URLS: http://elasticsearch-e2e:9200
+    ES_INDEX_PREFIX: main
+
+notifyroots:
+- name: notifyroot
+  hostname: "127.0.0.1"
+  vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
+
+edgeturns:
+- name: edgeturn
+  hostname: "127.0.0.1"
+  testmode: true
+  vaultaddr: "http://127.0.0.1:8200"
+  usevaultcas: true
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"

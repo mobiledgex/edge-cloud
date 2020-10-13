@@ -3,19 +3,21 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/gogo/protobuf/gogoproto"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -64,80 +66,37 @@ func NodeHideTags(in *edgeproto.Node) {
 	}
 }
 
-var NodeApiCmd edgeproto.NodeApiClient
-
-var ShowNodeLocalCmd = &cli.Command{
-	Use:          "ShowNodeLocal",
-	OptionalArgs: strings.Join(append(NodeRequiredArgs, NodeOptionalArgs...), " "),
-	AliasArgs:    strings.Join(NodeAliasArgs, " "),
-	SpecialArgs:  &NodeSpecialArgs,
-	Comments:     NodeComments,
-	ReqData:      &edgeproto.Node{},
-	ReplyData:    &edgeproto.Node{},
-	Run:          runShowNodeLocal,
-}
-
-func runShowNodeLocal(c *cli.Command, args []string) error {
-	obj := c.ReqData.(*edgeproto.Node)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowNodeLocal(c, obj)
-}
-
-func ShowNodeLocal(c *cli.Command, in *edgeproto.Node) error {
-	if NodeApiCmd == nil {
-		return fmt.Errorf("NodeApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := NodeApiCmd.ShowNodeLocal(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowNodeLocal failed: %s", errstr)
-	}
-	objs := make([]*edgeproto.Node, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowNodeLocal recv failed: %s", errstr)
-		}
-		NodeHideTags(obj)
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowNodeLocals(c *cli.Command, data []edgeproto.Node, err *error) {
-	if *err != nil {
+func NodeDataHideTags(in *edgeproto.NodeData) {
+	if cli.HideTags == "" {
 		return
 	}
-	for ii, _ := range data {
-		fmt.Printf("ShowNodeLocal %v\n", data[ii])
-		myerr := ShowNodeLocal(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Nodes); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].Key.Name = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].NotifyId = 0
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildMaster = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildHead = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildAuthor = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].Hostname = ""
 		}
 	}
 }
+
+var NodeApiCmd edgeproto.NodeApiClient
 
 var ShowNodeCmd = &cli.Command{
 	Use:          "ShowNode",
@@ -151,6 +110,9 @@ var ShowNodeCmd = &cli.Command{
 }
 
 func runShowNode(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.Node)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -173,6 +135,7 @@ func ShowNode(c *cli.Command, in *edgeproto.Node) error {
 		}
 		return fmt.Errorf("ShowNode failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.Node, 0)
 	for {
 		obj, err := stream.Recv()
@@ -213,30 +176,32 @@ func ShowNodes(c *cli.Command, data []edgeproto.Node, err *error) {
 }
 
 var NodeApiCmds = []*cobra.Command{
-	ShowNodeLocalCmd.GenCmd(),
 	ShowNodeCmd.GenCmd(),
 }
 
 var NodeKeyRequiredArgs = []string{}
 var NodeKeyOptionalArgs = []string{
 	"name",
-	"nodetype",
-	"cloudletkey.operatorkey.name",
+	"type",
+	"cloudletkey.organization",
 	"cloudletkey.name",
+	"region",
 }
 var NodeKeyAliasArgs = []string{}
 var NodeKeyComments = map[string]string{
-	"name":                         "Name or hostname of node",
-	"nodetype":                     "Node type, one of NodeUnknown, NodeDme, NodeCrm, NodeController",
-	"cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"cloudletkey.name":             "Name of the cloudlet",
+	"name":                     "Name or hostname of node",
+	"type":                     "Node type",
+	"cloudletkey.organization": "Organization of the cloudlet site",
+	"cloudletkey.name":         "Name of the cloudlet",
+	"region":                   "Region the node is in",
 }
 var NodeKeySpecialArgs = map[string]string{}
 var NodeRequiredArgs = []string{
-	"key.name",
-	"key.nodetype",
-	"key.cloudletkey.operatorkey.name",
-	"key.cloudletkey.name",
+	"name",
+	"type",
+	"cloudlet-org",
+	"cloudlet",
+	"region",
 }
 var NodeOptionalArgs = []string{
 	"notifyid",
@@ -244,19 +209,66 @@ var NodeOptionalArgs = []string{
 	"buildhead",
 	"buildauthor",
 	"hostname",
-	"imageversion",
+	"containerversion",
+	"internalpki",
 }
-var NodeAliasArgs = []string{}
+var NodeAliasArgs = []string{
+	"name=key.name",
+	"type=key.type",
+	"cloudlet-org=key.cloudletkey.organization",
+	"cloudlet=key.cloudletkey.name",
+	"region=key.region",
+}
 var NodeComments = map[string]string{
-	"key.name":                         "Name or hostname of node",
-	"key.nodetype":                     "Node type, one of NodeUnknown, NodeDme, NodeCrm, NodeController",
-	"key.cloudletkey.operatorkey.name": "Company or Organization name of the operator",
-	"key.cloudletkey.name":             "Name of the cloudlet",
-	"notifyid":                         "Id of client assigned by server (internal use only)",
-	"buildmaster":                      "Build Master Version",
-	"buildhead":                        "Build Head Version",
-	"buildauthor":                      "Build Author",
-	"hostname":                         "Hostname",
-	"imageversion":                     "Docker edge-cloud base image version",
+	"fields":           "Fields are used for the Update API to specify which fields to apply",
+	"name":             "Name or hostname of node",
+	"type":             "Node type",
+	"cloudlet-org":     "Organization of the cloudlet site",
+	"cloudlet":         "Name of the cloudlet",
+	"region":           "Region the node is in",
+	"notifyid":         "Id of client assigned by server (internal use only)",
+	"buildmaster":      "Build Master Version",
+	"buildhead":        "Build Head Version",
+	"buildauthor":      "Build Author",
+	"hostname":         "Hostname",
+	"containerversion": "Docker edge-cloud container version which node instance use",
+	"internalpki":      "Internal PKI Config",
 }
-var NodeSpecialArgs = map[string]string{}
+var NodeSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
+var NodeDataRequiredArgs = []string{}
+var NodeDataOptionalArgs = []string{
+	"nodes:#.fields",
+	"nodes:#.key.name",
+	"nodes:#.key.type",
+	"nodes:#.key.cloudletkey.organization",
+	"nodes:#.key.cloudletkey.name",
+	"nodes:#.key.region",
+	"nodes:#.notifyid",
+	"nodes:#.buildmaster",
+	"nodes:#.buildhead",
+	"nodes:#.buildauthor",
+	"nodes:#.hostname",
+	"nodes:#.containerversion",
+	"nodes:#.internalpki",
+}
+var NodeDataAliasArgs = []string{}
+var NodeDataComments = map[string]string{
+	"nodes:#.fields":                       "Fields are used for the Update API to specify which fields to apply",
+	"nodes:#.key.name":                     "Name or hostname of node",
+	"nodes:#.key.type":                     "Node type",
+	"nodes:#.key.cloudletkey.organization": "Organization of the cloudlet site",
+	"nodes:#.key.cloudletkey.name":         "Name of the cloudlet",
+	"nodes:#.key.region":                   "Region the node is in",
+	"nodes:#.notifyid":                     "Id of client assigned by server (internal use only)",
+	"nodes:#.buildmaster":                  "Build Master Version",
+	"nodes:#.buildhead":                    "Build Head Version",
+	"nodes:#.buildauthor":                  "Build Author",
+	"nodes:#.hostname":                     "Hostname",
+	"nodes:#.containerversion":             "Docker edge-cloud container version which node instance use",
+	"nodes:#.internalpki":                  "Internal PKI Config",
+}
+var NodeDataSpecialArgs = map[string]string{
+	"nodes:#.fields": "StringArray",
+}

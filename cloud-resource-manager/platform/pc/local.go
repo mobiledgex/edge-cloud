@@ -5,8 +5,10 @@ import (
 	"io"
 	"os/exec"
 	"sync"
+	"time"
 
-	"github.com/kr/pty"
+	"github.com/creack/pty"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 // Implements nanobox-io's ssh.Client interface, but runs commands locally.
@@ -17,7 +19,7 @@ type LocalClient struct {
 
 // Output returns the output of the command run on the remote host.
 func (s *LocalClient) Output(command string) (string, error) {
-	cmd := exec.Command("sh", "-c", command)
+	cmd := exec.Command("bash", "-c", command)
 	out, err := cmd.CombinedOutput()
 	return string(out), err
 }
@@ -35,7 +37,7 @@ func (s *LocalClient) Shell(sin io.Reader, sout, serr io.Writer, args ...string)
 
 	// wait until all data has been written to avoid
 	// race conditions between write back and caller closing
-	// the webrtc data channel.
+	// the connection.
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -88,4 +90,23 @@ func (s *LocalClient) Wait() error {
 	err := s.cmd.Wait()
 	s.cmd = nil
 	return err
+}
+
+// AddHop for LocalClient returns an unmodified LocalClient
+func (s *LocalClient) AddHop(host string, port int) (ssh.Client, error) {
+	return s, nil
+}
+
+// For local, timeout is irrelevant
+func (s *LocalClient) OutputWithTimeout(command string, timeout time.Duration) (string, error) {
+	return s.Output(command)
+}
+
+// No-op for local client
+func (nc *LocalClient) StartPersistentConn(timeout time.Duration) error {
+	return nil
+}
+
+// No-op for local client
+func (nc *LocalClient) StopPersistentConn() {
 }

@@ -52,3 +52,16 @@ func EscapeJson(jsoninput string) string {
 		`{`, `\{`, `}`, `\}`)
 	return r.Replace(jsoninput)
 }
+
+func CapitalizeMessage(msg string) string {
+	c := msg[0]
+	// Return msg if already capitalized
+	if !isASCIILower(c) {
+		return msg
+	}
+	// Capitalize first character and append to rest of msg
+	t := string(msg[1:len(msg)])
+	c ^= ' '
+	t = string(c) + t
+	return t
+}

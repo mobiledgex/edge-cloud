@@ -3,19 +3,21 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -42,6 +44,12 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
+	if _, found := tags["nocmp"]; found {
+		in.Revision = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
 }
 
 var AppApiCmd edgeproto.AppApiClient
@@ -59,6 +67,9 @@ var CreateAppCmd = &cli.Command{
 }
 
 func runCreateApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -113,6 +124,9 @@ var DeleteAppCmd = &cli.Command{
 }
 
 func runDeleteApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -156,8 +170,8 @@ func DeleteApps(c *cli.Command, data []edgeproto.App, err *error) {
 
 var UpdateAppCmd = &cli.Command{
 	Use:          "UpdateApp",
-	RequiredArgs: strings.Join(AppRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppOptionalArgs, " "),
+	RequiredArgs: strings.Join(UpdateAppRequiredArgs, " "),
+	OptionalArgs: strings.Join(UpdateAppOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppAliasArgs, " "),
 	SpecialArgs:  &AppSpecialArgs,
 	Comments:     AppComments,
@@ -167,6 +181,9 @@ var UpdateAppCmd = &cli.Command{
 }
 
 func runUpdateApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -221,6 +238,9 @@ var ShowAppCmd = &cli.Command{
 }
 
 func runShowApp(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.App)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -243,6 +263,7 @@ func ShowApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("ShowApp failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.App, 0)
 	for {
 		obj, err := stream.Recv()
@@ -282,24 +303,140 @@ func ShowApps(c *cli.Command, data []edgeproto.App, err *error) {
 	}
 }
 
+var AddAppAutoProvPolicyCmd = &cli.Command{
+	Use:          "AddAppAutoProvPolicy",
+	RequiredArgs: strings.Join(AppAutoProvPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppAutoProvPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAutoProvPolicyAliasArgs, " "),
+	SpecialArgs:  &AppAutoProvPolicySpecialArgs,
+	Comments:     AppAutoProvPolicyComments,
+	ReqData:      &edgeproto.AppAutoProvPolicy{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddAppAutoProvPolicy,
+}
+
+func runAddAppAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppAutoProvPolicy)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddAppAutoProvPolicy(c, obj)
+}
+
+func AddAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.AddAppAutoProvPolicy(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddAppAutoProvPolicy failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddAppAutoProvPolicy %v\n", data[ii])
+		myerr := AddAppAutoProvPolicy(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RemoveAppAutoProvPolicyCmd = &cli.Command{
+	Use:          "RemoveAppAutoProvPolicy",
+	RequiredArgs: strings.Join(AppAutoProvPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppAutoProvPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAutoProvPolicyAliasArgs, " "),
+	SpecialArgs:  &AppAutoProvPolicySpecialArgs,
+	Comments:     AppAutoProvPolicyComments,
+	ReqData:      &edgeproto.AppAutoProvPolicy{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRemoveAppAutoProvPolicy,
+}
+
+func runRemoveAppAutoProvPolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppAutoProvPolicy)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RemoveAppAutoProvPolicy(c, obj)
+}
+
+func RemoveAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.RemoveAppAutoProvPolicy(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RemoveAppAutoProvPolicy failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RemoveAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RemoveAppAutoProvPolicy %v\n", data[ii])
+		myerr := RemoveAppAutoProvPolicy(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AppApiCmds = []*cobra.Command{
 	CreateAppCmd.GenCmd(),
 	DeleteAppCmd.GenCmd(),
 	UpdateAppCmd.GenCmd(),
 	ShowAppCmd.GenCmd(),
+	AddAppAutoProvPolicyCmd.GenCmd(),
+	RemoveAppAutoProvPolicyCmd.GenCmd(),
 }
 
 var AppKeyRequiredArgs = []string{}
 var AppKeyOptionalArgs = []string{
-	"developerkey.name",
+	"organization",
 	"name",
 	"version",
 }
 var AppKeyAliasArgs = []string{}
 var AppKeyComments = map[string]string{
-	"developerkey.name": "Organization or Company Name that a Developer is part of",
-	"name":              "App name",
-	"version":           "App version",
+	"organization": "App developer organization",
+	"name":         "App name",
+	"version":      "App version",
 }
 var AppKeySpecialArgs = map[string]string{}
 var ConfigFileRequiredArgs = []string{}
@@ -309,12 +446,12 @@ var ConfigFileOptionalArgs = []string{
 }
 var ConfigFileAliasArgs = []string{}
 var ConfigFileComments = map[string]string{
-	"kind":   "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
+	"kind":   "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"config": "config file contents or URI reference",
 }
 var ConfigFileSpecialArgs = map[string]string{}
 var AppRequiredArgs = []string{
-	"developer",
+	"app-org",
 	"appname",
 	"appvers",
 }
@@ -331,24 +468,30 @@ var AppOptionalArgs = []string{
 	"deploymentgenerator",
 	"androidpackagename",
 	"delopt",
-	"configs.kind",
-	"configs.config",
+	"configs:#.kind",
+	"configs:#.config",
 	"scalewithcluster",
 	"internalports",
+	"revision",
 	"officialfqdn",
 	"md5sum",
 	"defaultsharedvolumesize",
 	"autoprovpolicy",
 	"accesstype",
+	"defaultprivacypolicy",
+	"autoprovpolicies",
+	"templatedelimiter",
+	"skiphcports",
 }
 var AppAliasArgs = []string{
-	"developer=key.developerkey.name",
+	"app-org=key.organization",
 	"appname=key.name",
 	"appvers=key.version",
 	"defaultflavor=defaultflavor.name",
 }
 var AppComments = map[string]string{
-	"developer":               "Organization or Company Name that a Developer is part of",
+	"fields":                  "Fields are used for the Update API to specify which fields to apply",
+	"app-org":                 "App developer organization",
 	"appname":                 "App name",
 	"appvers":                 "App version",
 	"imagepath":               "URI of where image resides",
@@ -363,15 +506,69 @@ var AppComments = map[string]string{
 	"deploymentgenerator":     "Deployment generator target to generate a basic deployment manifest",
 	"androidpackagename":      "Android package name used to match the App name from the Android package",
 	"delopt":                  "Override actions to Controller, one of NoAutoDelete, AutoDelete",
-	"configs.kind":            "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config",
-	"configs.config":          "config file contents or URI reference",
+	"configs:#.kind":          "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
+	"configs:#.config":        "config file contents or URI reference",
 	"scalewithcluster":        "Option to run App on all nodes of the cluster",
 	"internalports":           "Should this app have access to outside world?",
-	"revision":                "Revision increments each time the App is updated",
+	"revision":                "Revision can be specified or defaults to current timestamp when app is updated",
 	"officialfqdn":            "Official FQDN is the FQDN that the app uses to connect by default",
 	"md5sum":                  "MD5Sum of the VM-based app image",
 	"defaultsharedvolumesize": "shared volume size when creating auto cluster",
-	"autoprovpolicy":          "Auto provisioning policy name",
+	"autoprovpolicy":          "(_deprecated_) Auto provisioning policy name",
 	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
+	"deleteprepare":           "Preparing to be deleted",
+	"autoprovpolicies":        "Auto provisioning policy names",
+	"templatedelimiter":       "Delimiter to be used for template parsing, defaults to [[ ]]",
+	"skiphcports":             "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 }
-var AppSpecialArgs = map[string]string{}
+var AppSpecialArgs = map[string]string{
+	"autoprovpolicies": "StringArray",
+	"fields":           "StringArray",
+}
+var AppAutoProvPolicyRequiredArgs = []string{}
+var AppAutoProvPolicyOptionalArgs = []string{
+	"appkey.organization",
+	"appkey.name",
+	"appkey.version",
+	"autoprovpolicy",
+}
+var AppAutoProvPolicyAliasArgs = []string{}
+var AppAutoProvPolicyComments = map[string]string{
+	"appkey.organization": "App developer organization",
+	"appkey.name":         "App name",
+	"appkey.version":      "App version",
+	"autoprovpolicy":      "Auto provisioning policy name",
+}
+var AppAutoProvPolicySpecialArgs = map[string]string{}
+var UpdateAppRequiredArgs = []string{
+	"app-org",
+	"appname",
+	"appvers",
+}
+var UpdateAppOptionalArgs = []string{
+	"imagepath",
+	"imagetype",
+	"accessports",
+	"defaultflavor",
+	"authpublickey",
+	"command",
+	"annotations",
+	"deploymentmanifest",
+	"androidpackagename",
+	"delopt",
+	"configs:#.kind",
+	"configs:#.config",
+	"scalewithcluster",
+	"internalports",
+	"revision",
+	"officialfqdn",
+	"md5sum",
+	"defaultsharedvolumesize",
+	"autoprovpolicy",
+	"accesstype",
+	"defaultprivacypolicy",
+	"autoprovpolicies",
+	"templatedelimiter",
+	"skiphcports",
+}

@@ -3,36 +3,43 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "sort"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	"sort"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+
 // CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.
 type CloudletRefs struct {
 	// Cloudlet key
-	Key CloudletKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Clusters instantiated on the Cloudlet
-	Clusters []ClusterKey `protobuf:"bytes,2,rep,name=clusters" json:"clusters"`
+	Clusters []ClusterKey `protobuf:"bytes,2,rep,name=clusters,proto3" json:"clusters"`
 	// Used RAM in MB
 	UsedRam uint64 `protobuf:"varint,4,opt,name=used_ram,json=usedRam,proto3" json:"used_ram,omitempty"`
 	// Used VCPU cores
@@ -41,26 +48,54 @@ type CloudletRefs struct {
 	UsedDisk uint64 `protobuf:"varint,6,opt,name=used_disk,json=usedDisk,proto3" json:"used_disk,omitempty"`
 	// Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol
 	// bitmap: bit 0: tcp, bit 1: udp
-	RootLbPorts map[int32]int32 `protobuf:"bytes,8,rep,name=root_lb_ports,json=rootLbPorts" json:"root_lb_ports,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	RootLbPorts map[int32]int32 `protobuf:"bytes,8,rep,name=root_lb_ports,json=rootLbPorts,proto3" json:"root_lb_ports,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 	// Used dynamic IPs
 	UsedDynamicIps int32 `protobuf:"varint,9,opt,name=used_dynamic_ips,json=usedDynamicIps,proto3" json:"used_dynamic_ips,omitempty"`
 	// Used static IPs
 	UsedStaticIps string `protobuf:"bytes,10,opt,name=used_static_ips,json=usedStaticIps,proto3" json:"used_static_ips,omitempty"`
 	// Used Optional Resources
-	OptResUsedMap map[string]uint32 `protobuf:"bytes,11,rep,name=opt_res_used_map,json=optResUsedMap" json:"opt_res_used_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	OptResUsedMap map[string]uint32 `protobuf:"bytes,11,rep,name=opt_res_used_map,json=optResUsedMap,proto3" json:"opt_res_used_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 }
 
-func (m *CloudletRefs) Reset()                    { *m = CloudletRefs{} }
-func (m *CloudletRefs) String() string            { return proto.CompactTextString(m) }
-func (*CloudletRefs) ProtoMessage()               {}
-func (*CloudletRefs) Descriptor() ([]byte, []int) { return fileDescriptorRefs, []int{0} }
+func (m *CloudletRefs) Reset()         { *m = CloudletRefs{} }
+func (m *CloudletRefs) String() string { return proto.CompactTextString(m) }
+func (*CloudletRefs) ProtoMessage()    {}
+func (*CloudletRefs) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6435a763ece979c6, []int{0}
+}
+func (m *CloudletRefs) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletRefs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletRefs.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletRefs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletRefs.Merge(m, src)
+}
+func (m *CloudletRefs) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletRefs) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletRefs.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletRefs proto.InternalMessageInfo
 
 // ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst.
 type ClusterRefs struct {
 	// Cluster Instance key
-	Key ClusterInstKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key ClusterInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Apps instances in the Cluster Instance
-	Apps []AppKey `protobuf:"bytes,2,rep,name=apps" json:"apps"`
+	Apps []AppKey `protobuf:"bytes,2,rep,name=apps,proto3" json:"apps"`
 	// Used RAM in MB
 	UsedRam uint64 `protobuf:"varint,4,opt,name=used_ram,json=usedRam,proto3" json:"used_ram,omitempty"`
 	// Used VCPU cores
@@ -69,14 +104,138 @@ type ClusterRefs struct {
 	UsedDisk uint64 `protobuf:"varint,6,opt,name=used_disk,json=usedDisk,proto3" json:"used_disk,omitempty"`
 }
 
-func (m *ClusterRefs) Reset()                    { *m = ClusterRefs{} }
-func (m *ClusterRefs) String() string            { return proto.CompactTextString(m) }
-func (*ClusterRefs) ProtoMessage()               {}
-func (*ClusterRefs) Descriptor() ([]byte, []int) { return fileDescriptorRefs, []int{1} }
+func (m *ClusterRefs) Reset()         { *m = ClusterRefs{} }
+func (m *ClusterRefs) String() string { return proto.CompactTextString(m) }
+func (*ClusterRefs) ProtoMessage()    {}
+func (*ClusterRefs) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6435a763ece979c6, []int{1}
+}
+func (m *ClusterRefs) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClusterRefs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClusterRefs.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClusterRefs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClusterRefs.Merge(m, src)
+}
+func (m *ClusterRefs) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClusterRefs) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClusterRefs.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClusterRefs proto.InternalMessageInfo
+
+type AppInstRefs struct {
+	// App key
+	Key AppKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
+	// AppInsts for App (key is JSON of AppInst Key)
+	Insts map[string]uint32 `protobuf:"bytes,2,rep,name=insts,proto3" json:"insts" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+}
+
+func (m *AppInstRefs) Reset()         { *m = AppInstRefs{} }
+func (m *AppInstRefs) String() string { return proto.CompactTextString(m) }
+func (*AppInstRefs) ProtoMessage()    {}
+func (*AppInstRefs) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6435a763ece979c6, []int{2}
+}
+func (m *AppInstRefs) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppInstRefs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppInstRefs.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppInstRefs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppInstRefs.Merge(m, src)
+}
+func (m *AppInstRefs) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppInstRefs) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppInstRefs.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppInstRefs proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*CloudletRefs)(nil), "edgeproto.CloudletRefs")
+	proto.RegisterMapType((map[string]uint32)(nil), "edgeproto.CloudletRefs.OptResUsedMapEntry")
+	proto.RegisterMapType((map[int32]int32)(nil), "edgeproto.CloudletRefs.RootLbPortsEntry")
 	proto.RegisterType((*ClusterRefs)(nil), "edgeproto.ClusterRefs")
+	proto.RegisterType((*AppInstRefs)(nil), "edgeproto.AppInstRefs")
+	proto.RegisterMapType((map[string]uint32)(nil), "edgeproto.AppInstRefs.InstsEntry")
+}
+
+func init() { proto.RegisterFile("refs.proto", fileDescriptor_6435a763ece979c6) }
+
+var fileDescriptor_6435a763ece979c6 = []byte{
+	// 733 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0xcf, 0x4f, 0x13, 0x5b,
+	0x14, 0xee, 0x85, 0x96, 0x47, 0x4f, 0x5f, 0x4b, 0x99, 0xf0, 0x78, 0x97, 0x3e, 0x52, 0xfa, 0x1a,
+	0x63, 0x46, 0x85, 0x29, 0xd4, 0x85, 0x84, 0x44, 0x63, 0x51, 0x17, 0x04, 0x0c, 0x66, 0x88, 0x6c,
+	0x9b, 0xe9, 0xf4, 0x52, 0x26, 0xb4, 0x73, 0x6f, 0xe6, 0xce, 0x80, 0xd5, 0x8d, 0x3b, 0x37, 0x2e,
+	0xf8, 0x13, 0xfc, 0x1b, 0xfc, 0x2b, 0xd8, 0xc9, 0xd2, 0x95, 0xe1, 0xc7, 0xc6, 0xb0, 0x32, 0xa1,
+	0x71, 0x6d, 0xee, 0x9d, 0x99, 0xce, 0x14, 0xa8, 0xc6, 0x85, 0x9b, 0xe6, 0xdc, 0xef, 0x7c, 0xe7,
+	0x9c, 0xef, 0xf4, 0x7c, 0x2d, 0x80, 0x43, 0x76, 0xb8, 0xc6, 0x1c, 0xea, 0x52, 0x25, 0x4d, 0x9a,
+	0x2d, 0x22, 0xc3, 0xc2, 0x72, 0xcb, 0x72, 0x77, 0xbd, 0x86, 0x66, 0xd2, 0x4e, 0xa5, 0x43, 0x1b,
+	0x56, 0x5b, 0xa4, 0x5e, 0x55, 0xc4, 0xe7, 0x82, 0xd9, 0xa6, 0x5e, 0xb3, 0x22, 0x79, 0x2d, 0x62,
+	0xf7, 0x03, 0xbf, 0x49, 0x21, 0x27, 0xd3, 0x6d, 0xe2, 0x06, 0xef, 0xac, 0xd9, 0xf6, 0xb8, 0x4b,
+	0x9c, 0xe0, 0x39, 0x19, 0x3c, 0x2d, 0x9b, 0x87, 0x8c, 0xb4, 0xc1, 0x58, 0x10, 0x4e, 0xb5, 0x68,
+	0x8b, 0xca, 0xb0, 0x22, 0x22, 0x1f, 0x2d, 0x9f, 0x26, 0xe1, 0xef, 0x27, 0x41, 0x57, 0x9d, 0xec,
+	0x70, 0x45, 0x83, 0xd1, 0x3d, 0xd2, 0xc5, 0xa8, 0x84, 0xd4, 0x4c, 0x75, 0x5a, 0xeb, 0xcb, 0xd6,
+	0x42, 0xd6, 0x3a, 0xe9, 0xae, 0x26, 0x8f, 0xbe, 0xcc, 0x25, 0x74, 0x41, 0x54, 0x1e, 0xc0, 0x78,
+	0x30, 0x96, 0xe3, 0x91, 0xd2, 0xa8, 0x9a, 0xa9, 0xfe, 0x33, 0x50, 0x24, 0x53, 0x51, 0x4d, 0x9f,
+	0xac, 0xcc, 0xc0, 0xb8, 0xc7, 0x49, 0xb3, 0xee, 0x18, 0x1d, 0x9c, 0x2c, 0x21, 0x35, 0xa9, 0xff,
+	0x25, 0xde, 0xba, 0xd1, 0x51, 0xe6, 0x20, 0x23, 0x53, 0xfb, 0x26, 0x75, 0x08, 0xc7, 0x29, 0x99,
+	0x05, 0x01, 0x6d, 0x4b, 0x44, 0xf9, 0x0f, 0xd2, 0x92, 0xd0, 0xb4, 0xf8, 0x1e, 0x1e, 0x93, 0x69,
+	0xd9, 0xec, 0xa9, 0xc5, 0xf7, 0x94, 0x0d, 0xc8, 0x3a, 0x94, 0xba, 0xf5, 0x76, 0xa3, 0xce, 0xa8,
+	0xe3, 0x72, 0x3c, 0x2e, 0x65, 0xa9, 0x37, 0xec, 0x22, 0x36, 0xd6, 0x74, 0x4a, 0xdd, 0x8d, 0xc6,
+	0x0b, 0x41, 0x7d, 0x66, 0xbb, 0x4e, 0x57, 0xcf, 0x38, 0x11, 0xa2, 0xa8, 0x90, 0xf7, 0x47, 0x75,
+	0x6d, 0xa3, 0x63, 0x99, 0x75, 0x8b, 0x71, 0x9c, 0x2e, 0x21, 0x35, 0xa5, 0xe7, 0xe4, 0x44, 0x1f,
+	0x5e, 0x63, 0x5c, 0xb9, 0x0d, 0x13, 0x92, 0xc9, 0x5d, 0xc3, 0x0d, 0x88, 0x50, 0x42, 0x6a, 0x5a,
+	0xcf, 0x0a, 0x78, 0x4b, 0xa2, 0x82, 0xb7, 0x05, 0x79, 0xca, 0xdc, 0xba, 0x43, 0x78, 0x5d, 0xf2,
+	0x3b, 0x06, 0xc3, 0x19, 0x29, 0xf1, 0xee, 0x30, 0x89, 0x9b, 0xcc, 0xd5, 0x09, 0x7f, 0xc9, 0x49,
+	0xf3, 0xb9, 0xc1, 0x7c, 0x91, 0x59, 0x1a, 0xc7, 0x0a, 0x8f, 0x20, 0x7f, 0x75, 0x0f, 0x25, 0x1f,
+	0x9d, 0x32, 0xe5, 0x1f, 0x6b, 0x0a, 0x52, 0xfb, 0x46, 0xdb, 0x23, 0x78, 0x44, 0x62, 0xfe, 0x63,
+	0x65, 0x64, 0x19, 0x15, 0x1e, 0x83, 0x72, 0x7d, 0x48, 0xbc, 0x43, 0xfa, 0x86, 0x0e, 0xd9, 0x58,
+	0x87, 0x15, 0xfc, 0xf5, 0x12, 0xa3, 0x6f, 0x97, 0x18, 0xbd, 0xed, 0x61, 0xf4, 0xa1, 0x87, 0xd1,
+	0xc7, 0xef, 0x38, 0x69, 0x53, 0x9b, 0x94, 0x4f, 0x10, 0x64, 0x02, 0x23, 0x48, 0x8b, 0x2d, 0xc5,
+	0x2d, 0x36, 0x73, 0xdd, 0x2d, 0x6b, 0x36, 0xbf, 0xea, 0xb2, 0x7b, 0x90, 0x34, 0x18, 0x0b, 0x1d,
+	0x36, 0x19, 0xab, 0xa9, 0x31, 0x16, 0x71, 0x25, 0xe9, 0x8f, 0x39, 0xeb, 0x27, 0x2b, 0x7e, 0x42,
+	0x90, 0xa9, 0x31, 0x26, 0x94, 0xcb, 0x15, 0xef, 0xc4, 0x57, 0x1c, 0x2a, 0x57, 0xae, 0xf6, 0x10,
+	0x52, 0xe2, 0x07, 0x1b, 0xee, 0xf6, 0xff, 0x20, 0x39, 0xec, 0xa8, 0x89, 0xc0, 0xbf, 0x6b, 0x50,
+	0xec, 0x57, 0x15, 0x96, 0x01, 0xa2, 0xd4, 0x6f, 0x1d, 0x6c, 0x36, 0xbe, 0xcd, 0xe1, 0x95, 0x8d,
+	0xaa, 0xef, 0x11, 0x4c, 0xc4, 0x3d, 0x58, 0x63, 0x96, 0xd2, 0x85, 0xfc, 0xd6, 0x2e, 0x3d, 0x18,
+	0xf8, 0xbf, 0xf8, 0x77, 0x88, 0x67, 0x0b, 0xc3, 0x12, 0xe5, 0xa5, 0x8b, 0x1e, 0x5e, 0xd0, 0x09,
+	0xa7, 0x9e, 0x63, 0x92, 0x30, 0xc3, 0xe7, 0x6b, 0xa6, 0x6b, 0x51, 0x7b, 0xdb, 0x22, 0x07, 0xf3,
+	0xeb, 0xa4, 0xab, 0x6d, 0x3a, 0x2d, 0xc3, 0xb6, 0x5e, 0x1b, 0x02, 0x5c, 0x44, 0xd5, 0x37, 0x90,
+	0x8b, 0x59, 0x48, 0x88, 0xb1, 0x60, 0xc2, 0x17, 0x13, 0x19, 0x6b, 0xfa, 0xba, 0x97, 0xa4, 0x94,
+	0x21, 0x78, 0xf9, 0xd6, 0x45, 0x0f, 0x97, 0x22, 0x25, 0x7d, 0xf3, 0x0d, 0x88, 0x59, 0x44, 0xd5,
+	0x77, 0x08, 0x72, 0xb1, 0x5b, 0x88, 0xe9, 0x9e, 0x3f, 0x3d, 0x7e, 0xf3, 0xe9, 0x9b, 0x2f, 0x57,
+	0x18, 0x82, 0x97, 0x17, 0x2f, 0x7a, 0x78, 0x3e, 0x9c, 0x1e, 0x24, 0x7e, 0xf1, 0x35, 0xac, 0xce,
+	0x1e, 0x9d, 0x16, 0x13, 0x47, 0x67, 0x45, 0x74, 0x7c, 0x56, 0x44, 0x27, 0x67, 0x45, 0x74, 0x78,
+	0x5e, 0x4c, 0x1c, 0x9f, 0x17, 0x13, 0x9f, 0xcf, 0x8b, 0x89, 0xc6, 0x98, 0x1c, 0x72, 0xff, 0x47,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0xb3, 0xb6, 0xba, 0x29, 0x79, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -87,8 +246,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for CloudletRefsApi service
-
+// CloudletRefsApiClient is the client API for CloudletRefsApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CloudletRefsApiClient interface {
 	// Show CloudletRefs (debug only)
 	ShowCloudletRefs(ctx context.Context, in *CloudletRefs, opts ...grpc.CallOption) (CloudletRefsApi_ShowCloudletRefsClient, error)
@@ -103,7 +263,7 @@ func NewCloudletRefsApiClient(cc *grpc.ClientConn) CloudletRefsApiClient {
 }
 
 func (c *cloudletRefsApiClient) ShowCloudletRefs(ctx context.Context, in *CloudletRefs, opts ...grpc.CallOption) (CloudletRefsApi_ShowCloudletRefsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_CloudletRefsApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletRefsApi/ShowCloudletRefs", opts...)
+	stream, err := c.cc.NewStream(ctx, &_CloudletRefsApi_serviceDesc.Streams[0], "/edgeproto.CloudletRefsApi/ShowCloudletRefs", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -134,11 +294,18 @@ func (x *cloudletRefsApiShowCloudletRefsClient) Recv() (*CloudletRefs, error) {
 	return m, nil
 }
 
-// Server API for CloudletRefsApi service
-
+// CloudletRefsApiServer is the server API for CloudletRefsApi service.
 type CloudletRefsApiServer interface {
 	// Show CloudletRefs (debug only)
 	ShowCloudletRefs(*CloudletRefs, CloudletRefsApi_ShowCloudletRefsServer) error
+}
+
+// UnimplementedCloudletRefsApiServer can be embedded to have forward compatible implementations.
+type UnimplementedCloudletRefsApiServer struct {
+}
+
+func (*UnimplementedCloudletRefsApiServer) ShowCloudletRefs(req *CloudletRefs, srv CloudletRefsApi_ShowCloudletRefsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowCloudletRefs not implemented")
 }
 
 func RegisterCloudletRefsApiServer(s *grpc.Server, srv CloudletRefsApiServer) {
@@ -180,8 +347,9 @@ var _CloudletRefsApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "refs.proto",
 }
 
-// Client API for ClusterRefsApi service
-
+// ClusterRefsApiClient is the client API for ClusterRefsApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ClusterRefsApiClient interface {
 	// Show ClusterRefs (debug only)
 	ShowClusterRefs(ctx context.Context, in *ClusterRefs, opts ...grpc.CallOption) (ClusterRefsApi_ShowClusterRefsClient, error)
@@ -196,7 +364,7 @@ func NewClusterRefsApiClient(cc *grpc.ClientConn) ClusterRefsApiClient {
 }
 
 func (c *clusterRefsApiClient) ShowClusterRefs(ctx context.Context, in *ClusterRefs, opts ...grpc.CallOption) (ClusterRefsApi_ShowClusterRefsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterRefsApi_serviceDesc.Streams[0], c.cc, "/edgeproto.ClusterRefsApi/ShowClusterRefs", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ClusterRefsApi_serviceDesc.Streams[0], "/edgeproto.ClusterRefsApi/ShowClusterRefs", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -227,11 +395,18 @@ func (x *clusterRefsApiShowClusterRefsClient) Recv() (*ClusterRefs, error) {
 	return m, nil
 }
 
-// Server API for ClusterRefsApi service
-
+// ClusterRefsApiServer is the server API for ClusterRefsApi service.
 type ClusterRefsApiServer interface {
 	// Show ClusterRefs (debug only)
 	ShowClusterRefs(*ClusterRefs, ClusterRefsApi_ShowClusterRefsServer) error
+}
+
+// UnimplementedClusterRefsApiServer can be embedded to have forward compatible implementations.
+type UnimplementedClusterRefsApiServer struct {
+}
+
+func (*UnimplementedClusterRefsApiServer) ShowClusterRefs(req *ClusterRefs, srv ClusterRefsApi_ShowClusterRefsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowClusterRefs not implemented")
 }
 
 func RegisterClusterRefsApiServer(s *grpc.Server, srv ClusterRefsApiServer) {
@@ -273,10 +448,111 @@ var _ClusterRefsApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "refs.proto",
 }
 
+// AppInstRefsApiClient is the client API for AppInstRefsApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type AppInstRefsApiClient interface {
+	// Show AppInstRefs (debug only)
+	ShowAppInstRefs(ctx context.Context, in *AppInstRefs, opts ...grpc.CallOption) (AppInstRefsApi_ShowAppInstRefsClient, error)
+}
+
+type appInstRefsApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewAppInstRefsApiClient(cc *grpc.ClientConn) AppInstRefsApiClient {
+	return &appInstRefsApiClient{cc}
+}
+
+func (c *appInstRefsApiClient) ShowAppInstRefs(ctx context.Context, in *AppInstRefs, opts ...grpc.CallOption) (AppInstRefsApi_ShowAppInstRefsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_AppInstRefsApi_serviceDesc.Streams[0], "/edgeproto.AppInstRefsApi/ShowAppInstRefs", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appInstRefsApiShowAppInstRefsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type AppInstRefsApi_ShowAppInstRefsClient interface {
+	Recv() (*AppInstRefs, error)
+	grpc.ClientStream
+}
+
+type appInstRefsApiShowAppInstRefsClient struct {
+	grpc.ClientStream
+}
+
+func (x *appInstRefsApiShowAppInstRefsClient) Recv() (*AppInstRefs, error) {
+	m := new(AppInstRefs)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// AppInstRefsApiServer is the server API for AppInstRefsApi service.
+type AppInstRefsApiServer interface {
+	// Show AppInstRefs (debug only)
+	ShowAppInstRefs(*AppInstRefs, AppInstRefsApi_ShowAppInstRefsServer) error
+}
+
+// UnimplementedAppInstRefsApiServer can be embedded to have forward compatible implementations.
+type UnimplementedAppInstRefsApiServer struct {
+}
+
+func (*UnimplementedAppInstRefsApiServer) ShowAppInstRefs(req *AppInstRefs, srv AppInstRefsApi_ShowAppInstRefsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowAppInstRefs not implemented")
+}
+
+func RegisterAppInstRefsApiServer(s *grpc.Server, srv AppInstRefsApiServer) {
+	s.RegisterService(&_AppInstRefsApi_serviceDesc, srv)
+}
+
+func _AppInstRefsApi_ShowAppInstRefs_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AppInstRefs)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AppInstRefsApiServer).ShowAppInstRefs(m, &appInstRefsApiShowAppInstRefsServer{stream})
+}
+
+type AppInstRefsApi_ShowAppInstRefsServer interface {
+	Send(*AppInstRefs) error
+	grpc.ServerStream
+}
+
+type appInstRefsApiShowAppInstRefsServer struct {
+	grpc.ServerStream
+}
+
+func (x *appInstRefsApiShowAppInstRefsServer) Send(m *AppInstRefs) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _AppInstRefsApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.AppInstRefsApi",
+	HandlerType: (*AppInstRefsApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowAppInstRefs",
+			Handler:       _AppInstRefsApi_ShowAppInstRefs_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "refs.proto",
+}
+
 func (m *CloudletRefs) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -284,94 +560,105 @@ func (m *CloudletRefs) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CloudletRefs) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletRefs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintRefs(dAtA, i, uint64(m.Key.Size()))
-	n1, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if len(m.Clusters) > 0 {
-		for _, msg := range m.Clusters {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintRefs(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if m.UsedRam != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedRam))
-	}
-	if m.UsedVcores != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedVcores))
-	}
-	if m.UsedDisk != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDisk))
-	}
-	if len(m.RootLbPorts) > 0 {
-		for k, _ := range m.RootLbPorts {
-			dAtA[i] = 0x42
-			i++
-			v := m.RootLbPorts[k]
-			mapSize := 1 + sovRefs(uint64(k)) + 1 + sovRefs(uint64(v))
-			i = encodeVarintRefs(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0x8
-			i++
-			i = encodeVarintRefs(dAtA, i, uint64(k))
-			dAtA[i] = 0x10
-			i++
+	if len(m.OptResUsedMap) > 0 {
+		for k := range m.OptResUsedMap {
+			v := m.OptResUsedMap[k]
+			baseI := i
 			i = encodeVarintRefs(dAtA, i, uint64(v))
+			i--
+			dAtA[i] = 0x10
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintRefs(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintRefs(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x5a
 		}
-	}
-	if m.UsedDynamicIps != 0 {
-		dAtA[i] = 0x48
-		i++
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDynamicIps))
 	}
 	if len(m.UsedStaticIps) > 0 {
-		dAtA[i] = 0x52
-		i++
+		i -= len(m.UsedStaticIps)
+		copy(dAtA[i:], m.UsedStaticIps)
 		i = encodeVarintRefs(dAtA, i, uint64(len(m.UsedStaticIps)))
-		i += copy(dAtA[i:], m.UsedStaticIps)
+		i--
+		dAtA[i] = 0x52
 	}
-	if len(m.OptResUsedMap) > 0 {
-		for k, _ := range m.OptResUsedMap {
-			dAtA[i] = 0x5a
-			i++
-			v := m.OptResUsedMap[k]
-			mapSize := 1 + len(k) + sovRefs(uint64(len(k))) + 1 + sovRefs(uint64(v))
-			i = encodeVarintRefs(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintRefs(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x10
-			i++
+	if m.UsedDynamicIps != 0 {
+		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDynamicIps))
+		i--
+		dAtA[i] = 0x48
+	}
+	if len(m.RootLbPorts) > 0 {
+		for k := range m.RootLbPorts {
+			v := m.RootLbPorts[k]
+			baseI := i
 			i = encodeVarintRefs(dAtA, i, uint64(v))
+			i--
+			dAtA[i] = 0x10
+			i = encodeVarintRefs(dAtA, i, uint64(k))
+			i--
+			dAtA[i] = 0x8
+			i = encodeVarintRefs(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x42
 		}
 	}
-	return i, nil
+	if m.UsedDisk != 0 {
+		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDisk))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.UsedVcores != 0 {
+		i = encodeVarintRefs(dAtA, i, uint64(m.UsedVcores))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.UsedRam != 0 {
+		i = encodeVarintRefs(dAtA, i, uint64(m.UsedRam))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.Clusters) > 0 {
+		for iNdEx := len(m.Clusters) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Clusters[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRefs(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRefs(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *ClusterRefs) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -379,56 +666,117 @@ func (m *ClusterRefs) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ClusterRefs) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClusterRefs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintRefs(dAtA, i, uint64(m.Key.Size()))
-	n2, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	if len(m.Apps) > 0 {
-		for _, msg := range m.Apps {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintRefs(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if m.UsedRam != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedRam))
+	if m.UsedDisk != 0 {
+		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDisk))
+		i--
+		dAtA[i] = 0x30
 	}
 	if m.UsedVcores != 0 {
-		dAtA[i] = 0x28
-		i++
 		i = encodeVarintRefs(dAtA, i, uint64(m.UsedVcores))
+		i--
+		dAtA[i] = 0x28
 	}
-	if m.UsedDisk != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDisk))
+	if m.UsedRam != 0 {
+		i = encodeVarintRefs(dAtA, i, uint64(m.UsedRam))
+		i--
+		dAtA[i] = 0x20
 	}
-	return i, nil
+	if len(m.Apps) > 0 {
+		for iNdEx := len(m.Apps) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Apps[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRefs(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRefs(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *AppInstRefs) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppInstRefs) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppInstRefs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Insts) > 0 {
+		for k := range m.Insts {
+			v := m.Insts[k]
+			baseI := i
+			i = encodeVarintRefs(dAtA, i, uint64(v))
+			i--
+			dAtA[i] = 0x10
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintRefs(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintRefs(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRefs(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintRefs(dAtA []byte, offset int, v uint64) int {
+	offset -= sovRefs(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -530,23 +878,20 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 
 func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 	changed := 0
-	if m.Key.OperatorKey.Name != src.Key.OperatorKey.Name {
-		m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
 		changed++
 	}
 	if m.Key.Name != src.Key.Name {
 		m.Key.Name = src.Key.Name
 		changed++
 	}
-	if m.Clusters == nil || len(m.Clusters) != len(src.Clusters) {
-		m.Clusters = make([]ClusterKey, len(src.Clusters))
+	if src.Clusters != nil {
+		m.Clusters = src.Clusters
 		changed++
-	}
-	for i0 := 0; i0 < len(src.Clusters); i0++ {
-		if m.Clusters[i0].Name != src.Clusters[i0].Name {
-			m.Clusters[i0].Name = src.Clusters[i0].Name
-			changed++
-		}
+	} else if m.Clusters != nil {
+		m.Clusters = nil
+		changed++
 	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
@@ -587,6 +932,39 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *CloudletRefs) DeepCopyIn(src *CloudletRefs) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Clusters != nil {
+		m.Clusters = make([]ClusterKey, len(src.Clusters), len(src.Clusters))
+		for ii, s := range src.Clusters {
+			m.Clusters[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Clusters = nil
+	}
+	m.UsedRam = src.UsedRam
+	m.UsedVcores = src.UsedVcores
+	m.UsedDisk = src.UsedDisk
+	if src.RootLbPorts != nil {
+		m.RootLbPorts = make(map[int32]int32)
+		for k, v := range src.RootLbPorts {
+			m.RootLbPorts[k] = v
+		}
+	} else {
+		m.RootLbPorts = nil
+	}
+	m.UsedDynamicIps = src.UsedDynamicIps
+	m.UsedStaticIps = src.UsedStaticIps
+	if src.OptResUsedMap != nil {
+		m.OptResUsedMap = make(map[string]uint32)
+		for k, v := range src.OptResUsedMap {
+			m.OptResUsedMap[k] = v
+		}
+	} else {
+		m.OptResUsedMap = nil
+	}
 }
 
 func (s *CloudletRefs) HasFields() bool {
@@ -727,15 +1105,24 @@ type CloudletRefsKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type CloudletRefsCacheData struct {
+	Obj    *CloudletRefs
+	ModRev int64
+}
+
 // CloudletRefsCache caches CloudletRefs objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletRefsCache struct {
-	Objs        map[CloudletKey]*CloudletRefs
-	Mux         util.Mutex
-	List        map[CloudletKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *CloudletKey, old *CloudletRefs)
-	UpdatedCb   func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)
-	KeyWatchers map[CloudletKey][]*CloudletRefsKeyWatcher
+	Objs          map[CloudletKey]*CloudletRefsCacheData
+	Mux           util.Mutex
+	List          map[CloudletKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)
+	DeletedCbs    []func(ctx context.Context, old *CloudletRefs)
+	KeyWatchers   map[CloudletKey][]*CloudletRefsKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *CloudletKey)
+	DeletedKeyCbs []func(ctx context.Context, key *CloudletKey)
 }
 
 func NewCloudletRefsCache() *CloudletRefsCache {
@@ -745,8 +1132,13 @@ func NewCloudletRefsCache() *CloudletRefsCache {
 }
 
 func InitCloudletRefsCache(cache *CloudletRefsCache) {
-	cache.Objs = make(map[CloudletKey]*CloudletRefs)
+	cache.Objs = make(map[CloudletKey]*CloudletRefsCacheData)
 	cache.KeyWatchers = make(map[CloudletKey][]*CloudletRefsKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *CloudletRefsCache) GetTypeString() string {
@@ -754,11 +1146,17 @@ func (c *CloudletRefsCache) GetTypeString() string {
 }
 
 func (c *CloudletRefsCache) Get(key *CloudletKey, valbuf *CloudletRefs) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *CloudletRefsCache) GetWithRev(key *CloudletKey, valbuf *CloudletRefs, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -770,64 +1168,87 @@ func (c *CloudletRefsCache) HasKey(key *CloudletKey) bool {
 	return found
 }
 
-func (c *CloudletRefsCache) GetAllKeys(ctx context.Context, keys map[CloudletKey]context.Context) {
+func (c *CloudletRefsCache) GetAllKeys(ctx context.Context, cb func(key *CloudletKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *CloudletRefsCache) Update(ctx context.Context, in *CloudletRefs, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *CloudletRefs) (*CloudletRefs, bool) {
+func (c *CloudletRefsCache) Update(ctx context.Context, in *CloudletRefs, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *CloudletRefs) (*CloudletRefs, bool) {
 		return in, true
 	})
 }
 
-func (c *CloudletRefsCache) UpdateModFunc(ctx context.Context, key *CloudletKey, rev int64, modFunc func(old *CloudletRefs) (new *CloudletRefs, changed bool)) {
+func (c *CloudletRefsCache) UpdateModFunc(ctx context.Context, key *CloudletKey, modRev int64, modFunc func(old *CloudletRefs) (new *CloudletRefs, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *CloudletRefs
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &CloudletRefs{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &CloudletRefs{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletRefs", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &CloudletRefs{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &CloudletRefsCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *CloudletRefsCache) Delete(ctx context.Context, in *CloudletRefs, rev int64) {
+func (c *CloudletRefsCache) Delete(ctx context.Context, in *CloudletRefs, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *CloudletRefs
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletRefs", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *CloudletRefsCache) Prune(ctx context.Context, validKeys map[CloudletKey]struct{}) {
-	notify := make(map[CloudletKey]*CloudletRefs)
+	notify := make(map[CloudletKey]*CloudletRefsCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -835,8 +1256,18 @@ func (c *CloudletRefsCache) Prune(ctx context.Context, validKeys map[CloudletKey
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -855,13 +1286,13 @@ func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs
 	log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletRefs", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare CloudletRefs", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -875,12 +1306,48 @@ func CloudletRefsGenericNotifyCb(fn func(key *CloudletKey, old *CloudletRefs)) f
 	}
 }
 
-func (c *CloudletRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletRefs)) {
-	c.NotifyCb = fn
+func (c *CloudletRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64){fn}
 }
 
 func (c *CloudletRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *CloudletRefs, new *CloudletRefs){fn}
+}
+
+func (c *CloudletRefsCache) SetDeletedCb(fn func(ctx context.Context, old *CloudletRefs)) {
+	c.DeletedCbs = []func(ctx context.Context, old *CloudletRefs){fn}
+}
+
+func (c *CloudletRefsCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+}
+
+func (c *CloudletRefsCache) SetDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *CloudletKey){fn}
+}
+
+func (c *CloudletRefsCache) AddUpdatedCb(fn func(ctx context.Context, old *CloudletRefs, new *CloudletRefs)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *CloudletRefsCache) AddDeletedCb(fn func(ctx context.Context, old *CloudletRefs)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *CloudletRefsCache) AddNotifyCb(fn func(ctx context.Context, obj *CloudletKey, old *CloudletRefs, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *CloudletRefsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *CloudletRefsCache) AddDeletedKeyCb(fn func(ctx context.Context, key *CloudletKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *CloudletRefsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *CloudletRefsCache) WatchKey(key *CloudletKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -927,14 +1394,21 @@ func (c *CloudletRefsCache) TriggerKeyWatchers(ctx context.Context, key *Cloudle
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *CloudletRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *CloudletRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := CloudletRefs{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse CloudletRefs data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -942,11 +1416,11 @@ func (c *CloudletRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev
 	c.Mux.Unlock()
 }
 
-func (c *CloudletRefsCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *CloudletRefsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := CloudletRefs{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	CloudletKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *CloudletRefsCache) SyncListStart(ctx context.Context) {
@@ -954,7 +1428,7 @@ func (c *CloudletRefsCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *CloudletRefsCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[CloudletKey]*CloudletRefs)
+	deleted := make(map[CloudletKey]*CloudletRefsCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -964,12 +1438,26 @@ func (c *CloudletRefsCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
+}
+
+func (c *CloudletRefsCache) UsesOrg(org string) bool {
+	return false
 }
 
 func (m *CloudletRefs) GetObjKey() objstore.ObjKey {
@@ -1063,35 +1551,24 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 		m.Key.ClusterKey.Name = src.Key.ClusterKey.Name
 		changed++
 	}
-	if m.Key.CloudletKey.OperatorKey.Name != src.Key.CloudletKey.OperatorKey.Name {
-		m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
+	if m.Key.CloudletKey.Organization != src.Key.CloudletKey.Organization {
+		m.Key.CloudletKey.Organization = src.Key.CloudletKey.Organization
 		changed++
 	}
 	if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
 		m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
 		changed++
 	}
-	if m.Key.Developer != src.Key.Developer {
-		m.Key.Developer = src.Key.Developer
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
 		changed++
 	}
-	if m.Apps == nil || len(m.Apps) != len(src.Apps) {
-		m.Apps = make([]AppKey, len(src.Apps))
+	if src.Apps != nil {
+		m.Apps = src.Apps
 		changed++
-	}
-	for i0 := 0; i0 < len(src.Apps); i0++ {
-		if m.Apps[i0].DeveloperKey.Name != src.Apps[i0].DeveloperKey.Name {
-			m.Apps[i0].DeveloperKey.Name = src.Apps[i0].DeveloperKey.Name
-			changed++
-		}
-		if m.Apps[i0].Name != src.Apps[i0].Name {
-			m.Apps[i0].Name = src.Apps[i0].Name
-			changed++
-		}
-		if m.Apps[i0].Version != src.Apps[i0].Version {
-			m.Apps[i0].Version = src.Apps[i0].Version
-			changed++
-		}
+	} else if m.Apps != nil {
+		m.Apps = nil
+		changed++
 	}
 	if m.UsedRam != src.UsedRam {
 		m.UsedRam = src.UsedRam
@@ -1106,6 +1583,21 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 		changed++
 	}
 	return changed
+}
+
+func (m *ClusterRefs) DeepCopyIn(src *ClusterRefs) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Apps != nil {
+		m.Apps = make([]AppKey, len(src.Apps), len(src.Apps))
+		for ii, s := range src.Apps {
+			m.Apps[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Apps = nil
+	}
+	m.UsedRam = src.UsedRam
+	m.UsedVcores = src.UsedVcores
+	m.UsedDisk = src.UsedDisk
 }
 
 func (s *ClusterRefs) HasFields() bool {
@@ -1246,15 +1738,24 @@ type ClusterRefsKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type ClusterRefsCacheData struct {
+	Obj    *ClusterRefs
+	ModRev int64
+}
+
 // ClusterRefsCache caches ClusterRefs objects in memory in a hash table
 // and keeps them in sync with the database.
 type ClusterRefsCache struct {
-	Objs        map[ClusterInstKey]*ClusterRefs
-	Mux         util.Mutex
-	List        map[ClusterInstKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs)
-	UpdatedCb   func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)
-	KeyWatchers map[ClusterInstKey][]*ClusterRefsKeyWatcher
+	Objs          map[ClusterInstKey]*ClusterRefsCacheData
+	Mux           util.Mutex
+	List          map[ClusterInstKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)
+	DeletedCbs    []func(ctx context.Context, old *ClusterRefs)
+	KeyWatchers   map[ClusterInstKey][]*ClusterRefsKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *ClusterInstKey)
+	DeletedKeyCbs []func(ctx context.Context, key *ClusterInstKey)
 }
 
 func NewClusterRefsCache() *ClusterRefsCache {
@@ -1264,8 +1765,13 @@ func NewClusterRefsCache() *ClusterRefsCache {
 }
 
 func InitClusterRefsCache(cache *ClusterRefsCache) {
-	cache.Objs = make(map[ClusterInstKey]*ClusterRefs)
+	cache.Objs = make(map[ClusterInstKey]*ClusterRefsCacheData)
 	cache.KeyWatchers = make(map[ClusterInstKey][]*ClusterRefsKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *ClusterRefsCache) GetTypeString() string {
@@ -1273,11 +1779,17 @@ func (c *ClusterRefsCache) GetTypeString() string {
 }
 
 func (c *ClusterRefsCache) Get(key *ClusterInstKey, valbuf *ClusterRefs) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *ClusterRefsCache) GetWithRev(key *ClusterInstKey, valbuf *ClusterRefs, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -1289,64 +1801,87 @@ func (c *ClusterRefsCache) HasKey(key *ClusterInstKey) bool {
 	return found
 }
 
-func (c *ClusterRefsCache) GetAllKeys(ctx context.Context, keys map[ClusterInstKey]context.Context) {
+func (c *ClusterRefsCache) GetAllKeys(ctx context.Context, cb func(key *ClusterInstKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *ClusterRefsCache) Update(ctx context.Context, in *ClusterRefs, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *ClusterRefs) (*ClusterRefs, bool) {
+func (c *ClusterRefsCache) Update(ctx context.Context, in *ClusterRefs, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *ClusterRefs) (*ClusterRefs, bool) {
 		return in, true
 	})
 }
 
-func (c *ClusterRefsCache) UpdateModFunc(ctx context.Context, key *ClusterInstKey, rev int64, modFunc func(old *ClusterRefs) (new *ClusterRefs, changed bool)) {
+func (c *ClusterRefsCache) UpdateModFunc(ctx context.Context, key *ClusterInstKey, modRev int64, modFunc func(old *ClusterRefs) (new *ClusterRefs, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *ClusterRefs
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &ClusterRefs{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &ClusterRefs{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterRefs", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &ClusterRefs{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &ClusterRefsCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *ClusterRefsCache) Delete(ctx context.Context, in *ClusterRefs, rev int64) {
+func (c *ClusterRefsCache) Delete(ctx context.Context, in *ClusterRefs, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *ClusterRefs
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterRefs", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *ClusterRefsCache) Prune(ctx context.Context, validKeys map[ClusterInstKey]struct{}) {
-	notify := make(map[ClusterInstKey]*ClusterRefs)
+	notify := make(map[ClusterInstKey]*ClusterRefsCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1354,8 +1889,18 @@ func (c *ClusterRefsCache) Prune(ctx context.Context, validKeys map[ClusterInstK
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1374,13 +1919,13 @@ func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) e
 	log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare ClusterRefs", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare ClusterRefs", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1394,12 +1939,48 @@ func ClusterRefsGenericNotifyCb(fn func(key *ClusterInstKey, old *ClusterRefs)) 
 	}
 }
 
-func (c *ClusterRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs)) {
-	c.NotifyCb = fn
+func (c *ClusterRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64){fn}
 }
 
 func (c *ClusterRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *ClusterRefs, new *ClusterRefs){fn}
+}
+
+func (c *ClusterRefsCache) SetDeletedCb(fn func(ctx context.Context, old *ClusterRefs)) {
+	c.DeletedCbs = []func(ctx context.Context, old *ClusterRefs){fn}
+}
+
+func (c *ClusterRefsCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *ClusterInstKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *ClusterInstKey){fn}
+}
+
+func (c *ClusterRefsCache) SetDeletedKeyCb(fn func(ctx context.Context, key *ClusterInstKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *ClusterInstKey){fn}
+}
+
+func (c *ClusterRefsCache) AddUpdatedCb(fn func(ctx context.Context, old *ClusterRefs, new *ClusterRefs)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *ClusterRefsCache) AddDeletedCb(fn func(ctx context.Context, old *ClusterRefs)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *ClusterRefsCache) AddNotifyCb(fn func(ctx context.Context, obj *ClusterInstKey, old *ClusterRefs, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *ClusterRefsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *ClusterInstKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *ClusterRefsCache) AddDeletedKeyCb(fn func(ctx context.Context, key *ClusterInstKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *ClusterRefsCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ClusterRefsCache) WatchKey(key *ClusterInstKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1446,14 +2027,21 @@ func (c *ClusterRefsCache) TriggerKeyWatchers(ctx context.Context, key *ClusterI
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *ClusterRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *ClusterRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := ClusterRefs{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse ClusterRefs data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1461,11 +2049,11 @@ func (c *ClusterRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	c.Mux.Unlock()
 }
 
-func (c *ClusterRefsCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *ClusterRefsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := ClusterRefs{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	ClusterInstKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *ClusterRefsCache) SyncListStart(ctx context.Context) {
@@ -1473,7 +2061,7 @@ func (c *ClusterRefsCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *ClusterRefsCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[ClusterInstKey]*ClusterRefs)
+	deleted := make(map[ClusterInstKey]*ClusterRefsCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1483,12 +2071,26 @@ func (c *ClusterRefsCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
 		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
 	}
+}
+
+func (c *ClusterRefsCache) UsesOrg(org string) bool {
+	return false
 }
 
 func (m *ClusterRefs) GetObjKey() objstore.ObjKey {
@@ -1524,7 +2126,602 @@ func (m *ClusterRefs) ValidateEnums() error {
 	return nil
 }
 
+func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.Insts != nil {
+		if m.Insts == nil && o.Insts != nil || m.Insts != nil && o.Insts == nil {
+			return false
+		} else if m.Insts != nil && o.Insts != nil {
+			if len(m.Insts) != len(o.Insts) {
+				return false
+			}
+			for k, _ := range m.Insts {
+				_, ok := o.Insts[k]
+				if !ok {
+					return false
+				}
+				if o.Insts[k] != m.Insts[k] {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+func (m *AppInstRefs) CopyInFields(src *AppInstRefs) int {
+	changed := 0
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
+		changed++
+	}
+	if m.Key.Name != src.Key.Name {
+		m.Key.Name = src.Key.Name
+		changed++
+	}
+	if m.Key.Version != src.Key.Version {
+		m.Key.Version = src.Key.Version
+		changed++
+	}
+	if src.Insts != nil {
+		m.Insts = make(map[string]uint32)
+		for k0, _ := range src.Insts {
+			m.Insts[k0] = src.Insts[k0]
+		}
+	} else if m.Insts != nil {
+		m.Insts = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *AppInstRefs) DeepCopyIn(src *AppInstRefs) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Insts != nil {
+		m.Insts = make(map[string]uint32)
+		for k, v := range src.Insts {
+			m.Insts[k] = v
+		}
+	} else {
+		m.Insts = nil
+	}
+}
+
+func (s *AppInstRefs) HasFields() bool {
+	return false
+}
+
+type AppInstRefsStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewAppInstRefsStore(kvstore objstore.KVStore) AppInstRefsStore {
+	return AppInstRefsStore{kvstore: kvstore}
+}
+
+func (s *AppInstRefsStore) Create(ctx context.Context, m *AppInstRefs, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) Update(ctx context.Context, m *AppInstRefs, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	var vers int64 = 0
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) Put(ctx context.Context, m *AppInstRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) Delete(ctx context.Context, m *AppInstRefs, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstRefs", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstRefsStore) LoadOne(key string) (*AppInstRefs, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj AppInstRefs
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInstRefs data", "val", string(val), "err", err)
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *AppInstRefsStore) STMGet(stm concurrency.STM, key *AppKey, buf *AppInstRefs) bool {
+	keystr := objstore.DbKeyString("AppInstRefs", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *AppInstRefsStore) STMPut(stm concurrency.STM, obj *AppInstRefs, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("AppInstRefs", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("AppInstRefs json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *AppInstRefsStore) STMDel(stm concurrency.STM, key *AppKey) {
+	keystr := objstore.DbKeyString("AppInstRefs", key)
+	stm.Del(keystr)
+}
+
+type AppInstRefsKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+type AppInstRefsCacheData struct {
+	Obj    *AppInstRefs
+	ModRev int64
+}
+
+// AppInstRefsCache caches AppInstRefs objects in memory in a hash table
+// and keeps them in sync with the database.
+type AppInstRefsCache struct {
+	Objs          map[AppKey]*AppInstRefsCacheData
+	Mux           util.Mutex
+	List          map[AppKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *AppInstRefs, new *AppInstRefs)
+	DeletedCbs    []func(ctx context.Context, old *AppInstRefs)
+	KeyWatchers   map[AppKey][]*AppInstRefsKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AppKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AppKey)
+}
+
+func NewAppInstRefsCache() *AppInstRefsCache {
+	cache := AppInstRefsCache{}
+	InitAppInstRefsCache(&cache)
+	return &cache
+}
+
+func InitAppInstRefsCache(cache *AppInstRefsCache) {
+	cache.Objs = make(map[AppKey]*AppInstRefsCacheData)
+	cache.KeyWatchers = make(map[AppKey][]*AppInstRefsKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
+}
+
+func (c *AppInstRefsCache) GetTypeString() string {
+	return "AppInstRefs"
+}
+
+func (c *AppInstRefsCache) Get(key *AppKey, valbuf *AppInstRefs) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *AppInstRefsCache) GetWithRev(key *AppKey, valbuf *AppInstRefs, modRev *int64) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
+	}
+	return found
+}
+
+func (c *AppInstRefsCache) HasKey(key *AppKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *AppInstRefsCache) GetAllKeys(ctx context.Context, cb func(key *AppKey, modRev int64)) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
+	}
+}
+
+func (c *AppInstRefsCache) Update(ctx context.Context, in *AppInstRefs, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AppInstRefs) (*AppInstRefs, bool) {
+		return in, true
+	})
+}
+
+func (c *AppInstRefsCache) UpdateModFunc(ctx context.Context, key *AppKey, modRev int64, modFunc func(old *AppInstRefs) (new *AppInstRefs, changed bool)) {
+	c.Mux.Lock()
+	var old *AppInstRefs
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &AppInstRefs{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
+	}
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &AppInstRefs{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &AppInstRefsCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *AppInstRefsCache) Delete(ctx context.Context, in *AppInstRefs, modRev int64) {
+	c.Mux.Lock()
+	var old *AppInstRefs
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	c.Mux.Unlock()
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *AppInstRefsCache) Prune(ctx context.Context, validKeys map[AppKey]struct{}) {
+	notify := make(map[AppKey]*AppInstRefsCacheData)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *AppInstRefsCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *AppInstRefsCache) Flush(ctx context.Context, notifyId int64) {
+}
+
+func (c *AppInstRefsCache) Show(filter *AppInstRefs, cb func(ret *AppInstRefs) error) error {
+	log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare AppInstRefs", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "obj", data.Obj)
+		err := cb(data.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AppInstRefsGenericNotifyCb(fn func(key *AppKey, old *AppInstRefs)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppKey), obj.(*AppInstRefs))
+	}
+}
+
+func (c *AppInstRefsCache) SetNotifyCb(fn func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64){fn}
+}
+
+func (c *AppInstRefsCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstRefs, new *AppInstRefs)) {
+	c.UpdatedCbs = []func(ctx context.Context, old *AppInstRefs, new *AppInstRefs){fn}
+}
+
+func (c *AppInstRefsCache) SetDeletedCb(fn func(ctx context.Context, old *AppInstRefs)) {
+	c.DeletedCbs = []func(ctx context.Context, old *AppInstRefs){fn}
+}
+
+func (c *AppInstRefsCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AppKey){fn}
+}
+
+func (c *AppInstRefsCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AppKey){fn}
+}
+
+func (c *AppInstRefsCache) AddUpdatedCb(fn func(ctx context.Context, old *AppInstRefs, new *AppInstRefs)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *AppInstRefsCache) AddDeletedCb(fn func(ctx context.Context, old *AppInstRefs)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *AppInstRefsCache) AddNotifyCb(fn func(ctx context.Context, obj *AppKey, old *AppInstRefs, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *AppInstRefsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *AppInstRefsCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AppKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *AppInstRefsCache) SetFlushAll() {
+	c.FlushAll = true
+}
+
+func (c *AppInstRefsCache) WatchKey(key *AppKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*AppInstRefsKeyWatcher, 0)
+	}
+	watcher := AppInstRefsKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching AppInstRefs", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *AppInstRefsCache) TriggerKeyWatchers(ctx context.Context, key *AppKey) {
+	watchers := make([]*AppInstRefsKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *AppInstRefsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := AppInstRefs{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse AppInstRefs data", "val", string(val), "err", err)
+		return
+	}
+	c.Update(ctx, &obj, modRev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *AppInstRefsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := AppInstRefs{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	AppKeyStringParse(keystr, obj.GetKey())
+	c.Delete(ctx, &obj, modRev)
+}
+
+func (c *AppInstRefsCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[AppKey]struct{})
+}
+
+func (c *AppInstRefsCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[AppKey]*AppInstRefsCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *AppInstRefsCache) UsesOrg(org string) bool {
+	return false
+}
+
+func (m *AppInstRefs) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *AppInstRefs) GetKey() *AppKey {
+	return &m.Key
+}
+
+func (m *AppInstRefs) GetKeyVal() AppKey {
+	return m.Key
+}
+
+func (m *AppInstRefs) SetKey(key *AppKey) {
+	m.Key = *key
+}
+
+func CmpSortAppInstRefs(a AppInstRefs, b AppInstRefs) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+func (m *AppInstRefs) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *CloudletRefs) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -1571,6 +2768,9 @@ func (m *CloudletRefs) Size() (n int) {
 }
 
 func (m *ClusterRefs) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = m.Key.Size()
@@ -1593,15 +2793,27 @@ func (m *ClusterRefs) Size() (n int) {
 	return n
 }
 
-func sovRefs(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
+func (m *AppInstRefs) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovRefs(uint64(l))
+	if len(m.Insts) > 0 {
+		for k, v := range m.Insts {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovRefs(uint64(len(k))) + 1 + sovRefs(uint64(v))
+			n += mapEntrySize + 1 + sovRefs(uint64(mapEntrySize))
 		}
 	}
 	return n
+}
+
+func sovRefs(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozRefs(x uint64) (n int) {
 	return sovRefs(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1621,7 +2833,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1649,7 +2861,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1658,6 +2870,9 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRefs
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1679,7 +2894,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1688,6 +2903,9 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRefs
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1710,7 +2928,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UsedRam |= (uint64(b) & 0x7F) << shift
+				m.UsedRam |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1729,7 +2947,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UsedVcores |= (uint64(b) & 0x7F) << shift
+				m.UsedVcores |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1748,7 +2966,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UsedDisk |= (uint64(b) & 0x7F) << shift
+				m.UsedDisk |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1767,7 +2985,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1776,6 +2994,9 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRefs
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1796,7 +3017,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1812,7 +3033,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int32(b) & 0x7F) << shift
+						mapkey |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1827,7 +3048,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (int32(b) & 0x7F) << shift
+						mapvalue |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1863,7 +3084,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UsedDynamicIps |= (int32(b) & 0x7F) << shift
+				m.UsedDynamicIps |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1882,7 +3103,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1892,6 +3113,9 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRefs
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1911,7 +3135,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1920,6 +3144,9 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRefs
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1940,7 +3167,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1957,7 +3184,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1967,6 +3194,9 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthRefs
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthRefs
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -1982,7 +3212,7 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (uint32(b) & 0x7F) << shift
+						mapvalue |= uint32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -2013,6 +3243,9 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthRefs
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2040,7 +3273,7 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -2068,7 +3301,7 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2077,6 +3310,9 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRefs
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2098,7 +3334,7 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2107,6 +3343,9 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRefs
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -2129,7 +3368,7 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UsedRam |= (uint64(b) & 0x7F) << shift
+				m.UsedRam |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2148,7 +3387,7 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UsedVcores |= (uint64(b) & 0x7F) << shift
+				m.UsedVcores |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2167,7 +3406,7 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UsedDisk |= (uint64(b) & 0x7F) << shift
+				m.UsedDisk |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2179,6 +3418,208 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppInstRefs) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRefs
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppInstRefs: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppInstRefs: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Insts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Insts == nil {
+				m.Insts = make(map[string]uint32)
+			}
+			var mapkey string
+			var mapvalue uint32
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRefs
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRefs
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthRefs
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthRefs
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRefs
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapvalue |= uint32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipRefs(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthRefs
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Insts[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRefs(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthRefs
 			}
 			if (iNdEx + skippy) > l {
@@ -2196,6 +3637,7 @@ func (m *ClusterRefs) Unmarshal(dAtA []byte) error {
 func skipRefs(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -2227,10 +3669,8 @@ func skipRefs(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -2247,100 +3687,34 @@ func skipRefs(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthRefs
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowRefs
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipRefs(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupRefs
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthRefs
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthRefs = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowRefs   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthRefs        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowRefs          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupRefs = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("refs.proto", fileDescriptorRefs) }
-
-var fileDescriptorRefs = []byte{
-	// 645 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0x41, 0x4f, 0x13, 0x4f,
-	0x14, 0x67, 0xa0, 0xe5, 0x4f, 0xa7, 0xff, 0xc2, 0xb2, 0x41, 0x1c, 0xaa, 0x29, 0x4d, 0x63, 0xcc,
-	0x46, 0x71, 0x0b, 0x35, 0x46, 0xc2, 0xc1, 0x08, 0xea, 0x81, 0x80, 0x62, 0x96, 0xc8, 0xb5, 0x99,
-	0x6e, 0x87, 0x65, 0xc2, 0xee, 0xce, 0x64, 0x66, 0x0a, 0x36, 0xc6, 0xc4, 0x8f, 0xe0, 0x47, 0xf0,
-	0xe3, 0x70, 0xf4, 0xa8, 0x17, 0xa3, 0x9c, 0x0c, 0x27, 0x13, 0xfa, 0x01, 0xcc, 0xcc, 0x6e, 0xdb,
-	0x85, 0xd2, 0xa3, 0x97, 0xe6, 0xbd, 0xdf, 0xfb, 0xbd, 0xf7, 0x7e, 0x6f, 0xdf, 0x9b, 0x42, 0x28,
-	0xc8, 0xa1, 0x74, 0xb9, 0x60, 0x8a, 0xd9, 0x05, 0xd2, 0x0e, 0x88, 0x31, 0xcb, 0x77, 0x03, 0xc6,
-	0x82, 0x90, 0xd4, 0x31, 0xa7, 0x75, 0x1c, 0xc7, 0x4c, 0x61, 0x45, 0x59, 0x9c, 0x12, 0xcb, 0xeb,
-	0x01, 0x55, 0x47, 0x9d, 0x96, 0xeb, 0xb3, 0xa8, 0x1e, 0xb1, 0x16, 0x0d, 0x75, 0xe2, 0xfb, 0xba,
-	0xfe, 0x7d, 0xe4, 0x87, 0xac, 0xd3, 0xae, 0x1b, 0x5e, 0x40, 0xe2, 0x81, 0x91, 0x66, 0xce, 0x9a,
-	0x70, 0x48, 0x54, 0xea, 0x97, 0xfc, 0xb0, 0x23, 0x15, 0x11, 0xa9, 0x3b, 0x9f, 0xba, 0x34, 0x96,
-	0x7d, 0x46, 0x01, 0x73, 0x9e, 0x9a, 0x0b, 0x01, 0x0b, 0x98, 0x31, 0xeb, 0xda, 0x4a, 0xd0, 0xda,
-	0xf7, 0x1c, 0xfc, 0xff, 0x45, 0x5a, 0xd5, 0x23, 0x87, 0xd2, 0x76, 0xe1, 0xd4, 0x31, 0xe9, 0x22,
-	0x50, 0x05, 0x4e, 0xb1, 0xb1, 0xe8, 0x0e, 0x86, 0x72, 0xfb, 0xac, 0x1d, 0xd2, 0xdd, 0xca, 0x9d,
-	0xfd, 0x58, 0x9e, 0xf0, 0x34, 0xd1, 0x7e, 0x0a, 0x67, 0xd2, 0xb6, 0x12, 0x4d, 0x56, 0xa7, 0x9c,
-	0x62, 0xe3, 0xd6, 0x95, 0x24, 0x13, 0x1a, 0xe6, 0x0c, 0xc8, 0xf6, 0x12, 0x9c, 0xe9, 0x48, 0xd2,
-	0x6e, 0x0a, 0x1c, 0xa1, 0x5c, 0x15, 0x38, 0x39, 0xef, 0x3f, 0xed, 0x7b, 0x38, 0xb2, 0x97, 0x61,
-	0xd1, 0x84, 0x4e, 0x7c, 0x26, 0x88, 0x44, 0x79, 0x13, 0x85, 0x1a, 0x3a, 0x30, 0x88, 0x7d, 0x07,
-	0x16, 0x0c, 0xa1, 0x4d, 0xe5, 0x31, 0x9a, 0x36, 0x61, 0x53, 0xec, 0x25, 0x95, 0xc7, 0xf6, 0x2e,
-	0x2c, 0x09, 0xc6, 0x54, 0x33, 0x6c, 0x35, 0x39, 0x13, 0x4a, 0xa2, 0x19, 0x23, 0xcb, 0xb9, 0x61,
-	0x16, 0x3d, 0xb1, 0xeb, 0x31, 0xa6, 0x76, 0x5b, 0x6f, 0x35, 0xf5, 0x55, 0xac, 0x44, 0xd7, 0x2b,
-	0x8a, 0x21, 0x62, 0x3b, 0xd0, 0x4a, 0x5a, 0x75, 0x63, 0x1c, 0x51, 0xbf, 0x49, 0xb9, 0x44, 0x85,
-	0x2a, 0x70, 0xf2, 0xde, 0xac, 0xe9, 0x98, 0xc0, 0xdb, 0x5c, 0xda, 0xf7, 0xe1, 0x9c, 0x61, 0x4a,
-	0xbd, 0xee, 0x84, 0x08, 0xab, 0xc0, 0x29, 0x78, 0x25, 0x0d, 0xef, 0x1b, 0x54, 0xf3, 0xf6, 0xa1,
-	0xc5, 0xb8, 0x6a, 0x0a, 0x22, 0x9b, 0x86, 0x1f, 0x61, 0x8e, 0x8a, 0x46, 0xe2, 0x83, 0x71, 0x12,
-	0xf7, 0xb8, 0xf2, 0x88, 0x7c, 0x27, 0x49, 0xfb, 0x35, 0xe6, 0x89, 0xc8, 0x12, 0xcb, 0x62, 0xe5,
-	0x67, 0xd0, 0xba, 0x3e, 0x87, 0x6d, 0x0d, 0x57, 0x99, 0x4f, 0x96, 0xb5, 0x00, 0xf3, 0x27, 0x38,
-	0xec, 0x10, 0x34, 0x69, 0xb0, 0xc4, 0xd9, 0x98, 0x5c, 0x07, 0xe5, 0xe7, 0xd0, 0x1e, 0x6d, 0x92,
-	0xad, 0x50, 0xb8, 0xa1, 0x42, 0x29, 0x53, 0x61, 0xc3, 0xfa, 0x7d, 0x89, 0xc0, 0x9f, 0x4b, 0x04,
-	0x3e, 0xf5, 0x10, 0xf8, 0xd2, 0x43, 0xa0, 0xf6, 0x0d, 0xc0, 0x62, 0x7a, 0x00, 0xe6, 0xb4, 0xd6,
-	0xb2, 0xa7, 0xb5, 0x34, 0x7a, 0x25, 0xdb, 0xb1, 0xbc, 0x7e, 0x5d, 0x0f, 0x61, 0x0e, 0x73, 0xde,
-	0xbf, 0xac, 0xf9, 0x4c, 0xce, 0x26, 0xe7, 0x43, 0xae, 0x21, 0xfd, 0xb3, 0x8b, 0x1a, 0x1d, 0xad,
-	0xf1, 0x19, 0xc0, 0xb9, 0xec, 0x86, 0x36, 0x39, 0xb5, 0x3f, 0x42, 0x6b, 0xff, 0x88, 0x9d, 0x5e,
-	0x79, 0x4d, 0xb7, 0xc7, 0x6c, 0xb4, 0x3c, 0x2e, 0x50, 0x7b, 0x72, 0xd1, 0x43, 0x6b, 0x1e, 0x91,
-	0xac, 0x23, 0x7c, 0xd2, 0x8f, 0xc8, 0x95, 0x4d, 0x5f, 0xff, 0x85, 0x1c, 0x50, 0x72, 0xba, 0xb2,
-	0x43, 0xba, 0xee, 0x1e, 0x27, 0x02, 0x2b, 0xa6, 0x1f, 0x96, 0xfb, 0x06, 0x47, 0x64, 0x15, 0x34,
-	0x3e, 0xc0, 0xd9, 0xcc, 0xc7, 0xd6, 0x82, 0x28, 0x9c, 0x4b, 0x04, 0x0d, 0x57, 0xb0, 0x38, 0xfa,
-	0xd5, 0x8d, 0x9c, 0x31, 0x78, 0xed, 0xde, 0x45, 0x0f, 0x55, 0x87, 0x6a, 0x06, 0x6b, 0xba, 0x22,
-	0x68, 0x15, 0x6c, 0x59, 0x67, 0xbf, 0x2a, 0x13, 0x67, 0xe7, 0x15, 0xf0, 0xf5, 0xbc, 0x02, 0x7e,
-	0x9e, 0x57, 0x40, 0x6b, 0xda, 0x14, 0x7b, 0xfc, 0x37, 0x00, 0x00, 0xff, 0xff, 0x75, 0x5e, 0x9b,
-	0xb0, 0x23, 0x05, 0x00, 0x00,
-}

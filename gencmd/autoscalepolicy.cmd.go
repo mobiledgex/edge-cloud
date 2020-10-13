@@ -3,19 +3,21 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import "strings"
-import "github.com/spf13/cobra"
-import "context"
-import "io"
-import "github.com/mobiledgex/edge-cloud/cli"
-import "google.golang.org/grpc/status"
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	"context"
+	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
+	math "math"
+	"strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -38,6 +40,9 @@ var CreateAutoScalePolicyCmd = &cli.Command{
 }
 
 func runCreateAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -92,6 +97,9 @@ var DeleteAutoScalePolicyCmd = &cli.Command{
 }
 
 func runDeleteAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -146,6 +154,9 @@ var UpdateAutoScalePolicyCmd = &cli.Command{
 }
 
 func runUpdateAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
@@ -200,6 +211,9 @@ var ShowAutoScalePolicyCmd = &cli.Command{
 }
 
 func runShowAutoScalePolicy(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
 	obj := c.ReqData.(*edgeproto.AutoScalePolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
@@ -222,6 +236,7 @@ func ShowAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error {
 		}
 		return fmt.Errorf("ShowAutoScalePolicy failed: %s", errstr)
 	}
+
 	objs := make([]*edgeproto.AutoScalePolicy, 0)
 	for {
 		obj, err := stream.Recv()
@@ -269,17 +284,17 @@ var AutoScalePolicyApiCmds = []*cobra.Command{
 
 var PolicyKeyRequiredArgs = []string{}
 var PolicyKeyOptionalArgs = []string{
-	"developer",
+	"organization",
 	"name",
 }
 var PolicyKeyAliasArgs = []string{}
 var PolicyKeyComments = map[string]string{
-	"developer": "Name of the Developer that this policy belongs to",
-	"name":      "Policy name",
+	"organization": "Name of the organization for the cluster that this policy will apply to",
+	"name":         "Policy name",
 }
 var PolicyKeySpecialArgs = map[string]string{}
 var AutoScalePolicyRequiredArgs = []string{
-	"developer",
+	"cluster-org",
 	"name",
 }
 var AutoScalePolicyOptionalArgs = []string{
@@ -290,11 +305,12 @@ var AutoScalePolicyOptionalArgs = []string{
 	"triggertimesec",
 }
 var AutoScalePolicyAliasArgs = []string{
-	"developer=key.developer",
+	"cluster-org=key.organization",
 	"name=key.name",
 }
 var AutoScalePolicyComments = map[string]string{
-	"developer":          "Name of the Developer that this policy belongs to",
+	"fields":             "Fields are used for the Update API to specify which fields to apply",
+	"cluster-org":        "Name of the organization for the cluster that this policy will apply to",
 	"name":               "Policy name",
 	"minnodes":           "Minimum number of cluster nodes",
 	"maxnodes":           "Maximum number of cluster nodes",
@@ -302,9 +318,11 @@ var AutoScalePolicyComments = map[string]string{
 	"scaledowncputhresh": "Scale down cpu threshold (percentage 1 to 100)",
 	"triggertimesec":     "Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.",
 }
-var AutoScalePolicySpecialArgs = map[string]string{}
+var AutoScalePolicySpecialArgs = map[string]string{
+	"fields": "StringArray",
+}
 var CreateAutoScalePolicyRequiredArgs = []string{
-	"developer",
+	"cluster-org",
 	"name",
 	"minnodes",
 	"maxnodes",

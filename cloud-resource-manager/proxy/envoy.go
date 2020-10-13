@@ -7,30 +7,28 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
-
-// Envoy is now handling all of our L4 TCP loadbalancing
-// Eventually L7 and UDP Proxying support will be added so
-// all of our loadbalancing is handled by envoy.
-// UDP proxying is currently blocked by: https://github.com/envoyproxy/envoy/issues/492
 
 var envoyYamlT *template.Template
 
 // this is the default value in envoy, for DOS protection
 const defaultConcurrentConns uint64 = 1024
 
+const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
+
 func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 }
 
-func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, listenIP, backendIP string, ports []dme.AppPort, ops ...Op) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy", "name", name, "listenIP", listenIP, "backendIP", backendIP, "ports", ports)
+func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string, ops ...Op) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "create envoy", "name", name, "listenIP", listenIP, "backendIP", backendIP, "ports", ports)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -41,7 +39,7 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, liste
 	pwd := strings.TrimSpace(string(out))
 
 	dir := pwd + "/envoy/" + name
-	log.SpanLog(ctx, log.DebugLevelMexos, "envoy remote dir", "name", name, "dir", dir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "envoy remote dir", "name", name, "dir", dir)
 
 	err = pc.Run(client, "mkdir -p "+dir)
 	if err != nil {
@@ -50,67 +48,92 @@ func CreateEnvoyProxy(ctx context.Context, client pc.PlatformClient, name, liste
 	accesslogFile := dir + "/access.log"
 	err = pc.Run(client, "touch "+accesslogFile)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
+		log.SpanLog(ctx, log.DebugLevelInfra,
 			"envoy %s can't create file %s", name, accesslogFile)
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, opts.Cert, ports)
+	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, ports, skipHcPorts)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
-	}
-
-	certDir := dir + "/certs"
-	err = pc.Run(client, "mkdir -p "+certDir)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos,
-			"envoy %s can't create cert dir %s", name, certDir)
-		return err
-	}
-	if opts.Cert != nil {
-		certFile := certDir + "/" + opts.Cert.CommonName + ".crt"
-		err = pc.WriteFile(client, certFile, opts.Cert.CertString, "tls cert", pc.NoSudo)
-		if err != nil {
-			return err
-		}
-		keyFile := certDir + "/" + opts.Cert.CommonName + ".key"
-		err = pc.WriteFile(client, keyFile, opts.Cert.KeyString, "tls key", pc.NoSudo)
-		if err != nil {
-			return err
-		}
 	}
 
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dme.LProto_L_PROTO_TCP, listenIP)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dockermgmt.EnvoyProxy, listenIP)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
+	certsDir, _, _, err := GetCertsDirAndFiles(ctx, client)
+	if err != nil {
+		return fmt.Errorf("Unable to get certsDir - %v", "err")
+	}
 	cmdArgs = append(cmdArgs, []string{
-		"-v", certDir + ":/etc/envoy/certs",
-		"-v", accesslogFile + ":/var/log/access.log",
+		"-v", certsDir + ":/etc/envoy/certs",
+		"-v", accesslogFile + ":/tmp/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
-		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl"}...)
+		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@" + EnvoyImageDigest}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
-	log.SpanLog(ctx, log.DebugLevelMexos, "envoy docker command", "name", "envoy"+name,
+	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't create envoy container %s, %s, %v", "envoy"+name, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "created envoy container", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "created envoy container", "name", name)
 	return nil
 }
 
-func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, name, listenIP, backendIP string, cert *access.TLSCert, ports []dme.AppPort) error {
+// Build a map of individual ports with key struct:
+// <proto>:<portnum>
+func buildPortsMapFromString(portsString string) (map[string]struct{}, error) {
+	portMap := make(map[string]struct{})
+	if portsString == "all" {
+		return portMap, nil
+	}
+	ports, err := edgeproto.ParseAppPorts(portsString)
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range ports {
+		if port.EndPort == 0 {
+			port.EndPort = port.InternalPort
+		}
+		for p := port.InternalPort; p <= port.EndPort; p++ {
+			proto, err := edgeproto.LProtoStr(port.Proto)
+			if err != nil {
+				return nil, err
+			}
+			key := fmt.Sprintf("%s:%d", proto, p)
+			portMap[key] = struct{}{}
+		}
+	}
+	return portMap, nil
+}
+
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string) error {
+	var skipHcAll = false
+	var skipHcPortsMap map[string]struct{}
+	var err error
+
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
-		Cert:       cert,
+		CertName:   CertName,
 	}
+	// check skip health check ports
+	if skipHcPorts == "all" {
+		skipHcAll = true
+	} else {
+		skipHcPortsMap, err = buildPortsMapFromString(skipHcPorts)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, p := range ports {
 		endPort := p.EndPort
 		if endPort == 0 {
@@ -128,11 +151,15 @@ func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, na
 			switch p.Proto {
 			// only support tcp for now
 			case dme.LProto_L_PROTO_TCP:
+				key := fmt.Sprintf("%s:%d", "tcp", internalPort)
+				_, skipHealthCheck := skipHcPortsMap[key]
 				tcpPort := TCPSpecDetail{
 					ListenPort:  pubPort,
 					ListenIP:    listenIP,
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
+					UseTLS:      p.Tls,
+					HealthCheck: !skipHcAll && !skipHealthCheck,
 				}
 				tcpconns, err := getTCPConcurrentConnections()
 				if err != nil {
@@ -140,20 +167,35 @@ func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, na
 				}
 				tcpPort.ConcurrentConns = tcpconns
 				spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
-				spec.L4 = true
+			case dme.LProto_L_PROTO_UDP:
+				if p.Nginx { // defv specified nginx for this port (range)
+					continue
+				}
+				udpPort := UDPSpecDetail{
+					ListenPort:  pubPort,
+					ListenIP:    listenIP,
+					BackendIP:   backendIP,
+					BackendPort: internalPort,
+				}
+				udpconns, err := getUDPConcurrentConnections()
+				if err != nil {
+					return err
+				}
+				udpPort.ConcurrentConns = udpconns
+				spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 			}
 			internalPort++
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "create envoy yaml", "name", name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create envoy yaml", "name", name)
 	buf := bytes.Buffer{}
-	err := envoyYamlT.Execute(&buf, &spec)
+	err = envoyYamlT.Execute(&buf, &spec)
 	if err != nil {
 		return err
 	}
 	err = pc.WriteFile(client, yamlname, buf.String(), "envoy.yaml", pc.NoSudo)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "write envoy.yaml failed",
+		log.SpanLog(ctx, log.DebugLevelInfra, "write envoy.yaml failed",
 			"name", name, "err", err)
 		return err
 	}
@@ -162,7 +204,6 @@ func createEnvoyYaml(ctx context.Context, client pc.PlatformClient, yamlname, na
 
 // TODO: Probably should eventually find a better way to uniquely name clusters other than just by the port theyre getting proxied from
 var envoyYaml = `
-{{if .L4 -}}
 static_resources:
   listeners:
   {{- range .TCPSpec}}
@@ -179,7 +220,7 @@ static_resources:
           access_log:
             - name: envoy.file_access_log
               config:
-                path: /var/log/access.log
+                path: /tmp/access.log
                 json_format: {
                   "start_time": "%START_TIME%",
                   "duration": "%DURATION%",
@@ -188,15 +229,30 @@ static_resources:
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
 				}
-     {{if $.Cert}}
+      {{if .UseTLS -}}
       tls_context:
         common_tls_context:
           tls_certificates:
             - certificate_chain:
-                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.crt"
+                filename: "/etc/envoy/certs/{{$.CertName}}.crt"
               private_key:
-                filename: "/etc/envoy/certs/{{$.Cert.CommonName}}.key"
-     {{- end}}
+                filename: "/etc/envoy/certs/{{$.CertName}}.key"
+      {{- end}}
+  {{- end}}
+  {{- range .UDPSpec}}
+  - name: udp_listener_{{.ListenPort}}
+    address:
+      socket_address:
+        protocol: UDP
+        address: 0.0.0.0
+        port_value: {{.ListenPort}}
+    listener_filters:
+      name: envoy.filters.udp_listener.udp_proxy
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
+        stat_prefix: downstream{{.BackendPort}}
+        cluster: udp_backend{{.BackendPort}}
+    reuse_port: true
   {{- end}}
   clusters:
   {{- range .TCPSpec}}
@@ -211,6 +267,7 @@ static_resources:
     - socket_address:
         address: {{.BackendIP}}
         port_value: {{.BackendPort}}
+    {{if .HealthCheck -}}
     health_checks:
       - timeout: 1s
         interval: 5s
@@ -218,43 +275,52 @@ static_resources:
         unhealthy_threshold: 3
         healthy_threshold: 3
         tcp_health_check: {}
+        no_traffic_interval: 5s
+    {{- end}}
+{{- end}}
+{{- range .UDPSpec}}
+  - name: udp_backend{{.BackendPort}}
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    circuit_breakers:
+      thresholds:
+        max_connections: {{.ConcurrentConns}}
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: udp_backend{{.BackendPort}}
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: {{.BackendIP}}
+                port_value: {{.BackendPort}}
 {{- end}}
 admin:
-  access_log_path: "/var/log/admin.log"
+  access_log_path: "/tmp/admin.log"
   address:
     socket_address:
       address: 0.0.0.0
       port_value: {{.MetricPort}}
-{{- end}}
 `
 
-func DeleteEnvoyProxy(ctx context.Context, client pc.PlatformClient, name string) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy", "name", "envoy"+name)
-	out, err := client.Output("docker kill " + "envoy" + name)
-	deleteContainer := false
-	if err == nil {
-		deleteContainer = true
-	} else {
-		if strings.Contains(string(out), "No such container") {
-			log.SpanLog(ctx, log.DebugLevelMexos,
-				"envoy LB container already gone", "name", "envoy"+name)
-		} else {
-			return fmt.Errorf("can't delete envoy container %s, %s, %v", name, out, err)
-		}
-	}
+func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error {
+	containerName := "envoy" + name
+
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete envoy", "name", containerName)
+	out, err := client.Output("docker kill " + containerName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "kill envoy result", "out", out, "err", err)
+
 	envoyDir := "envoy/" + name
 	out, err = client.Output("rm -rf " + envoyDir)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
-	}
-	if deleteContainer {
-		out, err = client.Output("docker rm " + "envoy" + name)
-		if err != nil && !strings.Contains(string(out), "No such container") {
-			return fmt.Errorf("can't remove envoy container %s, %s, %v", "envoy"+name, out, err)
-		}
-	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete envoy dir", "name", name, "dir", envoyDir, "out", out, "err", err)
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "deleted envoy", "name", name)
+	out, err = client.Output("docker rm -f " + "envoy" + name)
+	log.SpanLog(ctx, log.DebugLevelInfra, "rm envoy result", "out", out, "err", err)
+	if err != nil && !strings.Contains(string(out), "No such container") {
+		// delete the envoy proxy anyway
+		return fmt.Errorf("can't remove envoy container %s, %s, %v", name, out, err)
+	}
 	return nil
 }
 

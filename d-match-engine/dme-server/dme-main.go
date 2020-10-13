@@ -12,11 +12,13 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
+	"strings"
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
@@ -27,7 +29,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/mobiledgex/edge-cloud/version"
+	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -43,19 +45,19 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
-var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
-var vaultAddr = flag.String("vaultAddr", "", "Vault address")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
+var testMode = flag.Bool("testMode", false, "Run controller in test mode")
+var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
 
-// TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
+// TODO: carrier arg is redundant with Organization in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
 // verify location API behavior and e2e test setups.
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for no external APIs")
@@ -69,38 +71,89 @@ type server struct{}
 // The key for myCloudlet is provided as a configuration - either command line or
 // from a file.
 var myCloudletKey edgeproto.CloudletKey
-var myNode edgeproto.Node
+var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 
+func validateLocation(loc *dme.Loc) error {
+	if loc == nil || (loc.Latitude == 0 && loc.Longitude == 0) {
+		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	}
+	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
+		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	}
+	return nil
+}
+
 func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest) (*dme.FindCloudletReply, error) {
+	reply := new(dme.FindCloudletReply)
+	var appkey edgeproto.AppKey
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
+	}
+	appkey.Organization = ckey.OrgName
+	appkey.Name = ckey.AppName
+	appkey.Version = ckey.AppVers
+
+	err := validateLocation(req.GpsLocation)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
+		return reply, err
+	}
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
+	return reply, err
+}
+
+func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFindCloudletRequest) (*dme.FindCloudletReply, error) {
 	reply := new(dme.FindCloudletReply)
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
 		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
-	if req.CarrierName == "" {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
-
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
+	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudlet API Not allowed for developer app", "org", ckey.OrgName, "name", ckey.AppName)
+		return reply, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
 	}
-	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	if req.ClientToken == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudlet request", "Error", "Missing ClientToken")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing ClientToken")
+	}
+	tokdata, err := dmecommon.GetClientDataFromToken(req.ClientToken)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, unable to get data from token", "token", req.ClientToken, "err", err)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
 
-	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
-		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	if tokdata.AppKey.Organization == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "OrgName in token cannot be empty")
+		return reply, grpc.Errorf(codes.InvalidArgument, "OrgName in token cannot be empty")
 	}
-
-	err := dmecommon.FindCloudlet(ctx, ckey, req, reply)
-	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
+	if tokdata.AppKey.Name == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppName in token cannot be empty")
+		return reply, grpc.Errorf(codes.InvalidArgument, "AppName in token cannot be empty")
+	}
+	if tokdata.AppKey.Version == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppVers in token cannot be empty")
+		return reply, grpc.Errorf(codes.InvalidArgument, "AppVers in token cannot be empty")
+	}
+	if !dmecommon.AppExists(tokdata.AppKey.Organization, tokdata.AppKey.Name, tokdata.AppKey.Version) {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Requested app does not exist", "requestedAppKey", tokdata.AppKey)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Requested app does not exist")
+	}
+	err = validateLocation(&tokdata.Location)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
+	}
+	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
 
 func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dme.FqdnListReply, error) {
-	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList", "req", req)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetFqdnList", "req", req)
 	flist := new(dme.FqdnListReply)
 
 	ckey, ok := dmecommon.CookieFromContext(ctx)
@@ -108,12 +161,12 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	// normal applications are not allowed to access this, only special platform developer/app combos
-	if !cloudcommon.IsPlatformApp(ckey.DevName, ckey.AppName) {
-		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
+	if !cloudcommon.IsPlatformApp(ckey.OrgName, ckey.AppName) {
+		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.OrgName, ckey.AppName)
 	}
 
 	dmecommon.GetFqdnList(req, flist)
-	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList returns", "status", flist.Status)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetFqdnList returns", "status", flist.Status)
 	return flist, nil
 }
 
@@ -123,16 +176,33 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
 
 	if req.GpsLocation == nil {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
 		return nil, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 	alist := new(dme.AppInstListReply)
-	dmecommon.GetAppInstList(ckey, req, alist)
-	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
+	dmecommon.GetAppInstList(ctx, ckey, req, alist)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
 	return alist, nil
+}
+
+func (s *server) GetAppOfficialFqdn(ctx context.Context, req *dme.AppOfficialFqdnRequest) (*dme.AppOfficialFqdnReply, error) {
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	reply := new(dme.AppOfficialFqdnReply)
+	if !ok {
+		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
+	}
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn", "ckey", ckey, "loc", req.GpsLocation)
+	err := validateLocation(req.GpsLocation)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn request, invalid location", "loc", req.GpsLocation, "err", err)
+		return reply, err
+	}
+	dmecommon.GetAppOfficialFqdn(ctx, ckey, req, reply)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn returns", "status", reply.Status)
+	return reply, nil
 }
 
 func (s *server) VerifyLocation(ctx context.Context,
@@ -143,17 +213,17 @@ func (s *server) VerifyLocation(ctx context.Context,
 	reply.GpsLocationStatus = dme.VerifyLocationReply_LOC_UNKNOWN
 	reply.GpsLocationAccuracyKm = -1
 
-	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Received Verify Location",
 		"VerifyLocToken", req.VerifyLocToken,
 		"GpsLocation", req.GpsLocation)
 
 	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
 		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 
 	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 	err := operatorApiGw.VerifyLocation(req, reply)
@@ -173,26 +243,26 @@ func (s *server) RegisterClient(ctx context.Context,
 
 	mstatus := new(dme.RegisterClientReply)
 
-	log.DebugLog(log.DebugLevelDmereq, "RegisterClient received", "request", req)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "RegisterClient received", "request", req)
 
-	if req.DevName == "" {
-		log.DebugLog(log.DebugLevelDmereq, "DevName cannot be empty")
+	if req.OrgName == "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "OrgName cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
-		return mstatus, grpc.Errorf(codes.InvalidArgument, "DevName cannot be empty")
+		return mstatus, grpc.Errorf(codes.InvalidArgument, "OrgName cannot be empty")
 	}
 	if req.AppName == "" {
-		log.DebugLog(log.DebugLevelDmereq, "AppName cannot be empty")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppName cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppName cannot be empty")
 	}
 	if req.AppVers == "" {
-		log.DebugLog(log.DebugLevelDmereq, "AppVers cannot be empty")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "AppVers cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppVers cannot be empty")
 	}
-	authkey, err := dmecommon.GetAuthPublicKey(req.DevName, req.AppName, req.AppVers)
+	authkey, err := dmecommon.GetAuthPublicKey(req.OrgName, req.AppName, req.AppVers)
 	if err != nil {
-		log.DebugLog(log.DebugLevelDmereq, "fail to get public key", "err", err)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "fail to get public key", "err", err)
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
 		return mstatus, err
 	}
@@ -202,40 +272,66 @@ func (s *server) RegisterClient(ctx context.Context,
 	if req.AuthToken == "" {
 		if authkey != "" {
 			// we provisioned a key, and one was not provided.
-			log.DebugLog(log.DebugLevelDmereq, "App has key, no token received")
+			log.SpanLog(ctx, log.DebugLevelDmereq, "App has key, no token received")
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, grpc.Errorf(codes.InvalidArgument, "No authtoken received")
 		}
 		// for now we will allow a tokenless register to pass if the app does not have one
-		log.DebugLog(log.DebugLevelDmereq, "Allowing register without token")
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Allowing register without token")
 
 	} else {
 		if authkey == "" {
-			log.DebugLog(log.DebugLevelDmereq, "No authkey provisioned to validate token")
+			log.SpanLog(ctx, log.DebugLevelDmereq, "No authkey provisioned to validate token")
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, grpc.Errorf(codes.Unauthenticated, "No authkey found to validate token")
 		}
-		err := dmecommon.VerifyAuthToken(req.AuthToken, authkey, req.DevName, req.AppName, req.AppVers)
+		err := dmecommon.VerifyAuthToken(ctx, req.AuthToken, authkey, req.OrgName, req.AppName, req.AppVers)
 		if err != nil {
-			log.DebugLog(log.DebugLevelDmereq, "Failed to verify token", "err", err)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Failed to verify token", "err", err)
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, grpc.Errorf(codes.Unauthenticated, "failed to verify token - %s", err.Error())
 		}
 	}
 
-	// Generate KSUID
-	uid := ksuid.New()
 	key := dmecommon.CookieKey{
-		DevName:      req.DevName,
-		AppName:      req.AppName,
-		AppVers:      req.AppVers,
-		UniqueIdType: "dme-ksuid",
-		UniqueId:     uid.String(),
+		OrgName: req.OrgName,
+		AppName: req.AppName,
+		AppVers: req.AppVers,
+	}
+
+	// Both UniqueId and UniqueIdType should be set, or none
+	if (req.UniqueId != "" && req.UniqueIdType == "") ||
+		(req.UniqueIdType != "" && req.UniqueId == "") {
+		mstatus.Status = dme.ReplyStatus_RS_FAIL
+		return mstatus, grpc.Errorf(codes.InvalidArgument,
+			"Both, or none of UniqueId and UniqueIdType should be set")
+	}
+
+	// If we get UUID from the Request, use that, otherwise generate a new one
+	if req.UniqueIdType != "" && req.UniqueId != "" {
+		key.UniqueId = req.UniqueId
+		key.UniqueIdType = req.UniqueIdType
+	} else {
+		// Generate KSUID
+		uid := ksuid.New()
+		key.UniqueId = uid.String()
+		if cloudcommon.IsPlatformApp(req.OrgName, req.AppName) {
+			key.UniqueIdType = req.OrgName + ":" + req.AppName
+		} else {
+			key.UniqueIdType = "dme-ksuid"
+		}
 	}
 
 	cookie, err := dmecommon.GenerateCookie(&key, ctx, cookieExpiration)
 	if err != nil {
 		return mstatus, grpc.Errorf(codes.Internal, err.Error())
+	}
+
+	// Set UUID in the reply if none were sent in the request
+	// We only respond back with a UUID if it's generated by the DME
+	if req.UniqueIdType == "" || req.UniqueId == "" {
+		mstatus.UniqueIdType = key.UniqueIdType
+		mstatus.UniqueId = key.UniqueId
 	}
 	mstatus.SessionCookie = cookie
 	mstatus.TokenServerUri = *tokSrvUrl
@@ -253,7 +349,7 @@ func (s *server) AddUserToGroup(ctx context.Context,
 }
 
 func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
-	log.DebugLog(log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
+	log.SpanLog(getQosSvr.Context(), log.DebugLevelDmereq, "GetQosPositionKpi", "request", req)
 	return operatorApiGw.GetQOSPositionKPI(req, getQosSvr)
 }
 
@@ -264,7 +360,7 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 	if *solib == "" {
 		*solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
 	}
-	log.DebugLog(log.DebugLevelDmereq, "Loading plugin", "plugin", *solib)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *solib)
 	plug, err := plugin.Open(*solib)
 	if err != nil {
 		log.WarnLog("failed to load plugin", "plugin", *solib, "error", err)
@@ -281,42 +377,84 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 	return getOperatorFunc(ctx, operatorName)
 }
 
+// allowCORS allows Cross Origin Resoruce Sharing from any origin.
+func allowCORS(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
+				// preflight headers
+				headers := []string{"Content-Type", "Accept"}
+				w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+				methods := []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
+				w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
+				return
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 func main() {
+	nodeMgr.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	log.InitTracer(*tlsCertFile)
-	defer log.FinishTracer()
-	span := log.StartSpan(log.DebugLevelInfo, "main")
-	ctx := log.ContextWithSpan(context.Background(), span)
 
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
-	var err error
+	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, node.CertIssuerRegionalCloudlet, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
+	if err != nil {
+		log.FatalLog("Failed init node", "err", err)
+	}
+	defer nodeMgr.Finish()
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
-	var servers = operator.OperatorApiGwServers{VaultAddr: *vaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
+	var servers = operator.OperatorApiGwServers{VaultAddr: nodeMgr.VaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
 	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Unable to init API GW", "err", err)
 
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
-	err = dmecommon.InitVault(*vaultAddr, *region)
+	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
 	if err != nil {
+		span.Finish()
 		log.FatalLog("Failed to init vault", "err", err)
+	}
+	if *testMode {
+		// init JWK so Vault not required
+		dmecommon.Jwks.Keys[0] = &vault.JWK{
+			Secret: "secret",
+		}
 	}
 
 	dmecommon.SetupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)
 
-	notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
+	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+		nodeMgr.CommonName(),
+		node.CertIssuerRegionalCloudlet,
+		[]node.MatchCA{node.SameRegionalMatchCA()})
+	if err != nil {
+		log.FatalLog("Failed to get notify client tls config", "err", err)
+	}
+
+	notifyClient := initNotifyClient(ctx, *notifyAddrs, tls.GetGrpcDialOption(notifyClientTls))
 	sendMetric := notify.NewMetricSend()
 	notifyClient.RegisterSend(sendMetric)
 	sendAutoProvCounts := notify.NewAutoProvCountsSend()
 	notifyClient.RegisterSend(sendAutoProvCounts)
+	nodeMgr.RegisterClient(notifyClient)
+
+	// Start autProvStats before we recieve Settings Update
+	dmecommon.Settings = *edgeproto.GetDefaultSettings()
+	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &nodeMgr.MyNode.Key, sendAutoProvCounts.Update)
+	autoProvStats.Start()
+	defer autoProvStats.Stop()
 
 	notifyClient.Start()
 	defer notifyClient.Stop()
@@ -326,20 +464,11 @@ func main() {
 	stats.Start()
 	defer stats.Stop()
 
-	dmecommon.Settings = *edgeproto.GetDefaultSettings()
-	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &myNode.Key, sendAutoProvCounts.Update)
-	autoProvStats.Start()
-	defer autoProvStats.Stop()
+	InitAppInstClients()
 
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamInterceptor())))
-
-	myNode.BuildMaster = version.BuildMaster
-	myNode.BuildHead = version.BuildHead
-	myNode.BuildAuthor = version.BuildAuthor
-	myNode.Hostname = cloudcommon.Hostname()
-	nodeCache.Update(ctx, &myNode, 0)
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
@@ -403,7 +532,7 @@ func main() {
 
 	httpServer := &http.Server{
 		Addr:      *httpAddr,
-		Handler:   mux,
+		Handler:   allowCORS(mux),
 		TLSConfig: tlscfg,
 		ErrorLog:  &nullLogger,
 	}

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -77,6 +78,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 		}
 		var argVal interface{}
 		argKey, argVal := kv[0], kv[1]
+		argKey = resolveAlias(argKey, aliases)
 		specialArgType := ""
 		if s.SpecialArgs != nil {
 			if argType, found := (*s.SpecialArgs)[argKey]; found {
@@ -91,10 +93,9 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 				}
 			}
 		}
-		key := resolveAlias(argKey, aliases)
-		delete(required, key)
-		setKeyVal(dat, key, argVal, specialArgType)
-		if key == s.PasswordArg {
+		delete(required, argKey)
+		setKeyVal(dat, argKey, argVal, specialArgType)
+		if argKey == s.PasswordArg {
 			passwordFound = true
 		}
 	}
@@ -123,7 +124,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 	if obj != nil {
 		unused, err := WeakDecode(dat, obj, s.DecodeHook)
 		if err != nil {
-			return dat, err
+			return dat, ConvertDecodeErr(err, reals)
 		}
 		if !s.AllowUnused && len(unused) > 0 {
 			return dat, fmt.Errorf("invalid args: %s",
@@ -151,6 +152,48 @@ func WeakDecode(input, output interface{}, hook mapstructure.DecodeHookFunc) ([]
 	}
 	err = decoder.Decode(input)
 	return config.Metadata.Unused, err
+}
+
+func ConvertDecodeErr(err error, reals map[string]string) error {
+	// converts mapstructure errors into nicer errors for cli output
+	wrapped, ok := err.(*mapstructure.Error)
+	if !ok {
+		return err
+	}
+	for ii, err := range wrapped.Errors {
+		switch e := err.(type) {
+		case *mapstructure.ParseError:
+			name := getDecodeArg(e.Name, reals)
+			suberr := e.Err
+			help := ""
+			if ne, ok := suberr.(*strconv.NumError); ok {
+				suberr = ne.Err
+			}
+			if e.To == reflect.Bool {
+				help = ", valid values are true, false, 1, 0"
+			}
+			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: %v%s`, name, e.Val, e.To, suberr, help)
+		case *mapstructure.OverflowError:
+			name := getDecodeArg(e.Name, reals)
+			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: overflow error`, name, e.Val, e.To)
+		}
+		wrapped.Errors[ii] = err
+	}
+	return wrapped
+}
+
+func getDecodeArg(name string, reals map[string]string) string {
+	arg := strings.ToLower(name)
+	alias := resolveAlias(arg, reals)
+	if alias != arg {
+		return alias
+	}
+	// cli arg does not include parent struct name
+	parts := strings.Split(arg, ".")
+	if len(parts) > 1 {
+		arg = strings.Join(parts[1:], ".")
+	}
+	return arg
 }
 
 // FieldNamespace describes the format of field names used in generic
@@ -202,36 +245,45 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		}
 		if subargs, ok := val.(map[string]interface{}); ok {
 			// sub struct
+			kind := sf.Type.Kind()
+			if kind == reflect.Ptr {
+				kind = sf.Type.Elem().Kind()
+			}
+			if kind != reflect.Struct {
+				return fmt.Errorf("key %s value %v is a map (struct) but expected %v", key, val, sf.Type)
+			}
 			var subjson map[string]interface{}
 			if hasTag("inline", tagvals) {
 				subjson = js
 			} else {
-				subjson = getSubMap(js, jsonName)
+				subjson = getSubMap(js, jsonName, -1)
 			}
 			err := MapJsonNamesT(subargs, subjson, sf.Type, inputNS)
 			if err != nil {
 				return err
 			}
-		} else if list, ok := val.([]interface{}); ok {
+		} else if list, ok := val.([]map[string]interface{}); ok {
+			// arrayed struct
 			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s value is an array but type %v is not", key, sf.Type)
+				return fmt.Errorf("key %s value %v is an array but expected %v", key, val, sf.Type)
 			}
 			elemt := sf.Type.Elem()
-			jslist := make([]interface{}, 0, len(list))
+			jslist := make([]map[string]interface{}, 0, len(list))
 			for ii, _ := range list {
-				if item, ok := list[ii].(map[string]interface{}); ok {
-					// struct in list
-					out := make(map[string]interface{})
-					err := MapJsonNamesT(item, out, elemt, inputNS)
-					if err != nil {
-						return err
-					}
-					jslist = append(jslist, out)
-				} else {
-					jslist = append(jslist, list[ii])
+				out := make(map[string]interface{})
+				err := MapJsonNamesT(list[ii], out, elemt, inputNS)
+				if err != nil {
+					return err
 				}
+				jslist = append(jslist, out)
 			}
 			js[jsonName] = jslist
+		} else if reflect.TypeOf(val).Kind() == reflect.Slice {
+			// array of built-in types
+			if sf.Type.Kind() != reflect.Slice {
+				return fmt.Errorf("key %s value %v is an array but expected type %v", key, val, sf.Type)
+			}
+			js[jsonName] = val
 		} else {
 			if sf.Type.Kind() == reflect.Map {
 				// must be map of basic built-in types
@@ -290,7 +342,35 @@ func FindField(t reflect.Type, name string, ns FieldNamespace) (reflect.StructFi
 	}
 }
 
-func getSubMap(cur map[string]interface{}, key string) map[string]interface{} {
+func getSubMap(cur map[string]interface{}, key string, arrIdx int) map[string]interface{} {
+	if arrIdx > -1 {
+		// arrayed struct
+		var arr []map[string]interface{}
+		val, ok := cur[key]
+		if ok {
+			// check that it's the right type
+			arr, ok = val.([]map[string]interface{})
+		}
+		if !ok {
+			// didn't exist, or wrong type (so overwrite)
+			arr = make([]map[string]interface{}, arrIdx+1)
+			cur[key] = arr
+			for ii, _ := range arr {
+				arr[ii] = make(map[string]interface{})
+			}
+		}
+		// increase length if needed
+		if len(arr) <= arrIdx {
+			newarr := make([]map[string]interface{}, arrIdx+1)
+			copy(newarr, arr)
+			for ii := len(arr); ii < len(newarr); ii++ {
+				newarr[ii] = make(map[string]interface{})
+			}
+			arr = newarr
+			cur[key] = arr
+		}
+		return arr[arrIdx]
+	}
 	var sub map[string]interface{}
 	val, ok := cur[key]
 	if !ok {
@@ -318,11 +398,38 @@ func hasTag(tag string, tags []string) bool {
 	return false
 }
 
-func resolveAlias(name string, aliases map[string]string) string {
-	if real, ok := aliases[name]; ok {
-		return real
+var (
+	reArrayNums   = regexp.MustCompile(`:\d+.`)
+	reArrayPlaces = regexp.MustCompile(`:#.`)
+)
+
+func resolveAlias(name string, lookup map[string]string) string {
+	// for sublist arrays, we need to convert a :1 index
+	// into the generic :# used by the alias in the mapping.
+	// Ex: array:1.name -> array:#.name
+	matches := reArrayNums.FindAll([]byte(name), -1)
+	if len(matches) == 0 {
+		if mapped, ok := lookup[name]; ok {
+			return mapped
+		}
+		return name
 	}
-	return name
+	nameGeneric := reArrayNums.ReplaceAll([]byte(name), []byte(`:#.`))
+
+	mappedGeneric, ok := lookup[string(nameGeneric)]
+	if !ok {
+		return name
+	}
+	// put back the array index values
+	nameReplaced := reArrayPlaces.ReplaceAllFunc([]byte(mappedGeneric), func(repl []byte) []byte {
+		if len(matches) == 0 {
+			return repl
+		}
+		ret := matches[0]
+		matches = matches[1:]
+		return ret
+	})
+	return string(nameReplaced)
 }
 
 func setKeyVal(dat map[string]interface{}, key string, val interface{}, argType string) {
@@ -359,7 +466,16 @@ func setKeyVal(dat map[string]interface{}, key string, val interface{}, argType 
 				}
 			}
 		} else {
-			dat = getSubMap(dat, part)
+			arrIdx := -1
+			// if field is repeated (arrayed) struct, it will have a :# suffix.
+			colonIdx := strings.LastIndex(part, ":")
+			if colonIdx != -1 && len(part) > colonIdx+1 {
+				if idx, err := strconv.ParseUint(part[colonIdx+1:], 10, 32); err == nil {
+					arrIdx = int(idx)
+					part = part[:colonIdx]
+				}
+			}
+			dat = getSubMap(dat, part, arrIdx)
 		}
 	}
 }
@@ -405,19 +521,27 @@ func replaceMapVals(src map[string]interface{}, dst map[string]interface{}) {
 // MarshalArgs generates a name=val arg list from the object.
 // Arg names that should be ignore can be specified. Names are the
 // same format as arg names, lowercase of field names, joined by '.'
-func MarshalArgs(obj interface{}, ignore []string) ([]string, error) {
+// Aliases are of the form alias=hiername.
+func MarshalArgs(obj interface{}, ignore []string, aliases []string) ([]string, error) {
 	args := []string{}
 	if obj == nil {
 		return args, nil
 	}
 
-	// use mobiledgex yaml here since it always omits empty
-	byt, err := yaml.Marshal(obj)
-	if err != nil {
-		return args, err
+	// for updates, passed in data may already by mapped
+	dat, ok := obj.(map[string]interface{})
+	if !ok {
+		// use mobiledgex yaml here since it always omits empty
+		byt, err := yaml.Marshal(obj)
+		if err != nil {
+			return args, err
+		}
+		dat = make(map[string]interface{})
+		err = yaml.Unmarshal(byt, &dat)
+		if err != nil {
+			return args, err
+		}
 	}
-	dat := make(map[string]interface{})
-	err = yaml.Unmarshal(byt, &dat)
 
 	ignoremap := make(map[string]struct{})
 	if ignore != nil {
@@ -425,31 +549,102 @@ func MarshalArgs(obj interface{}, ignore []string) ([]string, error) {
 			ignoremap[str] = struct{}{}
 		}
 	}
+	spargs := GetSpecialArgs(obj)
 
-	return MapToArgs([]string{}, dat, ignoremap), nil
+	aliasm := make(map[string]string)
+	for _, alias := range aliases {
+		ar := strings.SplitN(alias, "=", 2)
+		if len(ar) != 2 {
+			continue
+		}
+		aliasm[ar[1]] = ar[0]
+	}
+
+	return MapToArgs([]string{}, dat, ignoremap, spargs, aliasm), nil
 }
 
-func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]struct{}) []string {
+func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]struct{}, specialArgs map[string]string, aliases map[string]string) []string {
 	args := []string{}
 	for k, v := range dat {
 		if v == nil {
 			continue
 		}
 		if sub, ok := v.(map[string]interface{}); ok {
-			subargs := MapToArgs(append(prefix, k), sub, ignore)
+			subargs := MapToArgs(append(prefix, k), sub, ignore, specialArgs, aliases)
 			args = append(args, subargs...)
 			continue
 		}
-		keys := append(prefix, k)
-		if _, ok := ignore[strings.Join(keys, ".")]; ok {
+		if sub, ok := v.([]interface{}); ok {
+			for ii, subv := range sub {
+				key := k
+				if reflect.ValueOf(subv).Kind() == reflect.Map {
+					// repeated struct
+					key = fmt.Sprintf("%s:%d", k, ii)
+				}
+				submap := map[string]interface{}{
+					key: subv,
+				}
+				subargs := MapToArgs(prefix, submap, ignore, specialArgs, aliases)
+				args = append(args, subargs...)
+			}
 			continue
 		}
+		keys := append(prefix, k)
+		name := strings.Join(keys, ".")
+		if _, ok := ignore[name]; ok {
+			continue
+		}
+		parentName := strings.Join(prefix, ".")
+		sparg, _ := specialArgs[parentName]
+		if sparg == "StringToString" {
+			name = parentName
+		}
+		name = resolveAlias(name, aliases)
+
 		val := fmt.Sprintf("%v", v)
-		if strings.ContainsAny(val, " \t\r\n") {
+		if strings.ContainsAny(val, " \t\r\n") || len(val) == 0 {
 			val = strconv.Quote(val)
 		}
-		arg := fmt.Sprintf("%s=%s", strings.Join(keys, "."), val)
+		var arg string
+		if sparg == "StringToString" {
+			arg = fmt.Sprintf("%s=%s=%s", name, k, val)
+		} else {
+			arg = fmt.Sprintf("%s=%s", name, val)
+		}
 		args = append(args, arg)
 	}
 	return args
+}
+
+func GetSpecialArgs(obj interface{}) map[string]string {
+	m := make(map[string]string)
+	getSpecialArgs(m, []string{}, reflect.TypeOf(obj))
+	return m
+}
+
+func getSpecialArgs(special map[string]string, parents []string, t reflect.Type) {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t.Kind() == reflect.Struct {
+		for ii := 0; ii < t.NumField(); ii++ {
+			sf := t.Field(ii)
+			getSpecialArgs(special, append(parents, sf.Name), sf.Type)
+		}
+	}
+	if len(parents) == 0 {
+		// basic type but not in a struct
+		return
+	}
+	sptype := ""
+	if t.Kind() == reflect.Map && t == reflect.MapOf(reflect.TypeOf(""), reflect.TypeOf("")) {
+		sptype = "StringToString"
+	}
+	if t.Kind() == reflect.Slice && t == reflect.SliceOf(reflect.TypeOf("")) {
+		sptype = "StringArray"
+	}
+	if sptype != "" {
+		key := strings.Join(parents, ".")
+		special[strings.ToLower(key)] = sptype
+	}
 }

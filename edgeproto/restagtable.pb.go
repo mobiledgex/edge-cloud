@@ -3,34 +3,41 @@
 
 package edgeproto
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
-import _ "github.com/gogo/protobuf/gogoproto"
-
-import strings "strings"
-import reflect "reflect"
-import sortkeys "github.com/gogo/protobuf/sortkeys"
-
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
-
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
-import "github.com/mobiledgex/edge-cloud/log"
-import "errors"
-import "strconv"
-
-import io "io"
+import (
+	context "context"
+	"encoding/json"
+	"errors"
+	fmt "fmt"
+	"github.com/coreos/etcd/clientv3/concurrency"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	reflect "reflect"
+	"strconv"
+	strings "strings"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type OptResNames int32
 
@@ -45,6 +52,7 @@ var OptResNames_name = map[int32]string{
 	1: "NAS",
 	2: "NIC",
 }
+
 var OptResNames_value = map[string]int32{
 	"GPU": 0,
 	"NAS": 1,
@@ -54,39 +62,152 @@ var OptResNames_value = map[string]int32{
 func (x OptResNames) String() string {
 	return proto.EnumName(OptResNames_name, int32(x))
 }
-func (OptResNames) EnumDescriptor() ([]byte, []int) { return fileDescriptorRestagtable, []int{0} }
+
+func (OptResNames) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e2a1b917fa867a3a, []int{0}
+}
 
 type ResTagTableKey struct {
 	// Resource Table Name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Operator of the cloudlet site.
-	OperatorKey OperatorKey `protobuf:"bytes,2,opt,name=operator_key,json=operatorKey" json:"operator_key"`
+	// Operator organization of the cloudlet site.
+	Organization string `protobuf:"bytes,2,opt,name=organization,proto3" json:"organization,omitempty"`
 }
 
-func (m *ResTagTableKey) Reset()                    { *m = ResTagTableKey{} }
-func (m *ResTagTableKey) String() string            { return proto.CompactTextString(m) }
-func (*ResTagTableKey) ProtoMessage()               {}
-func (*ResTagTableKey) Descriptor() ([]byte, []int) { return fileDescriptorRestagtable, []int{0} }
+func (m *ResTagTableKey) Reset()         { *m = ResTagTableKey{} }
+func (m *ResTagTableKey) String() string { return proto.CompactTextString(m) }
+func (*ResTagTableKey) ProtoMessage()    {}
+func (*ResTagTableKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e2a1b917fa867a3a, []int{0}
+}
+func (m *ResTagTableKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ResTagTableKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ResTagTableKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ResTagTableKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResTagTableKey.Merge(m, src)
+}
+func (m *ResTagTableKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *ResTagTableKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResTagTableKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ResTagTableKey proto.InternalMessageInfo
 
 type ResTagTable struct {
-	Fields []string       `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
-	Key    ResTagTableKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	Fields []string       `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
+	Key    ResTagTableKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// one or more string tags
-	Tags map[string]string `protobuf:"bytes,3,rep,name=tags" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Tags map[string]string `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// availability zone(s) of resource if required
 	Azone string `protobuf:"bytes,4,opt,name=azone,proto3" json:"azone,omitempty"`
 }
 
-func (m *ResTagTable) Reset()                    { *m = ResTagTable{} }
-func (m *ResTagTable) String() string            { return proto.CompactTextString(m) }
-func (*ResTagTable) ProtoMessage()               {}
-func (*ResTagTable) Descriptor() ([]byte, []int) { return fileDescriptorRestagtable, []int{1} }
+func (m *ResTagTable) Reset()         { *m = ResTagTable{} }
+func (m *ResTagTable) String() string { return proto.CompactTextString(m) }
+func (*ResTagTable) ProtoMessage()    {}
+func (*ResTagTable) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e2a1b917fa867a3a, []int{1}
+}
+func (m *ResTagTable) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ResTagTable) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ResTagTable.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ResTagTable) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResTagTable.Merge(m, src)
+}
+func (m *ResTagTable) XXX_Size() int {
+	return m.Size()
+}
+func (m *ResTagTable) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResTagTable.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ResTagTable proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterEnum("edgeproto.OptResNames", OptResNames_name, OptResNames_value)
 	proto.RegisterType((*ResTagTableKey)(nil), "edgeproto.ResTagTableKey")
 	proto.RegisterType((*ResTagTable)(nil), "edgeproto.ResTagTable")
-	proto.RegisterEnum("edgeproto.OptResNames", OptResNames_name, OptResNames_value)
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.ResTagTable.TagsEntry")
 }
+
+func init() { proto.RegisterFile("restagtable.proto", fileDescriptor_e2a1b917fa867a3a) }
+
+var fileDescriptor_e2a1b917fa867a3a = []byte{
+	// 730 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x94, 0x4f, 0x4c, 0x13, 0x41,
+	0x14, 0xc6, 0x77, 0xda, 0x82, 0x76, 0x5a, 0x4b, 0xbb, 0x36, 0x64, 0x6c, 0x48, 0xa9, 0xeb, 0xa5,
+	0x21, 0xd8, 0x15, 0x34, 0x4a, 0x9a, 0x70, 0x68, 0xd1, 0x10, 0x43, 0x00, 0x59, 0xc0, 0xfb, 0xb4,
+	0x3b, 0x0e, 0x2b, 0xdb, 0x9d, 0x66, 0xff, 0x80, 0xc5, 0x8b, 0xf1, 0x62, 0x62, 0x3c, 0xa0, 0x5e,
+	0x8c, 0x27, 0x3c, 0x78, 0xf1, 0x44, 0x3c, 0x72, 0xf2, 0x58, 0x3d, 0x91, 0x78, 0xf1, 0x64, 0x14,
+	0x3c, 0x18, 0x4e, 0x26, 0xb4, 0x8d, 0x47, 0xb3, 0xb3, 0xa4, 0xe9, 0x22, 0x8d, 0x82, 0x07, 0x2f,
+	0xcd, 0x7b, 0x6f, 0xbe, 0x99, 0xf7, 0x7b, 0xdf, 0x6b, 0x16, 0x26, 0x4c, 0x62, 0xd9, 0x98, 0xda,
+	0xb8, 0xa4, 0x93, 0x5c, 0xd5, 0x64, 0x36, 0x13, 0xc3, 0x44, 0xa5, 0x84, 0x87, 0xa9, 0x01, 0xca,
+	0x18, 0xd5, 0x89, 0x8c, 0xab, 0x9a, 0x8c, 0x0d, 0x83, 0xd9, 0xd8, 0xd6, 0x98, 0x61, 0x79, 0xc2,
+	0xd4, 0x18, 0xd5, 0xec, 0x25, 0xa7, 0x94, 0x2b, 0xb3, 0x8a, 0x5c, 0x61, 0x25, 0x4d, 0x77, 0x2f,
+	0xde, 0x93, 0xdd, 0xdf, 0x8b, 0x65, 0x9d, 0x39, 0xaa, 0xcc, 0x75, 0x94, 0x18, 0xed, 0xe0, 0xe0,
+	0x66, 0xd4, 0x24, 0x96, 0xa3, 0xdb, 0x07, 0x59, 0x92, 0x32, 0xca, 0x78, 0x28, 0xbb, 0x91, 0x57,
+	0x95, 0xee, 0xc3, 0x98, 0x42, 0xac, 0x05, 0x4c, 0x17, 0x5c, 0xb6, 0x29, 0x52, 0x13, 0x2f, 0xc0,
+	0x90, 0x81, 0x2b, 0x04, 0x81, 0x0c, 0xc8, 0x86, 0x8b, 0x7d, 0x5b, 0x2d, 0x14, 0xe9, 0xa0, 0x57,
+	0xf8, 0xa1, 0x78, 0x15, 0x46, 0x99, 0x49, 0xb1, 0xa1, 0xad, 0x71, 0x56, 0x14, 0xe0, 0x62, 0x71,
+	0xab, 0x85, 0x62, 0x1d, 0x62, 0x66, 0x52, 0xc5, 0xa7, 0xcb, 0x47, 0xbf, 0xef, 0x23, 0xf0, 0x73,
+	0x1f, 0x81, 0xcd, 0x8d, 0x41, 0x20, 0xbd, 0x0f, 0xc0, 0x48, 0x47, 0x77, 0xb1, 0x1f, 0xf6, 0xde,
+	0xd1, 0x88, 0xae, 0x5a, 0x08, 0x64, 0x82, 0xd9, 0xb0, 0x72, 0x90, 0x89, 0x23, 0x30, 0xb8, 0x4c,
+	0x6a, 0xbc, 0x49, 0x64, 0xf4, 0x5c, 0xae, 0xed, 0x5c, 0xce, 0x8f, 0x5e, 0x0c, 0xd5, 0x3f, 0x0f,
+	0x0a, 0x8a, 0xab, 0x15, 0xaf, 0xc0, 0x90, 0x8d, 0xa9, 0x85, 0x82, 0x99, 0x60, 0x36, 0x32, 0x9a,
+	0x39, 0xfa, 0x4e, 0x6e, 0x01, 0x53, 0xeb, 0x86, 0x61, 0x9b, 0x35, 0x85, 0xab, 0xc5, 0x24, 0xec,
+	0xc1, 0x6b, 0xcc, 0x20, 0x28, 0xe4, 0xce, 0xa3, 0x78, 0x49, 0xea, 0x1a, 0x0c, 0xb7, 0x85, 0x62,
+	0xdc, 0x63, 0xe1, 0xee, 0x78, 0xad, 0x92, 0xb0, 0x67, 0x05, 0xeb, 0x0e, 0xf1, 0x4c, 0x50, 0xbc,
+	0x24, 0x1f, 0x18, 0x03, 0xf9, 0xbb, 0xee, 0xb4, 0x3f, 0xf6, 0x11, 0x78, 0xd0, 0x40, 0x60, 0xbd,
+	0x81, 0xc0, 0x8b, 0x06, 0x02, 0xef, 0x1a, 0x08, 0xbc, 0x6c, 0xa2, 0x21, 0x93, 0x58, 0xe3, 0x53,
+	0xa4, 0x96, 0x9b, 0xc1, 0x15, 0x32, 0xdc, 0x69, 0x12, 0xaf, 0xce, 0x76, 0x14, 0x36, 0x9b, 0x48,
+	0xf8, 0xd0, 0x44, 0x21, 0x17, 0xe2, 0x6d, 0x0b, 0xc5, 0x97, 0x49, 0x6d, 0xdc, 0x77, 0xbe, 0x31,
+	0x08, 0x86, 0xb2, 0x30, 0x32, 0x5b, 0xb5, 0x15, 0x62, 0xb9, 0xef, 0x59, 0xe2, 0x29, 0x18, 0x9c,
+	0xbc, 0xb5, 0x18, 0x17, 0xdc, 0x60, 0xa6, 0x30, 0x1f, 0x07, 0x3c, 0xb8, 0x39, 0x11, 0x0f, 0x8c,
+	0xbe, 0x3a, 0xed, 0xdb, 0x79, 0xa1, 0xaa, 0x89, 0xaf, 0x01, 0x4c, 0x4c, 0x98, 0x04, 0xdb, 0xc4,
+	0xb7, 0x8e, 0xa3, 0x5d, 0x4b, 0x25, 0xfc, 0x75, 0x47, 0xb7, 0x25, 0xb2, 0xd7, 0x40, 0x23, 0x0a,
+	0xb1, 0x98, 0x63, 0x96, 0x3b, 0xdf, 0x18, 0x2e, 0x94, 0x5d, 0xc2, 0x69, 0x6c, 0x60, 0x4a, 0x86,
+	0x0f, 0x0f, 0xf6, 0xa6, 0x85, 0xe2, 0x87, 0x6b, 0x0f, 0x3f, 0x7e, 0x7b, 0x1e, 0xe8, 0x97, 0x12,
+	0x72, 0x99, 0xf3, 0xc8, 0xb4, 0xea, 0xb8, 0x7f, 0xa7, 0x92, 0x9e, 0x07, 0x43, 0xe2, 0x53, 0x00,
+	0x13, 0xd7, 0x89, 0x4e, 0x4e, 0xcc, 0x39, 0x77, 0x22, 0xce, 0x36, 0x93, 0xca, 0x7b, 0xff, 0xce,
+	0xb4, 0x58, 0x55, 0xf1, 0xff, 0x62, 0x72, 0x78, 0x6f, 0x3f, 0xd3, 0x33, 0x00, 0xfb, 0xe6, 0x97,
+	0xd8, 0xea, 0xdf, 0x10, 0x75, 0xa9, 0x4b, 0xd3, 0x7b, 0x0d, 0x24, 0x77, 0xc7, 0xba, 0xad, 0x91,
+	0xd5, 0xa3, 0xa1, 0x92, 0x52, 0x9f, 0x6c, 0x2d, 0xb1, 0x55, 0x1f, 0xd2, 0x25, 0x20, 0x3e, 0x06,
+	0x30, 0x5c, 0x50, 0x55, 0xef, 0xa9, 0xe3, 0x18, 0xa4, 0x9c, 0xc8, 0xa0, 0x7a, 0x13, 0x01, 0xce,
+	0x73, 0x56, 0x8a, 0xc9, 0x58, 0x55, 0xfd, 0x0e, 0x3d, 0x01, 0x30, 0xaa, 0x90, 0x0a, 0x5b, 0x21,
+	0xc7, 0xe7, 0x99, 0xfb, 0x37, 0x1e, 0x51, 0x3a, 0x23, 0x9b, 0x15, 0x3f, 0xce, 0x23, 0x00, 0x63,
+	0x93, 0xc4, 0xee, 0xdc, 0x57, 0xf7, 0xef, 0x5c, 0xd7, 0x95, 0x15, 0xf7, 0x1a, 0xe8, 0xfc, 0x1f,
+	0xc1, 0x7c, 0xc6, 0x50, 0x62, 0xfb, 0x48, 0x52, 0xa1, 0xf5, 0x26, 0x12, 0x8a, 0x03, 0xf5, 0xaf,
+	0x69, 0xa1, 0xbe, 0x93, 0x06, 0xdb, 0x3b, 0x69, 0xf0, 0x65, 0x27, 0x0d, 0xd6, 0x77, 0xd3, 0xc2,
+	0xf6, 0x6e, 0x5a, 0xf8, 0xb4, 0x9b, 0x16, 0x4a, 0xbd, 0xbc, 0xf5, 0xe5, 0x5f, 0x01, 0x00, 0x00,
+	0xff, 0xff, 0xc8, 0x42, 0x19, 0xc2, 0xd7, 0x06, 0x00, 0x00,
+}
+
 func (this *ResTagTableKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -94,7 +215,7 @@ func (this *ResTagTableKey) GoString() string {
 	s := make([]string, 0, 6)
 	s = append(s, "&edgeproto.ResTagTableKey{")
 	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
-	s = append(s, "OperatorKey: "+strings.Replace(this.OperatorKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -110,7 +231,7 @@ func (this *ResTagTable) GoString() string {
 	for k, _ := range this.Tags {
 		keysForTags = append(keysForTags, k)
 	}
-	sortkeys.Strings(keysForTags)
+	github_com_gogo_protobuf_sortkeys.Strings(keysForTags)
 	mapStringForTags := "map[string]string{"
 	for _, k := range keysForTags {
 		mapStringForTags += fmt.Sprintf("%#v: %#v,", k, this.Tags[k])
@@ -140,8 +261,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for ResTagTableApi service
-
+// ResTagTableApiClient is the client API for ResTagTableApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ResTagTableApiClient interface {
 	// Create TagTable
 	CreateResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error)
@@ -168,7 +290,7 @@ func NewResTagTableApiClient(cc *grpc.ClientConn) ResTagTableApiClient {
 
 func (c *resTagTableApiClient) CreateResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ResTagTableApi/CreateResTagTable", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ResTagTableApi/CreateResTagTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +299,7 @@ func (c *resTagTableApiClient) CreateResTagTable(ctx context.Context, in *ResTag
 
 func (c *resTagTableApiClient) DeleteResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ResTagTableApi/DeleteResTagTable", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ResTagTableApi/DeleteResTagTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +308,7 @@ func (c *resTagTableApiClient) DeleteResTagTable(ctx context.Context, in *ResTag
 
 func (c *resTagTableApiClient) UpdateResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ResTagTableApi/UpdateResTagTable", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ResTagTableApi/UpdateResTagTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +316,7 @@ func (c *resTagTableApiClient) UpdateResTagTable(ctx context.Context, in *ResTag
 }
 
 func (c *resTagTableApiClient) ShowResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (ResTagTableApi_ShowResTagTableClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ResTagTableApi_serviceDesc.Streams[0], c.cc, "/edgeproto.ResTagTableApi/ShowResTagTable", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ResTagTableApi_serviceDesc.Streams[0], "/edgeproto.ResTagTableApi/ShowResTagTable", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +349,7 @@ func (x *resTagTableApiShowResTagTableClient) Recv() (*ResTagTable, error) {
 
 func (c *resTagTableApiClient) AddResTag(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ResTagTableApi/AddResTag", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ResTagTableApi/AddResTag", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +358,7 @@ func (c *resTagTableApiClient) AddResTag(ctx context.Context, in *ResTagTable, o
 
 func (c *resTagTableApiClient) RemoveResTag(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ResTagTableApi/RemoveResTag", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ResTagTableApi/RemoveResTag", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -245,15 +367,14 @@ func (c *resTagTableApiClient) RemoveResTag(ctx context.Context, in *ResTagTable
 
 func (c *resTagTableApiClient) GetResTagTable(ctx context.Context, in *ResTagTableKey, opts ...grpc.CallOption) (*ResTagTable, error) {
 	out := new(ResTagTable)
-	err := grpc.Invoke(ctx, "/edgeproto.ResTagTableApi/GetResTagTable", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.ResTagTableApi/GetResTagTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for ResTagTableApi service
-
+// ResTagTableApiServer is the server API for ResTagTableApi service.
 type ResTagTableApiServer interface {
 	// Create TagTable
 	CreateResTagTable(context.Context, *ResTagTable) (*Result, error)
@@ -268,6 +389,32 @@ type ResTagTableApiServer interface {
 	RemoveResTag(context.Context, *ResTagTable) (*Result, error)
 	// Fetch a copy of the TagTable
 	GetResTagTable(context.Context, *ResTagTableKey) (*ResTagTable, error)
+}
+
+// UnimplementedResTagTableApiServer can be embedded to have forward compatible implementations.
+type UnimplementedResTagTableApiServer struct {
+}
+
+func (*UnimplementedResTagTableApiServer) CreateResTagTable(ctx context.Context, req *ResTagTable) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateResTagTable not implemented")
+}
+func (*UnimplementedResTagTableApiServer) DeleteResTagTable(ctx context.Context, req *ResTagTable) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteResTagTable not implemented")
+}
+func (*UnimplementedResTagTableApiServer) UpdateResTagTable(ctx context.Context, req *ResTagTable) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateResTagTable not implemented")
+}
+func (*UnimplementedResTagTableApiServer) ShowResTagTable(req *ResTagTable, srv ResTagTableApi_ShowResTagTableServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowResTagTable not implemented")
+}
+func (*UnimplementedResTagTableApiServer) AddResTag(ctx context.Context, req *ResTagTable) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddResTag not implemented")
+}
+func (*UnimplementedResTagTableApiServer) RemoveResTag(ctx context.Context, req *ResTagTable) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveResTag not implemented")
+}
+func (*UnimplementedResTagTableApiServer) GetResTagTable(ctx context.Context, req *ResTagTableKey) (*ResTagTable, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetResTagTable not implemented")
 }
 
 func RegisterResTagTableApiServer(s *grpc.Server, srv ResTagTableApiServer) {
@@ -445,7 +592,7 @@ var _ResTagTableApi_serviceDesc = grpc.ServiceDesc{
 func (m *ResTagTableKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -453,31 +600,36 @@ func (m *ResTagTableKey) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ResTagTableKey) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ResTagTableKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	if len(m.Organization) > 0 {
+		i -= len(m.Organization)
+		copy(dAtA[i:], m.Organization)
+		i = encodeVarintRestagtable(dAtA, i, uint64(len(m.Organization)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.Name) > 0 {
-		dAtA[i] = 0xa
-		i++
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
 		i = encodeVarintRestagtable(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i--
+		dAtA[i] = 0xa
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintRestagtable(dAtA, i, uint64(m.OperatorKey.Size()))
-	n1, err := m.OperatorKey.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *ResTagTable) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -485,67 +637,73 @@ func (m *ResTagTable) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ResTagTable) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ResTagTable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintRestagtable(dAtA, i, uint64(m.Key.Size()))
-	n2, err := m.Key.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	if len(m.Tags) > 0 {
-		for k, _ := range m.Tags {
-			dAtA[i] = 0x1a
-			i++
-			v := m.Tags[k]
-			mapSize := 1 + len(k) + sovRestagtable(uint64(len(k))) + 1 + len(v) + sovRestagtable(uint64(len(v)))
-			i = encodeVarintRestagtable(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintRestagtable(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintRestagtable(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
 	if len(m.Azone) > 0 {
-		dAtA[i] = 0x22
-		i++
+		i -= len(m.Azone)
+		copy(dAtA[i:], m.Azone)
 		i = encodeVarintRestagtable(dAtA, i, uint64(len(m.Azone)))
-		i += copy(dAtA[i:], m.Azone)
+		i--
+		dAtA[i] = 0x22
 	}
-	return i, nil
+	if len(m.Tags) > 0 {
+		for k := range m.Tags {
+			v := m.Tags[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintRestagtable(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintRestagtable(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintRestagtable(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRestagtable(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintRestagtable(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintRestagtable(dAtA []byte, offset int, v uint64) int {
+	offset -= sovRestagtable(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *ResTagTableKey) Matches(o *ResTagTableKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
@@ -561,8 +719,10 @@ func (m *ResTagTableKey) Matches(o *ResTagTableKey, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
-	if !m.OperatorKey.Matches(&o.OperatorKey, fopts...) {
-		return false
+	if !opts.Filter || o.Organization != "" {
+		if o.Organization != m.Organization {
+			return false
+		}
 	}
 	return true
 }
@@ -573,11 +733,16 @@ func (m *ResTagTableKey) CopyInFields(src *ResTagTableKey) int {
 		m.Name = src.Name
 		changed++
 	}
-	if m.OperatorKey.Name != src.OperatorKey.Name {
-		m.OperatorKey.Name = src.OperatorKey.Name
+	if m.Organization != src.Organization {
+		m.Organization = src.Organization
 		changed++
 	}
 	return changed
+}
+
+func (m *ResTagTableKey) DeepCopyIn(src *ResTagTableKey) {
+	m.Name = src.Name
+	m.Organization = src.Organization
 }
 
 func (m *ResTagTableKey) GetKeyString() string {
@@ -603,11 +768,18 @@ func (m *ResTagTableKey) ExistsError() error {
 	return fmt.Errorf("ResTagTable key %s already exists", m.GetKeyString())
 }
 
+var ResTagTableKeyTagName = "restagtable"
+var ResTagTableKeyTagOrganization = "restagtableorg"
+
+func (m *ResTagTableKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["restagtable"] = m.Name
+	tags["restagtableorg"] = m.Organization
+	return tags
+}
+
 // Helper method to check that enums have valid values
 func (m *ResTagTableKey) ValidateEnums() error {
-	if err := m.OperatorKey.ValidateEnums(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -651,8 +823,7 @@ func (m *ResTagTable) Matches(o *ResTagTable, fopts ...MatchOpt) bool {
 
 const ResTagTableFieldKey = "2"
 const ResTagTableFieldKeyName = "2.1"
-const ResTagTableFieldKeyOperatorKey = "2.2"
-const ResTagTableFieldKeyOperatorKeyName = "2.2.1"
+const ResTagTableFieldKeyOrganization = "2.2"
 const ResTagTableFieldTags = "3"
 const ResTagTableFieldTagsKey = "3.1"
 const ResTagTableFieldTagsValue = "3.2"
@@ -660,30 +831,30 @@ const ResTagTableFieldAzone = "4"
 
 var ResTagTableAllFields = []string{
 	ResTagTableFieldKeyName,
-	ResTagTableFieldKeyOperatorKeyName,
+	ResTagTableFieldKeyOrganization,
 	ResTagTableFieldTagsKey,
 	ResTagTableFieldTagsValue,
 	ResTagTableFieldAzone,
 }
 
 var ResTagTableAllFieldsMap = map[string]struct{}{
-	ResTagTableFieldKeyName:            struct{}{},
-	ResTagTableFieldKeyOperatorKeyName: struct{}{},
-	ResTagTableFieldTagsKey:            struct{}{},
-	ResTagTableFieldTagsValue:          struct{}{},
-	ResTagTableFieldAzone:              struct{}{},
+	ResTagTableFieldKeyName:         struct{}{},
+	ResTagTableFieldKeyOrganization: struct{}{},
+	ResTagTableFieldTagsKey:         struct{}{},
+	ResTagTableFieldTagsValue:       struct{}{},
+	ResTagTableFieldAzone:           struct{}{},
 }
 
 var ResTagTableAllFieldsStringMap = map[string]string{
-	ResTagTableFieldKeyName:            "Key Name",
-	ResTagTableFieldKeyOperatorKeyName: "Key Operator Key Name",
-	ResTagTableFieldTagsKey:            "Tags Key",
-	ResTagTableFieldTagsValue:          "Tags Value",
-	ResTagTableFieldAzone:              "Azone",
+	ResTagTableFieldKeyName:         "Key Name",
+	ResTagTableFieldKeyOrganization: "Key Organization",
+	ResTagTableFieldTagsKey:         "Tags Key",
+	ResTagTableFieldTagsValue:       "Tags Value",
+	ResTagTableFieldAzone:           "Azone",
 }
 
 func (m *ResTagTable) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, ResTagTableFieldKey+".")
+	return strings.HasPrefix(s, ResTagTableFieldKey+".") || s == ResTagTableFieldKey
 }
 
 func (m *ResTagTable) DiffFields(o *ResTagTable, fields map[string]struct{}) {
@@ -691,9 +862,8 @@ func (m *ResTagTable) DiffFields(o *ResTagTable, fields map[string]struct{}) {
 		fields[ResTagTableFieldKeyName] = struct{}{}
 		fields[ResTagTableFieldKey] = struct{}{}
 	}
-	if m.Key.OperatorKey.Name != o.Key.OperatorKey.Name {
-		fields[ResTagTableFieldKeyOperatorKeyName] = struct{}{}
-		fields[ResTagTableFieldKeyOperatorKey] = struct{}{}
+	if m.Key.Organization != o.Key.Organization {
+		fields[ResTagTableFieldKeyOrganization] = struct{}{}
 		fields[ResTagTableFieldKey] = struct{}{}
 	}
 	if m.Tags != nil && o.Tags != nil {
@@ -720,6 +890,35 @@ func (m *ResTagTable) DiffFields(o *ResTagTable, fields map[string]struct{}) {
 	}
 }
 
+var UpdateResTagTableFieldsMap = map[string]struct{}{
+	ResTagTableFieldTags:      struct{}{},
+	ResTagTableFieldTagsValue: struct{}{},
+	ResTagTableFieldAzone:     struct{}{},
+}
+
+func (m *ResTagTable) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateResTagTableFieldsMap[field]; !ok {
+			if _, ok := ResTagTableAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, ResTagTableAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
 func (m *ResTagTable) CopyInFields(src *ResTagTable) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)
@@ -731,11 +930,9 @@ func (m *ResTagTable) CopyInFields(src *ResTagTable) int {
 			}
 		}
 		if _, set := fmap["2.2"]; set {
-			if _, set := fmap["2.2.1"]; set {
-				if m.Key.OperatorKey.Name != src.Key.OperatorKey.Name {
-					m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
-					changed++
-				}
+			if m.Key.Organization != src.Key.Organization {
+				m.Key.Organization = src.Key.Organization
+				changed++
 			}
 		}
 	}
@@ -757,6 +954,19 @@ func (m *ResTagTable) CopyInFields(src *ResTagTable) int {
 		}
 	}
 	return changed
+}
+
+func (m *ResTagTable) DeepCopyIn(src *ResTagTable) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k, v := range src.Tags {
+			m.Tags[k] = v
+		}
+	} else {
+		m.Tags = nil
+	}
+	m.Azone = src.Azone
 }
 
 func (s *ResTagTable) HasFields() bool {
@@ -911,15 +1121,24 @@ type ResTagTableKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
+type ResTagTableCacheData struct {
+	Obj    *ResTagTable
+	ModRev int64
+}
+
 // ResTagTableCache caches ResTagTable objects in memory in a hash table
 // and keeps them in sync with the database.
 type ResTagTableCache struct {
-	Objs        map[ResTagTableKey]*ResTagTable
-	Mux         util.Mutex
-	List        map[ResTagTableKey]struct{}
-	NotifyCb    func(ctx context.Context, obj *ResTagTableKey, old *ResTagTable)
-	UpdatedCb   func(ctx context.Context, old *ResTagTable, new *ResTagTable)
-	KeyWatchers map[ResTagTableKey][]*ResTagTableKeyWatcher
+	Objs          map[ResTagTableKey]*ResTagTableCacheData
+	Mux           util.Mutex
+	List          map[ResTagTableKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *ResTagTableKey, old *ResTagTable, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *ResTagTable, new *ResTagTable)
+	DeletedCbs    []func(ctx context.Context, old *ResTagTable)
+	KeyWatchers   map[ResTagTableKey][]*ResTagTableKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *ResTagTableKey)
+	DeletedKeyCbs []func(ctx context.Context, key *ResTagTableKey)
 }
 
 func NewResTagTableCache() *ResTagTableCache {
@@ -929,8 +1148,13 @@ func NewResTagTableCache() *ResTagTableCache {
 }
 
 func InitResTagTableCache(cache *ResTagTableCache) {
-	cache.Objs = make(map[ResTagTableKey]*ResTagTable)
+	cache.Objs = make(map[ResTagTableKey]*ResTagTableCacheData)
 	cache.KeyWatchers = make(map[ResTagTableKey][]*ResTagTableKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
 }
 
 func (c *ResTagTableCache) GetTypeString() string {
@@ -938,11 +1162,17 @@ func (c *ResTagTableCache) GetTypeString() string {
 }
 
 func (c *ResTagTableCache) Get(key *ResTagTableKey, valbuf *ResTagTable) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *ResTagTableCache) GetWithRev(key *ResTagTableKey, valbuf *ResTagTable, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
 	if found {
-		*valbuf = *inst
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
 	}
 	return found
 }
@@ -954,64 +1184,87 @@ func (c *ResTagTableCache) HasKey(key *ResTagTableKey) bool {
 	return found
 }
 
-func (c *ResTagTableCache) GetAllKeys(ctx context.Context, keys map[ResTagTableKey]context.Context) {
+func (c *ResTagTableCache) GetAllKeys(ctx context.Context, cb func(key *ResTagTableKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = ctx
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
 	}
 }
 
-func (c *ResTagTableCache) Update(ctx context.Context, in *ResTagTable, rev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), rev, func(old *ResTagTable) (*ResTagTable, bool) {
+func (c *ResTagTableCache) Update(ctx context.Context, in *ResTagTable, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *ResTagTable) (*ResTagTable, bool) {
 		return in, true
 	})
 }
 
-func (c *ResTagTableCache) UpdateModFunc(ctx context.Context, key *ResTagTableKey, rev int64, modFunc func(old *ResTagTable) (new *ResTagTable, changed bool)) {
+func (c *ResTagTableCache) UpdateModFunc(ctx context.Context, key *ResTagTableKey, modRev int64, modFunc func(old *ResTagTable) (new *ResTagTable, changed bool)) {
 	c.Mux.Lock()
-	old := c.Objs[*key]
+	var old *ResTagTable
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
 	new, changed := modFunc(old)
 	if !changed {
 		c.Mux.Unlock()
 		return
 	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &ResTagTable{}
-			*newCopy = *new
-			defer c.UpdatedCb(ctx, old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(ctx, new.GetKey(), old)
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &ResTagTable{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
 		}
 	}
-	c.Objs[new.GetKeyVal()] = new
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", new)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate ResTagTable", "obj", new, "rev", rev)
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &ResTagTable{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &ResTagTableCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
 	c.Mux.Unlock()
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *ResTagTableCache) Delete(ctx context.Context, in *ResTagTable, rev int64) {
+func (c *ResTagTableCache) Delete(ctx context.Context, in *ResTagTable, modRev int64) {
 	c.Mux.Lock()
-	old := c.Objs[in.GetKeyVal()]
+	var old *ResTagTable
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	log.DebugLog(log.DebugLevelApi, "SyncDelete ResTagTable", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(ctx, in.GetKey(), old)
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
 	}
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
 func (c *ResTagTableCache) Prune(ctx context.Context, validKeys map[ResTagTableKey]struct{}) {
-	notify := make(map[ResTagTableKey]*ResTagTable)
+	notify := make(map[ResTagTableKey]*ResTagTableCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
 				notify[key] = c.Objs[key]
 			}
 			delete(c.Objs, key)
@@ -1019,8 +1272,18 @@ func (c *ResTagTableCache) Prune(ctx context.Context, validKeys map[ResTagTableK
 	}
 	c.Mux.Unlock()
 	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(ctx, &key, old)
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
 		}
 		c.TriggerKeyWatchers(ctx, &key)
 	}
@@ -1039,13 +1302,13 @@ func (c *ResTagTableCache) Show(filter *ResTagTable, cb func(ret *ResTagTable) e
 	log.DebugLog(log.DebugLevelApi, "Show ResTagTable", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare ResTagTable", "filter", filter, "obj", obj)
-		if !obj.Matches(filter, MatchFilter()) {
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare ResTagTable", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show ResTagTable", "obj", obj)
-		err := cb(obj)
+		log.DebugLog(log.DebugLevelApi, "Show ResTagTable", "obj", data.Obj)
+		err := cb(data.Obj)
 		if err != nil {
 			return err
 		}
@@ -1059,12 +1322,48 @@ func ResTagTableGenericNotifyCb(fn func(key *ResTagTableKey, old *ResTagTable)) 
 	}
 }
 
-func (c *ResTagTableCache) SetNotifyCb(fn func(ctx context.Context, obj *ResTagTableKey, old *ResTagTable)) {
-	c.NotifyCb = fn
+func (c *ResTagTableCache) SetNotifyCb(fn func(ctx context.Context, obj *ResTagTableKey, old *ResTagTable, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *ResTagTableKey, old *ResTagTable, modRev int64){fn}
 }
 
 func (c *ResTagTableCache) SetUpdatedCb(fn func(ctx context.Context, old *ResTagTable, new *ResTagTable)) {
-	c.UpdatedCb = fn
+	c.UpdatedCbs = []func(ctx context.Context, old *ResTagTable, new *ResTagTable){fn}
+}
+
+func (c *ResTagTableCache) SetDeletedCb(fn func(ctx context.Context, old *ResTagTable)) {
+	c.DeletedCbs = []func(ctx context.Context, old *ResTagTable){fn}
+}
+
+func (c *ResTagTableCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *ResTagTableKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *ResTagTableKey){fn}
+}
+
+func (c *ResTagTableCache) SetDeletedKeyCb(fn func(ctx context.Context, key *ResTagTableKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *ResTagTableKey){fn}
+}
+
+func (c *ResTagTableCache) AddUpdatedCb(fn func(ctx context.Context, old *ResTagTable, new *ResTagTable)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *ResTagTableCache) AddDeletedCb(fn func(ctx context.Context, old *ResTagTable)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *ResTagTableCache) AddNotifyCb(fn func(ctx context.Context, obj *ResTagTableKey, old *ResTagTable, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *ResTagTableCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *ResTagTableKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *ResTagTableCache) AddDeletedKeyCb(fn func(ctx context.Context, key *ResTagTableKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *ResTagTableCache) SetFlushAll() {
+	c.FlushAll = true
 }
 
 func (c *ResTagTableCache) WatchKey(key *ResTagTableKey, cb func(ctx context.Context)) context.CancelFunc {
@@ -1111,14 +1410,21 @@ func (c *ResTagTableCache) TriggerKeyWatchers(ctx context.Context, key *ResTagTa
 		watchers[ii].cb(ctx)
 	}
 }
-func (c *ResTagTableCache) SyncUpdate(ctx context.Context, key, val []byte, rev int64) {
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *ResTagTableCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
 	obj := ResTagTable{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
 		log.WarnLog("Failed to parse ResTagTable data", "val", string(val), "err", err)
 		return
 	}
-	c.Update(ctx, &obj, rev)
+	c.Update(ctx, &obj, modRev)
 	c.Mux.Lock()
 	if c.List != nil {
 		c.List[obj.GetKeyVal()] = struct{}{}
@@ -1126,11 +1432,11 @@ func (c *ResTagTableCache) SyncUpdate(ctx context.Context, key, val []byte, rev 
 	c.Mux.Unlock()
 }
 
-func (c *ResTagTableCache) SyncDelete(ctx context.Context, key []byte, rev int64) {
+func (c *ResTagTableCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := ResTagTable{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
 	ResTagTableKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, rev)
+	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *ResTagTableCache) SyncListStart(ctx context.Context) {
@@ -1138,7 +1444,7 @@ func (c *ResTagTableCache) SyncListStart(ctx context.Context) {
 }
 
 func (c *ResTagTableCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[ResTagTableKey]*ResTagTable)
+	deleted := make(map[ResTagTableKey]*ResTagTableCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1148,12 +1454,33 @@ func (c *ResTagTableCache) SyncListEnd(ctx context.Context) {
 	}
 	c.List = nil
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(ctx, &key, val)
-			c.TriggerKeyWatchers(ctx, &key)
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *ResTagTableCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if key.Organization == org {
+			return true
 		}
 	}
+	return false
 }
 
 func (m *ResTagTable) GetObjKey() objstore.ObjKey {
@@ -1266,18 +1593,26 @@ func (e *OptResNames) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 func (m *ResTagTableKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	l = len(m.Name)
 	if l > 0 {
 		n += 1 + l + sovRestagtable(uint64(l))
 	}
-	l = m.OperatorKey.Size()
-	n += 1 + l + sovRestagtable(uint64(l))
+	l = len(m.Organization)
+	if l > 0 {
+		n += 1 + l + sovRestagtable(uint64(l))
+	}
 	return n
 }
 
 func (m *ResTagTable) Size() (n int) {
+	if m == nil {
+		return 0
+	}
 	var l int
 	_ = l
 	if len(m.Fields) > 0 {
@@ -1304,14 +1639,7 @@ func (m *ResTagTable) Size() (n int) {
 }
 
 func sovRestagtable(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozRestagtable(x uint64) (n int) {
 	return sovRestagtable(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -1331,7 +1659,7 @@ func (m *ResTagTableKey) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1359,7 +1687,7 @@ func (m *ResTagTableKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1369,6 +1697,9 @@ func (m *ResTagTableKey) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRestagtable
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRestagtable
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1376,9 +1707,9 @@ func (m *ResTagTableKey) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OperatorKey", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Organization", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRestagtable
@@ -1388,21 +1719,23 @@ func (m *ResTagTableKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthRestagtable
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRestagtable
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.OperatorKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Organization = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1411,6 +1744,9 @@ func (m *ResTagTableKey) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthRestagtable
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthRestagtable
 			}
 			if (iNdEx + skippy) > l {
@@ -1440,7 +1776,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1468,7 +1804,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1478,6 +1814,9 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRestagtable
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRestagtable
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1497,7 +1836,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1506,6 +1845,9 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRestagtable
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRestagtable
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1527,7 +1869,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1536,6 +1878,9 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRestagtable
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRestagtable
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1556,7 +1901,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1573,7 +1918,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1583,6 +1928,9 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthRestagtable
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthRestagtable
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -1599,7 +1947,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1609,6 +1957,9 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthRestagtable
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthRestagtable
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -1645,7 +1996,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1655,6 +2006,9 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthRestagtable
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRestagtable
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1667,6 +2021,9 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthRestagtable
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthRestagtable
 			}
 			if (iNdEx + skippy) > l {
@@ -1684,6 +2041,7 @@ func (m *ResTagTable) Unmarshal(dAtA []byte) error {
 func skipRestagtable(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1715,10 +2073,8 @@ func skipRestagtable(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1735,102 +2091,34 @@ func skipRestagtable(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthRestagtable
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowRestagtable
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipRestagtable(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupRestagtable
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthRestagtable
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthRestagtable = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowRestagtable   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthRestagtable        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowRestagtable          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupRestagtable = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("restagtable.proto", fileDescriptorRestagtable) }
-
-var fileDescriptorRestagtable = []byte{
-	// 688 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x94, 0x4f, 0x68, 0x13, 0x5b,
-	0x14, 0xc6, 0x73, 0x93, 0xb4, 0x25, 0x37, 0x7d, 0x69, 0x32, 0x2f, 0x94, 0xdb, 0xf0, 0x48, 0xf3,
-	0x66, 0x95, 0x57, 0xfa, 0x32, 0x5a, 0x05, 0x4b, 0xa0, 0x48, 0x5a, 0xa5, 0x48, 0xb1, 0x95, 0xe9,
-	0x9f, 0xad, 0xdc, 0x64, 0x8e, 0xb7, 0x83, 0x93, 0xb9, 0xc3, 0xcc, 0x9d, 0xd6, 0x14, 0x17, 0xda,
-	0x8d, 0xdb, 0x82, 0x1b, 0x71, 0xe5, 0xde, 0x8d, 0x1b, 0xf7, 0x2e, 0x83, 0x2b, 0xc1, 0xbd, 0x68,
-	0x71, 0x21, 0x5d, 0x09, 0x4d, 0xc0, 0xa5, 0xcc, 0x9d, 0x34, 0xcd, 0xd0, 0x06, 0x5a, 0x17, 0xdd,
-	0x84, 0x73, 0xce, 0x3d, 0xe7, 0x7e, 0xbf, 0xf3, 0xdd, 0x24, 0x38, 0xe7, 0x82, 0x27, 0x28, 0x13,
-	0xb4, 0x6e, 0x41, 0xc5, 0x71, 0xb9, 0xe0, 0x4a, 0x0a, 0x0c, 0x06, 0x32, 0x2c, 0xfc, 0xc3, 0x38,
-	0x67, 0x16, 0x68, 0xd4, 0x31, 0x35, 0x6a, 0xdb, 0x5c, 0x50, 0x61, 0x72, 0xdb, 0x0b, 0x1b, 0x0b,
-	0xf3, 0xcc, 0x14, 0xdb, 0x7e, 0xbd, 0xd2, 0xe0, 0x4d, 0xad, 0xc9, 0xeb, 0xa6, 0x15, 0x0c, 0x3e,
-	0xd1, 0x82, 0xcf, 0xff, 0x1b, 0x16, 0xf7, 0x0d, 0x4d, 0xf6, 0x31, 0xb0, 0xfb, 0x41, 0x6f, 0x72,
-	0xdc, 0x05, 0xcf, 0xb7, 0x44, 0x2f, 0xcb, 0x70, 0x07, 0x5c, 0x2a, 0xb8, 0xdb, 0xcb, 0xf3, 0x8c,
-	0x33, 0x2e, 0x43, 0x2d, 0x88, 0xc2, 0xaa, 0x7a, 0x80, 0x70, 0x46, 0x07, 0x6f, 0x83, 0xb2, 0x8d,
-	0x00, 0x76, 0x05, 0x5a, 0x8a, 0x82, 0x93, 0x36, 0x6d, 0x02, 0x41, 0x25, 0x54, 0x4e, 0xe9, 0x32,
-	0x56, 0x6e, 0xe3, 0xf1, 0x93, 0xeb, 0x1e, 0x3e, 0x86, 0x16, 0x89, 0x97, 0x50, 0x39, 0x3d, 0x37,
-	0x59, 0xe9, 0x2f, 0x55, 0x59, 0xeb, 0x1d, 0xaf, 0x40, 0x6b, 0x31, 0xd9, 0xfe, 0x32, 0x1d, 0xd3,
-	0xd3, 0xfc, 0xb4, 0x54, 0xfd, 0xef, 0xc7, 0x31, 0x41, 0xbf, 0x8e, 0x09, 0x7a, 0xdd, 0x25, 0x53,
-	0x27, 0x07, 0x0b, 0x03, 0x43, 0x95, 0x55, 0xda, 0x84, 0x77, 0x6f, 0xa6, 0x91, 0xfa, 0x3e, 0x8e,
-	0xd3, 0x03, 0x48, 0xca, 0x24, 0x1e, 0x7d, 0x64, 0x82, 0x65, 0x78, 0x04, 0x95, 0x12, 0xe5, 0x94,
-	0xde, 0xcb, 0x94, 0xeb, 0x38, 0x71, 0x8a, 0x32, 0x35, 0x80, 0x12, 0xdd, 0xa7, 0x47, 0x13, 0xf4,
-	0x2a, 0x37, 0x71, 0x52, 0x50, 0xe6, 0x91, 0x44, 0x29, 0x51, 0x4e, 0xcf, 0x95, 0xce, 0x9f, 0xa9,
-	0x6c, 0x50, 0xe6, 0xdd, 0xb5, 0x85, 0xdb, 0xd2, 0x65, 0xb7, 0x92, 0xc7, 0x23, 0x74, 0x8f, 0xdb,
-	0x40, 0x92, 0xd2, 0x91, 0x30, 0x29, 0xdc, 0xc2, 0xa9, 0x7e, 0xa3, 0x92, 0x0d, 0x59, 0x42, 0xcb,
-	0xa4, 0x54, 0x1e, 0x8f, 0xec, 0x50, 0xcb, 0x07, 0xc9, 0x97, 0xd2, 0xc3, 0xa4, 0x1a, 0x9f, 0x47,
-	0xd5, 0xad, 0xc0, 0x8a, 0x9f, 0xc7, 0x04, 0x3d, 0xeb, 0x10, 0x74, 0xd0, 0x21, 0xe8, 0x55, 0x87,
-	0xa0, 0x0f, 0x1d, 0x69, 0xcd, 0x8c, 0x0b, 0xde, 0xc2, 0x89, 0x1b, 0xb3, 0x7d, 0x9f, 0x82, 0xca,
-	0x19, 0xaf, 0xba, 0x24, 0xf6, 0xb1, 0x4b, 0x92, 0x01, 0x44, 0xe0, 0xdb, 0x4c, 0x19, 0xa7, 0xd7,
-	0x1c, 0xa1, 0x83, 0x17, 0x9c, 0x7a, 0xca, 0x18, 0x4e, 0x2c, 0x3f, 0xd8, 0xcc, 0xc6, 0x82, 0x60,
-	0xb5, 0xb6, 0x9e, 0x45, 0x32, 0xb8, 0xb7, 0x94, 0x8d, 0xcf, 0xbd, 0x1d, 0x8b, 0x3c, 0x7a, 0xcd,
-	0x31, 0x95, 0xe7, 0x08, 0xe7, 0x96, 0x5c, 0xa0, 0x02, 0x22, 0xd6, 0x9f, 0xef, 0x50, 0x21, 0x17,
-	0xad, 0xfb, 0x96, 0x50, 0x6b, 0x47, 0x1d, 0xf2, 0xaf, 0x0e, 0x1e, 0xf7, 0xdd, 0xc6, 0xe0, 0x1d,
-	0xb3, 0xb5, 0x46, 0xf0, 0xed, 0xbe, 0x4f, 0x6d, 0xca, 0x60, 0x76, 0xff, 0xf3, 0xf7, 0x97, 0xf1,
-	0x49, 0x35, 0xa7, 0x35, 0xa4, 0x96, 0xc6, 0x1c, 0x3f, 0xf8, 0x9d, 0xd4, 0xad, 0x2a, 0x9a, 0x91,
-	0x0c, 0x77, 0xc0, 0x82, 0xab, 0x62, 0x30, 0xa4, 0xd6, 0x59, 0x86, 0x4d, 0xc7, 0xb8, 0x32, 0x1f,
-	0x7c, 0xa9, 0x15, 0x65, 0xd8, 0x47, 0x78, 0x62, 0x7d, 0x9b, 0xef, 0x5e, 0x84, 0x60, 0x48, 0x5d,
-	0x5d, 0x38, 0xea, 0x90, 0xe9, 0xe1, 0x18, 0x5b, 0x26, 0xec, 0x86, 0x10, 0x79, 0x75, 0x42, 0xf3,
-	0xb6, 0xf9, 0x6e, 0x04, 0xe1, 0x1a, 0x52, 0xf6, 0x70, 0xaa, 0x66, 0x18, 0xe1, 0xe4, 0x65, 0xf6,
-	0x5f, 0xbc, 0xd0, 0xfe, 0xed, 0x2e, 0x41, 0x52, 0xfe, 0x6f, 0x35, 0xa3, 0x51, 0xc3, 0x88, 0x1a,
-	0xf0, 0x14, 0x8f, 0xeb, 0xd0, 0xe4, 0x3b, 0x70, 0x79, 0xf9, 0xda, 0xe5, 0xe4, 0x15, 0xf5, 0x2f,
-	0xcd, 0x6d, 0x46, 0xd5, 0x5f, 0x20, 0x9c, 0x59, 0x06, 0x31, 0xe8, 0xfe, 0xf0, 0x7f, 0x97, 0xa1,
-	0x0f, 0xf0, 0x07, 0x3e, 0x30, 0x10, 0x11, 0x92, 0x42, 0xf2, 0xa0, 0x4b, 0x62, 0x8b, 0xd9, 0xf6,
-	0xb7, 0x62, 0xac, 0x7d, 0x58, 0x44, 0x9f, 0x0e, 0x8b, 0xe8, 0xeb, 0x61, 0x11, 0xd5, 0x47, 0xa5,
-	0xdc, 0x8d, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x30, 0x8c, 0x7d, 0x94, 0x67, 0x06, 0x00, 0x00,
-}

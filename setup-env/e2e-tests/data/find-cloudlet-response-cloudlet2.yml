@@ -1,14 +1,14 @@
 status: FindFound
-fqdn: tmus-cloud-2.tmus.mobiledgex.net
+fqdn: tmus-cloud-2.tmus.localtest.net
 ports:
 - proto: LProtoTcp
   internalport: 80
   publicport: 80
   fqdnprefix: someapplication1-tcp.
-- proto: LProtoHttp
+- proto: LProtoTcp
   internalport: 443
   publicport: 443
-  pathprefix: acmeappco/someapplication110/p443
+  fqdnprefix: someapplication1-tcp.
 - proto: LProtoUdp
   internalport: 10002
   publicport: 10002

@@ -11,7 +11,6 @@ import (
 
 	sh "github.com/codeskyblue/go-sh"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -28,23 +27,23 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	var err error
 
 	switch clusterInst.Deployment {
-	case cloudcommon.AppDeploymentTypeDocker:
+	case cloudcommon.DeploymentTypeDocker:
 		updateCallback(edgeproto.UpdateTask, "Create done for Docker Cluster on DIND")
 		return nil
-	case cloudcommon.AppDeploymentTypeKubernetes:
+	case cloudcommon.DeploymentTypeKubernetes:
 		updateCallback(edgeproto.UpdateTask, "Create DIND Cluster")
 	default:
 		return fmt.Errorf("Only K8s and Docker clusters are supported on DIND")
 	}
 	// Create K8s cluster
-	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
-	log.SpanLog(ctx, log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
+	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
+	log.SpanLog(ctx, log.DebugLevelInfra, "creating local dind cluster", "clusterName", clusterName)
 
 	kconfName := k8smgmt.GetKconfName(clusterInst)
 	if err = s.CreateDINDCluster(ctx, clusterName, kconfName); err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "created dind", "name", clusterName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "created dind", "name", clusterName)
 	return nil
 }
 
@@ -84,56 +83,45 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 	os.Setenv("DIND_LABEL", clusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(clusterID))
 	cluster := NewClusterFor(clusterName, clusterID)
-	log.SpanLog(ctx, log.DebugLevelMexos, "CreateDINDCluster", "scriptName", cloudcommon.DindScriptName, "name", clusterName, "clusterid", clusterID)
+	log.SpanLog(ctx, log.DebugLevelInfra, "CreateDINDCluster", "scriptName", cloudcommon.DindScriptName, "name", clusterName, "clusterid", clusterID)
 
 	out, err := sh.Command(cloudcommon.DindScriptName, "up").Command("tee", "/tmp/dind.log").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ERROR creating Dind Cluster: [%s] %v", out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "Finished CreateDINDCluster", "name", clusterName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Finished CreateDINDCluster", "name", clusterName)
 	//race condition exists where the config file is not ready until just after the cluster create is done
 	time.Sleep(3 * time.Second)
 
 	//now set the k8s config
-	log.SpanLog(ctx, log.DebugLevelMexos, "set config context", "kcontext", cluster.KContext)
+	log.SpanLog(ctx, log.DebugLevelInfra, "set config context", "kcontext", cluster.KContext)
 	out, err = sh.Command("kubectl", "config", "use-context", cluster.KContext).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ERROR setting kube config context: [%s] %v", string(out), err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "set config context output", "out", string(out), "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "set config context output", "out", string(out), "err", err)
 
 	//copy kubeconfig locally
-	log.SpanLog(ctx, log.DebugLevelMexos, "locally copying kubeconfig", "kconfName", kconfName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "locally copying kubeconfig", "kconfName", kconfName)
 	home := os.Getenv("HOME")
 	out, err = sh.Command("cp", home+"/.kube/config", kconfName).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
 	out, err = sh.Command("cat", home+"/.kube/config").CombinedOutput()
-	log.SpanLog(ctx, log.DebugLevelMexos, "config file", "home", home, "out", string(out), "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "config file", "home", home, "out", string(out), "err", err)
 
-	// bridge nginxL7 network to this cluster's network
-	out, err = sh.Command("docker", "network", "connect",
-		GetDockerNetworkName(&cluster), proxy.NginxL7Name).CombinedOutput()
-	if err != nil && strings.Contains(string(out), "already exists") {
-		err = nil
-	}
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "cannot connect nginx network",
-			"cluster", cluster, "out", out, "err", err)
-		return fmt.Errorf("failed to connect nginxL7 network, %s, %v", out, err)
-	}
 	return nil
 }
 
 //DeleteDINDCluster creates kubernetes cluster on local mac
 func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto.ClusterInst) error {
 
-	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
-	log.SpanLog(ctx, log.DebugLevelMexos, "DeleteDINDCluster", "clusterName", clusterName)
+	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
+	log.SpanLog(ctx, log.DebugLevelInfra, "DeleteDINDCluster", "clusterName", clusterName)
 
-	if clusterInst.Deployment == cloudcommon.AppDeploymentTypeDocker {
-		log.SpanLog(ctx, log.DebugLevelMexos, "No delete required for DIND docker cluster", "clusterName", clusterName)
+	if clusterInst.Deployment == cloudcommon.DeploymentTypeDocker {
+		log.SpanLog(ctx, log.DebugLevelInfra, "No delete required for DIND docker cluster", "clusterName", clusterName)
 		return nil
 	}
 	cluster, err := FindCluster(clusterName)
@@ -141,24 +129,13 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 		return fmt.Errorf("ERROR - Cluster %s not found, %v", clusterName, err)
 	}
 
-	// disconnect nginxL7 network
-	out, err := sh.Command("docker", "network", "disconnect",
-		GetDockerNetworkName(cluster), proxy.NginxL7Name).CombinedOutput()
-	if err != nil && strings.Contains(string(out), "is not connected") {
-		err = nil
-	}
-	if err != nil {
-		return fmt.Errorf("docker network disconnect failed, %s, %v",
-			out, err)
-	}
-
 	os.Setenv("DIND_LABEL", cluster.ClusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(cluster.ClusterID))
-	out, err = sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
+	out, err := sh.Command(cloudcommon.DindScriptName, "clean").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelMexos, "Finished dind clean", "scriptName", cloudcommon.DindScriptName, "clusterName", clusterName, "out", out)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Finished dind clean", "scriptName", cloudcommon.DindScriptName, "clusterName", clusterName, "out", out)
 	return nil
 }
 

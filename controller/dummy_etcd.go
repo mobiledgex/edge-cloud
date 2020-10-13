@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"strings"
+	"time"
 
 	v3 "github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -18,10 +20,14 @@ type watcher struct {
 	cb objstore.SyncCb
 }
 
+type dummyData struct {
+	val    string
+	vers   int64
+	modRev int64
+}
+
 type dummyEtcd struct {
-	db       map[string]string
-	vers     map[string]int64
-	modRev   map[string]int64
+	db       map[string]*dummyData
 	watchers map[string]*watcher
 	rev      int64
 	syncCb   objstore.SyncCb
@@ -29,9 +35,7 @@ type dummyEtcd struct {
 }
 
 func (e *dummyEtcd) Start() error {
-	e.db = make(map[string]string)
-	e.vers = make(map[string]int64)
-	e.modRev = make(map[string]int64)
+	e.db = make(map[string]*dummyData)
 	e.watchers = make(map[string]*watcher)
 	e.rev = 1
 	return nil
@@ -41,7 +45,6 @@ func (e *dummyEtcd) Stop() {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	e.db = nil
-	e.vers = nil
 }
 
 func (e *dummyEtcd) Create(ctx context.Context, key, val string) (int64, error) {
@@ -54,10 +57,12 @@ func (e *dummyEtcd) Create(ctx context.Context, key, val string) (int64, error) 
 	if ok {
 		return 0, objstore.ExistsError(key)
 	}
-	e.db[key] = val
-	e.vers[key] = 1
 	e.rev++
-	e.modRev[key] = e.rev
+	e.db[key] = &dummyData{
+		val:    val,
+		vers:   1,
+		modRev: e.rev,
+	}
 	log.DebugLog(log.DebugLevelEtcd, "Created", "key", key, "val", val, "rev", e.rev)
 	e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
@@ -69,20 +74,19 @@ func (e *dummyEtcd) Update(ctx context.Context, key, val string, version int64) 
 	if e.db == nil {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
-	_, ok := e.db[key]
+	data, ok := e.db[key]
 	if !ok {
 		return 0, objstore.NotFoundError(key)
 	}
-	ver := e.vers[key]
-	if version != objstore.ObjStoreUpdateVersionAny && ver != version {
+	if version != objstore.ObjStoreUpdateVersionAny && data.vers != version {
 		return 0, errors.New("Invalid version")
 	}
 
-	e.db[key] = val
-	e.vers[key] = ver + 1
 	e.rev++
-	e.modRev[key] = e.rev
-	log.DebugLog(log.DebugLevelEtcd, "Updated", "key", key, "val", val, "ver", ver+1, "rev", e.rev)
+	data.val = val
+	data.vers++
+	data.modRev = e.rev
+	log.DebugLog(log.DebugLevelEtcd, "Updated", "key", key, "val", val, "ver", data.vers, "rev", e.rev)
 	e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
 }
@@ -93,15 +97,16 @@ func (e *dummyEtcd) Put(ctx context.Context, key, val string, ops ...objstore.KV
 	if e.db == nil {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
-	ver, ok := e.vers[key]
+	data, ok := e.db[key]
 	if !ok {
-		ver = 0
+		data = &dummyData{}
+		e.db[key] = data
 	}
-	e.db[key] = val
-	e.vers[key] = ver + 1
 	e.rev++
-	e.modRev[key] = e.rev
-	log.DebugLog(log.DebugLevelEtcd, "Put", "key", key, "val", val, "ver", ver+1, "rev", e.rev)
+	data.val = val
+	data.vers++
+	data.modRev = e.rev
+	log.DebugLog(log.DebugLevelEtcd, "Put", "key", key, "val", val, "ver", data.vers, "rev", e.rev)
 	e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
 }
@@ -113,8 +118,6 @@ func (e *dummyEtcd) Delete(ctx context.Context, key string) (int64, error) {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	delete(e.db, key)
-	delete(e.vers, key)
-	delete(e.modRev, key)
 	e.rev++
 	log.DebugLog(log.DebugLevelEtcd, "Delete", "key", key, "rev", e.rev)
 	e.triggerWatcher(ctx, objstore.SyncDelete, key, "", e.rev)
@@ -127,18 +130,16 @@ func (e *dummyEtcd) Get(key string, opts ...objstore.KVOp) ([]byte, int64, int64
 	if e.db == nil {
 		return nil, 0, 0, objstore.ErrKVStoreNotInitialized
 	}
-	val, ok := e.db[key]
+	data, ok := e.db[key]
 	if !ok {
 		return nil, 0, 0, objstore.NotFoundError(key)
 	}
-	ver := e.vers[key]
-
-	log.DebugLog(log.DebugLevelEtcd, "Got", "key", key, "val", val, "ver", ver, "rev", e.rev)
-	return ([]byte)(val), ver, e.modRev[key], nil
+	log.DebugLog(log.DebugLevelEtcd, "Got", "key", key, "val", data.val, "ver", data.vers, "rev", e.rev)
+	return ([]byte)(data.val), data.vers, data.modRev, nil
 }
 
 func (e *dummyEtcd) List(key string, cb objstore.ListCb) error {
-	kvs := make(map[string]string)
+	kvs := make(map[string]*dummyData)
 	e.mux.Lock()
 	if e.db == nil {
 		e.mux.Unlock()
@@ -148,14 +149,15 @@ func (e *dummyEtcd) List(key string, cb objstore.ListCb) error {
 		if !strings.HasPrefix(k, key) {
 			continue
 		}
-		kvs[k] = v
+		dd := *v
+		kvs[k] = &dd
 	}
 	rev := e.rev
 	e.mux.Unlock()
 
 	for k, v := range kvs {
-		log.DebugLog(log.DebugLevelEtcd, "List", "key", k, "val", v, "rev", rev)
-		err := cb([]byte(k), []byte(v), rev)
+		log.DebugLog(log.DebugLevelEtcd, "List", "key", k, "val", v.val, "rev", rev, "modRev", v.modRev)
+		err := cb([]byte(k), []byte(v.val), rev, v.modRev)
 		if err != nil {
 			break
 		}
@@ -166,7 +168,7 @@ func (e *dummyEtcd) List(key string, cb objstore.ListCb) error {
 func (e *dummyEtcd) Rev(key string) int64 {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	return e.modRev[key]
+	return e.db[key].modRev
 }
 
 func (e *dummyEtcd) Sync(ctx context.Context, prefix string, cb objstore.SyncCb) error {
@@ -180,14 +182,16 @@ func (e *dummyEtcd) Sync(ctx context.Context, prefix string, cb objstore.SyncCb)
 	data := objstore.SyncCbData{}
 	data.Action = objstore.SyncListStart
 	data.Rev = 0
+	data.ModRev = 0
 	cb(ctx, &data)
-	for key, val := range e.db {
+	for key, dd := range e.db {
 		if strings.HasPrefix(key, prefix) {
-			log.DebugLog(log.DebugLevelEtcd, "sync list data", "key", key, "val", val, "rev", e.rev)
+			log.DebugLog(log.DebugLevelEtcd, "sync list data", "key", key, "val", dd.val, "rev", e.rev)
 			data.Action = objstore.SyncList
 			data.Key = []byte(key)
-			data.Value = []byte(val)
+			data.Value = []byte(dd.val)
 			data.Rev = e.rev
+			data.ModRev = dd.modRev
 			cb(ctx, &data)
 		}
 	}
@@ -213,6 +217,7 @@ func (e *dummyEtcd) triggerWatcher(ctx context.Context, action objstore.SyncCbAc
 				Key:    []byte(key),
 				Value:  []byte(val),
 				Rev:    rev,
+				ModRev: rev,
 			}
 			log.DebugLog(log.DebugLevelEtcd, "watch data", "key", key, "val", val, "rev", rev)
 			watch.cb(ctx, &data)
@@ -234,6 +239,7 @@ func (e *dummyEtcd) ApplySTM(ctx context.Context, apply func(concurrency.STM) er
 	var err error
 	var rev int64 = 0
 	ii := 0
+	backoff := time.Millisecond
 	for {
 		stm.reset()
 		err = apply(&stm)
@@ -249,6 +255,8 @@ func (e *dummyEtcd) ApplySTM(ctx context.Context, apply func(concurrency.STM) er
 			err = errors.New("too many iterations")
 			break
 		}
+		backoff *= time.Duration(rand.Intn(20))
+		time.Sleep(backoff)
 	}
 	return rev, err
 }
@@ -265,9 +273,13 @@ func (e *dummyEtcd) commit(ctx context.Context, stm *dummySTM) (int64, error) {
 	rev := int64(math.MaxInt64 - 1)
 	// check that gets have not changed
 	for key, resp := range stm.rset {
-		if e.modRev[key] != resp.modRev {
+		modRev := int64(0)
+		if dd, ok := e.db[key]; ok {
+			modRev = dd.modRev
+		}
+		if modRev != resp.modRev {
 			fmt.Printf("rset modRev mismatch %s e.modRev %d resp.modRev %d\n",
-				key, e.modRev[key], resp.modRev)
+				key, modRev, resp.modRev)
 			return 0, errors.New("rset rev mismatch")
 		}
 		if resp.rev < rev {
@@ -280,9 +292,10 @@ func (e *dummyEtcd) commit(ctx context.Context, stm *dummySTM) (int64, error) {
 	// of the first get. If rset is empty, rev will be a huge
 	// number so all these checks will pass.
 	for key, _ := range stm.wset {
-		wrev, ok := e.modRev[key]
-		if !ok {
-			wrev = 0
+		wrev := int64(0)
+		dd, ok := e.db[key]
+		if ok {
+			wrev = dd.modRev
 		}
 		if wrev > rev {
 			fmt.Printf("wset rev mismatch %s rev %d wrev %d\n",
@@ -293,24 +306,23 @@ func (e *dummyEtcd) commit(ctx context.Context, stm *dummySTM) (int64, error) {
 	// commit all changes in one revision
 	e.rev++
 	for key, val := range stm.wset {
-		ver, ok := e.vers[key]
-		if !ok {
-			ver = 0
-		}
 		if val == "" {
 			// delete
 			delete(e.db, key)
-			delete(e.vers, key)
-			delete(e.modRev, key)
 			log.DebugLog(log.DebugLevelEtcd, "Delete",
 				"key", key, "rev", e.rev)
 			e.triggerWatcher(ctx, objstore.SyncDelete, key, "", e.rev)
 		} else {
-			e.db[key] = val
-			e.vers[key] = ver + 1
-			e.modRev[key] = e.rev
+			dd, ok := e.db[key]
+			if !ok {
+				dd = &dummyData{}
+				e.db[key] = dd
+			}
+			dd.val = val
+			dd.vers++
+			dd.modRev = e.rev
 			log.DebugLog(log.DebugLevelEtcd, "Commit", "key", key,
-				"val", val, "ver", ver+1, "rev", e.rev)
+				"val", val, "ver", dd.vers, "rev", e.rev)
 			e.triggerWatcher(ctx, objstore.SyncUpdate, key, val, e.rev)
 		}
 	}

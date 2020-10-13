@@ -3,10 +3,18 @@ package process
 import "os/exec"
 
 type Vault struct {
-	Common    `yaml:",inline"`
-	DmeSecret string
-	cmd       *exec.Cmd
+	Common     `yaml:",inline"`
+	DmeSecret  string
+	Regions    string
+	VaultDatas []VaultData
+	cmd        *exec.Cmd
 }
+
+type VaultData struct {
+	Path string
+	Data map[string]string
+}
+
 type Etcd struct {
 	Common         `yaml:",inline"`
 	DataDir        string
@@ -21,9 +29,15 @@ type Controller struct {
 	ApiAddr              string
 	HttpAddr             string
 	NotifyAddr           string
+	NotifyRootAddrs      string
+	NotifyParentAddrs    string
+	EdgeTurnAddr         string
 	VaultAddr            string
 	InfluxAddr           string
+	Region               string
 	TLS                  TLSCerts
+	UseVaultCAs          bool
+	UseVaultCerts        bool
 	cmd                  *exec.Cmd
 	TestMode             bool
 	RegistryFQDN         string
@@ -31,38 +45,52 @@ type Controller struct {
 	CloudletRegistryPath string
 	VersionTag           string
 	CloudletVMImagePath  string
+	CheckpointInterval   string
+	AppDNSRoot           string
+	DeploymentTag        string
+	ChefServerPath       string
 }
 type Dme struct {
-	Common      `yaml:",inline"`
-	ApiAddr     string
-	HttpAddr    string
-	NotifyAddrs string
-	LocVerUrl   string
-	TokSrvUrl   string
-	QosPosUrl   string
-	Carrier     string
-	CloudletKey string
-	VaultAddr   string
-	CookieExpr  string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
+	Common        `yaml:",inline"`
+	ApiAddr       string
+	HttpAddr      string
+	NotifyAddrs   string
+	LocVerUrl     string
+	TokSrvUrl     string
+	QosPosUrl     string
+	Carrier       string
+	CloudletKey   string
+	VaultAddr     string
+	CookieExpr    string
+	Region        string
+	TLS           TLSCerts
+	UseVaultCAs   bool
+	UseVaultCerts bool
+	cmd           *exec.Cmd
 }
 type Crm struct {
-	Common        `yaml:",inline"`
-	NotifyAddrs   string
-	NotifySrvAddr string
-	CloudletKey   string
-	Platform      string
-	Plugin        string
-	TLS           TLSCerts
-	cmd           *exec.Cmd
-	VaultAddr     string
-	PhysicalName  string
-	TestMode      bool
-	Span          string
-	CleanupMode   bool
-	Version       string
-	Region        string
+	Common              `yaml:",inline"`
+	NotifyAddrs         string
+	NotifySrvAddr       string
+	CloudletKey         string
+	Platform            string
+	Plugin              string
+	TLS                 TLSCerts
+	UseVaultCAs         bool
+	UseVaultCerts       bool
+	cmd                 *exec.Cmd
+	VaultAddr           string
+	PhysicalName        string
+	TestMode            bool
+	Span                string
+	ContainerVersion    string
+	VMImageVersion      string
+	CloudletVMImagePath string
+	Region              string
+	CommercialCerts     bool
+	AppDNSRoot          string
+	ChefServerPath      string
+	DeploymentTag       string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
@@ -90,6 +118,7 @@ type Influx struct {
 	Common   `yaml:",inline"`
 	DataDir  string
 	HttpAddr string
+	BindAddr string
 	Config   string // set during Start
 	TLS      TLSCerts
 	Auth     LocalAuth
@@ -102,17 +131,50 @@ type ClusterSvc struct {
 	PromPorts      string
 	InfluxDB       string
 	Interval       string
+	Region         string
+	VaultAddr      string
 	PluginRequired bool
+	UseVaultCAs    bool
+	UseVaultCerts  bool
 	TLS            TLSCerts
 	cmd            *exec.Cmd
 }
+type DockerGeneric struct {
+	Common        `yaml:",inline"`
+	Links         []string
+	DockerEnvVars map[string]string
+	TLS           TLSCerts
+	cmd           *exec.Cmd
+}
 type Jaeger struct {
-	Common `yaml:",inline"`
-	TLS    TLSCerts
-	cmd    *exec.Cmd
+	DockerGeneric `yaml:",inline"`
+}
+type ElasticSearch struct {
+	DockerGeneric `yaml:",inline"`
+	Type          string
 }
 type Traefik struct {
 	Common `yaml:",inline"`
 	TLS    TLSCerts
 	cmd    *exec.Cmd
+}
+type NotifyRoot struct {
+	Common        `yaml:",inline"`
+	VaultAddr     string
+	TLS           TLSCerts
+	UseVaultCAs   bool
+	UseVaultCerts bool
+	cmd           *exec.Cmd
+}
+type EdgeTurn struct {
+	Common        `yaml:",inline"`
+	TLS           TLSCerts
+	cmd           *exec.Cmd
+	UseVaultCAs   bool
+	UseVaultCerts bool
+	VaultAddr     string
+	ListenAddr    string
+	ProxyAddr     string
+	Region        string
+	TestMode      bool
 }

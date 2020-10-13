@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
@@ -23,8 +24,8 @@ func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 }
 
 func TestController(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi)
-	log.InitTracer("")
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi | log.DebugLevelUpgrade)
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse() // set defaults
@@ -38,6 +39,8 @@ func TestController(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 
+	testservices.CheckNotifySendOrder(t, notify.ServerMgrOne.GetSendOrder())
+
 	conn, err := getGrpcClient(t)
 	require.Nil(t, err, "grpc client")
 	defer conn.Close()
@@ -45,7 +48,7 @@ func TestController(t *testing.T) {
 	// test notify clients
 	notifyAddrs := []string{*notifyAddr}
 	crmNotify := notify.NewDummyHandler()
-	crmClient := notify.NewClient(notifyAddrs, "")
+	crmClient := notify.NewClient("crm", notifyAddrs, nil)
 	crmNotify.RegisterCRMClient(crmClient)
 	NewDummyInfoResponder(&crmNotify.AppInstCache, &crmNotify.ClusterInstCache,
 		&crmNotify.AppInstInfoCache, &crmNotify.ClusterInstInfoCache)
@@ -55,14 +58,12 @@ func TestController(t *testing.T) {
 	go crmClient.Start()
 	defer crmClient.Stop()
 	dmeNotify := notify.NewDummyHandler()
-	dmeClient := notify.NewClient(notifyAddrs, "")
+	dmeClient := notify.NewClient("dme", notifyAddrs, nil)
 	dmeNotify.RegisterDMEClient(dmeClient)
 	go dmeClient.Start()
 	defer dmeClient.Stop()
 
-	devClient := edgeproto.NewDeveloperApiClient(conn)
 	appClient := edgeproto.NewAppApiClient(conn)
-	operClient := edgeproto.NewOperatorApiClient(conn)
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
@@ -73,22 +74,24 @@ func TestController(t *testing.T) {
 
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
+	for ii, _ := range testutil.CloudletInfoData {
+		err := cloudletInfoApi.cache.WaitForState(ctx, &testutil.CloudletInfoData[ii].Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, time.Second)
+		require.Nil(t, err)
+	}
 
-	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
 	testutil.ClientAutoProvPolicyTest(t, "cud", autoProvPolicyClient, testutil.AutoProvPolicyData)
 	testutil.ClientAutoScalePolicyTest(t, "cud", autoScalePolicyClient, testutil.AutoScalePolicyData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
-	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)
 	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
 	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData)
 
-	dmeNotify.WaitForAppInsts(6)
-	crmNotify.WaitForFlavors(3)
+	require.Nil(t, dmeNotify.WaitForAppInsts(len(testutil.AppInstData)))
+	require.Nil(t, crmNotify.WaitForFlavors(len(testutil.FlavorData)))
 
 	require.Equal(t, len(testutil.AppInstData), len(dmeNotify.AppInstCache.Objs), "num appinsts")
-	require.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
+	require.Equal(t, len(testutil.FlavorData), len(crmNotify.FlavorCache.Objs), "num flavors")
 	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
 	require.Equal(t, len(testutil.AppInstData), len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 
@@ -106,10 +109,6 @@ func TestController(t *testing.T) {
 	}
 
 	// test that delete checks disallow deletes of dependent objects
-	_, err = devClient.DeleteDeveloper(ctx, &testutil.DevData[0])
-	require.NotNil(t, err)
-	_, err = operClient.DeleteOperator(ctx, &testutil.OperatorData[0])
-	require.NotNil(t, err)
 	stream, err := cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
 	err = testutil.CloudletReadResultStream(stream, err)
 	require.NotNil(t, err)
@@ -139,25 +138,22 @@ func TestController(t *testing.T) {
 		_, err = autoScalePolicyClient.DeleteAutoScalePolicy(ctx, &obj)
 		require.Nil(t, err)
 	}
+	for ii, _ := range testutil.CloudletInfoData {
+		obj := testutil.CloudletInfoData[ii]
+		obj.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
+		crmNotify.CloudletInfoCache.Update(ctx, &obj, 0)
+	}
 	for _, obj := range testutil.CloudletData {
 		stream, err := cloudletClient.DeleteCloudlet(ctx, &obj)
 		err = testutil.CloudletReadResultStream(stream, err)
 		require.Nil(t, err)
 	}
-	for _, obj := range testutil.OperatorData {
-		_, err = operClient.DeleteOperator(ctx, &obj)
-		require.Nil(t, err)
-	}
-	for _, obj := range testutil.DevData {
-		_, err = devClient.DeleteDeveloper(ctx, &obj)
-		require.Nil(t, err)
-	}
 
 	// make sure dynamic app insts were deleted along with Apps
-	dmeNotify.WaitForAppInsts(0)
+	require.Nil(t, dmeNotify.WaitForAppInsts(0))
 	require.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	// deleting appinsts/cloudlets should also delete associated info
-	require.Equal(t, 4, len(cloudletInfoApi.cache.Objs))
+	require.Equal(t, 0, len(cloudletInfoApi.cache.Objs))
 	require.Equal(t, 0, len(clusterInstApi.cache.Objs))
 	require.Equal(t, 0, len(appInstApi.cache.Objs))
 }
@@ -170,7 +166,7 @@ func TestDataGen(t *testing.T) {
 	}
 	for _, obj := range testutil.DevData {
 		val, err := json.Marshal(&obj)
-		require.Nil(t, err, "marshal %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "marshal %s", obj)
 		out.Write(val)
 		out.WriteString("\n")
 	}
@@ -179,7 +175,7 @@ func TestDataGen(t *testing.T) {
 
 func TestEdgeCloudBug26(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
-	log.InitTracer("")
+	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()
@@ -197,17 +193,12 @@ func TestEdgeCloudBug26(t *testing.T) {
 	require.Nil(t, err, "grcp client")
 	defer conn.Close()
 
-	devClient := edgeproto.NewDeveloperApiClient(conn)
 	appClient := edgeproto.NewAppApiClient(conn)
-	operClient := edgeproto.NewOperatorApiClient(conn)
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
 
 	yamlData := `
-operators:
-- key:
-    name: TMUS
 cloudlets:
 - key:
     operatorkey:
@@ -215,46 +206,39 @@ cloudlets:
     name: cloud2
   ipsupport: IpSupportDynamic
   numdynamicips: 100
+
 flavors:
 - key:
     name: m1.small
   ram: 1024
   vcpus: 1
   disk: 1
-developers:
-- key:
-    name: AcmeAppCo
 apps:
 - key:
-    developerkey:
-      name: AcmeAppCo
+    organization: AcmeAppCo
     name: someApplication
     version: 1.0
   defaultflavor:
     name: m1.small
   imagetype: ImageTypeDocker
-  accessports: "tcp:80,http:443,udp:10002"
+  accessports: "tcp:80,tcp:443,udp:10002"
   ipaccess: IpAccessShared
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: AcmeAppCo
+      organization: AcmeAppCo
       name: someApplication
       version: 1.0
     cloudletkey:
-      operatorkey:
-        name: TMUS
+      organization: TMUS
       name: cloud2
     id: 99
   liveness: 1
   port: 8080
   ip: [10,100,10,4]
-
 cloudletinfos:
 - key:
-    operatorkey:
-      name: TMUS
+    organization: TMUS
     name: cloud2
   state: CloudletStateReady
   osmaxram: 65536
@@ -262,18 +246,14 @@ cloudletinfos:
   osmaxvolgb: 500
   rootlbfqdn: mexlb.cloud2.tmus.mobiledgex.net
 `
-	data := edgeproto.ApplicationData{}
+	data := edgeproto.AllData{}
 	err = yaml.Unmarshal([]byte(yamlData), &data)
 	require.Nil(t, err, "unmarshal data")
 
-	_, err = devClient.CreateDeveloper(ctx, &data.Developers[0])
-	require.Nil(t, err, "create dev")
 	_, err = flavorClient.CreateFlavor(ctx, &data.Flavors[0])
 	require.Nil(t, err, "create flavor")
-	_, err = appClient.CreateApp(ctx, &data.Applications[0])
+	_, err = appClient.CreateApp(ctx, &data.Apps[0])
 	require.Nil(t, err, "create app")
-	_, err = operClient.CreateOperator(ctx, &data.Operators[0])
-	require.Nil(t, err, "create operator")
 	_, err = cloudletClient.CreateCloudlet(ctx, &data.Cloudlets[0])
 	require.Nil(t, err, "create cloudlet")
 	insertCloudletInfo(ctx, data.CloudletInfos)

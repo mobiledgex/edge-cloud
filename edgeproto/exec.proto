@@ -1,40 +1,102 @@
 syntax = "proto3";
 package edgeproto;
 
-import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
-import "app_inst.proto";
+import "appinst.proto";
 
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+message CloudletMgmtNode {
+  // Type of Cloudlet Mgmt Node
+  string type = 1;
+  // Name of Cloudlet Mgmt Node
+  string name = 2;
+}
+
+message RunCmd {
+  // Command or Shell
+  string command = 1;
+  // Cloudlet Mgmt Node
+  CloudletMgmtNode cloudlet_mgmt_node= 2;
+}
+
+message RunVMConsole {
+  // VM Console URL
+  string url = 1 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+}
+
+message ShowLog {
+  // Show logs since either a duration ago (5s, 2m, 3h) or a timestamp (RFC3339)
+  string since = 1;
+  // Show only a recent number of lines
+  int32 tail = 2;
+  // Show timestamps
+  bool timestamps = 3;
+  // Stream data
+  bool follow = 4;
+}
+
+// ExecRequest is a common struct for enabling a connection to execute some work on a container.
 message ExecRequest {
   // Target AppInst
   AppInstKey app_inst_key = 1 [(gogoproto.nullable) = false];
-  // Command or Shell
-  string command = 2;
-  // ContainerID is the name of the target container, if applicable
+  // ContainerId is the name or ID of the target container, if applicable
   string container_id = 3;
-  // WebRTC Offer
+  // Offer
   string offer = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // WebRTC Answer
+  // Answer
   string answer = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Any error message
   string err = 6;
-  // VM Console
-  bool console = 7;
-  // VM Console URL
-  string console_url = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Command to run (one of)
+  RunCmd cmd = 9;
+  // Show log (one of)
+  ShowLog log = 10;
+  // Console (one of)
+  RunVMConsole console = 11;
+  // Timeout
+  int64 timeout = 12 [(gogoproto.casttype) = "Duration"];
+  // Access URL
+  string access_url = 14 [(protogen.backend) = true];
+  // EdgeTurn Server Address
+  string edge_turn_addr = 15 [(protogen.backend) = true];
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.noconfig) = "Offer,Answer,Err,ConsoleUrl,Console";
-  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,developer=AppInstKey.AppKey.DeveloperKey.Name,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,clusterdeveloper=AppInstKey.ClusterInstKey.Developer,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,operator=AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name";
+  option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout,AccessUrl,EdgeTurnAddr";
+  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow,node-type=Cmd.CloudletMgmtNode.Type,node-name=Cmd.CloudletMgmtNode.Name";
   option (protogen.also_required) = "AppInstKey";
 }
 
 service ExecApi {
-  // Run a Command or Shell on a container or VM
+  // Run a Command or Shell on a container
   rpc RunCommand(ExecRequest) returns (ExecRequest) {
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,AccessUrl,EdgeTurnAddr,Cmd.CloudletMgmtNode";
+    option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
   }
-  // This is used internally to forward requests to other Controllers.
+  // Run console on a VM
+  rpc RunConsole(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,ContainerId,AccessUrl,EdgeTurnAddr";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
+  }
+  // View logs for AppInst
+  rpc ShowLogs(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.Organization";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,AccessUrl,EdgeTurnAddr";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
+    option (protogen.non_standard_show) = true;
+  }
+  // Access Cloudlet VM
+  rpc AccessCloudlet(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,";
+    option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,ContainerId,AccessUrl,EdgeTurnAddr,AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization,AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_also_required) = "AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization";
+  }
+  // This is used internally to forward requests to other Controllers.e
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}
 }

@@ -15,94 +15,51 @@ import (
 // To get a list of all DMEs, we query each controller and get each
 // one's list of connected DMEs/CRMs.
 
-type NodeApi struct {
-	cache edgeproto.NodeCache
-}
+type NodeApi struct{}
 
 var nodeApi = NodeApi{}
 
-func InitNodeApi(sync *Sync) {
-	edgeproto.InitNodeCache(&nodeApi.cache)
-	sync.RegisterCache(&nodeApi.cache)
-}
-
-func (s *NodeApi) Update(ctx context.Context, in *edgeproto.Node, rev int64) {
-	s.cache.Update(ctx, in, rev)
-}
-
-func (s *NodeApi) Delete(ctx context.Context, in *edgeproto.Node, rev int64) {
-	s.cache.Delete(ctx, in, rev)
-}
-
-func (s *NodeApi) Flush(ctx context.Context, notifyId int64) {
-	s.cache.Flush(ctx, notifyId)
-}
-
-func (s *NodeApi) Prune(ctx context.Context, keys map[edgeproto.NodeKey]struct{}) {}
-
-func (s *NodeApi) ShowNodeLocal(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeLocalServer) error {
-	err := s.cache.Show(in, func(obj *edgeproto.Node) error {
-		err := cb.Send(obj)
-		return err
-	})
-	return err
-}
-
 func (s *NodeApi) ShowNode(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeServer) error {
-	filter := &edgeproto.Controller{}
-	err := controllerApi.cache.Show(filter, func(obj *edgeproto.Controller) error {
-		node := edgeproto.Node{
-			Key: edgeproto.NodeKey{
-				Name:     obj.Key.Addr,
-				NodeType: edgeproto.NodeType_NODE_CONTROLLER,
-			},
-			BuildMaster:  obj.BuildMaster,
-			BuildHead:    obj.BuildHead,
-			BuildAuthor:  obj.BuildAuthor,
-			Hostname:     obj.Hostname,
-			ImageVersion: *versionTag,
-		}
-		err := cb.Send(&node)
-		return err
-	})
+	if *notifyRootAddrs == "" && *notifyParentAddrs == "" {
+		// assume this is the root
+		return nodeMgr.NodeCache.Show(in, func(obj *edgeproto.Node) error {
+			err := cb.Send(obj)
+			return err
+		})
+	}
+
+	// ShowNode should directly communicate with NotifyRoot and not via MC
+	notifyAddrs := *notifyRootAddrs
+	if notifyAddrs == "" {
+		// In case notifyrootaddrs is not specified,
+		// fallback to notifyparentaddrs
+		notifyAddrs = *notifyParentAddrs
+	}
+
+	conn, err := notifyRootConnect(cb.Context(), notifyAddrs)
 	if err != nil {
 		return err
 	}
-	err = controllerApi.RunJobs(func(arg interface{}, addr string) error {
-		if addr == *externalApiAddr {
-			// local node
-			return s.ShowNodeLocal(in, cb)
+	client := edgeproto.NewNodeApiClient(conn)
+	ctx, cancel := context.WithTimeout(cb.Context(), 3*time.Second)
+	defer cancel()
+
+	stream, err := client.ShowNode(ctx, in)
+	if err != nil {
+		return err
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
 		}
-		// connect to remote node
-		conn, err := ControllerConnect(addr)
 		if err != nil {
-			return nil
+			return fmt.Errorf("ShowNode failed, %v", err)
 		}
-		defer conn.Close()
-
-		cmd := edgeproto.NewNodeApiClient(conn)
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-
-		stream, err := cmd.ShowNodeLocal(ctx, in)
+		err = cb.Send(obj)
 		if err != nil {
 			return err
 		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowNodeLocal %s: failed: %s",
-					addr, err.Error())
-			}
-			err = cb.Send(obj)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}, nil)
-	return err
+	}
+	return nil
 }

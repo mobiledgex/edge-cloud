@@ -79,6 +79,21 @@ extend google.protobuf.MessageOptions {
   string custom_key_type = 51038;
   // Data is singular in system (never more than one)
   bool singular_data = 51039;
+  // Message is e2e test data struct
+  bool e2edata = 51043;
+  // Option to skip generating CopyInFields func
+  bool generate_copy_in_fields = 51044;
+  // Definition of org for UsesOrg check. One of:
+  // 1. "none" (does not reference org)
+  // 2. comma separated list of:
+  // - key=<path.to.org> (hierarchical struct path to org in key)
+  // - val=<path.to.org> (hierarchical struct path to org in val)
+  // 3. "custom" (custom hand-written org check func)
+  string uses_org = 51046;
+  // generate a reverse lookup cache (val is comma separated list of sublist types)
+  string generate_lookup_by_sublist = 51048;
+  // generate a reverse lookup cache (val is comma separated list of subfield paths)
+  string generate_lookup_by_subfield = 51049;
 }
 
 extend google.protobuf.EnumOptions {
@@ -93,6 +108,9 @@ extend google.protobuf.EnumValueOptions {
   // will be used to upgrade the etcd database. Only used on enum values of
   // the enum with version_hash set to true.
   string upgrade_func = 51025;
+  // Backend defines a field that is filled in by the back-end,
+  // not by the user.
+  bool enum_backend = 51042;
 }
 
 extend google.protobuf.FieldOptions {
@@ -105,12 +123,16 @@ extend google.protobuf.FieldOptions {
   // it will zero-out the field before generating output, which typically
   // hides it (for json and our custom yaml)
   string hidetag = 52002;
+  // KeyTag is a string use to identify key fields and their name for
+  // logging or metrics
+  string keytag = 51047;
 }
 
 extend google.protobuf.MethodOptions {
   // Comma separated list of three strings: resource name, action, org field path.
   // These are used in RBAC for Master Controller. Example:
-  // ResourceApps,ActionManage,Key.DeveloperKey.Name
+  // ResourceApps,ActionManage,Key.Organization
+  // Third field may be left blank to indicate the API is admin only.
   string mc2_api = 51021;
   // show stream output objects incrementally as they come, rather than
   // collecting them into one output format. Only applies to commands
@@ -129,6 +151,17 @@ extend google.protobuf.MethodOptions {
   string method_also_required = 51036;
   // Same as not_required option for the Message, but overrides it for this API.
   string method_not_required = 51037;
+  // Any API that starts with "Show" is assumed to be an API to show database
+  // objects, so the auto-generators make certain assumptions and behaviors.
+  // To avoid these behaviors, this can be overridden by the below option.
+  bool non_standard_show = 51040;
+  // Implement a streamer cache to cache a return stream data so it can be
+  // retrieved via a separate api.
+  bool mc2_streamer_cache = 51041;
+  // MC connect to notify root instead of controller for rpc
+  bool mc2_api_notifyroot = 51042;
+  // Specifies the org field path and requires to the org to exist
+  string mc2_api_requires_org = 51045;
 }
 
 extend google.protobuf.ServiceOptions {

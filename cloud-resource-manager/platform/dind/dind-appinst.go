@@ -14,15 +14,14 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(ctx, log.DebugLevelMexos, "call runKubectlCreateApp for dind")
-
+func (s *Platform) CreateAppInstInternal(ctx context.Context, clusterInst *edgeproto.ClusterInst,
+	app *edgeproto.App, appInst *edgeproto.AppInst, names *k8smgmt.KubeNames) error {
 	var err error
 	client := &pc.LocalClient{}
-	appDeploymentType := app.Deployment
+	DeploymentType := app.Deployment
 	// Support for local docker appInst
-	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
-		log.SpanLog(ctx, log.DebugLevelMexos, "run docker create app for dind")
+	if DeploymentType == cloudcommon.DeploymentTypeDocker {
+		log.SpanLog(ctx, log.DebugLevelInfra, "run docker create app for dind")
 		err = dockermgmt.CreateAppInstLocal(client, app, appInst)
 		if err != nil {
 			return fmt.Errorf("CreateAppInstLocal error for docker %v", err)
@@ -30,11 +29,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		return nil
 	}
 	// Now for helm and k8s apps
-	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl create app for dind")
-	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
-	if err != nil {
-		return err
-	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "run kubectl create app for dind")
 	cluster, err := FindCluster(names.ClusterName)
 	if err != nil {
 		return err
@@ -43,16 +38,17 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	network := GetDockerNetworkName(cluster)
 	// NOTE: for DIND we don't check whether this is internal
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(ctx, log.DebugLevelMexos, "Add Proxy for dind", "ports", appInst.MappedPorts)
+		log.SpanLog(ctx, log.DebugLevelInfra, "Add Proxy for dind", "ports", appInst.MappedPorts)
 		err = proxy.CreateNginxProxy(ctx, client,
-			names.AppName,
+			dockermgmt.GetContainerName(&app.Key),
 			cloudcommon.IPAddrAllInterfaces,
 			masterIP,
 			appInst.MappedPorts,
+			app.SkipHcPorts,
 			proxy.WithDockerNetwork(network),
 			proxy.WithDockerPublishPorts())
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "cannot add proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
+			log.SpanLog(ctx, log.DebugLevelInfra, "cannot add proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
 			return err
 		}
 	}
@@ -60,26 +56,51 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Add crm local replace variables
 	deploymentVars := crmutil.DeploymentReplaceVars{
 		Deployment: crmutil.CrmReplaceVars{
-			ClusterIp:     masterIP,
-			CloudletName:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
-			ClusterName:   k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
-			DeveloperName: k8smgmt.NormalizeName(app.Key.DeveloperKey.Name),
+			ClusterIp:    masterIP,
+			CloudletName: k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
+			ClusterName:  k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
+			CloudletOrg:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Organization),
+			AppOrg:       k8smgmt.NormalizeName(app.Key.Organization),
 		},
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
-	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		err = k8smgmt.CreateAppInst(ctx, client, names, app, appInst)
+	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
+		err = k8smgmt.CreateAppInst(ctx, nil, client, names, app, appInst)
 		if err == nil {
 			err = k8smgmt.WaitForAppInst(ctx, client, names, app, k8smgmt.WaitRunning)
 		}
-	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+	} else if DeploymentType == cloudcommon.DeploymentTypeHelm {
 		err = k8smgmt.CreateHelmAppInst(ctx, client, names, clusterInst, app, appInst)
 	} else {
-		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
+		err = fmt.Errorf("invalid deployment type %s for dind", DeploymentType)
 	}
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelMexos, "error creating dind app")
+		proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key))
+		log.SpanLog(ctx, log.DebugLevelInfra, "error creating dind app")
+		return err
+	}
+	return nil
+}
+
+func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "call runKubectlCreateApp for dind")
+	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
+	if err != nil {
+		return err
+	}
+	if err = s.CreateAppInstInternal(ctx, clusterInst, app, appInst, names); err != nil {
+		return err
+	}
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		s.DeleteAppInst(ctx, clusterInst, app, appInst)
+		return err
+	}
+	masterIP := cluster.MasterAddr
+	err = s.patchDindSevice(ctx, names, masterIP)
+	if err != nil {
+		s.DeleteAppInst(ctx, clusterInst, app, appInst)
 		return err
 	}
 	return nil
@@ -88,38 +109,38 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	var err error
 	client := &pc.LocalClient{}
-	appDeploymentType := app.Deployment
+	DeploymentType := app.Deployment
 	// Support for local docker appInst
-	if appDeploymentType == cloudcommon.AppDeploymentTypeDocker {
-		log.SpanLog(ctx, log.DebugLevelMexos, "run docker delete app for dind")
-		err = dockermgmt.DeleteAppInst(ctx, client, app, appInst)
+	if DeploymentType == cloudcommon.DeploymentTypeDocker {
+		log.SpanLog(ctx, log.DebugLevelInfra, "run docker delete app for dind")
+		err = dockermgmt.DeleteAppInst(ctx, nil, client, app, appInst)
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst error for docker %v", err)
 		}
 		return nil
 	}
 	// Now for helm and k8s apps
-	log.SpanLog(ctx, log.DebugLevelMexos, "run kubectl delete app for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "run kubectl delete app for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
 	}
 
-	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
+	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
 		err = k8smgmt.DeleteAppInst(ctx, client, names, app, appInst)
-	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+	} else if DeploymentType == cloudcommon.DeploymentTypeHelm {
 		err = k8smgmt.DeleteHelmAppInst(ctx, client, names, clusterInst)
 	} else {
-		err = fmt.Errorf("invalid deployment type %s for dind", appDeploymentType)
+		err = fmt.Errorf("invalid deployment type %s for dind", DeploymentType)
 	}
 	if err != nil {
 		return err
 	}
 
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(ctx, log.DebugLevelMexos, "DeleteNginxProxy for dind")
-		if err = proxy.DeleteNginxProxy(ctx, client, names.AppName); err != nil {
-			log.SpanLog(ctx, log.DebugLevelMexos, "cannot delete proxy", "name", names.AppName)
+		log.SpanLog(ctx, log.DebugLevelInfra, "DeleteNginxProxy for dind")
+		if err = proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key)); err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "cannot delete proxy", "name", names.AppName)
 			return err
 		}
 	}
@@ -128,9 +149,9 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 
 func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
 
-	log.SpanLog(ctx, log.DebugLevelMexos, "UpdateAppInst for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateAppInst for dind")
 	client := &pc.LocalClient{}
-	appDeploymentType := app.Deployment
+	DeploymentType := app.Deployment
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
@@ -143,24 +164,26 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	// Add crm local replace variables
 	deploymentVars := crmutil.DeploymentReplaceVars{
 		Deployment: crmutil.CrmReplaceVars{
-			ClusterIp:     cluster.MasterAddr,
-			CloudletName:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
-			ClusterName:   k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
-			DeveloperName: k8smgmt.NormalizeName(app.Key.DeveloperKey.Name),
+			ClusterIp:    cluster.MasterAddr,
+			CloudletName: k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
+			ClusterName:  k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
+			CloudletOrg:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Organization),
+			AppOrg:       k8smgmt.NormalizeName(app.Key.Organization),
 		},
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
-	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
-		return k8smgmt.UpdateAppInst(ctx, client, names, app, appInst)
-	} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
+		return k8smgmt.UpdateAppInst(ctx, nil, client, names, app, appInst)
+	} else if DeploymentType == cloudcommon.DeploymentTypeHelm {
 		return k8smgmt.UpdateHelmAppInst(ctx, client, names, app, appInst)
 	}
-	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", appDeploymentType)
+	return fmt.Errorf("UpdateAppInst not supported for deployment: %s", DeploymentType)
 }
 
 func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
-	client, err := s.GetPlatformClient(ctx, clusterInst)
+	clientType := cloudcommon.GetAppClientType(app)
+	client, err := s.GetClusterPlatformClient(ctx, clusterInst, clientType)
 	if err != nil {
 		return nil, err
 	}
@@ -172,10 +195,33 @@ func (s *Platform) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto
 	return k8smgmt.GetAppInstRuntime(ctx, client, names, app, appInst)
 }
 
+func (s *Platform) patchDindSevice(ctx context.Context, kubeNames *k8smgmt.KubeNames, ipaddr string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Patch DIND service", "kubeNames", kubeNames, "ipaddr", ipaddr)
+
+	client := &pc.LocalClient{}
+
+	for _, serviceName := range kubeNames.ServiceNames {
+
+		cmd := fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, kubeNames.KconfEnv, serviceName, ipaddr)
+		out, err := client.Output(cmd)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "patch svc failed",
+				"servicename", serviceName, "out", out, "err", err)
+			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "patched externalIPs on service", "service", serviceName, "externalIPs", ipaddr)
+	}
+	return nil
+}
+
 func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
 	return k8smgmt.GetContainerCommand(ctx, clusterInst, app, appInst, req)
 }
 
 func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {
 	return "", nil
+}
+
+func (s *Platform) SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	return nil
 }
