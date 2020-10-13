@@ -21,7 +21,7 @@ pipeline {
         }
         stage('Match branches') {
             steps {
-                dir(path: 'go/src/github.com/mobiledgex/edge-cloud-infra') {
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make edge-cloud-version-set', script: '''#!/bin/bash
 export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/go/bin:$HOME/go/bin
 export GOPATH=$WORKSPACE/go
