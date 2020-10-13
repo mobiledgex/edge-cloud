@@ -79,7 +79,7 @@ lint:
 	prototool lint edgeproto
 	prototool lint d-match-engine
 
-UNIT_TEST_LOG = /tmp/edge-cloud-unit-test.log
+UNIT_TEST_LOG ?= /tmp/edge-cloud-unit-test.log
 
 unit-test:
 	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
