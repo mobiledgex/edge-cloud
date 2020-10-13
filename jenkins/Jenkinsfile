@@ -26,21 +26,6 @@ make clean
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'git clean edge-cloud', script: 'git clean -f -d -x'
                 }
-                sh 'rm -f go.mod go.sum'
-                dir(path: 'go/src/github.com') {
-                    sh label: 'set up dependencies', script: '''#!/bin/bash
-export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin
-export GOPATH=$WORKSPACE/go
-
-set -ex
-
-if ! test -d grpc-ecosystem; then
-    mkdir -p grpc-ecosystem
-    cd grpc-ecosystem
-    git clone https://github.com/mobiledgex/grpc-gateway.git
-fi
-                    '''
-                }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make tools', script: '''#!/bin/bash
 export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin
