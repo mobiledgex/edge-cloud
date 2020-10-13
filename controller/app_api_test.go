@@ -45,7 +45,30 @@ func TestAppApi(t *testing.T) {
 	require.NotNil(t, err, "Update app with port 0")
 	require.Contains(t, err.Error(), "App ports out of range")
 
+	// update should also validate skipHcPorts
+	upapp = testutil.AppData[3]
+	upapp.SkipHcPorts = "tcp:123"
+	upapp.Fields = []string{edgeproto.AppFieldSkipHcPorts}
+	_, err = appApi.UpdateApp(ctx, &upapp)
+	require.NotNil(t, err, "Update app with SkipHcPort 123")
+	require.Contains(t, err.Error(), "skipHcPorts not supported for type")
+
 	obj := testutil.AppData[3]
+	_, err = appApi.DeleteApp(ctx, &obj)
+	require.Nil(t, err)
+
+	// validateSkipHcPorts on createApp
+	obj = testutil.AppData[2]
+	obj.SkipHcPorts = "udp:11111"
+	_, err = appApi.CreateApp(ctx, &obj)
+	require.NotNil(t, err, "Create App with udp skipHcPort")
+
+	obj = testutil.AppData[2]
+	obj.SkipHcPorts = "tcp:444"
+	_, err = appApi.CreateApp(ctx, &obj)
+	require.NotNil(t, err, "Create App with udp skipHcPort")
+
+	obj = testutil.AppData[2]
 	_, err = appApi.DeleteApp(ctx, &obj)
 	require.Nil(t, err)
 
