@@ -156,74 +156,6 @@ func request_AppInstApi_ShowAppInst_0(ctx context.Context, marshaler runtime.Mar
 
 }
 
-func request_AppInstApi_RequestAppInstLatency_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AppInst
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.RequestAppInstLatency(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_AppInstApi_RequestAppInstLatency_0(ctx context.Context, marshaler runtime.Marshaler, server AppInstApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AppInst
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.RequestAppInstLatency(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-func request_AppInstApi_DisplayAppInstLatency_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AppInst
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.DisplayAppInstLatency(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_AppInstApi_DisplayAppInstLatency_0(ctx context.Context, marshaler runtime.Marshaler, server AppInstApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AppInst
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.DisplayAppInstLatency(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
 func request_AppInstInfoApi_ShowAppInstInfo_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstInfoApiClient, req *http.Request, pathParams map[string]string) (AppInstInfoApi_ShowAppInstInfoClient, runtime.ServerMetadata, error) {
 	var protoReq AppInstInfo
 	var metadata runtime.ServerMetadata
@@ -262,6 +194,65 @@ func request_AppInstMetricsApi_ShowAppInstMetrics_0(ctx context.Context, marshal
 	}
 
 	stream, err := client.ShowAppInstMetrics(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
+func request_AppInstLatencyApi_RequestAppInstLatency_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstLatencyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AppInstLatency
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.RequestAppInstLatency(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_AppInstLatencyApi_RequestAppInstLatency_0(ctx context.Context, marshaler runtime.Marshaler, server AppInstLatencyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AppInstLatency
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.RequestAppInstLatency(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_AppInstLatencyApi_ShowAppInstLatency_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstLatencyApiClient, req *http.Request, pathParams map[string]string) (AppInstLatencyApi_ShowAppInstLatencyClient, runtime.ServerMetadata, error) {
+	var protoReq AppInstLatency
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.ShowAppInstLatency(ctx, &protoReq)
 	if err != nil {
 		return nil, metadata, err
 	}
@@ -314,46 +305,6 @@ func RegisterAppInstApiHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		return
 	})
 
-	mux.Handle("POST", pattern_AppInstApi_RequestAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AppInstApi_RequestAppInstLatency_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_AppInstApi_RequestAppInstLatency_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_AppInstApi_DisplayAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AppInstApi_DisplayAppInstLatency_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_AppInstApi_DisplayAppInstLatency_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	return nil
 }
 
@@ -378,6 +329,41 @@ func RegisterAppInstInfoApiHandlerServer(ctx context.Context, mux *runtime.Serve
 func RegisterAppInstMetricsApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AppInstMetricsApiServer) error {
 
 	mux.Handle("POST", pattern_AppInstMetricsApi_ShowAppInstMetrics_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	return nil
+}
+
+// RegisterAppInstLatencyApiHandlerServer registers the http handlers for service AppInstLatencyApi to "mux".
+// UnaryRPC     :call AppInstLatencyApiServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterAppInstLatencyApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AppInstLatencyApiServer) error {
+
+	mux.Handle("POST", pattern_AppInstLatencyApi_RequestAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AppInstLatencyApi_RequestAppInstLatency_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AppInstLatencyApi_RequestAppInstLatency_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AppInstLatencyApi_ShowAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
 		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -525,46 +511,6 @@ func RegisterAppInstApiHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 
 	})
 
-	mux.Handle("POST", pattern_AppInstApi_RequestAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AppInstApi_RequestAppInstLatency_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_AppInstApi_RequestAppInstLatency_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_AppInstApi_DisplayAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AppInstApi_DisplayAppInstLatency_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_AppInstApi_DisplayAppInstLatency_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	return nil
 }
 
@@ -578,10 +524,6 @@ var (
 	pattern_AppInstApi_UpdateAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_AppInstApi_ShowAppInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
-
-	pattern_AppInstApi_RequestAppInstLatency_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"reqlatency", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
-
-	pattern_AppInstApi_DisplayAppInstLatency_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"displatency", "appinst"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -594,10 +536,6 @@ var (
 	forward_AppInstApi_UpdateAppInst_0 = runtime.ForwardResponseStream
 
 	forward_AppInstApi_ShowAppInst_0 = runtime.ForwardResponseStream
-
-	forward_AppInstApi_RequestAppInstLatency_0 = runtime.ForwardResponseMessage
-
-	forward_AppInstApi_DisplayAppInstLatency_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterAppInstInfoApiHandlerFromEndpoint is same as RegisterAppInstInfoApiHandler but
@@ -736,4 +674,97 @@ var (
 
 var (
 	forward_AppInstMetricsApi_ShowAppInstMetrics_0 = runtime.ForwardResponseStream
+)
+
+// RegisterAppInstLatencyApiHandlerFromEndpoint is same as RegisterAppInstLatencyApiHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterAppInstLatencyApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return RegisterAppInstLatencyApiHandler(ctx, mux, conn)
+}
+
+// RegisterAppInstLatencyApiHandler registers the http handlers for service AppInstLatencyApi to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterAppInstLatencyApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterAppInstLatencyApiHandlerClient(ctx, mux, NewAppInstLatencyApiClient(conn))
+}
+
+// RegisterAppInstLatencyApiHandlerClient registers the http handlers for service AppInstLatencyApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "AppInstLatencyApiClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "AppInstLatencyApiClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "AppInstLatencyApiClient" to call the correct interceptors.
+func RegisterAppInstLatencyApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client AppInstLatencyApiClient) error {
+
+	mux.Handle("POST", pattern_AppInstLatencyApi_RequestAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AppInstLatencyApi_RequestAppInstLatency_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AppInstLatencyApi_RequestAppInstLatency_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_AppInstLatencyApi_ShowAppInstLatency_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AppInstLatencyApi_ShowAppInstLatency_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_AppInstLatencyApi_ShowAppInstLatency_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_AppInstLatencyApi_RequestAppInstLatency_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"request", "appinstlatency"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_AppInstLatencyApi_ShowAppInstLatency_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "appinstlatency"}, "", runtime.AssumeColonVerbOpt(true)))
+)
+
+var (
+	forward_AppInstLatencyApi_RequestAppInstLatency_0 = runtime.ForwardResponseMessage
+
+	forward_AppInstLatencyApi_ShowAppInstLatency_0 = runtime.ForwardResponseStream
 )

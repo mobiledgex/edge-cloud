@@ -213,22 +213,6 @@ service AppInstApi {
     };
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
   }
-  // Request Latency measurements for clients connected to AppInst
-  rpc RequestAppInstLatency(AppInst) returns (Result) {
-    option (google.api.http) = {
-      post: "/reqlatency/appinst"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
-  }
-  // Display Latency measurements for clients connected to AppInst
-  rpc DisplayAppInstLatency(AppInst) returns (Result) {
-    option (google.api.http) = {
-      post: "/displatency/appinst"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
-  }
 }
 
 // AppInstInfo provides information from the Cloudlet Resource Manager about the state of the AppInst on the Cloudlet. Whereas the AppInst defines the intent of instantiating an App on a Cloudlet, the AppInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.
@@ -294,4 +278,30 @@ message AppInstLookup {
   // lookup by AutoProvPolicy
   PolicyKey policy_key = 2 [(gogoproto.nullable) = false];
   option (protogen.generate_lookup_by_subfield) = "PolicyKey";
+}
+
+message AppInstLatency {
+  // Unique identifier key
+  AppInstKey key = 1 [(gogoproto.nullable) = false];
+  distributed_match_engine.Latency latency = 2;
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
+}
+
+service AppInstLatencyApi {
+  // Request Latency measurements for clients connected to AppInst
+  rpc RequestAppInstLatency(AppInstLatency) returns (Result) {
+    option (google.api.http) = {
+      post: "/request/appinstlatency"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
+  }
+  // Show Latency measurements for clients connected to AppInst
+  rpc ShowAppInstLatency(AppInstLatency) returns (stream AppInstLatency) {
+    option (google.api.http) = {
+      post: "/show/appinstlatency"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
+  }
 }

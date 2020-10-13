@@ -90,6 +90,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.ClusterRefsApiCmd = edgeproto.NewClusterRefsApiClient(conn)
 	gencmd.AppInstRefsApiCmd = edgeproto.NewAppInstRefsApiClient(conn)
 	gencmd.StreamObjApiCmd = edgeproto.NewStreamObjApiClient(conn)
+	gencmd.AppInstLatencyApiCmd = edgeproto.NewAppInstLatencyApiClient(conn)
 	return nil
 }
 
@@ -137,7 +138,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.ClusterRefsApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstRefsApiCmds...)
 	controllerCmd.AddCommand(gencmd.StreamObjApiCmds...)
-
+	controllerCmd.AddCommand(gencmd.AppInstLatencyApiCmds...)
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())
 	gencmd.RunCommandCmd.Run = runRunCommand

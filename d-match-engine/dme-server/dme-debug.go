@@ -15,12 +15,12 @@ import (
 
 const (
 	RequestAppInstLatency = "request-appinst-latency"
-	DisplayAppInstLatency = "display-appinst-latency"
+	ShowAppInstLatency    = "show-appinst-latency"
 )
 
 func InitDebug(nodeMgr *node.NodeMgr) {
 	nodeMgr.Debug.AddDebugFunc(RequestAppInstLatency, requestAppInstLatency)
-	nodeMgr.Debug.AddDebugFunc(DisplayAppInstLatency, displayAppInstLatency)
+	nodeMgr.Debug.AddDebugFunc(ShowAppInstLatency, showAppInstLatency)
 }
 
 func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
@@ -35,8 +35,8 @@ func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) str
 	return "successfully sent latency request"
 }
 
-func displayAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
-	log.SpanLog(ctx, log.DebugLevelDmereq, "Received display-appinst-latency in dme", "request", req)
+func showAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Received show-appinst-latency in dme", "request", req)
 
 	appInstKey, err := createAppInstKeyFromRequest(req)
 	if err != nil {

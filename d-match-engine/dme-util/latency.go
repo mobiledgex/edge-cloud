@@ -37,8 +37,13 @@ func CalculateLatency(samples []float64) *dme.Latency {
 // Update rolling Avg, Min, Max, StdDev, and NumSamples in provided Latency struct
 func UpdateRollingLatency(samples []float64, latency *dme.Latency) {
 	// First samples
+	/*if latency == nil {
+		latency = new(dme.Latency)
+		*latency = *CalculateLatency(samples)
+		return
+	}*/
 	if latency.NumSamples == 0 {
-		latency = CalculateLatency(samples)
+		*latency = *CalculateLatency(samples)
 		return
 	}
 	// Previous statistics used to calculate rolling variance

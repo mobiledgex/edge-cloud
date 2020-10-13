@@ -500,128 +500,12 @@ func ShowAppInsts(c *cli.Command, data []edgeproto.AppInst, err *error) {
 	}
 }
 
-var RequestAppInstLatencyCmd = &cli.Command{
-	Use:          "RequestAppInstLatency",
-	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
-	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
-	SpecialArgs:  &AppInstSpecialArgs,
-	Comments:     AppInstComments,
-	ReqData:      &edgeproto.AppInst{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runRequestAppInstLatency,
-}
-
-func runRequestAppInstLatency(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.AppInst)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return RequestAppInstLatency(c, obj)
-}
-
-func RequestAppInstLatency(c *cli.Command, in *edgeproto.AppInst) error {
-	if AppInstApiCmd == nil {
-		return fmt.Errorf("AppInstApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := AppInstApiCmd.RequestAppInstLatency(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("RequestAppInstLatency failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func RequestAppInstLatencys(c *cli.Command, data []edgeproto.AppInst, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("RequestAppInstLatency %v\n", data[ii])
-		myerr := RequestAppInstLatency(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var DisplayAppInstLatencyCmd = &cli.Command{
-	Use:          "DisplayAppInstLatency",
-	RequiredArgs: strings.Join(AppInstRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppInstOptionalArgs, " "),
-	AliasArgs:    strings.Join(AppInstAliasArgs, " "),
-	SpecialArgs:  &AppInstSpecialArgs,
-	Comments:     AppInstComments,
-	ReqData:      &edgeproto.AppInst{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runDisplayAppInstLatency,
-}
-
-func runDisplayAppInstLatency(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.AppInst)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return DisplayAppInstLatency(c, obj)
-}
-
-func DisplayAppInstLatency(c *cli.Command, in *edgeproto.AppInst) error {
-	if AppInstApiCmd == nil {
-		return fmt.Errorf("AppInstApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := AppInstApiCmd.DisplayAppInstLatency(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("DisplayAppInstLatency failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func DisplayAppInstLatencys(c *cli.Command, data []edgeproto.AppInst, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("DisplayAppInstLatency %v\n", data[ii])
-		myerr := DisplayAppInstLatency(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var AppInstApiCmds = []*cobra.Command{
 	CreateAppInstCmd.GenCmd(),
 	DeleteAppInstCmd.GenCmd(),
 	RefreshAppInstCmd.GenCmd(),
 	UpdateAppInstCmd.GenCmd(),
 	ShowAppInstCmd.GenCmd(),
-	RequestAppInstLatencyCmd.GenCmd(),
-	DisplayAppInstLatencyCmd.GenCmd(),
 }
 
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
@@ -787,6 +671,146 @@ func ShowAppInstMetricss(c *cli.Command, data []edgeproto.AppInstMetrics, err *e
 
 var AppInstMetricsApiCmds = []*cobra.Command{
 	ShowAppInstMetricsCmd.GenCmd(),
+}
+
+var AppInstLatencyApiCmd edgeproto.AppInstLatencyApiClient
+
+var RequestAppInstLatencyCmd = &cli.Command{
+	Use:          "RequestAppInstLatency",
+	RequiredArgs: strings.Join(AppInstLatencyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstLatencyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstLatencyAliasArgs, " "),
+	SpecialArgs:  &AppInstLatencySpecialArgs,
+	Comments:     AppInstLatencyComments,
+	ReqData:      &edgeproto.AppInstLatency{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRequestAppInstLatency,
+}
+
+func runRequestAppInstLatency(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppInstLatency)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RequestAppInstLatency(c, obj)
+}
+
+func RequestAppInstLatency(c *cli.Command, in *edgeproto.AppInstLatency) error {
+	if AppInstLatencyApiCmd == nil {
+		return fmt.Errorf("AppInstLatencyApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppInstLatencyApiCmd.RequestAppInstLatency(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RequestAppInstLatency failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RequestAppInstLatencys(c *cli.Command, data []edgeproto.AppInstLatency, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RequestAppInstLatency %v\n", data[ii])
+		myerr := RequestAppInstLatency(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var ShowAppInstLatencyCmd = &cli.Command{
+	Use:          "ShowAppInstLatency",
+	OptionalArgs: strings.Join(append(AppInstLatencyRequiredArgs, AppInstLatencyOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AppInstLatencyAliasArgs, " "),
+	SpecialArgs:  &AppInstLatencySpecialArgs,
+	Comments:     AppInstLatencyComments,
+	ReqData:      &edgeproto.AppInstLatency{},
+	ReplyData:    &edgeproto.AppInstLatency{},
+	Run:          runShowAppInstLatency,
+}
+
+func runShowAppInstLatency(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppInstLatency)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowAppInstLatency(c, obj)
+}
+
+func ShowAppInstLatency(c *cli.Command, in *edgeproto.AppInstLatency) error {
+	if AppInstLatencyApiCmd == nil {
+		return fmt.Errorf("AppInstLatencyApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstLatencyApiCmd.ShowAppInstLatency(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowAppInstLatency failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.AppInstLatency, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstLatency recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowAppInstLatencys(c *cli.Command, data []edgeproto.AppInstLatency, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowAppInstLatency %v\n", data[ii])
+		myerr := ShowAppInstLatency(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var AppInstLatencyApiCmds = []*cobra.Command{
+	RequestAppInstLatencyCmd.GenCmd(),
+	ShowAppInstLatencyCmd.GenCmd(),
 }
 
 var AppInstKeyRequiredArgs = []string{}
@@ -981,6 +1005,44 @@ var AppInstLookupComments = map[string]string{
 	"policykey.name":                              "Policy name",
 }
 var AppInstLookupSpecialArgs = map[string]string{}
+var AppInstLatencyRequiredArgs = []string{
+	"app-org",
+	"appname",
+	"appvers",
+	"cluster",
+	"cloudlet-org",
+	"cloudlet",
+	"cluster-org",
+}
+var AppInstLatencyOptionalArgs = []string{
+	"latency.avg",
+	"latency.min",
+	"latency.max",
+	"latency.stddev",
+	"latency.variance",
+	"latency.numsamples",
+}
+var AppInstLatencyAliasArgs = []string{
+	"app-org=key.appkey.organization",
+	"appname=key.appkey.name",
+	"appvers=key.appkey.version",
+	"cluster=key.clusterinstkey.clusterkey.name",
+	"cloudlet-org=key.clusterinstkey.cloudletkey.organization",
+	"cloudlet=key.clusterinstkey.cloudletkey.name",
+	"cluster-org=key.clusterinstkey.organization",
+}
+var AppInstLatencyComments = map[string]string{
+	"app-org":          "App developer organization",
+	"appname":          "App name",
+	"appvers":          "App version",
+	"cluster":          "Cluster name",
+	"cloudlet-org":     "Organization of the cloudlet site",
+	"cloudlet":         "Name of the cloudlet",
+	"cluster-org":      "Name of Developer organization that this cluster belongs to",
+	"latency.stddev":   "Unbiased standard deviation",
+	"latency.variance": "Unbiased variance",
+}
+var AppInstLatencySpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{
 	"app-org",
 	"appname",

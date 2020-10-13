@@ -37,7 +37,7 @@ type ApiStat struct {
 	reqs           uint64
 	errs           uint64
 	latency        grpcstats.LatencyMetric
-	rollinglatency dme.Latency // Rolling statistics for EdgeEvents latency measurements
+	rollinglatency *dme.Latency // Rolling statistics for EdgeEvents latency measurements
 	mux            sync.Mutex
 	changed        bool
 }
@@ -110,7 +110,10 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	}
 	stat.latency.AddLatency(call.latency)
 	if call.key.Method == EdgeEventLatencyMethod {
-		dmeutil.UpdateRollingLatency(call.samples, &stat.rollinglatency)
+		if stat.rollinglatency == nil {
+			stat.rollinglatency = new(dme.Latency)
+		}
+		dmeutil.UpdateRollingLatency(call.samples, stat.rollinglatency)
 	}
 	stat.changed = true
 	shard.mux.Unlock()
@@ -182,6 +185,12 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *Ap
 
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
+
+	metric.AddIntVal("numsamples", stat.rollinglatency.NumSamples)
+	metric.AddDoubleVal("avg", stat.rollinglatency.Avg)
+	metric.AddDoubleVal("stddev", stat.rollinglatency.StdDev)
+	metric.AddDoubleVal("min", stat.rollinglatency.Min)
+	metric.AddDoubleVal("max", stat.rollinglatency.Max)
 
 	stat.latency.AddToMetric(&metric)
 	return &metric
