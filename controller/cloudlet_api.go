@@ -165,7 +165,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.Span = log.SpanToString(ctx)
 	pfConfig.ChefServerPath = *chefServerPath
 	pfConfig.ChefClientInterval = settingsApi.Get().ChefClientInterval
-	pfConfig.DeploymentTag = *deploymentTag
+	pfConfig.DeploymentTag = nodeMgr.DeploymentTag
 
 	return &pfConfig, nil
 }

@@ -39,6 +39,7 @@ type NodeMgr struct {
 	ESClient        *elasticsearch.Client
 	tlsClientIssuer string
 	commonName      string
+	DeploymentTag   string
 }
 
 // Most of the time there will only be one NodeMgr per process, and these
@@ -55,6 +56,7 @@ func (s *NodeMgr) InitFlags() {
 	flag.BoolVar(&s.InternalPki.UseVaultCerts, "useVaultCerts", false, "Use Vault Certs for internal mTLS; implies useVaultCAs")
 	flag.StringVar(&s.InternalDomain, "internalDomain", "mobiledgex.net", "domain name for internal PKI")
 	flag.StringVar(&s.commonName, "commonName", "", "common name to use for vault internal pki issued certificates")
+	flag.StringVar(&s.DeploymentTag, "deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
 }
 
 func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context.Context, opentracing.Span, error) {
