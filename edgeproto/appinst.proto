@@ -284,6 +284,7 @@ message AppInstLatency {
   // Unique identifier key
   AppInstKey key = 1 [(gogoproto.nullable) = false];
   distributed_match_engine.Latency latency = 2;
+  string message = 3;
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
 }
 

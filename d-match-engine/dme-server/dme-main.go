@@ -455,7 +455,6 @@ func main() {
 	if err != nil {
 		log.FatalLog("Failed init node", "err", err)
 	}
-
 	defer nodeMgr.Finish()
 	operatorApiGw, err = initOperator(ctx, *carrier)
 	if err != nil {

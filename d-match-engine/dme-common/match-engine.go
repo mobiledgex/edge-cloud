@@ -108,7 +108,6 @@ type StatKeyContextType string
 var StatKeyContextKey = StatKeyContextType("statKey")
 
 // EdgeEventsHandler implementation (loaded from Plugin)
-// TODO: RENAME
 var EEHandler EdgeEventsHandler
 
 func SetupMatchEngine() {
@@ -252,11 +251,6 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		cl.CloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 		cl.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 	}
-	// Check if MC API triggered MeasureLatency
-	/*if appInst.MeasureLatency {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "AppInst update in DME. Request to Measure Latency")
-		EEHandler.SendLatencyRequestEdgeEvent(ctx, cl, appInst.Key)
-	}*/
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
 		"appName", app.AppKey.Name,
@@ -301,7 +295,6 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		app.Lock()
 		if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
 			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
-
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
 				cl.AppInstHealth = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 				// Remove AppInst from edgeevents plugin
@@ -996,10 +989,9 @@ func StreamEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_StreamEdgeEven
 	initMsg, err := (*svr).Recv()
 	ctx = (*svr).Context()
 	if err != nil && err != io.EOF {
-		// TODO: HANDLE ERROR
 		return err
 	}
-	// Add connection, client, and appinst to Plugin hashmap
+	// On first message, add connection, client, and appinst to Plugin hashmap
 	if initMsg.Event == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
 		// Grab CookieKey
 		key, ok := CookieFromContext(ctx)
@@ -1039,7 +1031,7 @@ func StreamEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_StreamEdgeEven
 		initServerEdgeEvent.Event = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
 		EEHandler.SendEdgeEventToClient(ctx, initServerEdgeEvent, *appInstKey, *key)
 	} else {
-		// TODO: BREAK IF FIRST MSG IS NOT INIT
+		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
 	// Loop while persistent connection is up

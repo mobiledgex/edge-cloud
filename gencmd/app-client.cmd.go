@@ -755,6 +755,8 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.speed",
 	"cloudletlocation.timestamp.seconds",
 	"cloudletlocation.timestamp.nanos",
+	"edgeeventscookie",
+	"dmefqdn",
 	"tags",
 }
 var FindCloudletReplyAliasArgs = []string{}
@@ -776,6 +778,8 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"cloudletlocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
+	"dmefqdn":                             "Fully Qualified Domain Name of the DME on the cloudlet for specified AppInst",
 	"tags":                                "_(optional)_ Vendor specific data",
 }
 var FindCloudletReplySpecialArgs = map[string]string{
@@ -1399,5 +1403,69 @@ var QosPositionKpiReplyComments = map[string]string{
 	"tags":                                             "_(optional)_ Vendor specific data",
 }
 var QosPositionKpiReplySpecialArgs = map[string]string{
+	"tags": "StringToString",
+}
+var ClientEdgeEventRequiredArgs = []string{}
+var ClientEdgeEventOptionalArgs = []string{
+	"sessioncookie",
+	"edgeeventscookie",
+	"event",
+	"gpslocation.latitude",
+	"gpslocation.longitude",
+	"gpslocation.horizontalaccuracy",
+	"gpslocation.verticalaccuracy",
+	"gpslocation.altitude",
+	"gpslocation.course",
+	"gpslocation.speed",
+	"gpslocation.timestamp.seconds",
+	"gpslocation.timestamp.nanos",
+	"samples",
+	"tags",
+}
+var ClientEdgeEventAliasArgs = []string{}
+var ClientEdgeEventComments = map[string]string{
+	"sessioncookie":                  "Session Cookie from RegisterClientReply",
+	"edgeeventscookie":               "Session Cookie from FindCloudletReply",
+	"event":                          ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate",
+	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
+	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
+	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
+	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
+	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"samples":                        "Latency Samples if EventType is EVENT_LATENCY_SAMPLES",
+	"tags":                           "_(optional)_ Vendor specific data",
+}
+var ClientEdgeEventSpecialArgs = map[string]string{
+	"tags": "StringToString",
+}
+var ServerEdgeEventRequiredArgs = []string{}
+var ServerEdgeEventOptionalArgs = []string{
+	"event",
+	"cloudletstate",
+	"cloudletmaintenancestate",
+	"appinsthealthstate",
+	"latency.avg",
+	"latency.min",
+	"latency.max",
+	"latency.stddev",
+	"latency.variance",
+	"latency.numsamples",
+	"latency.timestamp.seconds",
+	"latency.timestamp.nanos",
+	"tags",
+}
+var ServerEdgeEventAliasArgs = []string{}
+var ServerEdgeEventComments = map[string]string{
+	"event":                    ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth",
+	"cloudletstate":            ", one of CloudletStateUnknown, CloudletStateReady, CloudletOffline, CloudletStateNotPresent, CloudletUpgrade, CloudletStateErrors, CloudletStateInit",
+	"cloudletmaintenancestate": ", one of MaintenanceStateUnknown, MaintenanceStateNormal, MaintenanceStateUnderMaintenance, MaintenanceStateMaintenanceFailed, MaintenanceStateFailingOver, MaintenanceStateFailoverError, MaintenanceStateFailoverDone",
+	"appinsthealthstate":       ", one of HealthCheckUnknown, HealthCheckOk, HealthCheckFail, AppinstDown",
+	"latency.stddev":           "Unbiased standard deviation",
+	"latency.variance":         "Unbiased variance",
+	"tags":                     "_(optional)_ Vendor specific data",
+}
+var ServerEdgeEventSpecialArgs = map[string]string{
 	"tags": "StringToString",
 }

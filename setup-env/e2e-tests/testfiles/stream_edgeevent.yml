@@ -12,7 +12,7 @@ tests:
   compareyaml:
     yaml1: "{{outputdir}}/edgeeventinit.yml"
     yaml2: "{{datadir}}/edgeevent-init-response.yml"
-    filetype: StreamEdgeEvent
+    filetype: streamedgeevent
 
 - name: Start persistent connection and send dummy latency samples to server
   apifile: "{{datadir}}/edgeevent-req.yml"
@@ -20,7 +20,7 @@ tests:
   compareyaml:
     yaml1: "{{outputdir}}/edgeeventlatency.yml"
     yaml2: "{{datadir}}/edgeevent-latency-response.yml"
-    filetype: StreamEdgeEvent
+    filetype: streamedgeevent
 
 - name: Delete provisioning
   apifile: "{{datadir}}/appdata.yml"

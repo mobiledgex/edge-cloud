@@ -7,7 +7,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-// TODO: DESCRIPTIONS
 type EdgeEventsHandler interface {
 	AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, sendFunc func(event *dme.ServerEdgeEvent))
 	RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)

@@ -79,7 +79,6 @@ func (s *ServerStreamWrapper) RecvMsg(m interface{}) error {
 		log.InfoLog("Unknown streaming operation, cannot verify cookie", "type", reflect.TypeOf(m).String())
 		return grpc.Errorf(codes.Unauthenticated, err.Error())
 	}
-
 	return err
 }
 

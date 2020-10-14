@@ -112,6 +112,12 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	if call.key.Method == EdgeEventLatencyMethod {
 		if stat.rollinglatency == nil {
 			stat.rollinglatency = new(dme.Latency)
+		} else {
+			// Reset rollinglatency every 10 minutes or something, so that latency values are current
+			t := cloudcommon.TimestampToTime(*stat.rollinglatency.Timestamp)
+			if time.Since(t) > time.Minute*10 {
+				stat.rollinglatency = new(dme.Latency)
+			}
 		}
 		dmeutil.UpdateRollingLatency(call.samples, stat.rollinglatency)
 	}
@@ -177,7 +183,7 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *Ap
 	metric.Name = EdgeEventLatencyMethod
 	metric.AddTag("app", key.AppKey.Name)
 	metric.AddTag("apporg", key.AppKey.Organization)
-	metric.AddTag("appver", key.AppKey.Version)
+	metric.AddTag("ver", key.AppKey.Version)
 	metric.AddTag("cloudlet", key.CloudletFound.Name)
 	metric.AddTag("cloudletorg", key.CloudletFound.Organization)
 	metric.AddTag("cluster", key.ClusterKey.Name)

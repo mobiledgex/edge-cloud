@@ -1021,6 +1021,9 @@ var AppInstLatencyOptionalArgs = []string{
 	"latency.stddev",
 	"latency.variance",
 	"latency.numsamples",
+	"latency.timestamp.seconds",
+	"latency.timestamp.nanos",
+	"message",
 }
 var AppInstLatencyAliasArgs = []string{
 	"app-org=key.appkey.organization",

@@ -2,30 +2,22 @@ package main
 
 import (
 	"context"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	log "github.com/mobiledgex/edge-cloud/log"
-)
-
-const (
-	RequestAppInstLatency = "request-appinst-latency"
-	ShowAppInstLatency    = "show-appinst-latency"
 )
 
 func InitDebug(nodeMgr *node.NodeMgr) {
-	nodeMgr.Debug.AddDebugFunc(RequestAppInstLatency, requestAppInstLatency)
-	nodeMgr.Debug.AddDebugFunc(ShowAppInstLatency, showAppInstLatency)
+	nodeMgr.Debug.AddDebugFunc(dmeutil.RequestAppInstLatency, requestAppInstLatency)
+	nodeMgr.Debug.AddDebugFunc(dmeutil.ShowAppInstLatency, showAppInstLatency)
 }
 
 func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
-	log.SpanLog(ctx, log.DebugLevelDmereq, "Received request-appinst-latency in dme", "request", req)
-
 	appInstKey, err := createAppInstKeyFromRequest(req)
 	if err != nil {
 		return err.Error()
@@ -36,8 +28,6 @@ func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) str
 }
 
 func showAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
-	log.SpanLog(ctx, log.DebugLevelDmereq, "Received show-appinst-latency in dme", "request", req)
-
 	appInstKey, err := createAppInstKeyFromRequest(req)
 	if err != nil {
 		return err.Error()
@@ -72,11 +62,9 @@ func createAppInstKeyFromRequest(req *edgeproto.DebugRequest) (*edgeproto.AppIns
 	if req.Args == "" {
 		return nil, fmt.Errorf("appinst info in args required")
 	}
-	rd := csv.NewReader(strings.NewReader(req.Args))
-	rd.Comma = ' '
-	args, err := rd.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to split args string, %v", err)
+	args := strings.Split(req.Args, " ")
+	if len(args) != 7 {
+		return nil, fmt.Errorf("7 arguments required: appname, apporg, appvers, cloudlet, cloudletorg, cluster, clusterorg")
 	}
 	appname := args[0]
 	apporg := args[1]
@@ -85,12 +73,6 @@ func createAppInstKeyFromRequest(req *edgeproto.DebugRequest) (*edgeproto.AppIns
 	cloudletorg := args[4]
 	cluster := args[5]
 	clusterorg := args[6]
-
-	// TODO: Check if args exist
-
-	/*if req.Node.CloudletKey == nil {
-		return "CloudletKey required"
-	}*/
 
 	appInstKey := &edgeproto.AppInstKey{
 		AppKey: edgeproto.AppKey{

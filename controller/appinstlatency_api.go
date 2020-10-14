@@ -6,10 +6,10 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"google.golang.org/grpc"
 )
 
 type AppInstLatencyApi struct {
@@ -22,36 +22,14 @@ func InitAppInstLatencyApi(sync *Sync) {
 	appInstLatencyApi.sync = sync
 }
 
-type ControllerRunDebugServer struct {
-	grpc.ServerStream
-	ctx          context.Context
-	ReplyHandler func(m *edgeproto.DebugReply) error // TODO: Rename SendHandler
-}
-
-func (c *ControllerRunDebugServer) Send(m *edgeproto.DebugReply) error {
-	return c.ReplyHandler(m)
-	// return c.ServerStream.SendMsg(m)
-}
-
-func (c *ControllerRunDebugServer) Context() context.Context {
-	return c.ctx
-}
-
 func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgeproto.AppInstLatency) (*edgeproto.Result, error) {
-	// ctx := cb.Context()
-
-	log.SpanLog(ctx, log.DebugLevelApi, "request app inst latency", "ctx", ctx)
-
-	var err error
-	/*err := in.Validate(edgeproto.AppInstAllFieldsMap)
+	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
-	}*/
-
+	}
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Organization == "" {
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
-		//cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
 	// AppInst information to be parsed in dme-debug.go
 	appKey := in.Key.AppKey
@@ -59,57 +37,45 @@ func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgep
 	cloudletKey := clusterinstKey.CloudletKey
 	clusterKey := in.Key.ClusterInstKey.ClusterKey
 	args := appKey.Name + " " + appKey.Organization + " " + appKey.Version + " " + cloudletKey.Name + " " + cloudletKey.Organization + " " + clusterKey.Name + " " + clusterinstKey.Organization
-	// Debug Request
+	// Create Debug Request
 	req := &edgeproto.DebugRequest{
 		Node: edgeproto.NodeKey{
-			// Name: "FHUANG-MAC.local",
-			Type:        node.NodeTypeDME,
-			CloudletKey: edgeproto.CloudletKey{
-				// Name:         "mexdev-cloud-1",
-				// Organization: "mexdev",
-			},      //in.Key.ClusterInstKey.CloudletKey,
-			Region: "local", //nodeMgr.Region, should be region of appinst
+			Type: node.NodeTypeDME,
+			// CloudletKey: in.Key.ClusterInstKey.CloudletKey, // When DME per cloudlet is implemented
+			Region: nodeMgr.Region, // should be region of appinst
 		},
-		Cmd:  "request-appinst-latency", //node.RequestAppInstLatency,
+		Cmd:  dmeutil.RequestAppInstLatency,
 		Args: args,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "before run debug", "req", req)
 
 	msg := ""
+	// Create function to handle DebugReply
 	replyHandler := func(m *edgeproto.DebugReply) error {
-		log.SpanLog(ctx, log.DebugLevelApi, "Received run debug reply", "reply", m)
 		msg = m.Output
 		return nil
 	}
-
-	newcb := &ControllerRunDebugServer{}
-	newcb.ReplyHandler = replyHandler
-	newcb.ctx = ctx
-
-	// err = debugApi.RunDebug(req, newcb)
+	// Initialize ControllerRunDebugServer will DebugReply handler to be called in Send
+	newcb := &ControllerRunDebugServer{
+		ReplyHandler: replyHandler,
+		ctx:          ctx,
+	}
 	err = nodeMgr.Debug.DebugRequest(req, newcb)
 	if err != nil {
 		return nil, err
 	}
-
-	log.SpanLog(ctx, log.DebugLevelApi, "received debug output", "msg", msg)
 	return &edgeproto.Result{Message: msg}, err
 }
 
 func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb edgeproto.AppInstLatencyApi_ShowAppInstLatencyServer) error {
 	ctx := cb.Context()
-	log.SpanLog(ctx, log.DebugLevelApi, "request app inst latency", "ctx", ctx)
-
-	var err error
-	/*err := in.Validate(edgeproto.AppInstAllFieldsMap)
+	err := in.Key.ValidateKey()
 	if err != nil {
 		return err
-	}*/
-
+	}
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Organization == "" {
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
-		//cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+		cb.Send(&edgeproto.AppInstLatency{Message: "Setting ClusterInst developer to match App developer"})
 	}
 	// AppInst information to be parsed in dme-debug.go
 	appKey := in.Key.AppKey
@@ -117,29 +83,21 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 	cloudletKey := clusterinstKey.CloudletKey
 	clusterKey := in.Key.ClusterInstKey.ClusterKey
 	args := appKey.Name + " " + appKey.Organization + " " + appKey.Version + " " + cloudletKey.Name + " " + cloudletKey.Organization + " " + clusterKey.Name + " " + clusterinstKey.Organization
-	// Debug Request
+	// Create Debug Request
 	req := &edgeproto.DebugRequest{
 		Node: edgeproto.NodeKey{
-			Type:        node.NodeTypeDME,
-			CloudletKey: edgeproto.CloudletKey{
-				// Name:         "mexdev-cloud-1",
-				// Organization: "mexdev",
-			},      //in.Key.ClusterInstKey.CloudletKey,
-			Region: "local", //nodeMgr.Region, should be region of appinst
+			Type: node.NodeTypeDME,
+			// CloudletKey: in.Key.ClusterInstKey.CloudletKey, // When DME per cloudlet is implemented
+			Region: nodeMgr.Region, // should be region of appinst
 		},
-		Cmd:  "show-appinst-latency", //node.ShowAppInstLatency,
+		Cmd:  dmeutil.ShowAppInstLatency,
 		Args: args,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "before run debug", "req", req)
 
-	msg := ""
-	// TODO: BETTER STREAM HANDLING (ERRORS)
+	// Create function to handle DebugReply
 	replyHandler := func(m *edgeproto.DebugReply) error {
-		log.SpanLog(ctx, log.DebugLevelApi, "Received run debug reply", "reply", m)
-		msg = m.Output
-
 		// Unmarshal
-		b := []byte(msg)
+		b := []byte(m.Output)
 		var latency dme.Latency
 		err := json.Unmarshal(b, &latency)
 		if err != nil {
@@ -150,20 +108,13 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 			Key:     in.Key,
 			Latency: &latency,
 		}
-		cb.Send(appInstLatency)
-		return nil
+		return cb.Send(appInstLatency)
 	}
 
-	newcb := &ControllerRunDebugServer{}
-	newcb.ReplyHandler = replyHandler
-	newcb.ctx = ctx
-
-	// err = debugApi.RunDebug(req, newcb)
+	newcb := &ControllerRunDebugServer{
+		ReplyHandler: replyHandler,
+		ctx:          ctx,
+	}
 	err = nodeMgr.Debug.DebugRequest(req, newcb)
-	if err != nil {
-		return err
-	}
-
-	log.SpanLog(ctx, log.DebugLevelApi, "received debug output", "msg", msg)
 	return err
 }

@@ -1,9 +1,18 @@
 package dmeutil
 
 import (
+	"fmt"
 	"math"
+	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+)
+
+// Constants for Debug
+const (
+	RequestAppInstLatency = "request-appinst-latency"
+	ShowAppInstLatency    = "show-appinst-latency"
 )
 
 // Return Latency struct with Avg, Min, Max, StdDev, and NumSamples
@@ -31,20 +40,20 @@ func CalculateLatency(samples []float64) *dme.Latency {
 	}
 	latency.Variance = diffSquared / float64(latency.NumSamples-1)
 	latency.StdDev = math.Sqrt(latency.Variance)
+	ts := cloudcommon.TimeToTimestamp(time.Now())
+	latency.Timestamp = &ts
 	return latency
 }
 
 // Update rolling Avg, Min, Max, StdDev, and NumSamples in provided Latency struct
-func UpdateRollingLatency(samples []float64, latency *dme.Latency) {
+func UpdateRollingLatency(samples []float64, latency *dme.Latency) error {
+	if latency == nil {
+		return fmt.Errorf("Latency is unititialized")
+	}
 	// First samples
-	/*if latency == nil {
-		latency = new(dme.Latency)
-		*latency = *CalculateLatency(samples)
-		return
-	}*/
 	if latency.NumSamples == 0 {
 		*latency = *CalculateLatency(samples)
-		return
+		return nil
 	}
 	// Previous statistics used to calculate rolling variance
 	prevNumSamples := latency.NumSamples
@@ -72,4 +81,5 @@ func UpdateRollingLatency(samples []float64, latency *dme.Latency) {
 	}
 	latency.Variance = newSumSquared / float64(latency.NumSamples-1)
 	latency.StdDev = math.Sqrt(latency.Variance)
+	return nil
 }
