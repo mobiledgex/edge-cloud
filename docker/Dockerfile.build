@@ -12,7 +12,7 @@
 
 FROM ubuntu:18.04 AS build
 
-ENV GOVERS 1.12.1
+ENV GOVERS 1.15.2
 ENV PROTOCVERS 3.6.0
 
 RUN apt-get update

@@ -21,6 +21,7 @@ check-vers: build-vers
 
 
 build: check-vers
+	make -f Makefile.tools
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
@@ -70,6 +71,7 @@ external-doc:
 	make -C edgeproto external-doc
 
 lint:
+	(cd $(GOPATH)/src/github.com/uber/prototool; go install ./cmd/prototool)
 	$(RM) link-gogo-protobuf
 	$(RM) link-grpc-gateway
 	ln -s $(GOGOPROTO) link-gogo-protobuf
@@ -79,7 +81,7 @@ lint:
 
 UNIT_TEST_LOG = /tmp/edge-cloud-unit-test.log
 
-unit-test: lint
+unit-test:
 	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
 
 test:

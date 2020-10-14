@@ -55,6 +55,7 @@ var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie e
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
+var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
 
 // TODO: carrier arg is redundant with Organization in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific

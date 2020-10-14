@@ -10,7 +10,7 @@
 # All the tools will be inside the docker.
 #
 
-FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.12.1 AS build
+FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.15.2 AS build
 
 ENV GOPATH=/go
 ENV PATH="/go/bin:${PATH}"
@@ -51,7 +51,7 @@ RUN make doc
 RUN make external-doc
 RUN make -C d-match-engine/dme-proto external-swagger
 
-FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v1.2.3-16-gf2d7b8ef
+FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v1.2.3-30-g3ac7f563
 
 # Will be overridden during build from the command line
 ARG BUILD_TAG=latest
