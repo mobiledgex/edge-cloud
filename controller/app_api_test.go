@@ -57,20 +57,20 @@ func TestAppApi(t *testing.T) {
 	_, err = appApi.DeleteApp(ctx, &obj)
 	require.Nil(t, err)
 
-	// validateSkipHcPorts on createApp
+	// validateSkipHcPorts
 	obj = testutil.AppData[2]
 	obj.SkipHcPorts = "udp:11111"
-	_, err = appApi.CreateApp(ctx, &obj)
-	require.NotNil(t, err, "Create App with udp skipHcPort")
+	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
+	_, err = appApi.UpdateApp(ctx, &obj)
+	require.NotNil(t, err, "update App with udp skipHcPort")
+	require.Contains(t, err.Error(), "Protocol L_PROTO_UDP unsupported for healthchecks")
 
 	obj = testutil.AppData[2]
 	obj.SkipHcPorts = "tcp:444"
-	_, err = appApi.CreateApp(ctx, &obj)
-	require.NotNil(t, err, "Create App with udp skipHcPort")
-
-	obj = testutil.AppData[2]
-	_, err = appApi.DeleteApp(ctx, &obj)
-	require.Nil(t, err)
+	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
+	_, err = appApi.UpdateApp(ctx, &obj)
+	require.NotNil(t, err, "Update App with skipHcPort not in AccessPorts")
+	require.Contains(t, err.Error(), "skipHcPort 444 not found in accessPorts")
 
 	// image path is optional for docker deployments if
 	// deployment manifest is specified.
