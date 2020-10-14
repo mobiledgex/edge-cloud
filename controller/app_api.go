@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -158,6 +159,57 @@ func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.Ac
 			if accessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > maxPorts {
 				return fmt.Errorf("Port range greater than max of %d for load balanced application", maxPorts)
 			}
+		}
+	}
+	return nil
+}
+
+func validateSkipHcPorts(app *edgeproto.App) error {
+	if app.SkipHcPorts == "" {
+		return nil
+	}
+	if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+		return fmt.Errorf("skipHcPorts not supported for type: %s", edgeproto.AccessType_ACCESS_TYPE_DIRECT)
+	}
+	if app.SkipHcPorts == "all" {
+		return nil
+	}
+	ports, err := edgeproto.ParseAppPorts(app.AccessPorts)
+	if err != nil {
+		return err
+	}
+	skipHcPorts, err := edgeproto.ParseAppPorts(app.SkipHcPorts)
+	if err != nil {
+		return fmt.Errorf("Cannot parse skipHcPorts: %v", err)
+	}
+	for _, skipPort := range skipHcPorts {
+		// for now we only support health checking for tcp ports
+		if skipPort.Proto != dme.LProto_L_PROTO_TCP {
+			return fmt.Errorf("Protocol %s unsupported for healthchecks", skipPort.Proto)
+		}
+		endSkip := skipPort.EndPort
+		if endSkip == 0 {
+			endSkip = skipPort.InternalPort
+		}
+		found := false
+		for _, port := range ports {
+			if port.Proto != skipPort.Proto {
+				continue
+			}
+			endPort := port.EndPort
+			if endPort == 0 {
+				endPort = port.InternalPort
+			}
+			if port.InternalPort <= skipPort.InternalPort && endSkip <= endPort {
+				found = true
+			}
+		}
+		if !found {
+			portStr := strconv.Itoa(int(skipPort.InternalPort))
+			if skipPort.EndPort != 0 {
+				portStr = fmt.Sprintf("%s-%s", portStr, strconv.Itoa(int(skipPort.EndPort)))
+			}
+			return fmt.Errorf("skipHcPort %s not found in accessPorts", portStr)
 		}
 	}
 	return nil
@@ -326,13 +378,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
-	// check that health check skip ports are parsable
-	if in.SkipHcPorts != "all" {
-		_, err = edgeproto.ParseAppPorts(in.SkipHcPorts)
-		if err != nil {
-			return &edgeproto.Result{}, err
-		}
+
+	err = validateSkipHcPorts(in)
+	if err != nil {
+		return &edgeproto.Result{}, err
 	}
+
 	if in.DeploymentManifest != "" {
 		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest, ports)
 		if err != nil {
@@ -454,6 +505,10 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
 		}
 		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
+			return err
+		}
+		err = validateSkipHcPorts(&cur)
+		if err != nil {
 			return err
 		}
 		if in.DeploymentManifest != "" {
