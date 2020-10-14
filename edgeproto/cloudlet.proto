@@ -209,6 +209,10 @@ message Cloudlet {
   bool override_policy_container_version = 31;
   // VM Pool
   string vm_pool = 32;
+  // CRM access public key
+  string crm_access_public_key = 33 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // CRM access key upgrade required
+  bool crm_access_key_upgrade_required = 34 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -346,6 +350,23 @@ service CloudletApi {
     body: "*"
   };
   option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+  }
+
+  // Revoke crm access key
+  rpc RevokeAccessKey(CloudletKey) returns (Result) {
+    option (google.api.http) = {
+      post: "/revoke/cloudletaccesskey"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+  }
+  // Generate new crm access key
+  rpc GenerateAccessKey(CloudletKey) returns (Result) {
+    option (google.api.http) = {
+      post: "/generate/cloudletaccesskey"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
 }
 

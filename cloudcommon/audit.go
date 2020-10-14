@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -58,6 +59,8 @@ func AuditStreamInterceptor(srv interface{}, stream grpc.ServerStream, info *grp
 		// API argument is passed in via the stream.
 		// Defer audit log until we can capture the client's argument.
 		stream = NewAuditRecvOne(stream, ctx)
+	} else {
+		stream = WrapStream(stream, ctx)
 	}
 	err := handler(srv, stream)
 	// Make sure first letter is capitalized in error message
@@ -101,4 +104,10 @@ func (s *AuditRecvOne) RecvMsg(m interface{}) error {
 
 func (s *AuditRecvOne) Context() context.Context {
 	return s.ctx
+}
+
+func WrapStream(stream grpc.ServerStream, ctx context.Context) grpc.ServerStream {
+	wrStream := grpc_middleware.WrapServerStream(stream)
+	wrStream.WrappedContext = ctx
+	return wrStream
 }

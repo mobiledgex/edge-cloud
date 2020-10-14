@@ -1,0 +1,60 @@
+
+syntax = "proto3";
+package edgeproto;
+
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+// This is an internal regional API for cloudlet-based services
+
+// IssueCertRequest asks for a TLS certificate from Vault
+message IssueCertRequest {
+  // Certificate common name
+  string common_name = 1;
+}
+
+message IssueCertReply {
+  // Public certificate in PEM format
+  string public_cert_pem = 1;
+  // Private key in PEM format
+  string private_key_pem = 2;
+}
+
+message GetCasRequest {
+  // Issuer
+  string issuer = 1;
+}
+
+message GetCasReply {
+  // CA chain in PEM format
+  string ca_chain_pem = 1;
+}
+
+message UpgradeAccessKeyClientMsg {
+  // Message type
+  string msg = 1;
+}
+
+message UpgradeAccessKeyServerMsg {
+  // Message type
+  string msg = 1;
+  // New Access key in PEM format (may be blank)
+  string crm_private_access_key = 2;
+}
+
+// Services that require an AccessKey to use
+service CloudletAccessApi {
+  // Issue certificate
+  rpc IssueCert(IssueCertRequest) returns (IssueCertReply);
+  // Get Cerficiate Authority public certs
+  rpc GetCas(GetCasRequest) returns (GetCasReply);
+}
+
+// Services to manage the access key
+service CloudletAccessKeyApi {
+  // Upgrade AccessKey for existing Vault-CRM, or one-time key
+  rpc UpgradeAccessKey(stream UpgradeAccessKeyClientMsg) returns (stream UpgradeAccessKeyServerMsg);
+}

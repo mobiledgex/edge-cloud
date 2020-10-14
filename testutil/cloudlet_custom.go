@@ -4,6 +4,7 @@ package testutil
 // Revisit as needed for unit tests.
 import (
 	"context"
+
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -21,4 +22,16 @@ func (s *DummyServer) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorM
 
 func (s *DummyServer) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
 	return in, nil
+}
+
+func (s *DummyServer) RevokeAccessKey(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) GenerateAccessKey(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
+	return nil
 }

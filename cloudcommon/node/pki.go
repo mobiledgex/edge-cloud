@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/vault/api"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
@@ -39,7 +39,7 @@ type internalPki struct {
 	// CA certs do not change frequently, and the tls config doesn't
 	// provide any way to retrieve them dynamically anyway. They are
 	// still cached to avoid talking to Vault for every new connection.
-	certs map[certId]*tls.Certificate
+	certs map[CertId]*tls.Certificate
 	cas   map[string][]*x509.Certificate
 
 	enabled        bool
@@ -47,10 +47,13 @@ type internalPki struct {
 	localRegion    string
 	refreshTrigger chan bool
 
+	// Set access key client to use this instead of Vault
+	accessKeyClient *AccessKeyClient
+
 	mux sync.Mutex
 }
 
-type certId struct {
+type CertId struct {
 	CommonName string
 	Issuer     string
 }
@@ -72,17 +75,25 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		pkiDesc = append(pkiDesc, "from-file")
 	}
 	s.InternalPki.vaultConfig = s.VaultConfig
+	if s.AccessKeyClient.enabled {
+		s.InternalPki.accessKeyClient = &s.AccessKeyClient
+		s.InternalPki.enabled = true
+		s.InternalPki.UseVaultCAs = true
+		s.InternalPki.UseVaultCerts = true
+		s.InternalPki.vaultConfig = nil // should never talk to Vault
+		pkiDesc = append(pkiDesc, "useAccessKey")
+	}
 	if s.InternalPki.UseVaultCerts {
 		s.InternalPki.UseVaultCAs = true
 	}
 	if s.InternalPki.UseVaultCAs {
-		if s.InternalPki.vaultConfig.Addr == "" {
-			return fmt.Errorf("Vault address required for UseVaultCAs or UseVaultCerts")
+		if !s.AccessKeyClient.enabled && s.InternalPki.vaultConfig.Addr == "" {
+			return fmt.Errorf("AccessKey file or Vault address required for UseVaultCAs or UseVaultCerts")
 		}
 		// enable Vault certs
 		log.SpanLog(ctx, log.DebugLevelInfo, "enable internal Vault PKI CAs")
 
-		s.InternalPki.certs = make(map[certId]*tls.Certificate)
+		s.InternalPki.certs = make(map[CertId]*tls.Certificate)
 		s.InternalPki.cas = make(map[string][]*x509.Certificate)
 		s.InternalPki.localRegion = s.Region
 		s.InternalPki.refreshTrigger = make(chan bool, 1)
@@ -92,6 +103,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		s.InternalPki.enabled = true
 		pkiDesc = append(pkiDesc, "useVaultCerts")
 	}
+
 	if len(pkiDesc) == 0 {
 		s.MyNode.InternalPki = "none"
 	} else {
@@ -164,7 +176,7 @@ func (s *internalPki) RefreshNow(ctx context.Context) error {
 		return nil
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "refreshing certs")
-	ids := make([]certId, 0)
+	ids := make([]CertId, 0)
 	s.mux.Lock()
 	for id, _ := range s.certs {
 		ids = append(ids, id)
@@ -229,10 +241,11 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 		op(opts)
 	}
 
-	id := certId{
+	id := CertId{
 		CommonName: commonName,
 		Issuer:     clientIssuer,
 	}
+
 	err := s.ensureCertInCache(ctx, id)
 	if err != nil {
 		return nil, err
@@ -273,7 +286,7 @@ func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, server
 		op(opts)
 	}
 
-	id := certId{
+	id := CertId{
 		CommonName: commonName,
 		Issuer:     serverIssuer,
 	}
@@ -356,19 +369,19 @@ func (s *internalPki) getVerifyFunc(issuers []MatchCA) func([][]byte, [][]*x509.
 	}
 }
 
-func (s *internalPki) getClientCertificateFunc(id certId) func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+func (s *internalPki) getClientCertificateFunc(id CertId) func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
 	return func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
 		return s.lookupCertForHandshake(id)
 	}
 }
 
-func (s *internalPki) getCertificateFunc(id certId) func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (s *internalPki) getCertificateFunc(id CertId) func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
 	return func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 		return s.lookupCertForHandshake(id)
 	}
 }
 
-func (s *internalPki) lookupCertForHandshake(id certId) (*tls.Certificate, error) {
+func (s *internalPki) lookupCertForHandshake(id CertId) (*tls.Certificate, error) {
 	if s.UseVaultCerts {
 		s.mux.Lock()
 		cert, found := s.certs[id]
@@ -384,7 +397,7 @@ func (s *internalPki) lookupCertForHandshake(id certId) (*tls.Certificate, error
 	return nil, fmt.Errorf("internal PKI disabled and no supplied certs for %v", id)
 }
 
-func (s *internalPki) ensureCertInCache(ctx context.Context, id certId) error {
+func (s *internalPki) ensureCertInCache(ctx context.Context, id CertId) error {
 	if !s.UseVaultCerts {
 		return nil
 	}
@@ -403,7 +416,31 @@ func (s *internalPki) ensureCertInCache(ctx context.Context, id certId) error {
 	return nil
 }
 
-func (s *internalPki) issueCert(ctx context.Context, id certId) (*tls.Certificate, error) {
+func (s *internalPki) issueCert(ctx context.Context, id CertId) (*tls.Certificate, error) {
+	var vc *VaultCert
+	var err error
+	if s.accessKeyClient != nil {
+		// get keys from Controller
+		vc, err = s.issueVaultCertController(ctx, id)
+	} else {
+		vc, err = s.IssueVaultCertDirect(ctx, id)
+	}
+	if err != nil {
+		return nil, err
+	}
+	cert, err := tls.X509KeyPair(vc.PublicCertPEM, vc.PrivateKeyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load x509 key pair, %v", err)
+	}
+	return &cert, err
+}
+
+type VaultCert struct {
+	PublicCertPEM []byte
+	PrivateKeyPEM []byte
+}
+
+func (s *internalPki) IssueVaultCertDirect(ctx context.Context, id CertId) (*VaultCert, error) {
 	rolename := s.localRegion
 	uriSans := "region://" + s.localRegion
 	if rolename == "" {
@@ -439,12 +476,40 @@ func (s *internalPki) issueCert(ctx context.Context, id certId) (*tls.Certificat
 	if err != nil {
 		return nil, fmt.Errorf("issueCert private_key data failure %v", err)
 	}
-
-	cert, err := tls.X509KeyPair(pub, key)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load x509 key pair, %v", err)
+	vc := VaultCert{
+		PublicCertPEM: pub,
+		PrivateKeyPEM: key,
 	}
-	return &cert, nil
+	return &vc, nil
+}
+
+func (s *internalPki) issueVaultCertController(ctx context.Context, id CertId) (*VaultCert, error) {
+	if id.Issuer != CertIssuerRegionalCloudlet {
+		return nil, fmt.Errorf("Controller will only issue RegionalCloudlet certs")
+	}
+	if s.accessKeyClient == nil {
+		return nil, fmt.Errorf("access key client not enabled for issuing regional cloudlet cert")
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "issue cert via Controller", "id", id)
+	conn, err := s.accessKeyClient.ConnectController(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := edgeproto.NewCloudletAccessApiClient(conn)
+	req := &edgeproto.IssueCertRequest{
+		CommonName: id.CommonName,
+	}
+	reply, err := client.IssueCert(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	vc := VaultCert{
+		PublicCertPEM: []byte(reply.PublicCertPem),
+		PrivateKeyPEM: []byte(reply.PrivateKeyPem),
+	}
+	return &vc, nil
 }
 
 func getVaultCertData(data map[string]interface{}, key string) ([]byte, error) {
@@ -492,26 +557,19 @@ func (s *internalPki) getVaultCAs(ctx context.Context, pool *x509.CertPool, issu
 	if !s.UseVaultCAs {
 		return nil
 	}
-	var client *api.Client
 	var err error
 	for _, caissuer := range issuers {
 		s.mux.Lock()
 		cas, found := s.cas[caissuer.Issuer]
 		s.mux.Unlock()
 		if !found {
-			path := caissuer.Issuer + "/cert/ca"
-			log.SpanLog(ctx, log.DebugLevelInfo, "pki getCAs", "path", path)
-			if client == nil {
-				client, err = s.vaultConfig.Login()
-				if err != nil {
-					return err
-				}
+			var cab []byte
+			if s.accessKeyClient != nil {
+				// get CAs from Controller
+				cab, err = s.getVaultCAsController(ctx, caissuer.Issuer)
+			} else {
+				cab, err = s.GetVaultCAsDirect(ctx, caissuer.Issuer)
 			}
-			secret, err := client.Logical().Read(path)
-			if err != nil {
-				return err
-			}
-			cab, err := getVaultCertData(secret.Data, "certificate")
 			if err != nil {
 				return err
 			}
@@ -528,6 +586,37 @@ func (s *internalPki) getVaultCAs(ctx context.Context, pool *x509.CertPool, issu
 		}
 	}
 	return nil
+}
+
+func (s *internalPki) GetVaultCAsDirect(ctx context.Context, issuer string) ([]byte, error) {
+	path := issuer + "/cert/ca"
+	client, err := s.vaultConfig.Login()
+	if err != nil {
+		return nil, err
+	}
+	secret, err := client.Logical().Read(path)
+	if err != nil {
+		return nil, err
+	}
+	return getVaultCertData(secret.Data, "certificate")
+}
+
+func (s *internalPki) getVaultCAsController(ctx context.Context, issuer string) ([]byte, error) {
+	conn, err := s.accessKeyClient.ConnectController(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := edgeproto.NewCloudletAccessApiClient(conn)
+	req := &edgeproto.GetCasRequest{
+		Issuer: issuer,
+	}
+	reply, err := client.GetCas(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(reply.CaChainPem), nil
 }
 
 func (s *NodeMgr) CommonName() string {

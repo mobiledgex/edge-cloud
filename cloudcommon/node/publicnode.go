@@ -11,9 +11,9 @@ import (
 // This allows mTLS where the public node uses a public cert and our internal
 // services use an internal vault pki cert.
 // Examples of such services are Jaeger, ElasticSearch, etc.
-
 func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, error) {
-	if s.tlsClientIssuer == "" {
+	if s.tlsClientIssuer == NoTlsClientIssuer {
+		// unit test mode
 		return nil, nil
 	}
 	tlsOpts := []TlsOp{
