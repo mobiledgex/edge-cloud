@@ -1,7 +1,5 @@
 package cloudcommon
 
-import "strings"
-
 // Alert names
 var AlertAutoScaleUp = "AutoScaleUp"
 var AlertAutoScaleDown = "AutoScaleDown"
@@ -18,9 +16,10 @@ var AlertKeyMinNodes = "minnodes"
 var AlertHealthCheckStatus = "status"
 
 const (
-	AlertSeverityError = "error"
-	AlertSeverityWarn  = "warning"
-	AlertSeverityInfo  = "info"
+	AlertSeverityError       = "error"
+	AlertSeverityWarn        = "warning"
+	AlertSeverityInfo        = "info"
+	ValidAlertSeverityString = `"info", "warning", "error"`
 )
 
 var AlertSeverityTypes = map[string]struct{}{
@@ -48,9 +47,5 @@ func IsAlertSeverityValid(severity string) bool {
 
 // Helper function - returns the string representations of all valid severities
 func GetValidAlertSeverityString() string {
-	result := make([]string, 0)
-	for k, _ := range AlertSeverityTypes {
-		result = append(result, "\""+k+"\"")
-	}
-	return strings.Join(result, ", ")
+	return ValidAlertSeverityString
 }
