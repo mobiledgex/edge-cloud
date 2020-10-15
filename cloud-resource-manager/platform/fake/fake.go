@@ -111,7 +111,7 @@ func (s *Platform) GetClusterPlatformClient(ctx context.Context, clusterInst *ed
 	return &pc.LocalClient{}, nil
 }
 
-func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode) (ssh.Client, error) {
+func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode, ops ...pc.SSHClientOp) (ssh.Client, error) {
 	return &pc.LocalClient{}, nil
 }
 
