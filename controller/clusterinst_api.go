@@ -190,7 +190,7 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 
 func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
-	err := streamObjApi.startStream(ctx, streamKey)
+	err := streamObjApi.startStream(ctx, streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
 		return inCb, err

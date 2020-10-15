@@ -179,7 +179,7 @@ func isOperatorInfraCloudlet(in *edgeproto.Cloudlet) bool {
 
 func startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) (edgeproto.CloudletApi_CreateCloudletServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
-	err := streamObjApi.startStream(ctx, streamKey)
+	err := streamObjApi.startStream(ctx, streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start Cloudlet stream", "err", err)
 		return inCb, err
@@ -204,8 +204,8 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 func sendCloudletMsg(ctx context.Context, key *edgeproto.CloudletKey, res *edgeproto.Result) {
 	streamKey := edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
 	if res != nil {
-		if streamChan, ok := streamObjApi.streamBuf[streamKey]; ok {
-			streamChan <- res.Message
+		if streamSendObj, ok := streamObjApi.streamBuf[streamKey]; ok {
+			streamSendObj.msgCh <- res.Message
 		}
 	}
 }
@@ -519,7 +519,6 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 }
 
 func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
-	lastStatusId := uint32(0)
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
@@ -596,21 +595,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	cancel := cloudletInfoApi.cache.WatchKey(key, func(ctx context.Context) {
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
-		}
-
-		if info.Status.TaskNumber == 0 {
-			lastStatusId = 0
-		} else if lastStatusId == info.Status.TaskNumber {
-			// got repeat message
-			lastStatusId = info.Status.TaskNumber
-
-		} else if info.Status.TaskNumber > lastStatusId {
-			if info.Status.StepName != "" {
-				updateCallback(edgeproto.UpdateTask, info.Status.StepName)
-			} else {
-				updateCallback(edgeproto.UpdateTask, info.Status.TaskName)
-			}
-			lastStatusId = info.Status.TaskNumber
 		}
 		checkState(key)
 	})

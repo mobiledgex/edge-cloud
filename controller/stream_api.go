@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -17,11 +18,20 @@ var streamObjApi = StreamObjApi{}
 var StreamTimeout = 30 * time.Minute
 var StreamLeaseTimeoutSec = int64(60 * 60) // 1 hour
 
+type streamSend struct {
+	msgCh        chan string
+	cb           GenericCb
+	lastRemoteId uint32
+	mux          *sync.Mutex
+	doneCh       chan bool
+}
+
 type StreamObjApi struct {
 	sync      *Sync
 	store     edgeproto.StreamObjStore
 	cache     edgeproto.StreamObjCache
-	streamBuf map[edgeproto.AppInstKey]chan string
+	streamBuf map[edgeproto.AppInstKey]*streamSend
+	mux       sync.Mutex
 }
 
 type GenericCb interface {
@@ -36,17 +46,19 @@ type CbWrapper struct {
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	if res != nil {
-		if streamChan, ok := streamObjApi.streamBuf[s.key]; ok {
-			streamChan <- res.Message
+		if streamSendObj, ok := streamObjApi.streamBuf[s.key]; ok {
+			streamSendObj.mux.Lock()
+			defer streamSendObj.mux.Unlock()
+			streamSendObj.msgCh <- res.Message
 		}
 	}
-	return s.GenericCb.Send(res)
+	return nil
 }
 
 func InitStreamObjApi(sync *Sync) {
 	streamObjApi.sync = sync
 	streamObjApi.store = edgeproto.NewStreamObjStore(sync.store)
-	streamObjApi.streamBuf = make(map[edgeproto.AppInstKey]chan string)
+	streamObjApi.streamBuf = make(map[edgeproto.AppInstKey]*streamSend)
 	edgeproto.InitStreamObjCache(&streamObjApi.cache)
 	sync.RegisterCache(&streamObjApi.cache)
 }
@@ -112,7 +124,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	return err
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey) error {
+func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) error {
 	streamObj := edgeproto.StreamObj{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, key, &streamObj) {
@@ -131,12 +143,22 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		streamObj.State = edgeproto.StreamState_STREAM_START
 		streamObj.Msgs = []*edgeproto.StreamMsg{}
 		streamObj.LastId = 0
+		streamObj.ErrorMsg = ""
 		s.store.STMPut(stm, &streamObj, objstore.WithLease(lease))
 		return nil
 	})
 
 	if err == nil {
-		s.streamBuf[*key] = make(chan string, 50)
+		streamSendObj := streamSend{}
+		streamSendObj.msgCh = make(chan string, 50)
+		streamSendObj.doneCh = make(chan bool, 1)
+		streamSendObj.cb = inCb
+		streamSendObj.lastRemoteId = uint32(0)
+		streamSendObj.mux = &sync.Mutex{}
+
+		s.mux.Lock()
+		s.streamBuf[*key] = &streamSendObj
+		s.mux.Unlock()
 		go s.addStream(ctx, key)
 	}
 
@@ -144,6 +166,16 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 }
 
 func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey, objErr error) error {
+	s.mux.Lock()
+	if streamSendObj, ok := s.streamBuf[*key]; ok {
+		close(streamSendObj.msgCh)
+		// wait for addStream to finish
+		<-streamSendObj.doneCh
+		streamSendObj.doneCh <- true
+		delete(s.streamBuf, *key)
+	}
+	s.mux.Unlock()
+
 	streamObj := edgeproto.StreamObj{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, key, &streamObj) {
@@ -157,20 +189,16 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 		return nil
 	})
 
-	if streamChan, ok := s.streamBuf[*key]; ok {
-		close(streamChan)
-		delete(s.streamBuf, *key)
-	}
-
 	return err
 }
 
 func (s *StreamObjApi) addStream(ctx context.Context, key *edgeproto.AppInstKey) {
-	msgCh, ok := s.streamBuf[*key]
+	streamSendObj, ok := s.streamBuf[*key]
 	if !ok {
 		return
 	}
-	for msg := range msgCh {
+	for msg := range streamSendObj.msgCh {
+		streamSendObj.cb.Send(&edgeproto.Result{Message: msg})
 		streamObj := edgeproto.StreamObj{}
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !s.store.STMGet(stm, key, &streamObj) {
@@ -193,4 +221,41 @@ func (s *StreamObjApi) addStream(ctx context.Context, key *edgeproto.AppInstKey)
 			log.SpanLog(ctx, log.DebugLevelApi, "Failed to add stream", "key", key, "msg", msg, "err", err)
 		}
 	}
+	streamSendObj.doneCh <- true
+}
+
+func (s *StreamObjApi) Update(ctx context.Context, in *edgeproto.StreamObj, rev int64) {
+	if in == nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "StreamObj is missing")
+		return
+	}
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	streamSendObj, ok := streamObjApi.streamBuf[in.Key]
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelApi, "No active streams", "key", in.Key)
+		return
+	}
+	streamSendObj.mux.Lock()
+	defer streamSendObj.mux.Unlock()
+	for _, streamMsg := range in.Msgs {
+		if streamMsg.Id <= streamSendObj.lastRemoteId {
+			// skip already streamed messages
+			continue
+		}
+		streamSendObj.lastRemoteId = streamMsg.Id
+		streamSendObj.msgCh <- streamMsg.Msg
+	}
+}
+
+func (s *StreamObjApi) Delete(ctx context.Context, in *edgeproto.StreamObj, rev int64) {
+	// no-op
+}
+
+func (s *StreamObjApi) Flush(ctx context.Context, notifyId int64) {
+	// no-op
+}
+
+func (s *StreamObjApi) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
+	// no-op
 }

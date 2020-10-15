@@ -25,7 +25,7 @@ tests:
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_stream.yml"
-    filetype: appdata
+    filetype: appstream
 
 - name: check DME/CRM node-show
   actions: [ctrlapi-nodeshow]
@@ -56,7 +56,7 @@ tests:
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty_stream.yml"
-    filetype: appdata
+    filetype: appstream
 
 - name: verify no CRM nodes are connected
   actions: [ctrlapi-nodeshow]

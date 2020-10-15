@@ -309,7 +309,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 }
 
 func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (edgeproto.AppInstApi_CreateAppInstServer, error) {
-	err := streamObjApi.startStream(ctx, key)
+	err := streamObjApi.startStream(ctx, key, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
 		return inCb, err
