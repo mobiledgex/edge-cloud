@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -25,6 +26,12 @@ type OverwriteDir bool
 
 var Overwrite OverwriteDir = true
 var NoOverwrite OverwriteDir = false
+
+type SSHOptions struct {
+	Timeout  time.Duration
+	User     string
+	CachedIP bool
+}
 
 // Some utility functions
 
@@ -125,4 +132,27 @@ func Run(client ssh.Client, cmd string) error {
 		return fmt.Errorf("command \"%s\" failed, %v", cmd, err)
 	}
 	return nil
+}
+
+type SSHClientOp func(sshp *SSHOptions)
+
+func (o *SSHOptions) Apply(ops []SSHClientOp) {
+	for _, op := range ops {
+		op(o)
+	}
+}
+func WithUser(user string) SSHClientOp {
+	return func(op *SSHOptions) {
+		op.User = user
+	}
+}
+func WithTimeout(timeout time.Duration) SSHClientOp {
+	return func(op *SSHOptions) {
+		op.Timeout = timeout
+	}
+}
+func WithCachedIp(cached bool) SSHClientOp {
+	return func(op *SSHOptions) {
+		op.CachedIP = cached
+	}
 }
