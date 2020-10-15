@@ -186,7 +186,7 @@ func TestAppInstApi(t *testing.T) {
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
 	// As there was progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
+	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Pass)
 	require.Greater(t, len(msgs), 0, "progress messages")
 
 	// check override of error CREATE_ERROR
@@ -207,7 +207,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, appInstRefsDeleted)
 	// As there was some progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
+	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Pass)
 	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// check override of error UPDATE_ERROR
