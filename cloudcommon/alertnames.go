@@ -16,9 +16,10 @@ var AlertKeyMinNodes = "minnodes"
 var AlertHealthCheckStatus = "status"
 
 const (
-	AlertSeverityError       = "error"
-	AlertSeverityWarn        = "warning"
-	AlertSeverityInfo        = "info"
+	AlertSeverityError = "error"
+	AlertSeverityWarn  = "warning"
+	AlertSeverityInfo  = "info"
+	// List in the order of increasing severity
 	ValidAlertSeverityString = `"info", "warning", "error"`
 )
 
