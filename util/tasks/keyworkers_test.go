@@ -24,8 +24,16 @@ func TestKeyWorkers(t *testing.T) {
 
 	kw.Init("test", workdata.run)
 
+	workdata.spawned.Add(3)
+	kw.NeedsWork(ctx, "key1")
+	kw.NeedsWork(ctx, "key2")
+	kw.NeedsWork(ctx, "key3")
+	// wait until work threads have started and "needsWork" is cleared
+	workdata.spawned.Wait()
+	// these next 1000 should be compressed into one more iteration only.
 	rep := 1000
 	for ii := 0; ii < rep; ii++ {
+		workdata.spawned.Add(3)
 		kw.NeedsWork(ctx, "key1")
 		kw.NeedsWork(ctx, "key2")
 		kw.NeedsWork(ctx, "key3")
@@ -47,9 +55,11 @@ type testWorkData struct {
 	startOk chan bool
 	data    map[interface{}]int
 	mux     sync.Mutex
+	spawned sync.WaitGroup
 }
 
 func (s *testWorkData) run(ctx context.Context, key interface{}) {
+	s.spawned.Done()
 	<-s.startOk
 
 	s.mux.Lock()
