@@ -134,7 +134,7 @@ func Run(client ssh.Client, cmd string) error {
 	return nil
 }
 
-type SSHClientOp func(sshp *SSHOptions) error
+type SSHClientOp func(sshp *SSHOptions)
 
 func (o *SSHOptions) Apply(ops []SSHClientOp) {
 	for _, op := range ops {
@@ -142,20 +142,17 @@ func (o *SSHOptions) Apply(ops []SSHClientOp) {
 	}
 }
 func WithUser(user string) SSHClientOp {
-	return func(op *SSHOptions) error {
+	return func(op *SSHOptions) {
 		op.User = user
-		return nil
 	}
 }
 func WithTimeout(timeout time.Duration) SSHClientOp {
-	return func(op *SSHOptions) error {
+	return func(op *SSHOptions) {
 		op.Timeout = timeout
-		return nil
 	}
 }
 func WithCachedIp(cached bool) SSHClientOp {
-	return func(op *SSHOptions) error {
+	return func(op *SSHOptions) {
 		op.CachedIP = cached
-		return nil
 	}
 }
