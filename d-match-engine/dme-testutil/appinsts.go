@@ -14,7 +14,6 @@ type App struct {
 }
 type Cloudlet struct {
 	Id          uint64
-	CarrierId   uint64
 	CarrierName string
 	Name        string
 	Uri         string
@@ -64,7 +63,6 @@ var Apps = []App{
 var Cloudlets = []Cloudlet{
 	Cloudlet{
 		Id:          111,
-		CarrierId:   1,
 		CarrierName: "GDDT",
 		Name:        "Buckhorn",
 		Uri:         "10.1.10.1",
@@ -73,7 +71,6 @@ var Cloudlets = []Cloudlet{
 	},
 	Cloudlet{
 		Id:          222,
-		CarrierId:   1,
 		CarrierName: "GDDT",
 		Name:        "Sunnydale",
 		Uri:         "11.1.11.1",
@@ -82,7 +79,6 @@ var Cloudlets = []Cloudlet{
 	},
 	Cloudlet{
 		Id:          333,
-		CarrierId:   1,
 		CarrierName: "GDDT",
 		Name:        "Beacon",
 		Uri:         "12.1.12.1",
@@ -91,12 +87,27 @@ var Cloudlets = []Cloudlet{
 	},
 	Cloudlet{
 		Id:          444,
-		CarrierId:   3,
 		CarrierName: "DMUUS",
 		Name:        "San Francisco",
 		Uri:         "13.1.13.1",
 		Ip:          []byte{13, 1, 13, 1},
 		Location:    dme.Loc{Latitude: 47.6062, Longitude: 122.3321},
+	},
+	Cloudlet{
+		Id:          555,
+		CarrierName: "TEF",
+		Name:        "HA Cloudlet1",
+		Uri:         "14.1.13.1",
+		Ip:          []byte{14, 1, 13, 1},
+		Location:    dme.Loc{Latitude: -50.1101, Longitude: -100.2201},
+	},
+	Cloudlet{
+		Id:          666,
+		CarrierName: "TEF",
+		Name:        "HA Cloudlet2",
+		Uri:         "14.1.13.2",
+		Ip:          []byte{14, 1, 13, 2},
+		Location:    dme.Loc{Latitude: -50.1102, Longitude: -100.2202},
 	},
 }
 

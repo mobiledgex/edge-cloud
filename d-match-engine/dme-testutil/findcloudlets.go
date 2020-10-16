@@ -3,11 +3,12 @@ package dmetest
 import dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
 type FindCloudletRR struct {
-	Reg           dme.RegisterClientRequest
-	Req           dme.FindCloudletRequest
-	Reply         dme.FindCloudletReply
-	ReplyCarrier  string
-	ReplyCloudlet string
+	Reg            dme.RegisterClientRequest
+	Req            dme.FindCloudletRequest
+	Reply          dme.FindCloudletReply
+	ReplyCarrier   string
+	ReplyCloudlet  string
+	ReplyAlternate dme.FindCloudletReply
 }
 
 // FindCloudlet API test data.
@@ -175,6 +176,32 @@ var FindCloudletData = []FindCloudletRR{
 		},
 		ReplyCarrier:  Cloudlets[2].CarrierName,
 		ReplyCloudlet: Cloudlets[2].Name,
+	},
+}
+
+var FindCloudletHAData = []FindCloudletRR{
+	FindCloudletRR{
+		Reg: dme.RegisterClientRequest{
+			OrgName: "Ever.AI",
+			AppName: "Ever",
+			AppVers: "1.7",
+		},
+		Req: dme.FindCloudletRequest{
+			CarrierName: "",
+			GpsLocation: &dme.Loc{Latitude: -50, Longitude: -100},
+		},
+		Reply: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[4].Uri,
+			CloudletLocation: &Cloudlets[4].Location,
+			Status:           1,
+		},
+		ReplyCarrier:  Cloudlets[4].CarrierName,
+		ReplyCloudlet: Cloudlets[4].Name,
+		ReplyAlternate: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[5].Uri,
+			CloudletLocation: &Cloudlets[5].Location,
+			Status:           1,
+		},
 	},
 }
 
