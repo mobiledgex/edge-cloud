@@ -308,20 +308,20 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 	}
 }
 
-func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (edgeproto.AppInstApi_CreateAppInstServer, error) {
-	err := streamObjApi.startStream(ctx, key, inCb)
+func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
+	streamSendObj, err := streamObjApi.startStream(ctx, key, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
-		return inCb, err
+		return nil, inCb, err
 	}
-	return &CbWrapper{
-		key:       *key,
-		GenericCb: inCb,
+	return streamSendObj, &CbWrapper{
+		streamSendObj: streamSendObj,
+		GenericCb:     inCb,
 	}, nil
 }
 
-func stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, objErr error) {
-	if err := streamObjApi.stopStream(ctx, key, objErr); err != nil {
+func stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) {
+	if err := streamObjApi.stopStream(ctx, key, streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 	}
 }
@@ -357,10 +357,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	appInstKey := in.Key
 
 	// create stream once AppInstKey is formed correctly
-	cb, err := startAppInstStream(ctx, &appInstKey, inCb)
+	sendObj, cb, err := startAppInstStream(ctx, &appInstKey, inCb)
 	if err == nil {
 		defer func() {
-			stopAppInstStream(ctx, &appInstKey, reterr)
+			stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
 		}()
 	}
 
@@ -802,10 +802,10 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	}
 
 	// create stream once AppInstKey is formed correctly
-	cb, err := startAppInstStream(ctx, &key, inCb)
+	sendObj, cb, err := startAppInstStream(ctx, &key, inCb)
 	if err == nil {
 		defer func() {
-			stopAppInstStream(ctx, &key, reterr)
+			stopAppInstStream(ctx, &key, sendObj, reterr)
 		}()
 	}
 
@@ -1068,10 +1068,10 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
-	cb, err := startAppInstStream(ctx, &appInstKey, inCb)
+	sendObj, cb, err := startAppInstStream(ctx, &appInstKey, inCb)
 	if err == nil {
 		defer func() {
-			stopAppInstStream(ctx, &appInstKey, reterr)
+			stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
 		}()
 	}
 

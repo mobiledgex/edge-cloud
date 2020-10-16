@@ -188,22 +188,22 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	return clusterInst.IpAccess, nil
 }
 
-func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
+func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
-	err := streamObjApi.startStream(ctx, streamKey, inCb)
+	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
-		return inCb, err
+		return nil, inCb, err
 	}
-	return &CbWrapper{
-		key:       *streamKey,
-		GenericCb: inCb,
+	return streamSendObj, &CbWrapper{
+		streamSendObj: streamSendObj,
+		GenericCb:     inCb,
 	}, nil
 }
 
-func stopClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, objErr error) {
+func stopClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, streamSendObj *streamSend, objErr error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
-	if err := streamObjApi.stopStream(ctx, streamKey, objErr); err != nil {
+	if err := streamObjApi.stopStream(ctx, streamKey, streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop ClusterInst stream", "err", err)
 	}
 }
@@ -229,10 +229,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	ctx := inCb.Context()
 
 	clusterInstKey := in.Key
-	cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
 	if err == nil {
 		defer func() {
-			stopClusterInstStream(ctx, &clusterInstKey, reterr)
+			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
 		}()
 	}
 
@@ -496,10 +496,10 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	cctx.SetOverride(&in.CrmOverride)
 
 	clusterInstKey := in.Key
-	cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
 	if err == nil {
 		defer func() {
-			stopClusterInstStream(ctx, &clusterInstKey, reterr)
+			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
 		}()
 	}
 
@@ -608,10 +608,10 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	ctx := inCb.Context()
 
 	clusterInstKey := in.Key
-	cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
 	if err == nil {
 		defer func() {
-			stopClusterInstStream(ctx, &clusterInstKey, reterr)
+			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
 		}()
 	}
 

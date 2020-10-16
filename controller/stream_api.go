@@ -14,7 +14,6 @@ import (
 )
 
 var streamObjApi = StreamObjApi{}
-var streamBuf map[edgeproto.AppInstKey]*streamSend
 
 var StreamTimeout = 30 * time.Minute
 var StreamLeaseTimeoutSec = int64(60 * 60) // 1 hour
@@ -41,17 +40,15 @@ type GenericCb interface {
 
 type CbWrapper struct {
 	GenericCb
-	key edgeproto.AppInstKey
+	streamSendObj *streamSend
 }
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	if res != nil {
-		if streamSendObj, ok := streamBuf[s.key]; ok {
-			if streamSendObj.closeCh {
-				return nil
-			}
-			streamSendObj.msgCh <- res.Message
+		if s.streamSendObj.closeCh {
+			return nil
 		}
+		s.streamSendObj.msgCh <- res.Message
 	}
 	return nil
 }
@@ -61,8 +58,6 @@ func InitStreamObjApi(sync *Sync) {
 	streamObjApi.store = edgeproto.NewStreamObjStore(sync.store)
 	edgeproto.InitStreamObjCache(&streamObjApi.cache)
 	sync.RegisterCache(&streamObjApi.cache)
-
-	streamBuf = make(map[edgeproto.AppInstKey]*streamSend)
 }
 
 func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
@@ -126,7 +121,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	return err
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) error {
+func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) (*streamSend, error) {
 	streamObj := edgeproto.StreamObj{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, key, &streamObj) {
@@ -157,15 +152,15 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		streamSendObj.cb = inCb
 		streamSendObj.lastRemoteId = uint32(0)
 
-		streamBuf[*key] = &streamSendObj
 		go s.addStream(ctx, key, &streamSendObj)
+		return &streamSendObj, err
 	}
 
-	return err
+	return nil, err
 }
 
-func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey, objErr error) error {
-	if streamSendObj, ok := streamBuf[*key]; ok {
+func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) error {
+	if streamSendObj != nil {
 		streamSendObj.mux.Lock()
 		close(streamSendObj.msgCh)
 		streamSendObj.closeCh = true
@@ -173,7 +168,6 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 
 		// wait for addStream to finish
 		<-streamSendObj.doneCh
-		delete(streamBuf, *key)
 	}
 
 	streamObj := edgeproto.StreamObj{}
