@@ -7,7 +7,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"google.golang.org/grpc"
 )
 
 type DebugApi struct{}
@@ -64,21 +63,4 @@ func (s *DebugApi) RunDebug(req *edgeproto.DebugRequest, cb edgeproto.DebugApi_R
 		}
 	}
 	return nil
-}
-
-// Struct that allows use of Debug framework from controller
-// Supply a ReplyHandler to handle the DebugReply
-// See appinstlatency_api.go for example use
-type ControllerRunDebugServer struct {
-	grpc.ServerStream
-	ctx          context.Context
-	ReplyHandler func(m *edgeproto.DebugReply) error
-}
-
-func (c *ControllerRunDebugServer) Send(m *edgeproto.DebugReply) error {
-	return c.ReplyHandler(m)
-}
-
-func (c *ControllerRunDebugServer) Context() context.Context {
-	return c.ctx
 }

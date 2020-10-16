@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
@@ -62,7 +61,8 @@ func createAppInstKeyFromRequest(req *edgeproto.DebugRequest) (*edgeproto.AppIns
 	if req.Args == "" {
 		return nil, fmt.Errorf("appinst info in args required")
 	}
-	args := strings.Split(req.Args, " ")
+	b := []byte(req.Args)
+	/*args := strings.Split(req.Args, " ")
 	if len(args) != 7 {
 		return nil, fmt.Errorf("7 arguments required: appname, apporg, appvers, cloudlet, cloudletorg, cluster, clusterorg")
 	}
@@ -91,6 +91,13 @@ func createAppInstKeyFromRequest(req *edgeproto.DebugRequest) (*edgeproto.AppIns
 			Organization: clusterorg,
 		},
 	}
+	*/
 
-	return appInstKey, nil
+	var appInstKey edgeproto.AppInstKey
+	err := json.Unmarshal(b, &appInstKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &appInstKey, nil
 }

@@ -1042,7 +1042,7 @@ var AppInstLatencyComments = map[string]string{
 	"cloudlet-org":     "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
 	"cluster-org":      "Name of Developer organization that this cluster belongs to",
-	"latency.stddev":   "Unbiased standard deviation",
+	"latency.stddev":   "Square root of unbiased variance",
 	"latency.variance": "Unbiased variance",
 }
 var AppInstLatencySpecialArgs = map[string]string{}

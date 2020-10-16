@@ -296,6 +296,7 @@ service AppInstLatencyApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
+    option (protogen.mc2_api_notifyroot) = true;
   }
   // Show Latency measurements for clients connected to AppInst
   rpc ShowAppInstLatency(AppInstLatency) returns (stream AppInstLatency) {
@@ -304,5 +305,6 @@ service AppInstLatencyApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
+    option (protogen.mc2_api_notifyroot) = true;
   }
 }

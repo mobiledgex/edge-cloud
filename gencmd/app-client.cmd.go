@@ -1462,7 +1462,7 @@ var ServerEdgeEventComments = map[string]string{
 	"cloudletstate":            ", one of CloudletStateUnknown, CloudletStateReady, CloudletOffline, CloudletStateNotPresent, CloudletUpgrade, CloudletStateErrors, CloudletStateInit",
 	"cloudletmaintenancestate": ", one of MaintenanceStateUnknown, MaintenanceStateNormal, MaintenanceStateUnderMaintenance, MaintenanceStateMaintenanceFailed, MaintenanceStateFailingOver, MaintenanceStateFailoverError, MaintenanceStateFailoverDone",
 	"appinsthealthstate":       ", one of HealthCheckUnknown, HealthCheckOk, HealthCheckFail, AppinstDown",
-	"latency.stddev":           "Unbiased standard deviation",
+	"latency.stddev":           "Square root of unbiased variance",
 	"latency.variance":         "Unbiased variance",
 	"tags":                     "_(optional)_ Vendor specific data",
 }

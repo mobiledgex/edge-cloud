@@ -130,7 +130,7 @@ type Latency struct {
 	Avg float64 `protobuf:"fixed64,1,opt,name=avg,proto3" json:"avg,omitempty"`
 	Min float64 `protobuf:"fixed64,2,opt,name=min,proto3" json:"min,omitempty"`
 	Max float64 `protobuf:"fixed64,3,opt,name=max,proto3" json:"max,omitempty"`
-	// Unbiased standard deviation
+	// Square root of unbiased variance
 	StdDev float64 `protobuf:"fixed64,4,opt,name=std_dev,json=stdDev,proto3" json:"std_dev,omitempty"`
 	// Unbiased variance
 	Variance             float64    `protobuf:"fixed64,5,opt,name=variance,proto3" json:"variance,omitempty"`

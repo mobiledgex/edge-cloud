@@ -365,7 +365,7 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 func (s *server) StreamEdgeEvent(streamEdgeEventSvr dme.MatchEngineApi_StreamEdgeEventServer) error {
 	ctx := streamEdgeEventSvr.Context()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "StreamEdgeEvent")
-	return dmecommon.StreamEdgeEvent(ctx, &streamEdgeEventSvr)
+	return dmecommon.StreamEdgeEvent(ctx, streamEdgeEventSvr)
 }
 
 // Loads EdgeEvent Plugin functions into corresponding dmecommon functions

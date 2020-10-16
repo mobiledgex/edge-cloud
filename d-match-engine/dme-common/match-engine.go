@@ -969,7 +969,7 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
-func StreamEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_StreamEdgeEventServer) error {
+func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) error {
 	var appInstKey *edgeproto.AppInstKey
 	var cookieKey *CookieKey
 	terminated := make(chan struct{})
@@ -977,7 +977,7 @@ func StreamEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_StreamEdgeEven
 
 	// Intialize send function to be passed to plugin functions
 	sendFunc := func(event *dme.ServerEdgeEvent) {
-		err := (*svr).Send(event)
+		err := svr.Send(event)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error sending event to client", "error", err, "eventType", event.Event)
 			reterr = err
@@ -986,8 +986,8 @@ func StreamEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_StreamEdgeEven
 	}
 
 	//receive first msg from stream
-	initMsg, err := (*svr).Recv()
-	ctx = (*svr).Context()
+	initMsg, err := svr.Recv()
+	ctx = svr.Context()
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -1052,8 +1052,8 @@ func StreamEdgeEvent(ctx context.Context, svr *dme.MatchEngineApi_StreamEdgeEven
 		default:
 		}
 		//receive data from stream
-		cupdate, err := (*svr).Recv()
-		ctx = (*svr).Context()
+		cupdate, err := svr.Recv()
+		ctx = svr.Context()
 		//check receive errors
 		if err != nil && err != io.EOF {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
