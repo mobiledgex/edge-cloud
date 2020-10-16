@@ -1,0 +1,269 @@
+streamobjs:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  msgs:
+  - id: 1
+    msg: Deleting
+  - id: 2
+    msg: First Delete Task
+  - id: 3
+    msg: Second Delete Task
+  - id: 4
+    msg: NotPresent
+  - id: 5
+    msg: Deleted AppInst successfully
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo
+  msgs:
+  - id: 1
+    msg: Deleting
+  - id: 2
+    msg: First Delete Task
+  - id: 3
+    msg: Second Delete Task
+  - id: 4
+    msg: NotPresent
+  - id: 5
+    msg: Deleted AppInst successfully
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: helmApplication
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  msgs:
+  - id: 1
+    msg: Deleting
+  - id: 2
+    msg: First Delete Task
+  - id: 3
+    msg: Second Delete Task
+  - id: 4
+    msg: NotPresent
+  - id: 5
+    msg: Deleted AppInst successfully
+- key:
+    appkey:
+      organization: AcmeAppCo1
+      name: vmapp1
+      version: "1.0"
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo1
+  msgs:
+  - id: 1
+    msg: Deleting
+  - id: 2
+    msg: First Delete Task
+  - id: 3
+    msg: Second Delete Task
+  - id: 4
+    msg: NotPresent
+  - id: 5
+    msg: Deleted AppInst successfully
+- key:
+    appkey:
+      organization: AcmeAppCo1
+      name: vmapp2
+      version: "1.0"
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo1
+  msgs:
+  - id: 1
+    msg: Deleting
+  - id: 2
+    msg: First Delete Task
+  - id: 3
+    msg: Second Delete Task
+  - id: 4
+    msg: NotPresent
+  - id: 5
+    msg: Deleted AppInst successfully
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: NoPortsApp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  msgs:
+  - id: 1
+    msg: Deleting
+  - id: 2
+    msg: First Delete Task
+  - id: 3
+    msg: Second Delete Task
+  - id: 4
+    msg: NotPresent
+  - id: 5
+    msg: Deleted AppInst successfully
+- key:
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  msgs:
+  - id: 1
+    msg: Autodeleting AppInst MEXPrometheusAppName
+  - id: 2
+    msg: Deleting
+  - id: 3
+    msg: First Delete Task
+  - id: 4
+    msg: Second Delete Task
+  - id: 5
+    msg: NotPresent
+  - id: 6
+    msg: Deleted AppInst successfully
+  - id: 7
+    msg: Autodeleting AppInst NFSAutoProvision
+  - id: 8
+    msg: Deleting
+  - id: 9
+    msg: First Delete Task
+  - id: 10
+    msg: Second Delete Task
+  - id: 11
+    msg: NotPresent
+  - id: 12
+    msg: Deleted AppInst successfully
+  - id: 13
+    msg: Deleting
+  - id: 14
+    msg: First Delete Task
+  - id: 15
+    msg: Second Delete Task
+  - id: 16
+    msg: NotPresent
+  - id: 17
+    msg: Deleted ClusterInst successfully
+- key:
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo
+  msgs:
+  - id: 1
+    msg: Autodeleting AppInst MEXPrometheusAppName
+  - id: 2
+    msg: Deleting
+  - id: 3
+    msg: First Delete Task
+  - id: 4
+    msg: Second Delete Task
+  - id: 5
+    msg: NotPresent
+  - id: 6
+    msg: Deleted AppInst successfully
+  - id: 7
+    msg: Deleting
+  - id: 8
+    msg: First Delete Task
+  - id: 9
+    msg: Second Delete Task
+  - id: 10
+    msg: NotPresent
+  - id: 11
+    msg: Deleted ClusterInst successfully
+- key:
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+  msgs:
+  - id: 1
+    msg: Deleting Cloudlet
+  - id: 2
+    msg: Stopping CRMServer
+  - id: 3
+    msg: Deleted Cloudlet successfully
+- key:
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+  msgs:
+  - id: 1
+    msg: Deleting Cloudlet
+  - id: 2
+    msg: Stopping CRMServer
+  - id: 3
+    msg: Deleted Cloudlet successfully
+- key:
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-3
+  msgs:
+  - id: 1
+    msg: Deleting Cloudlet
+  - id: 2
+    msg: Stopping CRMServer
+  - id: 3
+    msg: Deleted Cloudlet successfully
+- key:
+    clusterinstkey:
+      cloudletkey:
+        organization: azure
+        name: azure-cloud-4
+  msgs:
+  - id: 1
+    msg: Deleting Cloudlet
+  - id: 2
+    msg: Stopping CRMServer
+  - id: 3
+    msg: Deleted Cloudlet successfully
+- key:
+    clusterinstkey:
+      cloudletkey:
+        organization: gcp
+        name: gcp-cloud-5
+  msgs:
+  - id: 1
+    msg: Deleting Cloudlet
+  - id: 2
+    msg: Stopping CRMServer
+  - id: 3
+    msg: Deleted Cloudlet successfully

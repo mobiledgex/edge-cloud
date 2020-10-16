@@ -157,6 +157,10 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			output := &testutil.AllDataOut{}
 			testutil.RunAllDataApis(run, &appData, appDataMap, output)
 			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
+		case "stream":
+			output := &testutil.AllDataStreamOut{}
+			testutil.RunAllDataStreamApis(run, &appData, output)
+			util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
 		default:
 			log.Printf("Error: unsupported controller API %s\n", api)
 			rc = false

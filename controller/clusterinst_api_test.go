@@ -84,6 +84,9 @@ func TestClusterInstApi(t *testing.T) {
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "create overrides delete error")
 	checkClusterInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
+	// progress message should exist
+	msgs := GetClusterInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// check override of error CREATE_ERROR
 	err = forceClusterInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR)
@@ -92,6 +95,9 @@ func TestClusterInstApi(t *testing.T) {
 	err = clusterInstApi.DeleteClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkClusterInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+	// progress message should exist
+	msgs = GetClusterInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// test update of autoscale policy
 	obj = testutil.ClusterInstData[0]
@@ -102,6 +108,9 @@ func TestClusterInstApi(t *testing.T) {
 	found := clusterInstApi.cache.Get(&obj.Key, &check)
 	require.True(t, found)
 	require.Equal(t, 2, int(check.NumNodes))
+	// progress message should exist
+	msgs = GetClusterInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	obj.AutoScalePolicy = testutil.AutoScalePolicyData[1].Key.Name
 	obj.Fields = []string{edgeproto.ClusterInstFieldAutoScalePolicy}
@@ -112,6 +121,9 @@ func TestClusterInstApi(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, testutil.AutoScalePolicyData[1].Key.Name, check.AutoScalePolicy)
 	require.Equal(t, 4, int(check.NumNodes))
+	// progress message should exist
+	msgs = GetClusterInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// override CRM error
 	responder.SetSimulateClusterCreateFailure(true)
@@ -120,10 +132,16 @@ func TestClusterInstApi(t *testing.T) {
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "override crm error")
+	// progress message should exist
+	msgs = GetClusterInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	require.Greater(t, len(msgs), 0, "some progress messages")
 	obj = testutil.ClusterInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
 	err = clusterInstApi.DeleteClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "override crm error")
+	// progress message should exist
+	msgs = GetClusterInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// ignore CRM
 	obj = testutil.ClusterInstData[0]

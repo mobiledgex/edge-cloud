@@ -2489,6 +2489,8 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
+	bufferedMsgs := []string{}
+	recvdStatus := false
 	var err error
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
@@ -2503,10 +2505,29 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 			var msg string
 			if statusString != "" {
 				msg = statusString
+				recvdStatus = true
 			} else {
 				msg = TrackedState_CamelName[int32(curState)]
 			}
-			send(&Result{Message: msg})
+			if recvdStatus {
+				// recvdStatus flag is for backwards compatibility.
+				// With current code we support msg streaming via streamObjs,
+				// but in case there are old versions of CRM sending msgs via
+				// status msg, only then we send msgs to cb
+				for _, bufMsg := range bufferedMsgs {
+					send(&Result{Message: bufMsg})
+				}
+				bufferedMsgs = nil
+				send(&Result{Message: msg})
+			} else {
+				// NotPresent is a state msg generated from this code, hence
+				// allow it
+				if msg == TrackedState_CamelName[int32(TrackedState_NOT_PRESENT)] {
+					send(&Result{Message: msg})
+				} else {
+					bufferedMsgs = append(bufferedMsgs, msg)
+				}
+			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for VMPool")
 		log.DebugLog(log.DebugLevelApi, "Watch event for VMPool", "key", key, "state", TrackedState_CamelName[int32(curState)], "status", info.Status)
