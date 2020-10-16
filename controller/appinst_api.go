@@ -1291,7 +1291,7 @@ func isIPAllocatedPerService(platformType edgeproto.PlatformType, operator strin
 	log.DebugLog(log.DebugLevelApi, "isIPAllocatedPerService", "platformType", platformType, "operator", operator)
 
 	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
-		// for a fake cloudlet used in testing, decide based on operator name,
+		// for a fake cloudlet used in testing, decide based on operator name
 		return operator == cloudcommon.OperatorGCP || operator == cloudcommon.OperatorAzure || operator == cloudcommon.OperatorAWS
 	}
 	return platformType == edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS ||
