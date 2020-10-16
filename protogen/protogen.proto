@@ -155,9 +155,6 @@ extend google.protobuf.MethodOptions {
   // objects, so the auto-generators make certain assumptions and behaviors.
   // To avoid these behaviors, this can be overridden by the below option.
   bool non_standard_show = 51040;
-  // Implement a streamer cache to cache a return stream data so it can be
-  // retrieved via a separate api.
-  bool mc2_streamer_cache = 51041;
   // MC connect to notify root instead of controller for rpc
   bool mc2_api_notifyroot = 51042;
   // Specifies the org field path and requires to the org to exist

@@ -94,19 +94,19 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	}
 	cluster, err := FindCluster(names.ClusterName)
 	if err != nil {
-		s.DeleteAppInst(ctx, clusterInst, app, appInst)
+		s.DeleteAppInst(ctx, clusterInst, app, appInst, updateCallback)
 		return err
 	}
 	masterIP := cluster.MasterAddr
 	err = s.patchDindSevice(ctx, names, masterIP)
 	if err != nil {
-		s.DeleteAppInst(ctx, clusterInst, app, appInst)
+		s.DeleteAppInst(ctx, clusterInst, app, appInst, updateCallback)
 		return err
 	}
 	return nil
 }
 
-func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	var err error
 	client := &pc.LocalClient{}
 	DeploymentType := app.Deployment

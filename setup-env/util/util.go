@@ -615,6 +615,16 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = r1
 		y2 = r2
+	} else if fileType == "appstream" {
+		//for appdata, use the AllData type so we can sort it
+		var a1 testutil.AllDataStreamOut
+		var a2 testutil.AllDataStreamOut
+
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
+
+		y1 = a1
+		y2 = a2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)

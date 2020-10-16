@@ -41,6 +41,7 @@ var fakeProps = map[string]*edgeproto.PropertyInfo{
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
+
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
@@ -75,7 +76,9 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, "First Delete Task")
+	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst deleted")
 	return nil
 }
@@ -86,7 +89,9 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	return nil
 }
 
-func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, "First Delete Task")
+	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst deleted")
 	return nil
 }
@@ -144,7 +149,6 @@ func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (strin
 func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "create fake cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
-
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
