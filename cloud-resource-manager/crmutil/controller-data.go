@@ -33,6 +33,7 @@ type ControllerData struct {
 	AlertCache               edgeproto.AlertCache
 	SettingsCache            edgeproto.SettingsCache
 	ResTagTableCache         edgeproto.ResTagTableCache
+	StreamObjInfoCache       edgeproto.StreamObjInfoCache
 	ExecReqHandler           *ExecReqHandler
 	ExecReqSend              *notify.ExecRequestSend
 	ControllerWait           chan bool
@@ -74,6 +75,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
+	edgeproto.InitStreamObjInfoCache(&cd.StreamObjInfoCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
@@ -155,18 +157,21 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.ClusterInstInfoCache.SetStatusTask(ctx, &new.Key, value)
+			cd.StreamClusterInstMsg(ctx, &new.Key, updateType, value)
 		case edgeproto.UpdateStep:
-			cd.ClusterInstInfoCache.SetStatusStep(ctx, &new.Key, value)
+			cd.StreamClusterInstMsg(ctx, &new.Key, updateType, value)
 		}
 	}
 
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
+		// reset stream for the new action
+		cd.ResetClusterInstStream(ctx, &new.Key)
+
 		// create
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
 		// create or update k8s cluster on this cloudlet
-		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING)
+		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateClusterCacheCallback)
 		if err != nil {
 			return
 		}
@@ -177,7 +182,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			defer cspan.Finish()
 			if !cd.CloudletCache.Get(&new.Key.CloudletKey, &cloudlet) {
 				log.WarnLog("Could not find cloudlet in cache", "key", new.Key.CloudletKey)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey))
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey), updateClusterCacheCallback)
 				return
 			}
 			timeout := cd.settings.CreateClusterInstTimeout.TimeDuration()
@@ -192,24 +197,27 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				policy.Key.Name = new.PrivacyPolicy
 				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
 					log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
-					cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found")
+					cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found", updateClusterCacheCallback)
 					return
 				}
 			}
 			err = cd.platform.CreateClusterInst(ctx, new, &policy, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error cluster create fail", "error", err)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err))
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err), updateClusterCacheCallback)
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
 
 			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		// reset stream for the new action
+		cd.ResetClusterInstStream(ctx, &new.Key)
+
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
-		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING)
+		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateClusterCacheCallback)
 		if err != nil {
 			return
 		}
@@ -221,14 +229,14 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			policy.Key.Name = new.PrivacyPolicy
 			if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, "Privacy Policy not found")
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, "Privacy Policy not found", updateClusterCacheCallback)
 				return
 			}
 		}
 		err = cd.platform.UpdateClusterInst(ctx, new, &policy, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
-			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str)
+			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateClusterCacheCallback)
 			return
 		}
 		// Update Runtime info of apps deployed on this Cluster
@@ -246,19 +254,22 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", obj.Key, "err", err)
 				} else {
-					cd.appInstInfoRuntime(ctx, &obj.Key, edgeproto.TrackedState_READY, rt)
+					cd.appInstInfoRuntime(ctx, &obj.Key, edgeproto.TrackedState_READY, rt, updateClusterCacheCallback)
 				}
 			}
 			return nil
 		})
 
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
+		// reset stream for the new action
+		cd.ResetClusterInstStream(ctx, &new.Key)
+
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
 		// clusterInst was deleted
-		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING)
+		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback)
 		if err != nil {
 			return
 		}
@@ -267,10 +278,10 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 			log.SpanLog(ctx, log.DebugLevelInfra, "delete cluster inst", "ClusterInst", *new)
-			err = cd.platform.DeleteClusterInst(ctx, new)
+			err = cd.platform.DeleteClusterInst(ctx, new, updateClusterCacheCallback)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str)
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateClusterCacheCallback)
 				return
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "set cluster inst deleted", "ClusterInst", *new)
@@ -310,20 +321,23 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	updateAppCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.AppInstInfoCache.SetStatusTask(ctx, &new.Key, value)
+			cd.StreamAppInstMsg(ctx, &new.Key, updateType, value)
 		case edgeproto.UpdateStep:
-			cd.AppInstInfoCache.SetStatusStep(ctx, &new.Key, value)
+			cd.StreamAppInstMsg(ctx, &new.Key, updateType, value)
 		}
 	}
 
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
+		// reset stream for the new action
+		cd.ResetAppInstStream(ctx, &new.Key)
+
 		// create
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&new.Flavor, &flavor)
 		if !flavorFound {
 			str := fmt.Sprintf("Flavor %s not found",
 				new.Flavor.Name)
-			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str)
+			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
@@ -332,12 +346,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.Key.ClusterInstKey.ClusterKey.Name)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str)
+				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
 				return
 			}
 		}
 
-		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING)
+		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateAppCacheCallback)
 		if err != nil {
 			return
 		}
@@ -353,16 +367,16 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				policy.Key.Name = new.PrivacyPolicy
 				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
 					log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for AppInst", "policyName", policy.Key.Name)
-					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found")
+					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found", updateAppCacheCallback)
 					return
 				}
 			}
 			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, &policy, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr)
+				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr, updateAppCacheCallback)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't create app inst", "error", errstr, "key", new.Key)
-				derr := cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new)
+				derr := cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
 				if derr != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup app inst", "error", errstr, "key", new.Key)
 				}
@@ -374,13 +388,16 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, new)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", new.Key, "err", err)
-				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateAppCacheCallback)
 			} else {
-				cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt)
+				cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING)
+		// reset stream for the new action
+		cd.ResetAppInstStream(ctx, &new.Key)
+
+		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
 		if err != nil {
 			return
 		}
@@ -393,11 +410,11 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if err != nil {
 				errstr := fmt.Sprintf("Set AppInst PowerState failed: %s", err)
 				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.PowerState_POWER_STATE_ERROR)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr)
+				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't set power state on AppInst", "error", err, "key", new.Key)
 			} else {
 				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.GetNextPowerState(nextPowerState, edgeproto.FinalState))
-				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateAppCacheCallback)
 			}
 			return
 		}
@@ -407,14 +424,14 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.Key.ClusterInstKey.ClusterKey.Name)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str)
+				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateAppCacheCallback)
 				return
 			}
 		}
 		err = cd.platform.UpdateAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update App Inst failed: %s", err)
-			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr)
+			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback)
 			log.SpanLog(ctx, log.DebugLevelInfra, "can't update app inst", "error", errstr, "key", new.Key)
 			return
 		}
@@ -422,23 +439,26 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, new)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", new.Key, "err", err)
-			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY)
+			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateAppCacheCallback)
 		} else {
-			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt)
+			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
+		// reset stream for the new action
+		cd.ResetAppInstStream(ctx, &new.Key)
+
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.Key.ClusterInstKey.ClusterKey.Name)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str)
+				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateAppCacheCallback)
 				return
 			}
 		}
 		// appInst was deleted
-		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING)
+		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateAppCacheCallback)
 		if err != nil {
 			return
 		}
@@ -448,10 +468,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
-			err = cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new)
+			err = cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, errstr)
+				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, errstr, updateAppCacheCallback)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't delete app inst", "error", errstr, "key", new.Key)
 				return
 			}
@@ -481,11 +501,13 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	}
 }
 
-func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string) {
+func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {
+	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
 	cd.ClusterInstInfoCache.SetError(ctx, key, errState, err)
 }
 
-func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgeproto.ClusterInstKey, state edgeproto.TrackedState) error {
+func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgeproto.ClusterInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	if err := cd.ClusterInstInfoCache.SetState(ctx, key, state); err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
 		return err
@@ -493,11 +515,13 @@ func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgepro
 	return nil
 }
 
-func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.AppInstKey, errState edgeproto.TrackedState, err string) {
+func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.AppInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {
+	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
 	cd.AppInstInfoCache.SetError(ctx, key, errState, err)
 }
 
-func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState) error {
+func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	if err := cd.AppInstInfoCache.SetState(ctx, key, state); err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "AppInst set state failed", "err", err)
 		return err
@@ -513,7 +537,8 @@ func (cd *ControllerData) appInstInfoPowerState(ctx context.Context, key *edgepr
 	return nil
 }
 
-func (cd *ControllerData) appInstInfoRuntime(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, rt *edgeproto.AppInstRuntime) {
+func (cd *ControllerData) appInstInfoRuntime(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, rt *edgeproto.AppInstRuntime, updateCallback edgeproto.CacheUpdateCallback) {
+	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	cd.AppInstInfoCache.SetStateRuntime(ctx, key, state, rt)
 }
 
@@ -615,8 +640,10 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
+			cd.StreamCloudletMsg(ctx, &new.Key, updateType, value)
 			cd.CloudletInfoCache.SetStatusTask(ctx, &new.Key, value)
 		case edgeproto.UpdateStep:
+			cd.StreamCloudletMsg(ctx, &new.Key, updateType, value)
 			cd.CloudletInfoCache.SetStatusStep(ctx, &new.Key, value)
 		}
 	}
@@ -624,6 +651,9 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// Reset old Status
 		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
+
+		// reset stream for the new action
+		cd.ResetCloudletStream(ctx, &new.Key)
 
 		cloudlet := edgeproto.Cloudlet{}
 		// Check current thread state
@@ -921,4 +951,34 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 
 	// TODO calculate Flavor info and send CloudletInfo again
+}
+
+func (cd *ControllerData) StreamAppInstMsg(ctx context.Context, key *edgeproto.AppInstKey, updateType edgeproto.CacheUpdateType, msg string) {
+	streamKey := key
+	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
+}
+
+func (cd *ControllerData) ResetAppInstStream(ctx context.Context, key *edgeproto.AppInstKey) {
+	streamObjInfo := edgeproto.StreamObjInfo{Key: *key}
+	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
+}
+
+func (cd *ControllerData) StreamClusterInstMsg(ctx context.Context, key *edgeproto.ClusterInstKey, updateType edgeproto.CacheUpdateType, msg string) {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
+	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
+}
+
+func (cd *ControllerData) ResetClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey) {
+	streamObjInfo := edgeproto.StreamObjInfo{Key: edgeproto.AppInstKey{ClusterInstKey: *key}}
+	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
+}
+
+func (cd *ControllerData) StreamCloudletMsg(ctx context.Context, key *edgeproto.CloudletKey, updateType edgeproto.CacheUpdateType, msg string) {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
+	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
+}
+
+func (cd *ControllerData) ResetCloudletStream(ctx context.Context, key *edgeproto.CloudletKey) {
+	streamObjInfo := edgeproto.StreamObjInfo{Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}}
+	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
 }
