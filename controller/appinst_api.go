@@ -660,7 +660,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		} else {
-			if isIPAllocatedPerService(cloudlet.PlatformType) {
+			if isIPAllocatedPerService(cloudlet.PlatformType, clusterInst.Key.CloudletKey.Organization) {
 				//dedicated access in which each service gets a different ip
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				for ii, _ := range ports {
@@ -1287,7 +1287,13 @@ func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppIns
 }
 
 // public cloud k8s cluster allocates a separate IP per service.  This is a type of dedicated access
-func isIPAllocatedPerService(platformType edgeproto.PlatformType) bool {
+func isIPAllocatedPerService(platformType edgeproto.PlatformType, operator string) bool {
+	log.DebugLog(log.DebugLevelApi, "isIPAllocatedPerService", "platformType", platformType, "operator", operator)
+
+	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+		// for a fake cloudlet used in testing, decide based on operator name
+		return operator == cloudcommon.OperatorGCP || operator == cloudcommon.OperatorAzure || operator == cloudcommon.OperatorAWS
+	}
 	return platformType == edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS ||
 		platformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE ||
 		platformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP
@@ -1295,7 +1301,7 @@ func isIPAllocatedPerService(platformType edgeproto.PlatformType) bool {
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, platformType edgeproto.PlatformType, refs *edgeproto.CloudletRefs) error {
 
-	if isIPAllocatedPerService(platformType) {
+	if isIPAllocatedPerService(platformType, cloudlet.Key.Organization) {
 		// we don't track IPs in managed k8s clouds
 		return nil
 	}

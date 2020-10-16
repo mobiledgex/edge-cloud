@@ -140,7 +140,7 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	platName := edgeproto.PlatformType_name[int32(platformType)]
 
 	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
-	if isIPAllocatedPerService(platformType) {
+	if isIPAllocatedPerService(platformType, clusterInst.Key.CloudletKey.Organization) {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for platform: " + platName})
 			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
