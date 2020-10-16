@@ -207,6 +207,13 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.VmPools[i0].CrmOverride = 0
 		}
 	}
+	for i0 := 0; i0 < len(in.StreamObjs); i0++ {
+		for i1 := 0; i1 < len(in.StreamObjs[i0].Msgs); i1++ {
+		}
+		if _, found := tags["nocmp"]; found {
+			in.StreamObjs[i0].State = 0
+		}
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -526,6 +533,19 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.status.taskname",
 	"vmpools:#.status.stepname",
 	"vmpools:#.crmoverride",
+	"streamobjs:#.key.appkey.organization",
+	"streamobjs:#.key.appkey.name",
+	"streamobjs:#.key.appkey.version",
+	"streamobjs:#.key.clusterinstkey.clusterkey.name",
+	"streamobjs:#.key.clusterinstkey.cloudletkey.organization",
+	"streamobjs:#.key.clusterinstkey.cloudletkey.name",
+	"streamobjs:#.key.clusterinstkey.organization",
+	"streamobjs:#.msgs:#.id",
+	"streamobjs:#.msgs:#.msg",
+	"streamobjs:#.state",
+	"streamobjs:#.lastid",
+	"streamobjs:#.lease",
+	"streamobjs:#.errormsg",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -810,6 +830,19 @@ var AllDataComments = map[string]string{
 	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"vmpools:#.errors":                                           "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                      "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"streamobjs:#.key.appkey.organization":                       "App developer organization",
+	"streamobjs:#.key.appkey.name":                               "App name",
+	"streamobjs:#.key.appkey.version":                            "App version",
+	"streamobjs:#.key.clusterinstkey.clusterkey.name":            "Cluster name",
+	"streamobjs:#.key.clusterinstkey.cloudletkey.organization":   "Organization of the cloudlet site",
+	"streamobjs:#.key.clusterinstkey.cloudletkey.name":           "Name of the cloudlet",
+	"streamobjs:#.key.clusterinstkey.organization":               "Name of Developer organization that this cluster belongs to",
+	"streamobjs:#.msgs:#.id":                                     "Unique message ID",
+	"streamobjs:#.msgs:#.msg":                                    "Stream message",
+	"streamobjs:#.state":                                         "Current state of the obj on the Cloudlet, one of StreamUnknown, StreamStart, StreamStop, StreamError",
+	"streamobjs:#.lastid":                                        "Last ID to track duplicate messages",
+	"streamobjs:#.lease":                                         "Lease time",
+	"streamobjs:#.errormsg":                                      "Stream error message, if any",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",

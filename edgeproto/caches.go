@@ -286,7 +286,7 @@ func (s *AppInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *AppInstKe
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
-		log.InfoLog("SetStatusTaskMax failed, did not find clusterInst in cache")
+		log.InfoLog("SetStatusTaskMax failed, did not find appInstInfo in cache")
 		return
 	}
 	info.Status.SetMaxTasks(maxTasks)
@@ -298,7 +298,7 @@ func (s *AppInstInfoCache) SetStatusTask(ctx context.Context, key *AppInstKey, t
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
-		log.InfoLog("SetStatusTask failed, did not find clusterInst in cache")
+		log.InfoLog("SetStatusTask failed, did not find appInstInfo in cache")
 		return
 	}
 	info.Status.SetTask(taskName)
@@ -310,7 +310,7 @@ func (s *AppInstInfoCache) SetStatusStep(ctx context.Context, key *AppInstKey, s
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
-		log.InfoLog("SetStatusStep failed, did not find clusterInst in cache")
+		log.InfoLog("SetStatusStep failed, did not find appInstInfo in cache")
 		return
 	}
 	info.Status.SetStep(stepName)
@@ -361,4 +361,29 @@ func (s *CloudletInfoCache) SetStatusStep(ctx context.Context, key *CloudletKey,
 	}
 	info.Status.SetStep(stepName)
 	s.Update(ctx, &info, 0)
+}
+
+func (s *StreamObjInfoCache) AddStreamMsg(ctx context.Context, key *AppInstKey, updateType CacheUpdateType, msg string) {
+	s.UpdateModFunc(ctx, key, 0, func(old *StreamObjInfo) (newObj *StreamObjInfo, changed bool) {
+		obj := &StreamObjInfo{}
+		if old == nil {
+			obj.Key = *key
+			obj.LastId = 0
+		} else {
+			*obj = *old
+		}
+		objMsg := msg
+		if updateType == UpdateStep {
+			if len(obj.Msgs) > 0 && obj.LastId > 0 {
+				objMsg = obj.Msgs[obj.LastId-1].Msg
+				objMsg += fmt.Sprintf(", %s", msg)
+			}
+		}
+		obj.LastId++
+		obj.Msgs = append(obj.Msgs, &StreamMsg{
+			Id:  obj.LastId,
+			Msg: objMsg,
+		})
+		return obj, true
+	})
 }
