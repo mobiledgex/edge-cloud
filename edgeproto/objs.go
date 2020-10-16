@@ -459,6 +459,10 @@ func (s *StreamObj) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (s *StreamObjInfo) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func (key *PolicyKey) ValidateKey() error {
 	if err := util.ValidObjName(key.Organization); err != nil {
 		errstring := err.Error()

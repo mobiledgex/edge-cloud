@@ -201,15 +201,6 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
 }
 
-func sendCloudletMsg(ctx context.Context, key *edgeproto.CloudletKey, res *edgeproto.Result) {
-	streamKey := edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
-	if res != nil {
-		if streamSendObj, ok := streamObjApi.streamBuf[streamKey]; ok {
-			streamSendObj.msgCh <- res.Message
-		}
-	}
-}
-
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
 		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC

@@ -472,6 +472,7 @@ func InitApis(sync *Sync) {
 	InitCloudletRefsApi(sync)
 	InitAppInstRefsApi(sync)
 	InitStreamObjApi(sync)
+	InitStreamObjInfoApi(sync)
 	InitControllerApi(sync)
 	InitCloudletPoolApi(sync)
 	InitExecApi()
@@ -509,7 +510,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)
-	notify.ServerMgrOne.RegisterRecv(notify.NewStreamObjRecvMany(&streamObjApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewStreamObjInfoRecvMany(&streamObjInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(&vmPoolInfoApi))

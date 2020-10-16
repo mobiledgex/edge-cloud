@@ -33,7 +33,7 @@ type ControllerData struct {
 	AlertCache               edgeproto.AlertCache
 	SettingsCache            edgeproto.SettingsCache
 	ResTagTableCache         edgeproto.ResTagTableCache
-	StreamObjCache           edgeproto.StreamObjCache
+	StreamObjInfoCache       edgeproto.StreamObjInfoCache
 	ExecReqHandler           *ExecReqHandler
 	ExecReqSend              *notify.ExecRequestSend
 	ControllerWait           chan bool
@@ -75,7 +75,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
-	edgeproto.InitStreamObjCache(&cd.StreamObjCache)
+	edgeproto.InitStreamObjInfoCache(&cd.StreamObjInfoCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
@@ -955,30 +955,30 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 
 func (cd *ControllerData) StreamAppInstMsg(ctx context.Context, key *edgeproto.AppInstKey, updateType edgeproto.CacheUpdateType, msg string) {
 	streamKey := key
-	cd.StreamObjCache.AddStreamMsg(ctx, streamKey, updateType, msg)
+	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
 }
 
 func (cd *ControllerData) ResetAppInstStream(ctx context.Context, key *edgeproto.AppInstKey) {
-	streamObj := edgeproto.StreamObj{Key: *key}
-	cd.StreamObjCache.Delete(ctx, &streamObj, 0)
+	streamObjInfo := edgeproto.StreamObjInfo{Key: *key}
+	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
 }
 
 func (cd *ControllerData) StreamClusterInstMsg(ctx context.Context, key *edgeproto.ClusterInstKey, updateType edgeproto.CacheUpdateType, msg string) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
-	cd.StreamObjCache.AddStreamMsg(ctx, streamKey, updateType, msg)
+	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
 }
 
 func (cd *ControllerData) ResetClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey) {
-	streamObj := edgeproto.StreamObj{Key: edgeproto.AppInstKey{ClusterInstKey: *key}}
-	cd.StreamObjCache.Delete(ctx, &streamObj, 0)
+	streamObjInfo := edgeproto.StreamObjInfo{Key: edgeproto.AppInstKey{ClusterInstKey: *key}}
+	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
 }
 
 func (cd *ControllerData) StreamCloudletMsg(ctx context.Context, key *edgeproto.CloudletKey, updateType edgeproto.CacheUpdateType, msg string) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
-	cd.StreamObjCache.AddStreamMsg(ctx, streamKey, updateType, msg)
+	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
 }
 
 func (cd *ControllerData) ResetCloudletStream(ctx context.Context, key *edgeproto.CloudletKey) {
-	streamObj := edgeproto.StreamObj{Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}}
-	cd.StreamObjCache.Delete(ctx, &streamObj, 0)
+	streamObjInfo := edgeproto.StreamObjInfo{Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}}
+	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
 }

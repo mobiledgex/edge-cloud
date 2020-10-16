@@ -167,58 +167,107 @@ func (m *StreamObj) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StreamObj proto.InternalMessageInfo
 
+// StreamObjInfo to track running status of stream enabled objects from CRM
+type StreamObjInfo struct {
+	// AppInst key - Common key for all stream enabled objects
+	Key AppInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
+	// Obj status messages
+	Msgs []*StreamMsg `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
+	// Last ID to track duplicate messages
+	LastId uint32 `protobuf:"varint,3,opt,name=last_id,json=lastId,proto3" json:"last_id,omitempty"`
+}
+
+func (m *StreamObjInfo) Reset()         { *m = StreamObjInfo{} }
+func (m *StreamObjInfo) String() string { return proto.CompactTextString(m) }
+func (*StreamObjInfo) ProtoMessage()    {}
+func (*StreamObjInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb17ef3f514bfe54, []int{2}
+}
+func (m *StreamObjInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *StreamObjInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_StreamObjInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *StreamObjInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StreamObjInfo.Merge(m, src)
+}
+func (m *StreamObjInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *StreamObjInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_StreamObjInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StreamObjInfo proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterEnum("edgeproto.StreamState", StreamState_name, StreamState_value)
 	proto.RegisterType((*StreamMsg)(nil), "edgeproto.StreamMsg")
 	proto.RegisterType((*StreamObj)(nil), "edgeproto.StreamObj")
+	proto.RegisterType((*StreamObjInfo)(nil), "edgeproto.StreamObjInfo")
 }
 
 func init() { proto.RegisterFile("stream.proto", fileDescriptor_bb17ef3f514bfe54) }
 
 var fileDescriptor_bb17ef3f514bfe54 = []byte{
-	// 669 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x93, 0x41, 0x6f, 0xd3, 0x48,
-	0x14, 0xc7, 0x33, 0x76, 0xd2, 0xdd, 0x4c, 0x9a, 0xd4, 0x9d, 0x4d, 0xbb, 0xd3, 0x6c, 0xe5, 0x8d,
-	0x72, 0x0a, 0x55, 0x1a, 0xa3, 0x70, 0x41, 0xe5, 0x94, 0x56, 0x3d, 0x54, 0x69, 0x1a, 0x98, 0x94,
-	0xc2, 0xad, 0x72, 0x92, 0xd1, 0x60, 0x70, 0x3c, 0x96, 0xc7, 0x11, 0x84, 0x13, 0xe2, 0x03, 0xa0,
-	0x02, 0x37, 0x3e, 0x41, 0xcf, 0xfd, 0x12, 0xf4, 0x58, 0x89, 0x0b, 0xe2, 0x80, 0xa0, 0xe5, 0x80,
-	0x7a, 0x42, 0x6a, 0xca, 0x19, 0x79, 0xec, 0xa4, 0xae, 0x68, 0xc5, 0xc5, 0x7a, 0xf3, 0xe6, 0xff,
-	0x66, 0x7e, 0x6f, 0xfe, 0x7e, 0x70, 0x5a, 0xf8, 0x1e, 0x35, 0xfb, 0x55, 0xd7, 0xe3, 0x3e, 0x47,
-	0x69, 0xda, 0x63, 0x54, 0x86, 0x85, 0xac, 0xe9, 0xba, 0x96, 0x23, 0xfc, 0x70, 0xa7, 0x30, 0xdb,
-	0xb5, 0x07, 0xc2, 0xa7, 0x5e, 0x2c, 0x95, 0xeb, 0xda, 0x7c, 0xd0, 0xb3, 0xe9, 0x78, 0x7d, 0x9b,
-	0x59, 0xfe, 0xa3, 0x41, 0xa7, 0xda, 0xe5, 0x7d, 0xa3, 0xcf, 0x3b, 0x96, 0x1d, 0x1c, 0xf6, 0xcc,
-	0x08, 0xbe, 0xcb, 0x52, 0x6a, 0x48, 0x1d, 0xa3, 0xce, 0x24, 0x88, 0x2a, 0x17, 0x19, 0xe7, 0xcc,
-	0xa6, 0x86, 0xe9, 0x5a, 0x86, 0xe9, 0x38, 0xdc, 0x37, 0x7d, 0x8b, 0x3b, 0x22, 0xda, 0xcd, 0x33,
-	0xce, 0xb8, 0x0c, 0x8d, 0x20, 0x0a, 0xb3, 0xa5, 0x65, 0x98, 0x6e, 0x4b, 0xf4, 0xa6, 0x60, 0x28,
-	0x07, 0x15, 0xab, 0x87, 0x41, 0x11, 0x94, 0xb3, 0x44, 0xb1, 0x7a, 0x48, 0x83, 0x6a, 0x5f, 0x30,
-	0xac, 0x14, 0x41, 0x39, 0x4d, 0x82, 0xb0, 0xf4, 0x5e, 0x19, 0xeb, 0x5b, 0x9d, 0xc7, 0x68, 0x19,
-	0xaa, 0x4f, 0xe8, 0x50, 0x16, 0x64, 0x6a, 0x73, 0xd5, 0x49, 0xd7, 0xd5, 0xba, 0xeb, 0x6e, 0x38,
-	0xc2, 0x6f, 0xd0, 0xe1, 0x6a, 0xf2, 0xf0, 0xf3, 0xff, 0x09, 0x12, 0xe8, 0x50, 0x19, 0x26, 0xfb,
-	0x82, 0x09, 0xac, 0x14, 0xd5, 0x72, 0xa6, 0x96, 0x8f, 0xe9, 0x27, 0x08, 0x44, 0x2a, 0xd0, 0x1d,
-	0x98, 0x12, 0xbe, 0xe9, 0x53, 0xac, 0x16, 0x41, 0x39, 0x57, 0x9b, 0xff, 0x4d, 0xda, 0x0e, 0x76,
-	0x57, 0xb3, 0xfb, 0x23, 0x0c, 0xde, 0x1c, 0x2c, 0xa4, 0x1c, 0xde, 0xed, 0xbb, 0x24, 0xac, 0x41,
-	0xff, 0xc2, 0xbf, 0x6c, 0x53, 0xf8, 0xbb, 0x56, 0x0f, 0x27, 0x65, 0x2b, 0x53, 0xc1, 0x72, 0xa3,
-	0x87, 0xf2, 0x30, 0x65, 0x53, 0x53, 0x50, 0x9c, 0x2a, 0x82, 0xb2, 0x4a, 0xc2, 0x05, 0xfa, 0x0f,
-	0xa6, 0xa9, 0xe7, 0x71, 0x6f, 0x37, 0x68, 0x75, 0x4a, 0xb6, 0xfa, 0xb7, 0x4c, 0x34, 0x05, 0x5b,
-	0x79, 0xf8, 0xfd, 0x0c, 0x83, 0x1f, 0x67, 0x18, 0xbc, 0x18, 0x61, 0xb0, 0x17, 0xdc, 0x76, 0x8e,
-	0x0b, 0x4d, 0xc1, 0x44, 0x65, 0x53, 0x9e, 0x59, 0xd9, 0x0c, 0xce, 0xa8, 0xac, 0x47, 0xfa, 0x4f,
-	0xe7, 0x58, 0x6f, 0xd0, 0x61, 0x75, 0x2d, 0x74, 0x39, 0x7a, 0x83, 0xea, 0x5a, 0xe4, 0x70, 0x83,
-	0x0e, 0x0f, 0x7e, 0xe2, 0xa4, 0xc3, 0x1d, 0xba, 0xb4, 0x03, 0x33, 0xb1, 0x56, 0x10, 0x82, 0xb9,
-	0xf6, 0x36, 0x59, 0xaf, 0x37, 0x77, 0xef, 0x6f, 0x35, 0xb6, 0x5a, 0x0f, 0xb6, 0xb4, 0x04, 0xd2,
-	0xe0, 0x74, 0x94, 0x6b, 0x6f, 0xd7, 0xc9, 0xb6, 0x06, 0xd0, 0x0c, 0xcc, 0x4c, 0x32, 0xad, 0xbb,
-	0x9a, 0x12, 0x93, 0xac, 0x13, 0xd2, 0x22, 0x9a, 0x5a, 0x3b, 0x52, 0xe1, 0xf4, 0xc4, 0xa1, 0xba,
-	0x6b, 0xa1, 0xd7, 0x00, 0x66, 0xc3, 0x44, 0xe4, 0x0a, 0xba, 0xda, 0xa9, 0xc2, 0x95, 0x86, 0x94,
-	0xee, 0x9d, 0x8e, 0xb0, 0x41, 0xa8, 0xe0, 0x03, 0xaf, 0x4b, 0x23, 0xb5, 0xa8, 0xd4, 0xbb, 0xc1,
-	0xaf, 0xb5, 0x63, 0xd1, 0xa7, 0x95, 0xba, 0xeb, 0x06, 0x3d, 0xb6, 0x3c, 0x66, 0x3a, 0xd6, 0x73,
-	0xf9, 0xcb, 0xed, 0x9f, 0x63, 0xf0, 0xf2, 0xc3, 0xb7, 0xb7, 0x4a, 0xbe, 0x34, 0x63, 0x84, 0x93,
-	0x61, 0x44, 0x73, 0xb0, 0x02, 0x96, 0x6e, 0x02, 0xf4, 0x0e, 0xc0, 0xd9, 0xf0, 0x8a, 0xd8, 0x4b,
-	0xa1, 0x85, 0x18, 0xc0, 0xe5, 0x17, 0xbc, 0x86, 0x8d, 0x9c, 0x8e, 0x70, 0x65, 0xcc, 0x16, 0xab,
-	0xb8, 0xc4, 0x77, 0x25, 0x18, 0x2e, 0xfd, 0x33, 0x06, 0x8b, 0x4d, 0x64, 0x08, 0xf7, 0x0a, 0xc0,
-	0xdc, 0x18, 0x2e, 0xf4, 0x0d, 0xcd, 0x5f, 0x22, 0x9b, 0x98, 0x79, 0x0d, 0xd6, 0xe6, 0xe9, 0x08,
-	0xdf, 0xb8, 0xc0, 0x0a, 0xe5, 0x7f, 0x66, 0x9a, 0x2b, 0x69, 0x17, 0x4c, 0x61, 0x91, 0x04, 0x5a,
-	0x5d, 0x3c, 0xfc, 0xaa, 0x27, 0x0e, 0x8f, 0x75, 0x70, 0x74, 0xac, 0x83, 0x2f, 0xc7, 0x3a, 0xd8,
-	0x3b, 0xd1, 0x13, 0x47, 0x27, 0x7a, 0xe2, 0xe3, 0x89, 0x9e, 0xe8, 0x4c, 0xc9, 0xeb, 0x6f, 0xfd,
-	0x0a, 0x00, 0x00, 0xff, 0xff, 0x78, 0x0e, 0x35, 0x04, 0x83, 0x04, 0x00, 0x00,
+	// 741 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x94, 0x41, 0x4f, 0x13, 0x4d,
+	0x18, 0xc7, 0x3b, 0xdd, 0x96, 0xf7, 0xed, 0x94, 0x96, 0x65, 0xde, 0xc2, 0x3b, 0x54, 0xb2, 0x36,
+	0x7b, 0xaa, 0xa4, 0x74, 0x4d, 0xbd, 0x18, 0x4c, 0x4c, 0x0a, 0xe1, 0x40, 0x4a, 0xa9, 0x6e, 0x2b,
+	0x1e, 0xc9, 0xb6, 0x1d, 0x96, 0xc5, 0x76, 0x67, 0xb3, 0xb3, 0x0d, 0xd6, 0xc4, 0xc4, 0xf8, 0x01,
+	0x0c, 0xea, 0xcd, 0x93, 0x47, 0xce, 0x7c, 0x03, 0xe3, 0x85, 0x23, 0x89, 0x17, 0xe3, 0xc1, 0x28,
+	0x78, 0x30, 0x9c, 0x4c, 0x28, 0x9e, 0xcd, 0xce, 0x6e, 0x97, 0x6d, 0x80, 0xe8, 0xc5, 0x4b, 0x33,
+	0x33, 0xcf, 0xff, 0x99, 0xf9, 0x3d, 0xff, 0xa7, 0xcf, 0xc2, 0x71, 0xe6, 0xd8, 0x44, 0xeb, 0x16,
+	0x2d, 0x9b, 0x3a, 0x14, 0x25, 0x48, 0x5b, 0x27, 0x7c, 0x99, 0x4d, 0x69, 0x96, 0x65, 0x98, 0xcc,
+	0xf1, 0x22, 0xd9, 0xc9, 0x56, 0xa7, 0xc7, 0x1c, 0x62, 0x87, 0x8e, 0xd2, 0xad, 0x0e, 0xed, 0xb5,
+	0x3b, 0x64, 0xb8, 0xbf, 0xad, 0x1b, 0xce, 0x56, 0xaf, 0x59, 0x6c, 0xd1, 0xae, 0xd2, 0xa5, 0x4d,
+	0xa3, 0xe3, 0x5e, 0xf6, 0x58, 0x71, 0x7f, 0xe7, 0xb9, 0x54, 0xe1, 0x3a, 0x9d, 0x98, 0xc1, 0xc2,
+	0xcf, 0x9c, 0xd5, 0x29, 0xd5, 0x3b, 0x44, 0xd1, 0x2c, 0x43, 0xd1, 0x4c, 0x93, 0x3a, 0x9a, 0x63,
+	0x50, 0x93, 0xf9, 0xd1, 0x8c, 0x4e, 0x75, 0xca, 0x97, 0x8a, 0xbb, 0xf2, 0x4e, 0xe5, 0x79, 0x98,
+	0xa8, 0x73, 0xf4, 0x2a, 0xd3, 0x51, 0x1a, 0x46, 0x8d, 0x36, 0x06, 0x39, 0x90, 0x4f, 0xa9, 0x51,
+	0xa3, 0x8d, 0x44, 0x28, 0x74, 0x99, 0x8e, 0xa3, 0x39, 0x90, 0x4f, 0xa8, 0xee, 0x52, 0x7e, 0x1f,
+	0x1d, 0xea, 0x6b, 0xcd, 0x6d, 0x34, 0x0f, 0x85, 0x47, 0xa4, 0xcf, 0x13, 0x92, 0xa5, 0xa9, 0x62,
+	0x50, 0x75, 0xb1, 0x6c, 0x59, 0x2b, 0x26, 0x73, 0x2a, 0xa4, 0xbf, 0x18, 0x3b, 0xf8, 0x7c, 0x3d,
+	0xa2, 0xba, 0x3a, 0x94, 0x87, 0xb1, 0x2e, 0xd3, 0x19, 0x8e, 0xe6, 0x84, 0x7c, 0xb2, 0x94, 0x09,
+	0xe9, 0x03, 0x04, 0x95, 0x2b, 0xd0, 0x1d, 0x18, 0x67, 0x8e, 0xe6, 0x10, 0x2c, 0xe4, 0x40, 0x3e,
+	0x5d, 0x9a, 0xbe, 0x20, 0xad, 0xbb, 0xd1, 0xc5, 0xd4, 0xde, 0x00, 0x83, 0x57, 0xfb, 0x33, 0x71,
+	0x93, 0xb6, 0xba, 0x96, 0xea, 0xe5, 0xa0, 0xff, 0xe1, 0x3f, 0x1d, 0x8d, 0x39, 0x1b, 0x46, 0x1b,
+	0xc7, 0x78, 0x29, 0x63, 0xee, 0x76, 0xa5, 0x8d, 0x32, 0x30, 0xde, 0x21, 0x1a, 0x23, 0x38, 0x9e,
+	0x03, 0x79, 0x41, 0xf5, 0x36, 0xe8, 0x1a, 0x4c, 0x10, 0xdb, 0xa6, 0xf6, 0x86, 0x5b, 0xea, 0x18,
+	0x2f, 0xf5, 0x5f, 0x7e, 0x50, 0x65, 0xfa, 0x42, 0xe3, 0xfb, 0x29, 0x06, 0x3f, 0x4e, 0x31, 0x78,
+	0xe6, 0xbe, 0x74, 0x86, 0xb3, 0x55, 0xa6, 0xb3, 0xc2, 0x2a, 0xbf, 0xaf, 0xb0, 0xea, 0xe6, 0x17,
+	0x96, 0x7d, 0xed, 0xa7, 0x33, 0x2c, 0x55, 0x48, 0xbf, 0xb8, 0xe4, 0x75, 0xd8, 0xaf, 0xbf, 0xb8,
+	0xe4, 0x77, 0xb7, 0x42, 0xfa, 0xfb, 0x3f, 0x71, 0xcc, 0xa4, 0x26, 0x91, 0xdf, 0x01, 0x98, 0x0a,
+	0x5c, 0x5c, 0x31, 0x37, 0xe9, 0xdf, 0x73, 0x32, 0x64, 0x86, 0x10, 0x36, 0x63, 0xe1, 0x6e, 0xb8,
+	0xb2, 0xdd, 0x01, 0x06, 0x6f, 0x07, 0x18, 0xfc, 0x79, 0x0d, 0x73, 0xeb, 0x30, 0x19, 0x6a, 0x05,
+	0x42, 0x30, 0x5d, 0x6f, 0xa8, 0xcb, 0xe5, 0xea, 0xc6, 0x83, 0xb5, 0xca, 0x5a, 0xed, 0xe1, 0x9a,
+	0x18, 0x41, 0x22, 0x1c, 0xf7, 0xcf, 0xea, 0x8d, 0xb2, 0xda, 0x10, 0x01, 0x9a, 0x80, 0xc9, 0xe0,
+	0xa4, 0x76, 0x4f, 0x8c, 0x86, 0x24, 0xcb, 0xaa, 0x5a, 0x53, 0x45, 0xa1, 0x74, 0x28, 0xc0, 0xf1,
+	0xc0, 0x9b, 0xb2, 0x65, 0xa0, 0x97, 0x81, 0x59, 0xbe, 0x17, 0xe8, 0x72, 0x7f, 0xb2, 0x97, 0xda,
+	0x20, 0xdf, 0x3f, 0x19, 0x60, 0x45, 0x25, 0x8c, 0xf6, 0xec, 0x16, 0xf1, 0xd5, 0xac, 0x50, 0x6e,
+	0xb9, 0xa3, 0xb1, 0x6e, 0x90, 0x9d, 0x42, 0xd9, 0xb2, 0xdc, 0x1a, 0x6b, 0xb6, 0xae, 0x99, 0xc6,
+	0x13, 0x3e, 0x32, 0x7b, 0x67, 0x18, 0x3c, 0xff, 0xf0, 0xed, 0x75, 0x34, 0x23, 0x4f, 0x28, 0xde,
+	0x64, 0x2b, 0xfe, 0x1c, 0x2f, 0x80, 0xb9, 0x9b, 0x00, 0xbd, 0x01, 0x70, 0xd2, 0x7b, 0x22, 0xe4,
+	0x14, 0x9a, 0x09, 0x01, 0x8c, 0x3a, 0x78, 0x05, 0x9b, 0x7a, 0x32, 0xc0, 0x85, 0x21, 0x5b, 0x28,
+	0x63, 0x84, 0xef, 0x52, 0x30, 0x2c, 0xff, 0x37, 0x04, 0x0b, 0x7d, 0x51, 0x3c, 0xb8, 0x17, 0x00,
+	0xa6, 0x87, 0x70, 0x5e, 0xdf, 0xd0, 0xf4, 0x08, 0x59, 0xd0, 0xcc, 0x2b, 0xb0, 0x56, 0x4f, 0x06,
+	0xf8, 0xc6, 0x39, 0x96, 0x27, 0xff, 0x3d, 0xd3, 0x94, 0x2c, 0x9e, 0x33, 0x79, 0x49, 0x1c, 0xa8,
+	0xf4, 0x14, 0x8a, 0x23, 0xff, 0x76, 0xb7, 0xab, 0x06, 0x9c, 0xac, 0x6f, 0xd1, 0x9d, 0xd1, 0x29,
+	0xc0, 0x17, 0x70, 0xfc, 0x48, 0xf6, 0xca, 0x88, 0x2c, 0x9d, 0xfb, 0xb1, 0x45, 0x77, 0x7c, 0x00,
+	0xda, 0xdc, 0x36, 0xcc, 0x4d, 0xca, 0x9f, 0x5f, 0x9c, 0x3d, 0xf8, 0x2a, 0x45, 0x0e, 0x8e, 0x24,
+	0x70, 0x78, 0x24, 0x81, 0x2f, 0x47, 0x12, 0xd8, 0x3d, 0x96, 0x22, 0x87, 0xc7, 0x52, 0xe4, 0xe3,
+	0xb1, 0x14, 0x69, 0x8e, 0xf1, 0x4b, 0x6f, 0xfd, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x07, 0x33, 0xc3,
+	0x07, 0xc2, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -460,6 +509,107 @@ var _StreamObjApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "stream.proto",
 }
 
+// StreamObjInfoApiClient is the client API for StreamObjInfoApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type StreamObjInfoApiClient interface {
+	// Show stream obj sent by CRM.
+	ShowStreamObjInfo(ctx context.Context, in *StreamObjInfo, opts ...grpc.CallOption) (StreamObjInfoApi_ShowStreamObjInfoClient, error)
+}
+
+type streamObjInfoApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewStreamObjInfoApiClient(cc *grpc.ClientConn) StreamObjInfoApiClient {
+	return &streamObjInfoApiClient{cc}
+}
+
+func (c *streamObjInfoApiClient) ShowStreamObjInfo(ctx context.Context, in *StreamObjInfo, opts ...grpc.CallOption) (StreamObjInfoApi_ShowStreamObjInfoClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_StreamObjInfoApi_serviceDesc.Streams[0], "/edgeproto.StreamObjInfoApi/ShowStreamObjInfo", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &streamObjInfoApiShowStreamObjInfoClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type StreamObjInfoApi_ShowStreamObjInfoClient interface {
+	Recv() (*StreamObjInfo, error)
+	grpc.ClientStream
+}
+
+type streamObjInfoApiShowStreamObjInfoClient struct {
+	grpc.ClientStream
+}
+
+func (x *streamObjInfoApiShowStreamObjInfoClient) Recv() (*StreamObjInfo, error) {
+	m := new(StreamObjInfo)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// StreamObjInfoApiServer is the server API for StreamObjInfoApi service.
+type StreamObjInfoApiServer interface {
+	// Show stream obj sent by CRM.
+	ShowStreamObjInfo(*StreamObjInfo, StreamObjInfoApi_ShowStreamObjInfoServer) error
+}
+
+// UnimplementedStreamObjInfoApiServer can be embedded to have forward compatible implementations.
+type UnimplementedStreamObjInfoApiServer struct {
+}
+
+func (*UnimplementedStreamObjInfoApiServer) ShowStreamObjInfo(req *StreamObjInfo, srv StreamObjInfoApi_ShowStreamObjInfoServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowStreamObjInfo not implemented")
+}
+
+func RegisterStreamObjInfoApiServer(s *grpc.Server, srv StreamObjInfoApiServer) {
+	s.RegisterService(&_StreamObjInfoApi_serviceDesc, srv)
+}
+
+func _StreamObjInfoApi_ShowStreamObjInfo_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamObjInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(StreamObjInfoApiServer).ShowStreamObjInfo(m, &streamObjInfoApiShowStreamObjInfoServer{stream})
+}
+
+type StreamObjInfoApi_ShowStreamObjInfoServer interface {
+	Send(*StreamObjInfo) error
+	grpc.ServerStream
+}
+
+type streamObjInfoApiShowStreamObjInfoServer struct {
+	grpc.ServerStream
+}
+
+func (x *streamObjInfoApiShowStreamObjInfoServer) Send(m *StreamObjInfo) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _StreamObjInfoApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.StreamObjInfoApi",
+	HandlerType: (*StreamObjInfoApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowStreamObjInfo",
+			Handler:       _StreamObjInfoApi_ShowStreamObjInfo_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "stream.proto",
+}
+
 func (m *StreamMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -534,6 +684,58 @@ func (m *StreamObj) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	if m.State != 0 {
 		i = encodeVarintStream(dAtA, i, uint64(m.State))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Msgs) > 0 {
+		for iNdEx := len(m.Msgs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Msgs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintStream(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintStream(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *StreamObjInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StreamObjInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamObjInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.LastId != 0 {
+		i = encodeVarintStream(dAtA, i, uint64(m.LastId))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -1261,6 +1463,622 @@ func IgnoreStreamObjFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(StreamObj{}, names...)
 }
 
+func (m *StreamObjInfo) Matches(o *StreamObjInfo, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.Msgs != nil {
+		if m.Msgs == nil && o.Msgs != nil || m.Msgs != nil && o.Msgs == nil {
+			return false
+		} else if m.Msgs != nil && o.Msgs != nil {
+			if len(m.Msgs) != len(o.Msgs) {
+				return false
+			}
+			for i := 0; i < len(m.Msgs); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.LastId != 0 {
+		if o.LastId != m.LastId {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *StreamObjInfo) CopyInFields(src *StreamObjInfo) int {
+	changed := 0
+	if m.Key.AppKey.Organization != src.Key.AppKey.Organization {
+		m.Key.AppKey.Organization = src.Key.AppKey.Organization
+		changed++
+	}
+	if m.Key.AppKey.Name != src.Key.AppKey.Name {
+		m.Key.AppKey.Name = src.Key.AppKey.Name
+		changed++
+	}
+	if m.Key.AppKey.Version != src.Key.AppKey.Version {
+		m.Key.AppKey.Version = src.Key.AppKey.Version
+		changed++
+	}
+	if m.Key.ClusterInstKey.ClusterKey.Name != src.Key.ClusterInstKey.ClusterKey.Name {
+		m.Key.ClusterInstKey.ClusterKey.Name = src.Key.ClusterInstKey.ClusterKey.Name
+		changed++
+	}
+	if m.Key.ClusterInstKey.CloudletKey.Organization != src.Key.ClusterInstKey.CloudletKey.Organization {
+		m.Key.ClusterInstKey.CloudletKey.Organization = src.Key.ClusterInstKey.CloudletKey.Organization
+		changed++
+	}
+	if m.Key.ClusterInstKey.CloudletKey.Name != src.Key.ClusterInstKey.CloudletKey.Name {
+		m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
+		changed++
+	}
+	if m.Key.ClusterInstKey.Organization != src.Key.ClusterInstKey.Organization {
+		m.Key.ClusterInstKey.Organization = src.Key.ClusterInstKey.Organization
+		changed++
+	}
+	if src.Msgs != nil {
+		m.Msgs = src.Msgs
+		changed++
+	} else if m.Msgs != nil {
+		m.Msgs = nil
+		changed++
+	}
+	if m.LastId != src.LastId {
+		m.LastId = src.LastId
+		changed++
+	}
+	return changed
+}
+
+func (m *StreamObjInfo) DeepCopyIn(src *StreamObjInfo) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Msgs != nil {
+		m.Msgs = make([]*StreamMsg, len(src.Msgs), len(src.Msgs))
+		for ii, s := range src.Msgs {
+			var tmp_s StreamMsg
+			tmp_s.DeepCopyIn(s)
+			m.Msgs[ii] = &tmp_s
+		}
+	} else {
+		m.Msgs = nil
+	}
+	m.LastId = src.LastId
+}
+
+func (s *StreamObjInfo) HasFields() bool {
+	return false
+}
+
+type StreamObjInfoStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewStreamObjInfoStore(kvstore objstore.KVStore) StreamObjInfoStore {
+	return StreamObjInfoStore{kvstore: kvstore}
+}
+
+func (s *StreamObjInfoStore) Create(ctx context.Context, m *StreamObjInfo, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("StreamObjInfo", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *StreamObjInfoStore) Update(ctx context.Context, m *StreamObjInfo, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("StreamObjInfo", m.GetKey())
+	var vers int64 = 0
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *StreamObjInfoStore) Put(ctx context.Context, m *StreamObjInfo, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("StreamObjInfo", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *StreamObjInfoStore) Delete(ctx context.Context, m *StreamObjInfo, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("StreamObjInfo", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *StreamObjInfoStore) LoadOne(key string) (*StreamObjInfo, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj StreamObjInfo
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse StreamObjInfo data", "val", string(val), "err", err)
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *StreamObjInfoStore) STMGet(stm concurrency.STM, key *AppInstKey, buf *StreamObjInfo) bool {
+	keystr := objstore.DbKeyString("StreamObjInfo", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *StreamObjInfoStore) STMPut(stm concurrency.STM, obj *StreamObjInfo, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("StreamObjInfo", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("StreamObjInfo json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *StreamObjInfoStore) STMDel(stm concurrency.STM, key *AppInstKey) {
+	keystr := objstore.DbKeyString("StreamObjInfo", key)
+	stm.Del(keystr)
+}
+
+type StreamObjInfoKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+type StreamObjInfoCacheData struct {
+	Obj    *StreamObjInfo
+	ModRev int64
+}
+
+// StreamObjInfoCache caches StreamObjInfo objects in memory in a hash table
+// and keeps them in sync with the database.
+type StreamObjInfoCache struct {
+	Objs          map[AppInstKey]*StreamObjInfoCacheData
+	Mux           util.Mutex
+	List          map[AppInstKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *AppInstKey, old *StreamObjInfo, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *StreamObjInfo, new *StreamObjInfo)
+	DeletedCbs    []func(ctx context.Context, old *StreamObjInfo)
+	KeyWatchers   map[AppInstKey][]*StreamObjInfoKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AppInstKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AppInstKey)
+}
+
+func NewStreamObjInfoCache() *StreamObjInfoCache {
+	cache := StreamObjInfoCache{}
+	InitStreamObjInfoCache(&cache)
+	return &cache
+}
+
+func InitStreamObjInfoCache(cache *StreamObjInfoCache) {
+	cache.Objs = make(map[AppInstKey]*StreamObjInfoCacheData)
+	cache.KeyWatchers = make(map[AppInstKey][]*StreamObjInfoKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
+}
+
+func (c *StreamObjInfoCache) GetTypeString() string {
+	return "StreamObjInfo"
+}
+
+func (c *StreamObjInfoCache) Get(key *AppInstKey, valbuf *StreamObjInfo) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *StreamObjInfoCache) GetWithRev(key *AppInstKey, valbuf *StreamObjInfo, modRev *int64) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
+	}
+	return found
+}
+
+func (c *StreamObjInfoCache) HasKey(key *AppInstKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *StreamObjInfoCache) GetAllKeys(ctx context.Context, cb func(key *AppInstKey, modRev int64)) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
+	}
+}
+
+func (c *StreamObjInfoCache) Update(ctx context.Context, in *StreamObjInfo, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *StreamObjInfo) (*StreamObjInfo, bool) {
+		return in, true
+	})
+}
+
+func (c *StreamObjInfoCache) UpdateModFunc(ctx context.Context, key *AppInstKey, modRev int64, modFunc func(old *StreamObjInfo) (new *StreamObjInfo, changed bool)) {
+	c.Mux.Lock()
+	var old *StreamObjInfo
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &StreamObjInfo{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
+	}
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &StreamObjInfo{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &StreamObjInfoCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *StreamObjInfoCache) Delete(ctx context.Context, in *StreamObjInfo, modRev int64) {
+	c.Mux.Lock()
+	var old *StreamObjInfo
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+	}
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	c.Mux.Unlock()
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *StreamObjInfoCache) Prune(ctx context.Context, validKeys map[AppInstKey]struct{}) {
+	notify := make(map[AppInstKey]*StreamObjInfoCacheData)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *StreamObjInfoCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *StreamObjInfoCache) Flush(ctx context.Context, notifyId int64) {
+}
+
+func (c *StreamObjInfoCache) Show(filter *StreamObjInfo, cb func(ret *StreamObjInfo) error) error {
+	log.DebugLog(log.DebugLevelApi, "Show StreamObjInfo", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, data := range c.Objs {
+		log.DebugLog(log.DebugLevelApi, "Compare StreamObjInfo", "filter", filter, "data", data)
+		if !data.Obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		log.DebugLog(log.DebugLevelApi, "Show StreamObjInfo", "obj", data.Obj)
+		err := cb(data.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func StreamObjInfoGenericNotifyCb(fn func(key *AppInstKey, old *StreamObjInfo)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppInstKey), obj.(*StreamObjInfo))
+	}
+}
+
+func (c *StreamObjInfoCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstKey, old *StreamObjInfo, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *AppInstKey, old *StreamObjInfo, modRev int64){fn}
+}
+
+func (c *StreamObjInfoCache) SetUpdatedCb(fn func(ctx context.Context, old *StreamObjInfo, new *StreamObjInfo)) {
+	c.UpdatedCbs = []func(ctx context.Context, old *StreamObjInfo, new *StreamObjInfo){fn}
+}
+
+func (c *StreamObjInfoCache) SetDeletedCb(fn func(ctx context.Context, old *StreamObjInfo)) {
+	c.DeletedCbs = []func(ctx context.Context, old *StreamObjInfo){fn}
+}
+
+func (c *StreamObjInfoCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AppInstKey){fn}
+}
+
+func (c *StreamObjInfoCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AppInstKey){fn}
+}
+
+func (c *StreamObjInfoCache) AddUpdatedCb(fn func(ctx context.Context, old *StreamObjInfo, new *StreamObjInfo)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *StreamObjInfoCache) AddDeletedCb(fn func(ctx context.Context, old *StreamObjInfo)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *StreamObjInfoCache) AddNotifyCb(fn func(ctx context.Context, obj *AppInstKey, old *StreamObjInfo, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *StreamObjInfoCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *StreamObjInfoCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AppInstKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *StreamObjInfoCache) SetFlushAll() {
+	c.FlushAll = true
+}
+
+func (c *StreamObjInfoCache) WatchKey(key *AppInstKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*StreamObjInfoKeyWatcher, 0)
+	}
+	watcher := StreamObjInfoKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching StreamObjInfo", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *StreamObjInfoCache) TriggerKeyWatchers(ctx context.Context, key *AppInstKey) {
+	watchers := make([]*StreamObjInfoKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *StreamObjInfoCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := StreamObjInfo{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse StreamObjInfo data", "val", string(val), "err", err)
+		return
+	}
+	c.Update(ctx, &obj, modRev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *StreamObjInfoCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := StreamObjInfo{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	AppInstKeyStringParse(keystr, obj.GetKey())
+	c.Delete(ctx, &obj, modRev)
+}
+
+func (c *StreamObjInfoCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[AppInstKey]struct{})
+}
+
+func (c *StreamObjInfoCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[AppInstKey]*StreamObjInfoCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *StreamObjInfoCache) UsesOrg(org string) bool {
+	return false
+}
+
+func (m *StreamObjInfo) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *StreamObjInfo) GetKey() *AppInstKey {
+	return &m.Key
+}
+
+func (m *StreamObjInfo) GetKeyVal() AppInstKey {
+	return m.Key
+}
+
+func (m *StreamObjInfo) SetKey(key *AppInstKey) {
+	m.Key = *key
+}
+
+func CmpSortStreamObjInfo(a StreamObjInfo, b StreamObjInfo) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+func (m *StreamObjInfo) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	for _, e := range m.Msgs {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var StreamStateStrings = []string{
 	"STREAM_UNKNOWN",
 	"STREAM_START",
@@ -1388,6 +2206,26 @@ func (m *StreamObj) Size() (n int) {
 	l = len(m.ErrorMsg)
 	if l > 0 {
 		n += 1 + l + sovStream(uint64(l))
+	}
+	return n
+}
+
+func (m *StreamObjInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovStream(uint64(l))
+	if len(m.Msgs) > 0 {
+		for _, e := range m.Msgs {
+			l = e.Size()
+			n += 1 + l + sovStream(uint64(l))
+		}
+	}
+	if m.LastId != 0 {
+		n += 1 + sovStream(uint64(m.LastId))
 	}
 	return n
 }
@@ -1687,6 +2525,145 @@ func (m *StreamObj) Unmarshal(dAtA []byte) error {
 			}
 			m.ErrorMsg = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipStream(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthStream
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthStream
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StreamObjInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowStream
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StreamObjInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StreamObjInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStream
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStream
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthStream
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Msgs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStream
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStream
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthStream
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Msgs = append(m.Msgs, &StreamMsg{})
+			if err := m.Msgs[len(m.Msgs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastId", wireType)
+			}
+			m.LastId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStream
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipStream(dAtA[iNdEx:])

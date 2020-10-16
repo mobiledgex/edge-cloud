@@ -1190,6 +1190,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":    struct{}{},
 	"ShowClusterRefs":     struct{}{},
 	"ShowAppInstRefs":     struct{}{},
+	"ShowStreamObjInfo":   struct{}{},
 	"ShowController":      struct{}{},
 	"ShowNode":            struct{}{},
 	"ShowDevice":          struct{}{},

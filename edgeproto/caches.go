@@ -363,9 +363,9 @@ func (s *CloudletInfoCache) SetStatusStep(ctx context.Context, key *CloudletKey,
 	s.Update(ctx, &info, 0)
 }
 
-func (s *StreamObjCache) AddStreamMsg(ctx context.Context, key *AppInstKey, updateType CacheUpdateType, msg string) {
-	s.UpdateModFunc(ctx, key, 0, func(old *StreamObj) (newObj *StreamObj, changed bool) {
-		obj := &StreamObj{}
+func (s *StreamObjInfoCache) AddStreamMsg(ctx context.Context, key *AppInstKey, updateType CacheUpdateType, msg string) {
+	s.UpdateModFunc(ctx, key, 0, func(old *StreamObjInfo) (newObj *StreamObjInfo, changed bool) {
+		obj := &StreamObjInfo{}
 		if old == nil {
 			obj.Key = *key
 			obj.LastId = 0
