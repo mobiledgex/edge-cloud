@@ -754,15 +754,6 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 	return nil
 }
 
-func isPublicCarrier(carriername string) bool {
-	if carriername == cloudcommon.OperatorAzure ||
-		carriername == cloudcommon.OperatorGCP ||
-		carriername == cloudcommon.OperatorAWS {
-		return true
-	}
-	return false
-}
-
 func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 	var tbl *DmeApps
 	tbl = DmeAppTbl

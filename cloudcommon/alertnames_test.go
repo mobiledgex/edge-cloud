@@ -22,9 +22,3 @@ func TestValidateMonitoredAlert(t *testing.T) {
 	require.False(t, IsMonitoredAlert(""))
 	require.False(t, IsMonitoredAlert("UnmonitoredAlert"))
 }
-
-var testExpectedAlertString = `"error", "warning", "info"`
-
-func TestAlertListString(t *testing.T) {
-	require.Equal(t, testExpectedAlertString, GetValidAlertSeverityString())
-}
