@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
 	"strings"
 	"sync"
@@ -16,6 +17,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
+
+// 1 km is considered near enough to call 2 locations equivalent
+const VeryCloseDistanceKm = 1
 
 // AppInst within a cloudlet
 type DmeAppInst struct {
@@ -630,8 +634,14 @@ func (s *searchAppInst) searchAppInsts(ctx context.Context, carrier string, appI
 func (s *searchAppInst) insertResult(found *foundAppInst) bool {
 	inserted := false
 	for ii, ai := range s.results {
-		if !s.less(found, ai) {
-			continue
+		if s.veryClose(found, ai) {
+			if rand.Float64() > .5 {
+				continue
+			}
+		} else {
+			if !s.less(found, ai) {
+				continue
+			}
 		}
 		// insert before
 		if ii < len(s.results) {
@@ -659,6 +669,13 @@ func (s *searchAppInst) less(f1, f2 *foundAppInst) bool {
 	// For now we sort by distance, but in the future
 	// we may sort by latency or some other metric.
 	return f1.distance < f2.distance
+}
+
+func (s *searchAppInst) veryClose(f1, f2 *foundAppInst) bool {
+	if f1.distance > f2.distance {
+		return f1.distance-f2.distance < VeryCloseDistanceKm
+	}
+	return f2.distance-f1.distance < VeryCloseDistanceKm
 }
 
 func (s *searchAppInst) searchPotential(ctx context.Context, policy *AutoProvPolicy, carrier string, list []*edgeproto.AutoProvCloudlet) {

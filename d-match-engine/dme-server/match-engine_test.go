@@ -97,6 +97,47 @@ func TestAddRemove(t *testing.T) {
 				call.key.CloudletFound.Name, "findCloudletData[%d]", ii)
 		}
 	}
+
+	// test findCloudlet HA. Repeat the FindCloudlet 100 times and
+	// make sure we get results for both cloudlets
+	for ii, rr := range dmetest.FindCloudletHAData {
+		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
+		numFindsCloudlet1 := 0
+		numFindsCloudlet2 := 0
+		maxAttempts := 100
+		minExpectedEachCloudlet := 35
+		regReply, err := serv.RegisterClient(ctx, &rr.Reg)
+		assert.Nil(t, err, "register client")
+		ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
+		assert.Nil(t, err, "verify cookie")
+		ctx = dmecommon.NewCookieContext(ctx, ckey)
+		// Make sure we get the statsKey value filled in
+		call := ApiStatCall{}
+		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
+
+		for attempt := 0; attempt < maxAttempts; attempt++ {
+
+			reply, err := serv.FindCloudlet(ctx, &rr.Req)
+			assert.Nil(t, err, "find cloudlet")
+			assert.Equal(t, rr.Reply.Status, reply.Status, "findCloudletHAData[%d]", ii)
+			if reply.Status == dme.FindCloudletReply_FIND_FOUND {
+				if reply.Fqdn == rr.Reply.Fqdn {
+					numFindsCloudlet1++
+				} else if reply.Fqdn == rr.ReplyAlternate.Fqdn {
+					numFindsCloudlet2++
+				}
+				// carrier is the same either way
+				assert.Equal(t, rr.ReplyCarrier,
+					call.key.CloudletFound.Organization, "findCloudletHAData[%d]", ii)
+			}
+		}
+		// we expect at least 35% of all replies to be for each cloudlet, with confidence of 99.8%
+		assert.GreaterOrEqual(t, numFindsCloudlet1, minExpectedEachCloudlet)
+		assert.GreaterOrEqual(t, numFindsCloudlet2, minExpectedEachCloudlet)
+		// total for both should match attempts
+		assert.Equal(t, maxAttempts, numFindsCloudlet1+numFindsCloudlet2)
+	}
+
 	// Check Platform Devices register UUID
 	reg := dmetest.DeviceData[0]
 	// Both or none should be set
