@@ -48,7 +48,6 @@ var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
@@ -60,7 +59,7 @@ var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
 
-// TODO: carrier arg is redundant with Organization in myCloudletKey, and
+// TODO: carrier arg is redundant with Organization in MyCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
 // verify location API behavior and e2e test setups.
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for no external APIs")
@@ -70,15 +69,9 @@ var operatorApiGw op.OperatorApiGw
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
-// myCloudlet is the information for the cloudlet in which the DME is instantiated.
-// The key for myCloudlet is provided as a configuration - either command line or
-// from a file.
-var myCloudletKey edgeproto.CloudletKey
 var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
-
-var stats *DmeStats
 
 func validateLocation(loc *dme.Loc) error {
 	if loc == nil || (loc.Latitude == 0 && loc.Longitude == 0) {
@@ -450,8 +443,8 @@ func main() {
 		// Regional DME not associated with any Cloudlet
 		myCertIssuer = node.CertIssuerRegional
 	}
-	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, myCertIssuer, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
+	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &dmecommon.MyCloudletKey)
+	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, myCertIssuer, node.WithName(*dmecommon.ScaleID), node.WithCloudletKey(&dmecommon.MyCloudletKey), node.WithRegion(*region))
 	if err != nil {
 		log.FatalLog("Failed init node", "err", err)
 	}
@@ -527,15 +520,15 @@ func main() {
 	defer notifyClient.Stop()
 
 	interval := time.Duration(*statsInterval) * time.Second
-	stats = NewDmeStats(interval, *statsShards, sendMetric.Update)
-	stats.Start()
-	defer stats.Stop()
+	dmecommon.Stats = dmecommon.NewDmeStats(interval, *statsShards, sendMetric.Update)
+	dmecommon.Stats.Start()
+	defer dmecommon.Stats.Stop()
 
-	InitAppInstClients()
+	dmecommon.InitAppInstClients()
 
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), stats.GetStreamStatsInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {

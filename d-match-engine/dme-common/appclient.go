@@ -1,10 +1,10 @@
-package main
+package dmecommon
 
 import (
 	"sync"
 
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"golang.org/x/net/context"
 )
 
@@ -14,6 +14,9 @@ type ClientsMap struct {
 }
 
 var clientsMap *ClientsMap
+
+var ClientSender *notify.AppInstClientSend
+var AppInstClientKeyCache edgeproto.AppInstClientKeyCache
 
 func InitAppInstClients() {
 	clientsMap = new(ClientsMap)
@@ -48,13 +51,13 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 			}
 		}
 		//  We reached the limit of clients - remove the first one
-		if len(list) == int(dmecommon.Settings.MaxTrackedDmeClients) {
+		if len(list) == int(Settings.MaxTrackedDmeClients) {
 			list = list[1:]
 		}
 		clientsMap.clients[msg.ClientKey.Key] = append(list, *msg)
 	}
 	// If there is an outstanding request for this appInst, send it out
-	if appInstClientKeyCache.HasKey(msg.ClientKey.GetKey()) {
+	if AppInstClientKeyCache.HasKey(msg.ClientKey.GetKey()) {
 		ClientSender.Update(ctx, msg)
 	}
 }

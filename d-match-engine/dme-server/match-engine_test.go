@@ -21,7 +21,7 @@ func TestAddRemove(t *testing.T) {
 	span := log.SpanFromContext(ctx)
 
 	dmecommon.SetupMatchEngine()
-	InitAppInstClients()
+	dmecommon.InitAppInstClients()
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
@@ -87,8 +87,8 @@ func TestAddRemove(t *testing.T) {
 		}
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 		// Make sure we get the statsKey value filled in
-		call := ApiStatCall{}
-		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
+		call := dmecommon.ApiStatCall{}
+		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.Key)
 
 		reply, err := serv.FindCloudlet(ctx, &rr.Req)
 		assert.Nil(t, err, "find cloudlet")
@@ -98,9 +98,9 @@ func TestAddRemove(t *testing.T) {
 				"findCloudletData[%d]", ii)
 			// Check the filled in cloudlet details
 			assert.Equal(t, rr.ReplyCarrier,
-				call.key.CloudletFound.Organization, "findCloudletData[%d]", ii)
+				call.Key.CloudletFound.Organization, "findCloudletData[%d]", ii)
 			assert.Equal(t, rr.ReplyCloudlet,
-				call.key.CloudletFound.Name, "findCloudletData[%d]", ii)
+				call.Key.CloudletFound.Name, "findCloudletData[%d]", ii)
 		}
 	}
 

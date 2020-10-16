@@ -971,86 +971,69 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 
 func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) error {
 	var appInstKey *edgeproto.AppInstKey
-	var cookieKey *CookieKey
-	terminated := make(chan struct{})
+	var sessionCookieKey *CookieKey
+	var edgeEventsCookieKey *EdgeEventsCookieKey
 	var reterr error
-
 	// Intialize send function to be passed to plugin functions
 	sendFunc := func(event *dme.ServerEdgeEvent) {
 		err := svr.Send(event)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error sending event to client", "error", err, "eventType", event.Event)
-			reterr = err
-			close(terminated)
 		}
 	}
-
 	//receive first msg from stream
 	initMsg, err := svr.Recv()
-	ctx = svr.Context()
 	if err != nil && err != io.EOF {
 		return err
 	}
-	// On first message, add connection, client, and appinst to Plugin hashmap
+	// On first message:
+	// Verify Session Cookie and EdgeEvents Cookie
+	// Then add connection, client, and appinst to Plugin hashmap
 	if initMsg.Event == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
-		// Grab CookieKey
-		key, ok := CookieFromContext(ctx)
-		log.SpanLog(ctx, log.DebugLevelDmereq, "Session Cookie result", "key", key)
-		if !ok {
-			return grpc.Errorf(codes.Unauthenticated, "Unable to get session cookie from context")
+		// Verify session cookie
+		sessionCookieKey, err = VerifyCookie(ctx, initMsg.SessionCookie)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyCookie result", "ckey", sessionCookieKey, "err", err)
+		if err != nil {
+			return grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
-		// Grab EdgeEventsCookieKey
-		eekey, ok := EdgeEventsCookieFromContext(ctx)
-		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent SessionCookie result", "key", eekey)
-		if !ok {
-			return grpc.Errorf(codes.Unauthenticated, "Unable to get edge events session cookie from context")
+		ctx = NewCookieContext(ctx, sessionCookieKey)
+		// Verify EdgeEventsCookieKey
+		edgeEventsCookieKey, err = VerifyEdgeEventsCookie(ctx, initMsg.EdgeEventsCookie)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyEdgeEventsCookie result", "key", edgeEventsCookieKey, "err", err)
+		if err != nil {
+			return grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
 		// Create AppInstKey from SessionCookie and EdgeEventsCookie
 		appInstKey = &edgeproto.AppInstKey{
 			AppKey: edgeproto.AppKey{
-				Organization: key.OrgName,
-				Name:         key.AppName,
-				Version:      key.AppVers,
+				Organization: sessionCookieKey.OrgName,
+				Name:         sessionCookieKey.AppName,
+				Version:      sessionCookieKey.AppVers,
 			},
 			ClusterInstKey: edgeproto.ClusterInstKey{
 				ClusterKey: edgeproto.ClusterKey{
-					Name: eekey.ClusterName,
+					Name: edgeEventsCookieKey.ClusterName,
 				},
 				CloudletKey: edgeproto.CloudletKey{
-					Organization: eekey.CloudletOrg,
-					Name:         eekey.CloudletName,
+					Organization: edgeEventsCookieKey.CloudletOrg,
+					Name:         edgeEventsCookieKey.CloudletName,
 				},
-				Organization: eekey.ClusterOrg,
+				Organization: edgeEventsCookieKey.ClusterOrg,
 			},
 		}
-		cookieKey = key
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *key, sendFunc)
+		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, sendFunc)
 		// Send successful init response
 		initServerEdgeEvent := new(dme.ServerEdgeEvent)
 		initServerEdgeEvent.Event = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
-		EEHandler.SendEdgeEventToClient(ctx, initServerEdgeEvent, *appInstKey, *key)
+		EEHandler.SendEdgeEventToClient(ctx, initServerEdgeEvent, *appInstKey, *sessionCookieKey)
 	} else {
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
 	// Loop while persistent connection is up
+loop:
 	for {
-		//check if EdgeEvent persistent connection has been cancelled
-		select {
-		case <-ctx.Done():
-			log.SpanLog(ctx, log.DebugLevelDmereq, "persistent edge event cancelled")
-			reterr = ctx.Err()
-			break
-		case <-terminated:
-			if reterr != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "terminating persistent connection, mgr terminated", "error", reterr)
-				break
-			}
-			reterr = ctx.Err()
-			break
-		default:
-		}
 		//receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
@@ -1063,14 +1046,40 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
-		// Handle Client initiated termination
-		if cupdate.Event == dme.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION {
+		// Handle Different Client events
+		switch cupdate.Event {
+		case dme.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION:
+			// Client initiated termination
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Client initiated termination of persistent connection")
+			break loop
+		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
+			// Client sent latency samples to be processed
+			call := ApiStatCall{}
+			call.Key.AppKey = appInstKey.AppKey
+			call.Key.CloudletFound = appInstKey.ClusterInstKey.CloudletKey
+			call.Key.ClusterKey = appInstKey.ClusterInstKey.ClusterKey
+			call.Key.ClusterInstOrg = appInstKey.ClusterInstKey.Organization
+			latency, ok := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			if !ok {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples")
+				return err
+			}
+			call.Latency = time.Duration(latency.Avg * float64(time.Millisecond))
+			call.Samples = cupdate.Samples
+			call.Key.Method = EdgeEventLatencyMethod // override method name
+			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
+			Stats.RecordApiStatCall(&call)
+		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
+			// Client updated gps location
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookieKey, "location", cupdate.GpsLocation)
+		default:
+			// Unknown client event
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "event", cupdate.Event)
 			break
 		}
 	}
 	// Remove Client from edgeevents plugin
-	EEHandler.RemoveClientKey(ctx, *appInstKey, *cookieKey)
+	EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 	return reterr
 }
 

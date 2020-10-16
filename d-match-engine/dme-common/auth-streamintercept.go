@@ -56,25 +56,8 @@ func (s *ServerStreamWrapper) RecvMsg(m interface{}) error {
 		}
 		s.ctx = NewCookieContext(ctx, ckey)
 	case *dme.ClientEdgeEvent:
-		// Verify session cookie
-		cookie = typ.SessionCookie
-		ckey, err := VerifyCookie(ctx, cookie)
-		log.SpanLog(s.Context(), log.DebugLevelDmereq, "EdgeEvent VerifyCookie result", "ckey", ckey, "err", err)
-		if err != nil {
-			return grpc.Errorf(codes.Unauthenticated, err.Error())
-		}
-		ctx = NewCookieContext(ctx, ckey)
-		// Verify EdgeEventsCookieKey
-		eeCookie := typ.EdgeEventsCookie
-		eekey, err := VerifyEdgeEventsCookie(ctx, eeCookie)
-		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyEdgeEventsCookie result", "key", eekey, "err", err)
-		if err != nil {
-			return grpc.Errorf(codes.Unauthenticated, err.Error())
-		}
-		ctx = NewEdgeEventsCookieContext(ctx, eekey)
-		// Add session cookies to context
-		s.ctx = ctx
-		log.SpanLog(s.Context(), log.DebugLevelDmereq, "Auth intercept new context", "ctx", s.ctx)
+		// Authentication of Session Cookie and EdgeEvents Session Cookie occurs in match-engine.go:StreamEdgeEvent
+		break
 	default:
 		log.InfoLog("Unknown streaming operation, cannot verify cookie", "type", reflect.TypeOf(m).String())
 		return grpc.Errorf(codes.Unauthenticated, err.Error())

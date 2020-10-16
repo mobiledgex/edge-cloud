@@ -1,6 +1,7 @@
-package main
+package dmecommon
 
 import (
+	"flag"
 	"strconv"
 	"strings"
 	"sync"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -17,6 +17,18 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
+
+// MyCloudlet is the information for the cloudlet in which the DME is instantiated.
+// The key for MyCloudlet is provided as a configuration - either command line or
+// from a file.
+var MyCloudletKey edgeproto.CloudletKey
+
+var PlatformClientsCache edgeproto.DeviceCache
+
+var ScaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
+var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
+
+var Stats *DmeStats
 
 var LatencyTimes = []time.Duration{
 	5 * time.Millisecond,
@@ -27,23 +39,23 @@ var LatencyTimes = []time.Duration{
 }
 
 type ApiStatCall struct {
-	key     dmecommon.StatKey
-	fail    bool
-	latency time.Duration
-	samples []float64 // Latency samples for EdgeEvents
+	Key     StatKey
+	Fail    bool
+	Latency time.Duration
+	Samples []float64 // Latency samples for EdgeEvents
 }
 
 type ApiStat struct {
-	reqs           uint64
-	errs           uint64
-	latency        grpcstats.LatencyMetric
-	rollinglatency *dme.Latency // Rolling statistics for EdgeEvents latency measurements
-	mux            sync.Mutex
-	changed        bool
+	Reqs           uint64
+	Errs           uint64
+	Latency        grpcstats.LatencyMetric
+	Rollinglatency *dme.Latency // Rolling statistics for EdgeEvents latency measurements
+	Mux            sync.Mutex
+	Changed        bool
 }
 
 type MapShard struct {
-	apiStatMap map[dmecommon.StatKey]*ApiStat
+	apiStatMap map[StatKey]*ApiStat
 	notify     bool
 	mux        sync.Mutex
 }
@@ -63,7 +75,7 @@ func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.C
 	s.shards = make([]MapShard, numShards, numShards)
 	s.numShards = numShards
 	for ii, _ := range s.shards {
-		s.shards[ii].apiStatMap = make(map[dmecommon.StatKey]*ApiStat)
+		s.shards[ii].apiStatMap = make(map[StatKey]*ApiStat)
 	}
 	s.interval = interval
 	s.send = send
@@ -84,44 +96,44 @@ func (s *DmeStats) Stop() {
 }
 
 func (s *DmeStats) LookupApiStatCall(call *ApiStatCall) (*ApiStat, bool) {
-	idx := util.GetShardIndex(call.key.Method+call.key.AppKey.Organization+call.key.AppKey.Name, s.numShards)
+	idx := util.GetShardIndex(call.Key.Method+call.Key.AppKey.Organization+call.Key.AppKey.Name, s.numShards)
 
 	shard := &s.shards[idx]
 	shard.mux.Lock()
 	defer shard.mux.Unlock()
-	stat, found := shard.apiStatMap[call.key]
+	stat, found := shard.apiStatMap[call.Key]
 	return stat, found
 }
 
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
-	idx := util.GetShardIndex(call.key.Method+call.key.AppKey.Organization+call.key.AppKey.Name, s.numShards)
+	idx := util.GetShardIndex(call.Key.Method+call.Key.AppKey.Organization+call.Key.AppKey.Name, s.numShards)
 
 	shard := &s.shards[idx]
 	shard.mux.Lock()
-	stat, found := shard.apiStatMap[call.key]
+	stat, found := shard.apiStatMap[call.Key]
 	if !found {
 		stat = &ApiStat{}
-		grpcstats.InitLatencyMetric(&stat.latency, LatencyTimes)
-		shard.apiStatMap[call.key] = stat
+		grpcstats.InitLatencyMetric(&stat.Latency, LatencyTimes)
+		shard.apiStatMap[call.Key] = stat
 	}
-	stat.reqs++
-	if call.fail {
-		stat.errs++
+	stat.Reqs++
+	if call.Fail {
+		stat.Errs++
 	}
-	stat.latency.AddLatency(call.latency)
-	if call.key.Method == EdgeEventLatencyMethod {
-		if stat.rollinglatency == nil {
-			stat.rollinglatency = new(dme.Latency)
+	stat.Latency.AddLatency(call.Latency)
+	if call.Key.Method == EdgeEventLatencyMethod {
+		if stat.Rollinglatency == nil {
+			stat.Rollinglatency = new(dme.Latency)
 		} else {
 			// Reset rollinglatency every 10 minutes or something, so that latency values are current
-			t := cloudcommon.TimestampToTime(*stat.rollinglatency.Timestamp)
+			t := cloudcommon.TimestampToTime(*stat.Rollinglatency.Timestamp)
 			if time.Since(t) > time.Minute*10 {
-				stat.rollinglatency = new(dme.Latency)
+				stat.Rollinglatency = new(dme.Latency)
 			}
 		}
-		dmeutil.UpdateRollingLatency(call.samples, stat.rollinglatency)
+		dmeutil.UpdateRollingLatency(call.Samples, stat.Rollinglatency)
 	}
-	stat.changed = true
+	stat.Changed = true
 	shard.mux.Unlock()
 }
 
@@ -138,13 +150,13 @@ func (s *DmeStats) RunNotify() {
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
-					if stat.changed {
+					if stat.Changed {
 						if key.Method == EdgeEventLatencyMethod {
 							s.send(ctx, EdgeEventStatToMetric(ts, &key, stat))
 						} else {
 							s.send(ctx, ApiStatToMetric(ts, &key, stat))
 						}
-						stat.changed = false
+						stat.Changed = false
 					}
 				}
 				s.shards[ii].mux.Unlock()
@@ -156,28 +168,28 @@ func (s *DmeStats) RunNotify() {
 	s.waitGroup.Done()
 }
 
-func ApiStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat) *edgeproto.Metric {
+func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "dme-api"
 	metric.AddTag("apporg", key.AppKey.Organization)
 	metric.AddTag("app", key.AppKey.Name)
 	metric.AddTag("ver", key.AppKey.Version)
-	metric.AddTag("cloudletorg", myCloudletKey.Organization)
-	metric.AddTag("cloudlet", myCloudletKey.Name)
-	metric.AddTag("id", *scaleID)
+	metric.AddTag("cloudletorg", MyCloudletKey.Organization)
+	metric.AddTag("cloudlet", MyCloudletKey.Name)
+	metric.AddTag("id", *ScaleID)
 	metric.AddTag("method", key.Method)
-	metric.AddIntVal("reqs", stat.reqs)
-	metric.AddIntVal("errs", stat.errs)
+	metric.AddIntVal("reqs", stat.Reqs)
+	metric.AddIntVal("errs", stat.Errs)
 	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
 	metric.AddTag("foundOperator", key.CloudletFound.Organization)
 	// Cell ID is just a unique number - keep it as a string
 	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
-	stat.latency.AddToMetric(&metric)
+	stat.Latency.AddToMetric(&metric)
 	return &metric
 }
 
-func EdgeEventStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *ApiStat) *edgeproto.Metric {
+func EdgeEventStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = EdgeEventLatencyMethod
@@ -189,21 +201,21 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *dmecommon.StatKey, stat *Ap
 	metric.AddTag("cluster", key.ClusterKey.Name)
 	metric.AddTag("clusterorg", key.ClusterInstOrg)
 
-	metric.AddIntVal("reqs", stat.reqs)
-	metric.AddIntVal("errs", stat.errs)
+	metric.AddIntVal("reqs", stat.Reqs)
+	metric.AddIntVal("errs", stat.Errs)
 
-	metric.AddIntVal("numsamples", stat.rollinglatency.NumSamples)
-	metric.AddDoubleVal("avg", stat.rollinglatency.Avg)
-	metric.AddDoubleVal("stddev", stat.rollinglatency.StdDev)
-	metric.AddDoubleVal("min", stat.rollinglatency.Min)
-	metric.AddDoubleVal("max", stat.rollinglatency.Max)
+	metric.AddIntVal("numsamples", stat.Rollinglatency.NumSamples)
+	metric.AddDoubleVal("avg", stat.Rollinglatency.Avg)
+	metric.AddDoubleVal("stddev", stat.Rollinglatency.StdDev)
+	metric.AddDoubleVal("min", stat.Rollinglatency.Min)
+	metric.AddDoubleVal("max", stat.Rollinglatency.Max)
 
-	stat.latency.AddToMetric(&metric)
+	stat.Latency.AddToMetric(&metric)
 	return &metric
 }
 
-func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
-	key := &dmecommon.StatKey{}
+func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
+	key := &StatKey{}
 	stat := &ApiStat{}
 	for _, tag := range metric.Tags {
 		switch tag.Name {
@@ -224,12 +236,12 @@ func MetricToStat(metric *edgeproto.Metric) (*dmecommon.StatKey, *ApiStat) {
 	for _, val := range metric.Vals {
 		switch val.Name {
 		case "reqs":
-			stat.reqs = val.GetIval()
+			stat.Reqs = val.GetIval()
 		case "errs":
-			stat.errs = val.GetIval()
+			stat.Errs = val.GetIval()
 		}
 	}
-	stat.latency.FromMetric(metric)
+	stat.Latency.FromMetric(metric)
 	return key, stat
 }
 
@@ -275,12 +287,12 @@ func getResultFromFindCloudletReply(mreq *dme.FindCloudletReply) dme.FindCloudle
 }
 
 // Helper function to keep track of the registered devices
-func recordDevice(ctx context.Context, req *dme.RegisterClientRequest) {
+func RecordDevice(ctx context.Context, req *dme.RegisterClientRequest) {
 	devKey := edgeproto.DeviceKey{
 		UniqueId:     req.UniqueId,
 		UniqueIdType: req.UniqueIdType,
 	}
-	if platformClientsCache.HasKey(&devKey) {
+	if PlatformClientsCache.HasKey(&devKey) {
 		return
 	}
 	ts, err := types.TimestampProto(time.Now())
@@ -292,33 +304,33 @@ func recordDevice(ctx context.Context, req *dme.RegisterClientRequest) {
 		FirstSeen: ts,
 	}
 	// Update local cache, which will trigger a send to controller
-	platformClientsCache.Update(ctx, &dev, 0)
+	PlatformClientsCache.Update(ctx, &dev, 0)
 }
 
 func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	start := time.Now()
 
 	call := ApiStatCall{}
-	ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
+	ctx = context.WithValue(ctx, StatKeyContextKey, &call.Key)
 
 	// call the handler
 	resp, err := handler(ctx, req)
 
-	_, call.key.Method = cloudcommon.ParseGrpcMethod(info.FullMethod)
+	_, call.Key.Method = cloudcommon.ParseGrpcMethod(info.FullMethod)
 
 	updateClient := false
 	var loc *dme.Loc
 
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:
-		call.key.AppKey.Organization = typ.OrgName
-		call.key.AppKey.Name = typ.AppName
-		call.key.AppKey.Version = typ.AppVers
+		call.Key.AppKey.Organization = typ.OrgName
+		call.Key.AppKey.Name = typ.AppName
+		call.Key.AppKey.Version = typ.AppVers
 		// For platform App clients we need to do accounting of devices
 		if err == nil {
 			if cloudcommon.IsPlatformApp(typ.OrgName, typ.AppName) ||
 				strings.Contains(strings.ToLower(typ.UniqueIdType), strings.ToLower(cloudcommon.OrganizationSamsung)) {
-				go recordDevice(ctx, typ)
+				go RecordDevice(ctx, typ)
 			}
 		}
 
@@ -326,46 +338,46 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		token := req.(*dme.PlatformFindCloudletRequest).ClientToken
 		// cannot collect any stats without a token
 		if token != "" {
-			tokdata, tokerr := dmecommon.GetClientDataFromToken(token)
+			tokdata, tokerr := GetClientDataFromToken(token)
 			if tokerr != nil {
 				return resp, tokerr
 			}
-			call.key.AppKey = tokdata.AppKey
+			call.Key.AppKey = tokdata.AppKey
 			loc = &tokdata.Location
 			updateClient = true
 		}
 
 	case *dme.FindCloudletRequest:
 
-		ckey, ok := dmecommon.CookieFromContext(ctx)
+		ckey, ok := CookieFromContext(ctx)
 		if !ok {
 			return resp, err
 		}
-		call.key.AppKey.Organization = ckey.OrgName
-		call.key.AppKey.Name = ckey.AppName
-		call.key.AppKey.Version = ckey.AppVers
+		call.Key.AppKey.Organization = ckey.OrgName
+		call.Key.AppKey.Name = ckey.AppName
+		call.Key.AppKey.Version = ckey.AppVers
 		loc = req.(*dme.FindCloudletRequest).GpsLocation
 		updateClient = true
 
 	default:
 		// All other API calls besides RegisterClient
 		// have the app info in the session cookie key.
-		ckey, ok := dmecommon.CookieFromContext(ctx)
+		ckey, ok := CookieFromContext(ctx)
 		if !ok {
 			return resp, err
 		}
-		call.key.AppKey.Organization = ckey.OrgName
-		call.key.AppKey.Name = ckey.AppName
-		call.key.AppKey.Version = ckey.AppVers
+		call.Key.AppKey.Organization = ckey.OrgName
+		call.Key.AppKey.Name = ckey.AppName
+		call.Key.AppKey.Version = ckey.AppVers
 	}
-	call.key.CellId = getCellIdFromDmeReq(req)
+	call.Key.CellId = getCellIdFromDmeReq(req)
 	if err != nil {
-		call.fail = true
+		call.Fail = true
 	}
-	call.latency = time.Since(start)
+	call.Latency = time.Since(start)
 
 	if updateClient {
-		ckey, ok := dmecommon.CookieFromContext(ctx)
+		ckey, ok := CookieFromContext(ctx)
 		if !ok {
 			return resp, err
 		}
@@ -379,9 +391,9 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 
 		// Update clients cache if we found the cloudlet
 		if createClient {
-			client := getAppInstClient(call.key.AppKey.Name, call.key.AppKey.Version, call.key.AppKey.Organization, loc)
+			client := getAppInstClient(call.Key.AppKey.Name, call.Key.AppKey.Version, call.Key.AppKey.Organization, loc)
 			if client != nil {
-				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
+				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.Key.CloudletFound
 				client.ClientKey.UniqueId = ckey.UniqueId
 				client.ClientKey.UniqueIdType = ckey.UniqueIdType
 				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp

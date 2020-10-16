@@ -32,24 +32,24 @@ func showAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string
 		return err.Error()
 	}
 
-	apiStatCall := &ApiStatCall{
-		key: dmecommon.StatKey{
+	apiStatCall := &dmecommon.ApiStatCall{
+		Key: dmecommon.StatKey{
 			AppKey:         appInstKey.AppKey,
 			CloudletFound:  appInstKey.ClusterInstKey.CloudletKey,
-			Method:         EdgeEventLatencyMethod,
+			Method:         dmecommon.EdgeEventLatencyMethod,
 			ClusterKey:     appInstKey.ClusterInstKey.ClusterKey,
 			ClusterInstOrg: appInstKey.ClusterInstKey.Organization,
 		},
 	}
 
-	apiStat, found := stats.LookupApiStatCall(apiStatCall)
+	apiStat, found := dmecommon.Stats.LookupApiStatCall(apiStatCall)
 	if !found {
 		return "unable to find apiStat"
 	}
-	apiStat.mux.Lock()
-	defer apiStat.mux.Unlock()
+	apiStat.Mux.Lock()
+	defer apiStat.Mux.Unlock()
 
-	latency := apiStat.rollinglatency
+	latency := apiStat.Rollinglatency
 	b, err := json.Marshal(latency)
 	if err != nil {
 		return "unable to marshall latency"
@@ -61,38 +61,8 @@ func createAppInstKeyFromRequest(req *edgeproto.DebugRequest) (*edgeproto.AppIns
 	if req.Args == "" {
 		return nil, fmt.Errorf("appinst info in args required")
 	}
+
 	b := []byte(req.Args)
-	/*args := strings.Split(req.Args, " ")
-	if len(args) != 7 {
-		return nil, fmt.Errorf("7 arguments required: appname, apporg, appvers, cloudlet, cloudletorg, cluster, clusterorg")
-	}
-	appname := args[0]
-	apporg := args[1]
-	appvers := args[2]
-	cloudlet := args[3]
-	cloudletorg := args[4]
-	cluster := args[5]
-	clusterorg := args[6]
-
-	appInstKey := &edgeproto.AppInstKey{
-		AppKey: edgeproto.AppKey{
-			Organization: apporg,
-			Name:         appname,
-			Version:      appvers,
-		},
-		ClusterInstKey: edgeproto.ClusterInstKey{
-			ClusterKey: edgeproto.ClusterKey{
-				Name: cluster,
-			},
-			CloudletKey: edgeproto.CloudletKey{
-				Organization: cloudletorg,
-				Name:         cloudlet,
-			},
-			Organization: clusterorg,
-		},
-	}
-	*/
-
 	var appInstKey edgeproto.AppInstKey
 	err := json.Unmarshal(b, &appInstKey)
 	if err != nil {
