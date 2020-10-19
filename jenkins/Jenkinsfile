@@ -1,8 +1,12 @@
 pipeline {
     options {
+        skipDefaultCheckout true
         timeout(time: 30, unit: 'MINUTES')
     }
-    agent any
+    agent { label 'cicd' }
+    environment {
+        GITHUB_CREDS = credentials('jenkins-checkouts')
+    }
     stages {
         stage('Checkout') {
             steps {
@@ -10,15 +14,44 @@ pipeline {
                     checkout scm
                 }
                 dir(path: 'go/src/github.com/mobiledgex/edge-proto') {
-                    git url: 'git@github.com:mobiledgex/edge-proto.git'
+                    git credentialsId: 'jenkins-checkouts',
+                        url: 'https://github.com/mobiledgex/edge-proto.git'
                 }
             }
         }
-        stage('Build') {
+        stage('Match branches') {
+            steps {
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'make edge-cloud-version-set', script: '''#!/bin/bash
+export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/go/bin:$HOME/go/bin
+export GOPATH=$WORKSPACE/go
+
+PR=$( git rev-parse --abbrev-ref HEAD | cut -d- -f2 )
+PR_URL="https://api.github.com/repos/mobiledgex/edge-cloud/pulls/${PR}"
+EC_BRANCH=$( curl -sf -u "$GITHUB_CREDS_USR:$GITHUB_CREDS_PSW" "$PR_URL" \
+                | jq -r '.head.ref // empty' )
+if [[ -z "$EC_BRANCH" ]]; then
+    echo "Failed to determine PR branch" >&2
+    exit 2
+fi
+echo "Edge-cloud branch: $EC_BRANCH"
+
+PROTO_BRANCH=$( git -C ../edge-proto branch -a | awk -v "BR=remotes/origin/${EC_BRANCH}" '$NF == BR' )
+if [[ -n "$PROTO_BRANCH" ]]; then
+    echo "Checking out matching edge-proto branch: ${EC_BRANCH}"
+    git -C ../edge-proto checkout origin/${EC_BRANCH} || exit 2
+else
+    echo "Building with edge-proto master branch"
+fi
+                    '''
+                }
+            }
+        }
+        stage('Clean') {
             steps {
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make clean', script: '''#!/bin/bash
-export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin
+export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/go/bin:$HOME/go/bin
 export GOPATH=$WORKSPACE/go
 make clean
                     '''
@@ -26,18 +59,37 @@ make clean
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'git clean edge-cloud', script: 'git clean -f -d -x'
                 }
+            }
+        }
+        stage('GRPC checkout') {
+            when { not { expression { fileExists 'go/src/github.com/grpc-ecosystem/grpc-gateway' } } }
+            steps {
+                dir(path: 'go/src/github.com/grpc-ecosystem') {
+                    sh label: 'git clone grpc-gateway', script: 'git clone https://github.com/mobiledgex/grpc-gateway.git'
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'go mod download', script: '''#!/bin/bash
+export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/go/bin:$HOME/go/bin
+export GOPATH=$WORKSPACE/go
+export GO111MODULE=on
+go mod download
+                    '''
+                }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make tools', script: '''#!/bin/bash
-export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin
+export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/go/bin:$HOME/go/bin
 export GOPATH=$WORKSPACE/go
 make tools
                     '''
                 }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make', script: '''#!/bin/bash
-export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin
+export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/go/bin:$HOME/go/bin
 export GOPATH=$WORKSPACE/go
-make clean
 make
                     '''
                 }
@@ -45,33 +97,19 @@ make
         }
         stage('Test') {
             options {
+                lock('testbed')
                 timeout(time: 20, unit: 'MINUTES')
             }
             steps {
-                lock('testbed') {
-                    retry(2) {
-                        sleep 10
-                        dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                            sh label: 'unit tests', script: '''#!/bin/bash
-export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin:/usr/lib/postgresql/11/bin
-export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
+                retry(2) {
+                    sleep 10
+                    dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                        sh label: 'unit tests', script: '''#!/bin/bash
+export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/go/bin:$HOME/go/bin:/usr/lib/postgresql/10/bin
 export GOPATH=$WORKSPACE/go
 export GO111MODULE=on
-make test-stop
-make unit-test
-                            '''
-                        }
-                    }
-                    retry(2) {
-                        sleep 10
-                        dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                            sh label: 'make test', script: '''#!/bin/bash
-export PATH=$PATH:$WORKSPACE/go/bin:$HOME/go/bin:/usr/lib/postgresql/11/bin
-export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
-export GOPATH=$WORKSPACE/go
-make test
-                            '''
-                        }
+UNIT_TEST_LOG=/tmp/edge-cloud-unit-test.${BUILD_TAG}.log make unit-test
+                        '''
                     }
                 }
             }

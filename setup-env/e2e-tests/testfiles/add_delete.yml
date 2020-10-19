@@ -11,13 +11,21 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
-- name: Add and show provisioning and verify it is there
+- name: add and show provisioning and verify it is there
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-create,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
+
+- name: verify stream data
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-stream]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_stream.yml"
+    filetype: appstream
 
 - name: check DME/CRM node-show
   actions: [ctrlapi-nodeshow]
@@ -42,6 +50,14 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
+- name: verify stream data
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-stream]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty_stream.yml"
+    filetype: appstream
+
 - name: verify no CRM nodes are connected
   actions: [ctrlapi-nodeshow]
   compareyaml:
@@ -49,7 +65,7 @@ tests:
     yaml2: "{{datadir}}/no_cloudlet_nodes.yml"
     filetype: appdata
 
-- name: Add and show provisioning and verify it is there
+- name: add and show provisioning and verify it is there
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-create,ctrlapi-show]
   compareyaml:
@@ -94,4 +110,3 @@ tests:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
-

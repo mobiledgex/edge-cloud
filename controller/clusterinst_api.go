@@ -140,13 +140,13 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	platName := edgeproto.PlatformType_name[int32(platformType)]
 
 	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
-	if isIPAllocatedPerService(clusterInst.Key.CloudletKey.Organization) {
+	if isIPAllocatedPerService(platformType, clusterInst.Key.CloudletKey.Organization) {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for operator: " + clusterInst.Key.CloudletKey.Organization})
+			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for platform: " + platName})
 			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
 		}
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for operator: %s", clusterInst.Key.CloudletKey.Organization)
+			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for platform: %s", platName)
 		}
 		return clusterInst.IpAccess, nil
 	}
@@ -188,6 +188,30 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	return clusterInst.IpAccess, nil
 }
 
+func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
+	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
+		return nil, inCb, err
+	}
+	return streamSendObj, &CbWrapper{
+		streamSendObj: streamSendObj,
+		GenericCb:     inCb,
+	}, nil
+}
+
+func stopClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, streamSendObj *streamSend, objErr error) {
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
+	if err := streamObjApi.stopStream(ctx, streamKey, streamSendObj, objErr); err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop ClusterInst stream", "err", err)
+	}
+}
+
+func (s *StreamObjApi) StreamClusterInst(key *edgeproto.ClusterInstKey, cb edgeproto.StreamObjApi_StreamClusterInstServer) error {
+	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: *key}, cb)
+}
+
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
@@ -196,10 +220,20 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
-func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
+func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
+	}
+
+	ctx := inCb.Context()
+
+	clusterInstKey := in.Key
+	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	if err == nil {
+		defer func() {
+			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		}()
 	}
 
 	defer func() {
@@ -208,7 +242,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}()
 
-	ctx := cb.Context()
 	if in.Key.Organization == "" {
 		return fmt.Errorf("ClusterInst Organization cannot be empty")
 	}
@@ -267,7 +300,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
 	}
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
 			return err
 		}
@@ -398,7 +431,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
-		err = allocateIP(in, &cloudlet, &refs)
+		err = allocateIP(in, &cloudlet, cloudlet.PlatformType, &refs)
 		if err != nil {
 			return err
 		}
@@ -448,8 +481,8 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.updateClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
-	ctx := cb.Context()
+func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
+	ctx := inCb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "updateClusterInstInternal")
 
 	err := in.ValidateUpdateFields()
@@ -461,6 +494,14 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	cctx.SetOverride(&in.CrmOverride)
+
+	clusterInstKey := in.Key
+	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	if err == nil {
+		defer func() {
+			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		}()
+	}
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
@@ -552,7 +593,7 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 	return nil
 }
 
-func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
+func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
@@ -564,11 +605,19 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	cctx.SetOverride(&in.CrmOverride)
-	ctx := cb.Context()
+	ctx := inCb.Context()
+
+	clusterInstKey := in.Key
+	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	if err == nil {
+		defer func() {
+			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		}()
+	}
 
 	var prevState edgeproto.TrackedState
 	// Set state to prevent other apps from being created on ClusterInst
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}

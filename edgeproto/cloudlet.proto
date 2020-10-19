@@ -112,10 +112,12 @@ enum PlatformType {
   PLATFORM_TYPE_FAKEINFRA = 6;
    // VMWare VSphere (ESXi)
   PLATFORM_TYPE_VSPHERE = 7;
-  // AWS Cloudlet
-  PLATFORM_TYPE_AWS = 8;
+  // AWS EKS Cloudlet
+  PLATFORM_TYPE_AWS_EKS = 8;
   // VM Pool Cloudlet
   PLATFORM_TYPE_VM_POOL = 9;
+    // AWS EC2 VM Cloudlet
+  PLATFORM_TYPE_AWS_EC2 = 10;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
@@ -273,7 +275,6 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
-    option (protogen.mc2_streamer_cache) = true;
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
@@ -285,7 +286,6 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.mc2_streamer_cache) = true;
   }
   // Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
@@ -296,7 +296,6 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool";
-    option (protogen.mc2_streamer_cache) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
