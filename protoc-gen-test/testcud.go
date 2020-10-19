@@ -517,6 +517,9 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 		if len(service.Method) == 0 {
 			continue
 		}
+		if !hasSupportedMethod(service) {
+			continue
+		}
 		t.generateRunApi(file.FileDescriptorProto, service)
 		for _, method := range service.Method {
 			t.genDummyMethod(*service.Name, method)
