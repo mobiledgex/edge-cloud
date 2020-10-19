@@ -198,7 +198,6 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	cloudlet := testutil.CloudletData[2]
 	cloudlet.Key.Name = "crmmanualbringup"
 	cloudlet.ContainerVersion = crm_v1
-
 	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
