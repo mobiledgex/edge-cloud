@@ -13,6 +13,9 @@ const (
 	AutoProvReasonMinMax   = "minmax"
 	AutoProvReasonOrphaned = "orphaned"
 	AutoProvPolicyName     = "auto-prov-policy-name"
+	AccessKeyData          = "access-key-data"
+	AccessKeySig           = "access-key-sig"
+	VaultKeySig            = "vault-key-sig"
 )
 
 func AutoProvCloudletInfoOnline(cloudletInfo *edgeproto.CloudletInfo) bool {

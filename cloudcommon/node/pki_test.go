@@ -9,18 +9,26 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
+	edgetls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/examples/features/proto/echo"
 )
 
 // Note file package is not node, so avoids node package having
 // dependencies on process package.
 
 func TestInternalPki(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelApi)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
@@ -38,6 +46,29 @@ func TestInternalPki(t *testing.T) {
 	require.Nil(t, err, "start local vault")
 	defer vp.StopLocal()
 
+	node.BadAuthDelay = time.Millisecond
+
+	// Set up fake Controller to serve access key API
+	dcUS := &DummyController{}
+	dcUS.Init(ctx, "us", vroles)
+	dcUS.Start(ctx)
+	defer dcUS.Stop()
+
+	// Set up fake Controller to serve access key API
+	dcEU := &DummyController{}
+	dcEU.Init(ctx, "eu", vroles)
+	dcEU.Start(ctx)
+	defer dcEU.Stop()
+
+	// create access key for US cloudlet
+	tc1 := dcUS.CreateCloudlet(ctx, "pkitc1")
+	err = dcUS.UpdateKey(ctx, tc1.Cloudlet.Key)
+	require.Nil(t, err)
+	// create access key for EU cloudlet
+	tc2 := dcEU.CreateCloudlet(ctx, "pkitc2")
+	err = dcEU.UpdateKey(ctx, tc2.Cloudlet.Key)
+	require.Nil(t, err)
+
 	// Most positive testing is done by e2e tests.
 
 	// Negative testing for issuing certs.
@@ -49,41 +80,64 @@ func TestInternalPki(t *testing.T) {
 	cfgTests.add(ConfigTest{
 		NodeType:    node.NodeTypeController,
 		Region:      "us",
-		LocalIssuer: node.CertIssuerGlobal,
+		LocalIssuer: node.CertIssuerRegional,
+		TestIssuer:  node.CertIssuerGlobal,
 		ExpectErr:   "write failure pki-global/issue/us",
 	})
-	// regional Controller cannot issue cloudlet cert
+	// regional Controller can issue RegionalCloudlet, for access-key services.
 	cfgTests.add(ConfigTest{
 		NodeType:    node.NodeTypeController,
 		Region:      "us",
-		LocalIssuer: node.CertIssuerRegionalCloudlet,
-		ExpectErr:   "write failure pki-regional-cloudlet/issue/us",
+		LocalIssuer: node.CertIssuerRegional,
+		TestIssuer:  node.CertIssuerRegionalCloudlet,
+		ExpectErr:   "",
 	})
 	// global node cannot issue regional cert
 	cfgTests.add(ConfigTest{
 		NodeType:    node.NodeTypeNotifyRoot,
-		LocalIssuer: node.CertIssuerRegional,
+		LocalIssuer: node.CertIssuerGlobal,
+		TestIssuer:  node.CertIssuerRegional,
 		ExpectErr:   "write failure pki-regional/issue/default",
 	})
 	// global node cannot issue regional-cloudlet cert
 	cfgTests.add(ConfigTest{
 		NodeType:    node.NodeTypeNotifyRoot,
-		LocalIssuer: node.CertIssuerRegionalCloudlet,
+		LocalIssuer: node.CertIssuerGlobal,
+		TestIssuer:  node.CertIssuerRegionalCloudlet,
 		ExpectErr:   "write failure pki-regional-cloudlet/issue/default",
 	})
 	// cloudlet node cannot issue global cert
 	cfgTests.add(ConfigTest{
-		NodeType:    node.NodeTypeCRM,
-		Region:      "us",
-		LocalIssuer: node.CertIssuerGlobal,
-		ExpectErr:   "write failure pki-global/issue/us",
+		NodeType:      node.NodeTypeCRM,
+		Region:        "us",
+		LocalIssuer:   node.CertIssuerRegionalCloudlet,
+		TestIssuer:    node.CertIssuerGlobal,
+		AccessKeyFile: tc1.KeyClient.AccessKeyFile,
+		AccessApiAddr: tc1.KeyClient.AccessApiAddr,
+		CloudletKey:   &tc1.Cloudlet.Key,
+		ExpectErr:     "Controller will only issue RegionalCloudlet certs",
 	})
 	// cloudlet node cannot issue regional cert
 	cfgTests.add(ConfigTest{
-		NodeType:    node.NodeTypeCRM,
-		Region:      "us",
-		LocalIssuer: node.CertIssuerRegional,
-		ExpectErr:   "write failure pki-regional/issue/us",
+		NodeType:      node.NodeTypeCRM,
+		Region:        "us",
+		LocalIssuer:   node.CertIssuerRegionalCloudlet,
+		TestIssuer:    node.CertIssuerRegional,
+		AccessKeyFile: tc1.KeyClient.AccessKeyFile,
+		AccessApiAddr: tc1.KeyClient.AccessApiAddr,
+		CloudletKey:   &tc1.Cloudlet.Key,
+		ExpectErr:     "Controller will only issue RegionalCloudlet certs",
+	})
+	// cloudlet node can issue RegionalCloudlet cert
+	cfgTests.add(ConfigTest{
+		NodeType:      node.NodeTypeCRM,
+		Region:        "us",
+		LocalIssuer:   node.CertIssuerRegionalCloudlet,
+		TestIssuer:    node.CertIssuerRegionalCloudlet,
+		AccessKeyFile: tc1.KeyClient.AccessKeyFile,
+		AccessApiAddr: tc1.KeyClient.AccessApiAddr,
+		CloudletKey:   &tc1.Cloudlet.Key,
+		ExpectErr:     "",
 	})
 
 	for _, cfg := range cfgTests {
@@ -119,11 +173,34 @@ func TestInternalPki(t *testing.T) {
 			node.SameRegionalCloudletMatchCA(),
 		},
 	}
+	controllerApiServerUS := &PkiConfig{
+		Region:        "us",
+		Type:          node.NodeTypeController,
+		LocalIssuer:   node.CertIssuerRegional,
+		UseVaultCerts: true,
+		RemoteCAs: []node.MatchCA{
+			node.GlobalMatchCA(),
+			node.SameRegionalMatchCA(),
+		},
+	}
+	controllerApiServerEU := &PkiConfig{
+		Region:        "eu",
+		Type:          node.NodeTypeController,
+		LocalIssuer:   node.CertIssuerRegional,
+		UseVaultCerts: true,
+		RemoteCAs: []node.MatchCA{
+			node.GlobalMatchCA(),
+			node.SameRegionalMatchCA(),
+		},
+	}
 	crmClientUS := &PkiConfig{
 		Region:        "us",
 		Type:          node.NodeTypeCRM,
 		LocalIssuer:   node.CertIssuerRegionalCloudlet,
 		UseVaultCerts: true,
+		AccessKeyFile: tc1.KeyClient.AccessKeyFile,
+		AccessApiAddr: tc1.KeyClient.AccessApiAddr,
+		CloudletKey:   &tc1.Cloudlet.Key,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
 		},
@@ -133,8 +210,28 @@ func TestInternalPki(t *testing.T) {
 		Type:          node.NodeTypeCRM,
 		LocalIssuer:   node.CertIssuerRegionalCloudlet,
 		UseVaultCerts: true,
+		AccessKeyFile: tc2.KeyClient.AccessKeyFile,
+		AccessApiAddr: tc2.KeyClient.AccessApiAddr,
+		CloudletKey:   &tc2.Cloudlet.Key,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
+		},
+	}
+	dmeClientRegionalUS := &PkiConfig{
+		Region:        "us",
+		Type:          node.NodeTypeDME,
+		LocalIssuer:   node.CertIssuerRegional,
+		UseVaultCerts: true,
+		RemoteCAs: []node.MatchCA{
+			node.SameRegionalMatchCA(),
+		},
+	}
+	mc := &PkiConfig{
+		Type:          node.NodeTypeNotifyRoot,
+		LocalIssuer:   node.CertIssuerGlobal,
+		UseVaultCerts: true,
+		RemoteCAs: []node.MatchCA{
+			node.AnyRegionalMatchCA(),
 		},
 	}
 	// assume attacker stole crm EU certs, and vault login
@@ -144,6 +241,9 @@ func TestInternalPki(t *testing.T) {
 		Type:          node.NodeTypeCRM,
 		LocalIssuer:   node.CertIssuerRegionalCloudlet,
 		UseVaultCerts: true,
+		AccessKeyFile: tc2.KeyClient.AccessKeyFile,
+		AccessApiAddr: tc2.KeyClient.AccessApiAddr,
+		CloudletKey:   &tc2.Cloudlet.Key,
 		RemoteCAs: []node.MatchCA{
 			node.GlobalMatchCA(),
 			node.AnyRegionalMatchCA(),
@@ -176,6 +276,15 @@ func TestInternalPki(t *testing.T) {
 	csTests.add(ClientServer{
 		Server: notifyRootServer,
 		Client: controllerClientUS,
+	})
+	// mc can connect to controller
+	csTests.add(ClientServer{
+		Server: controllerApiServerUS,
+		Client: mc,
+	})
+	csTests.add(ClientServer{
+		Server: controllerApiServerEU,
+		Client: mc,
 	})
 	// crm can connect to controller
 	csTests.add(ClientServer{
@@ -347,34 +456,111 @@ func TestInternalPki(t *testing.T) {
 	for _, test := range csTests {
 		testExchange(t, ctx, vroles, &test)
 	}
+
+	// Tests for Tls interceptor that allows access for Global/Regional
+	// clients, but requires an additional access key for RegionalCloudlet.
+	// This will be used on the notify API.
+	var ccTests clientControllerList
+	// crm can connect within same region
+	ccTests.add(ClientController{
+		Controller:                 dcUS,
+		Client:                     crmClientUS,
+		ControllerRequireAccessKey: true,
+	})
+	ccTests.add(ClientController{
+		Controller:                 dcEU,
+		Client:                     crmClientEU,
+		ControllerRequireAccessKey: true,
+	})
+	// crm cannot connect to different region
+	ccTests.add(ClientController{
+		Controller:                 dcUS,
+		Client:                     crmClientEU,
+		ControllerRequireAccessKey: true,
+		ExpectErr:                  "region mismatch, expected local uri sans for eu",
+	})
+	ccTests.add(ClientController{
+		Controller:                 dcEU,
+		Client:                     crmClientUS,
+		ControllerRequireAccessKey: true,
+		ExpectErr:                  "region mismatch, expected local uri sans for us",
+	})
+	// test invalid keys
+	ccTests.add(ClientController{
+		Controller:                 dcUS,
+		Client:                     crmClientUS,
+		ControllerRequireAccessKey: true,
+		InvalidateClientKey:        true,
+		ExpectErr:                  "AccessKey authentication failed",
+	})
+	ccTests.add(ClientController{
+		Controller:                 dcEU,
+		Client:                     crmClientEU,
+		ControllerRequireAccessKey: true,
+		InvalidateClientKey:        true,
+		ExpectErr:                  "AccessKey authentication failed",
+	})
+	// ignore invalid keys or missing keys for backwards compatibility
+	// with CRMs that were not upgraded
+	ccTests.add(ClientController{
+		Controller:                 dcUS,
+		Client:                     crmClientUS,
+		ControllerRequireAccessKey: false,
+		InvalidateClientKey:        true,
+	})
+	ccTests.add(ClientController{
+		Controller:                 dcEU,
+		Client:                     crmClientEU,
+		ControllerRequireAccessKey: false,
+		InvalidateClientKey:        true,
+	})
+	// same regional service is ok (regional dme, etc)
+	ccTests.add(ClientController{
+		Controller: dcUS,
+		Client:     dmeClientRegionalUS,
+	})
+	for _, test := range ccTests {
+		testTlsConnect(t, ctx, &test)
+	}
 }
 
 type ConfigTest struct {
 	NodeType      string
 	Region        string
-	VaultNodeType string
-	VaultRegion   string
 	LocalIssuer   string
+	TestIssuer    string
 	RemoteCAs     []node.MatchCA
 	ExpectErr     string
 	Line          string
+	AccessKeyFile string
+	AccessApiAddr string
+	CloudletKey   *edgeproto.CloudletKey
 }
 
 func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRoles, cfg *ConfigTest) {
-	if cfg.VaultNodeType == "" {
-		cfg.VaultNodeType = cfg.NodeType
-	}
-	if cfg.VaultRegion == "" {
-		cfg.VaultRegion = cfg.Region
-	}
-	vc := getVaultConfig(cfg.VaultNodeType, cfg.VaultRegion, vroles)
+	log.SpanLog(ctx, log.DebugLevelInfo, "run testGetTlsConfig", "cfg", cfg)
+	vc := getVaultConfig(cfg.NodeType, cfg.Region, vroles)
 	mgr := node.NodeMgr{}
 	mgr.InternalPki.UseVaultCerts = true
-	_, _, err := mgr.Init(cfg.NodeType, node.NoTlsClientIssuer, node.WithRegion(cfg.Region), node.WithVaultConfig(vc))
-	require.Nil(t, err)
+	mgr.InternalDomain = "mobiledgex.net"
+	if cfg.AccessKeyFile != "" && cfg.AccessApiAddr != "" {
+		mgr.AccessKeyClient.AccessKeyFile = cfg.AccessKeyFile
+		mgr.AccessKeyClient.AccessApiAddr = "notls://" + cfg.AccessApiAddr
+	}
+	// nodeMgr init will attempt to issue a cert to be able to talk
+	// to Jaeger/ElasticSearch
+	opts := []node.NodeOp{
+		node.WithRegion(cfg.Region),
+		node.WithVaultConfig(vc),
+	}
+	if cfg.CloudletKey != nil {
+		opts = append(opts, node.WithCloudletKey(cfg.CloudletKey))
+	}
+	_, _, err := mgr.Init(cfg.NodeType, cfg.LocalIssuer, opts...)
+	require.Nil(t, err, "nodeMgr init %s", cfg.Line)
 	_, err = mgr.InternalPki.GetServerTlsConfig(ctx,
 		mgr.CommonName(),
-		cfg.LocalIssuer,
+		cfg.TestIssuer,
 		cfg.RemoteCAs)
 	if cfg.ExpectErr == "" {
 		require.Nil(t, err, "get tls config %s", cfg.Line)
@@ -394,6 +580,9 @@ type PkiConfig struct {
 	UseVaultCAs   bool
 	UseVaultCerts bool
 	RemoteCAs     []node.MatchCA
+	AccessKeyFile string
+	AccessApiAddr string
+	CloudletKey   *edgeproto.CloudletKey
 }
 
 type ClientServer struct {
@@ -402,6 +591,30 @@ type ClientServer struct {
 	ExpectServerErr string
 	ExpectClientErr string
 	Line            string
+}
+
+func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, error) {
+	vaultCfg := getVaultConfig(s.Type, s.Region, vroles)
+	nodeMgr := node.NodeMgr{}
+	nodeMgr.SetInternalTlsCertFile(s.CertFile)
+	nodeMgr.SetInternalTlsKeyFile(s.CertKey)
+	nodeMgr.SetInternalTlsCAFile(s.CAFile)
+	nodeMgr.InternalPki.UseVaultCAs = s.UseVaultCAs
+	nodeMgr.InternalPki.UseVaultCerts = s.UseVaultCerts
+	nodeMgr.InternalDomain = "mobiledgex.net"
+	if s.AccessKeyFile != "" && s.AccessApiAddr != "" {
+		nodeMgr.AccessKeyClient.AccessKeyFile = s.AccessKeyFile
+		nodeMgr.AccessKeyClient.AccessApiAddr = "notls://" + s.AccessApiAddr
+	}
+	opts := []node.NodeOp{
+		node.WithRegion(s.Region),
+		node.WithVaultConfig(vaultCfg),
+	}
+	if s.CloudletKey != nil {
+		opts = append(opts, node.WithCloudletKey(s.CloudletKey))
+	}
+	_, _, err := nodeMgr.Init(s.Type, s.LocalIssuer, opts...)
+	return &nodeMgr, err
 }
 
 func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles, cs *ClientServer) {
@@ -414,18 +627,8 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 		}
 	}
 	fmt.Printf("******************* testExchange %s *********************\n", cs.Line)
-	serverVault := getVaultConfig(cs.Server.Type, cs.Server.Region, vroles)
-	serverNode := node.NodeMgr{}
-	serverNode.SetInternalTlsCertFile(cs.Server.CertFile)
-	serverNode.SetInternalTlsKeyFile(cs.Server.CertKey)
-	serverNode.SetInternalTlsCAFile(cs.Server.CAFile)
-	serverNode.InternalPki.UseVaultCAs = cs.Server.UseVaultCAs
-	serverNode.InternalPki.UseVaultCerts = cs.Server.UseVaultCerts
-	serverNode.InternalDomain = "mobiledgex.net"
-	_, _, err := serverNode.Init(cs.Server.Type, node.NoTlsClientIssuer,
-		node.WithRegion(cs.Server.Region),
-		node.WithVaultConfig(serverVault))
-	require.Nil(t, err)
+	serverNode, err := cs.Server.setupNodeMgr(vroles)
+	require.Nil(t, err, "serverNode init %s", cs.Line)
 	serverTls, err := serverNode.InternalPki.GetServerTlsConfig(ctx,
 		serverNode.CommonName(),
 		cs.Server.LocalIssuer,
@@ -435,18 +638,8 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 		require.NotNil(t, serverTls)
 	}
 
-	clientVault := getVaultConfig(cs.Client.Type, cs.Client.Region, vroles)
-	clientNode := node.NodeMgr{}
-	clientNode.SetInternalTlsCertFile(cs.Client.CertFile)
-	clientNode.SetInternalTlsKeyFile(cs.Client.CertKey)
-	clientNode.SetInternalTlsCAFile(cs.Client.CAFile)
-	clientNode.InternalPki.UseVaultCAs = cs.Client.UseVaultCAs
-	clientNode.InternalPki.UseVaultCerts = cs.Client.UseVaultCerts
-	clientNode.InternalDomain = "mobiledgex.net"
-	_, _, err = clientNode.Init(cs.Client.Type, node.NoTlsClientIssuer,
-		node.WithRegion(cs.Client.Region),
-		node.WithVaultConfig(clientVault))
-	require.Nil(t, err)
+	clientNode, err := cs.Client.setupNodeMgr(vroles)
+	require.Nil(t, err, "clientNode init %s", cs.Line)
 	clientTls, err := clientNode.InternalPki.GetClientTlsConfig(ctx,
 		clientNode.CommonName(),
 		cs.Client.LocalIssuer,
@@ -517,6 +710,60 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 	}
 }
 
+type ClientController struct {
+	Controller                 *DummyController
+	Client                     *PkiConfig
+	ControllerRequireAccessKey bool
+	InvalidateClientKey        bool
+	ExpectErr                  string
+	Line                       string
+}
+
+func testTlsConnect(t *testing.T, ctx context.Context, cc *ClientController) {
+	// This tests the TLS interceptors that will require
+	// access keys if client uses the RegionalCloudlet cert.
+	fmt.Printf("******************* testTlsConnect %s *********************\n", cc.Line)
+	cc.Controller.DummyController.KeyServer.SetRequireTlsAccessKey(cc.ControllerRequireAccessKey)
+
+	clientNode, err := cc.Client.setupNodeMgr(cc.Controller.vroles)
+	require.Nil(t, err, "clientNode init %s", cc.Line)
+	clientTls, err := clientNode.InternalPki.GetClientTlsConfig(ctx,
+		clientNode.CommonName(),
+		cc.Client.LocalIssuer,
+		cc.Client.RemoteCAs)
+	require.Nil(t, err, "get client tls config %s", cc.Line)
+	if cc.Client.CertFile != "" || cc.Client.UseVaultCerts {
+		require.NotNil(t, clientTls)
+		// must set ServerName due to the way this test is set up
+		clientTls.ServerName = cc.Controller.nodeMgr.CommonName()
+	}
+	// for negative testing with invalid key
+	if cc.InvalidateClientKey && cc.Client.CloudletKey != nil {
+		cc.Controller.UpdateKey(ctx, *cc.Client.CloudletKey)
+	}
+	// interceptors will add access key to grpc metadata if access key present
+	unaryInterceptor := log.UnaryClientTraceGrpc
+	if cc.Client.AccessKeyFile != "" {
+		unaryInterceptor = grpc_middleware.ChainUnaryClient(
+			log.UnaryClientTraceGrpc,
+			clientNode.AccessKeyClient.UnaryAddAccessKey)
+	}
+	streamInterceptor := log.StreamClientTraceGrpc
+	if cc.Client.AccessKeyFile != "" {
+		streamInterceptor = grpc_middleware.ChainStreamClient(
+			log.StreamClientTraceGrpc,
+			clientNode.AccessKeyClient.StreamAddAccessKey)
+	}
+
+	clientConn, err := grpc.Dial(cc.Controller.TlsAddr(),
+		edgetls.GetGrpcDialOption(clientTls),
+		grpc.WithUnaryInterceptor(unaryInterceptor),
+		grpc.WithStreamInterceptor(streamInterceptor),
+	)
+	require.Nil(t, err, "create client conn %s", cc.Line)
+	node.EchoApisTest(t, ctx, clientConn, cc.ExpectErr)
+}
+
 func getVaultConfig(nodetype, region string, vroles *process.VaultRoles) *vault.Config {
 	var roleid string
 	var secretid string
@@ -538,8 +785,8 @@ func getVaultConfig(nodetype, region string, vroles *process.VaultRoles) *vault.
 			roleid = rr.DmeRoleID
 			secretid = rr.DmeSecretID
 		case node.NodeTypeCRM:
-			roleid = rr.CRMRoleID
-			secretid = rr.CRMSecretID
+			// no vault access for crm
+			return nil
 		case node.NodeTypeController:
 			roleid = rr.CtrlRoleID
 			secretid = rr.CtrlSecretID
@@ -574,4 +821,123 @@ func (list *clientServerList) add(cs ClientServer) {
 	_, file, line, _ := runtime.Caller(1)
 	cs.Line = fmt.Sprintf("%s:%d", filepath.Base(file), line)
 	*list = append(*list, cs)
+}
+
+type clientControllerList []ClientController
+
+func (list *clientControllerList) add(cc ClientController) {
+	_, file, line, _ := runtime.Caller(1)
+	cc.Line = fmt.Sprintf("%s:%d", filepath.Base(file), line)
+	*list = append(*list, cc)
+}
+
+// Dummy controller serves Vault certs to access key clients
+type DummyController struct {
+	node.DummyController
+	nodeMgr       node.NodeMgr
+	vroles        *process.VaultRoles
+	TlsLis        net.Listener
+	TlsServ       *grpc.Server
+	TlsRegisterCb func(server *grpc.Server)
+}
+
+func (s *DummyController) Init(ctx context.Context, region string, vroles *process.VaultRoles) error {
+	s.DummyController.Init()
+	s.DummyController.ApiRegisterCb = func(serv *grpc.Server) {
+		// add APIs to issue certs to CRM/etc
+		edgeproto.RegisterCloudletAccessApiServer(serv, s)
+	}
+	es := &node.EchoServer{}
+	s.TlsRegisterCb = func(serv *grpc.Server) {
+		// echo server for testing
+		echo.RegisterEchoServer(serv, es)
+	}
+	// no crm vault role/secret env vars for controller (no backwards compatability)
+	s.KeyServer.SetCrmVaultAuth("", "")
+	s.vroles = vroles
+
+	vc := getVaultConfig(node.NodeTypeController, region, vroles)
+	s.nodeMgr.InternalPki.UseVaultCerts = true
+	s.nodeMgr.InternalDomain = "mobiledgex.net"
+	_, _, err := s.nodeMgr.Init(node.NodeTypeController, node.NoTlsClientIssuer, node.WithRegion(region), node.WithVaultConfig(vc))
+	return err
+}
+
+func (s *DummyController) Start(ctx context.Context) {
+	s.DummyController.Start()
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		panic(err.Error())
+	}
+	s.TlsLis = lis
+	// same config as Controller's notify server
+	tlsConfig, err := s.nodeMgr.InternalPki.GetServerTlsConfig(ctx,
+		s.nodeMgr.CommonName(),
+		node.CertIssuerRegional,
+		[]node.MatchCA{
+			node.SameRegionalMatchCA(),
+			node.SameRegionalCloudletMatchCA(),
+		})
+	if err != nil {
+		panic(err.Error())
+	}
+	// The "tls" interceptors, which only require an access-key
+	// if the client is using a RegionalCloudlet cert.
+	s.TlsServ = grpc.NewServer(
+		cloudcommon.GrpcCreds(tlsConfig),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			cloudcommon.AuditUnaryInterceptor,
+			s.KeyServer.UnaryTlsAccessKey,
+		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			cloudcommon.AuditStreamInterceptor,
+			s.KeyServer.StreamTlsAccessKey,
+		)),
+	)
+	if s.TlsRegisterCb != nil {
+		s.TlsRegisterCb(s.TlsServ)
+	}
+	go func() {
+		err := s.TlsServ.Serve(s.TlsLis)
+		if err != nil {
+			panic(err.Error())
+		}
+	}()
+}
+
+func (s *DummyController) Stop() {
+	s.DummyController.Stop()
+	s.TlsServ.Stop()
+	s.TlsLis.Close()
+}
+
+func (s *DummyController) TlsAddr() string {
+	return s.TlsLis.Addr().String()
+}
+
+func (s *DummyController) IssueCert(ctx context.Context, req *edgeproto.IssueCertRequest) (*edgeproto.IssueCertReply, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "dummy controller issue cert", "req", req)
+	reply := &edgeproto.IssueCertReply{}
+	certId := node.CertId{
+		CommonName: req.CommonName,
+		Issuer:     node.CertIssuerRegionalCloudlet,
+	}
+	vc, err := s.nodeMgr.InternalPki.IssueVaultCertDirect(ctx, certId)
+	if err != nil {
+		return reply, err
+	}
+	reply.PublicCertPem = string(vc.PublicCertPEM)
+	reply.PrivateKeyPem = string(vc.PrivateKeyPEM)
+	return reply, nil
+}
+
+func (s *DummyController) GetCas(ctx context.Context, req *edgeproto.GetCasRequest) (*edgeproto.GetCasReply, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "dummy controller get cas", "req", req)
+	reply := &edgeproto.GetCasReply{}
+	cab, err := s.nodeMgr.InternalPki.GetVaultCAsDirect(ctx, req.Issuer)
+	if err != nil {
+		return reply, err
+	}
+	reply.CaChainPem = string(cab)
+	return reply, err
 }
