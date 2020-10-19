@@ -14,15 +14,17 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
 type CloudletApi struct {
-	sync  *Sync
-	store edgeproto.CloudletStore
-	cache edgeproto.CloudletCache
+	sync            *Sync
+	store           edgeproto.CloudletStore
+	cache           edgeproto.CloudletCache
+	accessKeyServer *node.AccessKeyServer
 }
 
 // Vault roles for all services
@@ -83,6 +85,7 @@ func InitCloudletApi(sync *Sync) {
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
 	edgeproto.InitCloudletCache(&cloudletApi.cache)
 	sync.RegisterCache(&cloudletApi.cache)
+	cloudletApi.accessKeyServer = node.NewAccessKeyServer(&cloudletApi.cache)
 }
 
 func (s *CloudletApi) Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
@@ -1293,4 +1296,39 @@ func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.Cloudl
 	}
 
 	return cloudletPlatform.GetCloudletProps(ctx)
+}
+
+func (s *CloudletApi) RevokeAccessKey(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cloudlet := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, key, &cloudlet) {
+			return key.NotFoundError()
+		}
+		cloudlet.CrmAccessPublicKey = ""
+		s.store.STMPut(stm, &cloudlet)
+		return nil
+	})
+	log.SpanLog(ctx, log.DebugLevelApi, "revoked crm access key", "CloudletKey", *key, "err", err)
+	return &edgeproto.Result{}, err
+}
+
+func (s *CloudletApi) GenerateAccessKey(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	res := edgeproto.Result{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		res.Message = ""
+		cloudlet := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, key, &cloudlet) {
+			return key.NotFoundError()
+		}
+		keyPair, err := node.GenerateAccessKey()
+		if err != nil {
+			return err
+		}
+		cloudlet.CrmAccessPublicKey = keyPair.PublicPEM
+		res.Message = keyPair.PrivatePEM
+		s.store.STMPut(stm, &cloudlet)
+		return nil
+	})
+	log.SpanLog(ctx, log.DebugLevelApi, "generated crm access key", "CloudletKey", *key, "err", err)
+	return &res, err
 }
