@@ -80,6 +80,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	case edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE:
 		newState = edgeproto.TrackedState_UPDATING
 	default:
+		log.SpanLog(ctx, log.DebugLevelNotify, "Skip cloudletInfo state handling", "key", in.Key, "state", in.State)
 		return
 	}
 	newCloudlet := edgeproto.Cloudlet{}
