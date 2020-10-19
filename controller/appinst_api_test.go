@@ -387,6 +387,7 @@ func TestAutoClusterInst(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 	InfluxUsageUnitTestSetup(t)
+	defer InfluxUsageUnitTestStop()
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
