@@ -58,6 +58,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["nocmp"]; found {
 		in.Deployment = ""
 	}
+	if _, found := tags["nocmp"]; found {
+		in.CrmAccessPublicKey = ""
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -690,6 +693,120 @@ func FindFlavorMatchs(c *cli.Command, data []edgeproto.FlavorMatch, err *error) 
 	}
 }
 
+var RevokeAccessKeyCmd = &cli.Command{
+	Use:          "RevokeAccessKey",
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRevokeAccessKey,
+}
+
+func runRevokeAccessKey(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RevokeAccessKey(c, obj)
+}
+
+func RevokeAccessKey(c *cli.Command, in *edgeproto.CloudletKey) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.RevokeAccessKey(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RevokeAccessKey failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RevokeAccessKeys(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RevokeAccessKey %v\n", data[ii])
+		myerr := RevokeAccessKey(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var GenerateAccessKeyCmd = &cli.Command{
+	Use:          "GenerateAccessKey",
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runGenerateAccessKey,
+}
+
+func runGenerateAccessKey(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GenerateAccessKey(c, obj)
+}
+
+func GenerateAccessKey(c *cli.Command, in *edgeproto.CloudletKey) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GenerateAccessKey(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GenerateAccessKey failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GenerateAccessKeys(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GenerateAccessKey %v\n", data[ii])
+		myerr := GenerateAccessKey(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var CloudletApiCmds = []*cobra.Command{
 	CreateCloudletCmd.GenCmd(),
 	DeleteCloudletCmd.GenCmd(),
@@ -700,6 +817,8 @@ var CloudletApiCmds = []*cobra.Command{
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
+	RevokeAccessKeyCmd.GenCmd(),
+	GenerateAccessKeyCmd.GenCmd(),
 }
 
 var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
@@ -1194,6 +1313,8 @@ var CloudletComments = map[string]string{
 	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"overridepolicycontainerversion":      "Override container version from policy file",
 	"vmpool":                              "VM Pool",
+	"crmaccesspublickey":                  "CRM access public key",
+	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",

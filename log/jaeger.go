@@ -118,6 +118,9 @@ func SpanToString(ctx context.Context) string {
 	if span == nil {
 		return ""
 	}
+	if espan, ok := span.(*Span); ok && espan.noTracing {
+		return ""
+	}
 	var t TraceData
 	t = make(map[string]string)
 	tracer.Inject(span.Context(), opentracing.TextMap, t)

@@ -706,7 +706,7 @@ func (r *Retry) SetActionRetry(ii int, retry bool) {
 	r.Enable = true
 	// set defaults
 	r.Count = 5
-	r.Interval = 200 * time.Millisecond
+	r.Interval = 500 * time.Millisecond
 }
 
 func (r *Retry) ShouldRunAction(ii int) bool {
