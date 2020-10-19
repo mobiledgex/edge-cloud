@@ -380,5 +380,7 @@ func InfluxUsageUnitTestSetup(t *testing.T) {
 
 func InfluxUsageUnitTestStop() {
 	services.events.Stop()
-	testInfluxProc.StopLocal()
+	if testInfluxProc != nil {
+		testInfluxProc.StopLocal()
+	}
 }
