@@ -786,12 +786,18 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		if err != nil {
 			return err
 		}
-		// first reset any old AutoProvInfo
-		autoProvInfo := edgeproto.AutoProvInfo{
-			Key:              in.Key,
-			MaintenanceState: edgeproto.MaintenanceState_NORMAL_OPERATION,
+		autoProvInfo := edgeproto.AutoProvInfo{}
+		if !*testMode {
+			// Do not update in testmode, so that it can be tested by setting
+			// autprovinfo state externally
+
+			// first reset any old AutoProvInfo
+			autoProvInfo = edgeproto.AutoProvInfo{
+				Key:              in.Key,
+				MaintenanceState: edgeproto.MaintenanceState_NORMAL_OPERATION,
+			}
+			autoProvInfoApi.Update(ctx, &autoProvInfo, 0)
 		}
-		autoProvInfoApi.Update(ctx, &autoProvInfo, 0)
 
 		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_FAILOVER_REQUESTED)
 		if err != nil {
@@ -852,6 +858,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance failures", "err", err, "undoErr", undoErr)
 				return fmt.Errorf("CRM encountered some errors, aborting maintenance")
 			}
+			nodeMgr.Event(ctx, "Cloudlet under maintenance", in.Key.Organization, in.Key.GetTags(), nil, "state", cloudletInfo.State.String(), "maintenance-state", cloudletInfo.MaintenanceState.String())
 		}
 		cb.Send(&edgeproto.Result{
 			Message: "CRM maintenance started",

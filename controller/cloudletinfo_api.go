@@ -53,18 +53,25 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	changedToOnline := false
+	changedToNormalOperation := false
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		info := edgeproto.CloudletInfo{}
 		if s.store.STMGet(stm, &in.Key, &info) {
 			if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY && info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
 				changedToOnline = true
 			}
+			if in.MaintenanceState == edgeproto.MaintenanceState_NORMAL_OPERATION && info.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+				changedToNormalOperation = true
+			}
 		}
 		s.store.STMPut(stm, in, objstore.WithLease(controllerAliveLease))
 		return nil
 	})
 	if changedToOnline {
-		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String())
+		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "version", in.ContainerVersion)
+	}
+	if changedToNormalOperation {
+		nodeMgr.Event(ctx, "Cloudlet back to normal operation", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "maintenance-state", in.MaintenanceState.String())
 	}
 
 	cloudlet := edgeproto.Cloudlet{}
@@ -81,6 +88,9 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_READY)
 		}
 	} else {
+		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
+			nodeMgr.Event(ctx, "Upgrading cloudlet", in.Key.Organization, in.Key.GetTags(), nil, "from-version", localVersion, "to-version", remoteVersion)
+		}
 		// Allow CRM init when started/upgraded manually
 		if cloudlet.State == edgeproto.TrackedState_READY &&
 			in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
@@ -131,6 +141,7 @@ func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete CloudletInfo",
 			"key", in.Key, "err", err)
 	}
+	nodeMgr.Event(ctx, "Cloudlet offline", in.Key.Organization, in.Key.GetTags(), nil, "reason", "notify disconnect")
 }
 
 func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
