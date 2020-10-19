@@ -234,7 +234,7 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 	verified := ContextGetAccessKeyVerified(ctx)
 	if verified == nil {
 		// this should never happen, the interceptor should error out first
-		return nil, "", fmt.Errorf("acces key not verified")
+		return nil, "", fmt.Errorf("access key not verified")
 	}
 
 	if !verified.UpgradeRequired {

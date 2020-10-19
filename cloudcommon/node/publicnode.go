@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"os"
+
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Third party services that we deploy all have their own letsencrypt-public
@@ -22,6 +24,7 @@ func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, er
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
 		// skip verifying cert if e2e-tests, because cert
 		// will be self-signed
+		log.SpanLog(ctx, log.DebugLevelInfo, "public client tls e2e-test mode")
 		tlsOpts = append(tlsOpts, WithTlsSkipVerify(true))
 	}
 	return s.InternalPki.GetClientTlsConfig(ctx,
