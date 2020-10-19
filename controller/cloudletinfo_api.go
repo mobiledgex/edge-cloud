@@ -71,35 +71,29 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	if !cloudletApi.cache.Get(&in.Key, &cloudlet) {
 		return
 	}
-	localVersion := cloudlet.ContainerVersion
-	remoteVersion := in.ContainerVersion
-
-	if !isVersionConflict(ctx, localVersion, remoteVersion) {
-		if in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
-			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_CRM_INITOK)
-		} else if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-			err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_READY)
-		}
-	} else {
-		// Allow CRM init when started/upgraded manually
-		if cloudlet.State == edgeproto.TrackedState_READY &&
-			in.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
-			newCloudlet := edgeproto.Cloudlet{}
-			key := &in.Key
-			err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-				if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
-					return key.NotFoundError()
-				}
-				newCloudlet.State = edgeproto.TrackedState_CRM_INITOK
-				newCloudlet.ContainerVersion = in.ContainerVersion
-				cloudletApi.store.STMPut(stm, &newCloudlet)
-				return nil
-			})
-		}
+	newState := edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+	switch in.State {
+	case edgeproto.CloudletState_CLOUDLET_STATE_INIT:
+		newState = edgeproto.TrackedState_CRM_INITOK
+	case edgeproto.CloudletState_CLOUDLET_STATE_READY:
+		newState = edgeproto.TrackedState_READY
+	case edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE:
+		newState = edgeproto.TrackedState_UPDATING
+	default:
+		log.SpanLog(ctx, log.DebugLevelNotify, "Skip cloudletInfo state handling", "key", in.Key, "state", in.State)
+		return
 	}
-	if in.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
-		err = cloudletApi.UpdateCloudletState(ctx, &in.Key, edgeproto.TrackedState_UPDATING)
-	}
+	newCloudlet := edgeproto.Cloudlet{}
+	key := &in.Key
+	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
+			return key.NotFoundError()
+		}
+		newCloudlet.State = newState
+		newCloudlet.ContainerVersion = in.ContainerVersion
+		cloudletApi.store.STMPut(stm, &newCloudlet)
+		return nil
+	})
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo state transition error",
 			"key", in.Key, "err", err)
