@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -205,14 +204,11 @@ func validateSkipHcPorts(app *edgeproto.App) error {
 				// for port ranges
 				if port.InternalPort <= skipPortNum && skipPortNum <= endPort {
 					found = true
+					break
 				}
 			}
 			if !found {
-				portStr := strconv.Itoa(int(skipPort.InternalPort))
-				if skipPort.EndPort != 0 {
-					portStr = fmt.Sprintf("%s-%s", portStr, strconv.Itoa(int(skipPort.EndPort)))
-				}
-				return fmt.Errorf("skipHcPort %s not found in accessPorts", portStr)
+				return fmt.Errorf("skipHcPort %d not found in accessPorts", skipPortNum)
 			}
 		}
 	}
