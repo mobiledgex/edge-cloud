@@ -484,12 +484,10 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				// No generator means the user previously provided a manifest.  Force them to do so again when changing ports so
 				// that they do not accidentally lose their provided manifest details
 				return fmt.Errorf("kubernetes manifest which was previously specified must be provided again when changing access ports")
-			} else if cur.Deployment == cloudcommon.DeploymentTypeDocker {
-				// there's no way to tell if we generated this manifest or it was provided, so disallow this change
-				return fmt.Errorf("Changing access ports on docker apps not allowed unless manifest is specified")
+			} else if cur.Deployment != cloudcommon.DeploymentTypeDocker {
+				// force regeneration of manifest for k8s
+				cur.DeploymentManifest = ""
 			}
-			// force regeneration of manifest
-			cur.DeploymentManifest = ""
 		}
 		cur.CopyInFields(in)
 		if err := s.validatePolicies(stm, &cur); err != nil {
