@@ -72,6 +72,19 @@ func TestAppApi(t *testing.T) {
 	require.NotNil(t, err, "Update App with skipHcPort not in AccessPorts")
 	require.Contains(t, err.Error(), "skipHcPort 444 not found in accessPorts")
 
+	obj = testutil.AppData[8]
+	obj.SkipHcPorts = "tcp:5000-5004"
+	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
+	_, err = appApi.UpdateApp(ctx, &obj)
+	require.NotNil(t, err, "Update App with skipHcPort range not in AccessPorts")
+	require.Contains(t, err.Error(), "skipHcPort 5003 not found in accessPorts")
+
+	obj = testutil.AppData[8]
+	obj.SkipHcPorts = "tcp:5000-5002"
+	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
+	_, err = appApi.UpdateApp(ctx, &obj)
+	require.Nil(t, err, "Update App with skipHcPort range")
+
 	// image path is optional for docker deployments if
 	// deployment manifest is specified.
 	app := edgeproto.App{
