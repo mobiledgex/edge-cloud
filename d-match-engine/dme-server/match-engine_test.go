@@ -173,8 +173,8 @@ func TestAddRemove(t *testing.T) {
 
 	// disable one cloudlet and check the newly found cloudlet
 	cloudletInfo := cloudlets[2]
-	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
-	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
+	dmecommon.SetInstStateForCloudlet(ctx, cloudletInfo)
 	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
 
 	regReply, err = serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
@@ -188,8 +188,8 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// re-enable and check that the results is now what original findCloudlet[3] is
-	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+	dmecommon.SetInstStateForCloudlet(ctx, cloudletInfo)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)
@@ -197,14 +197,14 @@ func TestAddRemove(t *testing.T) {
 
 	// Change the health check status of the appInst and get check the results
 	appInst := dmetest.MakeAppInst(&dmetest.Apps[0], &dmetest.Cloudlets[2])
-	appInst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE
+	appInst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE
 	dmecommon.AddAppInst(ctx, appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// reset and check the one that we get is returned
-	appInst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
+	appInst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_OK
 	dmecommon.AddAppInst(ctx, appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")

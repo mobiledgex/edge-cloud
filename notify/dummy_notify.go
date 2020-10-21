@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -257,8 +258,8 @@ func (s *DummyHandler) WaitForAlerts(count int) error {
 	return s.WaitFor(AlertType, count)
 }
 
-func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state edgeproto.CloudletState, version string) error {
-	lastState := edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state dmeproto.CloudletState, version string) error {
+	lastState := dmeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 	for i := 0; i < 100; i++ {
 		cloudletInfo := edgeproto.CloudletInfo{}
 		if s.CloudletInfoCache.Get(key, &cloudletInfo) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
@@ -91,7 +92,7 @@ type Platform interface {
 	// Delete Cloudlet AccessVars
 	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Sync data with controller
-	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState edgeproto.CloudletState) error
+	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState dme.CloudletState) error
 	// Get Cloudlet Manifest Config
 	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches) (*edgeproto.CloudletManifest, error)
 	// Verify VM

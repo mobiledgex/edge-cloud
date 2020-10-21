@@ -907,7 +907,7 @@ var AppInstComments = map[string]string{
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
-	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"powerstate":                     "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
@@ -963,7 +963,7 @@ var AppInstInfoComments = map[string]string{
 	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                    "List of container names",
-	"powerstate":                                  "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"powerstate":                                  "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
 }
 var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",

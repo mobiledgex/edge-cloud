@@ -37,10 +37,10 @@ type DmeAppInst struct {
 	// Ports and L7 Paths
 	ports []dme.AppPort
 	// State of the cloudlet - copy of the DmeCloudlet
-	CloudletState    edgeproto.CloudletState
-	MaintenanceState edgeproto.MaintenanceState
+	CloudletState    dme.CloudletState
+	MaintenanceState dme.MaintenanceState
 	// Health state of the appInst
-	AppInstHealth edgeproto.HealthCheck
+	HealthCheck dme.HealthCheck
 }
 
 type DmeAppInsts struct {
@@ -63,8 +63,8 @@ type DmeApp struct {
 type DmeCloudlet struct {
 	// No need for a mutex - protected under DmeApps mutex
 	CloudletKey      edgeproto.CloudletKey
-	State            edgeproto.CloudletState
-	MaintenanceState edgeproto.MaintenanceState
+	State            dme.CloudletState
+	MaintenanceState dme.MaintenanceState
 }
 
 type AutoProvPolicy struct {
@@ -125,11 +125,11 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
 		return false
 	}
-	if appInst.MaintenanceState == edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE {
+	if appInst.MaintenanceState == dme.MaintenanceState_CRM_UNDER_MAINTENANCE {
 		return false
 	}
-	if appInst.CloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		return appInst.AppInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_OK || appInst.AppInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN
+	if appInst.CloudletState == dme.CloudletState_CLOUDLET_STATE_READY {
+		return appInst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_OK || appInst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_UNKNOWN
 	}
 	return false
 }
@@ -232,11 +232,11 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	cl.location = appInst.CloudletLoc
 	cl.ports = appInst.MappedPorts
 
-	// Check if AppInstHealth has changed
-	if cl.AppInstHealth != appInst.HealthCheck {
+	// Check if HealthCheck has changed
+	if cl.HealthCheck != appInst.HealthCheck {
 		EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
-	cl.AppInstHealth = appInst.HealthCheck
+	cl.HealthCheck = appInst.HealthCheck
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
 		if cl.CloudletState != cloudlet.State {
@@ -248,8 +248,8 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		cl.CloudletState = cloudlet.State
 		cl.MaintenanceState = cloudlet.MaintenanceState
 	} else {
-		cl.CloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
-		cl.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+		cl.CloudletState = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
+		cl.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
@@ -296,7 +296,7 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
 			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
-				cl.AppInstHealth = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
+				cl.HealthCheck = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 				// Remove AppInst from edgeevents plugin
 				EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 				EEHandler.RemoveAppInstKey(ctx, appInst.Key)
@@ -382,8 +382,8 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
-					c.Insts[clusterInstKey].CloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
-					c.Insts[clusterInstKey].MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+					c.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					c.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}
@@ -407,8 +407,8 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 		for _, carr := range app.Carriers {
 			for clusterInstKey, _ := range carr.Insts {
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
-					carr.Insts[clusterInstKey].CloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
-					carr.Insts[clusterInstKey].MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+					carr.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					carr.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}

@@ -1444,8 +1444,8 @@ var ServerEdgeEventRequiredArgs = []string{}
 var ServerEdgeEventOptionalArgs = []string{
 	"event",
 	"cloudletstate",
-	"cloudletmaintenancestate",
-	"appinsthealthstate",
+	"maintenancestate",
+	"healthcheck",
 	"latency.avg",
 	"latency.min",
 	"latency.max",
@@ -1458,13 +1458,13 @@ var ServerEdgeEventOptionalArgs = []string{
 }
 var ServerEdgeEventAliasArgs = []string{}
 var ServerEdgeEventComments = map[string]string{
-	"event":                    ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth",
-	"cloudletstate":            ", one of CloudletStateUnknown, CloudletStateReady, CloudletOffline, CloudletStateNotPresent, CloudletUpgrade, CloudletStateErrors, CloudletStateInit",
-	"cloudletmaintenancestate": ", one of MaintenanceStateUnknown, MaintenanceStateNormal, MaintenanceStateUnderMaintenance, MaintenanceStateMaintenanceFailed, MaintenanceStateFailingOver, MaintenanceStateFailoverError, MaintenanceStateFailoverDone",
-	"appinsthealthstate":       ", one of HealthCheckUnknown, HealthCheckOk, HealthCheckFail, AppinstDown",
-	"latency.stddev":           "Square root of unbiased variance",
-	"latency.variance":         "Unbiased variance",
-	"tags":                     "_(optional)_ Vendor specific data",
+	"event":            ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth",
+	"cloudletstate":    "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
+	"maintenancestate": "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, UnderMaintenance",
+	"healthcheck":      "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
+	"latency.stddev":   "Square root of unbiased variance",
+	"latency.variance": "Unbiased variance",
+	"tags":             "_(optional)_ Vendor specific data",
 }
 var ServerEdgeEventSpecialArgs = map[string]string{
 	"tags": "StringToString",

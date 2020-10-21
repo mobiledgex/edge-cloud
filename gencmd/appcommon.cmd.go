@@ -6,6 +6,7 @@ package gencmd
 import (
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	math "math"
 )
 

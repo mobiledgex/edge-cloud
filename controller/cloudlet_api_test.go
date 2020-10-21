@@ -14,6 +14,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -22,7 +23,7 @@ import (
 )
 
 type stateTransition struct {
-	triggerState   edgeproto.CloudletState
+	triggerState   dme.CloudletState
 	triggerVersion string
 	expectedState  edgeproto.TrackedState
 	ignoreState    bool
@@ -202,7 +203,7 @@ func waitForState(key *edgeproto.CloudletKey, state edgeproto.TrackedState) erro
 	return fmt.Errorf("Unable to get desired cloudlet state, actual state %s, desired state %s", lastState, state)
 }
 
-func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.CloudletState, taskName, version string) {
+func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state dme.CloudletState, taskName, version string) {
 	info := edgeproto.CloudletInfo{}
 	info.Key = *key
 	info.State = state
@@ -257,13 +258,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, "stop cloudlet")
 	}()
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_CRM_INITOK
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_READY
@@ -272,13 +273,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_UPDATING
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 }
 

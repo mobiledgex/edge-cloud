@@ -1107,20 +1107,12 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(MaintenanceState(0)):
-		if en, ok := MaintenanceState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
 	case reflect.TypeOf(PlatformType(0)):
 		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(InfraApiAccess(0)):
 		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(CloudletState(0)):
-		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(VMState(0)):
@@ -1141,10 +1133,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(AccessType(0)):
 		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(HealthCheck(0)):
-		if en, ok := HealthCheck_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(PowerState(0)):

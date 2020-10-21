@@ -8,6 +8,7 @@ import (
 	"errors"
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
+	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/mobiledgex/edge-cloud/util"
 	io "io"
 	math "math"
@@ -56,6 +57,161 @@ func (x LProto) String() string {
 
 func (LProto) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_fdc58d2114e550de, []int{0}
+}
+
+// Health check status
+//
+// Health check status gets set by external, or rootLB health check
+type HealthCheck int32
+
+const (
+	// Health Check is unknown
+	HealthCheck_HEALTH_CHECK_UNKNOWN HealthCheck = 0
+	// Health Check failure due to RootLB being offline
+	HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE HealthCheck = 1
+	// Health Check failure due to Backend server being unavailable
+	HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL HealthCheck = 2
+	// Health Check is ok
+	HealthCheck_HEALTH_CHECK_OK HealthCheck = 3
+)
+
+var HealthCheck_name = map[int32]string{
+	0: "HEALTH_CHECK_UNKNOWN",
+	1: "HEALTH_CHECK_FAIL_ROOTLB_OFFLINE",
+	2: "HEALTH_CHECK_FAIL_SERVER_FAIL",
+	3: "HEALTH_CHECK_OK",
+}
+
+var HealthCheck_value = map[string]int32{
+	"HEALTH_CHECK_UNKNOWN":             0,
+	"HEALTH_CHECK_FAIL_ROOTLB_OFFLINE": 1,
+	"HEALTH_CHECK_FAIL_SERVER_FAIL":    2,
+	"HEALTH_CHECK_OK":                  3,
+}
+
+func (x HealthCheck) String() string {
+	return proto.EnumName(HealthCheck_name, int32(x))
+}
+
+func (HealthCheck) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{1}
+}
+
+// CloudletState is the state of the Cloudlet.
+type CloudletState int32
+
+const (
+	// Unknown
+	CloudletState_CLOUDLET_STATE_UNKNOWN CloudletState = 0
+	// Create/Delete/Update encountered errors (see Errors field of CloudletInfo)
+	CloudletState_CLOUDLET_STATE_ERRORS CloudletState = 1
+	// Cloudlet is created and ready
+	CloudletState_CLOUDLET_STATE_READY CloudletState = 2
+	// Cloudlet is offline (unreachable)
+	CloudletState_CLOUDLET_STATE_OFFLINE CloudletState = 3
+	// Cloudlet is not present
+	CloudletState_CLOUDLET_STATE_NOT_PRESENT CloudletState = 4
+	// Cloudlet is initializing
+	CloudletState_CLOUDLET_STATE_INIT CloudletState = 5
+	// Cloudlet is upgrading
+	CloudletState_CLOUDLET_STATE_UPGRADE CloudletState = 6
+	// Cloudlet needs data to synchronize
+	CloudletState_CLOUDLET_STATE_NEED_SYNC CloudletState = 7
+)
+
+var CloudletState_name = map[int32]string{
+	0: "CLOUDLET_STATE_UNKNOWN",
+	1: "CLOUDLET_STATE_ERRORS",
+	2: "CLOUDLET_STATE_READY",
+	3: "CLOUDLET_STATE_OFFLINE",
+	4: "CLOUDLET_STATE_NOT_PRESENT",
+	5: "CLOUDLET_STATE_INIT",
+	6: "CLOUDLET_STATE_UPGRADE",
+	7: "CLOUDLET_STATE_NEED_SYNC",
+}
+
+var CloudletState_value = map[string]int32{
+	"CLOUDLET_STATE_UNKNOWN":     0,
+	"CLOUDLET_STATE_ERRORS":      1,
+	"CLOUDLET_STATE_READY":       2,
+	"CLOUDLET_STATE_OFFLINE":     3,
+	"CLOUDLET_STATE_NOT_PRESENT": 4,
+	"CLOUDLET_STATE_INIT":        5,
+	"CLOUDLET_STATE_UPGRADE":     6,
+	"CLOUDLET_STATE_NEED_SYNC":   7,
+}
+
+func (x CloudletState) String() string {
+	return proto.EnumName(CloudletState_name, int32(x))
+}
+
+func (CloudletState) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{2}
+}
+
+// Cloudlet Maintenance States
+//
+// Maintenance allows for planned downtimes of Cloudlets.
+// These states involve message exchanges between the Controller,
+// the AutoProv service, and the CRM. Certain states are only set
+// by certain actors.
+type MaintenanceState int32
+
+const (
+	// Normal operational state
+	MaintenanceState_NORMAL_OPERATION MaintenanceState = 0
+	// Request start of maintenance
+	MaintenanceState_MAINTENANCE_START MaintenanceState = 1
+	// Trigger failover for any HA AppInsts
+	MaintenanceState_FAILOVER_REQUESTED MaintenanceState = 2
+	// Failover done
+	MaintenanceState_FAILOVER_DONE MaintenanceState = 3
+	// Some errors encountered during maintenance failover
+	MaintenanceState_FAILOVER_ERROR MaintenanceState = 4
+	// Request start of maintenance without AutoProv failover
+	MaintenanceState_MAINTENANCE_START_NO_FAILOVER MaintenanceState = 5
+	// Request CRM to transition to maintenance
+	MaintenanceState_CRM_REQUESTED MaintenanceState = 6
+	// CRM request done and under maintenance
+	MaintenanceState_CRM_UNDER_MAINTENANCE MaintenanceState = 7
+	// CRM failed to go into maintenance
+	MaintenanceState_CRM_ERROR MaintenanceState = 8
+	// Under maintenance
+	MaintenanceState_UNDER_MAINTENANCE MaintenanceState = 31
+)
+
+var MaintenanceState_name = map[int32]string{
+	0:  "NORMAL_OPERATION",
+	1:  "MAINTENANCE_START",
+	2:  "FAILOVER_REQUESTED",
+	3:  "FAILOVER_DONE",
+	4:  "FAILOVER_ERROR",
+	5:  "MAINTENANCE_START_NO_FAILOVER",
+	6:  "CRM_REQUESTED",
+	7:  "CRM_UNDER_MAINTENANCE",
+	8:  "CRM_ERROR",
+	31: "UNDER_MAINTENANCE",
+}
+
+var MaintenanceState_value = map[string]int32{
+	"NORMAL_OPERATION":              0,
+	"MAINTENANCE_START":             1,
+	"FAILOVER_REQUESTED":            2,
+	"FAILOVER_DONE":                 3,
+	"FAILOVER_ERROR":                4,
+	"MAINTENANCE_START_NO_FAILOVER": 5,
+	"CRM_REQUESTED":                 6,
+	"CRM_UNDER_MAINTENANCE":         7,
+	"CRM_ERROR":                     8,
+	"UNDER_MAINTENANCE":             31,
+}
+
+func (x MaintenanceState) String() string {
+	return proto.EnumName(MaintenanceState_name, int32(x))
+}
+
+func (MaintenanceState) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{3}
 }
 
 // Application Port
@@ -115,33 +271,71 @@ func (m *AppPort) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AppPort proto.InternalMessageInfo
 
+var E_EnumBackend = &proto.ExtensionDesc{
+	ExtendedType:  (*descriptor.EnumValueOptions)(nil),
+	ExtensionType: (*bool)(nil),
+	Field:         51042,
+	Name:          "distributed_match_engine.enum_backend",
+	Tag:           "varint,51042,opt,name=enum_backend",
+	Filename:      "appcommon.proto",
+}
+
 func init() {
 	proto.RegisterEnum("distributed_match_engine.LProto", LProto_name, LProto_value)
+	proto.RegisterEnum("distributed_match_engine.HealthCheck", HealthCheck_name, HealthCheck_value)
+	proto.RegisterEnum("distributed_match_engine.CloudletState", CloudletState_name, CloudletState_value)
+	proto.RegisterEnum("distributed_match_engine.MaintenanceState", MaintenanceState_name, MaintenanceState_value)
 	proto.RegisterType((*AppPort)(nil), "distributed_match_engine.AppPort")
+	proto.RegisterExtension(E_EnumBackend)
 }
 
 func init() { proto.RegisterFile("appcommon.proto", fileDescriptor_fdc58d2114e550de) }
 
 var fileDescriptor_fdc58d2114e550de = []byte{
-	// 285 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0xbb, 0x4e, 0xf3, 0x30,
-	0x1c, 0x47, 0xeb, 0x56, 0x69, 0xfb, 0xfd, 0xfb, 0x41, 0x23, 0xc3, 0x60, 0x96, 0x10, 0xc1, 0x12,
-	0x31, 0x74, 0x00, 0x89, 0x15, 0x71, 0xd9, 0xa8, 0x5a, 0x2b, 0x6a, 0xc5, 0x68, 0xe5, 0xe2, 0x82,
-	0xa5, 0xc4, 0x36, 0xae, 0x2b, 0xf5, 0x11, 0x3b, 0xf2, 0x08, 0x90, 0x95, 0x97, 0x40, 0xb1, 0x15,
-	0x89, 0x85, 0xcd, 0x3e, 0x3a, 0xc7, 0xfa, 0xc9, 0x30, 0xcd, 0xb4, 0x2e, 0x54, 0x5d, 0x2b, 0x39,
-	0xd3, 0x46, 0x59, 0x85, 0x49, 0x29, 0xb6, 0xd6, 0x88, 0x7c, 0x67, 0x79, 0xc9, 0xea, 0xcc, 0x16,
-	0x6f, 0x8c, 0xcb, 0x57, 0x21, 0xf9, 0xc5, 0x37, 0x82, 0xd1, 0xbd, 0xd6, 0x54, 0x19, 0x8b, 0x6f,
-	0x21, 0x70, 0x3a, 0x41, 0x31, 0x4a, 0x8e, 0xaf, 0xe3, 0xd9, 0x5f, 0xd5, 0x6c, 0x4e, 0x5b, 0x2f,
-	0xf5, 0x3a, 0xbe, 0x84, 0x23, 0x21, 0x2d, 0x37, 0x32, 0xab, 0x98, 0x56, 0xc6, 0x92, 0x7e, 0x8c,
-	0x92, 0x20, 0xfd, 0xdf, 0x41, 0xf7, 0xf8, 0x39, 0x4c, 0xf4, 0x2e, 0xaf, 0x44, 0xe1, 0x95, 0x81,
-	0x53, 0xc0, 0xa3, 0x4e, 0xd8, 0xbc, 0x97, 0x92, 0x69, 0xc3, 0x37, 0x62, 0x4f, 0x82, 0x18, 0x25,
-	0xff, 0x52, 0x68, 0x11, 0x75, 0x04, 0x9f, 0xc1, 0x98, 0xcb, 0xd2, 0xe7, 0x43, 0x97, 0x8f, 0xb8,
-	0x2c, 0x5d, 0x1b, 0xc2, 0xc0, 0x56, 0x5b, 0x32, 0x8a, 0x51, 0x32, 0x4e, 0xdb, 0x23, 0x3e, 0x85,
-	0xa0, 0x9d, 0xba, 0x27, 0x63, 0xc7, 0xfc, 0xe5, 0xea, 0x0e, 0x86, 0x7e, 0x3a, 0x3e, 0x81, 0xe9,
-	0x9c, 0xd1, 0x74, 0xb9, 0x5a, 0xb2, 0xf5, 0xe2, 0x79, 0xb1, 0x7c, 0x59, 0x84, 0x3d, 0x3c, 0x85,
-	0x49, 0x07, 0x57, 0x8f, 0x34, 0x44, 0xbf, 0xc1, 0xfa, 0x89, 0x86, 0xfd, 0x87, 0xf0, 0xf0, 0x15,
-	0xf5, 0x0e, 0x4d, 0x84, 0x3e, 0x9a, 0x08, 0x7d, 0x36, 0x11, 0xca, 0x87, 0xee, 0x0f, 0x6e, 0x7e,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0x43, 0x15, 0x16, 0x53, 0x74, 0x01, 0x00, 0x00,
+	// 684 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x53, 0xcf, 0x6e, 0xe3, 0x44,
+	0x18, 0xdf, 0x49, 0x9a, 0x3f, 0xfb, 0x65, 0xbb, 0x9d, 0x9d, 0xb6, 0xac, 0x37, 0xec, 0xa6, 0x29,
+	0x70, 0x88, 0x72, 0x48, 0x25, 0x90, 0x38, 0x70, 0x41, 0xae, 0x3d, 0x21, 0x51, 0x1d, 0x8f, 0x99,
+	0x38, 0x45, 0x3d, 0x8d, 0x9c, 0x78, 0xda, 0x5a, 0x75, 0x6c, 0xe3, 0x38, 0x52, 0x5f, 0x80, 0x2b,
+	0xe2, 0x0d, 0x78, 0x9d, 0x1e, 0x79, 0x04, 0xc8, 0x95, 0x03, 0x37, 0xce, 0x68, 0xec, 0xa4, 0x4a,
+	0xd3, 0x72, 0x1b, 0xff, 0xfe, 0xcd, 0xef, 0x1b, 0xf9, 0x83, 0x03, 0x2f, 0x49, 0x66, 0xf1, 0x7c,
+	0x1e, 0x47, 0xbd, 0x24, 0x8d, 0xb3, 0x98, 0x68, 0x7e, 0xb0, 0xc8, 0xd2, 0x60, 0xba, 0xcc, 0xa4,
+	0x2f, 0xe6, 0x5e, 0x36, 0xbb, 0x15, 0x32, 0xba, 0x09, 0x22, 0xd9, 0x6c, 0xdf, 0xc4, 0xf1, 0x4d,
+	0x28, 0xcf, 0x72, 0xdd, 0x74, 0x79, 0x7d, 0xe6, 0xcb, 0xc5, 0x2c, 0x0d, 0x92, 0x2c, 0x4e, 0x0b,
+	0xef, 0x17, 0x7f, 0x23, 0xa8, 0xe9, 0x49, 0xe2, 0xc4, 0x69, 0x46, 0xbe, 0x85, 0x4a, 0x0e, 0x6a,
+	0xa8, 0x8d, 0x3a, 0x6f, 0xbf, 0x6e, 0xf7, 0xfe, 0x2f, 0xb7, 0x67, 0x39, 0x4a, 0xc7, 0x0b, 0x39,
+	0xf9, 0x12, 0xf6, 0x83, 0x28, 0x93, 0x69, 0xe4, 0x85, 0x22, 0x89, 0xd3, 0x4c, 0x2b, 0xb5, 0x51,
+	0xa7, 0xc2, 0xdf, 0x6c, 0xc0, 0x3c, 0xfc, 0x04, 0x1a, 0xc9, 0x72, 0x1a, 0x06, 0xb3, 0x42, 0x52,
+	0xce, 0x25, 0x50, 0x40, 0x1b, 0xc1, 0xf5, 0xcf, 0x7e, 0x24, 0x92, 0x54, 0x5e, 0x07, 0xf7, 0x5a,
+	0xa5, 0x8d, 0x3a, 0xaf, 0x39, 0x28, 0xc8, 0xc9, 0x11, 0xf2, 0x01, 0xea, 0x32, 0xf2, 0x0b, 0x7b,
+	0x35, 0xb7, 0xd7, 0x64, 0xe4, 0xe7, 0x5e, 0x0c, 0xe5, 0x2c, 0x5c, 0x68, 0xb5, 0x36, 0xea, 0xd4,
+	0xb9, 0x3a, 0x92, 0x23, 0xa8, 0xa8, 0xaa, 0xf7, 0x5a, 0x3d, 0xc7, 0x8a, 0x8f, 0xee, 0xf7, 0x50,
+	0x2d, 0xaa, 0x93, 0x43, 0x38, 0xb0, 0x84, 0xc3, 0x99, 0xcb, 0xc4, 0xc4, 0xbe, 0xb0, 0xd9, 0x4f,
+	0x36, 0x7e, 0x45, 0x0e, 0xa0, 0xb1, 0x01, 0x5d, 0xc3, 0xc1, 0x68, 0x1b, 0x98, 0x98, 0x0e, 0x2e,
+	0x75, 0x7f, 0x41, 0xd0, 0x18, 0x48, 0x2f, 0xcc, 0x6e, 0x8d, 0x5b, 0x39, 0xbb, 0x23, 0x1a, 0x1c,
+	0x0d, 0xa8, 0x6e, 0xb9, 0x03, 0x61, 0x0c, 0xa8, 0x71, 0xb1, 0x95, 0xf5, 0x15, 0xb4, 0x9f, 0x30,
+	0x7d, 0x7d, 0x68, 0x09, 0xce, 0x98, 0x6b, 0x9d, 0x0b, 0xd6, 0xef, 0x5b, 0x43, 0x9b, 0x62, 0x44,
+	0x4e, 0xe1, 0xd3, 0x73, 0xd5, 0x98, 0xf2, 0x4b, 0xca, 0xf3, 0x33, 0x2e, 0xa9, 0xa6, 0x4f, 0x24,
+	0xec, 0x02, 0x97, 0xbb, 0xff, 0x20, 0xd8, 0x37, 0xc2, 0x78, 0xe9, 0x87, 0x32, 0x1b, 0x67, 0x5e,
+	0x26, 0x49, 0x13, 0x3e, 0x33, 0x2c, 0x36, 0x31, 0x2d, 0xea, 0x8a, 0xb1, 0xab, 0xbb, 0x74, 0xab,
+	0xcb, 0x07, 0x38, 0xde, 0xe1, 0x28, 0xe7, 0x8c, 0x8f, 0x31, 0x52, 0x03, 0xec, 0x50, 0x9c, 0xea,
+	0xe6, 0x15, 0x2e, 0xbd, 0x10, 0xb8, 0xa9, 0x5d, 0x26, 0x2d, 0x68, 0xee, 0x70, 0x36, 0x73, 0x85,
+	0xc3, 0xe9, 0x98, 0xda, 0x2e, 0xde, 0x23, 0xef, 0xe1, 0x70, 0x87, 0x1f, 0xda, 0x43, 0x17, 0x57,
+	0x5e, 0x6a, 0xe9, 0xfc, 0xc0, 0x75, 0x93, 0xe2, 0x2a, 0xf9, 0x08, 0xda, 0x6e, 0x28, 0xa5, 0xa6,
+	0x18, 0x5f, 0xd9, 0x06, 0xae, 0x75, 0x7f, 0x2f, 0x01, 0x1e, 0x79, 0xea, 0x97, 0x8a, 0xbc, 0x68,
+	0x26, 0x8b, 0xa1, 0x8f, 0x00, 0xdb, 0x8c, 0x8f, 0x74, 0x4b, 0x30, 0x87, 0x72, 0xdd, 0x1d, 0x32,
+	0x35, 0xee, 0x31, 0xbc, 0x1b, 0xe9, 0x43, 0xdb, 0xa5, 0xb6, 0x6e, 0x1b, 0x54, 0x65, 0x71, 0x17,
+	0x23, 0xf2, 0x11, 0x88, 0x7a, 0x52, 0xa6, 0xde, 0x96, 0xd3, 0x1f, 0x27, 0x74, 0xec, 0x52, 0x13,
+	0x97, 0x9a, 0x7b, 0xbf, 0xfd, 0xab, 0x21, 0xf2, 0x1e, 0xf6, 0x1f, 0x59, 0x93, 0xa9, 0x29, 0xd7,
+	0x84, 0x06, 0x6f, 0x1f, 0x89, 0xfc, 0xd9, 0xf0, 0xde, 0x9a, 0x39, 0x85, 0x4f, 0xcf, 0xee, 0x11,
+	0x36, 0x13, 0x1b, 0x39, 0xae, 0xa8, 0x54, 0x83, 0x8f, 0xb6, 0xae, 0xab, 0xae, 0xbd, 0x27, 0x70,
+	0xac, 0x88, 0x89, 0x6d, 0x52, 0x2e, 0xb6, 0x52, 0x70, 0x6d, 0x2d, 0x38, 0x84, 0xd7, 0x4a, 0x50,
+	0xdc, 0x58, 0x5f, 0x83, 0x9f, 0xc3, 0xbb, 0xe7, 0x8e, 0x93, 0x82, 0xfc, 0xae, 0x0f, 0x6f, 0x64,
+	0xb4, 0x9c, 0x8b, 0xa9, 0x37, 0xbb, 0x93, 0x91, 0x4f, 0x4e, 0x7b, 0xc5, 0xf6, 0xf7, 0x36, 0xdb,
+	0xdf, 0xa3, 0xd1, 0x72, 0x7e, 0xe9, 0x85, 0x4b, 0xc9, 0x92, 0x2c, 0x88, 0xa3, 0x85, 0xb6, 0xfa,
+	0xb5, 0x9c, 0xaf, 0x47, 0x43, 0x19, 0xcf, 0x0b, 0xdf, 0x39, 0x7e, 0xf8, 0xab, 0xf5, 0xea, 0x61,
+	0xd5, 0x42, 0x7f, 0xac, 0x5a, 0xe8, 0xcf, 0x55, 0x0b, 0x4d, 0xab, 0x79, 0xc2, 0x37, 0xff, 0x05,
+	0x00, 0x00, 0xff, 0xff, 0x0c, 0x15, 0xfb, 0x0a, 0x7a, 0x04, 0x00, 0x00,
 }
 
 func (m *AppPort) Marshal() (dAtA []byte, err error) {
@@ -356,6 +550,314 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 	err = json.Unmarshal(b, &val)
 	if err == nil {
 		*e = LProto(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+var HealthCheckStrings = []string{
+	"HEALTH_CHECK_UNKNOWN",
+	"HEALTH_CHECK_FAIL_ROOTLB_OFFLINE",
+	"HEALTH_CHECK_FAIL_SERVER_FAIL",
+	"HEALTH_CHECK_OK",
+}
+
+const (
+	HealthCheckHEALTH_CHECK_UNKNOWN             uint64 = 1 << 0
+	HealthCheckHEALTH_CHECK_FAIL_ROOTLB_OFFLINE uint64 = 1 << 1
+	HealthCheckHEALTH_CHECK_FAIL_SERVER_FAIL    uint64 = 1 << 2
+	HealthCheckHEALTH_CHECK_OK                  uint64 = 1 << 3
+)
+
+var HealthCheck_CamelName = map[int32]string{
+	// HEALTH_CHECK_UNKNOWN -> HealthCheckUnknown
+	0: "HealthCheckUnknown",
+	// HEALTH_CHECK_FAIL_ROOTLB_OFFLINE -> HealthCheckFailRootlbOffline
+	1: "HealthCheckFailRootlbOffline",
+	// HEALTH_CHECK_FAIL_SERVER_FAIL -> HealthCheckFailServerFail
+	2: "HealthCheckFailServerFail",
+	// HEALTH_CHECK_OK -> HealthCheckOk
+	3: "HealthCheckOk",
+}
+var HealthCheck_CamelValue = map[string]int32{
+	"HealthCheckUnknown":           0,
+	"HealthCheckFailRootlbOffline": 1,
+	"HealthCheckFailServerFail":    2,
+	"HealthCheckOk":                3,
+}
+
+func (e *HealthCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = HealthCheck_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = HealthCheck(val)
+	return nil
+}
+
+func (e HealthCheck) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(HealthCheck_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *HealthCheck) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = HealthCheck_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = HealthCheck(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = HealthCheck(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+var CloudletStateStrings = []string{
+	"CLOUDLET_STATE_UNKNOWN",
+	"CLOUDLET_STATE_ERRORS",
+	"CLOUDLET_STATE_READY",
+	"CLOUDLET_STATE_OFFLINE",
+	"CLOUDLET_STATE_NOT_PRESENT",
+	"CLOUDLET_STATE_INIT",
+	"CLOUDLET_STATE_UPGRADE",
+	"CLOUDLET_STATE_NEED_SYNC",
+}
+
+const (
+	CloudletStateCLOUDLET_STATE_UNKNOWN     uint64 = 1 << 0
+	CloudletStateCLOUDLET_STATE_ERRORS      uint64 = 1 << 1
+	CloudletStateCLOUDLET_STATE_READY       uint64 = 1 << 2
+	CloudletStateCLOUDLET_STATE_OFFLINE     uint64 = 1 << 3
+	CloudletStateCLOUDLET_STATE_NOT_PRESENT uint64 = 1 << 4
+	CloudletStateCLOUDLET_STATE_INIT        uint64 = 1 << 5
+	CloudletStateCLOUDLET_STATE_UPGRADE     uint64 = 1 << 6
+	CloudletStateCLOUDLET_STATE_NEED_SYNC   uint64 = 1 << 7
+)
+
+var CloudletState_CamelName = map[int32]string{
+	// CLOUDLET_STATE_UNKNOWN -> CloudletStateUnknown
+	0: "CloudletStateUnknown",
+	// CLOUDLET_STATE_ERRORS -> CloudletStateErrors
+	1: "CloudletStateErrors",
+	// CLOUDLET_STATE_READY -> CloudletStateReady
+	2: "CloudletStateReady",
+	// CLOUDLET_STATE_OFFLINE -> CloudletStateOffline
+	3: "CloudletStateOffline",
+	// CLOUDLET_STATE_NOT_PRESENT -> CloudletStateNotPresent
+	4: "CloudletStateNotPresent",
+	// CLOUDLET_STATE_INIT -> CloudletStateInit
+	5: "CloudletStateInit",
+	// CLOUDLET_STATE_UPGRADE -> CloudletStateUpgrade
+	6: "CloudletStateUpgrade",
+	// CLOUDLET_STATE_NEED_SYNC -> CloudletStateNeedSync
+	7: "CloudletStateNeedSync",
+}
+var CloudletState_CamelValue = map[string]int32{
+	"CloudletStateUnknown":    0,
+	"CloudletStateErrors":     1,
+	"CloudletStateReady":      2,
+	"CloudletStateOffline":    3,
+	"CloudletStateNotPresent": 4,
+	"CloudletStateInit":       5,
+	"CloudletStateUpgrade":    6,
+	"CloudletStateNeedSync":   7,
+}
+
+func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := CloudletState_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = CloudletState_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = CloudletState(val)
+	return nil
+}
+
+func (e CloudletState) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(CloudletState_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *CloudletState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := CloudletState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = CloudletState_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = CloudletState(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = CloudletState(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+var MaintenanceStateStrings = []string{
+	"NORMAL_OPERATION",
+	"MAINTENANCE_START",
+	"FAILOVER_REQUESTED",
+	"FAILOVER_DONE",
+	"FAILOVER_ERROR",
+	"MAINTENANCE_START_NO_FAILOVER",
+	"CRM_REQUESTED",
+	"CRM_UNDER_MAINTENANCE",
+	"CRM_ERROR",
+	"UNDER_MAINTENANCE",
+}
+
+const (
+	MaintenanceStateNORMAL_OPERATION              uint64 = 1 << 0
+	MaintenanceStateMAINTENANCE_START             uint64 = 1 << 1
+	MaintenanceStateFAILOVER_REQUESTED            uint64 = 1 << 2
+	MaintenanceStateFAILOVER_DONE                 uint64 = 1 << 3
+	MaintenanceStateFAILOVER_ERROR                uint64 = 1 << 4
+	MaintenanceStateMAINTENANCE_START_NO_FAILOVER uint64 = 1 << 5
+	MaintenanceStateCRM_REQUESTED                 uint64 = 1 << 6
+	MaintenanceStateCRM_UNDER_MAINTENANCE         uint64 = 1 << 7
+	MaintenanceStateCRM_ERROR                     uint64 = 1 << 8
+	MaintenanceStateUNDER_MAINTENANCE             uint64 = 1 << 9
+)
+
+var MaintenanceState_CamelName = map[int32]string{
+	// NORMAL_OPERATION -> NormalOperation
+	0: "NormalOperation",
+	// MAINTENANCE_START -> MaintenanceStart
+	1: "MaintenanceStart",
+	// FAILOVER_REQUESTED -> FailoverRequested
+	2: "FailoverRequested",
+	// FAILOVER_DONE -> FailoverDone
+	3: "FailoverDone",
+	// FAILOVER_ERROR -> FailoverError
+	4: "FailoverError",
+	// MAINTENANCE_START_NO_FAILOVER -> MaintenanceStartNoFailover
+	5: "MaintenanceStartNoFailover",
+	// CRM_REQUESTED -> CrmRequested
+	6: "CrmRequested",
+	// CRM_UNDER_MAINTENANCE -> CrmUnderMaintenance
+	7: "CrmUnderMaintenance",
+	// CRM_ERROR -> CrmError
+	8: "CrmError",
+	// UNDER_MAINTENANCE -> UnderMaintenance
+	31: "UnderMaintenance",
+}
+var MaintenanceState_CamelValue = map[string]int32{
+	"NormalOperation":            0,
+	"MaintenanceStart":           1,
+	"FailoverRequested":          2,
+	"FailoverDone":               3,
+	"FailoverError":              4,
+	"MaintenanceStartNoFailover": 5,
+	"CrmRequested":               6,
+	"CrmUnderMaintenance":        7,
+	"CrmError":                   8,
+	"UnderMaintenance":           31,
+}
+
+func (e *MaintenanceState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := MaintenanceState_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = MaintenanceState_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = MaintenanceState(val)
+	return nil
+}
+
+func (e MaintenanceState) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(MaintenanceState_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *MaintenanceState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := MaintenanceState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = MaintenanceState_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = MaintenanceState(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = MaintenanceState(val)
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)

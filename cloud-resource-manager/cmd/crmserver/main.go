@@ -16,6 +16,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -156,7 +157,7 @@ func main() {
 			cloudletContainerVersion = *containerVersion
 		}
 
-		myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
+		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 		myCloudletInfo.ContainerVersion = cloudletContainerVersion
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
@@ -208,7 +209,7 @@ func main() {
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, nodeMgr.VaultAddr, &caches, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
-			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
 			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
@@ -217,9 +218,9 @@ func main() {
 
 			if err != nil {
 				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
-				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 			} else {
-				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC
+				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 				controllerData.ControllerSyncInProgress = true
 				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
@@ -241,7 +242,7 @@ func main() {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
 				myCloudletInfo.Errors = nil
-				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 			}
 		}

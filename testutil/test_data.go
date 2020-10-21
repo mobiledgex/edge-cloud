@@ -665,7 +665,7 @@ var AppInstRefsData = []edgeproto.AppInstRefs{
 var CloudletInfoData = []edgeproto.CloudletInfo{
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[0].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
@@ -740,7 +740,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[1].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
@@ -767,7 +767,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[2].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
@@ -794,7 +794,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[3].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,

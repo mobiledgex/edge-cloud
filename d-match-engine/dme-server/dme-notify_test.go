@@ -6,6 +6,7 @@ import (
 	"time"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -74,7 +75,7 @@ func TestNotify(t *testing.T) {
 			Organization: dmetest.Cloudlets[2].CarrierName,
 			Name:         dmetest.Cloudlets[2].Name,
 		},
-		State: edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE,
+		State: dme.CloudletState_CLOUDLET_STATE_OFFLINE,
 	}
 	cloudlet := edgeproto.Cloudlet{
 		Key: cloudletInfo.Key,
