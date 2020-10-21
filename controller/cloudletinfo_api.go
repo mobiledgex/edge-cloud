@@ -53,15 +53,11 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	changedToOnline := false
-	changedToNormalOperation := false
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		info := edgeproto.CloudletInfo{}
 		if s.store.STMGet(stm, &in.Key, &info) {
 			if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY && info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
 				changedToOnline = true
-			}
-			if in.MaintenanceState == edgeproto.MaintenanceState_NORMAL_OPERATION && info.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
-				changedToNormalOperation = true
 			}
 		}
 		s.store.STMPut(stm, in, objstore.WithLease(controllerAliveLease))
@@ -69,9 +65,6 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	})
 	if changedToOnline {
 		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "version", in.ContainerVersion)
-	}
-	if changedToNormalOperation {
-		nodeMgr.Event(ctx, "Cloudlet back to normal operation", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "maintenance-state", in.MaintenanceState.String())
 	}
 
 	cloudlet := edgeproto.Cloudlet{}
