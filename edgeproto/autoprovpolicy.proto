@@ -11,7 +11,6 @@ import "autoscalepolicy.proto";
 import "cloudlet.proto";
 import "app.proto";
 import "clusterinst.proto";
-import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 import "google/protobuf/timestamp.proto";

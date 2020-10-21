@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -66,6 +67,7 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 	if err != nil {
 		return err
 	}
+
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Organization == "" {
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
@@ -109,6 +111,11 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 		ReplyHandler: replyHandler,
 		Ctx:          ctx,
 	}
-	err = nodeMgr.Debug.DebugRequest(req, newcb)
-	return err
+
+	for {
+		if err = nodeMgr.Debug.DebugRequest(req, newcb); err != nil {
+			return err
+		}
+		time.Sleep(5 * time.Second)
+	}
 }
