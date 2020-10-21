@@ -40,6 +40,7 @@ type NodeMgr struct {
 	tlsClientIssuer string
 	commonName      string
 	DeploymentTag   string
+	AccessKeyClient AccessKeyClient
 }
 
 // Most of the time there will only be one NodeMgr per process, and these
@@ -60,7 +61,9 @@ func (s *NodeMgr) InitFlags() {
 }
 
 func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context.Context, opentracing.Span, error) {
-	log.DebugLog(log.DebugLevelInfo, "start main nodeMgr init")
+	initCtx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
+	log.SpanLog(initCtx, log.DebugLevelInfo, "start main nodeMgr init")
+
 	opts := &NodeOptions{}
 	opts.updateMyNode = true
 	for _, op := range ops {
@@ -82,17 +85,23 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
 
-	initCtx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
-
-	// init vault before pki
-	s.VaultConfig = opts.vaultConfig
-	if s.VaultConfig == nil {
-		var err error
-		s.VaultConfig, err = vault.BestConfig(s.VaultAddr)
-		if err != nil {
-			return initCtx, nil, err
+	if err := s.AccessKeyClient.init(initCtx, tlsClientIssuer, opts.cloudletKey); err != nil {
+		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
+		return initCtx, nil, err
+	}
+	if s.AccessKeyClient.enabled {
+		// no vault, Controller replaces Vault for issuing certs
+	} else {
+		// init vault before pki
+		s.VaultConfig = opts.vaultConfig
+		if s.VaultConfig == nil {
+			var err error
+			s.VaultConfig, err = vault.BestConfig(s.VaultAddr)
+			if err != nil {
+				return initCtx, nil, err
+			}
+			log.SpanLog(initCtx, log.DebugLevelInfo, "vault auth", "type", s.VaultConfig.Auth.Type())
 		}
-		log.SpanLog(initCtx, log.DebugLevelInfo, "vault auth", "type", s.VaultConfig.Auth.Type())
 	}
 
 	// init pki before logging, because access to logger needs pki certs

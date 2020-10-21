@@ -102,7 +102,12 @@ func (mgr *ServerMgr) RegisterServerCb(registerServer func(s *grpc.Server)) {
 	mgr.regServ = registerServer
 }
 
-func (mgr *ServerMgr) Start(name, addr string, tlsConfig *tls.Config) {
+func (mgr *ServerMgr) Start(name, addr string, tlsConfig *tls.Config, ops ...NotifyOp) {
+	opts := &NotifyOptions{}
+	for _, op := range ops {
+		op(opts)
+	}
+
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 
@@ -118,11 +123,18 @@ func (mgr *ServerMgr) Start(name, addr string, tlsConfig *tls.Config) {
 		log.FatalLog("ServerMgr listen failed", "err", err)
 	}
 
+	if opts.unaryInterceptor == nil {
+		opts.unaryInterceptor = grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor)
+	}
+	if opts.streamInterceptor == nil {
+		opts.streamInterceptor = grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor)
+	}
+
 	mgr.serv = grpc.NewServer(cloudcommon.GrpcCreds(tlsConfig),
 		grpc.KeepaliveParams(serverParams),
 		grpc.KeepaliveEnforcementPolicy(serverEnforcement),
-		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
-		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor),
+		opts.unaryInterceptor,
+		opts.streamInterceptor,
 	)
 	edgeproto.RegisterNotifyApiServer(mgr.serv, mgr)
 	if mgr.regServ != nil {
@@ -334,4 +346,19 @@ func (s *Server) logDisconnect(ctx context.Context, err error) {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Notify server connection failed",
 			"client", s.peerAddr, "peer", s.sendrecv.peer, "err", err)
 	}
+}
+
+type NotifyOptions struct {
+	unaryInterceptor  grpc.ServerOption
+	streamInterceptor grpc.ServerOption
+}
+
+type NotifyOp func(s *NotifyOptions)
+
+func WithUnaryInterceptor(unaryInterceptor grpc.ServerOption) NotifyOp {
+	return func(opts *NotifyOptions) { opts.unaryInterceptor = unaryInterceptor }
+}
+
+func WithStreamInterceptor(streamInterceptor grpc.ServerOption) NotifyOp {
+	return func(opts *NotifyOptions) { opts.streamInterceptor = streamInterceptor }
 }

@@ -127,7 +127,7 @@ func SpanLog(ctx context.Context, lvl uint64, msg string, keysAndValues ...inter
 		return
 	}
 
-	ec := zapcore.NewEntryCaller(runtime.Caller(2))
+	ec := zapcore.NewEntryCaller(runtime.Caller(1))
 	lineno := ec.TrimmedPath()
 	if span.noTracing {
 		// just log to disk

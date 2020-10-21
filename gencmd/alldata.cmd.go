@@ -61,6 +61,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Deployment = ""
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].CrmAccessPublicKey = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -320,6 +323,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.maintenancestate",
 	"cloudlets:#.overridepolicycontainerversion",
 	"cloudlets:#.vmpool",
+	"cloudlets:#.crmaccesspublickey",
+	"cloudlets:#.crmaccesskeyupgraderequired",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -643,6 +648,8 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.maintenancestate":                               "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudlets:#.overridepolicycontainerversion":                 "Override container version from policy file",
 	"cloudlets:#.vmpool":                                         "VM Pool",
+	"cloudlets:#.crmaccesspublickey":                             "CRM access public key",
+	"cloudlets:#.crmaccesskeyupgraderequired":                    "CRM access key upgrade required",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",

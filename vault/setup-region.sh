@@ -65,6 +65,10 @@ path "secret/data/$REGION/accounts/*" {
 path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
+
+path "pki-regional-cloudlet/issue/$REGION" {
+  capabilities = [ "read", "update" ]
+}
 EOF
 vault policy write $REGION.controller /tmp/controller-pol.hcl
 rm /tmp/controller-pol.hcl
@@ -135,6 +139,10 @@ path "$REGION/jwtkeys/metadata/dme" {
 # Allow access to certs (including access to cert creation)
 path "certs/*" {
   capabilities = ["read"]
+}
+
+path "pki-regional/issue/$REGION" {
+  capabilities = [ "read", "update" ]
 }
 
 path "pki-regional-cloudlet/issue/$REGION" {
