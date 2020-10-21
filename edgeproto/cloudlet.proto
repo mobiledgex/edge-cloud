@@ -116,8 +116,10 @@ enum PlatformType {
   PLATFORM_TYPE_AWS_EKS = 8;
   // VM Pool Cloudlet
   PLATFORM_TYPE_VM_POOL = 9;
-    // AWS EC2 VM Cloudlet
+  // AWS EC2 VM Cloudlet
   PLATFORM_TYPE_AWS_EC2 = 10;
+  // VMWare vCD
+  PLATFORM_TYPE_VCD = 11;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
