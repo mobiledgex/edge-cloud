@@ -7,6 +7,8 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
 import "flavor.proto";
+import "infraresources.proto";
+
 import "cluster.proto";
 import "cloudlet.proto";
 import "common.proto";
@@ -15,6 +17,7 @@ import "gogoproto/gogo.proto";
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
+
 
 // Cluster Instance unique key
 //
@@ -89,6 +92,9 @@ message ClusterInst {
   bool skip_crm_cleanup_on_failure = 26 [(protogen.hidetag) = "nocmp"];
   // Optional Resources required by OS flavor if any
   string opt_res = 27 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
+  // resources used by cluster
+  InfraResources resources = 28 [(protogen.backend) = true, (gogoproto.nullable) = false];
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -103,6 +109,7 @@ message ClusterInst {
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
   option (protogen.uses_org) = "custom";
 }
+
 
 service ClusterInstApi {
   // Create Cluster Instance. Creates an instance of a Cluster on a Cloudlet,
@@ -160,6 +167,8 @@ message ClusterInstInfo {
   repeated string errors = 5;
   // status is used to reflect progress of creation or other events
   StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  // resources allocated to this cluster
+  InfraResources resources = 7 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
@@ -178,3 +187,16 @@ service ClusterInstInfoApi {
     };
   }
 }
+
+/*
+service ClusterInstResourceApi {
+   // Show resources for the cluster inst.
+  rpc ShowClusterInstResources(ClusterInst) returns (stream ClusterInstResources) {
+    option (google.api.http) = {
+      post: "/show/clusterinstresources"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Key.Organization";
+    option (protogen.method_noconfig) = "Vms";
+  }
+}*/

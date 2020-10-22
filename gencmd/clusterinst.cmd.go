@@ -63,6 +63,8 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.OptRes = ""
 	}
+	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -75,6 +77,8 @@ func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
+	}
+	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
 	}
 }
 
@@ -527,6 +531,8 @@ var ClusterInstOptionalArgs = []string{
 	"privacypolicy",
 	"skipcrmcleanuponfailure",
 	"optres",
+	"resources.vms:#.name",
+	"resources.vms:#.ipaddresses",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -566,8 +572,9 @@ var ClusterInstComments = map[string]string{
 	"optres":                  "Optional Resources required by OS flavor if any",
 }
 var ClusterInstSpecialArgs = map[string]string{
-	"errors": "StringArray",
-	"fields": "StringArray",
+	"errors":                      "StringArray",
+	"fields":                      "StringArray",
+	"resources.vms:#.ipaddresses": "StringArray",
 }
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
@@ -583,6 +590,8 @@ var ClusterInstInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"resources.vms:#.name",
+	"resources.vms:#.ipaddresses",
 }
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
@@ -596,8 +605,9 @@ var ClusterInstInfoComments = map[string]string{
 	"errors":                       "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
-	"errors": "StringArray",
-	"fields": "StringArray",
+	"errors":                      "StringArray",
+	"fields":                      "StringArray",
+	"resources.vms:#.ipaddresses": "StringArray",
 }
 var UpdateClusterInstRequiredArgs = []string{
 	"cluster",
@@ -611,4 +621,6 @@ var UpdateClusterInstOptionalArgs = []string{
 	"autoscalepolicy",
 	"skipcrmcleanuponfailure",
 	"optres",
+	"resources.vms:#.name",
+	"resources.vms:#.ipaddresses",
 }

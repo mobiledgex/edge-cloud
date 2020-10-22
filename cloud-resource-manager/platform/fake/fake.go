@@ -83,6 +83,19 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
+func (s *Platform) GetInfraResources(ctx context.Context, vmGroupName string) (*edgeproto.InfraResources, error) {
+	var resources edgeproto.InfraResources
+	for i := 0; i < 3; i++ {
+		ipaddr := fmt.Sprintf("10.100.100.1%d", i)
+		vm := edgeproto.VmInfo{
+			Name:        fmt.Sprintf("fakevm-num-%d", i),
+			Ipaddresses: []string{ipaddr},
+		}
+		resources.Vms = append(resources.Vms, vm)
+	}
+	return &resources, nil
+}
+
 func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Creating App Inst")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst ready")

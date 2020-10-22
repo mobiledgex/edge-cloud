@@ -219,3 +219,22 @@ func GetAppClientType(app *edgeproto.App) string {
 	}
 	return clientType
 }
+
+func GetClusterNodeNameSuffix(clusterInstKey *edgeproto.ClusterInstKey) string {
+	cloudletName := clusterInstKey.CloudletKey.Name
+	clusterName := clusterInstKey.ClusterKey.Name
+	devName := clusterInstKey.Organization
+	if devName != "" {
+		return NormalizeName(cloudletName + "-" + clusterName + "-" + devName)
+	}
+	return NormalizeName(cloudletName + "-" + clusterName)
+}
+
+// GetCloudletClusterName return the name of the cluster including cloudlet
+func GetCloudletClusterName(clusterInst *edgeproto.ClusterInst) string {
+	return GetClusterNodeNameSuffix(&clusterInst.Key)
+}
+
+func NormalizeName(name string) string {
+	return util.K8SSanitize(name)
+}

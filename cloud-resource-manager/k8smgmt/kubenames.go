@@ -38,25 +38,6 @@ func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
 		clusterInst.Key.CloudletKey.Organization)
 }
 
-func GetK8sNodeNameSuffix(clusterInstKey *edgeproto.ClusterInstKey) string {
-	cloudletName := clusterInstKey.CloudletKey.Name
-	clusterName := clusterInstKey.ClusterKey.Name
-	devName := clusterInstKey.Organization
-	if devName != "" {
-		return NormalizeName(cloudletName + "-" + clusterName + "-" + devName)
-	}
-	return NormalizeName(cloudletName + "-" + clusterName)
-}
-
-// GetCloudletClusterName return the name of the cluster including cloudlet
-func GetCloudletClusterName(clusterInst *edgeproto.ClusterInst) string {
-	return GetK8sNodeNameSuffix(&clusterInst.Key)
-}
-
-func NormalizeName(name string) string {
-	return util.K8SSanitize(name)
-}
-
 // GetKubeNames udpates kubeNames with normalized strings for the included clusterinst, app, and appisnt
 func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*KubeNames, error) {
 	if clusterInst == nil {
@@ -69,18 +50,18 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		return nil, fmt.Errorf("nil app inst")
 	}
 	kubeNames := KubeNames{}
-	kubeNames.ClusterName = NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
-	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(&clusterInst.Key)
-	kubeNames.AppName = NormalizeName(app.Key.Name)
-	kubeNames.AppVersion = NormalizeName(app.Key.Version)
-	kubeNames.AppOrg = NormalizeName(app.Key.Organization)
+	kubeNames.ClusterName = cloudcommon.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
+	kubeNames.K8sNodeNameSuffix = cloudcommon.GetClusterNodeNameSuffix(&clusterInst.Key)
+	kubeNames.AppName = cloudcommon.NormalizeName(app.Key.Name)
+	kubeNames.AppVersion = cloudcommon.NormalizeName(app.Key.Version)
+	kubeNames.AppOrg = cloudcommon.NormalizeName(app.Key.Organization)
 	// Helm app name has to conform to DNS naming standards
 	kubeNames.HelmAppName = util.DNSSanitize(app.Key.Name + "v" + app.Key.Version)
 	kubeNames.AppURI = appInst.Uri
 	kubeNames.AppRevision = app.Revision
 	kubeNames.AppInstRevision = appInst.Revision
-	kubeNames.AppImage = NormalizeName(app.ImagePath)
-	kubeNames.OperatorName = NormalizeName(clusterInst.Key.CloudletKey.Organization)
+	kubeNames.AppImage = cloudcommon.NormalizeName(app.ImagePath)
+	kubeNames.OperatorName = cloudcommon.NormalizeName(clusterInst.Key.CloudletKey.Organization)
 	kubeNames.KconfName = GetKconfName(clusterInst)
 	kubeNames.KconfEnv = "KUBECONFIG=" + kubeNames.KconfName
 	kubeNames.DeploymentType = app.Deployment

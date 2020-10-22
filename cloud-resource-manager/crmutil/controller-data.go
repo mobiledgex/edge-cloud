@@ -211,6 +211,16 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
+
+			// test
+			resources, err := cd.platform.GetInfraResources(ctx, cloudcommon.GetCloudletClusterName(new))
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resourcs", "err", err)
+			} else {
+				cd.clusterInstInfoResources(ctx, &new.Key, resources)
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
+
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// reset stream for the new action
@@ -513,6 +523,10 @@ func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgepro
 		return err
 	}
 	return nil
+}
+
+func (cd *ControllerData) clusterInstInfoResources(ctx context.Context, key *edgeproto.ClusterInstKey, resources *edgeproto.InfraResources) error {
+	return cd.ClusterInstInfoCache.SetResources(ctx, key, resources)
 }
 
 func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.AppInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {

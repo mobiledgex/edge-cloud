@@ -1,0 +1,30 @@
+// InfraResources defines resources used within the infrastructure
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "common.proto";
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+// VmInfo
+//
+// VmInfo is infomation about VM resources. 
+message VmInfo{
+  string name = 1;
+  repeated string ipaddresses = 2;
+}
+
+// InfraResources
+//
+// InfraResources is infomation about infrastructure resources. 
+message InfraResources{
+  repeated VmInfo vms = 3 [(gogoproto.nullable) = false];
+}
+
+
