@@ -161,6 +161,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			output := &testutil.AllDataStreamOut{}
 			testutil.RunAllDataStreamApis(run, &appData, output)
 			util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
+		case "showfiltered":
+			output := &edgeproto.AllData{}
+			testutil.RunAllDataShowApis(run, &appData, output)
+			util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
+			*retry = true
 		default:
 			log.Printf("Error: unsupported controller API %s\n", api)
 			rc = false
@@ -268,6 +273,16 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 
 	ctrl := util.GetController("")
 
+	dat, err := ioutil.ReadFile(outputDir + "/roles.yaml")
+	if err != nil {
+		return err
+	}
+	vroles := process.VaultRoles{}
+	err = yaml.Unmarshal(dat, &vroles)
+	if err != nil {
+		return err
+	}
+
 	for _, c := range appData.Cloudlets {
 		if c.NotifySrvAddr == "" {
 			c.NotifySrvAddr = "127.0.0.1:51001"
@@ -276,19 +291,9 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		if c.PhysicalName == "" {
 			c.PhysicalName = c.Key.Name
 		}
+		c.ContainerVersion = ctrl.VersionTag
 
 		pfConfig := edgeproto.PlatformConfig{}
-
-		rolesfile := outputDir + "/roles.yaml"
-		dat, err := ioutil.ReadFile(rolesfile)
-		if err != nil {
-			return err
-		}
-		vroles := process.VaultRoles{}
-		err = yaml.Unmarshal(dat, &vroles)
-		if err != nil {
-			return err
-		}
 		region := ctrl.Region
 		if region == "" {
 			region = "local"
@@ -303,11 +308,17 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		pfConfig.TlsCertFile = ctrl.TLS.ServerCert
 		pfConfig.TlsKeyFile = ctrl.TLS.ServerKey
 		pfConfig.TlsCaFile = ctrl.TLS.CACert
+		pfConfig.UseVaultCas = ctrl.UseVaultCAs
 		pfConfig.UseVaultCerts = ctrl.UseVaultCerts
 		pfConfig.VaultAddr = "http://127.0.0.1:8200"
 		pfConfig.ContainerRegistryPath = "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
 		pfConfig.TestMode = true
 		pfConfig.NotifyCtrlAddrs = ctrl.NotifyAddr
+		pfConfig.DeploymentTag = ctrl.DeploymentTag
+		pfConfig.AccessApiAddr = ctrl.AccessApiAddr
+		for k, v := range ctrl.Common.EnvVars {
+			pfConfig.EnvVar[k] = v
+		}
 
 		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig); err != nil {
 			return err

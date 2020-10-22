@@ -133,6 +133,7 @@ func getCrmEnv(vars map[string]string) {
 		"GITHUB_ID",
 		"VAULT_TOKEN",
 		"JAEGER_ENDPOINT",
+		"E2ETEST_TLS",
 	} {
 		if val, ok := os.LookupEnv(key); ok {
 			vars[key] = val
@@ -164,7 +165,12 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	if len(addrObjs) != 2 {
 		return nil, fmt.Errorf("unable to fetch notify addr of the controller")
 	}
+	accessAddrObjs := strings.Split(*accessApiAddr, ":")
+	if len(accessAddrObjs) != 2 {
+		return nil, fmt.Errorf("unable to parse accessApi addr of the controller")
+	}
 	pfConfig.NotifyCtrlAddrs = *publicAddr + ":" + addrObjs[1]
+	pfConfig.AccessApiAddr = *publicAddr + ":" + accessAddrObjs[1]
 	pfConfig.Span = log.SpanToString(ctx)
 	pfConfig.ChefServerPath = *chefServerPath
 	pfConfig.ChefClientInterval = settingsApi.Get().ChefClientInterval
@@ -346,6 +352,30 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if in.AccessVars != nil {
 		accessVars = in.AccessVars
 		in.AccessVars = nil
+	}
+
+	accessKey, err := node.GenerateAccessKey()
+	if err != nil {
+		return err
+	}
+	in.CrmAccessPublicKey = accessKey.PublicPEM
+	in.CrmAccessKeyUpgradeRequired = true
+	pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
+	if !*requireNotifyAccessKey {
+		// e2e test backward compatibility modes
+		if _, found := in.EnvVar["E2E_ACCESSKEY_BCTEST1"]; found {
+			log.SpanLog(ctx, log.DebugLevelInfo, "e2e accesskey bctest1")
+			// simulate existing CRM without private or public access keys
+			in.CrmAccessPublicKey = ""
+			in.CrmAccessKeyUpgradeRequired = false
+			pfConfig.CrmAccessPrivateKey = ""
+		}
+		if _, found := in.EnvVar["E2E_ACCESSKEY_BCTEST2"]; found {
+			log.SpanLog(ctx, log.DebugLevelInfo, "e2e accesskey bctest2")
+			// simulate new CRM on platform that has not implemented
+			// saving private key to disk yet.
+			pfConfig.CrmAccessPrivateKey = ""
+		}
 	}
 
 	vmPool := edgeproto.VMPool{}

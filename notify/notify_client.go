@@ -33,6 +33,7 @@ type Client struct {
 	localAddr    string
 	localAddrMux util.Mutex
 	name         string
+	options      ClientOptions
 }
 
 type ClientStats struct {
@@ -40,7 +41,7 @@ type ClientStats struct {
 
 func cancelNoop() {}
 
-func NewClient(name string, addrs []string, tlsDialOption grpc.DialOption) *Client {
+func NewClient(name string, addrs []string, tlsDialOption grpc.DialOption, ops ...ClientOp) *Client {
 	s := Client{}
 	s.name = name
 	s.addrs = addrs
@@ -48,6 +49,9 @@ func NewClient(name string, addrs []string, tlsDialOption grpc.DialOption) *Clie
 		tlsDialOption = grpc.WithInsecure()
 	}
 	s.tlsDialOption = tlsDialOption
+	for _, op := range ops {
+		op(&s.options)
+	}
 	s.sendrecv.init("client")
 	return &s
 }
@@ -131,22 +135,28 @@ func (s *Client) connect() (StreamNotify, error) {
 	addr := s.addrs[s.addrIdx]
 	s.mux.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), NotifyRetryTime)
+	span := log.StartSpan(log.DebugLevelNotify, "notify client connect")
+	defer span.Finish()
+	spanctx := log.ContextWithSpan(context.Background(), span)
+
+	ctx, cancel := context.WithTimeout(spanctx, NotifyRetryTime)
 	conn, err := grpc.DialContext(ctx, addr,
 		s.tlsDialOption,
 		grpc.WithStatsHandler(&grpcStatsHandler{client: s}),
-		grpc.WithKeepaliveParams(clientParams))
+		grpc.WithKeepaliveParams(clientParams),
+		grpc.WithChainUnaryInterceptor(s.options.unaryInterceptors...),
+		grpc.WithChainStreamInterceptor(s.options.streamInterceptors...),
+	)
 	cancel()
 	if err != nil {
 		return nil, err
 	}
-	log.DebugLog(log.DebugLevelNotify, "creating notify client", "addr", addr)
 
 	api := edgeproto.NewNotifyApiClient(conn)
-	ctx, cancel = context.WithCancel(context.Background())
+	ctx, cancel = context.WithCancel(spanctx)
 	stream, err := api.StreamNotice(ctx)
 	if err != nil {
-		log.DebugLog(log.DebugLevelNotify, "Notify client get stream",
+		log.SpanLog(ctx, log.DebugLevelNotify, "Notify client get stream",
 			"server", addr, "error", err)
 		cancel()
 		conn.Close()
@@ -281,3 +291,22 @@ func (s *grpcStatsHandler) TagConn(ctx context.Context, info *stats.ConnTagInfo)
 }
 
 func (s *grpcStatsHandler) HandleConn(ctx context.Context, connStats stats.ConnStats) {}
+
+type ClientOptions struct {
+	unaryInterceptors  []grpc.UnaryClientInterceptor
+	streamInterceptors []grpc.StreamClientInterceptor
+}
+
+type ClientOp func(s *ClientOptions)
+
+func ClientUnaryInterceptors(i ...grpc.UnaryClientInterceptor) ClientOp {
+	return func(opts *ClientOptions) {
+		opts.unaryInterceptors = append(opts.unaryInterceptors, i...)
+	}
+}
+
+func ClientStreamInterceptors(i ...grpc.StreamClientInterceptor) ClientOp {
+	return func(opts *ClientOptions) {
+		opts.streamInterceptors = append(opts.streamInterceptors, i...)
+	}
+}

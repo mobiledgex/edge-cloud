@@ -57,6 +57,7 @@ controllers:
   usevaultcas: true
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
+  accessapiaddr: "127.0.0.1:41001"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
     E2ETEST_TLS: true
@@ -80,6 +81,7 @@ controllers:
   usevaultcerts: true
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
+  accessapiaddr: "127.0.0.1:41002"
   envvars:
     ES_SERVER_URLS: https://localhost:9201
     E2ETEST_TLS: true

@@ -36,6 +36,8 @@ message GetCasReply {
 message UpgradeAccessKeyClientMsg {
   // Message type
   string msg = 1;
+  // Client node type
+  bool verify_only = 2;
 }
 
 message UpgradeAccessKeyServerMsg {

@@ -85,9 +85,15 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
 
-	if err := s.AccessKeyClient.init(initCtx, tlsClientIssuer, opts.cloudletKey); err != nil {
+	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
-		return initCtx, nil, err
+		if s.AccessKeyClient.requireAccessKey {
+			return initCtx, nil, err
+		}
+		// backwards compatibility mode. Access key mode is
+		// disabled, and service must rely on CRM Vault
+		// role/secrets.
+		log.SpanLog(initCtx, log.DebugLevelInfo, "access key backwards compatibility mode, assume vault creds")
 	}
 	if s.AccessKeyClient.enabled {
 		// no vault, Controller replaces Vault for issuing certs
@@ -105,12 +111,14 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	}
 
 	// init pki before logging, because access to logger needs pki certs
+	log.SpanLog(initCtx, log.DebugLevelInfo, "init internal pki")
 	err := s.initInternalPki(initCtx)
 	if err != nil {
 		return initCtx, nil, err
 	}
 
 	// init logger
+	log.SpanLog(initCtx, log.DebugLevelInfo, "get logger tls")
 	loggerTls, err := s.GetPublicClientTlsConfig(initCtx)
 	if err != nil {
 		return initCtx, nil, err
