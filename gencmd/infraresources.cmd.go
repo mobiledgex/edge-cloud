@@ -18,23 +18,70 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+var ContainerInfoRequiredArgs = []string{}
+var ContainerInfoOptionalArgs = []string{
+	"name",
+	"type",
+	"status",
+	"clusterip",
+	"restarts",
+}
+var ContainerInfoAliasArgs = []string{}
+var ContainerInfoComments = map[string]string{
+	"type":      "type can be docker or kubernetes",
+	"clusterip": "clusterip is applicable to kubernetes only",
+	"restarts":  "restarts is applicable to kubernetes only",
+}
+var ContainerInfoSpecialArgs = map[string]string{}
+var IpAddrRequiredArgs = []string{}
+var IpAddrOptionalArgs = []string{
+	"externalip",
+	"internalip",
+}
+var IpAddrAliasArgs = []string{}
+var IpAddrComments = map[string]string{}
+var IpAddrSpecialArgs = map[string]string{}
 var VmInfoRequiredArgs = []string{}
 var VmInfoOptionalArgs = []string{
 	"name",
-	"ipaddresses",
+	"type",
+	"status",
+	"infraflavor",
+	"ipaddresses:#.externalip",
+	"ipaddresses:#.internalip",
+	"containers:#.name",
+	"containers:#.type",
+	"containers:#.status",
+	"containers:#.clusterip",
+	"containers:#.restarts",
 }
 var VmInfoAliasArgs = []string{}
-var VmInfoComments = map[string]string{}
-var VmInfoSpecialArgs = map[string]string{
-	"ipaddresses": "StringArray",
+var VmInfoComments = map[string]string{
+	"type":                   "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"containers:#.type":      "type can be docker or kubernetes",
+	"containers:#.clusterip": "clusterip is applicable to kubernetes only",
+	"containers:#.restarts":  "restarts is applicable to kubernetes only",
 }
+var VmInfoSpecialArgs = map[string]string{}
 var InfraResourcesRequiredArgs = []string{}
 var InfraResourcesOptionalArgs = []string{
 	"vms:#.name",
-	"vms:#.ipaddresses",
+	"vms:#.type",
+	"vms:#.status",
+	"vms:#.infraflavor",
+	"vms:#.ipaddresses:#.externalip",
+	"vms:#.ipaddresses:#.internalip",
+	"vms:#.containers:#.name",
+	"vms:#.containers:#.type",
+	"vms:#.containers:#.status",
+	"vms:#.containers:#.clusterip",
+	"vms:#.containers:#.restarts",
 }
 var InfraResourcesAliasArgs = []string{}
-var InfraResourcesComments = map[string]string{}
-var InfraResourcesSpecialArgs = map[string]string{
-	"vms:#.ipaddresses": "StringArray",
+var InfraResourcesComments = map[string]string{
+	"vms:#.type":                   "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"vms:#.containers:#.type":      "type can be docker or kubernetes",
+	"vms:#.containers:#.clusterip": "clusterip is applicable to kubernetes only",
+	"vms:#.containers:#.restarts":  "restarts is applicable to kubernetes only",
 }
+var InfraResourcesSpecialArgs = map[string]string{}

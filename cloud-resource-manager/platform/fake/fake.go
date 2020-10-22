@@ -83,15 +83,47 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetInfraResources(ctx context.Context, vmGroupName string) (*edgeproto.InfraResources, error) {
+func (s *Platform) GetInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey, cloudletKey *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
 	var resources edgeproto.InfraResources
-	for i := 0; i < 3; i++ {
-		ipaddr := fmt.Sprintf("10.100.100.1%d", i)
-		vm := edgeproto.VmInfo{
-			Name:        fmt.Sprintf("fakevm-num-%d", i),
-			Ipaddresses: []string{ipaddr},
+	if clusterKey != nil {
+		vmtype := "cluster-master"
+		for i := 0; i < 3; i++ {
+			if i > 1 {
+				vmtype = "cluster-node"
+			}
+			ipstr := fmt.Sprintf("10.100.100.1%d", i)
+			vm := edgeproto.VmInfo{
+				Name:        fmt.Sprintf("fake-cluster-vm-%d", i),
+				Type:        vmtype,
+				InfraFlavor: "m4.small",
+				Status:      "ACTIVE",
+				Ipaddresses: []edgeproto.IpAddr{
+					{ExternalIp: ipstr},
+				},
+			}
+			resources.Vms = append(resources.Vms, vm)
 		}
-		resources.Vms = append(resources.Vms, vm)
+	} else if cloudletKey != nil {
+		platvm := edgeproto.VmInfo{
+			Name:        "fake-platform-vm",
+			Type:        "platform",
+			InfraFlavor: "m4.small",
+			Status:      "ACTIVE",
+			Ipaddresses: []edgeproto.IpAddr{
+				{ExternalIp: "10.101.100.10"},
+			},
+		}
+		resources.Vms = append(resources.Vms, platvm)
+		rlbvm := edgeproto.VmInfo{
+			Name:        "fake-rootlb-vm",
+			Type:        "rootlb",
+			InfraFlavor: "m4.small",
+			Status:      "ACTIVE",
+			Ipaddresses: []edgeproto.IpAddr{
+				{ExternalIp: "10.101.100.11"},
+			},
+		}
+		resources.Vms = append(resources.Vms, rlbvm)
 	}
 	return &resources, nil
 }

@@ -12,12 +12,40 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+// ContainerInfo
+//
+// ContainerInfo is infomation about containers running on a VM, 
+message ContainerInfo{
+  string name = 1;
+  // type can be docker or kubernetes
+  string type = 2;
+  string status = 3;
+  // clusterip is applicable to kubernetes only
+  string clusterip = 4;
+  // restarts is applicable to kubernetes only
+  int64 restarts = 5;
+}
+
+// IpAddr is an address for a VM which may have an external and
+// internal component.  Internal and external is with respect to the VM
+// and are are often the same unless a natted or floating IP is used.  If 
+// internalIP is not reported it is the same as the ExternalIP
+message IpAddr{
+  string externalIp = 1;
+  string internalIp = 2;
+}
+
 // VmInfo
 //
 // VmInfo is infomation about VM resources. 
 message VmInfo{
   string name = 1;
-  repeated string ipaddresses = 2;
+  // type can be platform, rootlb, cluster-master, cluster-node, vmapp
+  string type = 2;
+  string status = 3;
+  string infraFlavor = 4;
+  repeated IpAddr ipaddresses = 5 [(gogoproto.nullable) = false];
+  repeated ContainerInfo containers = 6;
 }
 
 // InfraResources

@@ -78,6 +78,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].OsImages); i1++ {
 		}
+		for i2 := 0; i2 < len(in.CloudletInfos[i0].Resources.Vms); i2++ {
+			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Ipaddresses); i3++ {
+			}
+			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Containers); i3++ {
+			}
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 	}
@@ -125,6 +131,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.ClusterInsts[i0].OptRes = ""
 		}
 		for i2 := 0; i2 < len(in.ClusterInsts[i0].Resources.Vms); i2++ {
+			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Ipaddresses); i3++ {
+			}
+			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Containers); i3++ {
+			}
 		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
@@ -355,6 +365,17 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.osimages:#.diskformat",
 	"cloudletinfos:#.controllercachereceived",
 	"cloudletinfos:#.maintenancestate",
+	"cloudletinfos:#.resources.vms:#.name",
+	"cloudletinfos:#.resources.vms:#.type",
+	"cloudletinfos:#.resources.vms:#.status",
+	"cloudletinfos:#.resources.vms:#.infraflavor",
+	"cloudletinfos:#.resources.vms:#.ipaddresses:#.externalip",
+	"cloudletinfos:#.resources.vms:#.ipaddresses:#.internalip",
+	"cloudletinfos:#.resources.vms:#.containers:#.name",
+	"cloudletinfos:#.resources.vms:#.containers:#.type",
+	"cloudletinfos:#.resources.vms:#.containers:#.status",
+	"cloudletinfos:#.resources.vms:#.containers:#.clusterip",
+	"cloudletinfos:#.resources.vms:#.containers:#.restarts",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -431,7 +452,16 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.skipcrmcleanuponfailure",
 	"clusterinsts:#.optres",
 	"clusterinsts:#.resources.vms:#.name",
-	"clusterinsts:#.resources.vms:#.ipaddresses",
+	"clusterinsts:#.resources.vms:#.type",
+	"clusterinsts:#.resources.vms:#.status",
+	"clusterinsts:#.resources.vms:#.infraflavor",
+	"clusterinsts:#.resources.vms:#.ipaddresses:#.externalip",
+	"clusterinsts:#.resources.vms:#.ipaddresses:#.internalip",
+	"clusterinsts:#.resources.vms:#.containers:#.name",
+	"clusterinsts:#.resources.vms:#.containers:#.type",
+	"clusterinsts:#.resources.vms:#.containers:#.status",
+	"clusterinsts:#.resources.vms:#.containers:#.clusterip",
+	"clusterinsts:#.resources.vms:#.containers:#.restarts",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -676,6 +706,10 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.osimages:#.diskformat":                      "format qcow2, img, etc",
 	"cloudletinfos:#.controllercachereceived":                    "Indicates all controller data has been sent to CRM",
 	"cloudletinfos:#.maintenancestate":                           "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"cloudletinfos:#.resources.vms:#.type":                       "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"cloudletinfos:#.resources.vms:#.containers:#.type":          "type can be docker or kubernetes",
+	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "clusterip is applicable to kubernetes only",
+	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "restarts is applicable to kubernetes only",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
@@ -745,6 +779,10 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
 	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"clusterinsts:#.optres":                                      "Optional Resources required by OS flavor if any",
+	"clusterinsts:#.resources.vms:#.type":                        "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"clusterinsts:#.resources.vms:#.containers:#.type":           "type can be docker or kubernetes",
+	"clusterinsts:#.resources.vms:#.containers:#.clusterip":      "clusterip is applicable to kubernetes only",
+	"clusterinsts:#.resources.vms:#.containers:#.restarts":       "restarts is applicable to kubernetes only",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",
@@ -856,34 +894,33 @@ var AllDataComments = map[string]string{
 	"streamobjs:#.errormsg":                                      "Stream error message, if any",
 }
 var AllDataSpecialArgs = map[string]string{
-	"appinstances:#.errors":                      "StringArray",
-	"appinstances:#.fields":                      "StringArray",
-	"appinstances:#.runtimeinfo.containerids":    "StringArray",
-	"apps:#.autoprovpolicies":                    "StringArray",
-	"apps:#.fields":                              "StringArray",
-	"autoprovpolicies:#.fields":                  "StringArray",
-	"autoscalepolicies:#.fields":                 "StringArray",
-	"cloudletinfos:#.errors":                     "StringArray",
-	"cloudletinfos:#.fields":                     "StringArray",
-	"cloudletinfos:#.flavors:#.propmap":          "StringToString",
-	"cloudletpools:#.cloudlets":                  "StringArray",
-	"cloudletpools:#.fields":                     "StringArray",
-	"cloudlets:#.accessvars":                     "StringToString",
-	"cloudlets:#.chefclientkey":                  "StringToString",
-	"cloudlets:#.config.envvar":                  "StringToString",
-	"cloudlets:#.envvar":                         "StringToString",
-	"cloudlets:#.errors":                         "StringArray",
-	"cloudlets:#.fields":                         "StringArray",
-	"clusterinsts:#.errors":                      "StringArray",
-	"clusterinsts:#.fields":                      "StringArray",
-	"clusterinsts:#.resources.vms:#.ipaddresses": "StringArray",
-	"flavors:#.fields":                           "StringArray",
-	"flavors:#.optresmap":                        "StringToString",
-	"privacypolicies:#.fields":                   "StringArray",
-	"restagtables:#.fields":                      "StringArray",
-	"restagtables:#.tags":                        "StringToString",
-	"settings.fields":                            "StringArray",
-	"vmpools:#.errors":                           "StringArray",
-	"vmpools:#.fields":                           "StringArray",
-	"vmpools:#.vms:#.flavor.propmap":             "StringToString",
+	"appinstances:#.errors":                   "StringArray",
+	"appinstances:#.fields":                   "StringArray",
+	"appinstances:#.runtimeinfo.containerids": "StringArray",
+	"apps:#.autoprovpolicies":                 "StringArray",
+	"apps:#.fields":                           "StringArray",
+	"autoprovpolicies:#.fields":               "StringArray",
+	"autoscalepolicies:#.fields":              "StringArray",
+	"cloudletinfos:#.errors":                  "StringArray",
+	"cloudletinfos:#.fields":                  "StringArray",
+	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
+	"cloudletpools:#.cloudlets":               "StringArray",
+	"cloudletpools:#.fields":                  "StringArray",
+	"cloudlets:#.accessvars":                  "StringToString",
+	"cloudlets:#.chefclientkey":               "StringToString",
+	"cloudlets:#.config.envvar":               "StringToString",
+	"cloudlets:#.envvar":                      "StringToString",
+	"cloudlets:#.errors":                      "StringArray",
+	"cloudlets:#.fields":                      "StringArray",
+	"clusterinsts:#.errors":                   "StringArray",
+	"clusterinsts:#.fields":                   "StringArray",
+	"flavors:#.fields":                        "StringArray",
+	"flavors:#.optresmap":                     "StringToString",
+	"privacypolicies:#.fields":                "StringArray",
+	"restagtables:#.fields":                   "StringArray",
+	"restagtables:#.tags":                     "StringToString",
+	"settings.fields":                         "StringArray",
+	"vmpools:#.errors":                        "StringArray",
+	"vmpools:#.fields":                        "StringArray",
+	"vmpools:#.vms:#.flavor.propmap":          "StringToString",
 }

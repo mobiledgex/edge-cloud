@@ -212,8 +212,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 
-			// test
-			resources, err := cd.platform.GetInfraResources(ctx, cloudcommon.GetCloudletClusterName(new))
+			resources, err := cd.platform.GetInfraResources(ctx, &new.Key, nil)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resourcs", "err", err)
 			} else {
@@ -269,7 +268,12 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			return nil
 		})
-
+		resources, err := cd.platform.GetInfraResources(ctx, &new.Key, nil)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resourcs", "err", err)
+		} else {
+			cd.clusterInstInfoResources(ctx, &new.Key, resources)
+		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 
@@ -706,7 +710,6 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}

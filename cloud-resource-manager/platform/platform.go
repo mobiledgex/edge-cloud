@@ -61,8 +61,8 @@ type Platform interface {
 	DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update the cluster
 	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error
-	// Get resources used by the given VM group name, which can be a cluster name or other
-	GetInfraResources(ctx context.Context, vmGroupName string) (*edgeproto.InfraResources, error)
+	// Get resources used by either the cluster (for cluster resources) or cloudlet (for platform resources)
+	GetInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey, cloudletKey *edgeproto.CloudletKey) (*edgeproto.InfraResources, error)
 	// Create an AppInst on a Cluster
 	CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete an AppInst on a Cluster

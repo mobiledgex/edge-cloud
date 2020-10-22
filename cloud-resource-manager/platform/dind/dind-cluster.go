@@ -36,7 +36,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 		return fmt.Errorf("Only K8s and Docker clusters are supported on DIND")
 	}
 	// Create K8s cluster
-	clusterName := cloudcommon.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
+	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
 	log.SpanLog(ctx, log.DebugLevelInfra, "creating local dind cluster", "clusterName", clusterName)
 
 	kconfName := k8smgmt.GetKconfName(clusterInst)
@@ -117,7 +117,7 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 //DeleteDINDCluster creates kubernetes cluster on local mac
 func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto.ClusterInst) error {
 
-	clusterName := cloudcommon.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
+	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
 	log.SpanLog(ctx, log.DebugLevelInfra, "DeleteDINDCluster", "clusterName", clusterName)
 
 	if clusterInst.Deployment == cloudcommon.DeploymentTypeDocker {
@@ -139,13 +139,10 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetInfraResources(ctx context.Context, vmGroupName string) (*edgeproto.InfraResources, error) {
+func (s *Platform) GetInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey, cloudletKey *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
 	resources := edgeproto.InfraResources{
 		Vms: []edgeproto.VmInfo{
-			{
-				Name:        "local-mac",
-				Ipaddresses: []string{"127.0.0.1"},
-			},
+			{Name: "local-mac"},
 		},
 	}
 	return &resources, nil

@@ -57,10 +57,10 @@ func (s *Platform) CreateAppInstInternal(ctx context.Context, clusterInst *edgep
 	deploymentVars := crmutil.DeploymentReplaceVars{
 		Deployment: crmutil.CrmReplaceVars{
 			ClusterIp:    masterIP,
-			CloudletName: cloudcommon.NormalizeName(clusterInst.Key.CloudletKey.Name),
-			ClusterName:  cloudcommon.NormalizeName(clusterInst.Key.ClusterKey.Name),
-			CloudletOrg:  cloudcommon.NormalizeName(clusterInst.Key.CloudletKey.Organization),
-			AppOrg:       cloudcommon.NormalizeName(app.Key.Organization),
+			CloudletName: k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
+			ClusterName:  k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
+			CloudletOrg:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Organization),
+			AppOrg:       k8smgmt.NormalizeName(app.Key.Organization),
 		},
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
@@ -165,10 +165,10 @@ func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	deploymentVars := crmutil.DeploymentReplaceVars{
 		Deployment: crmutil.CrmReplaceVars{
 			ClusterIp:    cluster.MasterAddr,
-			CloudletName: cloudcommon.NormalizeName(clusterInst.Key.CloudletKey.Name),
-			ClusterName:  cloudcommon.NormalizeName(clusterInst.Key.ClusterKey.Name),
-			CloudletOrg:  cloudcommon.NormalizeName(clusterInst.Key.CloudletKey.Organization),
-			AppOrg:       cloudcommon.NormalizeName(app.Key.Organization),
+			CloudletName: k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Name),
+			ClusterName:  k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name),
+			CloudletOrg:  k8smgmt.NormalizeName(clusterInst.Key.CloudletKey.Organization),
+			AppOrg:       k8smgmt.NormalizeName(app.Key.Organization),
 		},
 	}
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
