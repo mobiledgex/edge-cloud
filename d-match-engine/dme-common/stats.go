@@ -28,6 +28,8 @@ var PlatformClientsCache edgeproto.DeviceCache
 var ScaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
 
+const EdgeEventLatencyMethod = "appinst-latency"
+
 var Stats *DmeStats
 
 var LatencyTimes = []time.Duration{
@@ -39,18 +41,19 @@ var LatencyTimes = []time.Duration{
 }
 
 type ApiStatCall struct {
-	Key     StatKey
-	Fail    bool
-	Latency time.Duration
-	Samples []float64 // Latency samples for EdgeEvents
+	Key           StatKey
+	Fail          bool
+	Latency       time.Duration
+	Samples       []float64 // Latency samples for EdgeEvents
+	SessionCookie string    // SessionCookie to identify unique clients for EdgeEvents
 }
 
 type ApiStat struct {
 	Reqs                uint64
 	Errs                uint64
 	Latency             grpcstats.LatencyMetric
-	RollingLatency      *dme.Latency // Rolling statistics for EdgeEvents latency measurements (resets after 10 min)
-	RollingLatencyTotal *dme.Latency // Rolling statistics for EdgeEvents latency measurements
+	RollingLatencyTemp  *dmeutil.RollingLatency // Temporary rolling statistics for EdgeEvents latency measurements (resets after 10 min)
+	RollingLatencyTotal *dmeutil.RollingLatency // Rolling statistics for EdgeEvents latency measurements to be stored in influx
 	Mux                 sync.Mutex
 	Changed             bool
 }
@@ -124,20 +127,20 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	stat.Latency.AddLatency(call.Latency)
 	if call.Key.Method == EdgeEventLatencyMethod {
 		// Update RollingLatency and RollingLatencyTotal statistics
-		if stat.RollingLatency == nil {
-			stat.RollingLatency = new(dme.Latency)
+		if stat.RollingLatencyTemp == nil {
+			stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
 		} else {
 			// Reset rollinglatency every 10 minutes or something, so that latency values are current
-			t := cloudcommon.TimestampToTime(*stat.RollingLatency.Timestamp)
-			if time.Since(t) > time.Minute*10 {
-				stat.RollingLatency = new(dme.Latency)
+			t := cloudcommon.TimestampToTime(*stat.RollingLatencyTemp.Latency.Timestamp)
+			if time.Since(t) > time.Minute*1 {
+				stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
 			}
 		}
 		if stat.RollingLatencyTotal == nil {
-			stat.RollingLatencyTotal = new(dme.Latency)
+			stat.RollingLatencyTotal = dmeutil.NewRollingLatency()
 		}
-		dmeutil.UpdateRollingLatency(call.Samples, stat.RollingLatency)
-		dmeutil.UpdateRollingLatency(call.Samples, stat.RollingLatencyTotal)
+		stat.RollingLatencyTemp.UpdateRollingLatency(call.Samples, call.SessionCookie)
+		stat.RollingLatencyTotal.UpdateRollingLatency(call.Samples, call.SessionCookie)
 	}
 	stat.Changed = true
 	shard.mux.Unlock()
@@ -199,6 +202,11 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *ed
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = EdgeEventLatencyMethod
+	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
+	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
+	metric.AddIntVal("reqs", stat.Reqs)
+	metric.AddIntVal("errs", stat.Errs)
+	// AppInst information
 	metric.AddTag("app", key.AppKey.Name)
 	metric.AddTag("apporg", key.AppKey.Organization)
 	metric.AddTag("ver", key.AppKey.Version)
@@ -206,15 +214,13 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *ed
 	metric.AddTag("cloudletorg", key.CloudletFound.Organization)
 	metric.AddTag("cluster", key.ClusterKey.Name)
 	metric.AddTag("clusterorg", key.ClusterInstOrg)
-
-	metric.AddIntVal("reqs", stat.Reqs)
-	metric.AddIntVal("errs", stat.Errs)
-
-	metric.AddIntVal("numsamples", stat.RollingLatencyTotal.NumSamples)
-	metric.AddDoubleVal("avg", stat.RollingLatencyTotal.Avg)
-	metric.AddDoubleVal("stddev", stat.RollingLatencyTotal.StdDev)
-	metric.AddDoubleVal("min", stat.RollingLatencyTotal.Min)
-	metric.AddDoubleVal("max", stat.RollingLatencyTotal.Max)
+	// Latency information (store RollingLatencyTotal in influx)
+	metric.AddIntVal("numsamples", stat.RollingLatencyTotal.Latency.NumSamples)
+	metric.AddIntVal("numclients", stat.RollingLatencyTotal.Latency.NumClients)
+	metric.AddDoubleVal("avg", stat.RollingLatencyTotal.Latency.Avg)
+	metric.AddDoubleVal("stddev", stat.RollingLatencyTotal.Latency.StdDev)
+	metric.AddDoubleVal("min", stat.RollingLatencyTotal.Latency.Min)
+	metric.AddDoubleVal("max", stat.RollingLatencyTotal.Latency.Max)
 
 	stat.Latency.AddToMetric(&metric)
 	return &metric

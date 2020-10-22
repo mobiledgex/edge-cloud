@@ -1,7 +1,6 @@
 package dmeutil
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -15,8 +14,70 @@ const (
 	ShowAppInstLatency    = "show-appinst-latency"
 )
 
+type RollingLatency struct {
+	Latency       dme.Latency
+	UniqueClients map[string]struct{}
+}
+
+// TODO: Store and correlate gps, time, and latency
+type Sample struct {
+	Sample          float64
+	GpsLocation     dme.Loc
+	Client          string // Client session cookie
+	DataNetworkType string // eg. LTE, 5G, etc.
+	Timestamp       dme.Timestamp
+}
+
+func NewRollingLatency() *RollingLatency {
+	r := new(RollingLatency)
+	r.UniqueClients = make(map[string]struct{})
+	return r
+}
+
+// Update rolling Avg, Min, Max, StdDev, and NumSamples in provided Latency struct
+func (r *RollingLatency) UpdateRollingLatency(samples []float64, sessionCookie string) {
+	// Add client to UniqueClients map
+	r.UpdateUniqueClients(sessionCookie)
+	// First samples
+	if r.Latency.NumSamples == 0 {
+		r.Latency = CalculateLatency(samples)
+		return
+	}
+	// Previous statistics used to calculate rolling variance
+	prevNumSamples := r.Latency.NumSamples
+	prevAvg := r.Latency.Avg
+	prevVariance := r.Latency.Variance
+	// Update Min, Max, and Avg
+	total := r.Latency.Avg * float64(r.Latency.NumSamples)
+	for _, sample := range samples {
+		if sample < r.Latency.Min {
+			r.Latency.Min = sample
+		}
+		if sample > r.Latency.Max {
+			r.Latency.Max = sample
+		}
+		total += sample
+		r.Latency.NumSamples++
+	}
+	r.Latency.Avg = total / float64(r.Latency.NumSamples)
+	// Calulate Rolling variance and std dev (Using Welford's Algorithm)
+	// NewSumSquared = OldSumSquared + (sample - OldAverage)(sample - NewAverage)
+	prevSumSquared := prevVariance * float64(prevNumSamples-1)
+	newSumSquared := prevSumSquared
+	for _, sample := range samples {
+		newSumSquared += (sample - prevAvg) * (sample - r.Latency.Avg)
+	}
+	r.Latency.Variance = newSumSquared / float64(r.Latency.NumSamples-1)
+	r.Latency.StdDev = math.Sqrt(r.Latency.Variance)
+}
+
+func (r *RollingLatency) UpdateUniqueClients(sessionCookie string) {
+	r.UniqueClients[sessionCookie] = struct{}{}
+	r.Latency.NumClients = uint64(len(r.UniqueClients))
+}
+
 // Return Latency struct with Avg, Min, Max, StdDev, and NumSamples
-func CalculateLatency(samples []float64) *dme.Latency {
+func CalculateLatency(samples []float64) dme.Latency {
 	// Create latency struct
 	latency := new(dme.Latency)
 	// calculate Min, Max, and Avg
@@ -42,44 +103,5 @@ func CalculateLatency(samples []float64) *dme.Latency {
 	latency.StdDev = math.Sqrt(latency.Variance)
 	ts := cloudcommon.TimeToTimestamp(time.Now())
 	latency.Timestamp = &ts
-	return latency
-}
-
-// Update rolling Avg, Min, Max, StdDev, and NumSamples in provided Latency struct
-func UpdateRollingLatency(samples []float64, latency *dme.Latency) error {
-	if latency == nil {
-		return fmt.Errorf("Latency is unititialized")
-	}
-	// First samples
-	if latency.NumSamples == 0 {
-		*latency = *CalculateLatency(samples)
-		return nil
-	}
-	// Previous statistics used to calculate rolling variance
-	prevNumSamples := latency.NumSamples
-	prevAvg := latency.Avg
-	prevVariance := latency.Variance
-	// Update Min, Max, and Avg
-	total := latency.Avg * float64(latency.NumSamples)
-	for _, sample := range samples {
-		if sample < latency.Min {
-			latency.Min = sample
-		}
-		if sample > latency.Max {
-			latency.Max = sample
-		}
-		total += sample
-		latency.NumSamples++
-	}
-	latency.Avg = total / float64(latency.NumSamples)
-	// Calulate Rolling variance and std dev (Using Welford's Algorithm)
-	// NewSumSquared = OldSumSquared + (sample - OldAverage)(sample - NewAverage)
-	prevSumSquared := prevVariance * float64(prevNumSamples-1)
-	newSumSquared := prevSumSquared
-	for _, sample := range samples {
-		newSumSquared += (sample - prevAvg) * (sample - latency.Avg)
-	}
-	latency.Variance = newSumSquared / float64(latency.NumSamples-1)
-	latency.StdDev = math.Sqrt(latency.Variance)
-	return nil
+	return *latency
 }

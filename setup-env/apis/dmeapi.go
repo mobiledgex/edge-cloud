@@ -500,7 +500,7 @@
 			}
 			// Terminate persistent connection
 			terminateEvent := new(dmeproto.ClientEdgeEvent)
-			terminateEvent.Event = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
+			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
 			err = resp.Send(terminateEvent)
 		}
 		dmeerror = err
@@ -519,7 +519,7 @@
 			}
 			// Send dummy latency samples as Latency Event
 			latencyEvent := new(dmeproto.ClientEdgeEvent)
-			latencyEvent.Event = dmeproto.ClientEdgeEvent_EVENT_LATENCY_SAMPLES
+			latencyEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_LATENCY_SAMPLES
 			samples := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
 			latencyEvent.Samples = samples
 			err = resp.Send(latencyEvent)
@@ -530,7 +530,7 @@
 			}
 			// Terminate persistent connection
 			terminateEvent := new(dmeproto.ClientEdgeEvent)
-			terminateEvent.Event = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
+			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
 			err = resp.Send(terminateEvent)
 		}
 		dmeerror = err

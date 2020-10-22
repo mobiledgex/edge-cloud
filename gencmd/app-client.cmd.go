@@ -1409,7 +1409,7 @@ var ClientEdgeEventRequiredArgs = []string{}
 var ClientEdgeEventOptionalArgs = []string{
 	"sessioncookie",
 	"edgeeventscookie",
-	"event",
+	"eventtype",
 	"gpslocation.latitude",
 	"gpslocation.longitude",
 	"gpslocation.horizontalaccuracy",
@@ -1426,7 +1426,7 @@ var ClientEdgeEventAliasArgs = []string{}
 var ClientEdgeEventComments = map[string]string{
 	"sessioncookie":                  "Session Cookie from RegisterClientReply",
 	"edgeeventscookie":               "Session Cookie from FindCloudletReply",
-	"event":                          ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate",
+	"eventtype":                      ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -1442,7 +1442,7 @@ var ClientEdgeEventSpecialArgs = map[string]string{
 }
 var ServerEdgeEventRequiredArgs = []string{}
 var ServerEdgeEventOptionalArgs = []string{
-	"event",
+	"eventtype",
 	"cloudletstate",
 	"maintenancestate",
 	"healthcheck",
@@ -1452,19 +1452,21 @@ var ServerEdgeEventOptionalArgs = []string{
 	"latency.stddev",
 	"latency.variance",
 	"latency.numsamples",
+	"latency.numclients",
 	"latency.timestamp.seconds",
 	"latency.timestamp.nanos",
 	"tags",
 }
 var ServerEdgeEventAliasArgs = []string{}
 var ServerEdgeEventComments = map[string]string{
-	"event":            ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth",
-	"cloudletstate":    "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
-	"maintenancestate": "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, UnderMaintenance",
-	"healthcheck":      "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
-	"latency.stddev":   "Square root of unbiased variance",
-	"latency.variance": "Unbiased variance",
-	"tags":             "_(optional)_ Vendor specific data",
+	"eventtype":          ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth",
+	"cloudletstate":      "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
+	"maintenancestate":   "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, UnderMaintenance",
+	"healthcheck":        "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
+	"latency.stddev":     "Square root of unbiased variance",
+	"latency.variance":   "Unbiased variance",
+	"latency.numclients": "Number of unique clients contributing to latency statistics",
+	"tags":               "_(optional)_ Vendor specific data",
 }
 var ServerEdgeEventSpecialArgs = map[string]string{
 	"tags": "StringToString",

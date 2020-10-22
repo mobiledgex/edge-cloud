@@ -9,8 +9,6 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-const EdgeEventLatencyMethod = "appinst-latency"
-
 // A wrapper for grpc.ServerStream to handle stats
 type StatsStreamWrapper struct {
 	stats *DmeStats

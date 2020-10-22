@@ -978,7 +978,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	sendFunc := func(event *dme.ServerEdgeEvent) {
 		err := svr.Send(event)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "error sending event to client", "error", err, "eventType", event.Event)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "error sending event to client", "error", err, "eventType", event.EventType)
 		}
 	}
 	//receive first msg from stream
@@ -989,7 +989,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	// On first message:
 	// Verify Session Cookie and EdgeEvents Cookie
 	// Then add connection, client, and appinst to Plugin hashmap
-	if initMsg.Event == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
+	if initMsg.EventType == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
 		// Verify session cookie
 		sessionCookieKey, err = VerifyCookie(ctx, initMsg.SessionCookie)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyCookie result", "ckey", sessionCookieKey, "err", err)
@@ -1025,7 +1025,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, sendFunc)
 		// Send successful init response
 		initServerEdgeEvent := new(dme.ServerEdgeEvent)
-		initServerEdgeEvent.Event = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
+		initServerEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
 		EEHandler.SendEdgeEventToClient(ctx, initServerEdgeEvent, *appInstKey, *sessionCookieKey)
 	} else {
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
@@ -1047,7 +1047,7 @@ loop:
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
 		// Handle Different Client events
-		switch cupdate.Event {
+		switch cupdate.EventType {
 		case dme.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION:
 			// Client initiated termination
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Client initiated termination of persistent connection")
@@ -1067,6 +1067,7 @@ loop:
 			call.Latency = time.Duration(latency.Avg * float64(time.Millisecond))
 			call.Samples = cupdate.Samples
 			call.Key.Method = EdgeEventLatencyMethod // override method name
+			call.SessionCookie = cupdate.SessionCookie
 			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
 			Stats.RecordApiStatCall(&call)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
@@ -1074,7 +1075,7 @@ loop:
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookieKey, "location", cupdate.GpsLocation)
 		default:
 			// Unknown client event
-			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "event", cupdate.Event)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
 			break
 		}
 	}

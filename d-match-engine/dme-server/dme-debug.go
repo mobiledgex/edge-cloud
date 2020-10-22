@@ -49,7 +49,7 @@ func showAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string
 	apiStat.Mux.Lock()
 	defer apiStat.Mux.Unlock()
 
-	latency := apiStat.RollingLatency
+	latency := apiStat.RollingLatencyTemp.Latency
 	b, err := json.Marshal(latency)
 	if err != nil {
 		return "unable to marshall latency"

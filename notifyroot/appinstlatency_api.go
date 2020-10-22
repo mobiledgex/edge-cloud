@@ -112,10 +112,11 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 		Ctx:          ctx,
 	}
 
-	for {
+	for i := 0; i < 2; i++ {
 		if err = nodeMgr.Debug.DebugRequest(req, newcb); err != nil {
 			return err
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
+	return nil
 }
