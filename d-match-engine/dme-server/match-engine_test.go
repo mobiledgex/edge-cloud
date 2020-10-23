@@ -118,8 +118,8 @@ func TestAddRemove(t *testing.T) {
 		assert.Nil(t, err, "verify cookie")
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 		// Make sure we get the statsKey value filled in
-		call := ApiStatCall{}
-		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
+		call := dmecommon.ApiStatCall{}
+		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.Key)
 
 		for attempt := 0; attempt < maxAttempts; attempt++ {
 
@@ -134,7 +134,7 @@ func TestAddRemove(t *testing.T) {
 				}
 				// carrier is the same either way
 				assert.Equal(t, rr.ReplyCarrier,
-					call.key.CloudletFound.Organization, "findCloudletHAData[%d]", ii)
+					call.Key.CloudletFound.Organization, "findCloudletHAData[%d]", ii)
 			}
 		}
 		// we expect at least 35% of all replies to be for each cloudlet, with confidence of 99.8%

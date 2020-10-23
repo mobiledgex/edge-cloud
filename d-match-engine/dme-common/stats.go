@@ -216,7 +216,7 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *ed
 	metric.AddTag("clusterorg", key.ClusterInstOrg)
 	// Latency information (store RollingLatencyTotal in influx)
 	metric.AddIntVal("numsamples", stat.RollingLatencyTotal.Latency.NumSamples)
-	metric.AddIntVal("numclients", stat.RollingLatencyTotal.Latency.NumClients)
+	metric.AddIntVal("numclients", stat.RollingLatencyTotal.NumUniqueClients)
 	metric.AddDoubleVal("avg", stat.RollingLatencyTotal.Latency.Avg)
 	metric.AddDoubleVal("stddev", stat.RollingLatencyTotal.Latency.StdDev)
 	metric.AddDoubleVal("min", stat.RollingLatencyTotal.Latency.Min)

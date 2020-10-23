@@ -100,9 +100,9 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 			return err
 		}
 		appInstLatency := &edgeproto.AppInstLatency{
-			Key:     in.Key,
-			Latency: &rollinglatency.Latency,
-			NumClients: rollinglatency.NumUniqueClients
+			Key:        in.Key,
+			Latency:    &rollinglatency.Latency,
+			NumClients: rollinglatency.NumUniqueClients,
 		}
 		return cb.Send(appInstLatency)
 	}

@@ -294,7 +294,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, "cloudlet obj created")
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 	eMock.verifyEvent(t, "upgrading cloudlet", []node.EventTag{
@@ -308,7 +308,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 	eMock.verifyEvent(t, "cloudlet online", []node.EventTag{
@@ -386,12 +386,12 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	})
 
 	// Cloudlet state is INITOK but from old CRM (crm_v1)
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v1)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v1)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
 	// Cloudlet should still be ready, ignoring the above stale entry
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
