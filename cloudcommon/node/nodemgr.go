@@ -131,6 +131,12 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	// start pki refresh after logging initialized
 	s.InternalPki.start()
 
+	err = s.initEvents(ctx, opts)
+	if err != nil {
+		span.Finish()
+		return initCtx, nil, err
+	}
+
 	edgeproto.InitNodeCache(&s.NodeCache.NodeCache)
 	s.NodeCache.setRegion = opts.region
 	s.Debug.Init(s)
