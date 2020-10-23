@@ -63,11 +63,8 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.OptRes = ""
 	}
-	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
-		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
-		}
-		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
-		}
+	if _, found := tags["nocmp"]; found {
+		in.Resources = edgeproto.InfraResources{}
 	}
 }
 
@@ -587,10 +584,15 @@ var ClusterInstComments = map[string]string{
 	"masternodeflavor":                       "Generic flavor for k8s master VM when worker nodes > 0",
 	"skipcrmcleanuponfailure":                "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"optres":                                 "Optional Resources required by OS flavor if any",
-	"resources.vms:#.type":                   "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"resources.vms:#.containers:#.type":      "type can be docker or kubernetes",
-	"resources.vms:#.containers:#.clusterip": "clusterip is applicable to kubernetes only",
-	"resources.vms:#.containers:#.restarts":  "restarts is applicable to kubernetes only",
+	"resources.vms:#.name":                   "Virtual machine name",
+	"resources.vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"resources.vms:#.status":                 "Runtime status of the VM",
+	"resources.vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"resources.vms:#.containers:#.name":      "Name of the container",
+	"resources.vms:#.containers:#.type":      "Type can be docker or kubernetes",
+	"resources.vms:#.containers:#.status":    "Runtime status of the container",
+	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
+	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors": "StringArray",
@@ -632,10 +634,15 @@ var ClusterInstInfoComments = map[string]string{
 	"notifyid":                               "Id of client assigned by server (internal use only)",
 	"state":                                  "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
 	"errors":                                 "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
-	"resources.vms:#.type":                   "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"resources.vms:#.containers:#.type":      "type can be docker or kubernetes",
-	"resources.vms:#.containers:#.clusterip": "clusterip is applicable to kubernetes only",
-	"resources.vms:#.containers:#.restarts":  "restarts is applicable to kubernetes only",
+	"resources.vms:#.name":                   "Virtual machine name",
+	"resources.vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"resources.vms:#.status":                 "Runtime status of the VM",
+	"resources.vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"resources.vms:#.containers:#.name":      "Name of the container",
+	"resources.vms:#.containers:#.type":      "Type can be docker or kubernetes",
+	"resources.vms:#.containers:#.status":    "Runtime status of the container",
+	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
+	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
 	"errors": "StringArray",

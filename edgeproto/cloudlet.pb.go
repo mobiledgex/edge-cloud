@@ -875,7 +875,7 @@ type CloudletInfo struct {
 	ControllerCacheReceived bool `protobuf:"varint,15,opt,name=controller_cache_received,json=controllerCacheReceived,proto3" json:"controller_cache_received,omitempty"`
 	// State for maintenance
 	MaintenanceState MaintenanceState `protobuf:"varint,16,opt,name=maintenance_state,json=maintenanceState,proto3,enum=edgeproto.MaintenanceState" json:"maintenance_state,omitempty"`
-	// resources used by cloudlet
+	// Resources used by cloudlet
 	Resources InfraResources `protobuf:"bytes,17,opt,name=resources,proto3" json:"resources"`
 }
 

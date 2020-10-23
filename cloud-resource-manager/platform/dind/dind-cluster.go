@@ -148,11 +148,6 @@ func (s *Platform) GetInfraResources(ctx context.Context, clusterKey *edgeproto.
 	return &resources, nil
 }
 
-//
-//Name:   fmt.Sprintf("vmnum-%d", i),
-//Role:   "somerole",
-//Flavor: "someflavor",
-//},
 func GetClusterID(id int) string {
 	return strconv.Itoa(id)
 }

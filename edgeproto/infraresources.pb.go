@@ -29,13 +29,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 //
 // ContainerInfo is infomation about containers running on a VM,
 type ContainerInfo struct {
+	// Name of the container
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// type can be docker or kubernetes
-	Type   string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Type can be docker or kubernetes
+	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Runtime status of the container
 	Status string `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	// clusterip is applicable to kubernetes only
+	// IP within the CNI and is applicable to kubernetes only
 	Clusterip string `protobuf:"bytes,4,opt,name=clusterip,proto3" json:"clusterip,omitempty"`
-	// restarts is applicable to kubernetes only
+	// Restart count, applicable to kubernetes only
 	Restarts int64 `protobuf:"varint,5,opt,name=restarts,proto3" json:"restarts,omitempty"`
 }
 
@@ -75,7 +77,7 @@ var xxx_messageInfo_ContainerInfo proto.InternalMessageInfo
 // IpAddr is an address for a VM which may have an external and
 // internal component.  Internal and external is with respect to the VM
 // and are are often the same unless a natted or floating IP is used.  If
-// internalIP is not reported it is the same as the ExternalIP
+// internalIP is not reported it is the same as the ExternalIP.
 type IpAddr struct {
 	ExternalIp string `protobuf:"bytes,1,opt,name=externalIp,proto3" json:"externalIp,omitempty"`
 	InternalIp string `protobuf:"bytes,2,opt,name=internalIp,proto3" json:"internalIp,omitempty"`
@@ -116,15 +118,20 @@ var xxx_messageInfo_IpAddr proto.InternalMessageInfo
 
 // VmInfo
 //
-// VmInfo is infomation about VM resources.
+// VmInfo is information about Virtual Machine resources.
 type VmInfo struct {
+	// Virtual machine name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// type can be platform, rootlb, cluster-master, cluster-node, vmapp
-	Type        string           `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	Status      string           `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	InfraFlavor string           `protobuf:"bytes,4,opt,name=infraFlavor,proto3" json:"infraFlavor,omitempty"`
-	Ipaddresses []IpAddr         `protobuf:"bytes,5,rep,name=ipaddresses,proto3" json:"ipaddresses"`
-	Containers  []*ContainerInfo `protobuf:"bytes,6,rep,name=containers,proto3" json:"containers,omitempty"`
+	// Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Runtime status of the VM
+	Status string `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	// Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor
+	InfraFlavor string `protobuf:"bytes,4,opt,name=infraFlavor,proto3" json:"infraFlavor,omitempty"`
+	// IP addresses allocated to the VM
+	Ipaddresses []IpAddr `protobuf:"bytes,5,rep,name=ipaddresses,proto3" json:"ipaddresses"`
+	// Information about containers running in the VM
+	Containers []*ContainerInfo `protobuf:"bytes,6,rep,name=containers,proto3" json:"containers,omitempty"`
 }
 
 func (m *VmInfo) Reset()         { *m = VmInfo{} }

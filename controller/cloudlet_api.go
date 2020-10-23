@@ -652,6 +652,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			cloudlet.Errors = []string{err.Error()}
 			cloudlet.State = errorState
 		}
+
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})

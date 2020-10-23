@@ -1,4 +1,4 @@
-// InfraResources defines resources used within the infrastructure
+// InfraResources defines resources used within the cloudlet infrastructure
 
 syntax = "proto3";
 package edgeproto;
@@ -16,20 +16,22 @@ option (gogoproto.goproto_sizecache_all) = false;
 //
 // ContainerInfo is infomation about containers running on a VM, 
 message ContainerInfo{
+  // Name of the container 
   string name = 1;
-  // type can be docker or kubernetes
+  // Type can be docker or kubernetes
   string type = 2;
+  // Runtime status of the container
   string status = 3;
-  // clusterip is applicable to kubernetes only
+  // IP within the CNI and is applicable to kubernetes only
   string clusterip = 4;
-  // restarts is applicable to kubernetes only
+  // Restart count, applicable to kubernetes only
   int64 restarts = 5;
 }
 
 // IpAddr is an address for a VM which may have an external and
 // internal component.  Internal and external is with respect to the VM
 // and are are often the same unless a natted or floating IP is used.  If 
-// internalIP is not reported it is the same as the ExternalIP
+// internalIP is not reported it is the same as the ExternalIP.
 message IpAddr{
   string externalIp = 1;
   string internalIp = 2;
@@ -37,14 +39,19 @@ message IpAddr{
 
 // VmInfo
 //
-// VmInfo is infomation about VM resources. 
+// VmInfo is information about Virtual Machine resources. 
 message VmInfo{
+  // Virtual machine name
   string name = 1;
-  // type can be platform, rootlb, cluster-master, cluster-node, vmapp
+  // Type can be platform, rootlb, cluster-master, cluster-node, vmapp
   string type = 2;
+  // Runtime status of the VM
   string status = 3;
+  // Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor
   string infraFlavor = 4;
+  // IP addresses allocated to the VM
   repeated IpAddr ipaddresses = 5 [(gogoproto.nullable) = false];
+  // Information about containers running in the VM
   repeated ContainerInfo containers = 6;
 }
 

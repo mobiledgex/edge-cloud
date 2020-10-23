@@ -211,15 +211,17 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
-
+			// Get cluster resources and report to controller.
 			resources, err := cd.platform.GetInfraResources(ctx, &new.Key, nil)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resourcs", "err", err)
+				log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
 			} else {
-				cd.clusterInstInfoResources(ctx, &new.Key, resources)
+				err = cd.clusterInstInfoResources(ctx, &new.Key, resources)
+				if err != nil {
+					// this can happen if the cluster is deleted
+					log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err")
+				}
 			}
-			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// reset stream for the new action
@@ -268,15 +270,20 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			return nil
 		})
-		resources, err := cd.platform.GetInfraResources(ctx, &new.Key, nil)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resourcs", "err", err)
-		} else {
-			cd.clusterInstInfoResources(ctx, &new.Key, resources)
-		}
+
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
-
+		// Get cluster resources and report to controller.
+		resources, err := cd.platform.GetInfraResources(ctx, &new.Key, nil)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
+		} else {
+			err = cd.clusterInstInfoResources(ctx, &new.Key, resources)
+			if err != nil {
+				// this can happen if the cluster is deleted
+				log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err")
+			}
+		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// reset stream for the new action
 		cd.ResetClusterInstStream(ctx, &new.Key)

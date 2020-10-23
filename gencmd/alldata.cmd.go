@@ -130,11 +130,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].OptRes = ""
 		}
-		for i2 := 0; i2 < len(in.ClusterInsts[i0].Resources.Vms); i2++ {
-			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Ipaddresses); i3++ {
-			}
-			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Containers); i3++ {
-			}
+		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].Resources = edgeproto.InfraResources{}
 		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
@@ -706,10 +703,15 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.osimages:#.diskformat":                      "format qcow2, img, etc",
 	"cloudletinfos:#.controllercachereceived":                    "Indicates all controller data has been sent to CRM",
 	"cloudletinfos:#.maintenancestate":                           "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
-	"cloudletinfos:#.resources.vms:#.type":                       "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"cloudletinfos:#.resources.vms:#.containers:#.type":          "type can be docker or kubernetes",
-	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "clusterip is applicable to kubernetes only",
-	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "restarts is applicable to kubernetes only",
+	"cloudletinfos:#.resources.vms:#.name":                       "Virtual machine name",
+	"cloudletinfos:#.resources.vms:#.type":                       "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"cloudletinfos:#.resources.vms:#.status":                     "Runtime status of the VM",
+	"cloudletinfos:#.resources.vms:#.infraflavor":                "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"cloudletinfos:#.resources.vms:#.containers:#.name":          "Name of the container",
+	"cloudletinfos:#.resources.vms:#.containers:#.type":          "Type can be docker or kubernetes",
+	"cloudletinfos:#.resources.vms:#.containers:#.status":        "Runtime status of the container",
+	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "IP within the CNI and is applicable to kubernetes only",
+	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "Restart count, applicable to kubernetes only",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
@@ -779,10 +781,15 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
 	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"clusterinsts:#.optres":                                      "Optional Resources required by OS flavor if any",
-	"clusterinsts:#.resources.vms:#.type":                        "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"clusterinsts:#.resources.vms:#.containers:#.type":           "type can be docker or kubernetes",
-	"clusterinsts:#.resources.vms:#.containers:#.clusterip":      "clusterip is applicable to kubernetes only",
-	"clusterinsts:#.resources.vms:#.containers:#.restarts":       "restarts is applicable to kubernetes only",
+	"clusterinsts:#.resources.vms:#.name":                        "Virtual machine name",
+	"clusterinsts:#.resources.vms:#.type":                        "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"clusterinsts:#.resources.vms:#.status":                      "Runtime status of the VM",
+	"clusterinsts:#.resources.vms:#.infraflavor":                 "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"clusterinsts:#.resources.vms:#.containers:#.name":           "Name of the container",
+	"clusterinsts:#.resources.vms:#.containers:#.type":           "Type can be docker or kubernetes",
+	"clusterinsts:#.resources.vms:#.containers:#.status":         "Runtime status of the container",
+	"clusterinsts:#.resources.vms:#.containers:#.clusterip":      "IP within the CNI and is applicable to kubernetes only",
+	"clusterinsts:#.resources.vms:#.containers:#.restarts":       "Restart count, applicable to kubernetes only",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",

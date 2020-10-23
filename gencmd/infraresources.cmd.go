@@ -28,9 +28,11 @@ var ContainerInfoOptionalArgs = []string{
 }
 var ContainerInfoAliasArgs = []string{}
 var ContainerInfoComments = map[string]string{
-	"type":      "type can be docker or kubernetes",
-	"clusterip": "clusterip is applicable to kubernetes only",
-	"restarts":  "restarts is applicable to kubernetes only",
+	"name":      "Name of the container",
+	"type":      "Type can be docker or kubernetes",
+	"status":    "Runtime status of the container",
+	"clusterip": "IP within the CNI and is applicable to kubernetes only",
+	"restarts":  "Restart count, applicable to kubernetes only",
 }
 var ContainerInfoSpecialArgs = map[string]string{}
 var IpAddrRequiredArgs = []string{}
@@ -57,10 +59,15 @@ var VmInfoOptionalArgs = []string{
 }
 var VmInfoAliasArgs = []string{}
 var VmInfoComments = map[string]string{
-	"type":                   "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"containers:#.type":      "type can be docker or kubernetes",
-	"containers:#.clusterip": "clusterip is applicable to kubernetes only",
-	"containers:#.restarts":  "restarts is applicable to kubernetes only",
+	"name":                   "Virtual machine name",
+	"type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"status":                 "Runtime status of the VM",
+	"infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"containers:#.name":      "Name of the container",
+	"containers:#.type":      "Type can be docker or kubernetes",
+	"containers:#.status":    "Runtime status of the container",
+	"containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
+	"containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var VmInfoSpecialArgs = map[string]string{}
 var InfraResourcesRequiredArgs = []string{}
@@ -79,9 +86,14 @@ var InfraResourcesOptionalArgs = []string{
 }
 var InfraResourcesAliasArgs = []string{}
 var InfraResourcesComments = map[string]string{
-	"vms:#.type":                   "type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"vms:#.containers:#.type":      "type can be docker or kubernetes",
-	"vms:#.containers:#.clusterip": "clusterip is applicable to kubernetes only",
-	"vms:#.containers:#.restarts":  "restarts is applicable to kubernetes only",
+	"vms:#.name":                   "Virtual machine name",
+	"vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"vms:#.status":                 "Runtime status of the VM",
+	"vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"vms:#.containers:#.name":      "Name of the container",
+	"vms:#.containers:#.type":      "Type can be docker or kubernetes",
+	"vms:#.containers:#.status":    "Runtime status of the container",
+	"vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
+	"vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var InfraResourcesSpecialArgs = map[string]string{}
