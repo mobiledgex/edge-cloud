@@ -1310,7 +1310,7 @@ var CloudletComments = map[string]string{
 	"infraconfig.externalnetworkname":     "Infra specific external network name",
 	"infraconfig.flavorname":              "Infra specific flavor name",
 	"chefclientkey":                       "Chef client key",
-	"maintenancestate":                    "State for maintenance, one of MaintenanceStart, MaintenanceStartNoFailover, NormalOperationInit",
+	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"overridepolicycontainerversion":      "Override container version from policy file",
 	"vmpool":                              "VM Pool",
 	"crmaccesspublickey":                  "CRM access public key",
@@ -1491,7 +1491,7 @@ var CloudletInfoComments = map[string]string{
 	"osimages:#.properties":   "image properties/metadata",
 	"osimages:#.diskformat":   "format qcow2, img, etc",
 	"controllercachereceived": "Indicates all controller data has been sent to CRM",
-	"maintenancestate":        "State for maintenance, one of MaintenanceStart, MaintenanceStartNoFailover, NormalOperationInit",
+	"maintenancestate":        "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",

@@ -113,7 +113,7 @@ enum CRMOverride {
 // by certain actors.
 enum MaintenanceState {
   // Normal operational state
-  NORMAL_OPERATION = 0 [(protogen.enum_backend) = true];
+  NORMAL_OPERATION = 0;
   // Request start of maintenance
   MAINTENANCE_START = 1;
   // Trigger failover for any HA AppInsts
@@ -131,7 +131,7 @@ enum MaintenanceState {
   // CRM failed to go into maintenance
   CRM_ERROR = 8 [(protogen.enum_backend) = true];
   // Request CRM to transition to normal operation
-  NORMAL_OPERATION_INIT = 9;
+  NORMAL_OPERATION_INIT = 9 [(protogen.enum_backend) = true];
   // Under maintenance
   UNDER_MAINTENANCE = 31 [(protogen.enum_backend) = true];
 }
