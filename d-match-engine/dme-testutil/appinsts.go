@@ -162,5 +162,4 @@ func GenerateClouldlets() []*edgeproto.CloudletInfo {
 		infos = append(infos, MakeCloudletInfo(&c))
 	}
 	return infos
-
 }

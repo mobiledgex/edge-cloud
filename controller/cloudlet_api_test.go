@@ -2,13 +2,18 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/jarcoal/httpmock"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -28,6 +33,58 @@ const (
 	crm_v2 = "2002-01-31"
 )
 
+var eMock *EventMock
+
+type EventMock struct {
+	names map[string][]node.EventTag
+	addr  string
+}
+
+func NewEventMock(addr string) *EventMock {
+	event := EventMock{}
+	event.addr = addr
+	event.names = make(map[string][]node.EventTag)
+	return &event
+}
+
+func (e *EventMock) registerResponders(t *testing.T) {
+	// register mock responders
+	api := fmt.Sprintf("%s/_template/events-log", e.addr)
+	httpmock.RegisterResponder("PUT", api,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(200, "Success"), nil
+		},
+	)
+	api = fmt.Sprintf("=~%s/events-log-.*/_doc", e.addr)
+	httpmock.RegisterResponder("POST", api,
+		func(req *http.Request) (*http.Response, error) {
+			data, _ := ioutil.ReadAll(req.Body)
+			eData := node.EventData{}
+			err := json.Unmarshal(data, &eData)
+			require.Nil(t, err, "json unmarshal event data")
+			require.NotEmpty(t, eData.Name, "event name exists")
+			e.names[strings.ToLower(eData.Name)] = eData.Tags
+			return httpmock.NewStringResponse(200, "Success"), nil
+		},
+	)
+}
+
+func (e *EventMock) verifyEvent(t *testing.T, name string, tags []node.EventTag) {
+	eTags, ok := e.names[strings.ToLower(name)]
+	require.True(t, ok, "event exists")
+	require.NotEqual(t, len(eTags), 0, "there should be more than 0 tags")
+	require.NotEqual(t, len(tags), 0, "there should be more than 0 tags")
+	eTagsMap := make(map[string]string)
+	for _, eTag := range eTags {
+		eTagsMap[eTag.Key] = eTag.Value
+	}
+	for _, tag := range tags {
+		val, ok := eTagsMap[tag.Key]
+		require.True(t, ok, "tag key exists")
+		require.Equal(t, val, tag.Value, "tag value matches")
+	}
+}
+
 func TestCloudletApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
 	log.InitTracer(nil)
@@ -43,6 +100,23 @@ func TestCloudletApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
+	// mock http to redirect requests
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	// any requests that don't have a registered URL will be fetched normally
+	httpmock.RegisterNoResponder(httpmock.InitialTransport.RoundTrip)
+
+	esURL := "http://dummy-es"
+	eMock = NewEventMock(esURL)
+	eMock.registerResponders(t)
+
+	// setup nodeMgr for events
+	nodeMgr = node.NodeMgr{}
+	ctx, _, err := nodeMgr.Init(node.NodeTypeController, "", node.WithRegion("unit-test"),
+		node.WithESUrls(esURL))
+	require.Nil(t, err)
+	require.NotNil(t, nodeMgr.ESClient)
+
 	// create flavors
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 
@@ -56,7 +130,7 @@ func TestCloudletApi(t *testing.T) {
 
 	clbad = testutil.CloudletData[0]
 	clbad.Key.Name = "test num dyn ips"
-	err := cloudletApi.CreateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
+	err = cloudletApi.CreateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 	clbad.NumDynamicIps = 0
 	clbad.Fields = []string{edgeproto.CloudletFieldNumDynamicIps}
@@ -137,6 +211,21 @@ func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, sta
 	cloudletInfoApi.Update(ctx, &info, 0)
 }
 
+func forceCloudletInfoMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.MaintenanceState) {
+	info := edgeproto.CloudletInfo{}
+	if !cloudletInfoApi.cache.Get(key, &info) {
+		info.Key = *key
+	}
+	info.MaintenanceState = state
+	cloudletInfoApi.Update(ctx, &info, 0)
+}
+
+func deleteCloudletInfo(ctx context.Context, key *edgeproto.CloudletKey) {
+	info := edgeproto.CloudletInfo{}
+	info.Key = *key
+	cloudletInfoApi.Delete(ctx, &info, 0)
+}
+
 func testNotifyId(t *testing.T, ctrlHandler *notify.DummyHandler, key *edgeproto.CloudletKey, nodeCount, notifyId int, crmVersion string) {
 	require.Equal(t, nodeCount, len(ctrlHandler.NodeCache.Objs), "node count matches")
 	nodeVersion, nodeNotifyId, err := ctrlHandler.GetCloudletDetails(key)
@@ -207,10 +296,93 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
+	eMock.verifyEvent(t, "upgrading cloudlet", []node.EventTag{
+		node.EventTag{
+			Key:   "from-version",
+			Value: crm_v1,
+		},
+		node.EventTag{
+			Key:   "to-version",
+			Value: crm_v2,
+		},
+	})
 
 	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
+	eMock.verifyEvent(t, "cloudlet online", []node.EventTag{
+		node.EventTag{
+			Key:   "state",
+			Value: "CLOUDLET_STATE_READY",
+		},
+		node.EventTag{
+			Key:   "version",
+			Value: crm_v2,
+		},
+	})
+
+	stateTransitions := map[edgeproto.MaintenanceState]edgeproto.MaintenanceState{
+		edgeproto.MaintenanceState_FAILOVER_REQUESTED:    edgeproto.MaintenanceState_FAILOVER_DONE,
+		edgeproto.MaintenanceState_CRM_REQUESTED:         edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE,
+		edgeproto.MaintenanceState_NORMAL_OPERATION_INIT: edgeproto.MaintenanceState_NORMAL_OPERATION,
+	}
+
+	cancel := cloudletApi.cache.WatchKey(&cloudlet.Key, func(ctx context.Context) {
+		cl := edgeproto.Cloudlet{}
+		if !cloudletApi.cache.Get(&cloudlet.Key, &cl) {
+			return
+		}
+		switch cl.MaintenanceState {
+		case edgeproto.MaintenanceState_FAILOVER_REQUESTED:
+			info := edgeproto.AutoProvInfo{}
+			if !autoProvInfoApi.cache.Get(&cloudlet.Key, &info) {
+				info.Key = cloudlet.Key
+			}
+			info.MaintenanceState = stateTransitions[cl.MaintenanceState]
+			autoProvInfoApi.cache.Update(ctx, &info, 0)
+		case edgeproto.MaintenanceState_CRM_REQUESTED:
+			fallthrough
+		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
+			info := edgeproto.CloudletInfo{}
+			if !cloudletInfoApi.cache.Get(&cloudlet.Key, &info) {
+				info.Key = cloudlet.Key
+			}
+			info.MaintenanceState = stateTransitions[cl.MaintenanceState]
+			cloudletInfoApi.cache.Update(ctx, &info, 0)
+		}
+	})
+
+	defer cancel()
+
+	cloudlet.MaintenanceState = edgeproto.MaintenanceState_MAINTENANCE_START
+	cloudlet.Fields = append(cloudlet.Fields, edgeproto.CloudletFieldMaintenanceState)
+	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
+
+	eMock.verifyEvent(t, "cloudlet maintenance start", []node.EventTag{
+		node.EventTag{
+			Key:   "maintenance-state",
+			Value: "UNDER_MAINTENANCE",
+		},
+	})
+
+	cloudlet.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
+	eMock.verifyEvent(t, "cloudlet maintenance done", []node.EventTag{
+		node.EventTag{
+			Key:   "maintenance-state",
+			Value: "NORMAL_OPERATION",
+		},
+	})
+
+	deleteCloudletInfo(ctx, &cloudlet.Key)
+	eMock.verifyEvent(t, "cloudlet offline", []node.EventTag{
+		node.EventTag{
+			Key:   "reason",
+			Value: "notify disconnect",
+		},
+	})
 
 	// Cloudlet state is INITOK but from old CRM (crm_v1)
 	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v1)

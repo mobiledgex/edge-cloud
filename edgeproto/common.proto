@@ -130,6 +130,8 @@ enum MaintenanceState {
   CRM_UNDER_MAINTENANCE = 7 [(protogen.enum_backend) = true];
   // CRM failed to go into maintenance
   CRM_ERROR = 8 [(protogen.enum_backend) = true];
+  // Request CRM to transition to normal operation
+  NORMAL_OPERATION_INIT = 9 [(protogen.enum_backend) = true];
   // Under maintenance
   UNDER_MAINTENANCE = 31 [(protogen.enum_backend) = true];
 }
