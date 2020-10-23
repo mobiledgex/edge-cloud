@@ -89,12 +89,21 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	newCloudlet := edgeproto.Cloudlet{}
 	key := &in.Key
 	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		updateObj := false
 		if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
 			return key.NotFoundError()
 		}
-		newCloudlet.State = newState
-		newCloudlet.ContainerVersion = in.ContainerVersion
-		cloudletApi.store.STMPut(stm, &newCloudlet)
+		if newCloudlet.State != newState {
+			newCloudlet.State = newState
+			updateObj = true
+		}
+		if newCloudlet.ContainerVersion != in.ContainerVersion {
+			newCloudlet.ContainerVersion = in.ContainerVersion
+			updateObj = true
+		}
+		if updateObj {
+			cloudletApi.store.STMPut(stm, &newCloudlet)
+		}
 		return nil
 	})
 	if err != nil {

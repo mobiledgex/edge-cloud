@@ -783,11 +783,14 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		return err
 	}
 
-	if !maintenanceChanged {
+	// since default maintenance state is NORMAL_OPERATION, it is better to check
+	// if the field is set before handling maintenance state
+	if _, found := fmap[edgeproto.CloudletFieldMaintenanceState]; !found || !maintenanceChanged {
 		return nil
 	}
 	switch newMaintenanceState {
 	case edgeproto.MaintenanceState_NORMAL_OPERATION:
+		log.SpanLog(ctx, log.DebugLevelApi, "Stop CRM maintenance")
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
 			err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION_INIT)
