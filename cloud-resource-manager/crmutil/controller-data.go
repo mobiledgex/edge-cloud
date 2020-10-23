@@ -626,7 +626,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			// Acknowledge controller that CRM is in maintenance
 			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
 			updateInfo = true
-		case edgeproto.MaintenanceState_NORMAL_OPERATION:
+		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
 			// Set state back to normal so DME will allow clients
 			// for this Cloudlet.
 			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
