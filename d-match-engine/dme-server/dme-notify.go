@@ -18,6 +18,9 @@ type AppHandler struct {
 type AppInstHandler struct {
 }
 
+type CloudletHandler struct {
+}
+
 type CloudletInfoHandler struct {
 }
 
@@ -50,16 +53,47 @@ func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKe
 
 func (s *AppInstHandler) Flush(ctx context.Context, notifyId int64) {}
 
+func (s *CloudletHandler) Update(ctx context.Context, in *edgeproto.Cloudlet, rev int64) {
+	// * use cloudlet object for maintenance state as this state is used
+	//   by controller to avoid end-user interacting with cloudlets for
+	//   appinst/clusterinst actions. Refer SetInstMaintenanceStateForCloudlet
+	// * use cloudletInfo object for cloudlet state as this correctly gives
+	//   information if cloudlet is online or not
+	dmecommon.SetInstStateFromCloudlet(ctx, in)
+}
+
+func (s *CloudletHandler) Delete(ctx context.Context, in *edgeproto.Cloudlet, rev int64) {
+	// If cloudlet object, doesn't exist then delete it from DME refs
+	// even if cloudletInfo for the same exists
+	dmecommon.DeleteCloudletInfo(ctx, &in.Key)
+}
+
+func (s *CloudletHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {
+	// If cloudlet object, doesn't exist then delete it from DME refs
+	// even if cloudletInfo for the same exists
+	dmecommon.PruneCloudlets(ctx, keys)
+}
+
+func (s *CloudletHandler) Flush(ctx context.Context, notifyId int64) {}
+
 func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
-	dmecommon.SetInstStateForCloudlet(ctx, in)
+	// * use cloudlet object for maintenance state as this state is used
+	//   by controller to avoid end-user interacting with cloudlets for
+	//   appinst/clusterinst actions. Refer SetInstMaintenanceStateForCloudlet
+	// * use cloudletInfo object for cloudlet state as this correctly gives
+	//   information if cloudlet is online or not
+	dmecommon.SetInstStateFromCloudletInfo(ctx, in)
 }
 
 func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
-	dmecommon.DeleteCloudletInfo(ctx, in)
+	// set cloudlet state for the instance accordingly
+	in.State = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+	dmecommon.SetInstStateFromCloudletInfo(ctx, in)
 }
 
 func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.CloudletKey]struct{}) {
-	dmecommon.PruneCloudlets(ctx, keys)
+	// set cloudlet state for all the instances accordingly
+	dmecommon.PruneInstsCloudletState(ctx, keys)
 }
 
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
@@ -79,6 +113,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
 	notifyClient.RegisterRecv(notify.NewOperatorCodeRecv(&dmecommon.DmeAppTbl.OperatorCodes))
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))
+	notifyClient.RegisterRecv(notify.NewCloudletRecv(&CloudletHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&dmecommon.DmeAppTbl.FreeReservableClusterInsts))
 	notifyClient.RegisterRecvAppInstClientKeyCache(&appInstClientKeyCache)
