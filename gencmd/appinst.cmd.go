@@ -1021,10 +1021,10 @@ var AppInstLatencyOptionalArgs = []string{
 	"latency.stddev",
 	"latency.variance",
 	"latency.numsamples",
-	"latency.numclients",
 	"latency.timestamp.seconds",
 	"latency.timestamp.nanos",
 	"message",
+	"numclients",
 }
 var AppInstLatencyAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -1036,16 +1036,16 @@ var AppInstLatencyAliasArgs = []string{
 	"cluster-org=key.clusterinstkey.organization",
 }
 var AppInstLatencyComments = map[string]string{
-	"app-org":            "App developer organization",
-	"appname":            "App name",
-	"appvers":            "App version",
-	"cluster":            "Cluster name",
-	"cloudlet-org":       "Organization of the cloudlet site",
-	"cloudlet":           "Name of the cloudlet",
-	"cluster-org":        "Name of Developer organization that this cluster belongs to",
-	"latency.stddev":     "Square root of unbiased variance",
-	"latency.variance":   "Unbiased variance",
-	"latency.numclients": "Number of unique clients contributing to latency statistics",
+	"app-org":          "App developer organization",
+	"appname":          "App name",
+	"appvers":          "App version",
+	"cluster":          "Cluster name",
+	"cloudlet-org":     "Organization of the cloudlet site",
+	"cloudlet":         "Name of the cloudlet",
+	"cluster-org":      "Name of Developer organization that this cluster belongs to",
+	"latency.stddev":   "Square root of unbiased variance",
+	"latency.variance": "Unbiased variance",
+	"numclients":       "Number of unique clients contributing to latency statistics",
 }
 var AppInstLatencySpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{

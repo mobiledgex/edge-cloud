@@ -15,8 +15,9 @@ const (
 )
 
 type RollingLatency struct {
-	Latency       dme.Latency
-	UniqueClients map[string]struct{}
+	Latency          dme.Latency
+	UniqueClients    map[string]struct{}
+	NumUniqueClients uint64
 }
 
 // TODO: Store and correlate gps, time, and latency
@@ -73,7 +74,7 @@ func (r *RollingLatency) UpdateRollingLatency(samples []float64, sessionCookie s
 
 func (r *RollingLatency) UpdateUniqueClients(sessionCookie string) {
 	r.UniqueClients[sessionCookie] = struct{}{}
-	r.Latency.NumClients = uint64(len(r.UniqueClients))
+	r.NumUniqueClients = uint64(len(r.UniqueClients))
 }
 
 // Return Latency struct with Avg, Min, Max, StdDev, and NumSamples

@@ -7023,10 +7023,6 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 			m.Latency.NumSamples = src.Latency.NumSamples
 			changed++
 		}
-		if m.Latency.NumClients != src.Latency.NumClients {
-			m.Latency.NumClients = src.Latency.NumClients
-			changed++
-		}
 		if src.Latency.Timestamp != nil {
 			m.Latency.Timestamp = &Timestamp{}
 			if m.Latency.Timestamp.Seconds != src.Latency.Timestamp.Seconds {

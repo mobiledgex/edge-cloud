@@ -31,6 +31,7 @@ func TestLatencyCalculations(t *testing.T) {
 	require.True(t, math.Abs(61.71818-r.Latency.Variance) < errorThreshold)
 	require.True(t, math.Abs(7.8560919037394-r.Latency.StdDev) < errorThreshold)
 	require.Equal(t, uint64(5), r.Latency.NumSamples)
+	require.Equal(t, uint64(1), r.NumUniqueClients)
 
 	// Test rolling avg, min, max, stddev, variance, numsamples
 	// Update latency2 with samples1
@@ -41,4 +42,5 @@ func TestLatencyCalculations(t *testing.T) {
 	require.True(t, math.Abs(46.22609-r.Latency.Variance) < errorThreshold)
 	require.True(t, math.Abs(6.7989771289511-r.Latency.StdDev) < errorThreshold)
 	require.Equal(t, uint64(10), r.Latency.NumSamples)
+	require.Equal(t, uint64(2), r.NumUniqueClients)
 }

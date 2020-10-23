@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -94,15 +93,16 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 	replyHandler := func(m *edgeproto.DebugReply) error {
 		// Unmarshal
 		b := []byte(m.Output)
-		var latency dme.Latency
-		err := json.Unmarshal(b, &latency)
+		var rollinglatency dmeutil.RollingLatency
+		err := json.Unmarshal(b, &rollinglatency)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Unable to unmarshal DebugReply to latency")
+			log.SpanLog(ctx, log.DebugLevelApi, "Unable to unmarshal DebugReply to RollingLatency")
 			return err
 		}
 		appInstLatency := &edgeproto.AppInstLatency{
 			Key:     in.Key,
-			Latency: &latency,
+			Latency: &rollinglatency.Latency,
+			NumClients: rollinglatency.NumUniqueClients
 		}
 		return cb.Send(appInstLatency)
 	}

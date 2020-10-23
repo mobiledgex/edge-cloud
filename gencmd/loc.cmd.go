@@ -54,14 +54,12 @@ var LatencyOptionalArgs = []string{
 	"stddev",
 	"variance",
 	"numsamples",
-	"numclients",
 	"timestamp.seconds",
 	"timestamp.nanos",
 }
 var LatencyAliasArgs = []string{}
 var LatencyComments = map[string]string{
-	"stddev":     "Square root of unbiased variance",
-	"variance":   "Unbiased variance",
-	"numclients": "Number of unique clients contributing to latency statistics",
+	"stddev":   "Square root of unbiased variance",
+	"variance": "Unbiased variance",
 }
 var LatencySpecialArgs = map[string]string{}
