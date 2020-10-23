@@ -14,6 +14,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+var (
+	appInstUsable    bool = true
+	appInstNotUsable bool = false
+)
+
 func TestNotify(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify)
 	log.InitTracer(nil)
@@ -71,9 +76,39 @@ func TestNotify(t *testing.T) {
 		},
 		State: edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE,
 	}
+	cloudlet := edgeproto.Cloudlet{
+		Key: cloudletInfo.Key,
+	}
+	serverHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 	serverHandler.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	// check that the appInsts on that cloudlet are not available
-	waitAndCheckCloudletforApps(t, &cloudletInfo.Key)
+	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstNotUsable)
+
+	// update cloudletInfo for a single cloudlet and make sure it gets propagated to appInsts
+	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	serverHandler.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	// check that the appInsts on that cloudlet are available
+	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
+
+	// mark cloudlet under maintenance state just for cloudlet object
+	cloudlet.MaintenanceState = edgeproto.MaintenanceState_UNDER_MAINTENANCE
+	serverHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstNotUsable)
+
+	// mark cloudlet operational just for cloudlet object
+	cloudlet.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	serverHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
+
+	// set cloudletInfo maintenance state in maintenance mode,
+	// should not affect appInst
+	cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
+	serverHandler.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
+
+	// delete cloudlet object appInst should not be usable, even though
+	serverHandler.CloudletCache.Delete(ctx, &cloudlet, 0)
+	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstNotUsable)
 
 	// stop client, delete appInst on server, then start client.
 	// This checks that client deletes locally data
@@ -116,7 +151,7 @@ func TestNotify(t *testing.T) {
 	client.Stop()
 }
 
-func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey) {
+func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey, isAppInstUsable bool) {
 	var still_enabled bool
 
 	tbl := dmecommon.DmeAppTbl
@@ -135,7 +170,11 @@ func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	assert.False(t, still_enabled, "Notify message did not propagate")
+	if isAppInstUsable {
+		assert.True(t, still_enabled, "Notify message should have propagated")
+	} else {
+		assert.False(t, still_enabled, "Notify message did not propagate")
+	}
 }
 
 func waitForAppInst(appInst *edgeproto.AppInst) {
