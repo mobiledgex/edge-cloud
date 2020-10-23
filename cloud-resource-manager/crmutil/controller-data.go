@@ -717,6 +717,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
