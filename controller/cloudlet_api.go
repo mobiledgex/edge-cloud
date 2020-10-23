@@ -742,17 +742,21 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 	}
 
-	changed2Normal := false
+	var newMaintenanceState edgeproto.MaintenanceState
+	maintenanceChanged := false
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return in.Key.NotFoundError()
 		}
-		if cur.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION &&
-			in.MaintenanceState == edgeproto.MaintenanceState_NORMAL_OPERATION {
-			changed2Normal = true
-		}
+		oldmstate := cur.MaintenanceState
 		cur.CopyInFields(in)
+		newMaintenanceState = cur.MaintenanceState
+		if newMaintenanceState != oldmstate {
+			maintenanceChanged = true
+			// don't change maintenance here, we handle it below
+			cur.MaintenanceState = oldmstate
+		}
 		if crmUpdateReqd && !ignoreCRM(cctx) {
 			cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
@@ -779,17 +783,16 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		return err
 	}
 
-	if _, found := fmap[edgeproto.CloudletFieldMaintenanceState]; !found {
+	if !maintenanceChanged {
 		return nil
 	}
-	switch in.MaintenanceState {
+	switch newMaintenanceState {
 	case edgeproto.MaintenanceState_NORMAL_OPERATION:
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
-			// if changed from non-normal state to normal state, then log event
-			msg := maintenanceStateMsg(ctx, in.MaintenanceState)
-			if msg != "" && changed2Normal {
-				nodeMgr.Event(ctx, msg, in.Key.Organization, in.Key.GetTags(), nil, "maintenance-state", in.MaintenanceState.String())
+			err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION_INIT)
+			if err != nil {
+				return err
 			}
 			cloudletInfo := edgeproto.CloudletInfo{}
 			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION, edgeproto.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
@@ -799,6 +802,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			if cloudletInfo.MaintenanceState == edgeproto.MaintenanceState_CRM_ERROR {
 				return fmt.Errorf("CRM encountered some errors, aborting")
 			}
+		}
+		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
+		if err != nil {
+			return err
 		}
 	case edgeproto.MaintenanceState_MAINTENANCE_START:
 		// This is a state machine to transition into cloudlet
@@ -812,9 +819,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			return err
 		}
 		autoProvInfo := edgeproto.AutoProvInfo{}
-		// Do not update in testmode, so that it can be tested by setting
-		// autprovinfo state externally
-
 		// first reset any old AutoProvInfo
 		autoProvInfo = edgeproto.AutoProvInfo{
 			Key:              in.Key,
@@ -898,33 +902,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	return nil
 }
 
-func maintenanceStateMsg(ctx context.Context, state edgeproto.MaintenanceState) string {
-	switch state {
-	case edgeproto.MaintenanceState_NORMAL_OPERATION:
-		return "Cloudlet in normal operational mode"
-	case edgeproto.MaintenanceState_MAINTENANCE_START:
-		return "Cloudlet will going under maintenance mode"
-	case edgeproto.MaintenanceState_FAILOVER_REQUESTED:
-		return "Trigger failover for any HA AppInsts, as cloudlet is going under maintenance mode"
-	case edgeproto.MaintenanceState_FAILOVER_DONE:
-		return "Done trigger of any HA AppInsts"
-	case edgeproto.MaintenanceState_FAILOVER_ERROR:
-		return "Some errors encountered during cloudlet maintenance failover"
-	case edgeproto.MaintenanceState_MAINTENANCE_START_NO_FAILOVER:
-		return "Request start of cloudlet maintenance without AutoProv failover"
-	case edgeproto.MaintenanceState_CRM_REQUESTED:
-		return "Request Cloudlet to transition to maintenance"
-	case edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE:
-		return "Cloudlet request done and under maintenance"
-	case edgeproto.MaintenanceState_CRM_ERROR:
-		return "Cloudlet failed to go into maintenance"
-	case edgeproto.MaintenanceState_UNDER_MAINTENANCE:
-		return "Cloudlet under maintenance"
-	}
-	log.SpanLog(ctx, log.DebugLevelApi, "failed to get maintenance state message", "unknown state", state.String)
-	return ""
-}
-
 func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.MaintenanceState) error {
 	changedState := false
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -940,7 +917,14 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 		s.store.STMPut(stm, cur)
 		return nil
 	})
-	msg := maintenanceStateMsg(ctx, state)
+
+	msg := ""
+	switch state {
+	case edgeproto.MaintenanceState_UNDER_MAINTENANCE:
+		msg = "Cloudlet maintenance start"
+	case edgeproto.MaintenanceState_NORMAL_OPERATION:
+		msg = "Cloudlet maintenance done"
+	}
 	if msg != "" && changedState {
 		nodeMgr.Event(ctx, msg, key.Organization, key.GetTags(), nil, "maintenance-state", state.String())
 	}

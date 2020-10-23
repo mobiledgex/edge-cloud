@@ -322,9 +322,9 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	})
 
 	stateTransitions := map[edgeproto.MaintenanceState]edgeproto.MaintenanceState{
-		edgeproto.MaintenanceState_FAILOVER_REQUESTED: edgeproto.MaintenanceState_FAILOVER_DONE,
-		edgeproto.MaintenanceState_CRM_REQUESTED:      edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE,
-		edgeproto.MaintenanceState_NORMAL_OPERATION:   edgeproto.MaintenanceState_NORMAL_OPERATION,
+		edgeproto.MaintenanceState_FAILOVER_REQUESTED:    edgeproto.MaintenanceState_FAILOVER_DONE,
+		edgeproto.MaintenanceState_CRM_REQUESTED:         edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE,
+		edgeproto.MaintenanceState_NORMAL_OPERATION_INIT: edgeproto.MaintenanceState_NORMAL_OPERATION,
 	}
 
 	cancel := cloudletApi.cache.WatchKey(&cloudlet.Key, func(ctx context.Context) {
@@ -342,7 +342,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 			autoProvInfoApi.cache.Update(ctx, &info, 0)
 		case edgeproto.MaintenanceState_CRM_REQUESTED:
 			fallthrough
-		case edgeproto.MaintenanceState_NORMAL_OPERATION:
+		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
 			info := edgeproto.CloudletInfo{}
 			if !cloudletInfoApi.cache.Get(&cloudlet.Key, &info) {
 				info.Key = cloudlet.Key
@@ -359,19 +359,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
 
-	eMock.verifyEvent(t, "request cloudlet to transition to maintenance", []node.EventTag{
-		node.EventTag{
-			Key:   "maintenance-state",
-			Value: "CRM_REQUESTED",
-		},
-	})
-	eMock.verifyEvent(t, "trigger failover for any ha appinsts, as cloudlet is going under maintenance mode", []node.EventTag{
-		node.EventTag{
-			Key:   "maintenance-state",
-			Value: "FAILOVER_REQUESTED",
-		},
-	})
-	eMock.verifyEvent(t, "cloudlet under maintenance", []node.EventTag{
+	eMock.verifyEvent(t, "cloudlet maintenance start", []node.EventTag{
 		node.EventTag{
 			Key:   "maintenance-state",
 			Value: "UNDER_MAINTENANCE",
@@ -381,7 +369,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	cloudlet.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
-	eMock.verifyEvent(t, "cloudlet in normal operational mode", []node.EventTag{
+	eMock.verifyEvent(t, "cloudlet maintenance done", []node.EventTag{
 		node.EventTag{
 			Key:   "maintenance-state",
 			Value: "NORMAL_OPERATION",
