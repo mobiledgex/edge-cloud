@@ -14,6 +14,10 @@ import "google/protobuf/descriptor.proto";
 // ServiceOptions
 // MethodOptions
 
+extend google.protobuf.FileOptions {
+  string generate_enum_decode_hook_for_pkg = 51050;
+}
+
 extend google.protobuf.MessageOptions {
   // Generate a matches function to determine if two objects are equal,
   // or for show filtering, if filter fields match existing object.
