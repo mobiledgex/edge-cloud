@@ -22,9 +22,7 @@ func TestAddRemove(t *testing.T) {
 
 	dmecommon.SetupMatchEngine()
 	err := initEdgeEventsPlugin(ctx)
-	if err != nil {
-		assert.Fail(t, "Failed to init edge events plugin. Error is: "+err.Error())
-	}
+	require.Nil(t, err, "init edge events plugin")
 	dmecommon.InitAppInstClients()
 
 	setupJwks()

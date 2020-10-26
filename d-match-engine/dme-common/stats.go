@@ -130,6 +130,7 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 		if stat.RollingLatencyTemp == nil {
 			stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
 		} else {
+			// TODO: RESET SOMEWHERE ELSE TO IT IS ACCURATE
 			// Reset rollinglatency every 10 minutes or something, so that latency values are current
 			t := cloudcommon.TimestampToTime(*stat.RollingLatencyTemp.Latency.Timestamp)
 			if time.Since(t) > time.Minute*1 {

@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
 
@@ -27,9 +28,7 @@ func TestNotify(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 	dmecommon.SetupMatchEngine()
 	err := initEdgeEventsPlugin(ctx)
-	if err != nil {
-		assert.Fail(t, "Failed to init edge events plugin. Error is: "+err.Error())
-	}
+	require.Nil(t, err, "init edge events plugin")
 	dmecommon.InitAppInstClients()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
