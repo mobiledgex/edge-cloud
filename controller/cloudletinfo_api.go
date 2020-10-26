@@ -154,6 +154,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 	}
 	s.cache.Mux.Unlock()
 
+	// this creates a new span if there was none - which can happen if this is a cancelled context
 	span := log.SpanFromContext(ctx)
 	ectx := log.ContextWithSpan(context.Background(), span)
 
