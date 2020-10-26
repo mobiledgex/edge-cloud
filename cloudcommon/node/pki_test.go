@@ -491,14 +491,14 @@ func TestInternalPki(t *testing.T) {
 		Client:                     crmClientUS,
 		ControllerRequireAccessKey: true,
 		InvalidateClientKey:        true,
-		ExpectErr:                  "AccessKey authentication failed",
+		ExpectErr:                  "Failed to verify cloudlet access key signature",
 	})
 	ccTests.add(ClientController{
 		Controller:                 dcEU,
 		Client:                     crmClientEU,
 		ControllerRequireAccessKey: true,
 		InvalidateClientKey:        true,
-		ExpectErr:                  "AccessKey authentication failed",
+		ExpectErr:                  "Failed to verify cloudlet access key signature",
 	})
 	// ignore invalid keys or missing keys for backwards compatibility
 	// with CRMs that were not upgraded
@@ -545,7 +545,8 @@ func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRo
 	mgr.InternalDomain = "mobiledgex.net"
 	if cfg.AccessKeyFile != "" && cfg.AccessApiAddr != "" {
 		mgr.AccessKeyClient.AccessKeyFile = cfg.AccessKeyFile
-		mgr.AccessKeyClient.AccessApiAddr = "notls://" + cfg.AccessApiAddr
+		mgr.AccessKeyClient.AccessApiAddr = cfg.AccessApiAddr
+		mgr.AccessKeyClient.TestNoTls = true
 	}
 	// nodeMgr init will attempt to issue a cert to be able to talk
 	// to Jaeger/ElasticSearch
@@ -604,7 +605,8 @@ func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, err
 	nodeMgr.InternalDomain = "mobiledgex.net"
 	if s.AccessKeyFile != "" && s.AccessApiAddr != "" {
 		nodeMgr.AccessKeyClient.AccessKeyFile = s.AccessKeyFile
-		nodeMgr.AccessKeyClient.AccessApiAddr = "notls://" + s.AccessApiAddr
+		nodeMgr.AccessKeyClient.AccessApiAddr = s.AccessApiAddr
+		nodeMgr.AccessKeyClient.TestNoTls = true
 	}
 	opts := []node.NodeOp{
 		node.WithRegion(s.Region),

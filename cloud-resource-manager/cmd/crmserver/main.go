@@ -60,6 +60,7 @@ const ControllerTimeout = 1 * time.Minute
 
 func main() {
 	nodeMgr.InitFlags()
+	nodeMgr.AccessKeyClient.InitFlags()
 	flag.Parse()
 
 	if strings.Contains(*debugLevels, "mexos") {
@@ -132,7 +133,10 @@ func main() {
 		log.FatalLog(err.Error())
 	}
 	dialOption := tls.GetGrpcDialOption(notifyClientTls)
-	notifyClient = notify.NewClient(nodeMgr.Name(), addrs, dialOption)
+	notifyClient = notify.NewClient(nodeMgr.Name(), addrs, dialOption,
+		notify.ClientUnaryInterceptors(nodeMgr.AccessKeyClient.UnaryAddAccessKey),
+		notify.ClientStreamInterceptors(nodeMgr.AccessKeyClient.StreamAddAccessKey),
+	)
 	notifyClient.SetFilterByCloudletKey()
 	InitClientNotify(notifyClient, controllerData)
 	notifyClient.Start()
