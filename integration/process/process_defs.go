@@ -24,31 +24,33 @@ type Etcd struct {
 	cmd            *exec.Cmd
 }
 type Controller struct {
-	Common               `yaml:",inline"`
-	EtcdAddrs            string
-	ApiAddr              string
-	HttpAddr             string
-	NotifyAddr           string
-	NotifyRootAddrs      string
-	NotifyParentAddrs    string
-	EdgeTurnAddr         string
-	VaultAddr            string
-	InfluxAddr           string
-	Region               string
-	TLS                  TLSCerts
-	UseVaultCAs          bool
-	UseVaultCerts        bool
-	cmd                  *exec.Cmd
-	TestMode             bool
-	RegistryFQDN         string
-	ArtifactoryFQDN      string
-	CloudletRegistryPath string
-	VersionTag           string
-	CloudletVMImagePath  string
-	CheckpointInterval   string
-	AppDNSRoot           string
-	DeploymentTag        string
-	ChefServerPath       string
+	Common                 `yaml:",inline"`
+	EtcdAddrs              string
+	ApiAddr                string
+	HttpAddr               string
+	NotifyAddr             string
+	NotifyRootAddrs        string
+	NotifyParentAddrs      string
+	EdgeTurnAddr           string
+	VaultAddr              string
+	InfluxAddr             string
+	Region                 string
+	TLS                    TLSCerts
+	UseVaultCAs            bool
+	UseVaultCerts          bool
+	cmd                    *exec.Cmd
+	TestMode               bool
+	RegistryFQDN           string
+	ArtifactoryFQDN        string
+	CloudletRegistryPath   string
+	VersionTag             string
+	CloudletVMImagePath    string
+	CheckpointInterval     string
+	AppDNSRoot             string
+	DeploymentTag          string
+	ChefServerPath         string
+	AccessApiAddr          string
+	RequireNotifyAccessKey bool
 }
 type Dme struct {
 	Common        `yaml:",inline"`
@@ -67,6 +69,8 @@ type Dme struct {
 	UseVaultCAs   bool
 	UseVaultCerts bool
 	cmd           *exec.Cmd
+	AccessKeyFile string
+	AccessApiAddr string
 }
 type Crm struct {
 	Common              `yaml:",inline"`
@@ -91,6 +95,8 @@ type Crm struct {
 	AppDNSRoot          string
 	ChefServerPath      string
 	DeploymentTag       string
+	AccessKeyFile       string
+	AccessApiAddr       string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

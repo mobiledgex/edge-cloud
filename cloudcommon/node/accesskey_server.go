@@ -21,7 +21,6 @@ import (
 // Store and retrieve verified CloudletKey on context
 
 var BadAuthDelay = 3 * time.Second
-var BadAuthError = fmt.Errorf("AccessKey authentication failed")
 var UpgradeAccessKeyMethod = "/edgeproto.CloudletAccessKeyApi/UpgradeAccessKey"
 
 type accessKeyVerifiedTagType string
@@ -58,6 +57,10 @@ func NewAccessKeyServer(cloudletCache *edgeproto.CloudletCache) *AccessKeyServer
 		cloudletCache:  cloudletCache,
 		crmVaultRole:   os.Getenv("CRM_VAULT_ROLE_ID"),
 		crmVaultSecret: os.Getenv("CRM_VAULT_SECRET_ID"),
+	}
+	// for testing, reduce bad auth delay
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+		BadAuthDelay = time.Millisecond
 	}
 	return server
 }
@@ -120,6 +123,7 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 		if !ok {
 			return nil, fmt.Errorf("failed to verify cloudlet access key signature")
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "verified access key", "CloudletKey", verified.Key)
 		return verified, nil
 	}
 	vaultSig, found := md[cloudcommon.VaultKeySig]
@@ -139,6 +143,7 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 		if crmVaultKey != vaultSig[0] {
 			return nil, fmt.Errorf("Vault-based auth key mismatch")
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "verified vault keys", "CloudletKey", verified.Key)
 		return verified, nil
 	}
 	return nil, fmt.Errorf("no valid auth found")
@@ -154,7 +159,7 @@ func (s *AccessKeyServer) UnaryRequireAccessKey(ctx context.Context, req interfa
 		// function behaves.
 		log.SpanLog(ctx, log.DebugLevelApi, "accesskey auth failed", "err", err)
 		time.Sleep(BadAuthDelay)
-		return nil, BadAuthError
+		return nil, err
 	}
 	ctx = ContextSetAccessKeyVerified(ctx, verified)
 	return handler(ctx, req)
@@ -168,7 +173,7 @@ func (s *AccessKeyServer) StreamRequireAccessKey(srv interface{}, stream grpc.Se
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "accesskey auth failed", "err", err)
 		time.Sleep(BadAuthDelay)
-		return BadAuthError
+		return err
 	}
 	ctx = ContextSetAccessKeyVerified(ctx, verified)
 	// override context on existing stream, since no way to set it
@@ -229,17 +234,32 @@ func (s *AccessKeyServer) isTlsAccessKeyRequired(ctx context.Context) (bool, err
 	return false, nil
 }
 
-func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) (*edgeproto.CloudletKey, string, error) {
+func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer, commitKeyFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error) error {
 	ctx := stream.Context()
 	verified := ContextGetAccessKeyVerified(ctx)
 	if verified == nil {
 		// this should never happen, the interceptor should error out first
-		return nil, "", fmt.Errorf("access key not verified")
+		return fmt.Errorf("access key not verified")
+	}
+	msg, err := stream.Recv()
+	if err != nil {
+		return err
+	}
+	if msg.VerifyOnly {
+		log.SpanLog(ctx, log.DebugLevelApi, "access key verifyOnly")
+		// Non-CRM service that is verifying the access key.
+		// Fail verification if upgrade is required.
+		if verified.UpgradeRequired {
+			return fmt.Errorf("access key upgrade required")
+		}
+		return stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
+			Msg: "verified",
+		})
 	}
 
 	if !verified.UpgradeRequired {
 		log.SpanLog(ctx, log.DebugLevelApi, "access key upgrade not required")
-		return &verified.Key, "", stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
+		return stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
 			Msg: "upgrade-not-needed",
 		})
 	}
@@ -247,7 +267,7 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 	// upgrade required, generate new key
 	keyPair, err := GenerateAccessKey()
 	if err != nil {
-		return nil, "", err
+		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "sending new access key")
 	err = stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
@@ -255,15 +275,25 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 		CrmPrivateAccessKey: keyPair.PrivatePEM,
 	})
 	if err != nil {
-		return nil, "", err
+		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "waiting for ack")
 	// Read ack to make sure CRM got new key.
 	// See comments in client code for UpgradeAccessKey for error recovery.
 	_, err = stream.Recv()
 	if err != nil {
-		return nil, "", err
+		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "ack received, commit new key")
-	return &verified.Key, keyPair.PublicPEM, nil
+	log.SpanLog(ctx, log.DebugLevelApi, "ack received, committing new key")
+	err = commitKeyFunc(ctx, &verified.Key, keyPair.PublicPEM)
+	if err != nil {
+		return err
+	}
+	// this final send makes client wait until new public key pem
+	// has been committed, otherwise client will try to connect
+	// immediately with new private key before new public key has
+	// been put into cache by etcd watch.
+	return stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
+		Msg: "commit-complete",
+	})
 }

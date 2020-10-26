@@ -205,7 +205,7 @@ func IsYamlOk(e error, yamltype string) bool {
 
 func ConnectController(p *process.Controller, c chan ReturnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
-	api, err := p.ConnectAPI(10 * time.Second)
+	api, err := p.ConnectAPI(20 * time.Second)
 	if err != nil {
 		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
 	} else {
@@ -243,7 +243,7 @@ func GetDme(dmename string) *process.Dme {
 
 func ConnectDme(p *process.Dme, c chan ReturnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
-	api, err := p.ConnectAPI(10 * time.Second)
+	api, err := p.ConnectAPI(20 * time.Second)
 	if err != nil {
 		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
 	} else {
@@ -327,12 +327,24 @@ func SetLogFormat() {
 	log.SetFlags(log.Flags() | log.Ltime | log.Lmicroseconds)
 }
 
+func UnsetLogFormat() {
+	log.SetFlags(log.Flags() & ^log.Ltime & ^log.Lmicroseconds)
+}
+
+func PrintBlankLine() {
+	UnsetLogFormat()
+	log.Printf("")
+	SetLogFormat()
+}
+
 func PrintStartBanner(label string) {
-	log.Printf("\n\n   *** %s\n", label)
+	PrintBlankLine()
+	log.Printf("  ***  %s\n", label)
 }
 
 func PrintStepBanner(label string) {
-	log.Printf("\n\n      --- %s\n", label)
+	PrintBlankLine()
+	log.Printf("  ---  %s\n", label)
 }
 
 //for specific output that we want to put in a separate file.  If no
@@ -625,6 +637,12 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = a1
 		y2 = a2
+	} else if fileType == "raw" {
+		var dat1, dat2 []byte
+		dat1, err1 = ioutil.ReadFile(firstYamlFile)
+		dat2, err2 = ioutil.ReadFile(secondYamlFile)
+		y1 = string(dat1)
+		y2 = string(dat2)
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)
@@ -722,6 +740,9 @@ func clearCloudletInfoNocmp(data *edgeproto.AllData) {
 	for ii, _ := range data.CloudletInfos {
 		data.CloudletInfos[ii].Controller = ""
 		data.CloudletInfos[ii].NotifyId = 0
+	}
+	for ii, _ := range data.Cloudlets {
+		data.Cloudlets[ii].CrmAccessPublicKey = ""
 	}
 }
 

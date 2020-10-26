@@ -56,6 +56,7 @@ var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
+var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
 
 // TODO: carrier arg is redundant with Organization in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -397,11 +398,20 @@ func allowCORS(h http.Handler) http.Handler {
 
 func main() {
 	nodeMgr.InitFlags()
+	nodeMgr.AccessKeyClient.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 
+	var myCertIssuer string
+	if *cloudletDme {
+		// DME running on Cloudlet infra, requires access key
+		myCertIssuer = node.CertIssuerRegionalCloudlet
+	} else {
+		// Regional DME not associated with any Cloudlet
+		myCertIssuer = node.CertIssuerRegional
+	}
 	cloudcommon.ParseMyCloudletKey(false, cloudletKeyStr, &myCloudletKey)
-	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, node.CertIssuerRegionalCloudlet, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
+	ctx, span, err := nodeMgr.Init(node.NodeTypeDME, myCertIssuer, node.WithName(*scaleID), node.WithCloudletKey(&myCloudletKey), node.WithRegion(*region))
 	if err != nil {
 		log.FatalLog("Failed init node", "err", err)
 	}
@@ -437,13 +447,24 @@ func main() {
 
 	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
 		nodeMgr.CommonName(),
-		node.CertIssuerRegionalCloudlet,
+		myCertIssuer,
 		[]node.MatchCA{node.SameRegionalMatchCA()})
 	if err != nil {
 		log.FatalLog("Failed to get notify client tls config", "err", err)
 	}
-
-	notifyClient := initNotifyClient(ctx, *notifyAddrs, tls.GetGrpcDialOption(notifyClientTls))
+	notifyClientUnaryOp := notify.ClientUnaryInterceptors()
+	notifyClientStreamOp := notify.ClientStreamInterceptors()
+	if nodeMgr.AccessKeyClient.IsEnabled() {
+		notifyClientUnaryOp = notify.ClientUnaryInterceptors(
+			nodeMgr.AccessKeyClient.UnaryAddAccessKey)
+		notifyClientStreamOp = notify.ClientStreamInterceptors(
+			nodeMgr.AccessKeyClient.StreamAddAccessKey)
+	}
+	notifyClient := initNotifyClient(ctx, *notifyAddrs,
+		tls.GetGrpcDialOption(notifyClientTls),
+		notifyClientUnaryOp,
+		notifyClientStreamOp,
+	)
 	sendMetric := notify.NewMetricSend()
 	notifyClient.RegisterSend(sendMetric)
 	sendAutoProvCounts := notify.NewAutoProvCountsSend()

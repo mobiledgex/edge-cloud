@@ -57,7 +57,7 @@ message PlatformConfig {
   // Address of controller notify port (can be multiple of these)
   string notify_ctrl_addrs = 3;
   // Vault address
-  string vault_addr  = 4;
+  string vault_addr = 4;
   // TLS cert file
   string tls_cert_file = 5;
   // TLS key file
@@ -90,6 +90,10 @@ message PlatformConfig {
   int32 chef_client_interval = 18  [(gogoproto.casttype) = "Duration"];
   // Deployment Tag
   string deployment_tag = 19;
+  // crm access private key
+  string crm_access_private_key = 22;
+  // controller access API address
+  string access_api_addr = 23;
 }
 
 // Platform Type

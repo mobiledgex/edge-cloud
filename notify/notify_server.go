@@ -102,8 +102,8 @@ func (mgr *ServerMgr) RegisterServerCb(registerServer func(s *grpc.Server)) {
 	mgr.regServ = registerServer
 }
 
-func (mgr *ServerMgr) Start(name, addr string, tlsConfig *tls.Config, ops ...NotifyOp) {
-	opts := &NotifyOptions{}
+func (mgr *ServerMgr) Start(name, addr string, tlsConfig *tls.Config, ops ...ServerOp) {
+	opts := &ServerOptions{}
 	for _, op := range ops {
 		op(opts)
 	}
@@ -348,17 +348,17 @@ func (s *Server) logDisconnect(ctx context.Context, err error) {
 	}
 }
 
-type NotifyOptions struct {
+type ServerOptions struct {
 	unaryInterceptor  grpc.ServerOption
 	streamInterceptor grpc.ServerOption
 }
 
-type NotifyOp func(s *NotifyOptions)
+type ServerOp func(s *ServerOptions)
 
-func WithUnaryInterceptor(unaryInterceptor grpc.ServerOption) NotifyOp {
-	return func(opts *NotifyOptions) { opts.unaryInterceptor = unaryInterceptor }
+func ServerUnaryInterceptor(unaryInterceptor grpc.ServerOption) ServerOp {
+	return func(opts *ServerOptions) { opts.unaryInterceptor = unaryInterceptor }
 }
 
-func WithStreamInterceptor(streamInterceptor grpc.ServerOption) NotifyOp {
-	return func(opts *NotifyOptions) { opts.streamInterceptor = streamInterceptor }
+func ServerStreamInterceptor(streamInterceptor grpc.ServerOption) ServerOp {
+	return func(opts *ServerOptions) { opts.streamInterceptor = streamInterceptor }
 }

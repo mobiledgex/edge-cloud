@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -17,6 +18,14 @@ import (
 
 func GetCloudletLogFile(filePrefix string) string {
 	return "/tmp/" + filePrefix + ".log"
+}
+
+func GetLocalAccessKeyDir() string {
+	return "/tmp/accesskeys"
+}
+
+func GetLocalAccessKeyFile(filePrefix string) string {
+	return GetLocalAccessKeyDir() + "/" + filePrefix + ".key"
 }
 
 func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) (*process.Crm, []process.StartOp, error) {
@@ -43,6 +52,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	appDNSRoot := ""
 	chefServerPath := ""
 	deploymentTag := ""
+	accessApiAddr := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
@@ -62,6 +72,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		appDNSRoot = pfConfig.AppDnsRoot
 		chefServerPath = pfConfig.ChefServerPath
 		deploymentTag = pfConfig.DeploymentTag
+		accessApiAddr = pfConfig.AccessApiAddr
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
@@ -97,6 +108,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
 		DeploymentTag:       deploymentTag,
+		AccessApiAddr:       accessApiAddr,
 	}, opts, nil
 }
 
@@ -130,11 +142,24 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	}
 	cloudlet.NotifySrvAddr = newAddr
 
+	// Write access key to local disk
+	err = os.MkdirAll(GetLocalAccessKeyDir(), 0744)
+	if err != nil {
+		return err
+	}
+	accessKeyFile := GetLocalAccessKeyFile(cloudlet.Key.Name)
+	err = ioutil.WriteFile(accessKeyFile, []byte(pfConfig.CrmAccessPrivateKey), 0644)
+	if err != nil {
+		return err
+	}
+
+	// track all local crm processes
 	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
 		return err
 	}
+	crmProc.AccessKeyFile = accessKeyFile
 
 	err = crmProc.StartLocal(GetCloudletLogFile(cloudlet.Key.Name), opts...)
 	if err != nil {
