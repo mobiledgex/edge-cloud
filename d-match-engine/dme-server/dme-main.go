@@ -56,7 +56,6 @@ var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
 var eesolib = flag.String("eeplugin", "", "plugin file")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
-var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
 
 // TODO: carrier arg is redundant with Organization in MyCloudletKey, and
@@ -361,6 +360,7 @@ func (s *server) StreamEdgeEvent(streamEdgeEventSvr dme.MatchEngineApi_StreamEdg
 	return dmecommon.StreamEdgeEvent(ctx, streamEdgeEventSvr)
 }
 
+// TODO: Make part of SetupMatchEngine
 // Loads EdgeEvent Plugin functions into corresponding dmecommon functions
 func initEdgeEventsPlugin(ctx context.Context) error {
 	// Load Edge Events Plugin

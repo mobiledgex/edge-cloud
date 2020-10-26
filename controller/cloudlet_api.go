@@ -773,7 +773,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 	}
 
-	var newMaintenanceState edgeproto.MaintenanceState
+	var newMaintenanceState dme.MaintenanceState
 	maintenanceChanged := false
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := &edgeproto.Cloudlet{}
@@ -954,9 +954,9 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 
 	msg := ""
 	switch state {
-	case edgeproto.MaintenanceState_UNDER_MAINTENANCE:
+	case dme.MaintenanceState_UNDER_MAINTENANCE:
 		msg = "Cloudlet maintenance start"
-	case edgeproto.MaintenanceState_NORMAL_OPERATION:
+	case dme.MaintenanceState_NORMAL_OPERATION:
 		msg = "Cloudlet maintenance done"
 	}
 	if msg != "" && changedState {

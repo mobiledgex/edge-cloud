@@ -21,7 +21,12 @@ func TestAddRemove(t *testing.T) {
 	span := log.SpanFromContext(ctx)
 
 	dmecommon.SetupMatchEngine()
+	err := initEdgeEventsPlugin(ctx)
+	if err != nil {
+		assert.Fail(t, "Failed to init edge events plugin. Error is: "+err.Error())
+	}
 	dmecommon.InitAppInstClients()
+
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
@@ -174,7 +179,7 @@ func TestAddRemove(t *testing.T) {
 	// disable one cloudlet and check the newly found cloudlet
 	cloudletInfo := cloudlets[2]
 	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
-	dmecommon.SetInstStateForCloudlet(ctx, cloudletInfo)
+	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
 	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
 
 	regReply, err = serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
@@ -189,7 +194,7 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// re-enable and check that the results is now what original findCloudlet[3] is
 	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
-	dmecommon.SetInstStateForCloudlet(ctx, cloudletInfo)
+	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)

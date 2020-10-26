@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"io"
+	"math/rand"
 	"net"
 	"strings"
 	"sync"
@@ -381,7 +381,7 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
-				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, cloudletKey) {
 					c.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 					c.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 				}
@@ -434,7 +434,7 @@ func PruneInstsCloudletState(ctx context.Context, cloudlets map[edgeproto.Cloudl
 		for _, carr := range app.Carriers {
 			for clusterInstKey, _ := range carr.Insts {
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
-					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					carr.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 				}
 			}
 		}
@@ -512,7 +512,7 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &in.Key) {
-					c.Insts[clusterInstKey].maintenanceState = in.MaintenanceState
+					c.Insts[clusterInstKey].MaintenanceState = in.MaintenanceState
 				}
 			}
 		}

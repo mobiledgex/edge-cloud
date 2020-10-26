@@ -170,7 +170,7 @@ func (m *CloudletPoolMemberV1_OrgRestructure) GetTags() map[string]string { retu
 type CloudletInfoV0_OrgRestructure struct {
 	Fields            []string                     `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	Key               CloudletKeyV0_OrgRestructure `protobuf:"bytes,2,opt,name=key" json:"key"`
-	State             dme.CloudletState            `protobuf:"varint,3,opt,name=state,proto3,enum=edgeproto.CloudletState" json:"state,omitempty"`
+	State             dme.CloudletState            `protobuf:"varint,3,opt,name=state,proto3,enum=dme.CloudletState" json:"state,omitempty"`
 	NotifyId          int64                        `protobuf:"varint,4,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 	Controller        string                       `protobuf:"bytes,5,opt,name=controller,proto3" json:"controller,omitempty"`
 	OsMaxRam          uint64                       `protobuf:"varint,6,opt,name=os_max_ram,json=osMaxRam,proto3" json:"os_max_ram,omitempty"`
@@ -290,7 +290,7 @@ type AppInstV0_OrgRestructure struct {
 	UpdateMultiple      bool                                `protobuf:"varint,26,opt,name=update_multiple,json=updateMultiple,proto3" json:"update_multiple,omitempty"`
 	Configs             []*ConfigFile                       `protobuf:"bytes,27,rep,name=configs" json:"configs,omitempty"`
 	SharedVolumeSize    uint64                              `protobuf:"varint,28,opt,name=shared_volume_size,json=sharedVolumeSize,proto3" json:"shared_volume_size,omitempty"`
-	HealthCheck         dme.HealthCheck                     `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=edgeproto.HealthCheck" json:"health_check,omitempty"`
+	HealthCheck         dme.HealthCheck                     `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=dme.HealthCheck" json:"health_check,omitempty"`
 	PrivacyPolicy       string                              `protobuf:"bytes,30,opt,name=privacy_policy,json=privacyPolicy,proto3" json:"privacy_policy,omitempty"`
 	PowerState          PowerState                          `protobuf:"varint,31,opt,name=power_state,json=powerState,proto3,enum=edgeproto.PowerState" json:"power_state,omitempty"`
 	ExternalVolumeSize  uint64                              `protobuf:"varint,32,opt,name=external_volume_size,json=externalVolumeSize,proto3" json:"external_volume_size,omitempty"`
@@ -319,7 +319,7 @@ type AppInstV1_OrgRestructure struct {
 	UpdateMultiple      bool                                `protobuf:"varint,26,opt,name=update_multiple,json=updateMultiple,proto3" json:"update_multiple,omitempty"`
 	Configs             []*ConfigFile                       `protobuf:"bytes,27,rep,name=configs" json:"configs,omitempty"`
 	SharedVolumeSize    uint64                              `protobuf:"varint,28,opt,name=shared_volume_size,json=sharedVolumeSize,proto3" json:"shared_volume_size,omitempty"`
-	HealthCheck         dme.HealthCheck                     `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=edgeproto.HealthCheck" json:"health_check,omitempty"`
+	HealthCheck         dme.HealthCheck                     `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=dme.HealthCheck" json:"health_check,omitempty"`
 	PrivacyPolicy       string                              `protobuf:"bytes,30,opt,name=privacy_policy,json=privacyPolicy,proto3" json:"privacy_policy,omitempty"`
 	PowerState          PowerState                          `protobuf:"varint,31,opt,name=power_state,json=powerState,proto3,enum=edgeproto.PowerState" json:"power_state,omitempty"`
 	ExternalVolumeSize  uint64                              `protobuf:"varint,32,opt,name=external_volume_size,json=externalVolumeSize,proto3" json:"external_volume_size,omitempty"`

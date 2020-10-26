@@ -212,7 +212,7 @@ func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, sta
 	cloudletInfoApi.Update(ctx, &info, 0)
 }
 
-func forceCloudletInfoMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.MaintenanceState) {
+func forceCloudletInfoMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state dme.MaintenanceState) {
 	info := edgeproto.CloudletInfo{}
 	if !cloudletInfoApi.cache.Get(key, &info) {
 		info.Key = *key
@@ -322,10 +322,10 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	stateTransitions := map[edgeproto.MaintenanceState]edgeproto.MaintenanceState{
-		edgeproto.MaintenanceState_FAILOVER_REQUESTED:    edgeproto.MaintenanceState_FAILOVER_DONE,
-		edgeproto.MaintenanceState_CRM_REQUESTED:         edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE,
-		edgeproto.MaintenanceState_NORMAL_OPERATION_INIT: edgeproto.MaintenanceState_NORMAL_OPERATION,
+	stateTransitions := map[dme.MaintenanceState]dme.MaintenanceState{
+		dme.MaintenanceState_FAILOVER_REQUESTED:    dme.MaintenanceState_FAILOVER_DONE,
+		dme.MaintenanceState_CRM_REQUESTED:         dme.MaintenanceState_CRM_UNDER_MAINTENANCE,
+		dme.MaintenanceState_NORMAL_OPERATION_INIT: dme.MaintenanceState_NORMAL_OPERATION,
 	}
 
 	cancel := cloudletApi.cache.WatchKey(&cloudlet.Key, func(ctx context.Context) {
@@ -334,16 +334,16 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 			return
 		}
 		switch cl.MaintenanceState {
-		case edgeproto.MaintenanceState_FAILOVER_REQUESTED:
+		case dme.MaintenanceState_FAILOVER_REQUESTED:
 			info := edgeproto.AutoProvInfo{}
 			if !autoProvInfoApi.cache.Get(&cloudlet.Key, &info) {
 				info.Key = cloudlet.Key
 			}
 			info.MaintenanceState = stateTransitions[cl.MaintenanceState]
 			autoProvInfoApi.cache.Update(ctx, &info, 0)
-		case edgeproto.MaintenanceState_CRM_REQUESTED:
+		case dme.MaintenanceState_CRM_REQUESTED:
 			fallthrough
-		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
+		case dme.MaintenanceState_NORMAL_OPERATION_INIT:
 			info := edgeproto.CloudletInfo{}
 			if !cloudletInfoApi.cache.Get(&cloudlet.Key, &info) {
 				info.Key = cloudlet.Key
@@ -355,7 +355,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 
 	defer cancel()
 
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_MAINTENANCE_START
+	cloudlet.MaintenanceState = dme.MaintenanceState_MAINTENANCE_START
 	cloudlet.Fields = append(cloudlet.Fields, edgeproto.CloudletFieldMaintenanceState)
 	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
@@ -367,7 +367,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	cloudlet.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
 	eMock.verifyEvent(t, "cloudlet maintenance done", []node.EventTag{

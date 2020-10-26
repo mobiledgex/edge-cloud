@@ -26,6 +26,10 @@ func TestNotify(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	dmecommon.SetupMatchEngine()
+	err := initEdgeEventsPlugin(ctx)
+	if err != nil {
+		assert.Fail(t, "Failed to init edge events plugin. Error is: "+err.Error())
+	}
 	dmecommon.InitAppInstClients()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
@@ -86,24 +90,24 @@ func TestNotify(t *testing.T) {
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstNotUsable)
 
 	// update cloudletInfo for a single cloudlet and make sure it gets propagated to appInsts
-	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 	serverHandler.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	// check that the appInsts on that cloudlet are available
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
 
 	// mark cloudlet under maintenance state just for cloudlet object
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_UNDER_MAINTENANCE
+	cloudlet.MaintenanceState = dme.MaintenanceState_UNDER_MAINTENANCE
 	serverHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstNotUsable)
 
 	// mark cloudlet operational just for cloudlet object
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	cloudlet.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 	serverHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
 
 	// set cloudletInfo maintenance state in maintenance mode,
 	// should not affect appInst
-	cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
+	cloudletInfo.MaintenanceState = dme.MaintenanceState_CRM_UNDER_MAINTENANCE
 	serverHandler.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
 

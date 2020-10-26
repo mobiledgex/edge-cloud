@@ -1460,7 +1460,7 @@ var ServerEdgeEventAliasArgs = []string{}
 var ServerEdgeEventComments = map[string]string{
 	"eventtype":        ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth",
 	"cloudletstate":    "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
-	"maintenancestate": "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, UnderMaintenance",
+	"maintenancestate": "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
 	"healthcheck":      "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"latency.stddev":   "Square root of unbiased variance",
 	"latency.variance": "Unbiased variance",
