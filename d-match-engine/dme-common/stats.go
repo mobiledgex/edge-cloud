@@ -129,13 +129,6 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 		// Update RollingLatency and RollingLatencyTotal statistics
 		if stat.RollingLatencyTemp == nil {
 			stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
-		} else {
-			// TODO: RESET SOMEWHERE ELSE TO IT IS ACCURATE
-			// Reset rollinglatency every 10 minutes or something, so that latency values are current
-			t := cloudcommon.TimestampToTime(*stat.RollingLatencyTemp.Latency.Timestamp)
-			if time.Since(t) > time.Minute*1 {
-				stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
-			}
 		}
 		if stat.RollingLatencyTotal == nil {
 			stat.RollingLatencyTotal = dmeutil.NewRollingLatency()
@@ -167,6 +160,17 @@ func (s *DmeStats) RunNotify() {
 							s.send(ctx, ApiStatToMetric(ts, &key, stat))
 						}
 						stat.Changed = false
+					}
+					// Reset RollingLatencyTemp every 10 minutes, so that latency values are current
+					if key.Method == EdgeEventLatencyMethod {
+						if stat.RollingLatencyTemp == nil || stat.RollingLatencyTemp.NumUniqueClients == 0 {
+							continue
+						}
+						t := cloudcommon.TimestampToTime(*stat.RollingLatencyTemp.Latency.Timestamp)
+						if time.Since(t) > time.Minute*10 {
+							stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
+						}
+
 					}
 				}
 				s.shards[ii].mux.Unlock()

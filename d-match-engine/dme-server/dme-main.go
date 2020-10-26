@@ -54,7 +54,6 @@ var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie e
 var edgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
-var eesolib = flag.String("eeplugin", "", "plugin file")
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
 
@@ -360,33 +359,6 @@ func (s *server) StreamEdgeEvent(streamEdgeEventSvr dme.MatchEngineApi_StreamEdg
 	return dmecommon.StreamEdgeEvent(ctx, streamEdgeEventSvr)
 }
 
-// TODO: Make part of SetupMatchEngine
-// Loads EdgeEvent Plugin functions into corresponding dmecommon functions
-func initEdgeEventsPlugin(ctx context.Context) error {
-	// Load Edge Events Plugin
-	*eesolib = os.Getenv("GOPATH") + "/plugins/edgeevents.so"
-	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *eesolib)
-	plug, err := plugin.Open(*eesolib)
-	if err != nil {
-		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
-		return err
-	}
-	sym, err := plug.Lookup("GetEdgeEventsHandler")
-	if err != nil {
-		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
-	}
-	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (dmecommon.EdgeEventsHandler, error))
-	if !ok {
-		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *solib)
-	}
-	eehandler, err := getEdgeEventsHandlerFunc(ctx)
-	if err != nil {
-		return err
-	}
-	dmecommon.EEHandler = eehandler
-	return nil
-}
-
 func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, error) {
 	if operatorName == "" || operatorName == "standalone" {
 		return &defaultoperator.OperatorApiGw{}, nil
@@ -463,12 +435,6 @@ func main() {
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
-	err = initEdgeEventsPlugin(ctx)
-	if err != nil {
-		span.Finish()
-		log.FatalLog("Failed to init edge events plugin")
-	}
-
 	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
 	if err != nil {
 		span.Finish()
@@ -481,7 +447,7 @@ func main() {
 		}
 	}
 
-	dmecommon.SetupMatchEngine()
+	dmecommon.SetupMatchEngine(ctx)
 	grpcOpts := make([]grpc.ServerOption, 0)
 
 	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,

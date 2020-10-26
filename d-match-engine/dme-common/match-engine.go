@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"math/rand"
 	"net"
+	"os"
+	"plugin"
 	"strings"
 	"sync"
 	"time"
@@ -110,13 +113,43 @@ var StatKeyContextKey = StatKeyContextType("statKey")
 // EdgeEventsHandler implementation (loaded from Plugin)
 var EEHandler EdgeEventsHandler
 
-func SetupMatchEngine() {
+// Command line flag for laoding edge events plugin
+var eesolib = flag.String("eeplugin", "", "plugin file")
+
+func SetupMatchEngine(ctx context.Context) {
 	DmeAppTbl = new(DmeApps)
 	DmeAppTbl.Apps = make(map[edgeproto.AppKey]*DmeApp)
 	DmeAppTbl.Cloudlets = make(map[edgeproto.CloudletKey]*DmeCloudlet)
 	DmeAppTbl.AutoProvPolicies = make(map[edgeproto.PolicyKey]*AutoProvPolicy)
 	DmeAppTbl.FreeReservableClusterInsts.Init()
 	edgeproto.InitOperatorCodeCache(&DmeAppTbl.OperatorCodes)
+	initEdgeEventsPlugin(ctx)
+}
+
+// Loads EdgeEvent Plugin functions into EEHandler
+func initEdgeEventsPlugin(ctx context.Context) error {
+	// Load Edge Events Plugin
+	*eesolib = os.Getenv("GOPATH") + "/plugins/edgeevents.so"
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *eesolib)
+	plug, err := plugin.Open(*eesolib)
+	if err != nil {
+		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
+		return err
+	}
+	sym, err := plug.Lookup("GetEdgeEventsHandler")
+	if err != nil {
+		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
+	}
+	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (EdgeEventsHandler, error))
+	if !ok {
+		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
+	}
+	eehandler, err := getEdgeEventsHandlerFunc(ctx)
+	if err != nil {
+		return err
+	}
+	EEHandler = eehandler
+	return nil
 }
 
 // AppInst state is a superset of the cloudlet state and appInst state
@@ -125,7 +158,7 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
 		return false
 	}
-	if appInst.MaintenanceState == dme.MaintenanceState_CRM_UNDER_MAINTENANCE {
+	if appInst.MaintenanceState == dme.MaintenanceState_UNDER_MAINTENANCE {
 		return false
 	}
 	if appInst.CloudletState == dme.CloudletState_CLOUDLET_STATE_READY {

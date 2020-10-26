@@ -20,9 +20,7 @@ func TestAddRemove(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 	span := log.SpanFromContext(ctx)
 
-	dmecommon.SetupMatchEngine()
-	err := initEdgeEventsPlugin(ctx)
-	require.Nil(t, err, "init edge events plugin")
+	dmecommon.SetupMatchEngine(ctx)
 	dmecommon.InitAppInstClients()
 
 	setupJwks()
