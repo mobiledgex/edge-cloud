@@ -135,6 +135,8 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-2
   containerversion: 2019-10-24
+  envvar:
+    E2E_ACCESSKEY_BCTEST1: "true"
 - key:
     organization: dmuus
     name: dmuus-cloud-3
@@ -148,6 +150,9 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-3
   containerversion: 2019-10-24
+  envvar:
+    E2E_ACCESSKEY_BCTEST2: "true"
+  crmaccesskeyupgraderequired: true
 - key:
     organization: azure
     name: azure-cloud-4

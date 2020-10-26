@@ -92,7 +92,17 @@ tests:
 
 - name: enable dmuus-cloud-2 cloudlet
   apifile: "{{datadir}}/find_cloudlet_dmuus-cloud-2.yml"
-  actions: [start-crm=dmuus-cloud-2,sleep=2]
+  actions: [start-crm=dmuus-cloud-2]
+
+- name: wait until dmuus-cloud-2 cloudlet is ready
+  actions: [ctrlapi-showfiltered]
+  apifile: "{{datadir}}/dmuus_cloud_2_filter.yml"
+  retrycount: 20
+  retryintervalsec: 0.3
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/dmuus_cloud_2_ready.yml"
+    filetype: appdata
 
 - name: find cloudlet for app1, expect to see cloudlet2
   apifile: "{{datadir}}/find_cloudlet_app1.yml"

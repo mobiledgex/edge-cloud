@@ -185,10 +185,12 @@ var GetCasReplySpecialArgs = map[string]string{}
 var UpgradeAccessKeyClientMsgRequiredArgs = []string{}
 var UpgradeAccessKeyClientMsgOptionalArgs = []string{
 	"msg",
+	"verifyonly",
 }
 var UpgradeAccessKeyClientMsgAliasArgs = []string{}
 var UpgradeAccessKeyClientMsgComments = map[string]string{
-	"msg": "Message type",
+	"msg":        "Message type",
+	"verifyonly": "Client node type",
 }
 var UpgradeAccessKeyClientMsgSpecialArgs = map[string]string{}
 var UpgradeAccessKeyServerMsgRequiredArgs = []string{}

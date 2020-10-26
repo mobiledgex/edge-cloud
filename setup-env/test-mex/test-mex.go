@@ -158,6 +158,7 @@ func main() {
 			if !retry.ShouldRunAction(ii) {
 				continue
 			}
+			util.PrintStepBanner("name: " + spec.Name)
 			util.PrintStepBanner("running action: " + a + retry.Tries())
 			actionretry := false
 			errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &actionretry)
