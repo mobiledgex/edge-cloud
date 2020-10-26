@@ -1224,7 +1224,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
 		if autoerr != nil {
 			log.InfoLog("Failed to delete auto-ClusterInst",
-				"clusterInst", clusterInst, "err", err)
+				"clusterInst", clusterInst, "err", autoerr)
 		}
 	}
 	return err

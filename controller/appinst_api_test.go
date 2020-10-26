@@ -178,7 +178,7 @@ func TestAppInstApi(t *testing.T) {
 
 	obj = testutil.AppInstData[0]
 	// check override of error DELETE_ERROR
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_DELETE_ERROR)
 	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -190,7 +190,7 @@ func TestAppInstApi(t *testing.T) {
 	require.Greater(t, len(msgs), 0, "progress messages")
 
 	// check override of error CREATE_ERROR
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_CREATE_ERROR)
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -214,7 +214,7 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create appinst")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_UPDATE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_UPDATE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_UPDATE_ERROR)
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -256,7 +256,7 @@ func TestAppInstApi(t *testing.T) {
 		obj = testutil.AppInstData[0]
 		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state)
+		err = forceAppInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, commonApi, &obj, state)
 		obj = testutil.AppInstData[0]
@@ -441,7 +441,15 @@ func checkAppInstState(t *testing.T, ctx context.Context, api *testutil.AppInstC
 	}
 }
 
-func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgeproto.TrackedState) error {
+func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgeproto.TrackedState, responder *DummyInfoResponder) error {
+	if responder != nil {
+		// disable responder, otherwise it will respond to certain states
+		// and change the current state
+		responder.enable = false
+		defer func() {
+			responder.enable = true
+		}()
+	}
 	err := appInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		obj := edgeproto.AppInst{}
 		if !appInstApi.store.STMGet(stm, &in.Key, &obj) {
@@ -518,7 +526,7 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		obj = ai
 		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state)
+		err = forceAppInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
@@ -526,20 +534,22 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		obj = aiauto
 		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state)
+		err = forceAppInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
 		clust = ac
-		err = forceClusterInstState(ctx, &clust, state)
+		err = forceClusterInstState(ctx, &clust, state, responder)
 		require.Nil(t, err, "force state")
 		checkClusterInstState(t, ctx, clustApi, &clust, state)
 
 		// delete app (should delete auto cluster and auto app)
 		obj = ai
 		obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
+		log.SpanLog(ctx, log.DebugLevelInfo, "test run appinst delete")
 		err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "override crm and transient state %s", stateName)
+		log.SpanLog(ctx, log.DebugLevelInfo, "test appinst deleted")
 		// make sure autocluster got deleted (means apps also were deleted)
 		showData := testutil.ShowClusterInst{}
 		showData.Init()
