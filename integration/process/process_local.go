@@ -180,6 +180,12 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--chefServerPath")
 		args = append(args, p.ChefServerPath)
 	}
+	if p.AccessApiAddr != "" {
+		args = append(args, "--accessApiAddr", p.AccessApiAddr)
+	}
+	if p.RequireNotifyAccessKey {
+		args = append(args, "--requireNotifyAccessKey")
+	}
 
 	envs := p.GetEnv()
 	if options.RolesFile != "" {
@@ -328,6 +334,12 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
+	if p.AccessKeyFile != "" {
+		args = append(args, "--accessKeyFile", p.AccessKeyFile)
+	}
+	if p.AccessApiAddr != "" {
+		args = append(args, "--accessApiAddr", p.AccessApiAddr)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -466,6 +478,12 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.DeploymentTag != "" {
 		args = append(args, "--deploymentTag")
 		args = append(args, p.DeploymentTag)
+	}
+	if p.AccessKeyFile != "" {
+		args = append(args, "--accessKeyFile", p.AccessKeyFile)
+	}
+	if p.AccessApiAddr != "" {
+		args = append(args, "--accessApiAddr", p.AccessApiAddr)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -972,6 +990,10 @@ func (p *Traefik) StartLocal(logfile string, opts ...StartOp) error {
 	// etc are configured dynmically, either through a file provider
 	// or docker provider (snooping on docker events).
 
+	err := writeAllCAs(p.TLS.CACert, configDir+"/traefikCAs.pem")
+	if err != nil {
+		return err
+	}
 	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" && p.TLS.CACert != "" {
 		certsDir = path.Dir(p.TLS.ServerCert)
 		args = append(args, "-v", fmt.Sprintf("%s:/certs", certsDir))
@@ -1067,7 +1089,7 @@ tls:
     default:
       clientAuth:
         caFiles:
-        - /certs/{{.CACert}}
+        - traefikCAs.pem
         clientAuthType: RequireAndVerifyClientCert
   stores:
     default:
@@ -1198,6 +1220,22 @@ func (p *ElasticSearch) StartKibana(logfile string, opts ...StartOp) error {
 	return err
 }
 
+func writeAllCAs(inputCAFile, outputCAFile string) error {
+	// Combine all CAs into one for nginx or other TLS-terminating proxies.
+	// Note that nginx requires the full CA chain, so must include
+	// the root's public CA cert as well (not just intermediates).
+	certs := "/tmp/vault_pki/*.pem"
+	if inputCAFile != "" {
+		certs += " " + inputCAFile
+	}
+	cmd := exec.Command("bash", "-c", "cat "+certs+" > "+outputCAFile)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s, %s", string(out), err)
+	}
+	return nil
+}
+
 func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 	// Terminate TLS using mex-ca.crt and vault CAs.
 	if p.TLS.ServerCert == "" || p.TLS.ServerKey == "" {
@@ -1213,18 +1251,11 @@ func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 	}
 
 	// combine all cas into one for nginx config
-	// Note that nginx requires the full CA chain, so must include
-	// the root's public CA cert as well (not just intermediates).
 	// Note we can remove p.TLS.CACert once we transition to all services
 	// using "useVaultCerts" instead of "useVaultCAs".
-	certs := "/tmp/vault_pki/*.pem"
-	if p.TLS.CACert != "" {
-		certs += " " + p.TLS.CACert
-	}
-	cmd := exec.Command("bash", "-c", "cat "+certs+" > "+configDir+"/allcas.pem")
-	out, err := cmd.CombinedOutput()
+	err := writeAllCAs(p.TLS.CACert, configDir+"/allcas.pem")
 	if err != nil {
-		return fmt.Errorf("%s, %s", string(out), err)
+		return err
 	}
 
 	if len(p.Links) == 0 {

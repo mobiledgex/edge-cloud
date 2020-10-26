@@ -103,12 +103,12 @@ var ClientSender *notify.AppInstClientSend
 var appInstClientKeyCache edgeproto.AppInstClientKeyCache
 var platformClientsCache edgeproto.DeviceCache
 
-func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption) *notify.Client {
+func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption, notifyOps ...notify.ClientOp) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyCache)
 	edgeproto.InitDeviceCache(&platformClientsCache)
 	appInstClientKeyCache.SetUpdatedCb(SendCachedClients)
-	notifyClient := notify.NewClient(nodeMgr.Name(), strings.Split(addrs, ","), tlsDialOption)
+	notifyClient := notify.NewClient(nodeMgr.Name(), strings.Split(addrs, ","), tlsDialOption, notifyOps...)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
 	notifyClient.RegisterRecv(notify.NewOperatorCodeRecv(&dmecommon.DmeAppTbl.OperatorCodes))
