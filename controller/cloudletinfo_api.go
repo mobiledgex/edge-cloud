@@ -136,8 +136,9 @@ func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete CloudletInfo",
 			"key", in.Key, "err", err)
+	} else {
+		nodeMgr.Event(ctx, "Cloudlet offline", in.Key.Organization, in.Key.GetTags(), nil, "reason", "notify disconnect")
 	}
-	nodeMgr.Event(ctx, "Cloudlet offline", in.Key.Organization, in.Key.GetTags(), nil, "reason", "notify disconnect")
 }
 
 func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
@@ -152,6 +153,10 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 		matches = append(matches, val.Key)
 	}
 	s.cache.Mux.Unlock()
+
+	// this creates a new span if there was none - which can happen if this is a cancelled context
+	span := log.SpanFromContext(ctx)
+	ectx := log.ContextWithSpan(context.Background(), span)
 
 	info := edgeproto.CloudletInfo{}
 	for ii, _ := range matches {
@@ -171,7 +176,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
 		} else {
-			nodeMgr.Event(ctx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
+			nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 		}
 	}
 }
