@@ -9,6 +9,7 @@ import "flavor.proto";
 import "result.proto";
 import "restagtable.proto";
 import "common.proto";
+import "infraresources.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 
@@ -456,6 +457,8 @@ message CloudletInfo {
   bool controller_cache_received = 15;
   // State for maintenance
   MaintenanceState maintenance_state = 16;
+   // Resources used by cloudlet
+  InfraResources resources = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
