@@ -76,7 +76,7 @@ func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey
 func (s *ClusterInstInfoCache) SetResources(ctx context.Context, key *ClusterInstKey, resources *InfraResources) error {
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
-		log.InfoLog("SetResources failed, did not find clusterInst in cache")
+		log.SpanLog(ctx, log.DebugLevelApi, "SetResources failed, did not find clusterInst in cache")
 		return fmt.Errorf("ClusterInst not found in cache: %s", key.String())
 	}
 	info.Resources = *resources

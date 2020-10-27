@@ -241,7 +241,7 @@ func main() {
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 				resources, err := platform.GetInfraResources(ctx, nil, &myCloudletInfo.Key)
 				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key)
+					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key, "err", err)
 				} else {
 					myCloudletInfo.Resources = *resources
 				}
