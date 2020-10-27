@@ -83,47 +83,50 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey, cloudletKey *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
+func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
 	var resources edgeproto.InfraResources
-	if clusterKey != nil {
-		vmtype := "cluster-master"
-		for i := 0; i < 3; i++ {
-			if i > 1 {
-				vmtype = "cluster-node"
-			}
-			ipstr := fmt.Sprintf("10.100.100.1%d", i)
-			vm := edgeproto.VmInfo{
-				Name:        fmt.Sprintf("fake-cluster-vm-%d", i),
-				Type:        vmtype,
-				InfraFlavor: "m4.small",
-				Status:      "ACTIVE",
-				Ipaddresses: []edgeproto.IpAddr{
-					{ExternalIp: ipstr},
-				},
-			}
-			resources.Vms = append(resources.Vms, vm)
+	platvm := edgeproto.VmInfo{
+		Name:        "fake-platform-vm",
+		Type:        "platform",
+		InfraFlavor: "m4.small",
+		Status:      "ACTIVE",
+		Ipaddresses: []edgeproto.IpAddr{
+			{ExternalIp: "10.101.100.10"},
+		},
+	}
+	resources.Vms = append(resources.Vms, platvm)
+	rlbvm := edgeproto.VmInfo{
+		Name:        "fake-rootlb-vm",
+		Type:        "rootlb",
+		InfraFlavor: "m4.small",
+		Status:      "ACTIVE",
+		Ipaddresses: []edgeproto.IpAddr{
+			{ExternalIp: "10.101.100.11"},
+		},
+	}
+	resources.Vms = append(resources.Vms, rlbvm)
+
+	return &resources, nil
+}
+
+func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
+	var resources edgeproto.InfraResources
+	vmtype := "cluster-master"
+	for i := 0; i < 3; i++ {
+		if i > 1 {
+			vmtype = "cluster-node"
 		}
-	} else if cloudletKey != nil {
-		platvm := edgeproto.VmInfo{
-			Name:        "fake-platform-vm",
-			Type:        "platform",
+		ipstr := fmt.Sprintf("10.100.100.1%d", i)
+		vm := edgeproto.VmInfo{
+			Name:        fmt.Sprintf("fake-cluster-vm-%d", i),
+			Type:        vmtype,
 			InfraFlavor: "m4.small",
 			Status:      "ACTIVE",
 			Ipaddresses: []edgeproto.IpAddr{
-				{ExternalIp: "10.101.100.10"},
+				{ExternalIp: ipstr},
 			},
 		}
-		resources.Vms = append(resources.Vms, platvm)
-		rlbvm := edgeproto.VmInfo{
-			Name:        "fake-rootlb-vm",
-			Type:        "rootlb",
-			InfraFlavor: "m4.small",
-			Status:      "ACTIVE",
-			Ipaddresses: []edgeproto.IpAddr{
-				{ExternalIp: "10.101.100.11"},
-			},
-		}
-		resources.Vms = append(resources.Vms, rlbvm)
+		resources.Vms = append(resources.Vms, vm)
 	}
 	return &resources, nil
 }

@@ -36,6 +36,7 @@ type dmeApiRequest struct {
 	TokenServerPath  string                               `yaml:"token-server-path"`
 	ErrorExpected    string                               `yaml:"error-expected"`
 	Repeat           int                                  `yaml:"repeat"`
+	CountPerInterval int                                  `yaml:"countperinterval"`
 	RunAtIntervalSec float64                              `yaml:"runatintervalsec"`
 	RunAtOffsetSec   float64                              `yaml:"runatoffsetsec"`
 }
@@ -221,7 +222,14 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	replies := make([]interface{}, 0)
 
 	for ii, apiRequest := range apiRequests {
-		timeout := time.Duration(float64(time.Second) * (1.0 + apiRequest.RunAtIntervalSec))
+		if apiRequest.Repeat == 0 {
+			apiRequest.Repeat = 1
+		}
+		if apiRequest.CountPerInterval == 0 {
+			apiRequest.CountPerInterval = 1
+		}
+		numSecs := 1.0 + apiRequest.RunAtIntervalSec + float64(apiRequest.Repeat)
+		timeout := time.Duration(float64(time.Second) * numSecs)
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		log.Printf("RunDmeAPIiter[%d]\n", ii)
@@ -299,32 +307,37 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		fallthrough
 	case "findcloudlet":
 		apiRequest.Fcreq.SessionCookie = sessionCookie
-		if apiRequest.Repeat == 0 {
-			apiRequest.Repeat = 1
-		}
-		if apiRequest.RunAtIntervalSec != 0 {
-			dur := edgeutil.GetWaitTime(time.Now(), apiRequest.RunAtIntervalSec, apiRequest.RunAtOffsetSec)
-			time.Sleep(dur)
-		}
 		for ii := 0; ii < apiRequest.Repeat; ii++ {
-			var reply *dmeproto.FindCloudletReply
-			var err error
-			if api == "platformfindcloudlet" {
-				log.Printf("platformfindcloudlet %v\n", apiRequest.Pfcreq)
-				reply, err = client.PlatformFindCloudlet(ctx, &apiRequest.Pfcreq)
-			} else {
-				log.Printf("fcreq %v\n", apiRequest.Fcreq)
-				reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)
+			if apiRequest.RunAtIntervalSec != 0 {
+				dur := edgeutil.GetWaitTime(time.Now(), apiRequest.RunAtIntervalSec, apiRequest.RunAtOffsetSec)
+				time.Sleep(dur)
 			}
-			if reply != nil {
-				sort.Slice(reply.Ports, func(i, j int) bool {
-					return reply.Ports[i].InternalPort < reply.Ports[j].InternalPort
-				})
+			if apiRequest.Repeat != 1 {
+				log.Printf("repeat interval %d of %d\n", ii+1, apiRequest.Repeat)
 			}
-			dmereply = reply
-			dmeerror = err
-			if err != nil {
-				break
+			for jj := 0; jj < apiRequest.CountPerInterval; jj++ {
+				if apiRequest.CountPerInterval != 1 {
+					log.Printf("repeat interval %d count %d of %d\n", ii+1, jj+1, apiRequest.CountPerInterval)
+				}
+				var reply *dmeproto.FindCloudletReply
+				var err error
+				if api == "platformfindcloudlet" {
+					log.Printf("platformfindcloudlet %v\n", apiRequest.Pfcreq)
+					reply, err = client.PlatformFindCloudlet(ctx, &apiRequest.Pfcreq)
+				} else {
+					log.Printf("fcreq %v\n", apiRequest.Fcreq)
+					reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)
+				}
+				if reply != nil {
+					sort.Slice(reply.Ports, func(i, j int) bool {
+						return reply.Ports[i].InternalPort < reply.Ports[j].InternalPort
+					})
+				}
+				dmereply = reply
+				dmeerror = err
+				if err != nil {
+					break
+				}
 			}
 		}
 	case "register":

@@ -60,6 +60,7 @@ const ControllerTimeout = 1 * time.Minute
 
 func main() {
 	nodeMgr.InitFlags()
+	nodeMgr.AccessKeyClient.InitFlags()
 	flag.Parse()
 
 	if strings.Contains(*debugLevels, "mexos") {
@@ -132,7 +133,10 @@ func main() {
 		log.FatalLog(err.Error())
 	}
 	dialOption := tls.GetGrpcDialOption(notifyClientTls)
-	notifyClient = notify.NewClient(nodeMgr.Name(), addrs, dialOption)
+	notifyClient = notify.NewClient(nodeMgr.Name(), addrs, dialOption,
+		notify.ClientUnaryInterceptors(nodeMgr.AccessKeyClient.UnaryAddAccessKey),
+		notify.ClientStreamInterceptors(nodeMgr.AccessKeyClient.StreamAddAccessKey),
+	)
 	notifyClient.SetFilterByCloudletKey()
 	InitClientNotify(notifyClient, controllerData)
 	notifyClient.Start()
@@ -239,7 +243,7 @@ func main() {
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-				resources, err := platform.GetInfraResources(ctx, nil, &myCloudletInfo.Key)
+				resources, err := platform.GetCloudletInfraResources(ctx)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key, "err", err)
 				} else {

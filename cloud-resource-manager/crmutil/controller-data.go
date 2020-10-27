@@ -212,7 +212,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 			// Get cluster resources and report to controller.
-			resources, err := cd.platform.GetInfraResources(ctx, &new.Key, nil)
+			resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
 			} else {
@@ -274,7 +274,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
 		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 		// Get cluster resources and report to controller.
-		resources, err := cd.platform.GetInfraResources(ctx, &new.Key, nil)
+		resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
 		} else {
@@ -651,7 +651,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			// Acknowledge controller that CRM is in maintenance
 			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
 			updateInfo = true
-		case edgeproto.MaintenanceState_NORMAL_OPERATION:
+		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
 			// Set state back to normal so DME will allow clients
 			// for this Cloudlet.
 			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION

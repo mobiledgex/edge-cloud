@@ -31,8 +31,14 @@ func TestAddRemove(t *testing.T) {
 
 	// Add cloudlets first as we check the state via cloudlets
 	for _, cloudlet := range cloudlets {
-		dmecommon.SetInstStateForCloudlet(ctx, cloudlet)
+		dmecommon.SetInstStateFromCloudletInfo(ctx, cloudlet)
 	}
+	require.Equal(t, len(tbl.Cloudlets), 0, "without cloudlet object, cloudletInfo is not considered")
+	for _, cloudlet := range cloudlets {
+		dmecommon.SetInstStateFromCloudlet(ctx, &edgeproto.Cloudlet{Key: cloudlet.Key})
+		dmecommon.SetInstStateFromCloudletInfo(ctx, cloudlet)
+	}
+	require.Equal(t, len(tbl.Cloudlets), len(cloudlets), "cloudlet object exists")
 
 	// add all data, check that number of instances matches
 	for _, inst := range apps {
@@ -168,7 +174,7 @@ func TestAddRemove(t *testing.T) {
 	// disable one cloudlet and check the newly found cloudlet
 	cloudletInfo := cloudlets[2]
 	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
-	dmecommon.SetInstStateForCloudlet(ctx, cloudletInfo)
+	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
 	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
 
 	regReply, err = serv.RegisterClient(ctx, &dmetest.DisabledCloudletRR.Reg)
@@ -183,7 +189,7 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// re-enable and check that the results is now what original findCloudlet[3] is
 	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-	dmecommon.SetInstStateForCloudlet(ctx, cloudletInfo)
+	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.FindCloudletData[3].Reply.Status, reply.Status)

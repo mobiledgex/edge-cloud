@@ -117,7 +117,7 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
 		return false
 	}
-	if appInst.maintenanceState == edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE {
+	if appInst.maintenanceState == edgeproto.MaintenanceState_UNDER_MAINTENANCE {
 		return false
 	}
 	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
@@ -340,10 +340,10 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 	}
 }
 
-func DeleteCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) {
+func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey) {
 	log.SpanLog(ctx, log.DebugLevelDmereq, "DeleteCloudletInfo called")
 	tbl := DmeAppTbl
-	carrier := info.Key.Organization
+	carrier := cloudletKey.Organization
 	tbl.Lock()
 	defer tbl.Unlock()
 
@@ -352,7 +352,7 @@ func DeleteCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) {
 		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
-				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, cloudletKey) {
 					c.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 					c.Insts[clusterInstKey].maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
 				}
@@ -360,9 +360,9 @@ func DeleteCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) {
 		}
 		app.Unlock()
 	}
-	if _, found := tbl.Cloudlets[info.Key]; found {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "delete cloudletInfo", "key", info.Key)
-		delete(tbl.Cloudlets, info.Key)
+	if _, found := tbl.Cloudlets[*cloudletKey]; found {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "delete cloudletInfo", "key", cloudletKey)
+		delete(tbl.Cloudlets, *cloudletKey)
 	}
 }
 
@@ -390,6 +390,26 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 			log.SpanLog(ctx, log.DebugLevelDmereq, "pruning cloudletInfo", "key", cloudlet)
 			delete(tbl.Cloudlets, cloudlet)
 		}
+	}
+}
+
+// Reset the cloudlet state for the AppInsts for any cloudlets that no longer exists
+func PruneInstsCloudletState(ctx context.Context, cloudlets map[edgeproto.CloudletKey]struct{}) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "PruneInstsCloudletState called")
+	tbl := DmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+
+	for _, app := range tbl.Apps {
+		app.Lock()
+		for _, carr := range app.Carriers {
+			for clusterInstKey, _ := range carr.Insts {
+				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
+					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+				}
+			}
+		}
+		app.Unlock()
 	}
 }
 
@@ -442,10 +462,39 @@ func (s *AutoProvPolicyHandler) Prune(ctx context.Context, keys map[edgeproto.Po
 
 func (s *AutoProvPolicyHandler) Flush(ctx context.Context, notifyId int64) {}
 
-// SetInstStateForCloudlet - Sets the current state of the appInstances for the cloudlet
+// SetInstStateFromCloudlet - Sets the current maintenance state of the appInstances for the cloudlet
+func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "SetInstStateFromCloudlet called", "cloudlet", in)
+	carrier := in.Key.Organization
+	tbl := DmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+	// Update the state in the cloudlet table
+	cloudlet, foundCloudlet := tbl.Cloudlets[in.Key]
+	if !foundCloudlet {
+		cloudlet = new(DmeCloudlet)
+		cloudlet.CloudletKey = in.Key
+		tbl.Cloudlets[in.Key] = cloudlet
+	}
+	cloudlet.MaintenanceState = in.MaintenanceState
+
+	for _, app := range tbl.Apps {
+		app.Lock()
+		if c, found := app.Carriers[carrier]; found {
+			for clusterInstKey, _ := range c.Insts {
+				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &in.Key) {
+					c.Insts[clusterInstKey].maintenanceState = in.MaintenanceState
+				}
+			}
+		}
+		app.Unlock()
+	}
+}
+
+// SetInstStateFromCloudletInfo - Sets the current state of the appInstances for the cloudlet
 // This gets called when a cloudlet goes offline, or comes back online
-func SetInstStateForCloudlet(ctx context.Context, info *edgeproto.CloudletInfo) {
-	log.SpanLog(ctx, log.DebugLevelDmereq, "SetInstStateForCloudlet called", "cloudlet", info)
+func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "SetInstStateFromCloudletInfo called", "cloudlet", info)
 	carrier := info.Key.Organization
 	tbl := DmeAppTbl
 	tbl.Lock()
@@ -453,12 +502,10 @@ func SetInstStateForCloudlet(ctx context.Context, info *edgeproto.CloudletInfo) 
 	// Update the state in the cloudlet table
 	cloudlet, foundCloudlet := tbl.Cloudlets[info.Key]
 	if !foundCloudlet {
-		cloudlet = new(DmeCloudlet)
-		cloudlet.CloudletKey = info.Key
-		tbl.Cloudlets[info.Key] = cloudlet
+		// object should've been added on receipt of cloudlet object from controller
+		return
 	}
 	cloudlet.State = info.State
-	cloudlet.MaintenanceState = info.MaintenanceState
 
 	for _, app := range tbl.Apps {
 		app.Lock()
@@ -466,8 +513,6 @@ func SetInstStateForCloudlet(ctx context.Context, info *edgeproto.CloudletInfo) 
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
 					c.Insts[clusterInstKey].cloudletState = info.State
-					c.Insts[clusterInstKey].maintenanceState = info.MaintenanceState
-
 				}
 			}
 		}

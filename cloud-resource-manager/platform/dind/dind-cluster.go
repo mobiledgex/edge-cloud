@@ -139,12 +139,17 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey, cloudletKey *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
+func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
 	resources := edgeproto.InfraResources{
 		Vms: []edgeproto.VmInfo{
 			{Name: "local-mac"},
 		},
 	}
+	return &resources, nil
+}
+
+func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
+	resources := edgeproto.InfraResources{}
 	return &resources, nil
 }
 

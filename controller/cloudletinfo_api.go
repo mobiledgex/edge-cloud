@@ -64,7 +64,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		return nil
 	})
 	if changedToOnline {
-		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String())
+		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "version", in.ContainerVersion)
 	}
 
 	cloudlet := edgeproto.Cloudlet{}
@@ -75,6 +75,9 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	switch in.State {
 	case edgeproto.CloudletState_CLOUDLET_STATE_INIT:
 		newState = edgeproto.TrackedState_CRM_INITOK
+		if in.ContainerVersion != cloudlet.ContainerVersion {
+			nodeMgr.Event(ctx, "Upgrading cloudlet", in.Key.Organization, in.Key.GetTags(), nil, "from-version", cloudlet.ContainerVersion, "to-version", in.ContainerVersion)
+		}
 	case edgeproto.CloudletState_CLOUDLET_STATE_READY:
 		newState = edgeproto.TrackedState_READY
 	case edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE:
@@ -86,12 +89,21 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	newCloudlet := edgeproto.Cloudlet{}
 	key := &in.Key
 	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		updateObj := false
 		if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
 			return key.NotFoundError()
 		}
-		newCloudlet.State = newState
-		newCloudlet.ContainerVersion = in.ContainerVersion
-		cloudletApi.store.STMPut(stm, &newCloudlet)
+		if newCloudlet.State != newState {
+			newCloudlet.State = newState
+			updateObj = true
+		}
+		if newCloudlet.ContainerVersion != in.ContainerVersion {
+			newCloudlet.ContainerVersion = in.ContainerVersion
+			updateObj = true
+		}
+		if updateObj {
+			cloudletApi.store.STMPut(stm, &newCloudlet)
+		}
 		return nil
 	})
 	if err != nil {
@@ -124,6 +136,8 @@ func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete CloudletInfo",
 			"key", in.Key, "err", err)
+	} else {
+		nodeMgr.Event(ctx, "Cloudlet offline", in.Key.Organization, in.Key.GetTags(), nil, "reason", "notify disconnect")
 	}
 }
 
@@ -139,6 +153,10 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 		matches = append(matches, val.Key)
 	}
 	s.cache.Mux.Unlock()
+
+	// this creates a new span if there was none - which can happen if this is a cancelled context
+	span := log.SpanFromContext(ctx)
+	ectx := log.ContextWithSpan(context.Background(), span)
 
 	info := edgeproto.CloudletInfo{}
 	for ii, _ := range matches {
@@ -158,7 +176,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
 		} else {
-			nodeMgr.Event(ctx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
+			nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 		}
 	}
 }

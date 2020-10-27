@@ -1160,6 +1160,8 @@ var PlatformConfigOptionalArgs = []string{
 	"chefserverpath",
 	"chefclientinterval",
 	"deploymenttag",
+	"crmaccessprivatekey",
+	"accessapiaddr",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -1183,6 +1185,8 @@ var PlatformConfigComments = map[string]string{
 	"chefserverpath":        "Path to Chef Server",
 	"chefclientinterval":    "Chef client interval",
 	"deploymenttag":         "Deployment Tag",
+	"crmaccessprivatekey":   "crm access private key",
+	"accessapiaddr":         "controller access API address",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -1307,6 +1311,8 @@ var CloudletComments = map[string]string{
 	"config.chefserverpath":               "Path to Chef Server",
 	"config.chefclientinterval":           "Chef client interval",
 	"config.deploymenttag":                "Deployment Tag",
+	"config.crmaccessprivatekey":          "crm access private key",
+	"config.accessapiaddr":                "controller access API address",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",

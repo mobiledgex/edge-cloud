@@ -24,6 +24,7 @@ import (
 )
 
 type TestSpec struct {
+	Name             string      `json:"name" yaml:"name"`
 	ApiType          string      `json:"api" yaml:"api"`
 	ApiFile          string      `json:"apifile" yaml:"apifile"`
 	Actions          []string    `json:"actions" yaml:"actions"`
@@ -644,7 +645,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			errors = append(errors, "influx api failed")
 		}
 	case "cmds":
-		if !apis.RunCommands(spec.ApiFile, outputDir) {
+		if !apis.RunCommands(spec.ApiFile, outputDir, retry) {
 			log.Printf("Unable to run commands for %s\n", action)
 			errors = append(errors, "commands failed")
 		}
