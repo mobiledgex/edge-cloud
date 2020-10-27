@@ -49,8 +49,8 @@ func GetK8sNodeNameSuffix(clusterInstKey *edgeproto.ClusterInstKey) string {
 }
 
 // GetCloudletClusterName return the name of the cluster including cloudlet
-func GetCloudletClusterName(clusterInst *edgeproto.ClusterInst) string {
-	return GetK8sNodeNameSuffix(&clusterInst.Key)
+func GetCloudletClusterName(clusterKey *edgeproto.ClusterInstKey) string {
+	return GetK8sNodeNameSuffix(clusterKey)
 }
 
 func NormalizeName(name string) string {
