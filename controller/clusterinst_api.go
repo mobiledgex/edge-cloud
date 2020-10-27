@@ -795,22 +795,20 @@ func ignoreCRM(cctx *CallContext) bool {
 }
 
 func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) {
-	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "state", in.State, "status", in.Status)
+	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "state", in.State, "status", in.Status, "resources", in.Resources)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
+		inst.Resources = in.Resources
+		inst.Status = in.Status
+
 		if inst.State == in.State {
-			if inst.Status == in.Status {
-				return nil
-			} else {
-				log.SpanLog(ctx, log.DebugLevelApi, "status change only")
-				inst.Status = in.Status
-				s.store.STMPut(stm, &inst)
-				return nil
-			}
+			log.SpanLog(ctx, log.DebugLevelApi, "no state change")
+			s.store.STMPut(stm, &inst)
+			return nil
 		}
 		// please see state_transitions.md
 		if !crmTransitionOk(inst.State, in.State) {

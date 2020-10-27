@@ -78,6 +78,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].OsImages); i1++ {
 		}
+		for i2 := 0; i2 < len(in.CloudletInfos[i0].Resources.Vms); i2++ {
+			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Ipaddresses); i3++ {
+			}
+			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Containers); i3++ {
+			}
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 	}
@@ -123,6 +129,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].OptRes = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].Resources = edgeproto.InfraResources{}
 		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
@@ -355,6 +364,17 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.osimages:#.diskformat",
 	"cloudletinfos:#.controllercachereceived",
 	"cloudletinfos:#.maintenancestate",
+	"cloudletinfos:#.resources.vms:#.name",
+	"cloudletinfos:#.resources.vms:#.type",
+	"cloudletinfos:#.resources.vms:#.status",
+	"cloudletinfos:#.resources.vms:#.infraflavor",
+	"cloudletinfos:#.resources.vms:#.ipaddresses:#.externalip",
+	"cloudletinfos:#.resources.vms:#.ipaddresses:#.internalip",
+	"cloudletinfos:#.resources.vms:#.containers:#.name",
+	"cloudletinfos:#.resources.vms:#.containers:#.type",
+	"cloudletinfos:#.resources.vms:#.containers:#.status",
+	"cloudletinfos:#.resources.vms:#.containers:#.clusterip",
+	"cloudletinfos:#.resources.vms:#.containers:#.restarts",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -430,6 +450,17 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.masternodeflavor",
 	"clusterinsts:#.skipcrmcleanuponfailure",
 	"clusterinsts:#.optres",
+	"clusterinsts:#.resources.vms:#.name",
+	"clusterinsts:#.resources.vms:#.type",
+	"clusterinsts:#.resources.vms:#.status",
+	"clusterinsts:#.resources.vms:#.infraflavor",
+	"clusterinsts:#.resources.vms:#.ipaddresses:#.externalip",
+	"clusterinsts:#.resources.vms:#.ipaddresses:#.internalip",
+	"clusterinsts:#.resources.vms:#.containers:#.name",
+	"clusterinsts:#.resources.vms:#.containers:#.type",
+	"clusterinsts:#.resources.vms:#.containers:#.status",
+	"clusterinsts:#.resources.vms:#.containers:#.clusterip",
+	"clusterinsts:#.resources.vms:#.containers:#.restarts",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -676,6 +707,15 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.osimages:#.diskformat":                      "format qcow2, img, etc",
 	"cloudletinfos:#.controllercachereceived":                    "Indicates all controller data has been sent to CRM",
 	"cloudletinfos:#.maintenancestate":                           "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"cloudletinfos:#.resources.vms:#.name":                       "Virtual machine name",
+	"cloudletinfos:#.resources.vms:#.type":                       "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"cloudletinfos:#.resources.vms:#.status":                     "Runtime status of the VM",
+	"cloudletinfos:#.resources.vms:#.infraflavor":                "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"cloudletinfos:#.resources.vms:#.containers:#.name":          "Name of the container",
+	"cloudletinfos:#.resources.vms:#.containers:#.type":          "Type can be docker or kubernetes",
+	"cloudletinfos:#.resources.vms:#.containers:#.status":        "Runtime status of the container",
+	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "IP within the CNI and is applicable to kubernetes only",
+	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "Restart count, applicable to kubernetes only",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
@@ -745,6 +785,15 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
 	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"clusterinsts:#.optres":                                      "Optional Resources required by OS flavor if any",
+	"clusterinsts:#.resources.vms:#.name":                        "Virtual machine name",
+	"clusterinsts:#.resources.vms:#.type":                        "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"clusterinsts:#.resources.vms:#.status":                      "Runtime status of the VM",
+	"clusterinsts:#.resources.vms:#.infraflavor":                 "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"clusterinsts:#.resources.vms:#.containers:#.name":           "Name of the container",
+	"clusterinsts:#.resources.vms:#.containers:#.type":           "Type can be docker or kubernetes",
+	"clusterinsts:#.resources.vms:#.containers:#.status":         "Runtime status of the container",
+	"clusterinsts:#.resources.vms:#.containers:#.clusterip":      "IP within the CNI and is applicable to kubernetes only",
+	"clusterinsts:#.resources.vms:#.containers:#.restarts":       "Restart count, applicable to kubernetes only",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",

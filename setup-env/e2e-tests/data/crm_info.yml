@@ -53,6 +53,26 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-cluster-vm-0
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.10
+    - name: fake-cluster-vm-1
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.11
+    - name: fake-cluster-vm-2
+      type: cluster-node
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.12
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -71,6 +91,26 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-cluster-vm-0
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.10
+    - name: fake-cluster-vm-1
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.11
+    - name: fake-cluster-vm-2
+      type: cluster-node
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.12
 - key:
     clusterkey:
       name: autoclustersomeapplication2
@@ -89,6 +129,26 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-cluster-vm-0
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.10
+    - name: fake-cluster-vm-1
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.11
+    - name: fake-cluster-vm-2
+      type: cluster-node
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.12
 cloudlets:
 - key:
     organization: dmuus
@@ -140,6 +200,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -158,7 +232,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 apps:
 - key:
     organization: AcmeAppCo

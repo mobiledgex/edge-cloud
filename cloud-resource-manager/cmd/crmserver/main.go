@@ -243,6 +243,12 @@ func main() {
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+				resources, err := platform.GetCloudletInfraResources(ctx)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key, "err", err)
+				} else {
+					myCloudletInfo.Resources = *resources
+				}
 			}
 		}
 
