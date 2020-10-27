@@ -59,7 +59,7 @@ message VmInfo{
 //
 // InfraResources is infomation about infrastructure resources. 
 message InfraResources{
-  repeated VmInfo vms = 3 [(gogoproto.nullable) = false];
+  repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
 }
 
 

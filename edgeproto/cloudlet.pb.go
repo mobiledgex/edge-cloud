@@ -6284,20 +6284,20 @@ const CloudletInfoFieldOsImagesDiskFormat = "14.4"
 const CloudletInfoFieldControllerCacheReceived = "15"
 const CloudletInfoFieldMaintenanceState = "16"
 const CloudletInfoFieldResources = "17"
-const CloudletInfoFieldResourcesVms = "17.3"
-const CloudletInfoFieldResourcesVmsName = "17.3.1"
-const CloudletInfoFieldResourcesVmsType = "17.3.2"
-const CloudletInfoFieldResourcesVmsStatus = "17.3.3"
-const CloudletInfoFieldResourcesVmsInfraFlavor = "17.3.4"
-const CloudletInfoFieldResourcesVmsIpaddresses = "17.3.5"
-const CloudletInfoFieldResourcesVmsIpaddressesExternalIp = "17.3.5.1"
-const CloudletInfoFieldResourcesVmsIpaddressesInternalIp = "17.3.5.2"
-const CloudletInfoFieldResourcesVmsContainers = "17.3.6"
-const CloudletInfoFieldResourcesVmsContainersName = "17.3.6.1"
-const CloudletInfoFieldResourcesVmsContainersType = "17.3.6.2"
-const CloudletInfoFieldResourcesVmsContainersStatus = "17.3.6.3"
-const CloudletInfoFieldResourcesVmsContainersClusterip = "17.3.6.4"
-const CloudletInfoFieldResourcesVmsContainersRestarts = "17.3.6.5"
+const CloudletInfoFieldResourcesVms = "17.1"
+const CloudletInfoFieldResourcesVmsName = "17.1.1"
+const CloudletInfoFieldResourcesVmsType = "17.1.2"
+const CloudletInfoFieldResourcesVmsStatus = "17.1.3"
+const CloudletInfoFieldResourcesVmsInfraFlavor = "17.1.4"
+const CloudletInfoFieldResourcesVmsIpaddresses = "17.1.5"
+const CloudletInfoFieldResourcesVmsIpaddressesExternalIp = "17.1.5.1"
+const CloudletInfoFieldResourcesVmsIpaddressesInternalIp = "17.1.5.2"
+const CloudletInfoFieldResourcesVmsContainers = "17.1.6"
+const CloudletInfoFieldResourcesVmsContainersName = "17.1.6.1"
+const CloudletInfoFieldResourcesVmsContainersType = "17.1.6.2"
+const CloudletInfoFieldResourcesVmsContainersStatus = "17.1.6.3"
+const CloudletInfoFieldResourcesVmsContainersClusterip = "17.1.6.4"
+const CloudletInfoFieldResourcesVmsContainersRestarts = "17.1.6.5"
 
 var CloudletInfoAllFields = []string{
 	CloudletInfoFieldKeyOrganization,
@@ -6811,7 +6811,7 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 		}
 	}
 	if _, set := fmap["17"]; set {
-		if _, set := fmap["17.3"]; set {
+		if _, set := fmap["17.1"]; set {
 			if src.Resources.Vms != nil {
 				m.Resources.Vms = src.Resources.Vms
 				changed++

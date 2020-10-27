@@ -1453,20 +1453,20 @@ const ClusterInstFieldMasterNodeFlavor = "25"
 const ClusterInstFieldSkipCrmCleanupOnFailure = "26"
 const ClusterInstFieldOptRes = "27"
 const ClusterInstFieldResources = "28"
-const ClusterInstFieldResourcesVms = "28.3"
-const ClusterInstFieldResourcesVmsName = "28.3.1"
-const ClusterInstFieldResourcesVmsType = "28.3.2"
-const ClusterInstFieldResourcesVmsStatus = "28.3.3"
-const ClusterInstFieldResourcesVmsInfraFlavor = "28.3.4"
-const ClusterInstFieldResourcesVmsIpaddresses = "28.3.5"
-const ClusterInstFieldResourcesVmsIpaddressesExternalIp = "28.3.5.1"
-const ClusterInstFieldResourcesVmsIpaddressesInternalIp = "28.3.5.2"
-const ClusterInstFieldResourcesVmsContainers = "28.3.6"
-const ClusterInstFieldResourcesVmsContainersName = "28.3.6.1"
-const ClusterInstFieldResourcesVmsContainersType = "28.3.6.2"
-const ClusterInstFieldResourcesVmsContainersStatus = "28.3.6.3"
-const ClusterInstFieldResourcesVmsContainersClusterip = "28.3.6.4"
-const ClusterInstFieldResourcesVmsContainersRestarts = "28.3.6.5"
+const ClusterInstFieldResourcesVms = "28.1"
+const ClusterInstFieldResourcesVmsName = "28.1.1"
+const ClusterInstFieldResourcesVmsType = "28.1.2"
+const ClusterInstFieldResourcesVmsStatus = "28.1.3"
+const ClusterInstFieldResourcesVmsInfraFlavor = "28.1.4"
+const ClusterInstFieldResourcesVmsIpaddresses = "28.1.5"
+const ClusterInstFieldResourcesVmsIpaddressesExternalIp = "28.1.5.1"
+const ClusterInstFieldResourcesVmsIpaddressesInternalIp = "28.1.5.2"
+const ClusterInstFieldResourcesVmsContainers = "28.1.6"
+const ClusterInstFieldResourcesVmsContainersName = "28.1.6.1"
+const ClusterInstFieldResourcesVmsContainersType = "28.1.6.2"
+const ClusterInstFieldResourcesVmsContainersStatus = "28.1.6.3"
+const ClusterInstFieldResourcesVmsContainersClusterip = "28.1.6.4"
+const ClusterInstFieldResourcesVmsContainersRestarts = "28.1.6.5"
 
 var ClusterInstAllFields = []string{
 	ClusterInstFieldKeyClusterKeyName,
@@ -2047,7 +2047,7 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 		}
 	}
 	if _, set := fmap["28"]; set {
-		if _, set := fmap["28.3"]; set {
+		if _, set := fmap["28.1"]; set {
 			if src.Resources.Vms != nil {
 				m.Resources.Vms = src.Resources.Vms
 				changed++
@@ -2856,20 +2856,20 @@ const ClusterInstInfoFieldStatusMaxTasks = "6.2"
 const ClusterInstInfoFieldStatusTaskName = "6.3"
 const ClusterInstInfoFieldStatusStepName = "6.4"
 const ClusterInstInfoFieldResources = "7"
-const ClusterInstInfoFieldResourcesVms = "7.3"
-const ClusterInstInfoFieldResourcesVmsName = "7.3.1"
-const ClusterInstInfoFieldResourcesVmsType = "7.3.2"
-const ClusterInstInfoFieldResourcesVmsStatus = "7.3.3"
-const ClusterInstInfoFieldResourcesVmsInfraFlavor = "7.3.4"
-const ClusterInstInfoFieldResourcesVmsIpaddresses = "7.3.5"
-const ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp = "7.3.5.1"
-const ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp = "7.3.5.2"
-const ClusterInstInfoFieldResourcesVmsContainers = "7.3.6"
-const ClusterInstInfoFieldResourcesVmsContainersName = "7.3.6.1"
-const ClusterInstInfoFieldResourcesVmsContainersType = "7.3.6.2"
-const ClusterInstInfoFieldResourcesVmsContainersStatus = "7.3.6.3"
-const ClusterInstInfoFieldResourcesVmsContainersClusterip = "7.3.6.4"
-const ClusterInstInfoFieldResourcesVmsContainersRestarts = "7.3.6.5"
+const ClusterInstInfoFieldResourcesVms = "7.1"
+const ClusterInstInfoFieldResourcesVmsName = "7.1.1"
+const ClusterInstInfoFieldResourcesVmsType = "7.1.2"
+const ClusterInstInfoFieldResourcesVmsStatus = "7.1.3"
+const ClusterInstInfoFieldResourcesVmsInfraFlavor = "7.1.4"
+const ClusterInstInfoFieldResourcesVmsIpaddresses = "7.1.5"
+const ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp = "7.1.5.1"
+const ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp = "7.1.5.2"
+const ClusterInstInfoFieldResourcesVmsContainers = "7.1.6"
+const ClusterInstInfoFieldResourcesVmsContainersName = "7.1.6.1"
+const ClusterInstInfoFieldResourcesVmsContainersType = "7.1.6.2"
+const ClusterInstInfoFieldResourcesVmsContainersStatus = "7.1.6.3"
+const ClusterInstInfoFieldResourcesVmsContainersClusterip = "7.1.6.4"
+const ClusterInstInfoFieldResourcesVmsContainersRestarts = "7.1.6.5"
 
 var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldKeyClusterKeyName,
@@ -3176,7 +3176,7 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 		}
 	}
 	if _, set := fmap["7"]; set {
-		if _, set := fmap["7.3"]; set {
+		if _, set := fmap["7.1"]; set {
 			if src.Resources.Vms != nil {
 				m.Resources.Vms = src.Resources.Vms
 				changed++
