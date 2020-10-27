@@ -83,6 +83,12 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 	for i0 := 0; i0 < len(in.OsImages); i0++ {
 	}
+	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
+		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
+		}
+		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
+		}
+	}
 }
 
 var CloudletApiCmd edgeproto.CloudletApiClient
@@ -1470,34 +1476,54 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages:#.diskformat",
 	"controllercachereceived",
 	"maintenancestate",
+	"resources.vms:#.name",
+	"resources.vms:#.type",
+	"resources.vms:#.status",
+	"resources.vms:#.infraflavor",
+	"resources.vms:#.ipaddresses:#.externalip",
+	"resources.vms:#.ipaddresses:#.internalip",
+	"resources.vms:#.containers:#.name",
+	"resources.vms:#.containers:#.type",
+	"resources.vms:#.containers:#.status",
+	"resources.vms:#.containers:#.clusterip",
+	"resources.vms:#.containers:#.restarts",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
 }
 var CloudletInfoComments = map[string]string{
-	"fields":                  "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":            "Organization of the cloudlet site",
-	"cloudlet":                "Name of the cloudlet",
-	"state":                   "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
-	"notifyid":                "Id of client assigned by server (internal use only)",
-	"controller":              "Connected controller unique id",
-	"osmaxram":                "Maximum Ram in MB on the Cloudlet",
-	"osmaxvcores":             "Maximum number of VCPU cores on the Cloudlet",
-	"osmaxvolgb":              "Maximum amount of disk in GB on the Cloudlet",
-	"errors":                  "Any errors encountered while making changes to the Cloudlet",
-	"flavors:#.name":          "Name of the flavor on the Cloudlet",
-	"flavors:#.vcpus":         "Number of VCPU cores on the Cloudlet",
-	"flavors:#.ram":           "Ram in MB on the Cloudlet",
-	"flavors:#.disk":          "Amount of disk in GB on the Cloudlet",
-	"flavors:#.propmap":       "OS Flavor Properties, if any",
-	"containerversion":        "Cloudlet container version",
-	"osimages:#.name":         "image name",
-	"osimages:#.tags":         "optional tags present on image",
-	"osimages:#.properties":   "image properties/metadata",
-	"osimages:#.diskformat":   "format qcow2, img, etc",
-	"controllercachereceived": "Indicates all controller data has been sent to CRM",
-	"maintenancestate":        "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
+	"cloudlet-org":                           "Organization of the cloudlet site",
+	"cloudlet":                               "Name of the cloudlet",
+	"state":                                  "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
+	"notifyid":                               "Id of client assigned by server (internal use only)",
+	"controller":                             "Connected controller unique id",
+	"osmaxram":                               "Maximum Ram in MB on the Cloudlet",
+	"osmaxvcores":                            "Maximum number of VCPU cores on the Cloudlet",
+	"osmaxvolgb":                             "Maximum amount of disk in GB on the Cloudlet",
+	"errors":                                 "Any errors encountered while making changes to the Cloudlet",
+	"flavors:#.name":                         "Name of the flavor on the Cloudlet",
+	"flavors:#.vcpus":                        "Number of VCPU cores on the Cloudlet",
+	"flavors:#.ram":                          "Ram in MB on the Cloudlet",
+	"flavors:#.disk":                         "Amount of disk in GB on the Cloudlet",
+	"flavors:#.propmap":                      "OS Flavor Properties, if any",
+	"containerversion":                       "Cloudlet container version",
+	"osimages:#.name":                        "image name",
+	"osimages:#.tags":                        "optional tags present on image",
+	"osimages:#.properties":                  "image properties/metadata",
+	"osimages:#.diskformat":                  "format qcow2, img, etc",
+	"controllercachereceived":                "Indicates all controller data has been sent to CRM",
+	"maintenancestate":                       "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"resources.vms:#.name":                   "Virtual machine name",
+	"resources.vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"resources.vms:#.status":                 "Runtime status of the VM",
+	"resources.vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"resources.vms:#.containers:#.name":      "Name of the container",
+	"resources.vms:#.containers:#.type":      "Type can be docker or kubernetes",
+	"resources.vms:#.containers:#.status":    "Runtime status of the container",
+	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
+	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
