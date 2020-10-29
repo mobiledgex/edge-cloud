@@ -27,6 +27,7 @@ var PlatformClientsCache edgeproto.DeviceCache
 
 var ScaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
+var rollingInterval = flag.Int("rollingInterval", 10, "Rolling latency samples interval. Samples that are older than this interval are dropped")
 
 const EdgeEventLatencyMethod = "appinst-latency"
 
@@ -44,18 +45,17 @@ type ApiStatCall struct {
 	Key           StatKey
 	Fail          bool
 	Latency       time.Duration
-	Samples       []float64 // Latency samples for EdgeEvents
-	SessionCookie string    // SessionCookie to identify unique clients for EdgeEvents
+	Samples       []*dme.Sample // Latency samples for EdgeEvents
+	SessionCookie string        // SessionCookie to identify unique clients for EdgeEvents
 }
 
 type ApiStat struct {
-	Reqs                uint64
-	Errs                uint64
-	Latency             grpcstats.LatencyMetric
-	RollingLatencyTemp  *dmeutil.RollingLatency // Temporary rolling statistics for EdgeEvents latency measurements (resets after 10 min)
-	RollingLatencyTotal *dmeutil.RollingLatency // Rolling statistics for EdgeEvents latency measurements to be stored in influx
-	Mux                 sync.Mutex
-	Changed             bool
+	Reqs           uint64
+	Errs           uint64
+	Latency        grpcstats.LatencyMetric
+	RollingLatency *dmeutil.RollingLatency // Temporary rolling statistics for EdgeEvents latency measurements (resets after 10 min)
+	Mux            sync.Mutex
+	Changed        bool
 }
 
 type MapShard struct {
@@ -126,15 +126,11 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	}
 	stat.Latency.AddLatency(call.Latency)
 	if call.Key.Method == EdgeEventLatencyMethod {
-		// Update RollingLatency and RollingLatencyTotal statistics
-		if stat.RollingLatencyTemp == nil {
-			stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
+		// Update RollingLatency statistics
+		if stat.RollingLatency == nil {
+			stat.RollingLatency = dmeutil.NewRollingLatency()
 		}
-		if stat.RollingLatencyTotal == nil {
-			stat.RollingLatencyTotal = dmeutil.NewRollingLatency()
-		}
-		stat.RollingLatencyTemp.UpdateRollingLatency(call.Samples, call.SessionCookie)
-		stat.RollingLatencyTotal.UpdateRollingLatency(call.Samples, call.SessionCookie)
+		stat.RollingLatency.UpdateRollingLatency(call.Samples, call.SessionCookie, time.Duration(*rollingInterval)*time.Minute)
 	}
 	stat.Changed = true
 	shard.mux.Unlock()
@@ -146,35 +142,36 @@ func (s *DmeStats) RunNotify() {
 	done := false
 	// for now, no tracing of stats
 	ctx := context.Background()
+	sentToInflux := false // tracks whether previous loop sent updates to influx
 	for !done {
 		select {
 		case <-time.After(s.interval):
 			ts, _ := types.TimestampProto(time.Now())
+			currSentToInflux := false // tracks whether current loop has sent updates to influx
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
 					if stat.Changed {
 						if key.Method == EdgeEventLatencyMethod {
-							s.send(ctx, EdgeEventStatToMetric(ts, &key, stat))
+							// Only send latency updates to Influx the loop after other APIs are updated
+							if sentToInflux {
+								s.send(ctx, EdgeEventStatToMetric(ts, &key, stat))
+								stat.Changed = false
+							}
 						} else {
 							s.send(ctx, ApiStatToMetric(ts, &key, stat))
+							currSentToInflux = true
+							stat.Changed = false
 						}
-						stat.Changed = false
 					}
-					// Reset RollingLatencyTemp every 10 minutes, so that latency values are current
+					// Remove samples that are > than 10 min old
 					if key.Method == EdgeEventLatencyMethod {
-						if stat.RollingLatencyTemp == nil || stat.RollingLatencyTemp.NumUniqueClients == 0 {
-							continue
-						}
-						t := cloudcommon.TimestampToTime(*stat.RollingLatencyTemp.Latency.Timestamp)
-						if time.Since(t) > time.Minute*10 {
-							stat.RollingLatencyTemp = dmeutil.NewRollingLatency()
-						}
-
+						stat.RollingLatency.RemoveOldSamples(time.Duration(*rollingInterval) * time.Minute)
 					}
 				}
 				s.shards[ii].mux.Unlock()
 			}
+			sentToInflux = currSentToInflux
 		case <-s.stop:
 			done = true
 		}
@@ -219,13 +216,13 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *ed
 	metric.AddTag("cloudletorg", key.CloudletFound.Organization)
 	metric.AddTag("cluster", key.ClusterKey.Name)
 	metric.AddTag("clusterorg", key.ClusterInstOrg)
-	// Latency information (store RollingLatencyTotal in influx)
-	metric.AddIntVal("numsamples", stat.RollingLatencyTotal.Latency.NumSamples)
-	metric.AddIntVal("numclients", stat.RollingLatencyTotal.NumUniqueClients)
-	metric.AddDoubleVal("avg", stat.RollingLatencyTotal.Latency.Avg)
-	metric.AddDoubleVal("stddev", stat.RollingLatencyTotal.Latency.StdDev)
-	metric.AddDoubleVal("min", stat.RollingLatencyTotal.Latency.Min)
-	metric.AddDoubleVal("max", stat.RollingLatencyTotal.Latency.Max)
+	// Latency information
+	metric.AddIntVal("numsamples", stat.RollingLatency.Latency.NumSamples)
+	metric.AddIntVal("numclients", stat.RollingLatency.NumUniqueClients)
+	metric.AddDoubleVal("avg", stat.RollingLatency.Latency.Avg)
+	metric.AddDoubleVal("stddev", stat.RollingLatency.Latency.StdDev)
+	metric.AddDoubleVal("min", stat.RollingLatency.Latency.Min)
+	metric.AddDoubleVal("max", stat.RollingLatency.Latency.Max)
 
 	stat.Latency.AddToMetric(&metric)
 	return &metric

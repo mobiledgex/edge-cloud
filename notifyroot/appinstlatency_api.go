@@ -101,8 +101,9 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 		}
 		appInstLatency := &edgeproto.AppInstLatency{
 			Key:        in.Key,
-			Latency:    &rollinglatency.Latency,
+			Latency:    rollinglatency.Latency,
 			NumClients: rollinglatency.NumUniqueClients,
+			Samples:    rollinglatency.Samples,
 		}
 		return cb.Send(appInstLatency)
 	}
@@ -112,7 +113,12 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 		Ctx:          ctx,
 	}
 
-	for {
+	for i := 0; i < 1; i++ {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 		if err = nodeMgr.Debug.DebugRequest(req, newcb); err != nil {
 			return err
 		}

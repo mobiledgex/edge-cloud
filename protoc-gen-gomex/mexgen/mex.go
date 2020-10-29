@@ -114,11 +114,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 
 	if m.firstFile == *file.FileDescriptorProto.Name {
 		m.P(matchOptions)
-		prependPkg := GetGenerateEnumDecodeHookForPkg(file)
-		if prependPkg != "" {
-			prependPkg += "."
-		}
-		m.generateEnumDecodeHook(*file.Package, prependPkg)
+		m.generateEnumDecodeHook()
 		m.generateShowCheck()
 		m.generateAllKeyTags()
 	}
@@ -2332,13 +2328,7 @@ func (m *mex) setKeyTags(parents []string, desc *generator.Descriptor, visited [
 	}
 }
 
-// filePkg refers to the package of the file we are generating the EnumDecodeHook for
-// For example, if we are generating for alert.pb.go, the filePkg is edgeproto
-// prependPkg is the package to be prepended to certain Enums
-// For example, alert.pb.go Decode functions for enums in appcommon.proto require objects in appcommon.pb.go. Because
-// alert.pb.go is in the edgeproto package and appcommon.pb.go is in the distributed_match_engine package,
-// we need to prepend the package in order to access objects in appcommon.pb.go
-func (m *mex) generateEnumDecodeHook(filePkg string, prependPkg string) {
+func (m *mex) generateEnumDecodeHook() {
 	m.P("// DecodeHook for use with the mapstructure package.")
 	m.P("// Allows decoding to handle protobuf enums that are")
 	m.P("// represented as strings.")
@@ -2346,18 +2336,12 @@ func (m *mex) generateEnumDecodeHook(filePkg string, prependPkg string) {
 	m.P("if from.Kind() != reflect.String { return data, nil }")
 	m.P("switch to {")
 	for _, file := range m.gen.Request.ProtoFile {
-		if !m.support.GenFile(*file.Name) && *file.Name != "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto" {
+		if !m.support.GenFile(*file.Name) {
 			continue
 		}
-		currPkg := prependPkg
-		if prependPkg != "" {
-			if filePkg == *file.Package {
-				currPkg = ""
-			}
-		}
 		for _, en := range file.EnumType {
-			m.P("case reflect.TypeOf(", currPkg, en.Name, "(0)):")
-			m.P("if en, ok := ", currPkg, en.Name, "_CamelValue[util.CamelCase(data.(string))]; ok {")
+			m.P("case reflect.TypeOf(", en.Name, "(0)):")
+			m.P("if en, ok := ", en.Name, "_CamelValue[util.CamelCase(data.(string))]; ok {")
 			m.P("return en, nil")
 			m.P("}")
 		}
@@ -2572,8 +2556,4 @@ func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
 
 func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
 	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
-}
-
-func GetGenerateEnumDecodeHookForPkg(file *generator.FileDescriptor) string {
-	return gensupport.GetStringExtension(file.Options, protogen.E_GenerateEnumDecodeHookForPkg, "")
 }

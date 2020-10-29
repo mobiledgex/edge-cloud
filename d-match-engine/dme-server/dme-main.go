@@ -54,6 +54,7 @@ var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie e
 var edgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
+var eesolib = flag.String("eeplugin", "", "plugin file") // for edge events plugin
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
 
@@ -383,6 +384,36 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 	return getOperatorFunc(ctx, operatorName)
 }
 
+// Loads EdgeEvent Plugin functions into EEHandler
+func initEdgeEventsPlugin(ctx context.Context, operatorName string) (dmecommon.EdgeEventsHandler, error) {
+	if operatorName == "" || operatorName == "standalone" {
+		return &dmecommon.EmptyEdgeEventsHandler{}, nil
+	}
+	// Load Edge Events Plugin
+	if *eesolib == "" {
+		*eesolib = os.Getenv("GOPATH") + "/plugins/edgeevents.so"
+	}
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Loading plugin", "plugin", *eesolib)
+	plug, err := plugin.Open(*eesolib)
+	if err != nil {
+		log.WarnLog("failed to load plugin", "plugin", *eesolib, "error", err)
+		return nil, err
+	}
+	sym, err := plug.Lookup("GetEdgeEventsHandler")
+	if err != nil {
+		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
+	}
+	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (dmecommon.EdgeEventsHandler, error))
+	if !ok {
+		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
+	}
+	eehandler, err := getEdgeEventsHandlerFunc(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return eehandler, nil
+}
+
 // allowCORS allows Cross Origin Resoruce Sharing from any origin.
 func allowCORS(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -447,7 +478,13 @@ func main() {
 		}
 	}
 
-	dmecommon.SetupMatchEngine(ctx)
+	eehandler, err := initEdgeEventsPlugin(ctx, *carrier)
+	if err != nil {
+		span.Finish()
+		log.FatalLog("Unable to init EdgeEvents plugin", "err", err)
+	}
+
+	dmecommon.SetupMatchEngine(eehandler)
 	grpcOpts := make([]grpc.ServerOption, 0)
 
 	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
