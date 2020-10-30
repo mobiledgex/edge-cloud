@@ -594,6 +594,7 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 }
 
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
+	log.SpanLog(inCb.Context(), log.DebugLevelApi, "delete ClusterInst internal", "key", in.Key)
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
@@ -629,7 +630,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})
 			}
-			return errors.New("ClusterInst busy, cannot delete")
+			return fmt.Errorf("ClusterInst busy (%s), cannot delete", in.State.String())
 		}
 		prevState = in.State
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
