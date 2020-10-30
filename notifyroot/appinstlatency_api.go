@@ -113,7 +113,7 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 		Ctx:          ctx,
 	}
 
-	for i := 0; i < 1; i++ {
+	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
