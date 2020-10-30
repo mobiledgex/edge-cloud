@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -388,7 +387,9 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 	case "register":
 		var expirySeconds int64 = 600
 		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
-			privKeyFile := filepath.Dir(apiFile) + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
+			goPath := os.Getenv("GOPATH")
+			datadir := goPath + "/" + "src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data"
+			privKeyFile := datadir + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
 			expTime := time.Now().Add(time.Duration(expirySeconds) * time.Second).Unix()
 			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.OrgName,
 				apiRequest.Rcreq.AppName, apiRequest.Rcreq.AppVers, expTime)
@@ -520,7 +521,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Send dummy latency samples as Latency Event
 			latencyEvent := new(dmeproto.ClientEdgeEvent)
 			latencyEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_LATENCY_SAMPLES
-			samples := make([]*dmeproto.Sample, 5)
+			samples := make([]*dmeproto.Sample, 0)
 			// Create dummy samples
 			list := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
 			for i, val := range list {
@@ -532,6 +533,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 					},
 					Timestamp: &dmeproto.Timestamp{
 						Seconds: int64(i),
+						Nanos:   12345,
 					},
 					SessionCookie: sessionCookie,
 				}
