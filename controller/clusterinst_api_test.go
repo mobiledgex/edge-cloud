@@ -78,7 +78,7 @@ func TestClusterInstApi(t *testing.T) {
 	checkClusterInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 
 	// check override of error DELETE_ERROR
-	err = forceClusterInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR)
+	err = forceClusterInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkClusterInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_DELETE_ERROR)
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
@@ -89,7 +89,7 @@ func TestClusterInstApi(t *testing.T) {
 	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// check override of error CREATE_ERROR
-	err = forceClusterInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR)
+	err = forceClusterInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkClusterInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_CREATE_ERROR)
 	err = clusterInstApi.DeleteClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
@@ -203,6 +203,7 @@ func reduceInfoTimeouts(t *testing.T, ctx context.Context) {
 func checkClusterInstState(t *testing.T, ctx context.Context, api *testutil.ClusterInstCommonApi, in *edgeproto.ClusterInst, state edgeproto.TrackedState) {
 	out := edgeproto.ClusterInst{}
 	found := testutil.GetClusterInst(t, ctx, api, &in.Key, &out)
+	log.SpanLog(ctx, log.DebugLevelInfo, "check ClusterInst state", "state", state)
 	if state == edgeproto.TrackedState_NOT_PRESENT {
 		require.False(t, found, "get cluster inst")
 	} else {
@@ -211,7 +212,16 @@ func checkClusterInstState(t *testing.T, ctx context.Context, api *testutil.Clus
 	}
 }
 
-func forceClusterInstState(ctx context.Context, in *edgeproto.ClusterInst, state edgeproto.TrackedState) error {
+func forceClusterInstState(ctx context.Context, in *edgeproto.ClusterInst, state edgeproto.TrackedState, responder *DummyInfoResponder) error {
+	log.SpanLog(ctx, log.DebugLevelInfo, "force ClusterInst state", "state", state)
+	if responder != nil {
+		// disable responder, otherwise it will respond to certain states
+		// and change the current state
+		responder.enable = false
+		defer func() {
+			responder.enable = true
+		}()
+	}
 	err := clusterInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		obj := edgeproto.ClusterInst{}
 		if !clusterInstApi.store.STMGet(stm, &in.Key, &obj) {
@@ -332,10 +342,10 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 		err = appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create auto AppInst")
 		// force bad states
-		err = forceAppInstState(ctx, &ai, state)
+		err = forceAppInstState(ctx, &ai, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, appCommon, &ai, state)
-		err = forceClusterInstState(ctx, &obj, state)
+		err = forceClusterInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkClusterInstState(t, ctx, api, &obj, state)
 		// delete cluster
