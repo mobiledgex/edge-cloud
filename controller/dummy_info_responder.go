@@ -23,6 +23,7 @@ func NewDummyInfoResponder(appInstCache *edgeproto.AppInstCache, clusterInstCach
 		ClusterInstCache:    clusterInstCache,
 		RecvAppInstInfo:     recvAppInstInfo,
 		RecvClusterInstInfo: recvClusterInstInfo,
+		enable:              true,
 	}
 	d.AppInstCache.SetNotifyCb(d.runAppInstChanged)
 	d.ClusterInstCache.SetNotifyCb(d.runClusterInstChanged)
@@ -46,6 +47,7 @@ type DummyInfoResponder struct {
 	simulateClusterCreateFailure bool
 	simulateClusterUpdateFailure bool
 	simulateClusterDeleteFailure bool
+	enable                       bool
 }
 
 func (d *DummyInfoResponder) SetSimulateAppCreateFailure(state bool) {
@@ -65,10 +67,16 @@ func (d *DummyInfoResponder) SetSimulateClusterDeleteFailure(state bool) {
 }
 
 func (d *DummyInfoResponder) runClusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst, modRev int64) {
+	if !d.enable {
+		return
+	}
 	go d.clusterInstChanged(ctx, key, modRev)
 }
 
 func (d *DummyInfoResponder) runAppInstChanged(ctx context.Context, key *edgeproto.AppInstKey, old *edgeproto.AppInst, modRev int64) {
+	if !d.enable {
+		return
+	}
 	go d.appInstChanged(ctx, key, modRev)
 }
 
