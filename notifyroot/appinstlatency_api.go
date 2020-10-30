@@ -124,5 +124,4 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 		}
 		time.Sleep(10 * time.Second)
 	}
-	return nil
 }
