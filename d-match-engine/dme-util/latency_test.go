@@ -39,7 +39,7 @@ func TestLatencyCalculations(t *testing.T) {
 
 	// Test UpdateRollingLatency: min, max, avg, variance, stddev, numsamples calculation
 	now = time.Now()
-	r := NewRollingLatency()
+	r := NewRollingLatency(duration)
 	samples2 := make([]*dme.Sample, 0)
 	list2 := []float64{.53, 14.2, 21.3, 6.7, 8.8}
 	times2 := []time.Time{now.Add(-32 * time.Second), now.Add(-51 * time.Second), now.Add(-38 * time.Second), now.Add(-56 * time.Second), now.Add(-27 * time.Second)}
@@ -51,7 +51,7 @@ func TestLatencyCalculations(t *testing.T) {
 		}
 		samples2 = append(samples2, s)
 	}
-	r.UpdateRollingLatency(samples2, "123", duration)
+	r.UpdateRollingLatency(samples2, "123")
 	require.Equal(t, .53, r.Latency.Min)
 	require.Equal(t, 21.3, r.Latency.Max)
 	require.True(t, math.Abs(10.306-r.Latency.Avg) < errorThreshold)
@@ -67,7 +67,7 @@ func TestLatencyCalculations(t *testing.T) {
 
 	// Test UpdateRollingLatency: Adding Samples: rolling avg, min, max, stddev, variance, numsamples
 	// Update latency2 with samples1
-	r.UpdateRollingLatency(samples1, "234", duration)
+	r.UpdateRollingLatency(samples1, "234")
 	require.Equal(t, .53, r.Latency.Min)
 	require.Equal(t, 21.3, r.Latency.Max)
 	require.True(t, math.Abs(7.603-r.Latency.Avg) < errorThreshold)
@@ -95,7 +95,7 @@ func TestLatencyCalculations(t *testing.T) {
 		}
 		samples3 = append(samples3, s)
 	}
-	r.UpdateRollingLatency(samples3, "345", duration)
+	r.UpdateRollingLatency(samples3, "345")
 	require.Equal(t, .34, r.Latency.Min)
 	require.Equal(t, 33.21, r.Latency.Max)
 	require.True(t, math.Abs(8.668-r.Latency.Avg) < errorThreshold)

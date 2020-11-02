@@ -39,19 +39,21 @@ type RollingLatency struct {
 	Samples          Samples
 	UniqueClients    map[string]int // Maps unique client to number of occurences of that unique client
 	NumUniqueClients uint64
+	Duration         time.Duration // length of rolling window
 }
 
-func NewRollingLatency() *RollingLatency {
+func NewRollingLatency(duration time.Duration) *RollingLatency {
 	r := new(RollingLatency)
 	r.Samples = make([]*dme.Sample, 0)
 	r.UniqueClients = make(map[string]int)
 	r.Latency = new(dme.Latency)
+	r.Duration = duration
 	return r
 }
 
 // Update RollingLatency struct (Latency, Samples, UniqueClients, NumUniqueClients) with new Samples
-func (r *RollingLatency) UpdateRollingLatency(samples []*dme.Sample, sessionCookie string, duration time.Duration) {
-	r.RemoveOldSamples(duration)
+func (r *RollingLatency) UpdateRollingLatency(samples []*dme.Sample, sessionCookie string) {
+	r.RemoveOldSamples()
 	r.AddNewSamples(samples, sessionCookie)
 }
 
@@ -105,7 +107,7 @@ func (r *RollingLatency) AddNewSamples(samples []*dme.Sample, sessionCookie stri
 }
 
 // Remove samples that are older than time.Now() - duration and update RollingLatency statistics
-func (r *RollingLatency) RemoveOldSamples(duration time.Duration) {
+func (r *RollingLatency) RemoveOldSamples() {
 	// Previous statistics used to calculate rolling variance
 	prevNumSamples := r.Latency.NumSamples
 	prevAvg := r.Latency.Avg
@@ -115,7 +117,7 @@ func (r *RollingLatency) RemoveOldSamples(duration time.Duration) {
 	total := r.Latency.Avg * float64(r.Latency.NumSamples)
 	recalculateLatency := false
 	for _, sample := range r.Samples {
-		if time.Since(cloudcommon.TimestampToTime(*sample.Timestamp)) > duration {
+		if time.Since(cloudcommon.TimestampToTime(*sample.Timestamp)) > r.Duration {
 			// remove first element in slice
 			r.Samples = r.Samples[1:]
 			total = total - sample.Value
@@ -145,7 +147,7 @@ func (r *RollingLatency) RemoveOldSamples(duration time.Duration) {
 		prevSumSquared := prevVariance * float64(prevNumSamples-1)
 		newSumSquared := prevSumSquared
 		for _, sample := range prevSamples {
-			if time.Since(cloudcommon.TimestampToTime(*sample.Timestamp)) > duration {
+			if time.Since(cloudcommon.TimestampToTime(*sample.Timestamp)) > r.Duration {
 				newSumSquared -= (sample.Value - prevAvg) * (sample.Value - r.Latency.Avg)
 			} else {
 				break

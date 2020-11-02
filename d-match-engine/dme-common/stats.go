@@ -128,9 +128,9 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	if call.Key.Method == EdgeEventLatencyMethod {
 		// Update RollingLatency statistics
 		if stat.RollingLatency == nil {
-			stat.RollingLatency = dmeutil.NewRollingLatency()
+			stat.RollingLatency = dmeutil.NewRollingLatency(time.Duration(*rollingInterval) * time.Minute)
 		}
-		stat.RollingLatency.UpdateRollingLatency(call.Samples, call.SessionCookie, time.Duration(*rollingInterval)*time.Minute)
+		stat.RollingLatency.UpdateRollingLatency(call.Samples, call.SessionCookie)
 	}
 	stat.Changed = true
 	shard.mux.Unlock()
@@ -166,7 +166,7 @@ func (s *DmeStats) RunNotify() {
 					}
 					// Remove samples that are > than 10 min old
 					if key.Method == EdgeEventLatencyMethod {
-						stat.RollingLatency.RemoveOldSamples(time.Duration(*rollingInterval) * time.Minute)
+						stat.RollingLatency.RemoveOldSamples()
 					}
 				}
 				s.shards[ii].mux.Unlock()
