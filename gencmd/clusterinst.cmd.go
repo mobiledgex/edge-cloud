@@ -48,6 +48,8 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.NodeFlavor = ""
 	}
+	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
+	}
 	if _, found := tags["nocmp"]; found {
 		in.ExternalVolumeSize = 0
 	}
@@ -78,6 +80,8 @@ func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
+	}
+	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
 	}
 	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
 		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
@@ -600,6 +604,9 @@ var ClusterInstInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"status.msgcount",
+	"status.msgs:#.msgid",
+	"status.msgs:#.msg",
 	"resources.vms:#.name",
 	"resources.vms:#.type",
 	"resources.vms:#.status",

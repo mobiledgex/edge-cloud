@@ -52,6 +52,8 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
+	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
+	}
 	if _, found := tags["nocmp"]; found {
 		in.Revision = ""
 	}
@@ -93,6 +95,8 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
+	}
+	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
 	}
 }
 
@@ -807,6 +811,9 @@ var AppInstInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"status.msgcount",
+	"status.msgs:#.msgid",
+	"status.msgs:#.msg",
 	"powerstate",
 }
 var AppInstInfoAliasArgs = []string{}

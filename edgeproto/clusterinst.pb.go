@@ -1441,6 +1441,10 @@ const ClusterInstFieldStatusTaskNumber = "16.1"
 const ClusterInstFieldStatusMaxTasks = "16.2"
 const ClusterInstFieldStatusTaskName = "16.3"
 const ClusterInstFieldStatusStepName = "16.4"
+const ClusterInstFieldStatusMsgCount = "16.5"
+const ClusterInstFieldStatusMsgs = "16.6"
+const ClusterInstFieldStatusMsgsMsgId = "16.6.1"
+const ClusterInstFieldStatusMsgsMsg = "16.6.2"
 const ClusterInstFieldExternalVolumeSize = "17"
 const ClusterInstFieldAutoScalePolicy = "18"
 const ClusterInstFieldAvailabilityZone = "19"
@@ -1489,6 +1493,9 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldStatusMaxTasks,
 	ClusterInstFieldStatusTaskName,
 	ClusterInstFieldStatusStepName,
+	ClusterInstFieldStatusMsgCount,
+	ClusterInstFieldStatusMsgsMsgId,
+	ClusterInstFieldStatusMsgsMsg,
 	ClusterInstFieldExternalVolumeSize,
 	ClusterInstFieldAutoScalePolicy,
 	ClusterInstFieldAvailabilityZone,
@@ -1534,6 +1541,9 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldStatusMaxTasks:                    struct{}{},
 	ClusterInstFieldStatusTaskName:                    struct{}{},
 	ClusterInstFieldStatusStepName:                    struct{}{},
+	ClusterInstFieldStatusMsgCount:                    struct{}{},
+	ClusterInstFieldStatusMsgsMsgId:                   struct{}{},
+	ClusterInstFieldStatusMsgsMsg:                     struct{}{},
 	ClusterInstFieldExternalVolumeSize:                struct{}{},
 	ClusterInstFieldAutoScalePolicy:                   struct{}{},
 	ClusterInstFieldAvailabilityZone:                  struct{}{},
@@ -1579,6 +1589,9 @@ var ClusterInstAllFieldsStringMap = map[string]string{
 	ClusterInstFieldStatusMaxTasks:                    "Status Max Tasks",
 	ClusterInstFieldStatusTaskName:                    "Status Task Name",
 	ClusterInstFieldStatusStepName:                    "Status Step Name",
+	ClusterInstFieldStatusMsgCount:                    "Status Msg Count",
+	ClusterInstFieldStatusMsgsMsgId:                   "Status Msgs Msg Id",
+	ClusterInstFieldStatusMsgsMsg:                     "Status Msgs Msg",
 	ClusterInstFieldExternalVolumeSize:                "External Volume Size",
 	ClusterInstFieldAutoScalePolicy:                   "Auto Scale Policy",
 	ClusterInstFieldAvailabilityZone:                  "Availability Zone",
@@ -1686,6 +1699,27 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 	if m.Status.StepName != o.Status.StepName {
 		fields[ClusterInstFieldStatusStepName] = struct{}{}
 		fields[ClusterInstFieldStatus] = struct{}{}
+	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[ClusterInstFieldStatusMsgCount] = struct{}{}
+		fields[ClusterInstFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[ClusterInstFieldStatusMsgs] = struct{}{}
+		fields[ClusterInstFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
+				fields[ClusterInstFieldStatusMsgsMsgId] = struct{}{}
+				fields[ClusterInstFieldStatusMsgs] = struct{}{}
+				fields[ClusterInstFieldStatus] = struct{}{}
+			}
+			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
+				fields[ClusterInstFieldStatusMsgsMsg] = struct{}{}
+				fields[ClusterInstFieldStatusMsgs] = struct{}{}
+				fields[ClusterInstFieldStatus] = struct{}{}
+			}
+		}
 	}
 	if m.ExternalVolumeSize != o.ExternalVolumeSize {
 		fields[ClusterInstFieldExternalVolumeSize] = struct{}{}
@@ -1976,6 +2010,21 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 		if _, set := fmap["16.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["16.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["16.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}
@@ -2603,8 +2652,8 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	bufferedMsgs := []string{}
-	recvdStatus := false
+	lastMsgId := uint32(0)
+	var lastMsg string
 	var err error
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
@@ -2615,32 +2664,28 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.ToString()
-			var msg string
-			if statusString != "" {
-				msg = statusString
-				recvdStatus = true
-			} else {
-				msg = TrackedState_CamelName[int32(curState)]
-			}
-			if recvdStatus {
-				// recvdStatus flag is for backwards compatibility.
-				// With current code we support msg streaming via streamObjs,
-				// but in case there are old versions of CRM sending msgs via
-				// status msg, only then we send msgs to cb
-				for _, bufMsg := range bufferedMsgs {
-					send(&Result{Message: bufMsg})
+			if len(info.Status.Msgs) > 0 {
+				for _, streamMsg := range info.Status.Msgs {
+					if lastMsgId >= streamMsg.MsgId {
+						continue
+					}
+					if lastMsg == streamMsg.Msg {
+						continue
+					}
+					send(&Result{Message: streamMsg.Msg})
+					lastMsgId = streamMsg.MsgId
+					lastMsg = streamMsg.Msg
 				}
-				bufferedMsgs = nil
-				send(&Result{Message: msg})
 			} else {
-				// NotPresent is a state msg generated from this code, hence
-				// allow it
-				if msg == TrackedState_CamelName[int32(TrackedState_NOT_PRESENT)] {
-					send(&Result{Message: msg})
+				statusString := info.Status.ToString()
+				var msg string
+				if statusString != "" {
+					msg = statusString
 				} else {
-					bufferedMsgs = append(bufferedMsgs, msg)
+					msg = TrackedState_CamelName[int32(curState)]
 				}
+				lastMsg = msg
+				send(&Result{Message: msg})
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for ClusterInst")
@@ -2855,6 +2900,10 @@ const ClusterInstInfoFieldStatusTaskNumber = "6.1"
 const ClusterInstInfoFieldStatusMaxTasks = "6.2"
 const ClusterInstInfoFieldStatusTaskName = "6.3"
 const ClusterInstInfoFieldStatusStepName = "6.4"
+const ClusterInstInfoFieldStatusMsgCount = "6.5"
+const ClusterInstInfoFieldStatusMsgs = "6.6"
+const ClusterInstInfoFieldStatusMsgsMsgId = "6.6.1"
+const ClusterInstInfoFieldStatusMsgsMsg = "6.6.2"
 const ClusterInstInfoFieldResources = "7"
 const ClusterInstInfoFieldResourcesVms = "7.1"
 const ClusterInstInfoFieldResourcesVmsName = "7.1.1"
@@ -2883,6 +2932,9 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldStatusMaxTasks,
 	ClusterInstInfoFieldStatusTaskName,
 	ClusterInstInfoFieldStatusStepName,
+	ClusterInstInfoFieldStatusMsgCount,
+	ClusterInstInfoFieldStatusMsgsMsgId,
+	ClusterInstInfoFieldStatusMsgsMsg,
 	ClusterInstInfoFieldResourcesVmsName,
 	ClusterInstInfoFieldResourcesVmsType,
 	ClusterInstInfoFieldResourcesVmsStatus,
@@ -2908,6 +2960,9 @@ var ClusterInstInfoAllFieldsMap = map[string]struct{}{
 	ClusterInstInfoFieldStatusMaxTasks:                    struct{}{},
 	ClusterInstInfoFieldStatusTaskName:                    struct{}{},
 	ClusterInstInfoFieldStatusStepName:                    struct{}{},
+	ClusterInstInfoFieldStatusMsgCount:                    struct{}{},
+	ClusterInstInfoFieldStatusMsgsMsgId:                   struct{}{},
+	ClusterInstInfoFieldStatusMsgsMsg:                     struct{}{},
 	ClusterInstInfoFieldResourcesVmsName:                  struct{}{},
 	ClusterInstInfoFieldResourcesVmsType:                  struct{}{},
 	ClusterInstInfoFieldResourcesVmsStatus:                struct{}{},
@@ -2933,6 +2988,9 @@ var ClusterInstInfoAllFieldsStringMap = map[string]string{
 	ClusterInstInfoFieldStatusMaxTasks:                    "Status Max Tasks",
 	ClusterInstInfoFieldStatusTaskName:                    "Status Task Name",
 	ClusterInstInfoFieldStatusStepName:                    "Status Step Name",
+	ClusterInstInfoFieldStatusMsgCount:                    "Status Msg Count",
+	ClusterInstInfoFieldStatusMsgsMsgId:                   "Status Msgs Msg Id",
+	ClusterInstInfoFieldStatusMsgsMsg:                     "Status Msgs Msg",
 	ClusterInstInfoFieldResourcesVmsName:                  "Resources Vms Name",
 	ClusterInstInfoFieldResourcesVmsType:                  "Resources Vms Type",
 	ClusterInstInfoFieldResourcesVmsStatus:                "Resources Vms Status",
@@ -3001,6 +3059,27 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 	if m.Status.StepName != o.Status.StepName {
 		fields[ClusterInstInfoFieldStatusStepName] = struct{}{}
 		fields[ClusterInstInfoFieldStatus] = struct{}{}
+	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[ClusterInstInfoFieldStatusMsgCount] = struct{}{}
+		fields[ClusterInstInfoFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[ClusterInstInfoFieldStatusMsgs] = struct{}{}
+		fields[ClusterInstInfoFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
+				fields[ClusterInstInfoFieldStatusMsgsMsgId] = struct{}{}
+				fields[ClusterInstInfoFieldStatusMsgs] = struct{}{}
+				fields[ClusterInstInfoFieldStatus] = struct{}{}
+			}
+			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
+				fields[ClusterInstInfoFieldStatusMsgsMsg] = struct{}{}
+				fields[ClusterInstInfoFieldStatusMsgs] = struct{}{}
+				fields[ClusterInstInfoFieldStatus] = struct{}{}
+			}
+		}
 	}
 	if len(m.Resources.Vms) != len(o.Resources.Vms) {
 		fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
@@ -3171,6 +3250,21 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 		if _, set := fmap["6.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["6.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["6.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}

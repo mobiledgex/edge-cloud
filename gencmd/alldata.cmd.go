@@ -74,6 +74,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].Flavors); i1++ {
 		}
+		for i2 := 0; i2 < len(in.CloudletInfos[i0].Status.Msgs); i2++ {
+		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].AvailabilityZones); i1++ {
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].OsImages); i1++ {
@@ -114,6 +116,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].NodeFlavor = ""
+		}
+		for i2 := 0; i2 < len(in.ClusterInsts[i0].Status.Msgs); i2++ {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].ExternalVolumeSize = 0
@@ -171,6 +175,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
 		}
+		for i2 := 0; i2 < len(in.AppInstances[i0].Status.Msgs); i2++ {
+		}
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].Revision = ""
 		}
@@ -214,6 +220,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].Errors = nil
+		}
+		for i2 := 0; i2 < len(in.VmPools[i0].Status.Msgs); i2++ {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].CrmOverride = 0
@@ -290,6 +298,9 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.status.maxtasks",
 	"cloudlets:#.status.taskname",
 	"cloudlets:#.status.stepname",
+	"cloudlets:#.status.msgcount",
+	"cloudlets:#.status.msgs:#.msgid",
+	"cloudlets:#.status.msgs:#.msg",
 	"cloudlets:#.state",
 	"cloudlets:#.crmoverride",
 	"cloudlets:#.deploymentlocal",
@@ -355,6 +366,9 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.status.maxtasks",
 	"cloudletinfos:#.status.taskname",
 	"cloudletinfos:#.status.stepname",
+	"cloudletinfos:#.status.msgcount",
+	"cloudletinfos:#.status.msgs:#.msgid",
+	"cloudletinfos:#.status.msgs:#.msg",
 	"cloudletinfos:#.containerversion",
 	"cloudletinfos:#.availabilityzones:#.name",
 	"cloudletinfos:#.availabilityzones:#.status",
@@ -439,6 +453,9 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.status.maxtasks",
 	"clusterinsts:#.status.taskname",
 	"clusterinsts:#.status.stepname",
+	"clusterinsts:#.status.msgcount",
+	"clusterinsts:#.status.msgs:#.msgid",
+	"clusterinsts:#.status.msgs:#.msg",
 	"clusterinsts:#.externalvolumesize",
 	"clusterinsts:#.autoscalepolicy",
 	"clusterinsts:#.availabilityzone",
@@ -530,6 +547,9 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.status.maxtasks",
 	"appinstances:#.status.taskname",
 	"appinstances:#.status.stepname",
+	"appinstances:#.status.msgcount",
+	"appinstances:#.status.msgs:#.msgid",
+	"appinstances:#.status.msgs:#.msg",
 	"appinstances:#.revision",
 	"appinstances:#.forceupdate",
 	"appinstances:#.updatemultiple",
@@ -570,6 +590,9 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.status.maxtasks",
 	"vmpools:#.status.taskname",
 	"vmpools:#.status.stepname",
+	"vmpools:#.status.msgcount",
+	"vmpools:#.status.msgs:#.msgid",
+	"vmpools:#.status.msgs:#.msg",
 	"vmpools:#.crmoverride",
 	"streamobjs:#.key.appkey.organization",
 	"streamobjs:#.key.appkey.name",

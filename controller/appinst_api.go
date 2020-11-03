@@ -1290,7 +1290,8 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 				inst.RuntimeInfo = in.RuntimeInfo
 				inst.Status = in.Status
 				s.store.STMPut(stm, &inst)
-			} else if inst.Status != in.Status {
+			} else if (in.Status.MsgCount > 0 && in.Status.MsgCount != inst.Status.MsgCount) ||
+				(in.Status.TaskName != inst.Status.TaskName || in.Status.StepName != inst.Status.TaskName) {
 				// update status
 				inst.Status = in.Status
 				s.store.STMPut(stm, &inst)

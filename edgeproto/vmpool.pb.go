@@ -1617,6 +1617,10 @@ const VMPoolFieldStatusTaskNumber = "6.1"
 const VMPoolFieldStatusMaxTasks = "6.2"
 const VMPoolFieldStatusTaskName = "6.3"
 const VMPoolFieldStatusStepName = "6.4"
+const VMPoolFieldStatusMsgCount = "6.5"
+const VMPoolFieldStatusMsgs = "6.6"
+const VMPoolFieldStatusMsgsMsgId = "6.6.1"
+const VMPoolFieldStatusMsgsMsg = "6.6.2"
 const VMPoolFieldCrmOverride = "7"
 
 var VMPoolAllFields = []string{
@@ -1642,6 +1646,9 @@ var VMPoolAllFields = []string{
 	VMPoolFieldStatusMaxTasks,
 	VMPoolFieldStatusTaskName,
 	VMPoolFieldStatusStepName,
+	VMPoolFieldStatusMsgCount,
+	VMPoolFieldStatusMsgsMsgId,
+	VMPoolFieldStatusMsgsMsg,
 	VMPoolFieldCrmOverride,
 }
 
@@ -1668,6 +1675,9 @@ var VMPoolAllFieldsMap = map[string]struct{}{
 	VMPoolFieldStatusMaxTasks:        struct{}{},
 	VMPoolFieldStatusTaskName:        struct{}{},
 	VMPoolFieldStatusStepName:        struct{}{},
+	VMPoolFieldStatusMsgCount:        struct{}{},
+	VMPoolFieldStatusMsgsMsgId:       struct{}{},
+	VMPoolFieldStatusMsgsMsg:         struct{}{},
 	VMPoolFieldCrmOverride:           struct{}{},
 }
 
@@ -1694,6 +1704,9 @@ var VMPoolAllFieldsStringMap = map[string]string{
 	VMPoolFieldStatusMaxTasks:        "Status Max Tasks",
 	VMPoolFieldStatusTaskName:        "Status Task Name",
 	VMPoolFieldStatusStepName:        "Status Step Name",
+	VMPoolFieldStatusMsgCount:        "Status Msg Count",
+	VMPoolFieldStatusMsgsMsgId:       "Status Msgs Msg Id",
+	VMPoolFieldStatusMsgsMsg:         "Status Msgs Msg",
 	VMPoolFieldCrmOverride:           "Crm Override",
 }
 
@@ -1833,6 +1846,27 @@ func (m *VMPool) DiffFields(o *VMPool, fields map[string]struct{}) {
 		fields[VMPoolFieldStatusStepName] = struct{}{}
 		fields[VMPoolFieldStatus] = struct{}{}
 	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[VMPoolFieldStatusMsgCount] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[VMPoolFieldStatusMsgs] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
+				fields[VMPoolFieldStatusMsgsMsgId] = struct{}{}
+				fields[VMPoolFieldStatusMsgs] = struct{}{}
+				fields[VMPoolFieldStatus] = struct{}{}
+			}
+			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
+				fields[VMPoolFieldStatusMsgsMsg] = struct{}{}
+				fields[VMPoolFieldStatusMsgs] = struct{}{}
+				fields[VMPoolFieldStatus] = struct{}{}
+			}
+		}
+	}
 	if m.CrmOverride != o.CrmOverride {
 		fields[VMPoolFieldCrmOverride] = struct{}{}
 	}
@@ -1946,6 +1980,21 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 		if _, set := fmap["6.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["6.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["6.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}
@@ -2489,8 +2538,8 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	bufferedMsgs := []string{}
-	recvdStatus := false
+	lastMsgId := uint32(0)
+	var lastMsg string
 	var err error
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
@@ -2501,32 +2550,28 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.ToString()
-			var msg string
-			if statusString != "" {
-				msg = statusString
-				recvdStatus = true
-			} else {
-				msg = TrackedState_CamelName[int32(curState)]
-			}
-			if recvdStatus {
-				// recvdStatus flag is for backwards compatibility.
-				// With current code we support msg streaming via streamObjs,
-				// but in case there are old versions of CRM sending msgs via
-				// status msg, only then we send msgs to cb
-				for _, bufMsg := range bufferedMsgs {
-					send(&Result{Message: bufMsg})
+			if len(info.Status.Msgs) > 0 {
+				for _, streamMsg := range info.Status.Msgs {
+					if lastMsgId >= streamMsg.MsgId {
+						continue
+					}
+					if lastMsg == streamMsg.Msg {
+						continue
+					}
+					send(&Result{Message: streamMsg.Msg})
+					lastMsgId = streamMsg.MsgId
+					lastMsg = streamMsg.Msg
 				}
-				bufferedMsgs = nil
-				send(&Result{Message: msg})
 			} else {
-				// NotPresent is a state msg generated from this code, hence
-				// allow it
-				if msg == TrackedState_CamelName[int32(TrackedState_NOT_PRESENT)] {
-					send(&Result{Message: msg})
+				statusString := info.Status.ToString()
+				var msg string
+				if statusString != "" {
+					msg = statusString
 				} else {
-					bufferedMsgs = append(bufferedMsgs, msg)
+					msg = TrackedState_CamelName[int32(curState)]
 				}
+				lastMsg = msg
+				send(&Result{Message: msg})
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for VMPool")
@@ -2944,6 +2989,10 @@ const VMPoolInfoFieldStatusTaskNumber = "7.1"
 const VMPoolInfoFieldStatusMaxTasks = "7.2"
 const VMPoolInfoFieldStatusTaskName = "7.3"
 const VMPoolInfoFieldStatusStepName = "7.4"
+const VMPoolInfoFieldStatusMsgCount = "7.5"
+const VMPoolInfoFieldStatusMsgs = "7.6"
+const VMPoolInfoFieldStatusMsgsMsgId = "7.6.1"
+const VMPoolInfoFieldStatusMsgsMsg = "7.6.2"
 
 var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldKeyOrganization,
@@ -2969,6 +3018,9 @@ var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldStatusMaxTasks,
 	VMPoolInfoFieldStatusTaskName,
 	VMPoolInfoFieldStatusStepName,
+	VMPoolInfoFieldStatusMsgCount,
+	VMPoolInfoFieldStatusMsgsMsgId,
+	VMPoolInfoFieldStatusMsgsMsg,
 }
 
 var VMPoolInfoAllFieldsMap = map[string]struct{}{
@@ -2995,6 +3047,9 @@ var VMPoolInfoAllFieldsMap = map[string]struct{}{
 	VMPoolInfoFieldStatusMaxTasks:        struct{}{},
 	VMPoolInfoFieldStatusTaskName:        struct{}{},
 	VMPoolInfoFieldStatusStepName:        struct{}{},
+	VMPoolInfoFieldStatusMsgCount:        struct{}{},
+	VMPoolInfoFieldStatusMsgsMsgId:       struct{}{},
+	VMPoolInfoFieldStatusMsgsMsg:         struct{}{},
 }
 
 var VMPoolInfoAllFieldsStringMap = map[string]string{
@@ -3021,6 +3076,9 @@ var VMPoolInfoAllFieldsStringMap = map[string]string{
 	VMPoolInfoFieldStatusMaxTasks:        "Status Max Tasks",
 	VMPoolInfoFieldStatusTaskName:        "Status Task Name",
 	VMPoolInfoFieldStatusStepName:        "Status Step Name",
+	VMPoolInfoFieldStatusMsgCount:        "Status Msg Count",
+	VMPoolInfoFieldStatusMsgsMsgId:       "Status Msgs Msg Id",
+	VMPoolInfoFieldStatusMsgsMsg:         "Status Msgs Msg",
 }
 
 func (m *VMPoolInfo) IsKeyField(s string) bool {
@@ -3162,6 +3220,27 @@ func (m *VMPoolInfo) DiffFields(o *VMPoolInfo, fields map[string]struct{}) {
 		fields[VMPoolInfoFieldStatusStepName] = struct{}{}
 		fields[VMPoolInfoFieldStatus] = struct{}{}
 	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[VMPoolInfoFieldStatusMsgCount] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[VMPoolInfoFieldStatusMsgs] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
+				fields[VMPoolInfoFieldStatusMsgsMsgId] = struct{}{}
+				fields[VMPoolInfoFieldStatusMsgs] = struct{}{}
+				fields[VMPoolInfoFieldStatus] = struct{}{}
+			}
+			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
+				fields[VMPoolInfoFieldStatusMsgsMsg] = struct{}{}
+				fields[VMPoolInfoFieldStatusMsgs] = struct{}{}
+				fields[VMPoolInfoFieldStatus] = struct{}{}
+			}
+		}
+	}
 }
 
 func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
@@ -3233,6 +3312,21 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 		if _, set := fmap["7.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["7.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["7.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}

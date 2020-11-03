@@ -86,6 +86,8 @@ service StreamObjApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Organization";
   }
+  // This is used internally to forward requests to other Controllers.e
+  rpc StreamLocalMsgs(AppInstKey) returns (stream StreamMsg) {}
 }
 
 // StreamObjInfo to track running status of stream enabled objects from CRM

@@ -107,10 +107,8 @@ func main() {
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			controllerData.StreamCloudletMsg(ctx, &myCloudletInfo.Key, updateType, value)
 			myCloudletInfo.Status.SetTask(value)
 		case edgeproto.UpdateStep:
-			controllerData.StreamCloudletMsg(ctx, &myCloudletInfo.Key, updateType, value)
 			myCloudletInfo.Status.SetStep(value)
 		}
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)

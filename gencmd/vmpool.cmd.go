@@ -59,6 +59,8 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
 	}
+	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
+	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
 	}
@@ -101,6 +103,8 @@ func VMPoolInfoHideTags(in *edgeproto.VMPoolInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
+	}
+	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
 	}
 }
 
@@ -664,6 +668,9 @@ var VMPoolInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"status.msgcount",
+	"status.msgs:#.msgid",
+	"status.msgs:#.msg",
 }
 var VMPoolInfoAliasArgs = []string{
 	"vmpool-org=key.organization",

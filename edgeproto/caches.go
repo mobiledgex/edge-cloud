@@ -57,6 +57,7 @@ func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey
 		info := &ClusterInstInfo{}
 		if old == nil {
 			info.Key = *key
+			info.Status = StatusInfo{}
 		} else {
 			err = StateConflict(old.State, state)
 			if err != nil {
@@ -67,7 +68,6 @@ func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey
 		}
 		info.Errors = nil
 		info.State = state
-		info.Status = StatusInfo{}
 		return info, true
 	})
 	return err
@@ -127,6 +127,18 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 	}
 	info.Errors = append(info.Errors, err)
 	info.State = errState
+	s.Update(ctx, &info, 0)
+}
+
+func (s *ClusterInstInfoCache) StatusReset(ctx context.Context, key *ClusterInstKey) {
+	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
+	info := ClusterInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("StatusReset failed, did not find ClusterInstInfo in cache")
+		return
+	}
+	info.Status.StatusReset()
 	s.Update(ctx, &info, 0)
 }
 
@@ -242,6 +254,7 @@ func (s *AppInstInfoCache) SetPowerState(ctx context.Context, key *AppInstKey, s
 		info := &AppInstInfo{}
 		if old == nil {
 			info.Key = *key
+			info.Status = StatusInfo{}
 		} else {
 			err = PowerStateConflict(old.PowerState, state)
 			if err != nil {
@@ -252,7 +265,6 @@ func (s *AppInstInfoCache) SetPowerState(ctx context.Context, key *AppInstKey, s
 		}
 		info.Errors = nil
 		info.PowerState = state
-		info.Status = StatusInfo{}
 		return info, true
 	})
 	return err
@@ -264,6 +276,7 @@ func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state 
 		info := &AppInstInfo{}
 		if old == nil {
 			info.Key = *key
+			info.Status = StatusInfo{}
 		} else {
 			err = StateConflict(old.State, state)
 			if err != nil {
@@ -274,7 +287,6 @@ func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state 
 		}
 		info.Errors = nil
 		info.State = state
-		info.Status = StatusInfo{}
 		return info, true
 	})
 	return err
@@ -284,10 +296,10 @@ func (s *AppInstInfoCache) SetStateRuntime(ctx context.Context, key *AppInstKey,
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
+		info.Status = StatusInfo{}
 	}
 	info.Errors = nil
 	info.State = state
-	info.Status = StatusInfo{}
 	info.RuntimeInfo = *rt
 	s.Update(ctx, &info, 0)
 }
@@ -335,6 +347,18 @@ func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errSta
 	}
 	info.Errors = append(info.Errors, err)
 	info.State = errState
+	s.Update(ctx, &info, 0)
+}
+
+func (s *AppInstInfoCache) StatusReset(ctx context.Context, key *AppInstKey) {
+	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
+	info := AppInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("StatusReset failed, did not find AppInstInfo in cache")
+		return
+	}
+	info.Status.StatusReset()
 	s.Update(ctx, &info, 0)
 }
 

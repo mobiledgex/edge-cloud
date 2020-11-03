@@ -79,6 +79,8 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
 	}
+	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
+	}
 	for i0 := 0; i0 < len(in.AvailabilityZones); i0++ {
 	}
 	for i0 := 0; i0 < len(in.OsImages); i0++ {
@@ -1467,6 +1469,9 @@ var CloudletInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"status.msgcount",
+	"status.msgs:#.msgid",
+	"status.msgs:#.msg",
 	"containerversion",
 	"availabilityzones:#.name",
 	"availabilityzones:#.status",

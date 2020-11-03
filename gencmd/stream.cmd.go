@@ -285,10 +285,88 @@ func StreamCloudlets(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
 	}
 }
 
+var StreamLocalMsgsCmd = &cli.Command{
+	Use:          "StreamLocalMsgs",
+	RequiredArgs: strings.Join(AppInstKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstKeyAliasArgs, " "),
+	SpecialArgs:  &AppInstKeySpecialArgs,
+	Comments:     AppInstKeyComments,
+	ReqData:      &edgeproto.AppInstKey{},
+	ReplyData:    &edgeproto.StreamMsg{},
+	Run:          runStreamLocalMsgs,
+}
+
+func runStreamLocalMsgs(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppInstKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return StreamLocalMsgs(c, obj)
+}
+
+func StreamLocalMsgs(c *cli.Command, in *edgeproto.AppInstKey) error {
+	if StreamObjApiCmd == nil {
+		return fmt.Errorf("StreamObjApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := StreamObjApiCmd.StreamLocalMsgs(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("StreamLocalMsgs failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.StreamMsg, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("StreamLocalMsgs recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func StreamLocalMsgss(c *cli.Command, data []edgeproto.AppInstKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("StreamLocalMsgs %v\n", data[ii])
+		myerr := StreamLocalMsgs(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var StreamObjApiCmds = []*cobra.Command{
 	StreamAppInstCmd.GenCmd(),
 	StreamClusterInstCmd.GenCmd(),
 	StreamCloudletCmd.GenCmd(),
+	StreamLocalMsgsCmd.GenCmd(),
 }
 
 var StreamObjInfoApiCmd edgeproto.StreamObjInfoApiClient

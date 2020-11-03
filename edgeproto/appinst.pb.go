@@ -2024,6 +2024,10 @@ const AppInstFieldStatusTaskNumber = "23.1"
 const AppInstFieldStatusMaxTasks = "23.2"
 const AppInstFieldStatusTaskName = "23.3"
 const AppInstFieldStatusStepName = "23.4"
+const AppInstFieldStatusMsgCount = "23.5"
+const AppInstFieldStatusMsgs = "23.6"
+const AppInstFieldStatusMsgsMsgId = "23.6.1"
+const AppInstFieldStatusMsgsMsg = "23.6.2"
 const AppInstFieldRevision = "24"
 const AppInstFieldForceUpdate = "25"
 const AppInstFieldUpdateMultiple = "26"
@@ -2077,6 +2081,9 @@ var AppInstAllFields = []string{
 	AppInstFieldStatusMaxTasks,
 	AppInstFieldStatusTaskName,
 	AppInstFieldStatusStepName,
+	AppInstFieldStatusMsgCount,
+	AppInstFieldStatusMsgsMsgId,
+	AppInstFieldStatusMsgsMsg,
 	AppInstFieldRevision,
 	AppInstFieldForceUpdate,
 	AppInstFieldUpdateMultiple,
@@ -2130,6 +2137,9 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldStatusMaxTasks:                           struct{}{},
 	AppInstFieldStatusTaskName:                           struct{}{},
 	AppInstFieldStatusStepName:                           struct{}{},
+	AppInstFieldStatusMsgCount:                           struct{}{},
+	AppInstFieldStatusMsgsMsgId:                          struct{}{},
+	AppInstFieldStatusMsgsMsg:                            struct{}{},
 	AppInstFieldRevision:                                 struct{}{},
 	AppInstFieldForceUpdate:                              struct{}{},
 	AppInstFieldUpdateMultiple:                           struct{}{},
@@ -2183,6 +2193,9 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldStatusMaxTasks:                           "Status Max Tasks",
 	AppInstFieldStatusTaskName:                           "Status Task Name",
 	AppInstFieldStatusStepName:                           "Status Step Name",
+	AppInstFieldStatusMsgCount:                           "Status Msg Count",
+	AppInstFieldStatusMsgsMsgId:                          "Status Msgs Msg Id",
+	AppInstFieldStatusMsgsMsg:                            "Status Msgs Msg",
 	AppInstFieldRevision:                                 "Revision",
 	AppInstFieldForceUpdate:                              "Force Update",
 	AppInstFieldUpdateMultiple:                           "Update Multiple",
@@ -2382,6 +2395,27 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 	if m.Status.StepName != o.Status.StepName {
 		fields[AppInstFieldStatusStepName] = struct{}{}
 		fields[AppInstFieldStatus] = struct{}{}
+	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[AppInstFieldStatusMsgCount] = struct{}{}
+		fields[AppInstFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[AppInstFieldStatusMsgs] = struct{}{}
+		fields[AppInstFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
+				fields[AppInstFieldStatusMsgsMsgId] = struct{}{}
+				fields[AppInstFieldStatusMsgs] = struct{}{}
+				fields[AppInstFieldStatus] = struct{}{}
+			}
+			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
+				fields[AppInstFieldStatusMsgsMsg] = struct{}{}
+				fields[AppInstFieldStatusMsgs] = struct{}{}
+				fields[AppInstFieldStatus] = struct{}{}
+			}
+		}
 	}
 	if m.Revision != o.Revision {
 		fields[AppInstFieldRevision] = struct{}{}
@@ -2689,6 +2723,21 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		if _, set := fmap["23.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["23.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["23.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}
@@ -3329,8 +3378,8 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	bufferedMsgs := []string{}
-	recvdStatus := false
+	lastMsgId := uint32(0)
+	var lastMsg string
 	var err error
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
@@ -3341,32 +3390,28 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.ToString()
-			var msg string
-			if statusString != "" {
-				msg = statusString
-				recvdStatus = true
-			} else {
-				msg = TrackedState_CamelName[int32(curState)]
-			}
-			if recvdStatus {
-				// recvdStatus flag is for backwards compatibility.
-				// With current code we support msg streaming via streamObjs,
-				// but in case there are old versions of CRM sending msgs via
-				// status msg, only then we send msgs to cb
-				for _, bufMsg := range bufferedMsgs {
-					send(&Result{Message: bufMsg})
+			if len(info.Status.Msgs) > 0 {
+				for _, streamMsg := range info.Status.Msgs {
+					if lastMsgId >= streamMsg.MsgId {
+						continue
+					}
+					if lastMsg == streamMsg.Msg {
+						continue
+					}
+					send(&Result{Message: streamMsg.Msg})
+					lastMsgId = streamMsg.MsgId
+					lastMsg = streamMsg.Msg
 				}
-				bufferedMsgs = nil
-				send(&Result{Message: msg})
 			} else {
-				// NotPresent is a state msg generated from this code, hence
-				// allow it
-				if msg == TrackedState_CamelName[int32(TrackedState_NOT_PRESENT)] {
-					send(&Result{Message: msg})
+				statusString := info.Status.ToString()
+				var msg string
+				if statusString != "" {
+					msg = statusString
 				} else {
-					bufferedMsgs = append(bufferedMsgs, msg)
+					msg = TrackedState_CamelName[int32(curState)]
 				}
+				lastMsg = msg
+				send(&Result{Message: msg})
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for AppInst")
@@ -3656,6 +3701,10 @@ const AppInstInfoFieldStatusTaskNumber = "7.1"
 const AppInstInfoFieldStatusMaxTasks = "7.2"
 const AppInstInfoFieldStatusTaskName = "7.3"
 const AppInstInfoFieldStatusStepName = "7.4"
+const AppInstInfoFieldStatusMsgCount = "7.5"
+const AppInstInfoFieldStatusMsgs = "7.6"
+const AppInstInfoFieldStatusMsgsMsgId = "7.6.1"
+const AppInstInfoFieldStatusMsgsMsg = "7.6.2"
 const AppInstInfoFieldPowerState = "8"
 
 var AppInstInfoAllFields = []string{
@@ -3674,6 +3723,9 @@ var AppInstInfoAllFields = []string{
 	AppInstInfoFieldStatusMaxTasks,
 	AppInstInfoFieldStatusTaskName,
 	AppInstInfoFieldStatusStepName,
+	AppInstInfoFieldStatusMsgCount,
+	AppInstInfoFieldStatusMsgsMsgId,
+	AppInstInfoFieldStatusMsgsMsg,
 	AppInstInfoFieldPowerState,
 }
 
@@ -3693,6 +3745,9 @@ var AppInstInfoAllFieldsMap = map[string]struct{}{
 	AppInstInfoFieldStatusMaxTasks:                           struct{}{},
 	AppInstInfoFieldStatusTaskName:                           struct{}{},
 	AppInstInfoFieldStatusStepName:                           struct{}{},
+	AppInstInfoFieldStatusMsgCount:                           struct{}{},
+	AppInstInfoFieldStatusMsgsMsgId:                          struct{}{},
+	AppInstInfoFieldStatusMsgsMsg:                            struct{}{},
 	AppInstInfoFieldPowerState:                               struct{}{},
 }
 
@@ -3712,6 +3767,9 @@ var AppInstInfoAllFieldsStringMap = map[string]string{
 	AppInstInfoFieldStatusMaxTasks:                           "Status Max Tasks",
 	AppInstInfoFieldStatusTaskName:                           "Status Task Name",
 	AppInstInfoFieldStatusStepName:                           "Status Step Name",
+	AppInstInfoFieldStatusMsgCount:                           "Status Msg Count",
+	AppInstInfoFieldStatusMsgsMsgId:                          "Status Msgs Msg Id",
+	AppInstInfoFieldStatusMsgsMsg:                            "Status Msgs Msg",
 	AppInstInfoFieldPowerState:                               "Power State",
 }
 
@@ -3801,6 +3859,27 @@ func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
 	if m.Status.StepName != o.Status.StepName {
 		fields[AppInstInfoFieldStatusStepName] = struct{}{}
 		fields[AppInstInfoFieldStatus] = struct{}{}
+	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[AppInstInfoFieldStatusMsgCount] = struct{}{}
+		fields[AppInstInfoFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[AppInstInfoFieldStatusMsgs] = struct{}{}
+		fields[AppInstInfoFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
+				fields[AppInstInfoFieldStatusMsgsMsgId] = struct{}{}
+				fields[AppInstInfoFieldStatusMsgs] = struct{}{}
+				fields[AppInstInfoFieldStatus] = struct{}{}
+			}
+			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
+				fields[AppInstInfoFieldStatusMsgsMsg] = struct{}{}
+				fields[AppInstInfoFieldStatusMsgs] = struct{}{}
+				fields[AppInstInfoFieldStatus] = struct{}{}
+			}
+		}
 	}
 	if m.PowerState != o.PowerState {
 		fields[AppInstInfoFieldPowerState] = struct{}{}
@@ -3916,6 +3995,21 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) int {
 		if _, set := fmap["7.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["7.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["7.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}
