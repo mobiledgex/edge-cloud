@@ -1476,17 +1476,6 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages:#.diskformat",
 	"controllercachereceived",
 	"maintenancestate",
-	"resources.vms:#.name",
-	"resources.vms:#.type",
-	"resources.vms:#.status",
-	"resources.vms:#.infraflavor",
-	"resources.vms:#.ipaddresses:#.externalip",
-	"resources.vms:#.ipaddresses:#.internalip",
-	"resources.vms:#.containers:#.name",
-	"resources.vms:#.containers:#.type",
-	"resources.vms:#.containers:#.status",
-	"resources.vms:#.containers:#.clusterip",
-	"resources.vms:#.containers:#.restarts",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
