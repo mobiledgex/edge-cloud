@@ -274,8 +274,17 @@ func GetVMSpec(ctx context.Context, nodeflavor edgeproto.Flavor, cli edgeproto.C
 				continue
 			}
 		} else {
+			// xxx hack back: Our mex flavor is not requesting any optional resources. (OptResMap in mex flavor = nil)
+			// so to prevent _any_ race condition or absence of cloudlet config, skip any o.s. flavor with
+			// "gpu" in its name. xxx
+			if strings.Contains(flavor.Name, "gpu") {
+				log.SpanLog(ctx, log.DebugLevelApi, "No opt resource requested, skipping gpu ", "flavor", flavor.Name)
+				continue
+			}
 			// Finally, if the os flavor we're about to return happens to be offering an optional resource
-			// that was not requested, we need to skip it.
+			// that was not requested, we need to skip it. (if no cloudlet ResTagMap map[string]*ResTagTableKey, OSFlavorResources
+			// cannot reject a flavor by looking at the  o.s. flavor propteries. This config is manditory when the O.S. instance
+			// has gpu flavors available, whether anyone is using mex gpu flavors or not.
 			if _, cnt := OSFlavorResources(ctx, *flavor, tbls); cnt != 0 {
 				log.SpanLog(ctx, log.DebugLevelApi, "No opt resource requested, skipping ", "flavor", flavor.Name)
 				continue
