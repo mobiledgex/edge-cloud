@@ -1069,9 +1069,13 @@ loop:
 				return err
 			}
 			call.Latency = time.Duration(latency.Avg * float64(time.Millisecond))
-			call.Samples = cupdate.Samples
 			call.Key.Method = EdgeEventLatencyMethod // override method name
 			call.SessionCookie = cupdate.SessionCookie
+			// Set location for each Sample
+			for i := range cupdate.Samples {
+				cupdate.Samples[i].Loc = cupdate.GpsLocation
+			}
+			call.Samples = cupdate.Samples
 			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
 			Stats.RecordApiStatCall(&call)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
