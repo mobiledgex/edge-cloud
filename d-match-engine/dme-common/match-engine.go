@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"math/rand"
@@ -106,6 +107,7 @@ type StatKey struct {
 type StatKeyContextType string
 
 var StatKeyContextKey = StatKeyContextType("statKey")
+var EdgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
 
 // EdgeEventsHandler implementation (loaded from Plugin)
 var EEHandler EdgeEventsHandler
@@ -847,6 +849,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		}
 		cookie, _ := GenerateEdgeEventsCookie(&key, ctx, edgeEventsCookieExpiration)
 		mreply.EdgeEventsCookie = cookie
+		// TODO: Once DME per cloudlet is implemented, Set the DmeFqdn to the DNS name for the DME on the cloudlet of app inst provided
 
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
@@ -1074,6 +1077,27 @@ loop:
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookieKey, "location", cupdate.GpsLocation)
+			// Check if there is a better cloudlet based on location update
+			fcreply := new(dme.FindCloudletReply)
+			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, fcreply, EdgeEventsCookieExpiration)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
+				continue
+			}
+			newEECookieKey, err := VerifyEdgeEventsCookie(ctx, fcreply.EdgeEventsCookie)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying verify new cloudlet edgeeventscookie", "err", err)
+				continue
+			}
+			// Check if new appinst is different from current
+			if fcreply.Status == dme.FindCloudletReply_FIND_FOUND && !IsTheSameCluster(newEECookieKey, edgeEventsCookieKey) {
+				// Send successful init response
+				newCloudletEdgeEvent := new(dme.ServerEdgeEvent)
+				newCloudletEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_CLOUDLET_UPDATE
+				newCloudletEdgeEvent.NewCloudlet = fcreply
+				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
+				break loop
+			}
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
