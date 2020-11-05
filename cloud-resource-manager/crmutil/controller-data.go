@@ -78,7 +78,9 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
 	cd.ClusterInstCache.SetUpdatedCb(cd.clusterInstChanged)
+	cd.ClusterInstCache.SetDeletedCb(cd.clusterInstDeleted)
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
+	cd.AppInstCache.SetDeletedCb(cd.appInstDeleted)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
@@ -303,15 +305,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "set cluster inst deleted", "ClusterInst", *new)
 
-			// Trigger resend of Info object before deletion, this is to make
-			// sure status messages are recvd by controller before the object
-			// is deleted
-			updateClusterCacheCallback(edgeproto.UpdateTask, "")
-
-			// DELETING local info signals to controller that
-			// delete was successful.
-			info := edgeproto.ClusterInstInfo{Key: new.Key}
-			cd.ClusterInstInfoCache.Delete(ctx, &info, 0)
+			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateClusterCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		cd.clusterInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_CREATING,
@@ -326,6 +320,12 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			edgeproto.TrackedState_NOT_PRESENT,
 			edgeproto.TrackedState_DELETE_ERROR)
 	}
+}
+
+func (cd *ControllerData) clusterInstDeleted(ctx context.Context, old *edgeproto.ClusterInst) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "clusterInstDeleted", "ClusterInst", old)
+	info := edgeproto.ClusterInstInfo{Key: old.Key}
+	cd.ClusterInstInfoCache.Delete(ctx, &info, 0)
 }
 
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
@@ -496,15 +496,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				return
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "deleted app inst", "AppInst", new, "ClusterInst", clusterInst)
-			// Trigger resend of Info object before deletion, this is to make
-			// sure status messages are recvd by controller before the object
-			// is deleted
-			updateAppCacheCallback(edgeproto.UpdateTask, "")
-
-			// DELETING local info signals to controller that
-			// delete was successful.
-			info := edgeproto.AppInstInfo{Key: new.Key}
-			cd.AppInstInfoCache.Delete(ctx, &info, 0)
+			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateAppCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		// Controller may send a CRM transitional state after a
@@ -524,6 +516,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			edgeproto.TrackedState_NOT_PRESENT,
 			edgeproto.TrackedState_DELETE_ERROR)
 	}
+}
+
+func (cd *ControllerData) appInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "appInstDeleted", "AppInst", old)
+	info := edgeproto.AppInstInfo{Key: old.Key}
+	cd.AppInstInfoCache.Delete(ctx, &info, 0)
 }
 
 func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {

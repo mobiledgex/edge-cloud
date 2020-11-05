@@ -52,7 +52,8 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
-	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
+	if _, found := tags["nocmp"]; found {
+		in.Status = edgeproto.StatusInfo{}
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Revision = ""
@@ -758,7 +759,7 @@ var AppInstComments = map[string]string{
 	"mappedports:#.tls":              "TLS termination for this port",
 	"mappedports:#.nginx":            "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"flavor":                         "Flavor name",
-	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names",
@@ -827,7 +828,7 @@ var AppInstInfoComments = map[string]string{
 	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
 	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
 	"notifyid":                                    "Id of client assigned by server (internal use only)",
-	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                    "List of container names",
 	"powerstate":                                  "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",

@@ -74,7 +74,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].Flavors); i1++ {
 		}
-		for i2 := 0; i2 < len(in.CloudletInfos[i0].Status.Msgs); i2++ {
+		if _, found := tags["nocmp"]; found {
+			in.CloudletInfos[i0].Status = edgeproto.StatusInfo{}
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].AvailabilityZones); i1++ {
 		}
@@ -117,7 +118,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].NodeFlavor = ""
 		}
-		for i2 := 0; i2 < len(in.ClusterInsts[i0].Status.Msgs); i2++ {
+		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].Status = edgeproto.StatusInfo{}
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].ExternalVolumeSize = 0
@@ -175,7 +177,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
 		}
-		for i2 := 0; i2 < len(in.AppInstances[i0].Status.Msgs); i2++ {
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].Status = edgeproto.StatusInfo{}
 		}
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].Revision = ""
@@ -663,7 +666,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.timelimits.updateappinsttimeout":                "override default max time to update an app instance (duration)",
 	"cloudlets:#.timelimits.deleteappinsttimeout":                "override default max time to delete an app instance (duration)",
 	"cloudlets:#.errors":                                         "Any errors trying to create, update, or delete the Cloudlet.",
-	"cloudlets:#.state":                                          "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"cloudlets:#.state":                                          "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudlets:#.crmoverride":                                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                "Deploy cloudlet services locally",
 	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2",
@@ -788,7 +791,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.flavor.name":                                 "Flavor name",
 	"clusterinsts:#.liveness":                                    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"clusterinsts:#.auto":                                        "Auto is set to true when automatically created by back-end (internal use only)",
-	"clusterinsts:#.state":                                       "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"clusterinsts:#.state":                                       "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"clusterinsts:#.errors":                                      "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
 	"clusterinsts:#.crmoverride":                                 "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"clusterinsts:#.ipaccess":                                    "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
@@ -873,7 +876,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.mappedports:#.tls":                           "TLS termination for this port",
 	"appinstances:#.mappedports:#.nginx":                         "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"appinstances:#.flavor.name":                                 "Flavor name",
-	"appinstances:#.state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"appinstances:#.state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"appinstances:#.errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"appinstances:#.crmoverride":                                 "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"appinstances:#.runtimeinfo.containerids":                    "List of container names",
@@ -910,7 +913,7 @@ var AllDataComments = map[string]string{
 	"vmpools:#.vms:#.flavor.ram":                                 "Ram in MB on the Cloudlet",
 	"vmpools:#.vms:#.flavor.disk":                                "Amount of disk in GB on the Cloudlet",
 	"vmpools:#.vms:#.flavor.propmap":                             "OS Flavor Properties, if any",
-	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"vmpools:#.errors":                                           "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                      "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"streamobjs:#.key.appkey.organization":                       "App developer organization",

@@ -79,7 +79,8 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
 	}
-	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
+	if _, found := tags["nocmp"]; found {
+		in.Status = edgeproto.StatusInfo{}
 	}
 	for i0 := 0; i0 < len(in.AvailabilityZones); i0++ {
 	}
@@ -1284,7 +1285,7 @@ var CloudletComments = map[string]string{
 	"timelimits.updateappinsttimeout":     "override default max time to update an app instance (duration)",
 	"timelimits.deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 	"errors":                              "Any errors trying to create, update, or delete the Cloudlet.",
-	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
 	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2",

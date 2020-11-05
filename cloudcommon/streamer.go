@@ -2,15 +2,20 @@ package cloudcommon
 
 import (
 	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+var streamCleanupInterval = 10 * time.Minute
+var streamExpiration = 10 * time.Minute
+
 type Streamer struct {
-	buffer []interface{}
-	mux    sync.Mutex
-	subs   map[chan interface{}]struct{}
-	State  edgeproto.StreamState
+	buffer     []interface{}
+	mux        sync.Mutex
+	subs       map[chan interface{}]struct{}
+	State      edgeproto.StreamState
+	lastAccess time.Time
 }
 
 type Streams map[interface{}]*Streamer
@@ -50,10 +55,32 @@ func (sm *StreamObj) Remove(in interface{}, streamer *Streamer) {
 	}
 }
 
+func (sm *StreamObj) SetupCleanupTimer() {
+	for {
+		select {
+		case <-time.After(streamCleanupInterval):
+		}
+		sm.mux.Lock()
+		for obj, streamer := range sm.streamMap {
+			if streamer.State == edgeproto.StreamState_STREAM_START {
+				continue
+			}
+			if time.Now().Sub(streamer.lastAccess) >= streamExpiration {
+				for msgCh := range streamer.subs {
+					delete(streamer.subs, msgCh)
+				}
+				delete(sm.streamMap, obj)
+			}
+		}
+		sm.mux.Unlock()
+	}
+}
+
 func NewStreamer() *Streamer {
 	return &Streamer{
-		subs:  make(map[chan interface{}]struct{}),
-		State: edgeproto.StreamState_STREAM_START,
+		subs:       make(map[chan interface{}]struct{}),
+		State:      edgeproto.StreamState_STREAM_START,
+		lastAccess: time.Now(),
 	}
 }
 
@@ -62,11 +89,9 @@ func (s *Streamer) Stop() {
 	defer s.mux.Unlock()
 	for msgCh := range s.subs {
 		close(msgCh)
-		// TODO: Figure out when to delete it
-		// Maybe after 1hour
-		//delete(s.subs, msgCh)
 	}
 	s.State = edgeproto.StreamState_STREAM_STOP
+	s.lastAccess = time.Now()
 }
 
 func (s *Streamer) Subscribe() chan interface{} {
@@ -85,6 +110,7 @@ func (s *Streamer) Subscribe() chan interface{} {
 	if s.State != edgeproto.StreamState_STREAM_START {
 		close(msgCh)
 	}
+	s.lastAccess = time.Now()
 	return msgCh
 }
 
@@ -93,10 +119,8 @@ func (s *Streamer) Unsubscribe(msgCh chan interface{}) {
 	defer s.mux.Unlock()
 	if _, ok := s.subs[msgCh]; ok {
 		delete(s.subs, msgCh)
-		// TODO: Will be closed by the subscribe
-		// func & Stop func
-		//close(msgCh)
 	}
+	s.lastAccess = time.Now()
 }
 
 func (s *Streamer) Publish(msg interface{}) {
@@ -112,4 +136,5 @@ func (s *Streamer) Publish(msg interface{}) {
 		default:
 		}
 	}
+	s.lastAccess = time.Now()
 }

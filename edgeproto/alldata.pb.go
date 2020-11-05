@@ -685,6 +685,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "CloudletInfos.Controller")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "CloudletInfos.Status")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.State")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -698,6 +701,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.NodeFlavor")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "ClusterInsts.Status")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.ExternalVolumeSize")
@@ -746,6 +752,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "AppInstances.CreatedAt")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.Status")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.Revision")

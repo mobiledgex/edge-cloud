@@ -449,6 +449,9 @@ func startServices() error {
 	}
 	go runCheckpoints(ctx)
 
+	// setup cleanup timer to remove expired stream messages
+	go streamObjs.SetupCleanupTimer()
+
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
 }

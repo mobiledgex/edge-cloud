@@ -19,8 +19,10 @@ streamobjs:
   - id: 3
     msg: Second Delete Task
   - id: 4
-    msg: NotPresent
+    msg: DeleteDone
   - id: 5
+    msg: NotPresent
+  - id: 6
     msg: Deleted AppInst successfully
 - key:
     appkey:
@@ -42,8 +44,10 @@ streamobjs:
   - id: 3
     msg: Second Delete Task
   - id: 4
-    msg: NotPresent
+    msg: DeleteDone
   - id: 5
+    msg: NotPresent
+  - id: 6
     msg: Deleted AppInst successfully
 - key:
     appkey:
@@ -65,8 +69,10 @@ streamobjs:
   - id: 3
     msg: Second Delete Task
   - id: 4
-    msg: NotPresent
+    msg: DeleteDone
   - id: 5
+    msg: NotPresent
+  - id: 6
     msg: Deleted AppInst successfully
 - key:
     appkey:
@@ -86,8 +92,10 @@ streamobjs:
   - id: 3
     msg: Second Delete Task
   - id: 4
-    msg: NotPresent
+    msg: DeleteDone
   - id: 5
+    msg: NotPresent
+  - id: 6
     msg: Deleted AppInst successfully
 - key:
     appkey:
@@ -107,8 +115,10 @@ streamobjs:
   - id: 3
     msg: Second Delete Task
   - id: 4
-    msg: NotPresent
+    msg: DeleteDone
   - id: 5
+    msg: NotPresent
+  - id: 6
     msg: Deleted AppInst successfully
 - key:
     appkey:
@@ -130,8 +140,10 @@ streamobjs:
   - id: 3
     msg: Second Delete Task
   - id: 4
-    msg: NotPresent
+    msg: DeleteDone
   - id: 5
+    msg: NotPresent
+  - id: 6
     msg: Deleted AppInst successfully
 - key:
     clusterinstkey:
@@ -151,30 +163,36 @@ streamobjs:
   - id: 4
     msg: Second Delete Task
   - id: 5
-    msg: NotPresent
+    msg: DeleteDone
   - id: 6
-    msg: Deleted AppInst successfully
+    msg: NotPresent
   - id: 7
-    msg: Autodeleting AppInst NFSAutoProvision
-  - id: 8
-    msg: Deleting
-  - id: 9
-    msg: First Delete Task
-  - id: 10
-    msg: Second Delete Task
-  - id: 11
-    msg: NotPresent
-  - id: 12
     msg: Deleted AppInst successfully
-  - id: 13
+  - id: 8
+    msg: Autodeleting AppInst NFSAutoProvision
+  - id: 9
     msg: Deleting
-  - id: 14
+  - id: 10
     msg: First Delete Task
-  - id: 15
+  - id: 11
     msg: Second Delete Task
-  - id: 16
+  - id: 12
+    msg: DeleteDone
+  - id: 13
     msg: NotPresent
+  - id: 14
+    msg: Deleted AppInst successfully
+  - id: 15
+    msg: Deleting
+  - id: 16
+    msg: First Delete Task
   - id: 17
+    msg: Second Delete Task
+  - id: 18
+    msg: DeleteDone
+  - id: 19
+    msg: NotPresent
+  - id: 20
     msg: Deleted ClusterInst successfully
 - key:
     clusterinstkey:
@@ -194,18 +212,22 @@ streamobjs:
   - id: 4
     msg: Second Delete Task
   - id: 5
-    msg: NotPresent
+    msg: DeleteDone
   - id: 6
-    msg: Deleted AppInst successfully
-  - id: 7
-    msg: Deleting
-  - id: 8
-    msg: First Delete Task
-  - id: 9
-    msg: Second Delete Task
-  - id: 10
     msg: NotPresent
+  - id: 7
+    msg: Deleted AppInst successfully
+  - id: 8
+    msg: Deleting
+  - id: 9
+    msg: First Delete Task
+  - id: 10
+    msg: Second Delete Task
   - id: 11
+    msg: DeleteDone
+  - id: 12
+    msg: NotPresent
+  - id: 13
     msg: Deleted ClusterInst successfully
 - key:
     clusterinstkey:

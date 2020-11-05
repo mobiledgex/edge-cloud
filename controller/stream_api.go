@@ -16,17 +16,13 @@ import (
 var streamObjApi = StreamObjApi{}
 
 var StreamTimeout = 30 * time.Minute
-var StreamLeaseTimeoutSec = int64(60 * 60) // 1 hour
 
 var streamObjs = cloudcommon.StreamObj{}
 
 type streamSend struct {
-	cb           GenericCb
-	lastRemoteId uint32
-	doneCh       chan bool
-	mux          sync.Mutex
-	closeCh      bool
-	streamer     *cloudcommon.Streamer
+	cb       GenericCb
+	mux      sync.Mutex
+	streamer *cloudcommon.Streamer
 }
 
 type StreamObjApi struct {
@@ -47,9 +43,6 @@ type CbWrapper struct {
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	if res != nil {
-		if s.streamSendObj.closeCh {
-			return nil
-		}
 		if s.streamSendObj.streamer != nil {
 			s.streamSendObj.streamer.Publish(res.Message)
 		}
@@ -59,19 +52,25 @@ func (s *CbWrapper) Send(res *edgeproto.Result) error {
 }
 
 func (s *StreamObjApi) StreamLocalMsgs(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamLocalMsgsServer) error {
+	ctx := cb.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "Stream obj messages", "key", key)
 	streamer := streamObjs.Get(*key)
 	if streamer == nil {
 		// stream not found, nothing to show
+		log.SpanLog(ctx, log.DebugLevelApi, "Stream obj not found", "key", key)
 		return nil
 	}
 	streamCh := streamer.Subscribe()
 	defer streamer.Unsubscribe(streamCh)
+
+	msgId := 0
 	for streamMsg := range streamCh {
 		switch out := streamMsg.(type) {
-		case *edgeproto.StreamMsg:
-			cb.Send(out)
 		case string:
-			cb.Send(&edgeproto.StreamMsg{Msg: out})
+			msgId++
+			cb.Send(&edgeproto.StreamMsg{Id: uint32(msgId), Msg: out})
+		case error:
+			return out
 		default:
 			return fmt.Errorf("Unsupported message type received: %v", streamMsg)
 		}
@@ -82,6 +81,11 @@ func (s *StreamObjApi) StreamLocalMsgs(key *edgeproto.AppInstKey, cb edgeproto.S
 
 func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
 	ctx := cb.Context()
+
+	if *externalApiAddr == "" {
+		// unit test
+		return s.StreamLocalMsgs(key, cb)
+	}
 
 	// Currently we don't know which controller has the streamer Obj for this key
 	// (or if it's even present), so just broadcast to all.
@@ -135,9 +139,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 	}
 	streamer = cloudcommon.NewStreamer()
 	streamSendObj := streamSend{}
-	streamSendObj.doneCh = make(chan bool, 1)
 	streamSendObj.cb = inCb
-	streamSendObj.lastRemoteId = uint32(0)
 	streamSendObj.streamer = streamer
 	streamObjs.Add(*key, streamer)
 
@@ -145,12 +147,14 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 }
 
 func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", key)
+	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", key, "err", objErr)
 	if streamSendObj != nil {
 		streamSendObj.mux.Lock()
 		defer streamSendObj.mux.Unlock()
-		streamSendObj.closeCh = true
 		if streamSendObj.streamer != nil {
+			if objErr != nil {
+				streamSendObj.streamer.Publish(objErr)
+			}
 			streamSendObj.streamer.Stop()
 		}
 	}
