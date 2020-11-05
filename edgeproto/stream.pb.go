@@ -289,7 +289,7 @@ type StreamObjApiClient interface {
 	StreamClusterInst(ctx context.Context, in *ClusterInstKey, opts ...grpc.CallOption) (StreamObjApi_StreamClusterInstClient, error)
 	// Stream Cloudlet current progress
 	StreamCloudlet(ctx context.Context, in *CloudletKey, opts ...grpc.CallOption) (StreamObjApi_StreamCloudletClient, error)
-	// This is used internally to forward requests to other Controllers.e
+	// This is used internally to forward requests to other Controllers
 	StreamLocalMsgs(ctx context.Context, in *AppInstKey, opts ...grpc.CallOption) (StreamObjApi_StreamLocalMsgsClient, error)
 }
 
@@ -437,7 +437,7 @@ type StreamObjApiServer interface {
 	StreamClusterInst(*ClusterInstKey, StreamObjApi_StreamClusterInstServer) error
 	// Stream Cloudlet current progress
 	StreamCloudlet(*CloudletKey, StreamObjApi_StreamCloudletServer) error
-	// This is used internally to forward requests to other Controllers.e
+	// This is used internally to forward requests to other Controllers
 	StreamLocalMsgs(*AppInstKey, StreamObjApi_StreamLocalMsgsServer) error
 }
 
