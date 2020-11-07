@@ -195,9 +195,6 @@ cloudletinfos:
     vcpus: 10
     ram: 101024
     disk: 500
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resources:
@@ -227,9 +224,6 @@ cloudletinfos:
     vcpus: 10
     ram: 101024
     disk: 500
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resources:

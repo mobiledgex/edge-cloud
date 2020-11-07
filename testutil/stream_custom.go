@@ -5,22 +5,23 @@ import (
 )
 
 type AllDataStreamOut struct {
-	StreamObjs []edgeproto.StreamObj
+	StreamObjs []StreamObj
+}
+
+type StreamObj struct {
+	Key  edgeproto.AppInstKey
+	Msgs []edgeproto.Result
 }
 
 func RunAllDataStreamApis(run *Run, in *edgeproto.AllData, out *AllDataStreamOut) {
 	run.Mode = "streamappinst"
 	for _, appInst := range in.AppInstances {
 		appInstKeys := []edgeproto.AppInstKey{appInst.Key}
-		outMsgs := [][]edgeproto.StreamMsg{}
+		outMsgs := [][]edgeproto.Result{}
 		run.StreamObjApi_AppInstKey(&appInstKeys, nil, &outMsgs)
-		outObj := edgeproto.StreamObj{Key: appInst.Key}
+		outObj := StreamObj{Key: appInst.Key}
 		for _, objsMsgs := range outMsgs {
-			for _, msg := range objsMsgs {
-				addMsg := edgeproto.StreamMsg{}
-				addMsg = msg
-				outObj.Msgs = append(outObj.Msgs, &addMsg)
-			}
+			outObj.Msgs = objsMsgs
 		}
 		out.StreamObjs = append(out.StreamObjs, outObj)
 	}
@@ -28,18 +29,14 @@ func RunAllDataStreamApis(run *Run, in *edgeproto.AllData, out *AllDataStreamOut
 	run.Mode = "streamclusterinst"
 	for _, clusterInst := range in.ClusterInsts {
 		clusterInstKeys := []edgeproto.ClusterInstKey{clusterInst.Key}
-		outMsgs := [][]edgeproto.StreamMsg{}
+		outMsgs := [][]edgeproto.Result{}
 		run.StreamObjApi_ClusterInstKey(&clusterInstKeys, nil, &outMsgs)
 		streamKey := edgeproto.AppInstKey{
 			ClusterInstKey: clusterInst.Key,
 		}
-		outObj := edgeproto.StreamObj{Key: streamKey}
+		outObj := StreamObj{Key: streamKey}
 		for _, objsMsgs := range outMsgs {
-			for _, msg := range objsMsgs {
-				addMsg := edgeproto.StreamMsg{}
-				addMsg = msg
-				outObj.Msgs = append(outObj.Msgs, &addMsg)
-			}
+			outObj.Msgs = objsMsgs
 		}
 		out.StreamObjs = append(out.StreamObjs, outObj)
 	}
@@ -47,20 +44,16 @@ func RunAllDataStreamApis(run *Run, in *edgeproto.AllData, out *AllDataStreamOut
 	run.Mode = "streamcloudlet"
 	for _, cloudlet := range in.Cloudlets {
 		cloudletKeys := []edgeproto.CloudletKey{cloudlet.Key}
-		outMsgs := [][]edgeproto.StreamMsg{}
+		outMsgs := [][]edgeproto.Result{}
 		run.StreamObjApi_CloudletKey(&cloudletKeys, nil, &outMsgs)
 		streamKey := edgeproto.AppInstKey{
 			ClusterInstKey: edgeproto.ClusterInstKey{
 				CloudletKey: cloudlet.Key,
 			},
 		}
-		outObj := edgeproto.StreamObj{Key: streamKey}
+		outObj := StreamObj{Key: streamKey}
 		for _, objsMsgs := range outMsgs {
-			for _, msg := range objsMsgs {
-				addMsg := edgeproto.StreamMsg{}
-				addMsg = msg
-				outObj.Msgs = append(outObj.Msgs, &addMsg)
-			}
+			outObj.Msgs = objsMsgs
 		}
 		out.StreamObjs = append(out.StreamObjs, outObj)
 	}

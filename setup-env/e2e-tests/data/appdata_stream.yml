@@ -12,14 +12,10 @@ streamobjs:
         name: dmuus-cloud-1
       organization: AcmeAppCo
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: Creating App Inst
-  - id: 3
-    msg: Ready
-  - id: 4
-    msg: Created AppInst successfully
+  - message: Creating
+  - message: Creating App Inst
+  - message: Ready
+  - message: Created AppInst successfully
 - key:
     appkey:
       organization: AcmeAppCo
@@ -33,14 +29,10 @@ streamobjs:
         name: dmuus-cloud-2
       organization: AcmeAppCo
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: Creating App Inst
-  - id: 3
-    msg: Ready
-  - id: 4
-    msg: Created AppInst successfully
+  - message: Creating
+  - message: Creating App Inst
+  - message: Ready
+  - message: Created AppInst successfully
 - key:
     appkey:
       organization: AcmeAppCo
@@ -54,14 +46,10 @@ streamobjs:
         name: dmuus-cloud-1
       organization: AcmeAppCo
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: Creating App Inst
-  - id: 3
-    msg: Ready
-  - id: 4
-    msg: Created AppInst successfully
+  - message: Creating
+  - message: Creating App Inst
+  - message: Ready
+  - message: Created AppInst successfully
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -73,14 +61,10 @@ streamobjs:
         name: dmuus-cloud-1
       organization: AcmeAppCo1
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: Creating App Inst
-  - id: 3 
-    msg: Ready
-  - id: 4
-    msg: Created AppInst successfully
+  - message: Creating
+  - message: Creating App Inst
+  - message: Ready
+  - message: Created AppInst successfully
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -92,14 +76,10 @@ streamobjs:
         name: dmuus-cloud-2
       organization: AcmeAppCo1
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: Creating App Inst
-  - id: 3
-    msg: Ready
-  - id: 4
-    msg: Created AppInst successfully
+  - message: Creating
+  - message: Creating App Inst
+  - message: Ready
+  - message: Created AppInst successfully
 - key:
     appkey:
       organization: AcmeAppCo
@@ -113,14 +93,10 @@ streamobjs:
         name: dmuus-cloud-1
       organization: AcmeAppCo
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: Creating App Inst
-  - id: 3
-    msg: Ready
-  - id: 4
-    msg: Created AppInst successfully
+  - message: Creating
+  - message: Creating App Inst
+  - message: Ready
+  - message: Created AppInst successfully
 - key:
     clusterinstkey:
       clusterkey:
@@ -130,16 +106,11 @@ streamobjs:
         name: dmuus-cloud-1
       organization: AcmeAppCo
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: First Create Task
-  - id: 3
-    msg: Second Create Task
-  - id: 4
-    msg: Ready
-  - id: 5
-    msg: Created ClusterInst successfully
+  - message: Creating
+  - message: First Create Task
+  - message: Second Create Task
+  - message: Ready
+  - message: Created ClusterInst successfully
 - key:
     clusterinstkey:
       clusterkey:
@@ -149,113 +120,73 @@ streamobjs:
         name: dmuus-cloud-2
       organization: AcmeAppCo
   msgs:
-  - id: 1
-    msg: Creating
-  - id: 2
-    msg: First Create Task
-  - id: 3
-    msg: Second Create Task
-  - id: 4
-    msg: Ready
-  - id: 5
-    msg: Created ClusterInst successfully
+  - message: Creating
+  - message: First Create Task
+  - message: Second Create Task
+  - message: Ready
+  - message: Created ClusterInst successfully
 - key:
     clusterinstkey:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
   msgs:
-  - id: 1
-    msg: Setting physicalname to match cloudlet name
-  - id: 2
-    msg: Creating Cloudlet
-  - id: 3
-    msg: Starting CRMServer
-  - id: 4
-    msg: Initializing platform
-  - id: 5
-    msg: Done intializing fake platform
-  - id: 6
-    msg: Gathering Cloudlet Info
-  - id: 7
-    msg: Created Cloudlet successfully
+  - message: Setting physicalname to match cloudlet name
+  - message: Creating Cloudlet
+  - message: Starting CRMServer
+  - message: Initializing platform
+  - message: Done intializing fake platform
+  - message: Gathering Cloudlet Info
+  - message: Created Cloudlet successfully
 - key:
     clusterinstkey:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
   msgs:
-  - id: 1
-    msg: Setting physicalname to match cloudlet name
-  - id: 2
-    msg: Creating Cloudlet
-  - id: 3
-    msg: Starting CRMServer
-  - id: 4
-    msg: Initializing platform
-  - id: 5
-    msg: Done intializing fake platform
-  - id: 6
-    msg: Gathering Cloudlet Info
-  - id: 7
-    msg: Created Cloudlet successfully
+  - message: Setting physicalname to match cloudlet name
+  - message: Creating Cloudlet
+  - message: Starting CRMServer
+  - message: Initializing platform
+  - message: Done intializing fake platform
+  - message: Gathering Cloudlet Info
+  - message: Created Cloudlet successfully
 - key:
     clusterinstkey:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-3
   msgs:
-  - id: 1
-    msg: Setting physicalname to match cloudlet name
-  - id: 2
-    msg: Creating Cloudlet
-  - id: 3
-    msg: Starting CRMServer
-  - id: 4
-    msg: Initializing platform
-  - id: 5
-    msg: Done intializing fake platform
-  - id: 6
-    msg: Gathering Cloudlet Info
-  - id: 7
-    msg: Created Cloudlet successfully
+  - message: Setting physicalname to match cloudlet name
+  - message: Creating Cloudlet
+  - message: Starting CRMServer
+  - message: Initializing platform
+  - message: Done intializing fake platform
+  - message: Gathering Cloudlet Info
+  - message: Created Cloudlet successfully
 - key:
     clusterinstkey:
       cloudletkey:
         organization: azure
         name: azure-cloud-4
   msgs:
-  - id: 1
-    msg: Setting physicalname to match cloudlet name
-  - id: 2
-    msg: Creating Cloudlet
-  - id: 3
-    msg: Starting CRMServer
-  - id: 4
-    msg: Initializing platform
-  - id: 5
-    msg: Done intializing fake platform
-  - id: 6
-    msg: Gathering Cloudlet Info
-  - id: 7
-    msg: Created Cloudlet successfully
+  - message: Setting physicalname to match cloudlet name
+  - message: Creating Cloudlet
+  - message: Starting CRMServer
+  - message: Initializing platform
+  - message: Done intializing fake platform
+  - message: Gathering Cloudlet Info
+  - message: Created Cloudlet successfully
 - key:
     clusterinstkey:
       cloudletkey:
         organization: gcp
         name: gcp-cloud-5
   msgs:
-  - id: 1
-    msg: Setting physicalname to match cloudlet name
-  - id: 2
-    msg: Creating Cloudlet
-  - id: 3
-    msg: Starting CRMServer
-  - id: 4
-    msg: Initializing platform
-  - id: 5
-    msg: Done intializing fake platform
-  - id: 6
-    msg: Gathering Cloudlet Info
-  - id: 7
-    msg: Created Cloudlet successfully
+  - message: Setting physicalname to match cloudlet name
+  - message: Creating Cloudlet
+  - message: Starting CRMServer
+  - message: Initializing platform
+  - message: Done intializing fake platform
+  - message: Gathering Cloudlet Info
+  - message: Created Cloudlet successfully

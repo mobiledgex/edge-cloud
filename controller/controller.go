@@ -449,6 +449,9 @@ func startServices() error {
 	}
 	go runCheckpoints(ctx)
 
+	// setup cleanup timer to remove expired stream messages
+	go streamObjs.SetupCleanupTimer()
+
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
 }
@@ -528,8 +531,6 @@ func InitApis(sync *Sync) {
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
 	InitAppInstRefsApi(sync)
-	InitStreamObjApi(sync)
-	InitStreamObjInfoApi(sync)
 	InitControllerApi(sync)
 	InitCloudletPoolApi(sync)
 	InitExecApi()
@@ -567,7 +568,6 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)
-	notify.ServerMgrOne.RegisterRecv(notify.NewStreamObjInfoRecvMany(&streamObjInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(&vmPoolInfoApi))

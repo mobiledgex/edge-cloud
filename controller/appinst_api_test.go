@@ -21,13 +21,13 @@ var (
 )
 
 type StreamoutMsg struct {
-	Msgs []*edgeproto.StreamMsg
+	Msgs []edgeproto.Result
 	grpc.ServerStream
 	Ctx context.Context
 }
 
-func (x *StreamoutMsg) Send(msg *edgeproto.StreamMsg) error {
-	x.Msgs = append(x.Msgs, msg)
+func (x *StreamoutMsg) Send(msg *edgeproto.Result) error {
+	x.Msgs = append(x.Msgs, *msg)
 	return nil
 }
 
@@ -41,44 +41,38 @@ func NewStreamoutMsg(ctx context.Context) *StreamoutMsg {
 	}
 }
 
-func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, pass bool) []*edgeproto.StreamMsg {
+func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, pass bool) []edgeproto.Result {
 	// Verify stream appInst
 	streamAppInst := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamAppInst(key, streamAppInst)
 	if pass {
 		require.Nil(t, err, "stream appinst")
-		if len(streamAppInst.Msgs) > 0 {
-			require.Equal(t, streamAppInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
-		}
+		require.Greater(t, len(streamAppInst.Msgs), 0, "contains stream messages")
 	} else {
 		require.NotNil(t, err, "stream appinst should return error")
 	}
 	return streamAppInst.Msgs
 }
 
-func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, pass bool) []*edgeproto.StreamMsg {
+func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, pass bool) []edgeproto.Result {
 	// Verify stream clusterInst
 	streamClusterInst := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamClusterInst(key, streamClusterInst)
 	if pass {
 		require.Nil(t, err, "stream clusterinst")
-		if len(streamClusterInst.Msgs) > 0 {
-			require.Equal(t, streamClusterInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
-		}
+		require.Greater(t, len(streamClusterInst.Msgs), 0, "contains stream messages")
 	} else {
 		require.NotNil(t, err, "stream clusterinst should return error")
 	}
 	return streamClusterInst.Msgs
 }
 
-func GetCloudletStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey) []*edgeproto.StreamMsg {
+func GetCloudletStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey) []edgeproto.Result {
 	// Verify stream cloudlet
 	streamCloudlet := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamCloudlet(key, streamCloudlet)
 	require.Nil(t, err, "stream cloudlet")
-	if len(streamCloudlet.Msgs) > 0 {
-		require.Equal(t, streamCloudlet.Msgs[0].Id, uint32(1), "stream messages start with id 1")
-	}
+	require.Greater(t, len(streamCloudlet.Msgs), 0, "contains stream messages")
 	return streamCloudlet.Msgs
 }
 

@@ -16,7 +16,6 @@ import "clusterinst.proto";
 import "app.proto";
 import "appinst.proto";
 import "refs.proto";
-import "stream.proto";
 import "gogoproto/gogo.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
@@ -45,7 +44,6 @@ message AllData {
   repeated AppInst app_instances = 17 [(gogoproto.nullable) = false];
   repeated AppInstRefs app_inst_refs = 18 [(gogoproto.nullable) = false];
   repeated VMPool vm_pools = 19 [(gogoproto.nullable) = false];
-  repeated StreamObj stream_objs = 20 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }

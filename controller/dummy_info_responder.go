@@ -26,7 +26,9 @@ func NewDummyInfoResponder(appInstCache *edgeproto.AppInstCache, clusterInstCach
 		enable:              true,
 	}
 	d.AppInstCache.SetNotifyCb(d.runAppInstChanged)
+	d.AppInstCache.SetDeletedCb(d.runAppInstDeleted)
 	d.ClusterInstCache.SetNotifyCb(d.runClusterInstChanged)
+	d.ClusterInstCache.SetDeletedCb(d.runClusterInstDeleted)
 	edgeproto.InitClusterInstInfoCache(&d.ClusterInstInfoCache)
 	edgeproto.InitAppInstInfoCache(&d.AppInstInfoCache)
 	d.AppInstInfoCache.SetNotifyCb(d.appInstInfoCb)
@@ -73,11 +75,25 @@ func (d *DummyInfoResponder) runClusterInstChanged(ctx context.Context, key *edg
 	go d.clusterInstChanged(ctx, key, modRev)
 }
 
+func (d *DummyInfoResponder) runClusterInstDeleted(ctx context.Context, old *edgeproto.ClusterInst) {
+	if !d.enable {
+		return
+	}
+	go d.clusterInstDeleted(ctx, old)
+}
+
 func (d *DummyInfoResponder) runAppInstChanged(ctx context.Context, key *edgeproto.AppInstKey, old *edgeproto.AppInst, modRev int64) {
 	if !d.enable {
 		return
 	}
 	go d.appInstChanged(ctx, key, modRev)
+}
+
+func (d *DummyInfoResponder) runAppInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
+	if !d.enable {
+		return
+	}
+	go d.appInstDeleted(ctx, old)
 }
 
 func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, modRev int64) {
@@ -119,10 +135,14 @@ func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, key *edgepr
 		if d.simulateClusterDeleteFailure {
 			d.ClusterInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_DELETE_ERROR, "crm delete ClusterInst failed")
 		} else {
-			info := edgeproto.ClusterInstInfo{Key: *key}
-			d.ClusterInstInfoCache.Delete(ctx, &info, 0)
+			d.ClusterInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_DELETE_DONE)
 		}
 	}
+}
+
+func (d *DummyInfoResponder) clusterInstDeleted(ctx context.Context, old *edgeproto.ClusterInst) {
+	info := edgeproto.ClusterInstInfo{Key: old.Key}
+	d.ClusterInstInfoCache.Delete(ctx, &info, 0)
 }
 
 func (d *DummyInfoResponder) appInstChanged(ctx context.Context, key *edgeproto.AppInstKey, modRev int64) {
@@ -164,10 +184,14 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, key *edgeproto.
 		if d.simulateAppDeleteFailure {
 			d.AppInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_DELETE_ERROR, "crm delete app inst failed")
 		} else {
-			info := edgeproto.AppInstInfo{Key: *key}
-			d.AppInstInfoCache.Delete(ctx, &info, 0)
+			d.AppInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_DELETE_DONE)
 		}
 	}
+}
+
+func (d *DummyInfoResponder) appInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
+	info := edgeproto.AppInstInfo{Key: old.Key}
+	d.AppInstInfoCache.Delete(ctx, &info, 0)
 }
 
 func (d *DummyInfoResponder) clusterInstInfoCb(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInstInfo, modRev int64) {

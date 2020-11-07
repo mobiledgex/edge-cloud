@@ -33,7 +33,6 @@ type ControllerData struct {
 	AlertCache               edgeproto.AlertCache
 	SettingsCache            edgeproto.SettingsCache
 	ResTagTableCache         edgeproto.ResTagTableCache
-	StreamObjInfoCache       edgeproto.StreamObjInfoCache
 	ExecReqHandler           *ExecReqHandler
 	ExecReqSend              *notify.ExecRequestSend
 	ControllerWait           chan bool
@@ -75,12 +74,13 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
-	edgeproto.InitStreamObjInfoCache(&cd.StreamObjInfoCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
 	cd.ClusterInstCache.SetUpdatedCb(cd.clusterInstChanged)
+	cd.ClusterInstCache.SetDeletedCb(cd.clusterInstDeleted)
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
+	cd.AppInstCache.SetDeletedCb(cd.appInstDeleted)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
@@ -157,16 +157,16 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.StreamClusterInstMsg(ctx, &new.Key, updateType, value)
+			cd.ClusterInstInfoCache.SetStatusTask(ctx, &new.Key, value)
 		case edgeproto.UpdateStep:
-			cd.StreamClusterInstMsg(ctx, &new.Key, updateType, value)
+			cd.ClusterInstInfoCache.SetStatusStep(ctx, &new.Key, value)
 		}
 	}
 
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
-		// reset stream for the new action
-		cd.ResetClusterInstStream(ctx, &new.Key)
+		// reset status messages
+		cd.ClusterInstInfoCache.StatusReset(ctx, &new.Key)
 
 		// create
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
@@ -224,9 +224,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		// reset stream for the new action
-		cd.ResetClusterInstStream(ctx, &new.Key)
-
+		// reset status messages
+		cd.ClusterInstInfoCache.StatusReset(ctx, &new.Key)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateClusterCacheCallback)
 		if err != nil {
@@ -285,9 +284,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
-		// reset stream for the new action
-		cd.ResetClusterInstStream(ctx, &new.Key)
-
+		// reset status messages
+		cd.ClusterInstInfoCache.StatusReset(ctx, &new.Key)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
 		// clusterInst was deleted
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback)
@@ -306,10 +304,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				return
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "set cluster inst deleted", "ClusterInst", *new)
-			// DELETING local info signals to controller that
-			// delete was successful.
-			info := edgeproto.ClusterInstInfo{Key: new.Key}
-			cd.ClusterInstInfoCache.Delete(ctx, &info, 0)
+
+			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateClusterCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		cd.clusterInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_CREATING,
@@ -324,6 +320,12 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			edgeproto.TrackedState_NOT_PRESENT,
 			edgeproto.TrackedState_DELETE_ERROR)
 	}
+}
+
+func (cd *ControllerData) clusterInstDeleted(ctx context.Context, old *edgeproto.ClusterInst) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "clusterInstDeleted", "ClusterInst", old)
+	info := edgeproto.ClusterInstInfo{Key: old.Key}
+	cd.ClusterInstInfoCache.Delete(ctx, &info, 0)
 }
 
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
@@ -342,16 +344,15 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	updateAppCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.StreamAppInstMsg(ctx, &new.Key, updateType, value)
+			cd.AppInstInfoCache.SetStatusTask(ctx, &new.Key, value)
 		case edgeproto.UpdateStep:
-			cd.StreamAppInstMsg(ctx, &new.Key, updateType, value)
+			cd.AppInstInfoCache.SetStatusStep(ctx, &new.Key, value)
 		}
 	}
 
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
-		// reset stream for the new action
-		cd.ResetAppInstStream(ctx, &new.Key)
-
+		// reset status messages
+		cd.AppInstInfoCache.StatusReset(ctx, &new.Key)
 		// create
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&new.Flavor, &flavor)
@@ -415,9 +416,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		// reset stream for the new action
-		cd.ResetAppInstStream(ctx, &new.Key)
-
+		// reset status messages
+		cd.AppInstInfoCache.StatusReset(ctx, &new.Key)
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
 		if err != nil {
 			return
@@ -465,9 +465,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
-		// reset stream for the new action
-		cd.ResetAppInstStream(ctx, &new.Key)
-
+		// reset status messages
+		cd.AppInstInfoCache.StatusReset(ctx, &new.Key)
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
@@ -497,10 +496,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				return
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "deleted app inst", "AppInst", new, "ClusterInst", clusterInst)
-			// DELETING local info signals to controller that
-			// delete was successful.
-			info := edgeproto.AppInstInfo{Key: new.Key}
-			cd.AppInstInfoCache.Delete(ctx, &info, 0)
+			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateAppCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		// Controller may send a CRM transitional state after a
@@ -522,13 +518,29 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	}
 }
 
+func (cd *ControllerData) appInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "appInstDeleted", "AppInst", old)
+	info := edgeproto.AppInstInfo{Key: old.Key}
+	cd.AppInstInfoCache.Delete(ctx, &info, 0)
+}
+
 func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {
-	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
+	if cd.ClusterInstInfoCache.Get(key, &edgeproto.ClusterInstInfo{}) {
+		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
+	} else {
+		// If info obj is not yet created, send status msg after it is created
+		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
+	}
 	cd.ClusterInstInfoCache.SetError(ctx, key, errState, err)
 }
 
 func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgeproto.ClusterInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
-	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	if cd.ClusterInstInfoCache.Get(key, &edgeproto.ClusterInstInfo{}) {
+		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	} else {
+		// If info obj is not yet created, send status msg after it is created
+		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	}
 	if err := cd.ClusterInstInfoCache.SetState(ctx, key, state); err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
 		return err
@@ -541,12 +553,23 @@ func (cd *ControllerData) clusterInstInfoResources(ctx context.Context, key *edg
 }
 
 func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.AppInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {
-	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
+	if cd.AppInstInfoCache.Get(key, &edgeproto.AppInstInfo{}) {
+		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
+	} else {
+		// If info obj is not yet created, send status msg after it is created
+		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
+	}
 	cd.AppInstInfoCache.SetError(ctx, key, errState, err)
 }
 
 func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
-	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	if cd.AppInstInfoCache.Get(key, &edgeproto.AppInstInfo{}) {
+		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	} else {
+		// If info obj is not yet created, send status msg after it is created
+		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	}
+
 	if err := cd.AppInstInfoCache.SetState(ctx, key, state); err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "AppInst set state failed", "err", err)
 		return err
@@ -563,7 +586,12 @@ func (cd *ControllerData) appInstInfoPowerState(ctx context.Context, key *edgepr
 }
 
 func (cd *ControllerData) appInstInfoRuntime(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, rt *edgeproto.AppInstRuntime, updateCallback edgeproto.CacheUpdateCallback) {
-	updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	if cd.AppInstInfoCache.Get(key, &edgeproto.AppInstInfo{}) {
+		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	} else {
+		// If info obj is not yet created, send status msg after it is created
+		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	}
 	cd.AppInstInfoCache.SetStateRuntime(ctx, key, state, rt)
 }
 
@@ -665,10 +693,8 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.StreamCloudletMsg(ctx, &new.Key, updateType, value)
 			cd.CloudletInfoCache.SetStatusTask(ctx, &new.Key, value)
 		case edgeproto.UpdateStep:
-			cd.StreamCloudletMsg(ctx, &new.Key, updateType, value)
 			cd.CloudletInfoCache.SetStatusStep(ctx, &new.Key, value)
 		}
 	}
@@ -676,9 +702,6 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// Reset old Status
 		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
-
-		// reset stream for the new action
-		cd.ResetCloudletStream(ctx, &new.Key)
 
 		cloudlet := edgeproto.Cloudlet{}
 		// Check current thread state
@@ -976,34 +999,4 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 
 	// TODO calculate Flavor info and send CloudletInfo again
-}
-
-func (cd *ControllerData) StreamAppInstMsg(ctx context.Context, key *edgeproto.AppInstKey, updateType edgeproto.CacheUpdateType, msg string) {
-	streamKey := key
-	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
-}
-
-func (cd *ControllerData) ResetAppInstStream(ctx context.Context, key *edgeproto.AppInstKey) {
-	streamObjInfo := edgeproto.StreamObjInfo{Key: *key}
-	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
-}
-
-func (cd *ControllerData) StreamClusterInstMsg(ctx context.Context, key *edgeproto.ClusterInstKey, updateType edgeproto.CacheUpdateType, msg string) {
-	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
-	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
-}
-
-func (cd *ControllerData) ResetClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey) {
-	streamObjInfo := edgeproto.StreamObjInfo{Key: edgeproto.AppInstKey{ClusterInstKey: *key}}
-	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
-}
-
-func (cd *ControllerData) StreamCloudletMsg(ctx context.Context, key *edgeproto.CloudletKey, updateType edgeproto.CacheUpdateType, msg string) {
-	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
-	cd.StreamObjInfoCache.AddStreamMsg(ctx, streamKey, updateType, msg)
-}
-
-func (cd *ControllerData) ResetCloudletStream(ctx context.Context, key *edgeproto.CloudletKey) {
-	streamObjInfo := edgeproto.StreamObjInfo{Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}}
-	cd.StreamObjInfoCache.Delete(ctx, &streamObjInfo, 0)
 }
