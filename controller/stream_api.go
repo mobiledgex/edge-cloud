@@ -83,6 +83,12 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 
 	// Currently we don't know which controller has the streamer Obj for this key
 	// (or if it's even present), so just broadcast to all.
+
+	// In case, CRM loses connection to controller during an action in-progress
+	// (for ex: during CreateClusterInst), and reconnects to a different controller
+	// than it did earlier, then end-user might not see any status message
+	// For now we won't handle this case, as it will just affect the status updates
+	// which shouldn't be a big deal
 	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
 		if addr == *externalApiAddr {
 			// local node
