@@ -17,14 +17,6 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var StatusMsgRequiredArgs = []string{}
-var StatusMsgOptionalArgs = []string{
-	"msgid",
-	"msg",
-}
-var StatusMsgAliasArgs = []string{}
-var StatusMsgComments = map[string]string{}
-var StatusMsgSpecialArgs = map[string]string{}
 var StatusInfoRequiredArgs = []string{}
 var StatusInfoOptionalArgs = []string{
 	"tasknumber",
@@ -32,9 +24,10 @@ var StatusInfoOptionalArgs = []string{
 	"taskname",
 	"stepname",
 	"msgcount",
-	"msgs:#.msgid",
-	"msgs:#.msg",
+	"msgs",
 }
 var StatusInfoAliasArgs = []string{}
 var StatusInfoComments = map[string]string{}
-var StatusInfoSpecialArgs = map[string]string{}
+var StatusInfoSpecialArgs = map[string]string{
+	"msgs": "StringArray",
+}

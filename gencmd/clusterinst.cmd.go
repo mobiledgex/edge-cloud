@@ -82,8 +82,6 @@ func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
 	}
-	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
-	}
 	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
 		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
 		}
@@ -588,8 +586,9 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var ClusterInstSpecialArgs = map[string]string{
-	"errors": "StringArray",
-	"fields": "StringArray",
+	"errors":      "StringArray",
+	"fields":      "StringArray",
+	"status.msgs": "StringArray",
 }
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
@@ -606,8 +605,7 @@ var ClusterInstInfoOptionalArgs = []string{
 	"status.taskname",
 	"status.stepname",
 	"status.msgcount",
-	"status.msgs:#.msgid",
-	"status.msgs:#.msg",
+	"status.msgs",
 	"resources.vms:#.name",
 	"resources.vms:#.type",
 	"resources.vms:#.status",
@@ -641,8 +639,9 @@ var ClusterInstInfoComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
-	"errors": "StringArray",
-	"fields": "StringArray",
+	"errors":      "StringArray",
+	"fields":      "StringArray",
+	"status.msgs": "StringArray",
 }
 var UpdateClusterInstRequiredArgs = []string{
 	"cluster",

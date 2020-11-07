@@ -1338,6 +1338,7 @@ var CloudletSpecialArgs = map[string]string{
 	"envvar":        "StringToString",
 	"errors":        "StringArray",
 	"fields":        "StringArray",
+	"status.msgs":   "StringArray",
 }
 var FlavorMatchRequiredArgs = []string{
 	"cloudlet-org",
@@ -1471,8 +1472,7 @@ var CloudletInfoOptionalArgs = []string{
 	"status.taskname",
 	"status.stepname",
 	"status.msgcount",
-	"status.msgs:#.msgid",
-	"status.msgs:#.msg",
+	"status.msgs",
 	"containerversion",
 	"availabilityzones:#.name",
 	"availabilityzones:#.status",
@@ -1535,6 +1535,7 @@ var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
 	"fields":            "StringArray",
 	"flavors:#.propmap": "StringToString",
+	"status.msgs":       "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}
 var CloudletMetricsOptionalArgs = []string{

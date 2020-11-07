@@ -138,11 +138,6 @@ enum MaintenanceState {
   UNDER_MAINTENANCE = 31 [(protogen.enum_backend) = true];
 }
 
-message StatusMsg {
-  uint32 msg_id = 1;
-  string msg = 2;
-}
-
 // Status Information
 //
 // Used to track status of create/delete/update for resources that are being modified 
@@ -155,5 +150,5 @@ message StatusInfo{
   string task_name = 3;
   string step_name = 4;
   uint32 msg_count = 5;
-  repeated StatusMsg msgs = 6 [(gogoproto.nullable) = false];
+  repeated string msgs = 6;
 }

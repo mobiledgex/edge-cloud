@@ -3989,8 +3989,6 @@ const CloudletFieldStatusTaskName = "11.3"
 const CloudletFieldStatusStepName = "11.4"
 const CloudletFieldStatusMsgCount = "11.5"
 const CloudletFieldStatusMsgs = "11.6"
-const CloudletFieldStatusMsgsMsgId = "11.6.1"
-const CloudletFieldStatusMsgsMsg = "11.6.2"
 const CloudletFieldState = "12"
 const CloudletFieldCrmOverride = "13"
 const CloudletFieldDeploymentLocal = "14"
@@ -4078,8 +4076,7 @@ var CloudletAllFields = []string{
 	CloudletFieldStatusTaskName,
 	CloudletFieldStatusStepName,
 	CloudletFieldStatusMsgCount,
-	CloudletFieldStatusMsgsMsgId,
-	CloudletFieldStatusMsgsMsg,
+	CloudletFieldStatusMsgs,
 	CloudletFieldState,
 	CloudletFieldCrmOverride,
 	CloudletFieldDeploymentLocal,
@@ -4159,8 +4156,7 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldStatusTaskName:                     struct{}{},
 	CloudletFieldStatusStepName:                     struct{}{},
 	CloudletFieldStatusMsgCount:                     struct{}{},
-	CloudletFieldStatusMsgsMsgId:                    struct{}{},
-	CloudletFieldStatusMsgsMsg:                      struct{}{},
+	CloudletFieldStatusMsgs:                         struct{}{},
 	CloudletFieldState:                              struct{}{},
 	CloudletFieldCrmOverride:                        struct{}{},
 	CloudletFieldDeploymentLocal:                    struct{}{},
@@ -4240,8 +4236,7 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldStatusTaskName:                     "Status Task Name",
 	CloudletFieldStatusStepName:                     "Status Step Name",
 	CloudletFieldStatusMsgCount:                     "Status Msg Count",
-	CloudletFieldStatusMsgsMsgId:                    "Status Msgs Msg Id",
-	CloudletFieldStatusMsgsMsg:                      "Status Msgs Msg",
+	CloudletFieldStatusMsgs:                         "Status Msgs",
 	CloudletFieldState:                              "State",
 	CloudletFieldCrmOverride:                        "Crm Override",
 	CloudletFieldDeploymentLocal:                    "Deployment Local",
@@ -4418,15 +4413,10 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 		fields[CloudletFieldStatus] = struct{}{}
 	} else {
 		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
-			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
-				fields[CloudletFieldStatusMsgsMsgId] = struct{}{}
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
 				fields[CloudletFieldStatusMsgs] = struct{}{}
 				fields[CloudletFieldStatus] = struct{}{}
-			}
-			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
-				fields[CloudletFieldStatusMsgsMsg] = struct{}{}
-				fields[CloudletFieldStatusMsgs] = struct{}{}
-				fields[CloudletFieldStatus] = struct{}{}
+				break
 			}
 		}
 	}
@@ -6323,8 +6313,6 @@ const CloudletInfoFieldStatusTaskName = "11.3"
 const CloudletInfoFieldStatusStepName = "11.4"
 const CloudletInfoFieldStatusMsgCount = "11.5"
 const CloudletInfoFieldStatusMsgs = "11.6"
-const CloudletInfoFieldStatusMsgsMsgId = "11.6.1"
-const CloudletInfoFieldStatusMsgsMsg = "11.6.2"
 const CloudletInfoFieldContainerVersion = "12"
 const CloudletInfoFieldAvailabilityZones = "13"
 const CloudletInfoFieldAvailabilityZonesName = "13.1"
@@ -6373,8 +6361,7 @@ var CloudletInfoAllFields = []string{
 	CloudletInfoFieldStatusTaskName,
 	CloudletInfoFieldStatusStepName,
 	CloudletInfoFieldStatusMsgCount,
-	CloudletInfoFieldStatusMsgsMsgId,
-	CloudletInfoFieldStatusMsgsMsg,
+	CloudletInfoFieldStatusMsgs,
 	CloudletInfoFieldContainerVersion,
 	CloudletInfoFieldAvailabilityZonesName,
 	CloudletInfoFieldAvailabilityZonesStatus,
@@ -6418,8 +6405,7 @@ var CloudletInfoAllFieldsMap = map[string]struct{}{
 	CloudletInfoFieldStatusTaskName:                    struct{}{},
 	CloudletInfoFieldStatusStepName:                    struct{}{},
 	CloudletInfoFieldStatusMsgCount:                    struct{}{},
-	CloudletInfoFieldStatusMsgsMsgId:                   struct{}{},
-	CloudletInfoFieldStatusMsgsMsg:                     struct{}{},
+	CloudletInfoFieldStatusMsgs:                        struct{}{},
 	CloudletInfoFieldContainerVersion:                  struct{}{},
 	CloudletInfoFieldAvailabilityZonesName:             struct{}{},
 	CloudletInfoFieldAvailabilityZonesStatus:           struct{}{},
@@ -6463,8 +6449,7 @@ var CloudletInfoAllFieldsStringMap = map[string]string{
 	CloudletInfoFieldStatusTaskName:                    "Status Task Name",
 	CloudletInfoFieldStatusStepName:                    "Status Step Name",
 	CloudletInfoFieldStatusMsgCount:                    "Status Msg Count",
-	CloudletInfoFieldStatusMsgsMsgId:                   "Status Msgs Msg Id",
-	CloudletInfoFieldStatusMsgsMsg:                     "Status Msgs Msg",
+	CloudletInfoFieldStatusMsgs:                        "Status Msgs",
 	CloudletInfoFieldContainerVersion:                  "Container Version",
 	CloudletInfoFieldAvailabilityZonesName:             "Availability Zones Name",
 	CloudletInfoFieldAvailabilityZonesStatus:           "Availability Zones Status",
@@ -6602,15 +6587,10 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 		fields[CloudletInfoFieldStatus] = struct{}{}
 	} else {
 		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
-			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
-				fields[CloudletInfoFieldStatusMsgsMsgId] = struct{}{}
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
 				fields[CloudletInfoFieldStatusMsgs] = struct{}{}
 				fields[CloudletInfoFieldStatus] = struct{}{}
-			}
-			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
-				fields[CloudletInfoFieldStatusMsgsMsg] = struct{}{}
-				fields[CloudletInfoFieldStatusMsgs] = struct{}{}
-				fields[CloudletInfoFieldStatus] = struct{}{}
+				break
 			}
 		}
 	}

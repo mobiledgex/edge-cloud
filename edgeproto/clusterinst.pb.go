@@ -1443,8 +1443,6 @@ const ClusterInstFieldStatusTaskName = "16.3"
 const ClusterInstFieldStatusStepName = "16.4"
 const ClusterInstFieldStatusMsgCount = "16.5"
 const ClusterInstFieldStatusMsgs = "16.6"
-const ClusterInstFieldStatusMsgsMsgId = "16.6.1"
-const ClusterInstFieldStatusMsgsMsg = "16.6.2"
 const ClusterInstFieldExternalVolumeSize = "17"
 const ClusterInstFieldAutoScalePolicy = "18"
 const ClusterInstFieldAvailabilityZone = "19"
@@ -1494,8 +1492,7 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldStatusTaskName,
 	ClusterInstFieldStatusStepName,
 	ClusterInstFieldStatusMsgCount,
-	ClusterInstFieldStatusMsgsMsgId,
-	ClusterInstFieldStatusMsgsMsg,
+	ClusterInstFieldStatusMsgs,
 	ClusterInstFieldExternalVolumeSize,
 	ClusterInstFieldAutoScalePolicy,
 	ClusterInstFieldAvailabilityZone,
@@ -1542,8 +1539,7 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldStatusTaskName:                    struct{}{},
 	ClusterInstFieldStatusStepName:                    struct{}{},
 	ClusterInstFieldStatusMsgCount:                    struct{}{},
-	ClusterInstFieldStatusMsgsMsgId:                   struct{}{},
-	ClusterInstFieldStatusMsgsMsg:                     struct{}{},
+	ClusterInstFieldStatusMsgs:                        struct{}{},
 	ClusterInstFieldExternalVolumeSize:                struct{}{},
 	ClusterInstFieldAutoScalePolicy:                   struct{}{},
 	ClusterInstFieldAvailabilityZone:                  struct{}{},
@@ -1590,8 +1586,7 @@ var ClusterInstAllFieldsStringMap = map[string]string{
 	ClusterInstFieldStatusTaskName:                    "Status Task Name",
 	ClusterInstFieldStatusStepName:                    "Status Step Name",
 	ClusterInstFieldStatusMsgCount:                    "Status Msg Count",
-	ClusterInstFieldStatusMsgsMsgId:                   "Status Msgs Msg Id",
-	ClusterInstFieldStatusMsgsMsg:                     "Status Msgs Msg",
+	ClusterInstFieldStatusMsgs:                        "Status Msgs",
 	ClusterInstFieldExternalVolumeSize:                "External Volume Size",
 	ClusterInstFieldAutoScalePolicy:                   "Auto Scale Policy",
 	ClusterInstFieldAvailabilityZone:                  "Availability Zone",
@@ -1709,15 +1704,10 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 		fields[ClusterInstFieldStatus] = struct{}{}
 	} else {
 		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
-			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
-				fields[ClusterInstFieldStatusMsgsMsgId] = struct{}{}
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
 				fields[ClusterInstFieldStatusMsgs] = struct{}{}
 				fields[ClusterInstFieldStatus] = struct{}{}
-			}
-			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
-				fields[ClusterInstFieldStatusMsgsMsg] = struct{}{}
-				fields[ClusterInstFieldStatusMsgs] = struct{}{}
-				fields[ClusterInstFieldStatus] = struct{}{}
+				break
 			}
 		}
 	}
@@ -2652,7 +2642,7 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	lastMsgId := uint32(0)
+	lastMsgId := 0
 	var lastMsg string
 	var err error
 
@@ -2665,16 +2655,13 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 		}
 		if send != nil {
 			if len(info.Status.Msgs) > 0 {
-				for _, streamMsg := range info.Status.Msgs {
-					if lastMsgId >= streamMsg.MsgId {
+				for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+					if lastMsg == info.Status.Msgs[ii] {
 						continue
 					}
-					if lastMsg == streamMsg.Msg {
-						continue
-					}
-					send(&Result{Message: streamMsg.Msg})
-					lastMsgId = streamMsg.MsgId
-					lastMsg = streamMsg.Msg
+					send(&Result{Message: info.Status.Msgs[ii]})
+					lastMsg = info.Status.Msgs[ii]
+					lastMsgId++
 				}
 			} else {
 				statusString := info.Status.ToString()
@@ -2905,8 +2892,6 @@ const ClusterInstInfoFieldStatusTaskName = "6.3"
 const ClusterInstInfoFieldStatusStepName = "6.4"
 const ClusterInstInfoFieldStatusMsgCount = "6.5"
 const ClusterInstInfoFieldStatusMsgs = "6.6"
-const ClusterInstInfoFieldStatusMsgsMsgId = "6.6.1"
-const ClusterInstInfoFieldStatusMsgsMsg = "6.6.2"
 const ClusterInstInfoFieldResources = "7"
 const ClusterInstInfoFieldResourcesVms = "7.1"
 const ClusterInstInfoFieldResourcesVmsName = "7.1.1"
@@ -2936,8 +2921,7 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldStatusTaskName,
 	ClusterInstInfoFieldStatusStepName,
 	ClusterInstInfoFieldStatusMsgCount,
-	ClusterInstInfoFieldStatusMsgsMsgId,
-	ClusterInstInfoFieldStatusMsgsMsg,
+	ClusterInstInfoFieldStatusMsgs,
 	ClusterInstInfoFieldResourcesVmsName,
 	ClusterInstInfoFieldResourcesVmsType,
 	ClusterInstInfoFieldResourcesVmsStatus,
@@ -2964,8 +2948,7 @@ var ClusterInstInfoAllFieldsMap = map[string]struct{}{
 	ClusterInstInfoFieldStatusTaskName:                    struct{}{},
 	ClusterInstInfoFieldStatusStepName:                    struct{}{},
 	ClusterInstInfoFieldStatusMsgCount:                    struct{}{},
-	ClusterInstInfoFieldStatusMsgsMsgId:                   struct{}{},
-	ClusterInstInfoFieldStatusMsgsMsg:                     struct{}{},
+	ClusterInstInfoFieldStatusMsgs:                        struct{}{},
 	ClusterInstInfoFieldResourcesVmsName:                  struct{}{},
 	ClusterInstInfoFieldResourcesVmsType:                  struct{}{},
 	ClusterInstInfoFieldResourcesVmsStatus:                struct{}{},
@@ -2992,8 +2975,7 @@ var ClusterInstInfoAllFieldsStringMap = map[string]string{
 	ClusterInstInfoFieldStatusTaskName:                    "Status Task Name",
 	ClusterInstInfoFieldStatusStepName:                    "Status Step Name",
 	ClusterInstInfoFieldStatusMsgCount:                    "Status Msg Count",
-	ClusterInstInfoFieldStatusMsgsMsgId:                   "Status Msgs Msg Id",
-	ClusterInstInfoFieldStatusMsgsMsg:                     "Status Msgs Msg",
+	ClusterInstInfoFieldStatusMsgs:                        "Status Msgs",
 	ClusterInstInfoFieldResourcesVmsName:                  "Resources Vms Name",
 	ClusterInstInfoFieldResourcesVmsType:                  "Resources Vms Type",
 	ClusterInstInfoFieldResourcesVmsStatus:                "Resources Vms Status",
@@ -3072,15 +3054,10 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 		fields[ClusterInstInfoFieldStatus] = struct{}{}
 	} else {
 		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
-			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
-				fields[ClusterInstInfoFieldStatusMsgsMsgId] = struct{}{}
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
 				fields[ClusterInstInfoFieldStatusMsgs] = struct{}{}
 				fields[ClusterInstInfoFieldStatus] = struct{}{}
-			}
-			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
-				fields[ClusterInstInfoFieldStatusMsgsMsg] = struct{}{}
-				fields[ClusterInstInfoFieldStatusMsgs] = struct{}{}
-				fields[ClusterInstInfoFieldStatus] = struct{}{}
+				break
 			}
 		}
 	}

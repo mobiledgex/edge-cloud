@@ -97,8 +97,6 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
 	}
-	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
-	}
 }
 
 var AppInstApiCmd edgeproto.AppInstApiClient
@@ -782,6 +780,7 @@ var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
 	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
+	"status.msgs":              "StringArray",
 }
 var AppInstRuntimeRequiredArgs = []string{}
 var AppInstRuntimeOptionalArgs = []string{
@@ -813,8 +812,7 @@ var AppInstInfoOptionalArgs = []string{
 	"status.taskname",
 	"status.stepname",
 	"status.msgcount",
-	"status.msgs:#.msgid",
-	"status.msgs:#.msg",
+	"status.msgs",
 	"powerstate",
 }
 var AppInstInfoAliasArgs = []string{}
@@ -837,6 +835,7 @@ var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
 	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
+	"status.msgs":              "StringArray",
 }
 var AppInstMetricsRequiredArgs = []string{}
 var AppInstMetricsOptionalArgs = []string{

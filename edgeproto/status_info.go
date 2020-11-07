@@ -28,7 +28,7 @@ func (s *StatusInfo) StatusReset() {
 	s.TaskName = ""
 	s.StepName = ""
 	s.MsgCount = 0
-	s.Msgs = []StatusMsg{}
+	s.Msgs = []string{}
 }
 
 func (s *StatusInfo) SetMaxTasks(maxtask uint32) {
@@ -51,11 +51,7 @@ func (s *StatusInfo) SetTask(task string) {
 	s.TaskName = task
 	s.StepName = ""
 
-	s.MsgCount++
-	s.Msgs = append(s.Msgs, StatusMsg{
-		MsgId: s.MsgCount,
-		Msg:   s.ToString(),
-	})
+	s.Msgs = append(s.Msgs, s.ToString())
 }
 
 func (s *StatusInfo) SetStep(step string) {
@@ -65,8 +61,5 @@ func (s *StatusInfo) SetStep(step string) {
 	}
 	s.StepName = step
 	s.MsgCount++
-	s.Msgs = append(s.Msgs, StatusMsg{
-		MsgId: s.MsgCount,
-		Msg:   s.ToString(),
-	})
+	s.Msgs = append(s.Msgs, s.ToString())
 }

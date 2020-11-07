@@ -1503,7 +1503,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	lastMsgId := uint32(0)
+	lastMsgId := 0
 	var lastMsg string
 	var err error
 
@@ -1516,16 +1516,13 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 		if send != nil {
 			if len(info.Status.Msgs) > 0 {
-				for _, streamMsg := range info.Status.Msgs {
-					if lastMsgId >= streamMsg.MsgId {
+				for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+					if lastMsg == info.Status.Msgs[ii] {
 						continue
 					}
-					if lastMsg == streamMsg.Msg {
-                                                continue
-					}
-					send(&Result{Message: streamMsg.Msg})
-					lastMsgId = streamMsg.MsgId
-					lastMsg = streamMsg.Msg
+					send(&Result{Message: info.Status.Msgs[ii]})
+					lastMsg = info.Status.Msgs[ii]
+					lastMsgId++
 				}
 			} else {
 				statusString := info.Status.ToString()

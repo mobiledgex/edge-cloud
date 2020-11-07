@@ -545,8 +545,6 @@ func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgepro
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
 		return err
 	}
-	inst := edgeproto.ClusterInstInfo{}
-	cd.ClusterInstInfoCache.Get(key, &inst)
 	return nil
 }
 

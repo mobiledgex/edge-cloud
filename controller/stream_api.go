@@ -25,11 +25,7 @@ type streamSend struct {
 	streamer *cloudcommon.Streamer
 }
 
-type StreamObjApi struct {
-	sync  *Sync
-	store edgeproto.StreamObjStore
-	cache edgeproto.StreamObjCache
-}
+type StreamObjApi struct{}
 
 type GenericCb interface {
 	Send(*edgeproto.Result) error
@@ -63,12 +59,10 @@ func (s *StreamObjApi) StreamLocalMsgs(key *edgeproto.AppInstKey, cb edgeproto.S
 	streamCh := streamer.Subscribe()
 	defer streamer.Unsubscribe(streamCh)
 
-	msgId := 0
 	for streamMsg := range streamCh {
 		switch out := streamMsg.(type) {
 		case string:
-			msgId++
-			cb.Send(&edgeproto.StreamMsg{Id: uint32(msgId), Msg: out})
+			cb.Send(&edgeproto.Result{Message: out})
 		case error:
 			return out
 		default:
@@ -108,7 +102,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 		if sErr != nil {
 			return sErr
 		}
-		var sMsg *edgeproto.StreamMsg
+		var sMsg *edgeproto.Result
 		for {
 			sMsg, sErr = stream.Recv()
 			if sErr == io.EOF {

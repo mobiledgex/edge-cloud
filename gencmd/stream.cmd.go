@@ -25,21 +25,6 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func StreamObjHideTags(in *edgeproto.StreamObj) {
-	if cli.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cli.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-	for i0 := 0; i0 < len(in.Msgs); i0++ {
-	}
-	if _, found := tags["nocmp"]; found {
-		in.State = 0
-	}
-}
-
 var StreamObjApiCmd edgeproto.StreamObjApiClient
 
 var StreamAppInstCmd = &cli.Command{
@@ -50,7 +35,7 @@ var StreamAppInstCmd = &cli.Command{
 	SpecialArgs:  &AppInstKeySpecialArgs,
 	Comments:     AppInstKeyComments,
 	ReqData:      &edgeproto.AppInstKey{},
-	ReplyData:    &edgeproto.StreamMsg{},
+	ReplyData:    &edgeproto.Result{},
 	Run:          runStreamAppInst,
 }
 
@@ -81,7 +66,7 @@ func StreamAppInst(c *cli.Command, in *edgeproto.AppInstKey) error {
 		return fmt.Errorf("StreamAppInst failed: %s", errstr)
 	}
 
-	objs := make([]*edgeproto.StreamMsg, 0)
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -131,7 +116,7 @@ var StreamClusterInstCmd = &cli.Command{
 	SpecialArgs:  &ClusterInstKeySpecialArgs,
 	Comments:     ClusterInstKeyComments,
 	ReqData:      &edgeproto.ClusterInstKey{},
-	ReplyData:    &edgeproto.StreamMsg{},
+	ReplyData:    &edgeproto.Result{},
 	Run:          runStreamClusterInst,
 }
 
@@ -162,7 +147,7 @@ func StreamClusterInst(c *cli.Command, in *edgeproto.ClusterInstKey) error {
 		return fmt.Errorf("StreamClusterInst failed: %s", errstr)
 	}
 
-	objs := make([]*edgeproto.StreamMsg, 0)
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -212,7 +197,7 @@ var StreamCloudletCmd = &cli.Command{
 	SpecialArgs:  &CloudletKeySpecialArgs,
 	Comments:     CloudletKeyComments,
 	ReqData:      &edgeproto.CloudletKey{},
-	ReplyData:    &edgeproto.StreamMsg{},
+	ReplyData:    &edgeproto.Result{},
 	Run:          runStreamCloudlet,
 }
 
@@ -243,7 +228,7 @@ func StreamCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
 		return fmt.Errorf("StreamCloudlet failed: %s", errstr)
 	}
 
-	objs := make([]*edgeproto.StreamMsg, 0)
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -293,7 +278,7 @@ var StreamLocalMsgsCmd = &cli.Command{
 	SpecialArgs:  &AppInstKeySpecialArgs,
 	Comments:     AppInstKeyComments,
 	ReqData:      &edgeproto.AppInstKey{},
-	ReplyData:    &edgeproto.StreamMsg{},
+	ReplyData:    &edgeproto.Result{},
 	Run:          runStreamLocalMsgs,
 }
 
@@ -324,7 +309,7 @@ func StreamLocalMsgs(c *cli.Command, in *edgeproto.AppInstKey) error {
 		return fmt.Errorf("StreamLocalMsgs failed: %s", errstr)
 	}
 
-	objs := make([]*edgeproto.StreamMsg, 0)
+	objs := make([]*edgeproto.Result, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -368,154 +353,3 @@ var StreamObjApiCmds = []*cobra.Command{
 	StreamCloudletCmd.GenCmd(),
 	StreamLocalMsgsCmd.GenCmd(),
 }
-
-var StreamObjInfoApiCmd edgeproto.StreamObjInfoApiClient
-
-var ShowStreamObjInfoCmd = &cli.Command{
-	Use:          "ShowStreamObjInfo",
-	OptionalArgs: strings.Join(append(StreamObjInfoRequiredArgs, StreamObjInfoOptionalArgs...), " "),
-	AliasArgs:    strings.Join(StreamObjInfoAliasArgs, " "),
-	SpecialArgs:  &StreamObjInfoSpecialArgs,
-	Comments:     StreamObjInfoComments,
-	ReqData:      &edgeproto.StreamObjInfo{},
-	ReplyData:    &edgeproto.StreamObjInfo{},
-	Run:          runShowStreamObjInfo,
-}
-
-func runShowStreamObjInfo(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.StreamObjInfo)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowStreamObjInfo(c, obj)
-}
-
-func ShowStreamObjInfo(c *cli.Command, in *edgeproto.StreamObjInfo) error {
-	if StreamObjInfoApiCmd == nil {
-		return fmt.Errorf("StreamObjInfoApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := StreamObjInfoApiCmd.ShowStreamObjInfo(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowStreamObjInfo failed: %s", errstr)
-	}
-
-	objs := make([]*edgeproto.StreamObjInfo, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowStreamObjInfo recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowStreamObjInfos(c *cli.Command, data []edgeproto.StreamObjInfo, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowStreamObjInfo %v\n", data[ii])
-		myerr := ShowStreamObjInfo(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var StreamObjInfoApiCmds = []*cobra.Command{
-	ShowStreamObjInfoCmd.GenCmd(),
-}
-
-var StreamMsgRequiredArgs = []string{}
-var StreamMsgOptionalArgs = []string{
-	"id",
-	"msg",
-}
-var StreamMsgAliasArgs = []string{}
-var StreamMsgComments = map[string]string{
-	"id":  "Unique message ID",
-	"msg": "Stream message",
-}
-var StreamMsgSpecialArgs = map[string]string{}
-var StreamObjRequiredArgs = []string{
-	"key.appkey.organization",
-	"key.appkey.name",
-	"key.appkey.version",
-	"key.clusterinstkey.clusterkey.name",
-	"key.clusterinstkey.cloudletkey.organization",
-	"key.clusterinstkey.cloudletkey.name",
-	"key.clusterinstkey.organization",
-}
-var StreamObjOptionalArgs = []string{
-	"state",
-}
-var StreamObjAliasArgs = []string{}
-var StreamObjComments = map[string]string{
-	"key.appkey.organization":                     "App developer organization",
-	"key.appkey.name":                             "App name",
-	"key.appkey.version":                          "App version",
-	"key.clusterinstkey.clusterkey.name":          "Cluster name",
-	"key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
-	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
-	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
-	"msgs:#.id":                                   "Unique message ID",
-	"msgs:#.msg":                                  "Stream message",
-	"state":                                       "Current state of the obj on the Cloudlet, one of StreamUnknown, StreamStart, StreamStop, StreamError",
-	"lastid":                                      "Last ID to track duplicate messages",
-	"lease":                                       "Lease time",
-	"errormsg":                                    "Stream error message, if any",
-}
-var StreamObjSpecialArgs = map[string]string{}
-var StreamObjInfoRequiredArgs = []string{
-	"key.appkey.organization",
-	"key.appkey.name",
-	"key.appkey.version",
-	"key.clusterinstkey.clusterkey.name",
-	"key.clusterinstkey.cloudletkey.organization",
-	"key.clusterinstkey.cloudletkey.name",
-	"key.clusterinstkey.organization",
-}
-var StreamObjInfoOptionalArgs = []string{
-	"msgs:#.id",
-	"msgs:#.msg",
-	"lastid",
-}
-var StreamObjInfoAliasArgs = []string{}
-var StreamObjInfoComments = map[string]string{
-	"key.appkey.organization":                     "App developer organization",
-	"key.appkey.name":                             "App name",
-	"key.appkey.version":                          "App version",
-	"key.clusterinstkey.clusterkey.name":          "Cluster name",
-	"key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
-	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
-	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
-	"msgs:#.id":                                   "Unique message ID",
-	"msgs:#.msg":                                  "Stream message",
-	"lastid":                                      "Last ID to track duplicate messages",
-}
-var StreamObjInfoSpecialArgs = map[string]string{}

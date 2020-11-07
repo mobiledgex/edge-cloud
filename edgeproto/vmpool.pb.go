@@ -1619,8 +1619,6 @@ const VMPoolFieldStatusTaskName = "6.3"
 const VMPoolFieldStatusStepName = "6.4"
 const VMPoolFieldStatusMsgCount = "6.5"
 const VMPoolFieldStatusMsgs = "6.6"
-const VMPoolFieldStatusMsgsMsgId = "6.6.1"
-const VMPoolFieldStatusMsgsMsg = "6.6.2"
 const VMPoolFieldCrmOverride = "7"
 
 var VMPoolAllFields = []string{
@@ -1647,8 +1645,7 @@ var VMPoolAllFields = []string{
 	VMPoolFieldStatusTaskName,
 	VMPoolFieldStatusStepName,
 	VMPoolFieldStatusMsgCount,
-	VMPoolFieldStatusMsgsMsgId,
-	VMPoolFieldStatusMsgsMsg,
+	VMPoolFieldStatusMsgs,
 	VMPoolFieldCrmOverride,
 }
 
@@ -1676,8 +1673,7 @@ var VMPoolAllFieldsMap = map[string]struct{}{
 	VMPoolFieldStatusTaskName:        struct{}{},
 	VMPoolFieldStatusStepName:        struct{}{},
 	VMPoolFieldStatusMsgCount:        struct{}{},
-	VMPoolFieldStatusMsgsMsgId:       struct{}{},
-	VMPoolFieldStatusMsgsMsg:         struct{}{},
+	VMPoolFieldStatusMsgs:            struct{}{},
 	VMPoolFieldCrmOverride:           struct{}{},
 }
 
@@ -1705,8 +1701,7 @@ var VMPoolAllFieldsStringMap = map[string]string{
 	VMPoolFieldStatusTaskName:        "Status Task Name",
 	VMPoolFieldStatusStepName:        "Status Step Name",
 	VMPoolFieldStatusMsgCount:        "Status Msg Count",
-	VMPoolFieldStatusMsgsMsgId:       "Status Msgs Msg Id",
-	VMPoolFieldStatusMsgsMsg:         "Status Msgs Msg",
+	VMPoolFieldStatusMsgs:            "Status Msgs",
 	VMPoolFieldCrmOverride:           "Crm Override",
 }
 
@@ -1855,15 +1850,10 @@ func (m *VMPool) DiffFields(o *VMPool, fields map[string]struct{}) {
 		fields[VMPoolFieldStatus] = struct{}{}
 	} else {
 		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
-			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
-				fields[VMPoolFieldStatusMsgsMsgId] = struct{}{}
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
 				fields[VMPoolFieldStatusMsgs] = struct{}{}
 				fields[VMPoolFieldStatus] = struct{}{}
-			}
-			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
-				fields[VMPoolFieldStatusMsgsMsg] = struct{}{}
-				fields[VMPoolFieldStatusMsgs] = struct{}{}
-				fields[VMPoolFieldStatus] = struct{}{}
+				break
 			}
 		}
 	}
@@ -2538,7 +2528,7 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	lastMsgId := uint32(0)
+	lastMsgId := 0
 	var lastMsg string
 	var err error
 
@@ -2551,16 +2541,13 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 		}
 		if send != nil {
 			if len(info.Status.Msgs) > 0 {
-				for _, streamMsg := range info.Status.Msgs {
-					if lastMsgId >= streamMsg.MsgId {
+				for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+					if lastMsg == info.Status.Msgs[ii] {
 						continue
 					}
-					if lastMsg == streamMsg.Msg {
-						continue
-					}
-					send(&Result{Message: streamMsg.Msg})
-					lastMsgId = streamMsg.MsgId
-					lastMsg = streamMsg.Msg
+					send(&Result{Message: info.Status.Msgs[ii]})
+					lastMsg = info.Status.Msgs[ii]
+					lastMsgId++
 				}
 			} else {
 				statusString := info.Status.ToString()
@@ -2991,8 +2978,6 @@ const VMPoolInfoFieldStatusTaskName = "7.3"
 const VMPoolInfoFieldStatusStepName = "7.4"
 const VMPoolInfoFieldStatusMsgCount = "7.5"
 const VMPoolInfoFieldStatusMsgs = "7.6"
-const VMPoolInfoFieldStatusMsgsMsgId = "7.6.1"
-const VMPoolInfoFieldStatusMsgsMsg = "7.6.2"
 
 var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldKeyOrganization,
@@ -3019,8 +3004,7 @@ var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldStatusTaskName,
 	VMPoolInfoFieldStatusStepName,
 	VMPoolInfoFieldStatusMsgCount,
-	VMPoolInfoFieldStatusMsgsMsgId,
-	VMPoolInfoFieldStatusMsgsMsg,
+	VMPoolInfoFieldStatusMsgs,
 }
 
 var VMPoolInfoAllFieldsMap = map[string]struct{}{
@@ -3048,8 +3032,7 @@ var VMPoolInfoAllFieldsMap = map[string]struct{}{
 	VMPoolInfoFieldStatusTaskName:        struct{}{},
 	VMPoolInfoFieldStatusStepName:        struct{}{},
 	VMPoolInfoFieldStatusMsgCount:        struct{}{},
-	VMPoolInfoFieldStatusMsgsMsgId:       struct{}{},
-	VMPoolInfoFieldStatusMsgsMsg:         struct{}{},
+	VMPoolInfoFieldStatusMsgs:            struct{}{},
 }
 
 var VMPoolInfoAllFieldsStringMap = map[string]string{
@@ -3077,8 +3060,7 @@ var VMPoolInfoAllFieldsStringMap = map[string]string{
 	VMPoolInfoFieldStatusTaskName:        "Status Task Name",
 	VMPoolInfoFieldStatusStepName:        "Status Step Name",
 	VMPoolInfoFieldStatusMsgCount:        "Status Msg Count",
-	VMPoolInfoFieldStatusMsgsMsgId:       "Status Msgs Msg Id",
-	VMPoolInfoFieldStatusMsgsMsg:         "Status Msgs Msg",
+	VMPoolInfoFieldStatusMsgs:            "Status Msgs",
 }
 
 func (m *VMPoolInfo) IsKeyField(s string) bool {
@@ -3229,15 +3211,10 @@ func (m *VMPoolInfo) DiffFields(o *VMPoolInfo, fields map[string]struct{}) {
 		fields[VMPoolInfoFieldStatus] = struct{}{}
 	} else {
 		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
-			if m.Status.Msgs[i1].MsgId != o.Status.Msgs[i1].MsgId {
-				fields[VMPoolInfoFieldStatusMsgsMsgId] = struct{}{}
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
 				fields[VMPoolInfoFieldStatusMsgs] = struct{}{}
 				fields[VMPoolInfoFieldStatus] = struct{}{}
-			}
-			if m.Status.Msgs[i1].Msg != o.Status.Msgs[i1].Msg {
-				fields[VMPoolInfoFieldStatusMsgsMsg] = struct{}{}
-				fields[VMPoolInfoFieldStatusMsgs] = struct{}{}
-				fields[VMPoolInfoFieldStatus] = struct{}{}
+				break
 			}
 		}
 	}

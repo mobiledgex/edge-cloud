@@ -543,7 +543,7 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 }
 
 func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, send func(*edgeproto.Result) error) error {
-	lastMsgId := uint32(0)
+	lastMsgId := 0
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
@@ -621,14 +621,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
 		}
-		if len(info.Status.Msgs) > 0 {
-			for _, streamMsg := range info.Status.Msgs {
-				if lastMsgId >= streamMsg.MsgId {
-					continue
-				}
-				send(&edgeproto.Result{Message: streamMsg.Msg})
-				lastMsgId = streamMsg.MsgId
-			}
+		for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+			send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			lastMsgId++
 		}
 		checkState(key)
 	})

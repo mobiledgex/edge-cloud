@@ -132,14 +132,13 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 
 func (s *ClusterInstInfoCache) StatusReset(ctx context.Context, key *ClusterInstKey) {
 	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	info := ClusterInstInfo{}
-	if !s.Get(key, &info) {
-		// we don't want to override the state in the cache if it is not present
-		log.InfoLog("StatusReset failed, did not find ClusterInstInfo in cache")
-		return
-	}
-	info.Status.StatusReset()
-	s.Update(ctx, &info, 0)
+	s.UpdateModFunc(ctx, key, 0, func(old *ClusterInstInfo) (newObj *ClusterInstInfo, changed bool) {
+		if old == nil {
+			return old, false
+		}
+		old.Status.StatusReset()
+		return old, true
+	})
 }
 
 // If CRM crashes or reconnects to controller, controller will resend
@@ -352,26 +351,24 @@ func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errSta
 
 func (s *AppInstInfoCache) StatusReset(ctx context.Context, key *AppInstKey) {
 	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	info := AppInstInfo{}
-	if !s.Get(key, &info) {
-		// we don't want to override the state in the cache if it is not present
-		log.InfoLog("StatusReset failed, did not find AppInstInfo in cache")
-		return
-	}
-	info.Status.StatusReset()
-	s.Update(ctx, &info, 0)
+	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
+		if old == nil {
+			return old, false
+		}
+		old.Status.StatusReset()
+		return old, true
+	})
 }
 
 func (s *CloudletInfoCache) StatusReset(ctx context.Context, key *CloudletKey) {
 	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	info := CloudletInfo{}
-	if !s.Get(key, &info) {
-		// we don't want to override the state in the cache if it is not present
-		log.InfoLog("StatusReset failed, did not find CloudletInfo in cache")
-		return
-	}
-	info.Status.StatusReset()
-	s.Update(ctx, &info, 0)
+	s.UpdateModFunc(ctx, key, 0, func(old *CloudletInfo) (newObj *CloudletInfo, changed bool) {
+		if old == nil {
+			return old, false
+		}
+		old.Status.StatusReset()
+		return old, true
+	})
 }
 
 func (s *CloudletInfoCache) SetStatusTask(ctx context.Context, key *CloudletKey, taskName string) {
@@ -396,29 +393,4 @@ func (s *CloudletInfoCache) SetStatusStep(ctx context.Context, key *CloudletKey,
 	}
 	info.Status.SetStep(stepName)
 	s.Update(ctx, &info, 0)
-}
-
-func (s *StreamObjInfoCache) AddStreamMsg(ctx context.Context, key *AppInstKey, updateType CacheUpdateType, msg string) {
-	s.UpdateModFunc(ctx, key, 0, func(old *StreamObjInfo) (newObj *StreamObjInfo, changed bool) {
-		obj := &StreamObjInfo{}
-		if old == nil {
-			obj.Key = *key
-			obj.LastId = 0
-		} else {
-			*obj = *old
-		}
-		objMsg := msg
-		if updateType == UpdateStep {
-			if len(obj.Msgs) > 0 && obj.LastId > 0 {
-				objMsg = obj.Msgs[obj.LastId-1].Msg
-				objMsg += fmt.Sprintf(", %s", msg)
-			}
-		}
-		obj.LastId++
-		obj.Msgs = append(obj.Msgs, &StreamMsg{
-			Id:  obj.LastId,
-			Msg: objMsg,
-		})
-		return obj, true
-	})
 }

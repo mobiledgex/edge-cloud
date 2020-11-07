@@ -59,8 +59,6 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
 	}
-	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
-	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
 	}
@@ -103,8 +101,6 @@ func VMPoolInfoHideTags(in *edgeproto.VMPoolInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
-	}
-	for i1 := 0; i1 < len(in.Status.Msgs); i1++ {
 	}
 }
 
@@ -578,6 +574,7 @@ var VMPoolComments = map[string]string{
 var VMPoolSpecialArgs = map[string]string{
 	"errors":               "StringArray",
 	"fields":               "StringArray",
+	"status.msgs":          "StringArray",
 	"vms:#.flavor.propmap": "StringToString",
 }
 var VMPoolMemberRequiredArgs = []string{
@@ -669,8 +666,7 @@ var VMPoolInfoOptionalArgs = []string{
 	"status.taskname",
 	"status.stepname",
 	"status.msgcount",
-	"status.msgs:#.msgid",
-	"status.msgs:#.msg",
+	"status.msgs",
 }
 var VMPoolInfoAliasArgs = []string{
 	"vmpool-org=key.organization",
@@ -700,6 +696,7 @@ var VMPoolInfoComments = map[string]string{
 var VMPoolInfoSpecialArgs = map[string]string{
 	"errors":               "StringArray",
 	"fields":               "StringArray",
+	"status.msgs":          "StringArray",
 	"vms:#.flavor.propmap": "StringToString",
 }
 var CreateVMPoolRequiredArgs = []string{

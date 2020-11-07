@@ -62,15 +62,16 @@ func (sm *StreamObj) SetupCleanupTimer() {
 		}
 		sm.mux.Lock()
 		for obj, streamer := range sm.streamMap {
+			streamer.mux.Lock()
 			if streamer.State == edgeproto.StreamState_STREAM_START {
+				streamer.mux.Unlock()
 				continue
 			}
 			if time.Now().Sub(streamer.lastAccess) >= streamExpiration {
-				for msgCh := range streamer.subs {
-					delete(streamer.subs, msgCh)
-				}
+				streamer.subs = nil
 				delete(sm.streamMap, obj)
 			}
+			streamer.mux.Unlock()
 		}
 		sm.mux.Unlock()
 	}
@@ -87,8 +88,10 @@ func NewStreamer() *Streamer {
 func (s *Streamer) Stop() {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	for msgCh := range s.subs {
-		close(msgCh)
+	if s.subs != nil {
+		for msgCh := range s.subs {
+			close(msgCh)
+		}
 	}
 	s.State = edgeproto.StreamState_STREAM_STOP
 	s.lastAccess = time.Now()
@@ -96,9 +99,12 @@ func (s *Streamer) Stop() {
 
 func (s *Streamer) Subscribe() chan interface{} {
 	msgCh := make(chan interface{}, 20)
-
 	s.mux.Lock()
 	defer s.mux.Unlock()
+	if s.subs == nil {
+		// streamer is no longer active
+		return nil
+	}
 	s.subs[msgCh] = struct{}{}
 	// Send already streamed msgs to new subscriber
 	for _, msg := range s.buffer {
@@ -117,6 +123,10 @@ func (s *Streamer) Subscribe() chan interface{} {
 func (s *Streamer) Unsubscribe(msgCh chan interface{}) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
+	if s.subs == nil {
+		// streamer is no longer active
+		return
+	}
 	if _, ok := s.subs[msgCh]; ok {
 		delete(s.subs, msgCh)
 	}
