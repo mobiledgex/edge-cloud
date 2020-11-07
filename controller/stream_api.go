@@ -3,35 +3,29 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
-	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 	grpc "google.golang.org/grpc"
 )
 
 var streamObjApi = StreamObjApi{}
 
 var StreamTimeout = 30 * time.Minute
-var StreamLeaseTimeoutSec = int64(60 * 60) // 1 hour
+
+var streamObjs = cloudcommon.StreamObj{}
 
 type streamSend struct {
-	msgCh        chan string
-	cb           GenericCb
-	lastRemoteId uint32
-	doneCh       chan bool
-	mux          sync.Mutex
-	closeCh      bool
+	cb       GenericCb
+	mux      sync.Mutex
+	streamer *cloudcommon.Streamer
 }
 
-type StreamObjApi struct {
-	sync  *Sync
-	store edgeproto.StreamObjStore
-	cache edgeproto.StreamObjCache
-}
+type StreamObjApi struct{}
 
 type GenericCb interface {
 	Send(*edgeproto.Result) error
@@ -45,231 +39,125 @@ type CbWrapper struct {
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	if res != nil {
-		if s.streamSendObj.closeCh {
-			return nil
+		if s.streamSendObj.streamer != nil {
+			s.streamSendObj.streamer.Publish(res.Message)
 		}
-		s.streamSendObj.msgCh <- res.Message
 	}
+	s.GenericCb.Send(res)
 	return nil
 }
 
-func InitStreamObjApi(sync *Sync) {
-	streamObjApi.sync = sync
-	streamObjApi.store = edgeproto.NewStreamObjStore(sync.store)
-	edgeproto.InitStreamObjCache(&streamObjApi.cache)
-	sync.RegisterCache(&streamObjApi.cache)
+func (s *StreamObjApi) StreamLocalMsgs(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamLocalMsgsServer) error {
+	ctx := cb.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "Stream obj messages", "key", key)
+	streamer := streamObjs.Get(*key)
+	if streamer == nil {
+		// stream not found, nothing to show
+		log.SpanLog(ctx, log.DebugLevelApi, "Stream obj not found", "key", key)
+		return nil
+	}
+	streamCh := streamer.Subscribe()
+	defer streamer.Unsubscribe(streamCh)
+
+	for streamMsg := range streamCh {
+		switch out := streamMsg.(type) {
+		case string:
+			cb.Send(&edgeproto.Result{Message: out})
+		case error:
+			return out
+		default:
+			return fmt.Errorf("Unsupported message type received: %v", streamMsg)
+		}
+	}
+
+	return nil
 }
 
 func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
 	ctx := cb.Context()
-	streamObj := edgeproto.StreamObj{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, key, &streamObj) {
-			return key.NotFoundError()
-		}
-		return nil
-	})
-	if err != nil {
-		// return nil, if no object present
-		if err.Error() == key.NotFoundError().Error() {
-			log.SpanLog(ctx, log.DebugLevelApi, "Stream obj is not present", "key", key)
-			return nil
-		}
-		return err
-	}
-	lastMsgId := uint32(0)
-	for _, streamMsg := range streamObj.Msgs {
-		cb.Send(streamMsg)
-		lastMsgId = streamMsg.Id
-	}
-	if streamObj.State != edgeproto.StreamState_STREAM_START {
-		if streamObj.ErrorMsg != "" {
-			return fmt.Errorf("%s", streamObj.ErrorMsg)
-		}
-		return nil
+
+	if *externalApiAddr == "" {
+		// unit test
+		return s.StreamLocalMsgs(key, cb)
 	}
 
-	log.SpanLog(ctx, log.DebugLevelApi, "Stream is in progress, wait for new messages", "streamObj", streamObj, "lastMsgId", lastMsgId)
-	done := make(chan bool, 1)
-	cancel := s.cache.WatchKey(key, func(ctx context.Context) {
-		if !s.cache.Get(key, &streamObj) {
-			return
+	// Currently we don't know which controller has the streamer Obj for this key
+	// (or if it's even present), so just broadcast to all.
+
+	// In case CRM loses connection to controller during an action in-progress
+	// (for ex: during CreateClusterInst), and reconnects to a different controller
+	// than it did earlier, then end-user might not see any status messages.
+	// For now we won't handle this case, as it will just affect the status updates
+	// which shouldn't be a big deal
+	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
+		if addr == *externalApiAddr {
+			// local node
+			return s.StreamLocalMsgs(key, cb)
 		}
-		for _, streamMsg := range streamObj.Msgs {
-			if streamMsg.Id <= lastMsgId {
-				continue
+		// connect to remote node
+		conn, cErr := ControllerConnect(ctx, addr)
+		if cErr != nil {
+			return cErr
+		}
+		defer conn.Close()
+
+		cmd := edgeproto.NewStreamObjApiClient(conn)
+		ctx, cancel := context.WithTimeout(context.Background(), StreamTimeout)
+		defer cancel()
+		stream, sErr := cmd.StreamLocalMsgs(ctx, key)
+		if sErr != nil {
+			return sErr
+		}
+		var sMsg *edgeproto.Result
+		for {
+			sMsg, sErr = stream.Recv()
+			if sErr == io.EOF {
+				sErr = nil
+				break
 			}
-			cb.Send(streamMsg)
-			lastMsgId = streamMsg.Id
+			if sErr != nil {
+				break
+			}
+			cb.Send(sMsg)
 		}
-		if streamObj.State != edgeproto.StreamState_STREAM_START {
-			done <- true
+		if sErr != nil {
+			return sErr
 		}
-	})
-
-	select {
-	case <-done:
-		if streamObj.ErrorMsg != "" {
-			err = fmt.Errorf("%s", streamObj.ErrorMsg)
-		} else {
-			err = nil
-		}
-	case <-time.After(StreamTimeout):
-		err = fmt.Errorf("Timed out waiting for stream messages for app instance %v, please retry again later", key)
-	}
-	cancel()
+		return nil
+	}, nil)
 	return err
 }
 
 func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) (*streamSend, error) {
-	streamObj := edgeproto.StreamObj{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, key, &streamObj) {
-			if streamObj.State == edgeproto.StreamState_STREAM_START {
-				// stream is already in progress for this key
-				return key.ExistsError()
-			}
+	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", key)
+	streamer := streamObjs.Get(*key)
+	if streamer != nil {
+		// stream is already in progress for this key
+		if streamer.State == edgeproto.StreamState_STREAM_START {
+			return nil, key.ExistsError()
 		}
-		lease, gErr := s.sync.store.Grant(context.Background(), StreamLeaseTimeoutSec)
-		if gErr != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Stream grant lease failed", "key", key, "err", gErr)
-		} else {
-			streamObj.Lease = lease
-		}
-		streamObj.Key = *key
-		streamObj.State = edgeproto.StreamState_STREAM_START
-		streamObj.Msgs = []*edgeproto.StreamMsg{}
-		streamObj.LastId = 0
-		streamObj.ErrorMsg = ""
-		s.store.STMPut(stm, &streamObj, objstore.WithLease(lease))
-		return nil
-	})
-
-	if err == nil {
-		streamSendObj := streamSend{}
-		streamSendObj.msgCh = make(chan string, 50)
-		streamSendObj.doneCh = make(chan bool, 1)
-		streamSendObj.cb = inCb
-		streamSendObj.lastRemoteId = uint32(0)
-
-		go s.addStream(ctx, key, &streamSendObj)
-		return &streamSendObj, err
 	}
+	streamer = cloudcommon.NewStreamer()
+	streamSendObj := streamSend{}
+	streamSendObj.cb = inCb
+	streamSendObj.streamer = streamer
+	streamObjs.Add(*key, streamer)
 
-	return nil, err
+	return &streamSendObj, nil
 }
 
 func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", key, "err", objErr)
 	if streamSendObj != nil {
 		streamSendObj.mux.Lock()
-		close(streamSendObj.msgCh)
-		streamSendObj.closeCh = true
-		streamSendObj.mux.Unlock()
-
-		// wait for addStream to finish
-		<-streamSendObj.doneCh
-	}
-
-	streamObj := edgeproto.StreamObj{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, key, &streamObj) {
-			return key.NotFoundError()
-		}
-		streamObj.State = edgeproto.StreamState_STREAM_STOP
-		if objErr != nil {
-			streamObj.ErrorMsg = objErr.Error()
-		}
-		s.store.STMPut(stm, &streamObj, objstore.WithLease(streamObj.Lease))
-		return nil
-	})
-
-	return err
-}
-
-func (s *StreamObjApi) addStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend) {
-	lastStreamId := uint32(0)
-	cancel := streamObjInfoApi.cache.WatchKey(key, func(ctx context.Context) {
-		info := edgeproto.StreamObjInfo{}
-		if !streamObjInfoApi.cache.Get(key, &info) {
-			return
-		}
-		streamSendObj.mux.Lock()
 		defer streamSendObj.mux.Unlock()
-		if streamSendObj.closeCh {
-			return
-		}
-		for _, streamMsg := range info.Msgs {
-			if streamMsg.Id <= lastStreamId {
-				continue
+		if streamSendObj.streamer != nil {
+			if objErr != nil {
+				streamSendObj.streamer.Publish(objErr)
 			}
-			lastStreamId = streamMsg.Id
-			streamSendObj.msgCh <- streamMsg.Msg
-		}
-	})
-	for msg := range streamSendObj.msgCh {
-		streamSendObj.cb.Send(&edgeproto.Result{Message: msg})
-		streamObj := edgeproto.StreamObj{}
-		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if !s.store.STMGet(stm, key, &streamObj) {
-				return key.NotFoundError()
-			}
-			if len(streamObj.Msgs) > 0 &&
-				streamObj.Msgs[len(streamObj.Msgs)-1].Msg == msg {
-				// duplicate message, ignore
-			} else {
-				streamObj.LastId++
-				streamObj.Msgs = append(streamObj.Msgs, &edgeproto.StreamMsg{
-					Id:  streamObj.LastId,
-					Msg: msg,
-				})
-			}
-			s.store.STMPut(stm, &streamObj, objstore.WithLease(streamObj.Lease))
-			return nil
-		})
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to add msg to stream", "key", key, "msg", msg, "err", err)
+			streamSendObj.streamer.Stop()
 		}
 	}
-	cancel()
-	streamSendObj.doneCh <- true
-}
 
-type StreamObjInfoApi struct {
-	sync  *Sync
-	store edgeproto.StreamObjInfoStore
-	cache edgeproto.StreamObjInfoCache
-}
-
-var streamObjInfoApi = StreamObjInfoApi{}
-
-func InitStreamObjInfoApi(sync *Sync) {
-	streamObjInfoApi.sync = sync
-	streamObjInfoApi.store = edgeproto.NewStreamObjInfoStore(sync.store)
-	edgeproto.InitStreamObjInfoCache(&streamObjInfoApi.cache)
-	sync.RegisterCache(&streamObjInfoApi.cache)
-}
-
-func (s *StreamObjInfoApi) Update(ctx context.Context, in *edgeproto.StreamObjInfo, rev int64) {
-	if in == nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "StreamObj is missing")
-		return
-	}
-	lease, err := s.sync.store.Grant(context.Background(), StreamLeaseTimeoutSec)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "Lease grant failed for streamObjInfo, using controllerAliveLease", "key", in.Key, "err", err)
-		lease = controllerAliveLease
-	}
-	s.store.Put(ctx, in, nil, objstore.WithLease(lease))
-}
-
-func (s *StreamObjInfoApi) Delete(ctx context.Context, in *edgeproto.StreamObjInfo, rev int64) {
-	// no-op
-}
-
-func (s *StreamObjInfoApi) Flush(ctx context.Context, notifyId int64) {
-	// no-op
-}
-
-func (s *StreamObjInfoApi) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
-	// no-op
+	return nil
 }

@@ -109,7 +109,7 @@ message AppInst {
   // IpAccess for auto-clusters. Ignored otherwise.
   IpAccess auto_cluster_ip_access = 22 [(protogen.backend) = true];
   // status is used to reflect progress of creation or other events
-  StatusInfo status = 23 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  StatusInfo status = 23 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App
   string revision = 24 [(protogen.hidetag) = "nocmp"];
   // Force Appinst refresh even if revision number matches App revision number.

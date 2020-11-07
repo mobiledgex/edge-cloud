@@ -67,7 +67,7 @@ message ClusterInst {
   // Number of k8s nodes (In case of docker deployment, this field is not required)
   uint32 num_nodes = 14;
   // status is used to reflect progress of creation or other events
-  StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Size of external volume to be attached to nodes.  This is for the root partition
   uint64 external_volume_size = 17 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // Auto scale policy name

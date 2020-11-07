@@ -23,7 +23,11 @@ var StatusInfoOptionalArgs = []string{
 	"maxtasks",
 	"taskname",
 	"stepname",
+	"msgcount",
+	"msgs",
 }
 var StatusInfoAliasArgs = []string{}
 var StatusInfoComments = map[string]string{}
-var StatusInfoSpecialArgs = map[string]string{}
+var StatusInfoSpecialArgs = map[string]string{
+	"msgs": "StringArray",
+}
