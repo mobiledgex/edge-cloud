@@ -468,6 +468,7 @@ message CloudletInfo {
   option (protogen.notify_recv_hook) = true;
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "none";
+  option (protogen.noconfig) = "Resources";
 }
 
 service CloudletInfoApi {
