@@ -106,31 +106,6 @@ func request_StreamObjApi_StreamCloudlet_0(ctx context.Context, marshaler runtim
 
 }
 
-func request_StreamObjInfoApi_ShowStreamObjInfo_0(ctx context.Context, marshaler runtime.Marshaler, client StreamObjInfoApiClient, req *http.Request, pathParams map[string]string) (StreamObjInfoApi_ShowStreamObjInfoClient, runtime.ServerMetadata, error) {
-	var protoReq StreamObjInfo
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	stream, err := client.ShowStreamObjInfo(ctx, &protoReq)
-	if err != nil {
-		return nil, metadata, err
-	}
-	header, err := stream.Header()
-	if err != nil {
-		return nil, metadata, err
-	}
-	metadata.HeaderMD = header
-	return stream, metadata, nil
-
-}
-
 // RegisterStreamObjApiHandlerServer registers the http handlers for service StreamObjApi to "mux".
 // UnaryRPC     :call StreamObjApiServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -151,21 +126,6 @@ func RegisterStreamObjApiHandlerServer(ctx context.Context, mux *runtime.ServeMu
 	})
 
 	mux.Handle("POST", pattern_StreamObjApi_StreamCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
-		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-		return
-	})
-
-	return nil
-}
-
-// RegisterStreamObjInfoApiHandlerServer registers the http handlers for service StreamObjInfoApi to "mux".
-// UnaryRPC     :call StreamObjInfoApiServer directly.
-// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-func RegisterStreamObjInfoApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server StreamObjInfoApiServer) error {
-
-	mux.Handle("POST", pattern_StreamObjInfoApi_ShowStreamObjInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
 		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -290,73 +250,4 @@ var (
 	forward_StreamObjApi_StreamClusterInst_0 = runtime.ForwardResponseStream
 
 	forward_StreamObjApi_StreamCloudlet_0 = runtime.ForwardResponseStream
-)
-
-// RegisterStreamObjInfoApiHandlerFromEndpoint is same as RegisterStreamObjInfoApiHandler but
-// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterStreamObjInfoApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
-	conn, err := grpc.Dial(endpoint, opts...)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
-			}
-			return
-		}
-		go func() {
-			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
-			}
-		}()
-	}()
-
-	return RegisterStreamObjInfoApiHandler(ctx, mux, conn)
-}
-
-// RegisterStreamObjInfoApiHandler registers the http handlers for service StreamObjInfoApi to "mux".
-// The handlers forward requests to the grpc endpoint over "conn".
-func RegisterStreamObjInfoApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterStreamObjInfoApiHandlerClient(ctx, mux, NewStreamObjInfoApiClient(conn))
-}
-
-// RegisterStreamObjInfoApiHandlerClient registers the http handlers for service StreamObjInfoApi
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "StreamObjInfoApiClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "StreamObjInfoApiClient"
-// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "StreamObjInfoApiClient" to call the correct interceptors.
-func RegisterStreamObjInfoApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client StreamObjInfoApiClient) error {
-
-	mux.Handle("POST", pattern_StreamObjInfoApi_ShowStreamObjInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_StreamObjInfoApi_ShowStreamObjInfo_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_StreamObjInfoApi_ShowStreamObjInfo_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-
-	})
-
-	return nil
-}
-
-var (
-	pattern_StreamObjInfoApi_ShowStreamObjInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "streamobjinfo"}, "", runtime.AssumeColonVerbOpt(true)))
-)
-
-var (
-	forward_StreamObjInfoApi_ShowStreamObjInfo_0 = runtime.ForwardResponseStream
 )

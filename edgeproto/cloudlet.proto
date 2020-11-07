@@ -446,7 +446,7 @@ message CloudletInfo {
   // Supported flavors by the Cloudlet
   repeated FlavorInfo flavors = 10;
   // status is used to reflect progress of creation or other events
-  StatusInfo status = 11 [(gogoproto.nullable) = false];
+  StatusInfo status = 11 [(gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Cloudlet container version
   string container_version = 12;
   // Availability Zones if any

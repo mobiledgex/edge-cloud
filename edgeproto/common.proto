@@ -83,6 +83,8 @@ enum TrackedState {
   CRM_INITOK = 13;
   // Creating dependencies (state used to tracked dependent object change progress)
   CREATING_DEPENDENCIES = 14;
+  // Delete Done
+  DELETE_DONE = 15;
 }
 
 // Overrides default CRM behaviour
@@ -147,4 +149,6 @@ message StatusInfo{
   uint32 max_tasks = 2;
   string task_name = 3;
   string step_name = 4;
+  uint32 msg_count = 5;
+  repeated string msgs = 6;
 }

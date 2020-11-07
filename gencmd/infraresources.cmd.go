@@ -5,10 +5,8 @@ package gencmd
 
 import (
 	fmt "fmt"
-	_ "github.com/gogo/googleapis/google/api"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/mobiledgex/edge-cloud/protogen"
 	math "math"
 )
 
