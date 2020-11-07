@@ -27,6 +27,8 @@ func (s *StatusInfo) StatusReset() {
 	s.MaxTasks = 0
 	s.TaskName = ""
 	s.StepName = ""
+	s.MsgCount = 0
+	s.Msgs = []string{}
 }
 
 func (s *StatusInfo) SetMaxTasks(maxtask uint32) {
@@ -38,6 +40,9 @@ func (s *StatusInfo) SetTask(task string) {
 		log.WarnLog("nil StatusInfo")
 		return
 	}
+	if task == "" {
+		return
+	}
 	if s.TaskName == task {
 		log.DebugLog(log.DebugLevelApi, "StatusInfo task not changed")
 		return
@@ -45,6 +50,8 @@ func (s *StatusInfo) SetTask(task string) {
 	s.TaskNumber++
 	s.TaskName = task
 	s.StepName = ""
+
+	s.Msgs = append(s.Msgs, s.ToString())
 }
 
 func (s *StatusInfo) SetStep(step string) {
@@ -53,4 +60,6 @@ func (s *StatusInfo) SetStep(step string) {
 		return
 	}
 	s.StepName = step
+	s.MsgCount++
+	s.Msgs = append(s.Msgs, s.ToString())
 }

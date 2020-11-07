@@ -3,6 +3,7 @@
 syntax = "proto3";
 package edgeproto;
 
+import "result.proto";
 import "appinst.proto";
 import "clusterinst.proto";
 import "cloudlet.proto";
@@ -28,39 +29,9 @@ enum StreamState {
   STREAM_ERROR = 3;
 }
 
-// StreamMsg to display stream message
-message StreamMsg {
-  // Unique message ID
-  uint32 id = 1;
-  // Stream message
-  string msg = 2;
-}
-
-// StreamObj to track running status of stream enabled objects
-message StreamObj {
-  // AppInst key - Common key for all stream enabled objects
-  AppInstKey key = 1 [(gogoproto.nullable) = false];
-  // Obj status messages
-  repeated StreamMsg msgs = 2;
-  // Current state of the obj on the Cloudlet
-  StreamState state = 3 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Last ID to track duplicate messages
-  uint32 last_id = 4;
-  // Lease time
-  int64 lease = 5;
-  // Stream error message, if any
-  string error_msg = 6;
-  option (protogen.generate_matches) = true;
-  option (protogen.generate_cud) = true;
-  option (protogen.generate_cache) = true;
-  option (protogen.noconfig) = "Msgs,LastId,Lease,ErrorMsg";
-  option (protogen.uses_org) = "none";
-  option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
-}
-
 service StreamObjApi {
   // Stream Application Instance current progress
-  rpc StreamAppInst(AppInstKey) returns (stream StreamMsg) {
+  rpc StreamAppInst(AppInstKey) returns (stream Result) {
     option (google.api.http) = {
       post: "/stream/appinst"
       body: "*"
@@ -69,7 +40,7 @@ service StreamObjApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppKey.Organization";
   }
   // Stream Cluster Instance current progress
-  rpc StreamClusterInst(ClusterInstKey) returns (stream StreamMsg) {
+  rpc StreamClusterInst(ClusterInstKey) returns (stream Result) {
     option (google.api.http) = {
       post: "/stream/clusterinst"
       body: "*"
@@ -78,7 +49,7 @@ service StreamObjApi {
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Organization";
   }
   // Stream Cloudlet current progress
-  rpc StreamCloudlet(CloudletKey) returns (stream StreamMsg) {
+  rpc StreamCloudlet(CloudletKey) returns (stream Result) {
     option (google.api.http) = {
       post: "/stream/cloudlet"
       body: "*"
@@ -86,31 +57,6 @@ service StreamObjApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Organization";
   }
-}
-
-// StreamObjInfo to track running status of stream enabled objects from CRM
-message StreamObjInfo {
-  // AppInst key - Common key for all stream enabled objects
-  AppInstKey key = 1 [(gogoproto.nullable) = false];
-  // Obj status messages
-  repeated StreamMsg msgs = 2;
-  // Last ID to track duplicate messages
-  uint32 last_id = 3;
-  option (protogen.generate_matches) = true;
-  option (protogen.generate_cud) = true;
-  option (protogen.generate_cache) = true;
-  option (protogen.generate_show_test) = true;
-  option (protogen.notify_cache) = true;
-  option (protogen.uses_org) = "none";
-  option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
-}
-
-service StreamObjInfoApi {
-  // Show stream obj sent by CRM.
-  rpc ShowStreamObjInfo(StreamObjInfo) returns (stream StreamObjInfo) {
-    option (google.api.http) = {
-      post: "/show/streamobjinfo"
-      body: "*"
-    };
-  }
+  // This is used internally to forward requests to other Controllers
+  rpc StreamLocalMsgs(AppInstKey) returns (stream Result) {}
 }

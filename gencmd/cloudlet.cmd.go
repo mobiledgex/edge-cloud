@@ -79,6 +79,9 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
 	}
+	if _, found := tags["nocmp"]; found {
+		in.Status = edgeproto.StatusInfo{}
+	}
 	for i0 := 0; i0 < len(in.AvailabilityZones); i0++ {
 	}
 	for i0 := 0; i0 < len(in.OsImages); i0++ {
@@ -1282,7 +1285,7 @@ var CloudletComments = map[string]string{
 	"timelimits.updateappinsttimeout":     "override default max time to update an app instance (duration)",
 	"timelimits.deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 	"errors":                              "Any errors trying to create, update, or delete the Cloudlet.",
-	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
 	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2",
@@ -1335,6 +1338,7 @@ var CloudletSpecialArgs = map[string]string{
 	"envvar":        "StringToString",
 	"errors":        "StringArray",
 	"fields":        "StringArray",
+	"status.msgs":   "StringArray",
 }
 var FlavorMatchRequiredArgs = []string{
 	"cloudlet-org",
@@ -1467,6 +1471,8 @@ var CloudletInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"status.msgcount",
+	"status.msgs",
 	"containerversion",
 	"availabilityzones:#.name",
 	"availabilityzones:#.status",
@@ -1518,6 +1524,7 @@ var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
 	"fields":            "StringArray",
 	"flavors:#.propmap": "StringToString",
+	"status.msgs":       "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}
 var CloudletMetricsOptionalArgs = []string{

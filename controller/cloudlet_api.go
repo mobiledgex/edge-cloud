@@ -495,7 +495,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			ctx, &in.Key,
 			edgeproto.TrackedState_CREATE_ERROR, // Set error state
 			"Created Cloudlet successfully",     // Set success message
-			PlatformInitTimeout, updatecb.cb,
+			PlatformInitTimeout, cb.Send,
 		)
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
@@ -542,7 +542,8 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 	return err
 }
 
-func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, send func(*edgeproto.Result) error) error {
+	lastMsgId := 0
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	fatal := make(chan bool, 1)
@@ -620,6 +621,10 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletInfoApi.cache.Get(key, &info) {
 			return
 		}
+		for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+			send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			lastMsgId++
+		}
 		checkState(key)
 	})
 
@@ -632,7 +637,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case <-done:
 			err = nil
 			if successMsg != "" {
-				updateCallback(edgeproto.UpdateTask, successMsg)
+				send(&edgeproto.Result{Message: successMsg})
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {
@@ -657,11 +662,11 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			} else {
 				out = fmt.Sprintf("Failure: %s", out)
 			}
-			updateCallback(edgeproto.UpdateTask, out)
+			send(&edgeproto.Result{Message: out})
 			err = errors.New(out)
 		case <-time.After(timeout):
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
-			updateCallback(edgeproto.UpdateTask, "platform bringup timed out")
+			send(&edgeproto.Result{Message: "platform bringup timed out"})
 		}
 
 		cancel()
@@ -808,7 +813,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			ctx, &in.Key,
 			edgeproto.TrackedState_UPDATE_ERROR, // Set error state
 			"Cloudlet updated successfully",     // Set success message
-			PlatformInitTimeout, updatecb.cb,
+			PlatformInitTimeout, cb.Send,
 		)
 		return err
 	}
@@ -1128,6 +1133,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.Cloudlet) error {
+		obj.Status = edgeproto.StatusInfo{}
 		err := cb.Send(obj)
 		return err
 	})

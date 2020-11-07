@@ -22,7 +22,6 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterRecvClusterInstCache(&cd.ClusterInstCache)
 	client.RegisterRecv(notify.NewExecRequestRecv(cd.ExecReqHandler))
 	client.RegisterRecvResTagTableCache(&cd.ResTagTableCache)
-	client.RegisterSendStreamObjInfoCache(&cd.StreamObjInfoCache)
 	client.RegisterSendCloudletInfoCache(&cd.CloudletInfoCache)
 	client.RegisterSendVMPoolInfoCache(&cd.VMPoolInfoCache)
 	client.RegisterSendAppInstInfoCache(&cd.AppInstInfoCache)
