@@ -77,9 +77,6 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 	s.InternalPki.vaultConfig = s.VaultConfig
 	if s.AccessKeyClient.enabled {
 		s.InternalPki.accessKeyClient = &s.AccessKeyClient
-		s.InternalPki.enabled = true
-		s.InternalPki.UseVaultCAs = true
-		s.InternalPki.UseVaultCerts = true
 		s.InternalPki.vaultConfig = nil // should never talk to Vault
 		pkiDesc = append(pkiDesc, "useAccessKey")
 	}

@@ -4,17 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"testing"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/examples/features/proto/echo"
 )
 
@@ -28,6 +26,8 @@ func TestAccessClientServer(t *testing.T) {
 
 	// reduce timeout
 	BadAuthDelay = time.Millisecond
+	VerifyDelay = time.Millisecond
+	VerifyRetry = 3
 	vaultRole = ""
 	vaultSecret = ""
 
@@ -44,7 +44,8 @@ func TestAccessClientServer(t *testing.T) {
 	}
 	dc.Init()
 	dc.KeyServer.SetCrmVaultAuth("", "")
-	dc.Start()
+	addr := "127.0.0.1:12345"
+	dc.Start(addr)
 	defer dc.Stop()
 
 	// ----------------------------------------------------------------
@@ -68,6 +69,23 @@ func TestAccessClientServer(t *testing.T) {
 	require.Nil(t, err)
 	// API calls should succeed
 	clientConn = startClient(t, ctx, tc1.KeyClient)
+	EchoApisTest(t, ctx, clientConn, "")
+
+	// ----------------------------------------------------------------
+	log.SpanLog(ctx, log.DebugLevelInfo,
+		"---- test grpc-based reconnect with same client ----")
+	dc.Stop()
+	dc.Start(addr)
+	// wait for reconnect to complete
+	var state connectivity.State
+	for ii := 0; ii < 100; ii++ {
+		state = clientConn.GetState()
+		if state == connectivity.Ready {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.Equal(t, connectivity.Ready, state)
 	EchoApisTest(t, ctx, clientConn, "")
 	clientConn.Close()
 
@@ -230,12 +248,11 @@ func (s *EchoServer) BidirectionalStreamingEcho(stream echo.Echo_BidirectionalSt
 }
 
 type DummyController struct {
-	Cache         edgeproto.CloudletCache
-	Cloudlets     map[edgeproto.CloudletKey]*TestCloudlet
-	KeyServer     *AccessKeyServer
-	ApiLis        net.Listener
-	ApiServ       *grpc.Server
-	ApiRegisterCb func(server *grpc.Server)
+	Cache               edgeproto.CloudletCache
+	Cloudlets           map[edgeproto.CloudletKey]*TestCloudlet
+	KeyServer           *AccessKeyServer
+	AccessKeyGrpcServer AccessKeyGrpcServer
+	ApiRegisterCb       func(server *grpc.Server)
 }
 
 func (s *DummyController) Init() {
@@ -246,43 +263,24 @@ func (s *DummyController) Init() {
 
 // DummyController. The optional registerCb func allows the caller to register
 // more grpc handlers.
-func (s *DummyController) Start() {
-	lis, err := net.Listen("tcp", "127.0.0.1:0")
+func (s *DummyController) Start(addr string) {
+	err := s.AccessKeyGrpcServer.Start(addr, s.KeyServer, func(serv *grpc.Server) {
+		edgeproto.RegisterCloudletAccessKeyApiServer(serv, s)
+		if s.ApiRegisterCb != nil {
+			s.ApiRegisterCb(serv)
+		}
+	})
 	if err != nil {
 		panic(err.Error())
 	}
-	s.ApiLis = lis
-	// The "required" stream interceptors, which always requires a
-	// valid access key.
-	s.ApiServ = grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			cloudcommon.AuditUnaryInterceptor,
-			s.KeyServer.UnaryRequireAccessKey,
-		)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			cloudcommon.AuditStreamInterceptor,
-			s.KeyServer.StreamRequireAccessKey,
-		)),
-	)
-	edgeproto.RegisterCloudletAccessKeyApiServer(s.ApiServ, s)
-	if s.ApiRegisterCb != nil {
-		s.ApiRegisterCb(s.ApiServ)
-	}
-	go func() {
-		err := s.ApiServ.Serve(s.ApiLis)
-		if err != nil {
-			panic(err.Error())
-		}
-	}()
 }
 
 func (s *DummyController) Stop() {
-	s.ApiServ.Stop()
-	s.ApiLis.Close()
+	s.AccessKeyGrpcServer.Stop()
 }
 
 func (s *DummyController) ApiAddr() string {
-	return s.ApiLis.Addr().String()
+	return s.AccessKeyGrpcServer.ApiAddr()
 }
 
 func (s *DummyController) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
@@ -319,7 +317,7 @@ func (s *DummyController) CreateCloudlet(ctx context.Context, name string) *Test
 
 	keyClient := &AccessKeyClient{}
 	keyClient.AccessKeyFile = tc.privateKeyFile
-	keyClient.AccessApiAddr = s.ApiLis.Addr().String()
+	keyClient.AccessApiAddr = s.AccessKeyGrpcServer.ApiAddr()
 	keyClient.TestNoTls = true
 	tc.KeyClient = keyClient
 	// clear out any existing key files left over by previous (failed) tests

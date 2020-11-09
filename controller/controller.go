@@ -83,16 +83,16 @@ var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
 
 type Services struct {
-	etcdLocal       *process.Etcd
-	sync            *Sync
-	influxQ         *influxq.InfluxQ
-	events          *influxq.InfluxQ
-	notifyServerMgr bool
-	grpcServer      *grpc.Server
-	httpServer      *http.Server
-	notifyClient    *notify.Client
-	accessServer    *grpc.Server
-	listeners       []net.Listener
+	etcdLocal           *process.Etcd
+	sync                *Sync
+	influxQ             *influxq.InfluxQ
+	events              *influxq.InfluxQ
+	notifyServerMgr     bool
+	grpcServer          *grpc.Server
+	httpServer          *http.Server
+	notifyClient        *notify.Client
+	accessKeyGrpcServer node.AccessKeyGrpcServer
+	listeners           []net.Listener
 }
 
 func main() {
@@ -135,7 +135,10 @@ func validateFields(ctx context.Context) error {
 			return fmt.Errorf("Invalid registry path")
 		}
 		platform_registry_path := *cloudletRegistryPath + ":" + strings.TrimSpace(string(*versionTag))
-		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, vaultConfig)
+		authApi := &cloudcommon.VaultRegistryAuthApi{
+			VaultConfig: vaultConfig,
+		}
+		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, authApi)
 		if err != nil {
 			return err
 		}
@@ -310,31 +313,14 @@ func startServices() error {
 	)
 	services.notifyServerMgr = true
 
-	// AccessKey API. Tls implemented by nginx proxy
-	accessLis, err := net.Listen("tcp", *accessApiAddr)
+	// Start access server
+	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, func(accessServer *grpc.Server) {
+		edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
+		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
+	})
 	if err != nil {
-		return fmt.Errorf("Failed to listen on address %s, %v", *accessApiAddr, err)
+		return err
 	}
-	services.listeners = append(services.listeners, accessLis)
-	// start AccessKey grpc service
-	accessServer := grpc.NewServer(grpc.Creds(nil),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			cloudcommon.AuditUnaryInterceptor,
-			cloudletApi.accessKeyServer.UnaryRequireAccessKey,
-		)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			cloudcommon.AuditStreamInterceptor,
-			cloudletApi.accessKeyServer.StreamRequireAccessKey,
-		)),
-	)
-	edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
-	edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
-	go func() {
-		if err := accessServer.Serve(accessLis); err != nil {
-			log.FatalLog("Failed to serve", "err", err)
-		}
-	}()
-	services.accessServer = accessServer
 
 	// External API (for clients or MC).
 	apiTlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
@@ -463,9 +449,7 @@ func stopServices() {
 	if services.grpcServer != nil {
 		services.grpcServer.Stop()
 	}
-	if services.accessServer != nil {
-		services.accessServer.Stop()
-	}
+	services.accessKeyGrpcServer.Stop()
 	if services.notifyServerMgr {
 		notify.ServerMgrOne.Stop()
 	}

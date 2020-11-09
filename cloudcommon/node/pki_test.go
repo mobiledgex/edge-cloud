@@ -47,6 +47,8 @@ func TestInternalPki(t *testing.T) {
 	defer vp.StopLocal()
 
 	node.BadAuthDelay = time.Millisecond
+	node.VerifyDelay = time.Millisecond
+	node.VerifyRetry = 3
 
 	// Set up fake Controller to serve access key API
 	dcUS := &DummyController{}
@@ -866,7 +868,7 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 }
 
 func (s *DummyController) Start(ctx context.Context) {
-	s.DummyController.Start()
+	s.DummyController.Start("127.0.0.1:0")
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err.Error())
@@ -942,4 +944,8 @@ func (s *DummyController) GetCas(ctx context.Context, req *edgeproto.GetCasReque
 	}
 	reply.CaChainPem = string(cab)
 	return reply, err
+}
+
+func (s *DummyController) GetAccessData(ctx context.Context, in *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
+	return &edgeproto.AccessDataReply{}, nil
 }

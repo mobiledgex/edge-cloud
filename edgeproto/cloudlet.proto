@@ -57,8 +57,8 @@ message PlatformConfig {
   string cloudlet_vm_image_path = 2;
   // Address of controller notify port (can be multiple of these)
   string notify_ctrl_addrs = 3;
-  // Vault address
-  string vault_addr = 4;
+  // Vault address (4) deprecated, platform no longer has direct access to vault.
+
   // TLS cert file
   string tls_cert_file = 5;
   // TLS key file

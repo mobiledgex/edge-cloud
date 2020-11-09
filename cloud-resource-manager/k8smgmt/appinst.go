@@ -11,7 +11,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
 	appsv1 "k8s.io/api/apps/v1"
 )
@@ -146,12 +145,12 @@ func getConfigDirName(names *KubeNames) (string, string) {
 	return names.ClusterName, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
 
-func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
-	mf, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, app.DeploymentManifest)
+func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
+	mf, err := cloudcommon.GetDeploymentManifest(ctx, authApi, app.DeploymentManifest)
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(ctx, vaultConfig, app, mf, names.ImagePullSecrets)
+	mf, err = MergeEnvVars(ctx, authApi, app, mf, names.ImagePullSecrets)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
@@ -190,12 +189,12 @@ func createOrUpdateAppInst(ctx context.Context, vaultConfig *vault.Config, clien
 
 }
 
-func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	return createOrUpdateAppInst(ctx, vaultConfig, client, names, app, appInst, createManifest)
+func CreateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	return createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, createManifest)
 }
 
-func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	err := createOrUpdateAppInst(ctx, vaultConfig, client, names, app, appInst, applyManifest)
+func UpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	err := createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, applyManifest)
 	if err != nil {
 		return err
 	}
