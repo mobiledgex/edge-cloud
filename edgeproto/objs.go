@@ -35,7 +35,8 @@ var ValidConfigKinds = map[string]struct{}{
 }
 
 var ReservedPlatformPorts = map[string]string{
-	"tcp:22": "Platform inter-node SSH",
+	"tcp:22":    "Platform inter-node SSH",
+	"tcp:20800": "Kubernetes master join server",
 }
 
 // sort each slice by key
