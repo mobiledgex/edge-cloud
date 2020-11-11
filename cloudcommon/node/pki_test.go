@@ -868,7 +868,7 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 }
 
 func (s *DummyController) Start(ctx context.Context) {
-	s.DummyController.Start("127.0.0.1:0")
+	s.DummyController.Start(ctx, "127.0.0.1:0")
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err.Error())

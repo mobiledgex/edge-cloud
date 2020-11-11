@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -309,7 +310,7 @@ type AccessKeyGrpcServer struct {
 	AccessKeyServer *AccessKeyServer
 }
 
-func (s *AccessKeyGrpcServer) Start(addr string, keyServer *AccessKeyServer, registerHandlers func(server *grpc.Server)) error {
+func (s *AccessKeyGrpcServer) Start(addr string, keyServer *AccessKeyServer, tlsConfig *tls.Config, registerHandlers func(server *grpc.Server)) error {
 	s.AccessKeyServer = keyServer
 
 	lis, err := net.Listen("tcp", addr)
@@ -318,8 +319,8 @@ func (s *AccessKeyGrpcServer) Start(addr string, keyServer *AccessKeyServer, reg
 	}
 	s.lis = lis
 
-	// start AccessKey grpc service. TLS is implemented by nginx proxy if needed.
-	grpcServer := grpc.NewServer(grpc.Creds(nil),
+	// start AccessKey grpc service.
+	grpcServer := grpc.NewServer(cloudcommon.GrpcCreds(tlsConfig),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			cloudcommon.AuditUnaryInterceptor,
 			s.AccessKeyServer.UnaryRequireAccessKey,

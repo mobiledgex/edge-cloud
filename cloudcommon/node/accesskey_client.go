@@ -60,7 +60,7 @@ func (s *AccessKeyClient) InitFlags() {
 	flag.BoolVar(&s.requireAccessKey, "requireAccessKey", true, "Require access key for RegionalCloudlet service")
 }
 
-func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey) error {
+func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey, deploymentTag string) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "access key client init")
 	if tlsClientIssuer == NoTlsClientIssuer {
 		// unit test mode
@@ -81,10 +81,13 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
 		s.TestNoTls = true
 	}
+	if deploymentTag != "" && deploymentTag != "main" {
+		// test setup deployment, skip cert validation
+		s.TestNoTls = true
+	}
 	if s.TestNoTls {
 		// for e2e and unit testing only
 		log.SpanLog(ctx, log.DebugLevelInfo, "notls testing mode")
-		s.TestNoTls = true
 	}
 	// CloudletKey is required when using access key
 	if err := key.ValidateKey(); err != nil {
@@ -210,11 +213,12 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 		return false, fmt.Errorf("no credentials found")
 	}
 
-	dialOpt := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{}))
+	tlsConfig := &tls.Config{}
 	if s.TestNoTls {
 		// for e2e and unit testing only
-		dialOpt = grpc.WithInsecure()
+		tlsConfig.InsecureSkipVerify = true
 	}
+	dialOpt := grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
 	clientConn, err := grpc.Dial(s.AccessApiAddr, dialOpt)
 	if err != nil {
 		return false, err
@@ -339,13 +343,14 @@ func (s *AccessKeyClient) ConnectController(ctx context.Context) (*grpc.ClientCo
 	// TLS access config for talking to the Controller's AccessApi endpoint.
 	// The Controller will have a letsencrypt-public issued certificate, and will
 	// not require a client certificate.
+	skipVerify := false
 	if s.TestNoTls {
-		// No TLS for unit/e2e-tests. Real deployments will have
-		// nginx fronting Controllers and terminating TLS.
-	} else {
-		tlsConfig = &tls.Config{
-			ServerName: strings.Split(s.AccessApiAddr, ":")[0],
-		}
+		// unit/e2e-tests use fake cert, so skip verification
+		skipVerify = true
+	}
+	tlsConfig = &tls.Config{
+		ServerName:         strings.Split(s.AccessApiAddr, ":")[0],
+		InsecureSkipVerify: skipVerify,
 	}
 	dialOption := edgetls.GetGrpcDialOption(tlsConfig)
 	// sign request with access key

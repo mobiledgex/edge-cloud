@@ -93,6 +93,7 @@ type Services struct {
 	notifyClient        *notify.Client
 	accessKeyGrpcServer node.AccessKeyGrpcServer
 	listeners           []net.Listener
+	publicCertManager   *node.PublicCertManager
 }
 
 func main() {
@@ -313,8 +314,22 @@ func startServices() error {
 	)
 	services.notifyServerMgr = true
 
+	// Get TLS config for access server
+	var getPublicCertApi node.GetPublicCertApi
+	getPublicCertApi = &node.VaultPublicCertApi{
+		VaultConfig: vaultConfig,
+	}
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
+		getPublicCertApi = &node.TestPublicCertApi{}
+	}
+	services.publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
+	accessServerTlsConfig, err := services.publicCertManager.GetServerTlsConfig(ctx)
+	if err != nil {
+		return err
+	}
+	services.publicCertManager.StartRefresh()
 	// Start access server
-	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, func(accessServer *grpc.Server) {
+	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, accessServerTlsConfig, func(accessServer *grpc.Server) {
 		edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
 		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
 	})
@@ -448,6 +463,9 @@ func stopServices() {
 	}
 	if services.grpcServer != nil {
 		services.grpcServer.Stop()
+	}
+	if services.publicCertManager != nil {
+		services.publicCertManager.StopRefresh()
 	}
 	services.accessKeyGrpcServer.Stop()
 	if services.notifyServerMgr {

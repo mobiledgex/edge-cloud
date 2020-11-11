@@ -241,7 +241,12 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	ctrlHandler.RegisterServer(&ctrlMgr)
 	ctrlMgr.Start("ctrl", "127.0.0.1:50001", nil)
 	defer ctrlMgr.Stop()
-	err := services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, func(accessServer *grpc.Server) {
+
+	getPublicCertApi := &node.TestPublicCertApi{}
+	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
+	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
+	require.Nil(t, err)
+	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, tlsConfig, func(accessServer *grpc.Server) {
 		edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
 		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
 	})

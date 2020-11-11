@@ -85,7 +85,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
 
-	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey); err != nil {
+	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
 		return initCtx, nil, err
 	}
