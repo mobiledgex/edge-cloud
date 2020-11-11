@@ -81,7 +81,7 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
 		s.TestNoTls = true
 	}
-	if deploymentTag != "" && deploymentTag != "main" {
+	if deploymentTag == "dev" || deploymentTag == "stage" || deploymentTag == "upg" {
 		// test setup deployment, skip cert validation
 		s.TestNoTls = true
 	}

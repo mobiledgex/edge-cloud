@@ -11,7 +11,7 @@ import (
 
 var LocalTestZone = "localtest.net"
 
-//GetDNSRecords returns a list of DNS records for the given domain name. Error returned otherewise.
+// GetDNSRecords returns a list of DNS records for the given domain name. Error returned otherwise.
 // if name is provided, that is used as a filter
 func GetDNSRecords(ctx context.Context, api *cloudflare.API, zone string, name string) ([]cloudflare.DNSRecord, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "GetDNSRecords", "name", name)
@@ -37,7 +37,7 @@ func GetDNSRecords(ctx context.Context, api *cloudflare.API, zone string, name s
 	return records, nil
 }
 
-//CreateOrUpdateDNSRecord changes the existing record if found, or adds a new one
+// CreateOrUpdateDNSRecord changes the existing record if found, or adds a new one
 func CreateOrUpdateDNSRecord(ctx context.Context, api *cloudflare.API, zone, name, rtype, content string, ttl int, proxy bool) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "CreateOrUpdateDNSRecord", "zone", zone, "name", name, "content", content)
 
@@ -103,7 +103,7 @@ func CreateOrUpdateDNSRecord(ctx context.Context, api *cloudflare.API, zone, nam
 	return nil
 }
 
-//CreateDNSRecord creates a new DNS record for the zone
+// CreateDNSRecord creates a new DNS record for the zone
 func CreateDNSRecord(ctx context.Context, api *cloudflare.API, zone, name, rtype, content string, ttl int, proxy bool) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "CreateDNSRecord", "name", name, "content", content)
 
@@ -149,7 +149,7 @@ func CreateDNSRecord(ctx context.Context, api *cloudflare.API, zone, name, rtype
 	return nil
 }
 
-//DeleteDNSRecord deletes DNS record specified by recordID in zone.
+// DeleteDNSRecord deletes DNS record specified by recordID in zone.
 func DeleteDNSRecord(ctx context.Context, api *cloudflare.API, zone, recordID string) error {
 	if zone == LocalTestZone {
 		return nil

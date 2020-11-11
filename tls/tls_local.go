@@ -5,8 +5,7 @@ import (
 	"fmt"
 )
 
-func GetLocalTLSConfig() (*tls.Config, error) {
-	crt := `-----BEGIN CERTIFICATE-----
+const LocalTestCert = `-----BEGIN CERTIFICATE-----
 MIICpjCCAY4CCQD1NBBxj1nCFTANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAkx
 MjcuMC4wLjEwIBcNMTkxMDAyMDcxNDAwWhgPMjExOTA5MDgwNzE0MDBaMBQxEjAQ
 BgNVBAMMCTEyNy4wLjAuMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
@@ -24,7 +23,7 @@ h3n5d5xDgLZtG/n4OJehHFjsTfZ3qgHBP8zioSBYURDVJwdQMP+lLPQnnA+jauSf
 +5GYolB2RNzhlg==
 -----END CERTIFICATE-----`
 
-	key := `-----BEGIN PRIVATE KEY-----
+const LocalTestKey = `-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDDXIO6IPXyXNDA
 xkX0doRzkFHNoKh6+bUzRA0I0T7TLpCEwfXSVMRmkzgKyIiHcfoOgOfKcMYfsk7U
 etpSFyrwEXtcgcJM6jVGbQqJQQsJsrxpuDgskbkAqYDrs8C6ArhsfDPfHBkuTQHm
@@ -53,7 +52,8 @@ Ty5Scst9RNo9U91rAJOAG2Vrgg9058zCOngxKTnT6EygJx8ZFEVMy0iowri7hNq2
 U5CcqvvOrDIFqFt/iZALVwjU
 -----END PRIVATE KEY-----`
 
-	certificate, err := tls.X509KeyPair([]byte(crt), []byte(key))
+func GetLocalTLSConfig() (*tls.Config, error) {
+	certificate, err := tls.X509KeyPair([]byte(LocalTestCert), []byte(LocalTestKey))
 	if err != nil {
 		return nil, fmt.Errorf("could not load server key pair: %s", err)
 	}

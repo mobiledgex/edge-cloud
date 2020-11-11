@@ -15,6 +15,9 @@ import (
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
+// This is a global in order to cache it across all platforms in the Controller.
+var cloudflareApi *cloudflare.API
+
 // VaultClient implements platform.AccessApi for access from the Controller
 // directly to Vault. In some cases it may require loading the platform
 // specific plugin.
@@ -85,8 +88,8 @@ func (s *VaultClient) GetChefAuthKey(ctx context.Context) (*chefmgmt.ChefAuthKey
 }
 
 func (s *VaultClient) getCloudflareApi() (*cloudflare.API, error) {
-	if s.cloudflareApi != nil {
-		return s.cloudflareApi, nil
+	if cloudflareApi != nil {
+		return cloudflareApi, nil
 	}
 	vaultPath := "/secret/data/cloudlet/openstack/mexenv.json"
 	vars, err := vault.GetEnvVars(s.vaultConfig, vaultPath)
@@ -97,8 +100,8 @@ func (s *VaultClient) getCloudflareApi() (*cloudflare.API, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.cloudflareApi = api
-	return s.cloudflareApi, nil
+	cloudflareApi = api
+	return cloudflareApi, nil
 }
 
 func (s *VaultClient) CreateOrUpdateDNSRecord(ctx context.Context, zone, name, rtype, content string, ttl int, proxy bool) error {
