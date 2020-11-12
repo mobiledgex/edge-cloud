@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -65,4 +66,19 @@ func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})
+}
+
+func (s *CloudletApi) GetAccessData(ctx context.Context, req *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
+	verified := node.ContextGetAccessKeyVerified(ctx)
+	if verified == nil {
+		// should never reach here if it wasn't verified
+		return nil, fmt.Errorf("Client authentication not verified")
+	}
+	cloudlet := &edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(&verified.Key, cloudlet) {
+		return nil, verified.Key.NotFoundError()
+	}
+	vaultClient := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
+	handler := accessapi.NewControllerHandler(vaultClient)
+	return handler.GetAccessData(ctx, req)
 }

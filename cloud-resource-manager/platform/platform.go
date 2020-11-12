@@ -5,16 +5,19 @@ import (
 	"sync"
 	"time"
 
+	cloudflare "github.com/cloudflare/cloudflare-go"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/chefmgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
 
 type PlatformConfig struct {
 	CloudletKey         *edgeproto.CloudletKey
 	PhysicalName        string
-	VaultAddr           string
 	Region              string
 	TestMode            bool
 	CloudletVMImagePath string
@@ -26,6 +29,7 @@ type PlatformConfig struct {
 	ChefServerPath      string
 	DeploymentTag       string
 	Upgrade             bool
+	AccessApi           AccessApi
 }
 
 type Caches struct {
@@ -86,24 +90,42 @@ type Platform interface {
 	// Set power state of the AppInst
 	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Create Cloudlet
-	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
+	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
-	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
+	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	// Save Cloudlet AccessVars
-	SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, vaultConfig *vault.Config, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet AccessVars
-	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, vaultConfig *vault.Config, updateCallback edgeproto.CacheUpdateCallback) error
 	// Sync data with controller
 	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState edgeproto.CloudletState) error
 	// Get Cloudlet Manifest Config
-	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches) (*edgeproto.CloudletManifest, error)
+	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, flavor *edgeproto.Flavor, caches *Caches) (*edgeproto.CloudletManifest, error)
 	// Verify VM
 	VerifyVMs(ctx context.Context, vms []edgeproto.VM) error
 	// Get Cloudlet Properties
 	GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error)
+	// Platform-sepcific access data lookup (only called from Controller context)
+	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
 }
 
 type ClusterSvc interface {
 	GetAppInstConfigs(ctx context.Context, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst, autoScalePolicy *edgeproto.AutoScalePolicy) ([]*edgeproto.ConfigFile, error)
+}
+
+// AccessApi handles functions that require secrets access, but
+// may be run from either the Controller or CRM context, so may either
+// use Vault directly (Controller) or may go indirectly via Controller (CRM).
+type AccessApi interface {
+	cloudcommon.RegistryAuthApi
+	GetCloudletAccessVars(ctx context.Context) (map[string]string, error)
+	SignSSHKey(ctx context.Context, publicKey string) (string, error)
+	GetSSHPublicKey(ctx context.Context) (string, error)
+	GetOldSSHKey(ctx context.Context) (*vault.MEXKey, error)
+	GetChefAuthKey(ctx context.Context) (*chefmgmt.ChefAuthKey, error)
+	CreateOrUpdateDNSRecord(ctx context.Context, zone, name, rtype, content string, ttl int, proxy bool) error
+	GetDNSRecords(ctx context.Context, zone, fqdn string) ([]cloudflare.DNSRecord, error)
+	DeleteDNSRecord(ctx context.Context, zone, recordID string) error
+	GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error)
 }

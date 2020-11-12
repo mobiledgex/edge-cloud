@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -162,9 +164,30 @@ func TestCRM(t *testing.T) {
 	ctrlHandler := notify.NewDummyHandler()
 	ctrlMgr := notify.ServerMgr{}
 	ctrlHandler.RegisterServer(&ctrlMgr)
+	// handle access API
+	keyServer := node.NewAccessKeyServer(&ctrlHandler.CloudletCache)
+	accessKeyGrpcServer := node.AccessKeyGrpcServer{}
+	basicUpgradeHandler := node.BasicUpgradeHandler{
+		KeyServer: keyServer,
+	}
+	getPublicCertApi := &node.TestPublicCertApi{}
+	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
+	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
+	require.Nil(t, err)
+	accessKeyGrpcServer.Start("127.0.0.1:0", keyServer, tlsConfig, func(server *grpc.Server) {
+		edgeproto.RegisterCloudletAccessKeyApiServer(server, &basicUpgradeHandler)
+	})
+	defer accessKeyGrpcServer.Stop()
+	// setup access key
+	accessKey, err := node.GenerateAccessKey()
+	require.Nil(t, err)
+	accessKeyFile := "/tmp/accesskey_crm_unittest"
+	err = ioutil.WriteFile(accessKeyFile, []byte(accessKey.PrivatePEM), 0600)
+	require.Nil(t, err)
 	// set Cloudlet state to CRM_INIT to allow crm notify exchange to proceed
 	cdata := data.Cloudlets[0]
 	cdata.State = edgeproto.TrackedState_CRM_INITOK
+	cdata.CrmAccessPublicKey = accessKey.PublicPEM
 	ctrlHandler.CloudletCache.Update(ctx, &cdata, 0)
 	ctrlMgr.Start("ctrl", notifyAddr, nil)
 
@@ -172,6 +195,9 @@ func TestCRM(t *testing.T) {
 	os.Args = append(os.Args, string(bytes))
 	os.Args = append(os.Args, "-notifyAddrs")
 	os.Args = append(os.Args, notifyAddr)
+	os.Args = append(os.Args, "--accessApiAddr", accessKeyGrpcServer.ApiAddr())
+	os.Args = append(os.Args, "--accessKeyFile", accessKeyFile)
+	nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
 	mainDone, err := startMain(t)
 	if err != nil {
 		close(sigChan)

@@ -11,7 +11,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
 	yaml "github.com/mobiledgex/yaml/v2"
 )
@@ -103,7 +102,7 @@ func parseDockerComposeManifest(client ssh.Client, dir string, dm *cloudcommon.D
 	return nil
 }
 
-func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, action string, opts ...DockerReqOp) error {
+func handleDockerZipfile(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, action string, opts ...DockerReqOp) error {
 	var dockerOpt DockerOptions
 	for _, op := range opts {
 		if err := op(&dockerOpt); err != nil {
@@ -124,19 +123,19 @@ func handleDockerZipfile(ctx context.Context, vaultConfig *vault.Config, client 
 			return err
 		}
 		passParams := ""
-		if vaultConfig != nil {
-			auth, err := cloudcommon.GetRegistryAuth(ctx, app.DeploymentManifest, vaultConfig)
-			if err == nil && auth != nil {
-				switch auth.AuthType {
-				case cloudcommon.BasicAuth:
-					passParams = fmt.Sprintf("--user %s --password %s", auth.Username, auth.Password)
-				case cloudcommon.ApiKeyAuth:
-					passParams = fmt.Sprintf(`--header="X-JFrog-Art-Api: %s"`, auth.ApiKey)
-				default:
-					log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - unknown authtype", "authType", auth.AuthType)
-				}
-			} else {
-				log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
+		auth, err := authApi.GetRegistryAuth(ctx, app.DeploymentManifest)
+		if err != nil {
+			return err
+		}
+		if auth != nil {
+			switch auth.AuthType {
+			case cloudcommon.BasicAuth:
+				passParams = fmt.Sprintf("--user %s --password %s", auth.Username, auth.Password)
+			case cloudcommon.ApiKeyAuth:
+				passParams = fmt.Sprintf(`--header="X-JFrog-Art-Api: %s"`, auth.ApiKey)
+			case cloudcommon.NoAuth:
+			default:
+				log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - unknown authtype", "authType", auth.AuthType)
 			}
 		}
 		// pull the zipfile
@@ -284,7 +283,7 @@ func CreateAppInstLocal(client ssh.Client, app *edgeproto.App, appInst *edgeprot
 	return nil
 }
 
-func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, opts ...DockerReqOp) error {
+func CreateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst, opts ...DockerReqOp) error {
 	var dockerOpt DockerOptions
 	for _, op := range opts {
 		if err := op(&dockerOpt); err != nil {
@@ -319,7 +318,7 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 		log.SpanLog(ctx, log.DebugLevelInfra, "done docker run ")
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
-			return handleDockerZipfile(ctx, vaultConfig, client, app, appInst, createZip, opts...)
+			return handleDockerZipfile(ctx, authApi, client, app, appInst, createZip, opts...)
 		}
 		filename, err := createDockerComposeFile(client, app, appInst)
 		if err != nil {
@@ -347,7 +346,7 @@ func CreateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 	return nil
 }
 
-func DeleteAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func DeleteAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 
 	if app.DeploymentManifest == "" {
 		name := GetContainerName(&app.Key)
@@ -377,7 +376,7 @@ func DeleteAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 		}
 	} else {
 		if strings.HasSuffix(app.DeploymentManifest, ".zip") {
-			return handleDockerZipfile(ctx, vaultConfig, client, app, appInst, deleteZip)
+			return handleDockerZipfile(ctx, authApi, client, app, appInst, deleteZip)
 		}
 		filename := getDockerComposeFileName(client, app, appInst)
 		cmd := fmt.Sprintf("docker-compose -f %s down", filename)
@@ -395,14 +394,14 @@ func DeleteAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Cl
 	return nil
 }
 
-func UpdateAppInst(ctx context.Context, vaultConfig *vault.Config, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func UpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateAppInst", "appkey", app.Key, "ImagePath", app.ImagePath)
 
-	err := DeleteAppInst(ctx, vaultConfig, client, app, appInst)
+	err := DeleteAppInst(ctx, authApi, client, app, appInst)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "DeleteAppInst failed, proceeding with create", "appkey", app.Key, "err", err)
 	}
-	return CreateAppInst(ctx, vaultConfig, client, app, appInst, WithForceImagePull(true))
+	return CreateAppInst(ctx, authApi, client, app, appInst, WithForceImagePull(true))
 }
 
 func appendContainerIdsFromDockerComposeImages(client ssh.Client, dockerComposeFile string, rt *edgeproto.AppInstRuntime) error {

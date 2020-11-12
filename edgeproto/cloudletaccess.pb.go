@@ -262,6 +262,84 @@ func (m *UpgradeAccessKeyServerMsg) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UpgradeAccessKeyServerMsg proto.InternalMessageInfo
 
+type AccessDataRequest struct {
+	// Data type
+	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	// Any request data (type specific)
+	Data []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+}
+
+func (m *AccessDataRequest) Reset()         { *m = AccessDataRequest{} }
+func (m *AccessDataRequest) String() string { return proto.CompactTextString(m) }
+func (*AccessDataRequest) ProtoMessage()    {}
+func (*AccessDataRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0ae40f913721b930, []int{6}
+}
+func (m *AccessDataRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccessDataRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccessDataRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccessDataRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccessDataRequest.Merge(m, src)
+}
+func (m *AccessDataRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccessDataRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccessDataRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccessDataRequest proto.InternalMessageInfo
+
+type AccessDataReply struct {
+	// Reply data (type specific)
+	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+}
+
+func (m *AccessDataReply) Reset()         { *m = AccessDataReply{} }
+func (m *AccessDataReply) String() string { return proto.CompactTextString(m) }
+func (*AccessDataReply) ProtoMessage()    {}
+func (*AccessDataReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0ae40f913721b930, []int{7}
+}
+func (m *AccessDataReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccessDataReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccessDataReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccessDataReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccessDataReply.Merge(m, src)
+}
+func (m *AccessDataReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccessDataReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccessDataReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccessDataReply proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*IssueCertRequest)(nil), "edgeproto.IssueCertRequest")
 	proto.RegisterType((*IssueCertReply)(nil), "edgeproto.IssueCertReply")
@@ -269,39 +347,45 @@ func init() {
 	proto.RegisterType((*GetCasReply)(nil), "edgeproto.GetCasReply")
 	proto.RegisterType((*UpgradeAccessKeyClientMsg)(nil), "edgeproto.UpgradeAccessKeyClientMsg")
 	proto.RegisterType((*UpgradeAccessKeyServerMsg)(nil), "edgeproto.UpgradeAccessKeyServerMsg")
+	proto.RegisterType((*AccessDataRequest)(nil), "edgeproto.AccessDataRequest")
+	proto.RegisterType((*AccessDataReply)(nil), "edgeproto.AccessDataReply")
 }
 
 func init() { proto.RegisterFile("cloudletaccess.proto", fileDescriptor_0ae40f913721b930) }
 
 var fileDescriptor_0ae40f913721b930 = []byte{
-	// 429 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0xc1, 0x6f, 0xd3, 0x30,
-	0x14, 0xc6, 0x6b, 0x90, 0x2a, 0xfa, 0xc6, 0xa0, 0x98, 0xaa, 0xda, 0x0a, 0x0a, 0x53, 0x84, 0x60,
-	0xa7, 0x0e, 0xad, 0x37, 0x6e, 0x23, 0x07, 0x84, 0x2a, 0x46, 0x55, 0xc4, 0x39, 0xb8, 0xee, 0x23,
-	0x44, 0xd8, 0x71, 0xb0, 0xdd, 0x4a, 0xe6, 0xaf, 0xe0, 0xc0, 0x1f, 0xb5, 0xe3, 0x8e, 0x1c, 0xa1,
-	0xfd, 0x47, 0x90, 0xe3, 0xb4, 0xca, 0x4a, 0xe1, 0xf6, 0xf2, 0xf9, 0x7b, 0x5f, 0x3e, 0xfd, 0x1e,
-	0xf4, 0xb8, 0x50, 0x8b, 0xb9, 0x40, 0xcb, 0x38, 0x47, 0x63, 0x86, 0xa5, 0x56, 0x56, 0xd1, 0x0e,
-	0xce, 0x33, 0xac, 0xc6, 0x41, 0x2f, 0x53, 0x99, 0xaa, 0xc6, 0x33, 0x3f, 0x05, 0x43, 0x3c, 0x82,
-	0xee, 0x1b, 0x63, 0x16, 0x98, 0xa0, 0xb6, 0x53, 0xfc, 0xba, 0x40, 0x63, 0xe9, 0x13, 0x38, 0xe0,
-	0x4a, 0x4a, 0x55, 0xa4, 0x05, 0x93, 0x78, 0x44, 0x4e, 0xc8, 0x69, 0x67, 0x0a, 0x41, 0xba, 0x64,
-	0x12, 0xe3, 0x8f, 0x70, 0xaf, 0xb1, 0x54, 0x0a, 0x47, 0x9f, 0xc1, 0xfd, 0x72, 0x31, 0x13, 0x39,
-	0x4f, 0x39, 0x6a, 0x9b, 0x96, 0x28, 0xeb, 0xb5, 0xc3, 0x20, 0x7b, 0xe7, 0x04, 0x65, 0xe5, 0xd3,
-	0xf9, 0x92, 0x59, 0x4c, 0xbf, 0xa0, 0xab, 0x7c, 0xb7, 0x6a, 0x5f, 0x90, 0xc7, 0xe8, 0x26, 0x28,
-	0xe3, 0xe7, 0x70, 0xf8, 0x1a, 0x6d, 0xc2, 0xcc, 0xa6, 0x53, 0x1f, 0xda, 0xb9, 0xff, 0xa5, 0xae,
-	0x73, 0xeb, 0xaf, 0xf8, 0x0c, 0x0e, 0x36, 0x46, 0xdf, 0xe3, 0x04, 0xee, 0x72, 0x96, 0xf2, 0xcf,
-	0x2c, 0x2f, 0x1a, 0x25, 0x80, 0xb3, 0xc4, 0x4b, 0x3e, 0xf9, 0x12, 0x8e, 0x3f, 0x94, 0x99, 0x66,
-	0x73, 0xbc, 0xa8, 0x40, 0x8d, 0xd1, 0x25, 0x22, 0xc7, 0xc2, 0xbe, 0x35, 0x19, 0xed, 0xc2, 0x6d,
-	0x69, 0xb2, 0x7a, 0xcb, 0x8f, 0x9e, 0xc5, 0x12, 0x75, 0xfe, 0xc9, 0xa5, 0xaa, 0x10, 0xae, 0x2a,
-	0x7b, 0x67, 0x0a, 0x41, 0x7a, 0x57, 0x08, 0x17, 0xcf, 0xfe, 0xce, 0x7b, 0x8f, 0x7a, 0x89, 0x7a,
-	0x7f, 0xde, 0x08, 0xfa, 0x5c, 0xcb, 0x74, 0x03, 0x21, 0x1c, 0xcb, 0xb3, 0xa8, 0x39, 0x3c, 0xe4,
-	0x5a, 0x4e, 0xc2, 0xe3, 0x36, 0xef, 0xfc, 0x07, 0x81, 0x07, 0x49, 0x7d, 0xde, 0xa0, 0x5e, 0x94,
-	0x39, 0x4d, 0xa0, 0xb3, 0xbd, 0x02, 0x7d, 0x34, 0xdc, 0x5e, 0x7a, 0xb8, 0x7b, 0xd0, 0xc1, 0xf1,
-	0xfe, 0x47, 0x0f, 0xec, 0x25, 0xb4, 0x03, 0x3f, 0x7a, 0xd4, 0x30, 0xdd, 0x60, 0x3f, 0xe8, 0xef,
-	0x79, 0x29, 0x85, 0x3b, 0xff, 0x06, 0xbd, 0x9b, 0xad, 0xc6, 0xe8, 0x7c, 0xb1, 0x19, 0x74, 0x77,
-	0x91, 0xd0, 0xa7, 0x8d, 0x8c, 0x7f, 0xf2, 0x1f, 0xfc, 0xcf, 0xb5, 0xa5, 0x7a, 0x4a, 0x5e, 0x90,
-	0x57, 0x8f, 0xaf, 0x7e, 0x47, 0xad, 0xab, 0x55, 0x44, 0xae, 0x57, 0x11, 0xf9, 0xb5, 0x8a, 0xc8,
-	0xf7, 0x75, 0xd4, 0xba, 0x5e, 0x47, 0xad, 0x9f, 0xeb, 0xa8, 0x35, 0x6b, 0x57, 0x11, 0xa3, 0x3f,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0xed, 0x65, 0x05, 0x0e, 0x15, 0x03, 0x00, 0x00,
+	// 487 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x52, 0x4d, 0x6f, 0xd3, 0x40,
+	0x10, 0x8d, 0x01, 0x45, 0x64, 0xda, 0xd2, 0x74, 0x89, 0xa2, 0xd6, 0x54, 0xa6, 0xb2, 0xf8, 0xe8,
+	0x29, 0x45, 0xcd, 0x0d, 0x4e, 0xc5, 0x48, 0xa8, 0x8a, 0x28, 0x51, 0x10, 0x67, 0xb3, 0xd9, 0x0c,
+	0xc6, 0xc2, 0x6b, 0x9b, 0xf5, 0x26, 0xd2, 0xf2, 0x2b, 0xf8, 0x59, 0x3d, 0xf6, 0xc8, 0x0d, 0x48,
+	0xfe, 0x08, 0xda, 0x5d, 0xdb, 0x75, 0xdb, 0xb4, 0xb7, 0xd9, 0x99, 0x37, 0x6f, 0x67, 0xde, 0x3c,
+	0xe8, 0xb1, 0x24, 0x9b, 0xcf, 0x12, 0x94, 0x94, 0x31, 0x2c, 0x8a, 0x41, 0x2e, 0x32, 0x99, 0x91,
+	0x0e, 0xce, 0x22, 0x34, 0xa1, 0xdb, 0x8b, 0xb2, 0x28, 0x33, 0xe1, 0x91, 0x8e, 0x2c, 0xc0, 0x1f,
+	0x42, 0xf7, 0xb4, 0x28, 0xe6, 0x18, 0xa0, 0x90, 0x13, 0xfc, 0x31, 0xc7, 0x42, 0x92, 0xa7, 0xb0,
+	0xc1, 0x32, 0xce, 0xb3, 0x34, 0x4c, 0x29, 0xc7, 0x5d, 0xe7, 0xc0, 0x39, 0xec, 0x4c, 0xc0, 0xa6,
+	0xce, 0x28, 0x47, 0xff, 0x0b, 0x3c, 0x6a, 0x34, 0xe5, 0x89, 0x22, 0x2f, 0x60, 0x3b, 0x9f, 0x4f,
+	0x93, 0x98, 0x85, 0x0c, 0x85, 0x0c, 0x73, 0xe4, 0x65, 0xdb, 0x96, 0x4d, 0x6b, 0xe4, 0x18, 0xb9,
+	0xc1, 0x89, 0x78, 0x41, 0x25, 0x86, 0xdf, 0x51, 0x19, 0xdc, 0xbd, 0x12, 0x67, 0xd3, 0x23, 0x54,
+	0x63, 0xe4, 0xfe, 0x4b, 0xd8, 0x7a, 0x8f, 0x32, 0xa0, 0x45, 0x35, 0x53, 0x1f, 0xda, 0xb1, 0xfe,
+	0x52, 0x94, 0xbc, 0xe5, 0xcb, 0x3f, 0x82, 0x8d, 0x0a, 0xa8, 0xe7, 0x38, 0x80, 0x4d, 0x46, 0x43,
+	0xf6, 0x8d, 0xc6, 0x69, 0x63, 0x08, 0x60, 0x34, 0xd0, 0x29, 0xcd, 0x7c, 0x06, 0x7b, 0x9f, 0xf3,
+	0x48, 0xd0, 0x19, 0x9e, 0x18, 0xa1, 0x46, 0xa8, 0x82, 0x24, 0xc6, 0x54, 0x7e, 0x28, 0x22, 0xd2,
+	0x85, 0xfb, 0xbc, 0x88, 0xca, 0x2e, 0x1d, 0x6a, 0x2d, 0x16, 0x28, 0xe2, 0xaf, 0x2a, 0xcc, 0xd2,
+	0x44, 0x99, 0x61, 0x1f, 0x4e, 0xc0, 0xa6, 0x3e, 0xa6, 0x89, 0xf2, 0xa7, 0x37, 0xf9, 0x3e, 0xa1,
+	0x58, 0xa0, 0x58, 0xcf, 0x37, 0x84, 0x3e, 0x13, 0x3c, 0xac, 0x44, 0xb0, 0xc7, 0xd2, 0x5a, 0x94,
+	0x3a, 0x3c, 0x66, 0x82, 0x8f, 0x6d, 0xb1, 0xe6, 0xf3, 0xdf, 0xc0, 0x8e, 0x7d, 0xbc, 0xa3, 0x92,
+	0x56, 0x8a, 0x10, 0x78, 0x20, 0x55, 0x5e, 0x9d, 0xc7, 0xc4, 0x3a, 0x37, 0xa3, 0x92, 0x1a, 0xae,
+	0xcd, 0x89, 0x89, 0xfd, 0xe7, 0xb0, 0xdd, 0x6c, 0xd6, 0x2a, 0x55, 0x30, 0xe7, 0x12, 0x76, 0xfc,
+	0xc7, 0x81, 0x9d, 0xa0, 0xb4, 0x90, 0xc5, 0x9f, 0xe4, 0x31, 0x09, 0xa0, 0x53, 0x5f, 0x9a, 0x3c,
+	0x19, 0xd4, 0x6e, 0x1a, 0x5c, 0x37, 0x8d, 0xbb, 0xb7, 0xbe, 0xa8, 0xbf, 0x7b, 0x0d, 0x6d, 0x7b,
+	0x23, 0xb2, 0xdb, 0x00, 0x5d, 0xb9, 0xaf, 0xdb, 0x5f, 0x53, 0xd1, 0xbd, 0xa7, 0xc6, 0x08, 0x97,
+	0x0b, 0x90, 0xfd, 0x06, 0xf0, 0x86, 0x28, 0xae, 0x7b, 0x4b, 0x35, 0x4f, 0xd4, 0xf1, 0x4f, 0xe8,
+	0x5d, 0x5d, 0x70, 0x84, 0x4a, 0xef, 0x38, 0x85, 0xee, 0xf5, 0x0b, 0x92, 0x67, 0x0d, 0x9e, 0x5b,
+	0xed, 0xe2, 0xde, 0x85, 0xaa, 0x4d, 0x70, 0xe8, 0xbc, 0x72, 0xde, 0xee, 0x9f, 0xff, 0xf3, 0x5a,
+	0xe7, 0x4b, 0xcf, 0xb9, 0x58, 0x7a, 0xce, 0xdf, 0xa5, 0xe7, 0xfc, 0x5a, 0x79, 0xad, 0x8b, 0x95,
+	0xd7, 0xfa, 0xbd, 0xf2, 0x5a, 0xd3, 0xb6, 0xa1, 0x18, 0xfe, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x21,
+	0xca, 0xf4, 0x9c, 0xc4, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -320,6 +404,8 @@ type CloudletAccessApiClient interface {
 	IssueCert(ctx context.Context, in *IssueCertRequest, opts ...grpc.CallOption) (*IssueCertReply, error)
 	// Get Cerficiate Authority public certs
 	GetCas(ctx context.Context, in *GetCasRequest, opts ...grpc.CallOption) (*GetCasReply, error)
+	// GetAccessData generically gets access/secrets data based on type
+	GetAccessData(ctx context.Context, in *AccessDataRequest, opts ...grpc.CallOption) (*AccessDataReply, error)
 }
 
 type cloudletAccessApiClient struct {
@@ -348,12 +434,23 @@ func (c *cloudletAccessApiClient) GetCas(ctx context.Context, in *GetCasRequest,
 	return out, nil
 }
 
+func (c *cloudletAccessApiClient) GetAccessData(ctx context.Context, in *AccessDataRequest, opts ...grpc.CallOption) (*AccessDataReply, error) {
+	out := new(AccessDataReply)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletAccessApi/GetAccessData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CloudletAccessApiServer is the server API for CloudletAccessApi service.
 type CloudletAccessApiServer interface {
 	// Issue certificate
 	IssueCert(context.Context, *IssueCertRequest) (*IssueCertReply, error)
 	// Get Cerficiate Authority public certs
 	GetCas(context.Context, *GetCasRequest) (*GetCasReply, error)
+	// GetAccessData generically gets access/secrets data based on type
+	GetAccessData(context.Context, *AccessDataRequest) (*AccessDataReply, error)
 }
 
 // UnimplementedCloudletAccessApiServer can be embedded to have forward compatible implementations.
@@ -365,6 +462,9 @@ func (*UnimplementedCloudletAccessApiServer) IssueCert(ctx context.Context, req 
 }
 func (*UnimplementedCloudletAccessApiServer) GetCas(ctx context.Context, req *GetCasRequest) (*GetCasReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCas not implemented")
+}
+func (*UnimplementedCloudletAccessApiServer) GetAccessData(ctx context.Context, req *AccessDataRequest) (*AccessDataReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccessData not implemented")
 }
 
 func RegisterCloudletAccessApiServer(s *grpc.Server, srv CloudletAccessApiServer) {
@@ -407,6 +507,24 @@ func _CloudletAccessApi_GetCas_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CloudletAccessApi_GetAccessData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccessDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudletAccessApiServer).GetAccessData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.CloudletAccessApi/GetAccessData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudletAccessApiServer).GetAccessData(ctx, req.(*AccessDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _CloudletAccessApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.CloudletAccessApi",
 	HandlerType: (*CloudletAccessApiServer)(nil),
@@ -418,6 +536,10 @@ var _CloudletAccessApi_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCas",
 			Handler:    _CloudletAccessApi_GetCas_Handler,
+		},
+		{
+			MethodName: "GetAccessData",
+			Handler:    _CloudletAccessApi_GetAccessData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -734,6 +856,73 @@ func (m *UpgradeAccessKeyServerMsg) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *AccessDataRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccessDataRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccessDataRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Data) > 0 {
+		i -= len(m.Data)
+		copy(dAtA[i:], m.Data)
+		i = encodeVarintCloudletaccess(dAtA, i, uint64(len(m.Data)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Type) > 0 {
+		i -= len(m.Type)
+		copy(dAtA[i:], m.Type)
+		i = encodeVarintCloudletaccess(dAtA, i, uint64(len(m.Type)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccessDataReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccessDataReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccessDataReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Data) > 0 {
+		i -= len(m.Data)
+		copy(dAtA[i:], m.Data)
+		i = encodeVarintCloudletaccess(dAtA, i, uint64(len(m.Data)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintCloudletaccess(dAtA []byte, offset int, v uint64) int {
 	offset -= sovCloudletaccess(v)
 	base := offset
@@ -868,6 +1057,47 @@ func (m *UpgradeAccessKeyServerMsg) ValidateEnums() error {
 	return nil
 }
 
+func (m *AccessDataRequest) CopyInFields(src *AccessDataRequest) int {
+	changed := 0
+	if m.Type != src.Type {
+		m.Type = src.Type
+		changed++
+	}
+	if src.Data != nil {
+		m.Data = src.Data
+		changed++
+	}
+	return changed
+}
+
+func (m *AccessDataRequest) DeepCopyIn(src *AccessDataRequest) {
+	m.Type = src.Type
+	m.Data = src.Data
+}
+
+// Helper method to check that enums have valid values
+func (m *AccessDataRequest) ValidateEnums() error {
+	return nil
+}
+
+func (m *AccessDataReply) CopyInFields(src *AccessDataReply) int {
+	changed := 0
+	if src.Data != nil {
+		m.Data = src.Data
+		changed++
+	}
+	return changed
+}
+
+func (m *AccessDataReply) DeepCopyIn(src *AccessDataReply) {
+	m.Data = src.Data
+}
+
+// Helper method to check that enums have valid values
+func (m *AccessDataReply) ValidateEnums() error {
+	return nil
+}
+
 func (m *IssueCertRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -951,6 +1181,36 @@ func (m *UpgradeAccessKeyServerMsg) Size() (n int) {
 		n += 1 + l + sovCloudletaccess(uint64(l))
 	}
 	l = len(m.CrmPrivateAccessKey)
+	if l > 0 {
+		n += 1 + l + sovCloudletaccess(uint64(l))
+	}
+	return n
+}
+
+func (m *AccessDataRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovCloudletaccess(uint64(l))
+	}
+	l = len(m.Data)
+	if l > 0 {
+		n += 1 + l + sovCloudletaccess(uint64(l))
+	}
+	return n
+}
+
+func (m *AccessDataReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Data)
 	if l > 0 {
 		n += 1 + l + sovCloudletaccess(uint64(l))
 	}
@@ -1532,6 +1792,212 @@ func (m *UpgradeAccessKeyServerMsg) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.CrmPrivateAccessKey = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudletaccess(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccessDataRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudletaccess
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccessDataRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccessDataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletaccess
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletaccess
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
+			if m.Data == nil {
+				m.Data = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudletaccess(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccessDataReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudletaccess
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccessDataReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccessDataReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudletaccess
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudletaccess
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
+			if m.Data == nil {
+				m.Data = []byte{}
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -138,9 +138,67 @@ func GetCass(c *cli.Command, data []edgeproto.GetCasRequest, err *error) {
 	}
 }
 
+var GetAccessDataCmd = &cli.Command{
+	Use:          "GetAccessData",
+	RequiredArgs: strings.Join(AccessDataRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(AccessDataRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(AccessDataRequestAliasArgs, " "),
+	SpecialArgs:  &AccessDataRequestSpecialArgs,
+	Comments:     AccessDataRequestComments,
+	ReqData:      &edgeproto.AccessDataRequest{},
+	ReplyData:    &edgeproto.AccessDataReply{},
+	Run:          runGetAccessData,
+}
+
+func runGetAccessData(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AccessDataRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetAccessData(c, obj)
+}
+
+func GetAccessData(c *cli.Command, in *edgeproto.AccessDataRequest) error {
+	if CloudletAccessApiCmd == nil {
+		return fmt.Errorf("CloudletAccessApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletAccessApiCmd.GetAccessData(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetAccessData failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetAccessDatas(c *cli.Command, data []edgeproto.AccessDataRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetAccessData %v\n", data[ii])
+		myerr := GetAccessData(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var CloudletAccessApiCmds = []*cobra.Command{
 	IssueCertCmd.GenCmd(),
 	GetCasCmd.GenCmd(),
+	GetAccessDataCmd.GenCmd(),
 }
 
 var CloudletAccessKeyApiCmd edgeproto.CloudletAccessKeyApiClient
@@ -204,3 +262,23 @@ var UpgradeAccessKeyServerMsgComments = map[string]string{
 	"crmprivateaccesskey": "New Access key in PEM format (may be blank)",
 }
 var UpgradeAccessKeyServerMsgSpecialArgs = map[string]string{}
+var AccessDataRequestRequiredArgs = []string{}
+var AccessDataRequestOptionalArgs = []string{
+	"type",
+	"data",
+}
+var AccessDataRequestAliasArgs = []string{}
+var AccessDataRequestComments = map[string]string{
+	"type": "Data type",
+	"data": "Any request data (type specific)",
+}
+var AccessDataRequestSpecialArgs = map[string]string{}
+var AccessDataReplyRequiredArgs = []string{}
+var AccessDataReplyOptionalArgs = []string{
+	"data",
+}
+var AccessDataReplyAliasArgs = []string{}
+var AccessDataReplyComments = map[string]string{
+	"data": "Reply data (type specific)",
+}
+var AccessDataReplySpecialArgs = map[string]string{}

@@ -2,12 +2,15 @@ package node
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -296,4 +299,82 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 	return stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
 		Msg: "commit-complete",
 	})
+}
+
+// AccessKeyGrcpServer starts up a grpc listener for the access API endpoint.
+// This is used both by the Controller and various unit test code, and keeps
+// the interceptor setup consistent while avoiding duplicate code.
+type AccessKeyGrpcServer struct {
+	lis             net.Listener
+	serv            *grpc.Server
+	AccessKeyServer *AccessKeyServer
+}
+
+func (s *AccessKeyGrpcServer) Start(addr string, keyServer *AccessKeyServer, tlsConfig *tls.Config, registerHandlers func(server *grpc.Server)) error {
+	s.AccessKeyServer = keyServer
+
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	s.lis = lis
+
+	// start AccessKey grpc service.
+	grpcServer := grpc.NewServer(cloudcommon.GrpcCreds(tlsConfig),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			cloudcommon.AuditUnaryInterceptor,
+			s.AccessKeyServer.UnaryRequireAccessKey,
+		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			cloudcommon.AuditStreamInterceptor,
+			s.AccessKeyServer.StreamRequireAccessKey,
+		)),
+	)
+	if registerHandlers != nil {
+		registerHandlers(grpcServer)
+	}
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.FatalLog("Failed to serve", "err", err)
+		}
+	}()
+	s.serv = grpcServer
+	return nil
+}
+
+func (s *AccessKeyGrpcServer) Stop() {
+	if s.serv != nil {
+		s.serv.Stop()
+		s.serv = nil
+	}
+	if s.lis != nil {
+		s.lis.Close()
+		s.lis = nil
+	}
+}
+
+func (s *AccessKeyGrpcServer) ApiAddr() string {
+	return s.lis.Addr().String()
+}
+
+// Basic edgeproto.CloudletAccessKeyApiServer handler for unit tests only.
+type BasicUpgradeHandler struct {
+	KeyServer *AccessKeyServer
+}
+
+func (s *BasicUpgradeHandler) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
+	return s.KeyServer.UpgradeAccessKey(stream, s.commitKey)
+}
+
+func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
+	// Not thread safe, unit-test only.
+	cloudlet := &edgeproto.Cloudlet{}
+	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
+		return key.NotFoundError()
+	}
+	cloudlet.CrmAccessPublicKey = pubPEM
+	cloudlet.CrmAccessKeyUpgradeRequired = false
+	s.KeyServer.cloudletCache.Update(ctx, cloudlet, 0)
+	return nil
 }

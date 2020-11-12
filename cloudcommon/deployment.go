@@ -18,7 +18,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/vault"
 	yaml "github.com/mobiledgex/yaml/v2"
 	v1 "k8s.io/api/core/v1"
 )
@@ -208,9 +207,9 @@ func GetImageTypeForDeployment(deployment string) (edgeproto.ImageType, error) {
 }
 
 // GetAppDeploymentManifest gets the deployment-specific manifest.
-func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App) (string, error) {
+func GetAppDeploymentManifest(ctx context.Context, authApi RegistryAuthApi, app *edgeproto.App) (string, error) {
 	if app.DeploymentManifest != "" {
-		return GetDeploymentManifest(ctx, vaultConfig, app.DeploymentManifest)
+		return GetDeploymentManifest(ctx, authApi, app.DeploymentManifest)
 	} else if app.DeploymentGenerator != "" {
 		return GenerateManifest(app)
 	} else if app.Deployment == DeploymentTypeKubernetes {
@@ -226,12 +225,12 @@ func GetAppDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, ap
 	return "", nil
 }
 
-func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config, manifest, zipfile, downloadAction string) ([]map[string]DockerContainer, error) {
+func GetRemoteZipDockerManifests(ctx context.Context, authApi RegistryAuthApi, manifest, zipfile, downloadAction string) ([]map[string]DockerContainer, error) {
 	if zipfile == "" {
 		zipfile = "/var/tmp/temp.zip"
 	}
 	if downloadAction == Download {
-		err := GetRemoteManifestToFile(ctx, vaultConfig, manifest, zipfile)
+		err := GetRemoteManifestToFile(ctx, authApi, manifest, zipfile)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
 		}
@@ -289,20 +288,20 @@ func GetRemoteZipDockerManifests(ctx context.Context, vaultConfig *vault.Config,
 	return zipContainers, nil
 }
 
-func validateRemoteZipManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) error {
-	_, err := GetRemoteZipDockerManifests(ctx, vaultConfig, manifest, "", Download)
+func validateRemoteZipManifest(ctx context.Context, authApi RegistryAuthApi, manifest string) error {
+	_, err := GetRemoteZipDockerManifests(ctx, authApi, manifest, "", Download)
 	return err
 }
 
-func GetDeploymentManifest(ctx context.Context, vaultConfig *vault.Config, manifest string) (string, error) {
+func GetDeploymentManifest(ctx context.Context, authApi RegistryAuthApi, manifest string) (string, error) {
 	// manifest may be remote target or inline json/yaml
 	if strings.HasPrefix(manifest, "http://") || strings.HasPrefix(manifest, "https://") {
 
 		if strings.HasSuffix(manifest, ".zip") {
 			log.DebugLog(log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
-			return manifest, validateRemoteZipManifest(ctx, vaultConfig, manifest)
+			return manifest, validateRemoteZipManifest(ctx, authApi, manifest)
 		}
-		mf, err := GetRemoteManifest(ctx, vaultConfig, manifest)
+		mf, err := GetRemoteManifest(ctx, authApi, manifest)
 		if err != nil {
 			return "", fmt.Errorf("cannot get manifest from %s, %v", manifest, err)
 		}
@@ -326,17 +325,17 @@ func GenerateManifest(app *edgeproto.App) (string, error) {
 	return "", fmt.Errorf("invalid deployment generator %s", target)
 }
 
-func GetRemoteManifest(ctx context.Context, vaultConfig *vault.Config, target string) (string, error) {
+func GetRemoteManifest(ctx context.Context, authApi RegistryAuthApi, target string) (string, error) {
 	var content string
-	err := DownloadFile(ctx, vaultConfig, target, "", &content)
+	err := DownloadFile(ctx, authApi, target, "", &content)
 	if err != nil {
 		return "", err
 	}
 	return content, nil
 }
 
-func GetRemoteManifestToFile(ctx context.Context, vaultConfig *vault.Config, target string, filename string) error {
-	return DownloadFile(ctx, vaultConfig, target, filename, nil)
+func GetRemoteManifestToFile(ctx context.Context, authApi RegistryAuthApi, target string, filename string) error {
+	return DownloadFile(ctx, authApi, target, filename, nil)
 }
 
 // 5GB = 10minutes
@@ -349,7 +348,7 @@ func GetTimeout(cLen int) time.Duration {
 	return 15 * time.Minute
 }
 
-func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath string, filePath string, content *string) error {
+func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath string, filePath string, content *string) error {
 	var reqConfig *RequestConfig
 
 	log.SpanLog(ctx, log.DebugLevelApi, "attempt to download file", "file-url", fileUrlPath)
@@ -357,7 +356,7 @@ func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath st
 	// Adjust request timeout based on File Size
 	//  - Timeout is increased by 10min for every 5GB
 	//  - If less than 5GB, then use default timeout
-	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, vaultConfig, nil)
+	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, authApi, nil)
 	if err != nil {
 		return err
 	}
@@ -374,7 +373,7 @@ func DownloadFile(ctx context.Context, vaultConfig *vault.Config, fileUrlPath st
 		}
 	}
 
-	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, vaultConfig, reqConfig)
+	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, authApi, reqConfig)
 	if err != nil {
 		return err
 	}
