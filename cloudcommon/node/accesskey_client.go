@@ -44,14 +44,14 @@ const (
 
 // AccessKeyClient maintains information needed on the client.
 type AccessKeyClient struct {
-	AccessKeyFile    string
-	AccessApiAddr    string
-	accessPrivKey    ed25519.PrivateKey
-	cloudletKey      edgeproto.CloudletKey
-	cloudletKeyStr   string
-	enabled          bool
-	TestNoTls        bool
-	requireAccessKey bool
+	AccessKeyFile     string
+	AccessApiAddr     string
+	accessPrivKey     ed25519.PrivateKey
+	cloudletKey       edgeproto.CloudletKey
+	cloudletKeyStr    string
+	enabled           bool
+	TestSkipTlsVerify bool
+	requireAccessKey  bool
 }
 
 func (s *AccessKeyClient) InitFlags() {
@@ -79,15 +79,15 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 		return fmt.Errorf("Controller access API address not specified")
 	}
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
-		s.TestNoTls = true
+		s.TestSkipTlsVerify = true
 	}
 	if deploymentTag == "dev" || deploymentTag == "stage" || deploymentTag == "upg" {
 		// test setup deployment, skip cert validation
-		s.TestNoTls = true
+		s.TestSkipTlsVerify = true
 	}
-	if s.TestNoTls {
+	if s.TestSkipTlsVerify {
 		// for e2e and unit testing only
-		log.SpanLog(ctx, log.DebugLevelInfo, "notls testing mode")
+		log.SpanLog(ctx, log.DebugLevelInfo, "skip TLS verification testing mode")
 	}
 	// CloudletKey is required when using access key
 	if err := key.ValidateKey(); err != nil {
@@ -214,7 +214,7 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 	}
 
 	tlsConfig := &tls.Config{}
-	if s.TestNoTls {
+	if s.TestSkipTlsVerify {
 		// for e2e and unit testing only
 		tlsConfig.InsecureSkipVerify = true
 	}
@@ -344,7 +344,7 @@ func (s *AccessKeyClient) ConnectController(ctx context.Context) (*grpc.ClientCo
 	// The Controller will have a letsencrypt-public issued certificate, and will
 	// not require a client certificate.
 	skipVerify := false
-	if s.TestNoTls {
+	if s.TestSkipTlsVerify {
 		// unit/e2e-tests use fake cert, so skip verification
 		skipVerify = true
 	}

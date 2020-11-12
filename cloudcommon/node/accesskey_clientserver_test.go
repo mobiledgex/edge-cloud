@@ -329,7 +329,7 @@ func (s *DummyController) CreateCloudlet(ctx context.Context, name string) *Test
 	keyClient := &AccessKeyClient{}
 	keyClient.AccessKeyFile = tc.privateKeyFile
 	keyClient.AccessApiAddr = s.AccessKeyGrpcServer.ApiAddr()
-	keyClient.TestNoTls = true
+	keyClient.TestSkipTlsVerify = true
 	tc.KeyClient = keyClient
 	// clear out any existing key files left over by previous (failed) tests
 	tc.Cleanup()

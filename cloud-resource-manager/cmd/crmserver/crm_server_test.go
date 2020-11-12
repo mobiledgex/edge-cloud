@@ -197,7 +197,7 @@ func TestCRM(t *testing.T) {
 	os.Args = append(os.Args, notifyAddr)
 	os.Args = append(os.Args, "--accessApiAddr", accessKeyGrpcServer.ApiAddr())
 	os.Args = append(os.Args, "--accessKeyFile", accessKeyFile)
-	nodeMgr.AccessKeyClient.TestNoTls = true
+	nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
 	mainDone, err := startMain(t)
 	if err != nil {
 		close(sigChan)

@@ -548,7 +548,7 @@ func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRo
 	if cfg.AccessKeyFile != "" && cfg.AccessApiAddr != "" {
 		mgr.AccessKeyClient.AccessKeyFile = cfg.AccessKeyFile
 		mgr.AccessKeyClient.AccessApiAddr = cfg.AccessApiAddr
-		mgr.AccessKeyClient.TestNoTls = true
+		mgr.AccessKeyClient.TestSkipTlsVerify = true
 	}
 	// nodeMgr init will attempt to issue a cert to be able to talk
 	// to Jaeger/ElasticSearch
@@ -608,7 +608,7 @@ func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, err
 	if s.AccessKeyFile != "" && s.AccessApiAddr != "" {
 		nodeMgr.AccessKeyClient.AccessKeyFile = s.AccessKeyFile
 		nodeMgr.AccessKeyClient.AccessApiAddr = s.AccessApiAddr
-		nodeMgr.AccessKeyClient.TestNoTls = true
+		nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
 	}
 	opts := []node.NodeOp{
 		node.WithRegion(s.Region),
