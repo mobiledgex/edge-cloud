@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/Microsoft/go-winio v0.4.12 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
@@ -18,10 +17,9 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cespare/xxhash v1.1.0
+	github.com/cloudflare/cloudflare-go v0.13.4
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
-	github.com/codegangsta/inject v0.0.0-20140425184007-37d7f8432a3e // indirect
 	github.com/codeskyblue/go-sh v0.0.0-20170112005953-b097669b1569
-	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
 	github.com/coreos/bbolt v1.3.2 // indirect
 	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
@@ -39,13 +37,13 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/frankban/quicktest v1.10.0 // indirect
+	github.com/go-chef/chef v0.23.1 // indirect
 	github.com/go-ldap/ldap v3.0.2+incompatible // indirect
 	github.com/go-openapi/errors v0.19.7
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.9
 	github.com/go-openapi/validate v0.19.11
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
-	github.com/go-test/deep v1.0.1 // indirect
 	github.com/gocql/gocql v0.0.0-20190402132108-0e1d5de854df // indirect
 	github.com/gogo/gateway v1.0.0
 	github.com/gogo/googleapis v1.1.0
@@ -59,26 +57,23 @@ require (
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/gophercloud/gophercloud v0.8.0
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.1
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.14.1
-	github.com/hashicorp/go-memdb v1.0.0 // indirect
-	github.com/hashicorp/go-plugin v1.0.0 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.2.1 // indirect
-	github.com/hashicorp/vault v0.11.5
-	github.com/hashicorp/vault-plugin-secrets-kv v0.0.0-20190404212640-4807e6564154 // indirect
+	github.com/hashicorp/vault v1.4.2 // indirect
+	github.com/hashicorp/vault/api v1.0.5-0.20200317185738-82f498082f02
 	github.com/influxdata/influxdb v1.7.7
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jcelliott/lumber v0.0.0-20160324203708-dd349441af25 // indirect
 	github.com/jefferai/jsonx v1.0.0 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/keybase/go-crypto v0.0.0-20190403132359-d65b6b94177f // indirect
-	github.com/kr/pty v1.1.5
-	github.com/lib/pq v1.0.0 // indirect
+	github.com/kr/pty v1.1.5 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mobiledgex/golang-ssh v0.0.10
@@ -87,13 +82,11 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
-	github.com/ory/dockertest v3.3.4+incompatible // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.6.0 // indirect
 	github.com/prometheus/common v0.9.1
-	github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db // indirect
 	github.com/segmentio/ksuid v1.0.2
 	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -108,9 +101,8 @@ require (
 	github.com/xtaci/smux v1.3.6
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.uber.org/zap v1.13.0
-	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
-	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
-	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb
 	google.golang.org/genproto v0.0.0-20200305110556-506484158171 // indirect
 	google.golang.org/grpc v1.27.1
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect

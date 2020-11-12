@@ -47,12 +47,28 @@ message UpgradeAccessKeyServerMsg {
   string crm_private_access_key = 2;
 }
 
-// Services that require an AccessKey to use
+message AccessDataRequest {
+  // Data type
+  string type = 1;
+  // Any request data (type specific)
+  bytes data = 2;
+}
+
+message AccessDataReply {
+  // Reply data (type specific)
+  bytes data = 1;
+}
+
+// Services that require an AccessKey to use.
+// Note that all APIs authenticate by including a signed cloudlet key,
+// so all APIs here already intrinsically have the cloudlet key parameter.
 service CloudletAccessApi {
   // Issue certificate
   rpc IssueCert(IssueCertRequest) returns (IssueCertReply);
   // Get Cerficiate Authority public certs
   rpc GetCas(GetCasRequest) returns (GetCasReply);
+  // GetAccessData generically gets access/secrets data based on type
+  rpc GetAccessData(AccessDataRequest) returns (AccessDataReply);
 }
 
 // Services to manage the access key

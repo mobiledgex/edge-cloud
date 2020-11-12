@@ -85,15 +85,9 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
 
-	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey); err != nil {
+	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
-		if s.AccessKeyClient.requireAccessKey {
-			return initCtx, nil, err
-		}
-		// backwards compatibility mode. Access key mode is
-		// disabled, and service must rely on CRM Vault
-		// role/secrets.
-		log.SpanLog(initCtx, log.DebugLevelInfo, "access key backwards compatibility mode, assume vault creds")
+		return initCtx, nil, err
 	}
 	if s.AccessKeyClient.enabled {
 		// no vault, Controller replaces Vault for issuing certs

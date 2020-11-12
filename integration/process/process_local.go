@@ -202,8 +202,6 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		envs = append(envs,
 			fmt.Sprintf("VAULT_ROLE_ID=%s", rr.CtrlRoleID),
 			fmt.Sprintf("VAULT_SECRET_ID=%s", rr.CtrlSecretID),
-			fmt.Sprintf("VAULT_CRM_ROLE_ID=%s", rr.CRMRoleID),
-			fmt.Sprintf("VAULT_CRM_SECRET_ID=%s", rr.CRMSecretID),
 		)
 	}
 
@@ -729,8 +727,6 @@ type VaultRoles struct {
 type VaultRegionRoles struct {
 	DmeRoleID          string `json:"dmeroleid"`
 	DmeSecretID        string `json:"dmesecretid"`
-	CRMRoleID          string `json:"crmroleid"`
-	CRMSecretID        string `json:"crmsecretid"`
 	RotatorRoleID      string `json:"rotatorroleid"`
 	RotatorSecretID    string `json:"rotatorsecretid"`
 	CtrlRoleID         string `json:"controllerroleid"`
@@ -804,7 +800,6 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 		// get roleIDs and secretIDs
 		roles := VaultRegionRoles{}
 		p.GetAppRole(region, "dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
-		p.GetAppRole(region, "crm", &roles.CRMRoleID, &roles.CRMSecretID, &err)
 		p.GetAppRole(region, "rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
 		p.GetAppRole(region, "controller", &roles.CtrlRoleID, &roles.CtrlSecretID, &err)
 		p.GetAppRole(region, "cluster-svc", &roles.ClusterSvcRoleID, &roles.ClusterSvcSecretID, &err)

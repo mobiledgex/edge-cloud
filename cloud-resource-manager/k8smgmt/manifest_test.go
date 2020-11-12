@@ -45,14 +45,15 @@ func TestEnvVars(t *testing.T) {
 	}))
 	defer tsEnvVars.Close()
 
+	authApi := &cloudcommon.DummyRegistryAuthApi{}
 	// Test Deploymeent manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
-	envVarsMf, err := MergeEnvVars(ctx, nil, app, baseMf, nil)
+	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
 	require.Nil(t, err)
 	// make envVars remote
 	app.Configs[0].Config = tsEnvVars.URL
-	remoteEnvVars, err := MergeEnvVars(ctx, nil, app, baseMf, nil)
+	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
 
@@ -60,5 +61,9 @@ func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edg
 }
 
 func (s *Platform) GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error) {
+	return &edgeproto.CloudletProps{}, nil
+}
+
+func (s *Platform) GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error) {
 	return nil, nil
 }
