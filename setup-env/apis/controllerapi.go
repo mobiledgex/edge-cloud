@@ -5,7 +5,6 @@ package apis
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -14,10 +13,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	yaml "github.com/mobiledgex/yaml/v2"
 )
 
 var appData edgeproto.AllData
@@ -273,16 +270,6 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 
 	ctrl := util.GetController("")
 
-	dat, err := ioutil.ReadFile(outputDir + "/roles.yaml")
-	if err != nil {
-		return err
-	}
-	vroles := process.VaultRoles{}
-	err = yaml.Unmarshal(dat, &vroles)
-	if err != nil {
-		return err
-	}
-
 	for _, c := range appData.Cloudlets {
 		if c.NotifySrvAddr == "" {
 			c.NotifySrvAddr = "127.0.0.1:51001"
@@ -298,10 +285,7 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		if region == "" {
 			region = "local"
 		}
-		roles := vroles.RegionRoles[region]
 		pfConfig.EnvVar = make(map[string]string)
-		pfConfig.EnvVar["VAULT_ROLE_ID"] = roles.CRMRoleID
-		pfConfig.EnvVar["VAULT_SECRET_ID"] = roles.CRMSecretID
 
 		// Defaults
 		pfConfig.PlatformTag = ""
@@ -310,7 +294,6 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		pfConfig.TlsCaFile = ctrl.TLS.CACert
 		pfConfig.UseVaultCas = ctrl.UseVaultCAs
 		pfConfig.UseVaultCerts = ctrl.UseVaultCerts
-		pfConfig.VaultAddr = "http://127.0.0.1:8200"
 		pfConfig.ContainerRegistryPath = "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
 		pfConfig.TestMode = true
 		pfConfig.NotifyCtrlAddrs = ctrl.NotifyAddr

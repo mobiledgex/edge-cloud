@@ -13,6 +13,7 @@ import (
 )
 
 var solib = ""
+var GetPlatformFunc func(plat string) (pf.Platform, error)
 
 func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 	// Building plugins is slow, so directly importable
@@ -22,24 +23,25 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 	} else if plat == "PLATFORM_TYPE_FAKE" {
 		return &fake.Platform{}, nil
 	}
-
-	plug, err := loadPlugin(ctx)
-	if err != nil {
-		return nil, err
-	}
-	sym, err := plug.Lookup("GetPlatform")
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "plugin does not have GetPlatform symbol", "plugin", solib)
-		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol not found", plat)
-	}
-	getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
-	if !ok {
-		log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
-		return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", plat)
+	if GetPlatformFunc == nil {
+		plug, err := loadPlugin(ctx)
+		if err != nil {
+			return nil, err
+		}
+		sym, err := plug.Lookup("GetPlatform")
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "plugin does not have GetPlatform symbol", "plugin", solib)
+			return nil, fmt.Errorf("failed to load plugin for GetPlatform, err: GetPlatform symbol not found")
+		}
+		getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
+		if !ok {
+			log.SpanLog(ctx, log.DebugLevelInfo, "plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", solib)
+			return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", plat)
+		}
+		GetPlatformFunc = getPlatFunc
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "Creating platform")
-
-	return getPlatFunc(plat)
+	return GetPlatformFunc(plat)
 }
 
 func GetClusterSvc(ctx context.Context, pluginRequired bool) (pf.ClusterSvc, error) {

@@ -25,6 +25,8 @@ import (
 
 var vaultRole = os.Getenv("VAULT_ROLE_ID")
 var vaultSecret = os.Getenv("VAULT_SECRET_ID")
+var VerifyDelay time.Duration = time.Second
+var VerifyRetry = 30
 
 type AccessKeyVerifyOnly bool
 
@@ -33,25 +35,32 @@ const (
 	AccessKeyUpgrade                     = false
 )
 
+type KeyType int
+
+const (
+	PrimaryKey = 0
+	BackupKey  = 1
+)
+
 // AccessKeyClient maintains information needed on the client.
 type AccessKeyClient struct {
-	AccessKeyFile    string
-	AccessApiAddr    string
-	accessPrivKey    ed25519.PrivateKey
-	cloudletKey      edgeproto.CloudletKey
-	cloudletKeyStr   string
-	enabled          bool
-	TestNoTls        bool
-	requireAccessKey bool
+	AccessKeyFile     string
+	AccessApiAddr     string
+	accessPrivKey     ed25519.PrivateKey
+	cloudletKey       edgeproto.CloudletKey
+	cloudletKeyStr    string
+	enabled           bool
+	TestSkipTlsVerify bool
+	requireAccessKey  bool
 }
 
 func (s *AccessKeyClient) InitFlags() {
 	flag.StringVar(&s.AccessKeyFile, "accessKeyFile", "/root/accesskey/priv.key", "access private key file")
 	flag.StringVar(&s.AccessApiAddr, "accessApiAddr", "127.0.0.1:41001", "Controller's access API address")
-	flag.BoolVar(&s.requireAccessKey, "requireAccessKey", false, "Require access key for RegionalCloudlet service")
+	flag.BoolVar(&s.requireAccessKey, "requireAccessKey", true, "Require access key for RegionalCloudlet service")
 }
 
-func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey) error {
+func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey, deploymentTag string) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "access key client init")
 	if tlsClientIssuer == NoTlsClientIssuer {
 		// unit test mode
@@ -70,12 +79,15 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 		return fmt.Errorf("Controller access API address not specified")
 	}
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
-		s.TestNoTls = true
+		s.TestSkipTlsVerify = true
 	}
-	if s.TestNoTls {
+	if deploymentTag == "dev" || deploymentTag == "stage" || deploymentTag == "upg" {
+		// test setup deployment, skip cert validation
+		s.TestSkipTlsVerify = true
+	}
+	if s.TestSkipTlsVerify {
 		// for e2e and unit testing only
-		log.SpanLog(ctx, log.DebugLevelInfo, "notls testing mode")
-		s.TestNoTls = true
+		log.SpanLog(ctx, log.DebugLevelInfo, "skip TLS verification testing mode")
 	}
 	// CloudletKey is required when using access key
 	if err := key.ValidateKey(); err != nil {
@@ -97,16 +109,17 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 		err = s.loadAccessKey(ctx, s.AccessKeyFile)
 		log.SpanLog(ctx, log.DebugLevelInfo, "access key upgrade load", "err", err)
 		// Upgrade access key
-		err = s.upgradeAccessKey(ctx, AccessKeyUpgrade)
+		_, err = s.upgradeAccessKey(ctx, AccessKeyUpgrade, PrimaryKey)
 		if err != nil {
 			// attempt to upgrade using backup key
 			log.SpanLog(ctx, log.DebugLevelInfo, "upgrade failed, try backup key", "err", err)
 			bkerr := s.loadAccessKey(ctx, s.backupKeyFile())
 			log.SpanLog(ctx, log.DebugLevelInfo, "backup key load", "err", bkerr)
 			if bkerr == nil {
-				err = s.upgradeAccessKey(ctx, AccessKeyUpgrade)
-				if err == nil {
-					// backup key is valid
+				upgraded, err := s.upgradeAccessKey(ctx, AccessKeyUpgrade, BackupKey)
+				if err == nil && !upgraded {
+					// backup key is valid and key was not
+					// upgraded, move backup to primary.
 					log.SpanLog(ctx, log.DebugLevelInfo, "restore backup key")
 					err = os.Rename(s.backupKeyFile(), s.AccessKeyFile)
 				}
@@ -117,9 +130,9 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 		// CRM to upgrade the access key. So retry until verified.
 		// Verify ensures the access key does not require upgrade,
 		// and thus will not be changed by the CRM doing upgrade.
-		for ii := 0; ii < 30; ii++ {
+		for ii := 0; ii < VerifyRetry; ii++ {
 			if ii != 0 {
-				time.Sleep(time.Second)
+				time.Sleep(VerifyDelay)
 			}
 			log.SpanLog(ctx, log.DebugLevelInfo, "verify access key", "try", ii)
 			err = s.loadAccessKey(ctx, s.AccessKeyFile)
@@ -127,7 +140,7 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 				log.SpanLog(ctx, log.DebugLevelInfo, "verify access key load", "err", err)
 				continue
 			}
-			err = s.upgradeAccessKey(ctx, AccessKeyVerify)
+			_, err = s.upgradeAccessKey(ctx, AccessKeyVerify, PrimaryKey)
 			if err == nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "access key verified", "err", err)
 				break
@@ -159,6 +172,7 @@ func (s *AccessKeyClient) backupKeyFile() string {
 }
 
 func (s *AccessKeyClient) loadAccessKey(ctx context.Context, keyFile string) error {
+	log.SpanLog(ctx, log.DebugLevelInfo, "load access private key", "file", keyFile)
 	// read access private key
 	dat, err := ioutil.ReadFile(keyFile)
 	if err != nil {
@@ -168,12 +182,10 @@ func (s *AccessKeyClient) loadAccessKey(ctx context.Context, keyFile string) err
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfo, "loaded access private key", "file", keyFile)
-
 	return nil
 }
 
-func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly AccessKeyVerifyOnly) error {
+func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly AccessKeyVerifyOnly, keyType KeyType) (bool, error) {
 	// Request an updated AccessKey from the controller.
 	// The server (controller) determines whether or not to issue a new one.
 	// There are two cases where this is needed.
@@ -198,24 +210,25 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 		ctx = metadata.AppendToOutgoingContext(ctx, kvPairs...)
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfo, "no creds found")
-		return fmt.Errorf("no credentials found")
+		return false, fmt.Errorf("no credentials found")
 	}
 
-	dialOpt := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{}))
-	if s.TestNoTls {
+	tlsConfig := &tls.Config{}
+	if s.TestSkipTlsVerify {
 		// for e2e and unit testing only
-		dialOpt = grpc.WithInsecure()
+		tlsConfig.InsecureSkipVerify = true
 	}
+	dialOpt := grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
 	clientConn, err := grpc.Dial(s.AccessApiAddr, dialOpt)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer clientConn.Close()
 
 	client := edgeproto.NewCloudletAccessKeyApiClient(clientConn)
 	stream, err := client.UpgradeAccessKey(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 	// For non-CRMs that share the access key, only verify, do not upgrade.
 	err = stream.Send(&edgeproto.UpgradeAccessKeyClientMsg{
@@ -223,40 +236,41 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 		VerifyOnly: bool(verifyOnly),
 	})
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	reply, err := stream.Recv()
 	if err != nil {
-		return err
+		return false, err
 	}
 	if verifyOnly {
 		if reply.CrmPrivateAccessKey == "" {
 			log.SpanLog(ctx, log.DebugLevelInfo, "access key verified")
-			return nil
+			return false, nil
 		}
 		// should never get here, server should have sent error if
 		// verification failed
 		log.SpanLog(ctx, log.DebugLevelInfo, "verifyOnly unexpected response from server", "msg", reply.Msg)
-		return fmt.Errorf("verify-only unexpected response")
+		return false, fmt.Errorf("verify-only unexpected response")
 	}
 
 	if reply.CrmPrivateAccessKey == "" {
 		// no upgrade required, we're done
 		log.SpanLog(ctx, log.DebugLevelInfo, "no upgrade required")
-		return nil
+		return false, nil
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "upgrading access key")
 	// New key was issued. First we back up the existing key.
 	// If the controller doesn't get our ack and doesn't commit
 	// the new key, we can recover using the backup key.
+	// Skip this if we're already using the backup key.
 	backedUp := false
-	if _, err := os.Stat(s.AccessKeyFile); err == nil {
+	if _, err := os.Stat(s.AccessKeyFile); err == nil && keyType == PrimaryKey {
 		// key file exists
 		log.SpanLog(ctx, log.DebugLevelInfo, "backing up existing key")
 		err = os.Rename(s.AccessKeyFile, s.backupKeyFile())
 		if err != nil {
-			return err
+			return false, err
 		}
 		backedUp = true
 	}
@@ -269,7 +283,7 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 			undoErr := os.Rename(s.backupKeyFile(), s.AccessKeyFile)
 			log.SpanLog(ctx, log.DebugLevelApi, "restore from backup", "err", undoErr)
 		}
-		return err
+		return false, err
 	}
 	// We now have the new key on disk, plus the old key. Ack the changes.
 	// If connection fails at this point, Controller may or may not commit
@@ -281,17 +295,17 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 		Msg: "ack-new-key",
 	})
 	if err != nil {
-		return err
+		return true, err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "upgradeAccessKey complete")
 	// wait for commit-complete message, otherwise we may use new key
 	// before Controller has updated its caches.
 	reply, err = stream.Recv()
 	if err != nil {
-		return err
+		return true, err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "recv commit-complete", "reply", reply)
-	return nil
+	return true, nil
 }
 
 // Add an access key signature to the grpc metadata
@@ -329,17 +343,18 @@ func (s *AccessKeyClient) ConnectController(ctx context.Context) (*grpc.ClientCo
 	// TLS access config for talking to the Controller's AccessApi endpoint.
 	// The Controller will have a letsencrypt-public issued certificate, and will
 	// not require a client certificate.
-	if s.TestNoTls {
-		// No TLS for unit/e2e-tests. Real deployments will have
-		// nginx fronting Controllers and terminating TLS.
-	} else {
-		tlsConfig = &tls.Config{
-			ServerName: strings.Split(s.AccessApiAddr, ":")[0],
-		}
+	skipVerify := false
+	if s.TestSkipTlsVerify {
+		// unit/e2e-tests use fake cert, so skip verification
+		skipVerify = true
+	}
+	tlsConfig = &tls.Config{
+		ServerName:         strings.Split(s.AccessApiAddr, ":")[0],
+		InsecureSkipVerify: skipVerify,
 	}
 	dialOption := edgetls.GetGrpcDialOption(tlsConfig)
 	// sign request with access key
-	return grpc.Dial(s.AccessApiAddr, dialOption,
+	return grpc.Dial(s.AccessApiAddr, dialOption, grpc.WithBlock(),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
 			log.UnaryClientTraceGrpc,
 			s.UnaryAddAccessKey,

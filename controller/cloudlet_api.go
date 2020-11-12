@@ -11,6 +11,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -121,17 +122,7 @@ func (s *CloudletApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cloud
 }
 
 func getCrmEnv(vars map[string]string) {
-	// For Vault approle, CRM will have its own role/secret
-	if val, ok := os.LookupEnv("VAULT_CRM_ROLE_ID"); ok {
-		vars["VAULT_ROLE_ID"] = val
-	}
-	if val, ok := os.LookupEnv("VAULT_CRM_SECRET_ID"); ok {
-		vars["VAULT_SECRET_ID"] = val
-	}
-
 	for _, key := range []string{
-		"GITHUB_ID",
-		"VAULT_TOKEN",
 		"JAEGER_ENDPOINT",
 		"E2ETEST_TLS",
 	} {
@@ -147,7 +138,6 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.TlsCertFile = nodeMgr.GetInternalTlsCertFile()
 	pfConfig.TlsKeyFile = nodeMgr.GetInternalTlsKeyFile()
 	pfConfig.TlsCaFile = nodeMgr.GetInternalTlsCAFile()
-	pfConfig.VaultAddr = nodeMgr.VaultAddr
 	pfConfig.UseVaultCas = nodeMgr.InternalPki.UseVaultCAs
 	pfConfig.UseVaultCerts = nodeMgr.InternalPki.UseVaultCerts
 	pfConfig.ContainerRegistryPath = *cloudletRegistryPath
@@ -361,22 +351,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	in.CrmAccessPublicKey = accessKey.PublicPEM
 	in.CrmAccessKeyUpgradeRequired = true
 	pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
-	if !*requireNotifyAccessKey {
-		// e2e test backward compatibility modes
-		if _, found := in.EnvVar["E2E_ACCESSKEY_BCTEST1"]; found {
-			log.SpanLog(ctx, log.DebugLevelInfo, "e2e accesskey bctest1")
-			// simulate existing CRM without private or public access keys
-			in.CrmAccessPublicKey = ""
-			in.CrmAccessKeyUpgradeRequired = false
-			pfConfig.CrmAccessPrivateKey = ""
-		}
-		if _, found := in.EnvVar["E2E_ACCESSKEY_BCTEST2"]; found {
-			log.SpanLog(ctx, log.DebugLevelInfo, "e2e accesskey bctest2")
-			// simulate new CRM on platform that has not implemented
-			// saving private key to disk yet.
-			pfConfig.CrmAccessPrivateKey = ""
-		}
-	}
 
 	vmPool := edgeproto.VMPool{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -437,12 +411,13 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
 		if err == nil {
 			if len(accessVars) > 0 {
-				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
 			}
 			if err == nil {
 				// Some platform types require caches
 				caches := getCaches(ctx, &vmPool)
-				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, updatecb.cb)
+				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
+				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
 					deleteAccessVars = true
 				}
@@ -509,7 +484,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 	if deleteAccessVars {
-		err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, updatecb.cb)
+		err1 := cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
 		if err1 != nil {
 			cb.Send(&edgeproto.Result{Message: err1.Error()})
 		}
@@ -770,7 +745,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			return err
 		}
 		if len(accessVars) > 0 {
-			err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, updatecb.cb)
+			err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
 			if err != nil {
 				return err
 			}
@@ -1065,7 +1040,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if err == nil {
 				// Some platform types require caches
 				caches := getCaches(ctx, &vmPool)
-				err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, updatecb.cb)
+				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
+				err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
 			}
 		}
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
@@ -1342,14 +1318,14 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 	if err != nil {
 		return nil, err
 	}
-
+	accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
 		return nil, err
 	}
 	vmPool := edgeproto.VMPool{}
 	caches := getCaches(ctx, &vmPool)
-	return cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, &pfFlavor, caches)
+	return cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, accessApi, &pfFlavor, caches)
 }
 
 func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
