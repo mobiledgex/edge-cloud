@@ -284,12 +284,15 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 		}
 	}
 
+	authApi := &cloudcommon.VaultRegistryAuthApi{
+		VaultConfig: vaultConfig,
+	}
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
 		err := util.ValidateImagePath(in.ImagePath)
 		if err != nil {
 			return err
 		}
-		err = cloudcommon.ValidateVMRegistryPath(ctx, in.ImagePath, vaultConfig)
+		err = cloudcommon.ValidateVMRegistryPath(ctx, in.ImagePath, authApi)
 		if err != nil {
 			if *testMode {
 				log.SpanLog(ctx, log.DebugLevelApi, "Warning, could not validate VM registry path.", "path", in.ImagePath, "err", err)
@@ -302,7 +305,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
 		!cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) &&
 		in.ImagePath != "" {
-		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, vaultConfig)
+		err := cloudcommon.ValidateDockerRegistryPath(ctx, in.ImagePath, authApi)
 		if err != nil {
 			if *testMode {
 				log.SpanLog(ctx, log.DebugLevelApi, "Warning, could not validate docker registry image path", "path", in.ImagePath, "err", err)
@@ -311,7 +314,7 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 			}
 		}
 	}
-	deploymf, err := cloudcommon.GetAppDeploymentManifest(ctx, vaultConfig, in)
+	deploymf, err := cloudcommon.GetAppDeploymentManifest(ctx, authApi, in)
 	if err != nil {
 		return err
 	}
@@ -353,7 +356,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, err
 	}
 	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
-		_, err := k8smgmt.GetAppEnvVars(ctx, in, vaultConfig, &k8smgmt.TestReplacementVars)
+		authApi := &cloudcommon.VaultRegistryAuthApi{
+			VaultConfig: vaultConfig,
+		}
+		_, err = k8smgmt.GetAppEnvVars(ctx, in, authApi, &k8smgmt.TestReplacementVars)
 		if err != nil {
 			return &edgeproto.Result{}, err
 		}
@@ -516,7 +522,10 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 		if cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
-			_, err := k8smgmt.GetAppEnvVars(ctx, &cur, vaultConfig, &k8smgmt.TestReplacementVars)
+			authApi := &cloudcommon.VaultRegistryAuthApi{
+				VaultConfig: vaultConfig,
+			}
+			_, err = k8smgmt.GetAppEnvVars(ctx, &cur, authApi, &k8smgmt.TestReplacementVars)
 			if err != nil {
 				return err
 			}

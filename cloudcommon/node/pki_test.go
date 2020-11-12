@@ -47,6 +47,8 @@ func TestInternalPki(t *testing.T) {
 	defer vp.StopLocal()
 
 	node.BadAuthDelay = time.Millisecond
+	node.VerifyDelay = time.Millisecond
+	node.VerifyRetry = 3
 
 	// Set up fake Controller to serve access key API
 	dcUS := &DummyController{}
@@ -546,7 +548,7 @@ func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRo
 	if cfg.AccessKeyFile != "" && cfg.AccessApiAddr != "" {
 		mgr.AccessKeyClient.AccessKeyFile = cfg.AccessKeyFile
 		mgr.AccessKeyClient.AccessApiAddr = cfg.AccessApiAddr
-		mgr.AccessKeyClient.TestNoTls = true
+		mgr.AccessKeyClient.TestSkipTlsVerify = true
 	}
 	// nodeMgr init will attempt to issue a cert to be able to talk
 	// to Jaeger/ElasticSearch
@@ -606,7 +608,7 @@ func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, err
 	if s.AccessKeyFile != "" && s.AccessApiAddr != "" {
 		nodeMgr.AccessKeyClient.AccessKeyFile = s.AccessKeyFile
 		nodeMgr.AccessKeyClient.AccessApiAddr = s.AccessApiAddr
-		nodeMgr.AccessKeyClient.TestNoTls = true
+		nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
 	}
 	opts := []node.NodeOp{
 		node.WithRegion(s.Region),
@@ -866,7 +868,7 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 }
 
 func (s *DummyController) Start(ctx context.Context) {
-	s.DummyController.Start()
+	s.DummyController.Start(ctx, "127.0.0.1:0")
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err.Error())
@@ -942,4 +944,8 @@ func (s *DummyController) GetCas(ctx context.Context, req *edgeproto.GetCasReque
 	}
 	reply.CaChainPem = string(cab)
 	return reply, err
+}
+
+func (s *DummyController) GetAccessData(ctx context.Context, in *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
+	return &edgeproto.AccessDataReply{}, nil
 }

@@ -2,19 +2,19 @@ package node
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"testing"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/examples/features/proto/echo"
 )
 
@@ -28,8 +28,11 @@ func TestAccessClientServer(t *testing.T) {
 
 	// reduce timeout
 	BadAuthDelay = time.Millisecond
+	VerifyDelay = time.Millisecond
+	VerifyRetry = 3
 	vaultRole = ""
 	vaultSecret = ""
+	deploymentTag := ""
 
 	ctx := log.StartTestSpan(context.Background())
 	// use initCtx to test that init call to controller works without span
@@ -44,13 +47,16 @@ func TestAccessClientServer(t *testing.T) {
 	}
 	dc.Init()
 	dc.KeyServer.SetCrmVaultAuth("", "")
-	dc.Start()
+	addr := "127.0.0.1:12345"
+	dc.Start(ctx, addr)
 	defer dc.Stop()
 
 	// ----------------------------------------------------------------
 	log.SpanLog(ctx, log.DebugLevelInfo,
 		"---- client with no auth credentials, expect failure  ----")
-	clientConn, err := grpc.Dial(dc.ApiAddr(), grpc.WithInsecure())
+	clientConn, err := grpc.Dial(dc.ApiAddr(), grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	})))
 	require.Nil(t, err)
 	// API calls should fail
 	EchoApisTest(t, ctx, clientConn, "access-key-data not found in metadata")
@@ -64,10 +70,27 @@ func TestAccessClientServer(t *testing.T) {
 	err = dc.UpdateKey(ctx, tc1.Cloudlet.Key)
 	require.Nil(t, err)
 	// init client
-	err = tc1.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc1.Cloudlet.Key)
+	err = tc1.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc1.Cloudlet.Key, deploymentTag)
 	require.Nil(t, err)
 	// API calls should succeed
 	clientConn = startClient(t, ctx, tc1.KeyClient)
+	EchoApisTest(t, ctx, clientConn, "")
+
+	// ----------------------------------------------------------------
+	log.SpanLog(ctx, log.DebugLevelInfo,
+		"---- test grpc-based reconnect with same client ----")
+	dc.Stop()
+	dc.Start(ctx, addr)
+	// wait for reconnect to complete
+	var state connectivity.State
+	for ii := 0; ii < 100; ii++ {
+		state = clientConn.GetState()
+		if state == connectivity.Ready {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.Equal(t, connectivity.Ready, state)
 	EchoApisTest(t, ctx, clientConn, "")
 	clientConn.Close()
 
@@ -93,7 +116,7 @@ func TestAccessClientServer(t *testing.T) {
 	tc2.Cloudlet.CrmAccessKeyUpgradeRequired = true
 	dc.Cache.Update(ctx, &tc2.Cloudlet, 0)
 	// run init (upgrade)
-	err = tc2.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc2.Cloudlet.Key)
+	err = tc2.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc2.Cloudlet.Key, deploymentTag)
 	require.Nil(t, err)
 	// check that backup file exists and contains old key
 	dat, err := ioutil.ReadFile(tc2.KeyClient.backupKeyFile())
@@ -120,11 +143,11 @@ func TestAccessClientServer(t *testing.T) {
 	vaultSecret = "secret"
 	// init client will fail because no access key, and controller does not
 	// have matching vault creds
-	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key)
+	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag)
 	require.NotNil(t, err)
 	// Set server vault creds to match, init should now succeed
 	dc.KeyServer.SetCrmVaultAuth(vaultRole, vaultSecret)
-	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key)
+	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag)
 	require.Nil(t, err)
 	// access key should now exist
 	_, err = os.Stat(tc3.KeyClient.AccessKeyFile)
@@ -144,13 +167,13 @@ func TestAccessClientServer(t *testing.T) {
 	// save current private key
 	privKey = tc4.privateKeyPEM
 	// init client, should succeed to verify access key
-	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key)
+	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key, deploymentTag)
 	require.Nil(t, err)
 	// mark key for upgrade
 	tc4.Cloudlet.CrmAccessKeyUpgradeRequired = true
 	dc.Cache.Update(ctx, &tc4.Cloudlet, 0)
 	// init client, should fail because upgrade required
-	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key)
+	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key, deploymentTag)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "upgrade required")
 	// non crm should not touch private key, make sure it's still the same
@@ -230,12 +253,11 @@ func (s *EchoServer) BidirectionalStreamingEcho(stream echo.Echo_BidirectionalSt
 }
 
 type DummyController struct {
-	Cache         edgeproto.CloudletCache
-	Cloudlets     map[edgeproto.CloudletKey]*TestCloudlet
-	KeyServer     *AccessKeyServer
-	ApiLis        net.Listener
-	ApiServ       *grpc.Server
-	ApiRegisterCb func(server *grpc.Server)
+	Cache               edgeproto.CloudletCache
+	Cloudlets           map[edgeproto.CloudletKey]*TestCloudlet
+	KeyServer           *AccessKeyServer
+	AccessKeyGrpcServer AccessKeyGrpcServer
+	ApiRegisterCb       func(server *grpc.Server)
 }
 
 func (s *DummyController) Init() {
@@ -246,43 +268,30 @@ func (s *DummyController) Init() {
 
 // DummyController. The optional registerCb func allows the caller to register
 // more grpc handlers.
-func (s *DummyController) Start() {
-	lis, err := net.Listen("tcp", "127.0.0.1:0")
+func (s *DummyController) Start(ctx context.Context, addr string) {
+	api := &TestPublicCertApi{}
+	mgr := NewPublicCertManager("localhost", api)
+	tlsConfig, err := mgr.GetServerTlsConfig(ctx)
 	if err != nil {
 		panic(err.Error())
 	}
-	s.ApiLis = lis
-	// The "required" stream interceptors, which always requires a
-	// valid access key.
-	s.ApiServ = grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			cloudcommon.AuditUnaryInterceptor,
-			s.KeyServer.UnaryRequireAccessKey,
-		)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			cloudcommon.AuditStreamInterceptor,
-			s.KeyServer.StreamRequireAccessKey,
-		)),
-	)
-	edgeproto.RegisterCloudletAccessKeyApiServer(s.ApiServ, s)
-	if s.ApiRegisterCb != nil {
-		s.ApiRegisterCb(s.ApiServ)
-	}
-	go func() {
-		err := s.ApiServ.Serve(s.ApiLis)
-		if err != nil {
-			panic(err.Error())
+	err = s.AccessKeyGrpcServer.Start(addr, s.KeyServer, tlsConfig, func(serv *grpc.Server) {
+		edgeproto.RegisterCloudletAccessKeyApiServer(serv, s)
+		if s.ApiRegisterCb != nil {
+			s.ApiRegisterCb(serv)
 		}
-	}()
+	})
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func (s *DummyController) Stop() {
-	s.ApiServ.Stop()
-	s.ApiLis.Close()
+	s.AccessKeyGrpcServer.Stop()
 }
 
 func (s *DummyController) ApiAddr() string {
-	return s.ApiLis.Addr().String()
+	return s.AccessKeyGrpcServer.ApiAddr()
 }
 
 func (s *DummyController) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
@@ -319,8 +328,8 @@ func (s *DummyController) CreateCloudlet(ctx context.Context, name string) *Test
 
 	keyClient := &AccessKeyClient{}
 	keyClient.AccessKeyFile = tc.privateKeyFile
-	keyClient.AccessApiAddr = s.ApiLis.Addr().String()
-	keyClient.TestNoTls = true
+	keyClient.AccessApiAddr = s.AccessKeyGrpcServer.ApiAddr()
+	keyClient.TestSkipTlsVerify = true
 	tc.KeyClient = keyClient
 	// clear out any existing key files left over by previous (failed) tests
 	tc.Cleanup()

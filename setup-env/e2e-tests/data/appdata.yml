@@ -102,8 +102,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  envvar:
-    E2E_ACCESSKEY_BCTEST1: true
 - key:
     organization: dmuus
     name: dmuus-cloud-3
@@ -113,8 +111,6 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  envvar:
-    E2E_ACCESSKEY_BCTEST2: true
 - key:
     organization: azure
     name: azure-cloud-4

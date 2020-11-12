@@ -19,6 +19,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 )
 
 type stateTransition struct {
@@ -241,6 +242,17 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	ctrlMgr.Start("ctrl", "127.0.0.1:50001", nil)
 	defer ctrlMgr.Stop()
 
+	getPublicCertApi := &node.TestPublicCertApi{}
+	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
+	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
+	require.Nil(t, err)
+	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, tlsConfig, func(accessServer *grpc.Server) {
+		edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
+		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
+	})
+	require.Nil(t, err, "start access server")
+	defer services.accessKeyGrpcServer.Stop()
+
 	crm_notifyaddr := "127.0.0.1:0"
 	cloudlet := testutil.CloudletData[2]
 	cloudlet.ContainerVersion = crm_v1
@@ -248,6 +260,15 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudlet.NotifySrvAddr = crm_notifyaddr
 	pfConfig, err := getPlatformConfig(ctx, &cloudlet)
 	require.Nil(t, err, "get platform config")
+	pfConfig.EnvVar["E2ETEST_TLS"] = "true"
+
+	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err, "create cloudlet")
+	defer cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	res, err := cloudletApi.GenerateAccessKey(ctx, &cloudlet.Key)
+	require.Nil(t, err, "generate access key")
+	pfConfig.CrmAccessPrivateKey = res.Message
+	pfConfig.AccessApiAddr = services.accessKeyGrpcServer.ApiAddr()
 
 	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig)
 	require.Nil(t, err, "start cloudlet")

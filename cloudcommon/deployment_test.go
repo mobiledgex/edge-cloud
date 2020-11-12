@@ -92,9 +92,10 @@ func TestDeployment(t *testing.T) {
 }
 
 func testAppDeployment(ctx context.Context, t *testing.T, app *edgeproto.App, valid bool) {
+	authApi := &DummyRegistryAuthApi{}
 	fmt.Printf("test deployment %s, manifest %s, generator %s\n",
 		app.Deployment, app.DeploymentManifest, app.DeploymentGenerator)
-	_, err := GetAppDeploymentManifest(ctx, nil, app)
+	_, err := GetAppDeploymentManifest(ctx, authApi, app)
 	if valid {
 		require.Nil(t, err)
 	} else {
