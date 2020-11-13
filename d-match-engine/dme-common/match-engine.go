@@ -1050,6 +1050,10 @@ loop:
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
+		if cupdate == nil {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent is nil. Ending connection")
+			break loop
+		}
 		// Handle Different Client events
 		switch cupdate.EventType {
 		case dme.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION:
