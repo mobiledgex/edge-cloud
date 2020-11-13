@@ -34,6 +34,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Stream State
 //
 // Indicates if stream has started/ended or in a bad shape
+//
+// 0: `STREAM_UNKNOWN`
+// 1: `STREAM_START`
+// 2: `STREAM_STOP`
+// 3: `STREAM_ERROR`
 type StreamState int32
 
 const (

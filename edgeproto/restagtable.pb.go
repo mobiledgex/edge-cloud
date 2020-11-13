@@ -39,6 +39,13 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Optional Resource Names
+//
+// OptResNames indicates optional resource names
+//
+// 0: `GPU`
+// 1: `NAS`
+// 2: `NIC`
 type OptResNames int32
 
 const (
