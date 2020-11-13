@@ -1100,7 +1100,6 @@ loop:
 				newCloudletEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_CLOUDLET_UPDATE
 				newCloudletEdgeEvent.NewCloudlet = fcreply
 				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
-				break loop
 			}
 		default:
 			// Unknown client event
