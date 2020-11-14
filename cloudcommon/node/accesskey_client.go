@@ -205,7 +205,7 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 		log.SpanLog(ctx, log.DebugLevelInfo, "use vault creds")
 		kvPairs := []string{
 			cloudcommon.AccessKeyData, s.cloudletKeyStr,
-			cloudcommon.VaultKeySig, vaultRole + vaultSecret,
+			cloudcommon.VaultKeySig, vaultRole + "," + vaultSecret,
 		}
 		ctx = metadata.AppendToOutgoingContext(ctx, kvPairs...)
 	} else {
