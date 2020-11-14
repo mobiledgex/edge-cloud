@@ -68,12 +68,6 @@ func NewAccessKeyServer(cloudletCache *edgeproto.CloudletCache, vaultAddr string
 	return server
 }
 
-/*
-func (s *AccessKeyServer) SetCrmVaultAuth(role, secret string) {
-	s.crmVaultRole = role
-	s.crmVaultSecret = secret
-}
-*/
 func (s *AccessKeyServer) SetRequireTlsAccessKey(require bool) {
 	s.requireTlsAccessKey = require
 }
