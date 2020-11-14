@@ -86,7 +86,7 @@ func InitCloudletApi(sync *Sync) {
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
 	edgeproto.InitCloudletCache(&cloudletApi.cache)
 	sync.RegisterCache(&cloudletApi.cache)
-	cloudletApi.accessKeyServer = node.NewAccessKeyServer(&cloudletApi.cache)
+	cloudletApi.accessKeyServer = node.NewAccessKeyServer(&cloudletApi.cache, nodeMgr.VaultAddr)
 }
 
 func (s *CloudletApi) Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {

@@ -3,12 +3,16 @@ package node
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/vault/api"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/require"
@@ -38,6 +42,31 @@ func TestAccessClientServer(t *testing.T) {
 	// use initCtx to test that init call to controller works without span
 	initCtx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
 
+	// mock vault login to test backwards compatibility mode
+	vaultLoginRole := "login-role"
+	vaultLoginSecret := "login-secret"
+	vaultLogin := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		body, err := ioutil.ReadAll(req.Body)
+		require.Nil(t, err)
+		data := map[string]interface{}{}
+		err = json.Unmarshal(body, &data)
+		require.Nil(t, err)
+		if vaultLoginRole == data["role_id"] && vaultLoginSecret == data["secret_id"] {
+			// authenticated
+			reply := api.Secret{}
+			reply.Auth = &api.SecretAuth{
+				ClientToken: "fake-token",
+			}
+			res.WriteHeader(http.StatusOK)
+			replyData, err := json.Marshal(&reply)
+			require.Nil(t, err)
+			res.Write(replyData)
+		} else {
+			res.WriteHeader(http.StatusForbidden)
+		}
+	}))
+	defer vaultLogin.Close()
+
 	// dummy controller
 	es := &EchoServer{}
 	dc := DummyController{
@@ -45,8 +74,7 @@ func TestAccessClientServer(t *testing.T) {
 			echo.RegisterEchoServer(serv, es)
 		},
 	}
-	dc.Init()
-	dc.KeyServer.SetCrmVaultAuth("", "")
+	dc.Init(vaultLogin.URL)
 	addr := "127.0.0.1:12345"
 	dc.Start(ctx, addr)
 	defer dc.Stop()
@@ -141,12 +169,13 @@ func TestAccessClientServer(t *testing.T) {
 	// do not generate access key, instead set client vault role and secret
 	vaultRole = "role"
 	vaultSecret = "secret"
-	// init client will fail because no access key, and controller does not
-	// have matching vault creds
+	// init client will fail because no access key, and controller cannot
+	// login to Vault with crm credentials.
 	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag)
 	require.NotNil(t, err)
-	// Set server vault creds to match, init should now succeed
-	dc.KeyServer.SetCrmVaultAuth(vaultRole, vaultSecret)
+	// Set server vault creds to correct credentials, init should now succeed
+	vaultRole = vaultLoginRole
+	vaultSecret = vaultLoginSecret
 	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag)
 	require.Nil(t, err)
 	// access key should now exist
@@ -260,10 +289,10 @@ type DummyController struct {
 	ApiRegisterCb       func(server *grpc.Server)
 }
 
-func (s *DummyController) Init() {
+func (s *DummyController) Init(vaultAddr string) {
 	edgeproto.InitCloudletCache(&s.Cache)
 	s.Cloudlets = make(map[edgeproto.CloudletKey]*TestCloudlet)
-	s.KeyServer = NewAccessKeyServer(&s.Cache)
+	s.KeyServer = NewAccessKeyServer(&s.Cache, vaultAddr)
 }
 
 // DummyController. The optional registerCb func allows the caller to register
