@@ -50,15 +50,16 @@ func TestInternalPki(t *testing.T) {
 	node.VerifyDelay = time.Millisecond
 	node.VerifyRetry = 3
 
+	vaultAddr := "http://127.0.0.1:8200"
 	// Set up fake Controller to serve access key API
 	dcUS := &DummyController{}
-	dcUS.Init(ctx, "us", vroles)
+	dcUS.Init(ctx, "us", vroles, vaultAddr)
 	dcUS.Start(ctx)
 	defer dcUS.Stop()
 
 	// Set up fake Controller to serve access key API
 	dcEU := &DummyController{}
-	dcEU.Init(ctx, "eu", vroles)
+	dcEU.Init(ctx, "eu", vroles, vaultAddr)
 	dcEU.Start(ctx)
 	defer dcEU.Stop()
 
@@ -845,8 +846,8 @@ type DummyController struct {
 	TlsRegisterCb func(server *grpc.Server)
 }
 
-func (s *DummyController) Init(ctx context.Context, region string, vroles *process.VaultRoles) error {
-	s.DummyController.Init()
+func (s *DummyController) Init(ctx context.Context, region string, vroles *process.VaultRoles, vaultAddr string) error {
+	s.DummyController.Init(vaultAddr)
 	s.DummyController.ApiRegisterCb = func(serv *grpc.Server) {
 		// add APIs to issue certs to CRM/etc
 		edgeproto.RegisterCloudletAccessApiServer(serv, s)
@@ -857,7 +858,6 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 		echo.RegisterEchoServer(serv, es)
 	}
 	// no crm vault role/secret env vars for controller (no backwards compatability)
-	s.KeyServer.SetCrmVaultAuth("", "")
 	s.vroles = vroles
 
 	vc := getVaultConfig(node.NodeTypeController, region, vroles)
