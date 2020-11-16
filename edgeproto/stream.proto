@@ -18,6 +18,11 @@ option (gogoproto.goproto_sizecache_all) = false;
 // Stream State
 //
 // Indicates if stream has started/ended or in a bad shape
+//
+// 0: `STREAM_UNKNOWN`
+// 1: `STREAM_START`
+// 2: `STREAM_STOP`
+// 3: `STREAM_ERROR`
 enum StreamState {
   // Stream state is unknown
   STREAM_UNKNOWN = 0;

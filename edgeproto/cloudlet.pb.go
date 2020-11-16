@@ -45,6 +45,18 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Platform Type
 //
 // PlatformType is the supported list of cloudlet types
+//
+// 0: `PLATFORM_TYPE_FAKE`
+// 1: `PLATFORM_TYPE_DIND`
+// 2: `PLATFORM_TYPE_OPENSTACK`
+// 3: `PLATFORM_TYPE_AZURE`
+// 4: `PLATFORM_TYPE_GCP`
+// 5: `PLATFORM_TYPE_EDGEBOX`
+// 6: `PLATFORM_TYPE_FAKEINFRA`
+// 7: `PLATFORM_TYPE_VSPHERE`
+// 8: `PLATFORM_TYPE_AWS_EKS`
+// 9: `PLATFORM_TYPE_VM_POOL`
+// 10: `PLATFORM_TYPE_AWS_EC2`
 type PlatformType int32
 
 const (
@@ -111,6 +123,9 @@ func (PlatformType) EnumDescriptor() ([]byte, []int) {
 // Infra API Access
 //
 // InfraApiAccess is the type of access available to Infra API endpoint
+//
+// 0: `DIRECT_ACCESS`
+// 1: `RESTRICTED_ACCESS`
 type InfraApiAccess int32
 
 const (
@@ -138,7 +153,18 @@ func (InfraApiAccess) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_3aea31a648a25d86, []int{1}
 }
 
+// CloudletState
+//
 // CloudletState is the state of the Cloudlet.
+//
+//  0: `CLOUDLET_STATE_UNKNOWN`
+//  1: `CLOUDLET_STATE_ERRORS`
+//  2: `CLOUDLET_STATE_READY`
+//  3: `CLOUDLET_STATE_OFFLINE`
+//  4: `CLOUDLET_STATE_NOT_PRESENT`
+//  5: `CLOUDLET_STATE_INIT`
+//  6: `CLOUDLET_STATE_UPGRADE`
+//  7: `CLOUDLET_STATE_NEED_SYNC`
 type CloudletState int32
 
 const (
