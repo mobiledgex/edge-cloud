@@ -43,6 +43,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // ImageType
 //
 // ImageType specifies image type of an App
+//
+// 0: `IMAGE_TYPE_UNKNOWN`
+// 1: `IMAGE_TYPE_DOCKER`
+// 2: `IMAGE_TYPE_QCOW`
+// 3: `IMAGE_TYPE_HELM`
 type ImageType int32
 
 const (
@@ -81,6 +86,9 @@ func (ImageType) EnumDescriptor() ([]byte, []int) {
 // DeleteType
 //
 // DeleteType specifies if AppInst can be auto deleted or not
+//
+// 0: `NO_AUTO_DELETE`
+// 1: `AUTO_DELETE`
 type DeleteType int32
 
 const (
@@ -108,6 +116,13 @@ func (DeleteType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_e0f9056a14b86d47, []int{1}
 }
 
+// AccessType
+//
+// AccessType indicates how to access the app
+//
+// 0: `ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT`
+// 1: `ACCESS_TYPE_DIRECT`
+// 2: `ACCESS_TYPE_LOAD_BALANCER`
 type AccessType int32
 
 const (

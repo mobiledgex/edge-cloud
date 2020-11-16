@@ -35,6 +35,11 @@ message AppKey {
 // ImageType
 //
 // ImageType specifies image type of an App
+//
+// 0: `IMAGE_TYPE_UNKNOWN`
+// 1: `IMAGE_TYPE_DOCKER`
+// 2: `IMAGE_TYPE_QCOW`
+// 3: `IMAGE_TYPE_HELM`
 enum ImageType {
   // Unknown image type
   IMAGE_TYPE_UNKNOWN = 0;
@@ -49,6 +54,9 @@ enum ImageType {
 // DeleteType
 //
 // DeleteType specifies if AppInst can be auto deleted or not
+//
+// 0: `NO_AUTO_DELETE`
+// 1: `AUTO_DELETE`
 enum DeleteType {
   // No autodelete
   NO_AUTO_DELETE = 0;
@@ -56,7 +64,13 @@ enum DeleteType {
   AUTO_DELETE = 1;
 }
 
-
+// AccessType
+//
+// AccessType indicates how to access the app
+//
+// 0: `ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT`
+// 1: `ACCESS_TYPE_DIRECT`
+// 2: `ACCESS_TYPE_LOAD_BALANCER`
 enum AccessType {
   // Default load balancer or direct based on deployment
   ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT = 0;
