@@ -115,7 +115,7 @@ func (IpSupport) EnumDescriptor() ([]byte, []int) {
 //
 // 0: `IP_ACCESS_UNKNOWN`
 // 1: `IP_ACCESS_DEDICATED`
-// 2: `IP_ACCESS_SHARED`
+// 3: `IP_ACCESS_SHARED`
 type IpAccess int32
 
 const (

@@ -51,7 +51,7 @@ enum IpSupport {
 //
 // 0: `IP_ACCESS_UNKNOWN`
 // 1: `IP_ACCESS_DEDICATED`
-// 2: `IP_ACCESS_SHARED`
+// 3: `IP_ACCESS_SHARED`
 enum IpAccess {
   // Unknown IP access
   IP_ACCESS_UNKNOWN = 0;
