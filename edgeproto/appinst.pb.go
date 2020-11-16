@@ -43,9 +43,14 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Health check status
+// Health Check Status
 //
-// Health check status gets set by external, or rootLB health check
+// Health check status gets set by external, or rootLB health check.
+//
+// 0: `HEALTH_CHECK_UNKNOWN`
+// 1: `HEALTH_CHECK_FAIL_ROOTLB_OFFLINE`
+// 2: `HEALTH_CHECK_FAIL_SERVER_FAIL`
+// 3: `HEALTH_CHECK_OK`
 type HealthCheck int32
 
 const (
@@ -84,6 +89,18 @@ func (HealthCheck) EnumDescriptor() ([]byte, []int) {
 // Power State
 //
 // Power State of the AppInst
+//
+// 0: `POWER_STATE_UNKNOWN`
+// 1: `POWER_ON_REQUESTED`
+// 2: `POWERING_ON`
+// 3: `POWER_ON`
+// 4: `POWER_OFF_REQUESTED`
+// 5: `POWERING_OFF`
+// 6: `POWER_OFF`
+// 7: `REBOOT_REQUESTED`
+// 8: `REBOOTING`
+// 9: `REBOOT`
+// 10: `POWER_STATE_ERROR`
 type PowerState int32
 
 const (

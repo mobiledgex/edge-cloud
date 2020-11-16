@@ -31,6 +31,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Liveness Options
 //
 // Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.
+//
+// 0: `LIVENESS_UNKNOWN`
+// 1: `LIVENESS_STATIC`
+// 2: `LIVENESS_DYNAMIC`
+// 3: `LIVENESS_AUTOPROV`
 type Liveness int32
 
 const (
@@ -69,6 +74,10 @@ func (Liveness) EnumDescriptor() ([]byte, []int) {
 // Type of public IP support
 //
 // Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.
+//
+// 0: `IP_SUPPORT_UNKNOWN`
+// 1: `IP_SUPPORT_STATIC`
+// 2: `IP_SUPPORT_DYNAMIC`
 type IpSupport int32
 
 const (
@@ -103,6 +112,10 @@ func (IpSupport) EnumDescriptor() ([]byte, []int) {
 // IpAccess Options
 //
 // IpAccess indicates the type of RootLB that Developer requires for their App
+//
+// 0: `IP_ACCESS_UNKNOWN`
+// 1: `IP_ACCESS_DEDICATED`
+// 3: `IP_ACCESS_SHARED`
 type IpAccess int32
 
 const (
@@ -138,6 +151,23 @@ func (IpAccess) EnumDescriptor() ([]byte, []int) {
 //
 // TrackedState is used to track the state of an object on a remote node,
 // i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
+//
+// 0: `TRACKED_STATE_UNKNOWN`
+// 1: `NOT_PRESENT`
+// 2: `CREATE_REQUESTED`
+// 3: `CREATING`
+// 4: `CREATE_ERROR`
+// 5: `READY`
+// 6: `UPDATE_REQUESTED`
+// 7: `UPDATING`
+// 8: `UPDATE_ERROR`
+// 9: `DELETE_REQUESTED`
+// 10: `DELETING`
+// 11: `DELETE_ERROR`
+// 12: `DELETE_PREPARE`
+// 13: `CRM_INITOK`
+// 14: `CREATING_DEPENDENCIES`
+// 15: `DELETE_DONE`
 type TrackedState int32
 
 const (
@@ -228,6 +258,12 @@ func (TrackedState) EnumDescriptor() ([]byte, []int) {
 // Controller and CRM to get out of sync. It allows commands from the
 // Controller to ignore errors from the CRM, or ignore the CRM completely
 // (messages will not be sent to CRM).
+//
+// 0: `NO_OVERRIDE`
+// 1: `IGNORE_CRM_ERRORS`
+// 2: `IGNORE_CRM`
+// 3: `IGNORE_TRANSIENT_STATE`
+// 4: `IGNORE_CRM_AND_TRANSIENT_STATE`
 type CRMOverride int32
 
 const (
@@ -273,6 +309,18 @@ func (CRMOverride) EnumDescriptor() ([]byte, []int) {
 // These states involve message exchanges between the Controller,
 // the AutoProv service, and the CRM. Certain states are only set
 // by certain actors.
+//
+// 0: `NORMAL_OPERATION`
+// 1: `MAINTENANCE_START`
+// 2: `FAILOVER_REQUESTED`
+// 3: `FAILOVER_DONE`
+// 4: `FAILOVER_ERROR`
+// 5: `MAINTENANCE_START_NO_FAILOVER`
+// 6: `CRM_REQUESTED`
+// 7: `CRM_UNDER_MAINTENANCE`
+// 8: `CRM_ERROR`
+// 9: `NORMAL_OPERATION_INIT`
+// 31: `UNDER_MAINTENANCE`
 type MaintenanceState int32
 
 const (

@@ -12,6 +12,13 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+// Optional Resource Names
+//
+// OptResNames indicates optional resource names
+//
+// 0: `GPU`
+// 1: `NAS`
+// 2: `NIC`
 enum OptResNames {
   GPU = 0;
   NAS = 1;
