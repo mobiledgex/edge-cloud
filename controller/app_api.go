@@ -16,6 +16,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 // Should only be one of these instantiated in main
@@ -318,6 +319,10 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 	if err != nil {
 		return err
 	}
+	if in.ScaleWithCluster && !manifestContainsDaemonSet(deploymf) {
+		return fmt.Errorf("DaemonSet required in manifest when ScaleWithCluster set")
+	}
+
 	// Save manifest to app in case it was a remote target.
 	// Manifest is required on app delete and we'll be in trouble
 	// if remote target is unreachable or changed at that time.
@@ -482,10 +487,12 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				return err
 			}
 		}
-		if in.DeploymentManifest != "" {
+		_, deploymentManifestSpecified := fields[edgeproto.AppFieldDeploymentManifest]
+		_, accessPortSpecified := fields[edgeproto.AppFieldAccessPorts]
+		if deploymentManifestSpecified {
 			// reset the deployment generator
 			cur.DeploymentGenerator = ""
-		} else if in.AccessPorts != "" {
+		} else if accessPortSpecified {
 			if cur.DeploymentGenerator == "" && cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
 				// No generator means the user previously provided a manifest.  Force them to do so again when changing ports so
 				// that they do not accidentally lose their provided manifest details
@@ -690,4 +697,18 @@ func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error
 		}
 	}
 	return nil
+}
+
+func manifestContainsDaemonSet(manifest string) bool {
+	objs, _, err := cloudcommon.DecodeK8SYaml(manifest)
+	if err != nil {
+		return false
+	}
+	for ii, _ := range objs {
+		switch objs[ii].(type) {
+		case *appsv1.DaemonSet:
+			return true
+		}
+	}
+	return false
 }
