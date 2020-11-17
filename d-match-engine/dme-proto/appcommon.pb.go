@@ -26,7 +26,13 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Layer4 Protocol
+//
 // LProto indicates which protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.
+//
+// 0: `L_PROTO_UNKNOWN`
+// 1: `L_PROTO_TCP`
+// 2: `L_PROTO_UDP`
 type LProto int32
 
 const (
