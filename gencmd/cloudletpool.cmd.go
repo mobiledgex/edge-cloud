@@ -10,6 +10,8 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/mobiledgex/edge-cloud/cli"
+	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
@@ -25,6 +27,22 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func CloudletPoolHideTags(in *edgeproto.CloudletPool) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["timestamp"]; found {
+		in.CreatedAt = distributed_match_engine.Timestamp{}
+	}
+	if _, found := tags["timestamp"]; found {
+		in.UpdatedAt = distributed_match_engine.Timestamp{}
+	}
+}
+
 var CloudletPoolApiCmd edgeproto.CloudletPoolApiClient
 
 var CreateCloudletPoolCmd = &cli.Command{
@@ -251,6 +269,7 @@ func ShowCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 			}
 			return fmt.Errorf("ShowCloudletPool recv failed: %s", errstr)
 		}
+		CloudletPoolHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
