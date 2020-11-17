@@ -219,7 +219,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				err = cd.clusterInstInfoResources(ctx, &new.Key, resources)
 				if err != nil {
 					// this can happen if the cluster is deleted
-					log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err")
+					log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err", err)
 				}
 			}
 		}()
@@ -280,7 +280,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			err = cd.clusterInstInfoResources(ctx, &new.Key, resources)
 			if err != nil {
 				// this can happen if the cluster is deleted
-				log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err")
+				log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err", err)
 			}
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
