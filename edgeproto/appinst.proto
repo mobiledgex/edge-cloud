@@ -269,12 +269,7 @@ message AppInstLookup {
 message AppInstLatency {
   // Unique identifier key
   AppInstKey key = 1 [(gogoproto.nullable) = false];
-  distributed_match_engine.Latency latency = 2;
-  string message = 3;
-  // Number of unique clients contributing to latency statistics
-  uint64 num_clients = 4;
-  // List of samples with information (gps location) about each sample
-  repeated distributed_match_engine.Sample samples = 5;
+  string message = 2;
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
 }
 

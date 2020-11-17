@@ -27,9 +27,10 @@ var PlatformClientsCache edgeproto.DeviceCache
 
 var ScaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
-var rollingInterval = flag.Int("rollingInterval", 10, "Rolling latency samples interval. Samples that are older than this interval are dropped")
+var rollingInterval = flag.Int("rollingInterval", 60, "AppInstLatency stats are collected per rollingInterver. Reset after rollingInterval")
 
 const EdgeEventLatencyMethod = "appinst-latency"
+const GpsLocationUpdateMethod = "gps-location"
 
 var Stats *DmeStats
 
@@ -41,21 +42,29 @@ var LatencyTimes = []time.Duration{
 	100 * time.Millisecond,
 }
 
+type GpsLocationStat struct {
+	GpsLocation   *dme.Loc
+	SessionCookie string
+	Timestamp     dme.Timestamp
+	Carrier       string
+}
+
 type ApiStatCall struct {
-	Key           StatKey
-	Fail          bool
-	Latency       time.Duration
-	Samples       []*dme.Sample // Latency samples for EdgeEvents
-	SessionCookie string        // SessionCookie to identify unique clients for EdgeEvents
+	Key             StatKey
+	Fail            bool
+	Latency         time.Duration
+	AppInstLatency  *dmeutil.AppInstLatency // Latency samples for EdgeEvents
+	GpsLocationStat GpsLocationStat         // Gps Location update
 }
 
 type ApiStat struct {
-	Reqs           uint64
-	Errs           uint64
-	Latency        grpcstats.LatencyMetric
-	RollingLatency *dmeutil.RollingLatency // Temporary rolling statistics for EdgeEvents latency measurements (resets after 10 min)
-	Mux            sync.Mutex
-	Changed        bool
+	Reqs                uint64
+	Errs                uint64
+	Latency             grpcstats.LatencyMetric
+	AppInstLatencyStats *dmeutil.AppInstLatencyStats // Aggregated latency stats from persistent connection (resets every hour)
+	GpsLocationStat     GpsLocationStat              // Gps Location update
+	Mux                 sync.Mutex
+	Changed             bool
 }
 
 type MapShard struct {
@@ -127,10 +136,10 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	stat.Latency.AddLatency(call.Latency)
 	if call.Key.Method == EdgeEventLatencyMethod {
 		// Update RollingLatency statistics
-		if stat.RollingLatency == nil {
-			stat.RollingLatency = dmeutil.NewRollingLatency(time.Duration(*rollingInterval) * time.Minute)
+		if stat.AppInstLatencyStats == nil {
+			stat.AppInstLatencyStats = dmeutil.NewAppInstLatencyStats(LatencyTimes)
 		}
-		stat.RollingLatency.UpdateRollingLatency(call.Samples, call.SessionCookie)
+		stat.AppInstLatencyStats.Update(call.AppInstLatency)
 	}
 	stat.Changed = true
 	shard.mux.Unlock()
@@ -142,36 +151,38 @@ func (s *DmeStats) RunNotify() {
 	done := false
 	// for now, no tracing of stats
 	ctx := context.Background()
-	sentToInflux := false // tracks whether previous loop sent updates to influx
 	for !done {
 		select {
 		case <-time.After(s.interval):
 			ts, _ := types.TimestampProto(time.Now())
-			currSentToInflux := false // tracks whether current loop has sent updates to influx
+			for ii, _ := range s.shards {
+				s.shards[ii].mux.Lock()
+				for key, stat := range s.shards[ii].apiStatMap {
+					if stat.Changed {
+						if key.Method != EdgeEventLatencyMethod && key.Method != GpsLocationUpdateMethod {
+							s.send(ctx, ApiStatToMetric(ts, &key, stat))
+							stat.Changed = false
+						}
+					}
+				}
+				s.shards[ii].mux.Unlock()
+			}
+		case <-time.After(time.Duration(*rollingInterval) * time.Minute):
+			ts, _ := types.TimestampProto(time.Now())
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
 					if stat.Changed {
 						if key.Method == EdgeEventLatencyMethod {
-							// Only send latency updates to Influx the loop after other APIs are updated
-							if sentToInflux {
-								s.send(ctx, EdgeEventStatToMetric(ts, &key, stat))
-								stat.Changed = false
-							}
-						} else {
-							s.send(ctx, ApiStatToMetric(ts, &key, stat))
-							currSentToInflux = true
+							s.send(ctx, EdgeEventStatToMetric(ts, &key, stat))
+							stat.Changed = false
+						} else if key.Method == GpsLocationUpdateMethod {
+							s.send(ctx, GpsLocationStatToMetric(ts, &key, stat))
 							stat.Changed = false
 						}
 					}
-					// Remove samples that are > than 10 min old
-					if key.Method == EdgeEventLatencyMethod {
-						stat.RollingLatency.RemoveOldSamples()
-					}
 				}
-				s.shards[ii].mux.Unlock()
 			}
-			sentToInflux = currSentToInflux
 		case <-s.stop:
 			done = true
 		}
@@ -217,14 +228,15 @@ func EdgeEventStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *ed
 	metric.AddTag("cluster", key.ClusterKey.Name)
 	metric.AddTag("clusterorg", key.ClusterInstOrg)
 	// Latency information
-	metric.AddIntVal("numsamples", stat.RollingLatency.Latency.NumSamples)
-	metric.AddIntVal("numclients", stat.RollingLatency.NumUniqueClients)
-	metric.AddDoubleVal("avg", stat.RollingLatency.Latency.Avg)
-	metric.AddDoubleVal("stddev", stat.RollingLatency.Latency.StdDev)
-	metric.AddDoubleVal("min", stat.RollingLatency.Latency.Min)
-	metric.AddDoubleVal("max", stat.RollingLatency.Latency.Max)
+	stat.AppInstLatencyStats.LatencyAvg.AddToMetric(&metric)
+	stat.AppInstLatencyStats.LatencyStdDev.AddToMetric(&metric)
 
 	stat.Latency.AddToMetric(&metric)
+	return &metric
+}
+
+func GpsLocationStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeproto.Metric {
+	metric := edgeproto.Metric{}
 	return &metric
 }
 

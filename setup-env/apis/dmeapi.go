@@ -521,21 +521,20 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Send dummy latency samples as Latency Event
 			latencyEvent := new(dmeproto.ClientEdgeEvent)
 			latencyEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_LATENCY_SAMPLES
+			latencyEvent.GpsLocation = &dmeproto.Loc{
+				Longitude: 38.32,
+				Latitude:  100.342,
+			}
 			samples := make([]*dmeproto.Sample, 0)
 			// Create dummy samples
 			list := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
 			for i, val := range list {
 				s := &dmeproto.Sample{
 					Value: val,
-					Loc: &dmeproto.Loc{
-						Longitude: 38.32 + float64(i),
-						Latitude:  100.342 - float64(i),
-					},
 					Timestamp: &dmeproto.Timestamp{
 						Seconds: int64(i),
 						Nanos:   12345,
 					},
-					SessionCookie: sessionCookie,
 				}
 				samples = append(samples, s)
 			}

@@ -15,6 +15,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"google.golang.org/grpc"
@@ -975,7 +976,7 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 
 func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) error {
 	var appInstKey *edgeproto.AppInstKey
-	var sessionCookieKey *CookieKey
+	var sessionCookie string
 	var edgeEventsCookieKey *EdgeEventsCookieKey
 	var reterr error
 	// Intialize send function to be passed to plugin functions
@@ -995,7 +996,8 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	// Then add connection, client, and appinst to Plugin hashmap
 	if initMsg.EventType == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
 		// Verify session cookie
-		sessionCookieKey, err = VerifyCookie(ctx, initMsg.SessionCookie)
+		sessionCookie = initMsg.SessionCookie
+		sessionCookieKey, err := VerifyCookie(ctx, sessionCookie)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyCookie result", "ckey", sessionCookieKey, "err", err)
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
@@ -1026,11 +1028,11 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 			},
 		}
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, sendFunc)
+		EEHandler.AddClientKey(ctx, *appInstKey, sessionCookie, sendFunc)
 		// Send successful init response
 		initServerEdgeEvent := new(dme.ServerEdgeEvent)
 		initServerEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
-		EEHandler.SendEdgeEventToClient(ctx, initServerEdgeEvent, *appInstKey, *sessionCookieKey)
+		EEHandler.SendEdgeEventToClient(ctx, initServerEdgeEvent, *appInstKey, sessionCookie)
 	} else {
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
@@ -1067,24 +1069,23 @@ loop:
 			call.Key.CloudletFound = appInstKey.ClusterInstKey.CloudletKey
 			call.Key.ClusterKey = appInstKey.ClusterInstKey.ClusterKey
 			call.Key.ClusterInstOrg = appInstKey.ClusterInstKey.Organization
-			latency, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			latency, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, sessionCookie, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
 				return err
 			}
-			call.Latency = time.Duration(latency.Avg * float64(time.Millisecond))
 			call.Key.Method = EdgeEventLatencyMethod // override method name
-			call.SessionCookie = cupdate.SessionCookie
-			// Set location for each Sample
-			for i := range cupdate.Samples {
-				cupdate.Samples[i].Loc = cupdate.GpsLocation
+			call.AppInstLatency = &dmeutil.AppInstLatency{
+				Latency:         latency,
+				SessionCookie:   sessionCookie,
+				GpsLocation:     cupdate.GpsLocation,
+				DataNetworkType: cupdate.DataNetworkType,
 			}
-			call.Samples = cupdate.Samples
 			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
 			Stats.RecordApiStatCall(&call)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
-			log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookieKey, "location", cupdate.GpsLocation)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookie, "location", cupdate.GpsLocation)
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
 			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, fcreply, EdgeEventsCookieExpiration)
@@ -1103,7 +1104,7 @@ loop:
 				newCloudletEdgeEvent := new(dme.ServerEdgeEvent)
 				newCloudletEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_CLOUDLET_UPDATE
 				newCloudletEdgeEvent.NewCloudlet = fcreply
-				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
+				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, sessionCookie)
 			}
 		default:
 			// Unknown client event
@@ -1112,7 +1113,7 @@ loop:
 		}
 	}
 	// Remove Client from edgeevents plugin
-	EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
+	EEHandler.RemoveClientKey(ctx, *appInstKey, sessionCookie)
 	return reterr
 }
 

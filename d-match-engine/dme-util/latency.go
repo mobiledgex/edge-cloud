@@ -2,21 +2,24 @@ package dmeutil
 
 import (
 	"math"
-	"sort"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
-// Constants for Debug
-const (
-	RequestAppInstLatency = "request-appinst-latency"
-	ShowAppInstLatency    = "show-appinst-latency"
-)
-
 // Samples implements sort.Interface so that we can sort by Timestamp (oldest samples first)
 type Samples []*dme.Sample
+
+/*
+import (
+	"math"
+	"sort"
+	"time"
+
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+)
 
 func (s Samples) Len() int {
 	return len(s)
@@ -180,7 +183,7 @@ func (r *RollingLatency) RemoveUniqueClient(sessionCookie string) {
 	}
 	r.NumUniqueClients = uint64(len(r.UniqueClients))
 }
-
+*/
 // Utility function that returns Latency struct with Avg, Min, Max, StdDev, and NumSamples
 func CalculateLatency(samples []*dme.Sample) dme.Latency {
 	// Create latency struct

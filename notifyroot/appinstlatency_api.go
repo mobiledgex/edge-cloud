@@ -93,17 +93,14 @@ func (s *AppInstLatencyApi) ShowAppInstLatency(in *edgeproto.AppInstLatency, cb 
 	replyHandler := func(m *edgeproto.DebugReply) error {
 		// Unmarshal
 		b := []byte(m.Output)
-		var rollinglatency dmeutil.RollingLatency
-		err := json.Unmarshal(b, &rollinglatency)
+		var latencyStats dmeutil.AppInstLatencyStats
+		err := json.Unmarshal(b, &latencyStats)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Unable to unmarshal DebugReply to RollingLatency")
 			return err
 		}
 		appInstLatency := &edgeproto.AppInstLatency{
-			Key:        in.Key,
-			Latency:    rollinglatency.Latency,
-			NumClients: rollinglatency.NumUniqueClients,
-			Samples:    rollinglatency.Samples,
+			Key: in.Key,
 		}
 		return cb.Send(appInstLatency)
 	}
