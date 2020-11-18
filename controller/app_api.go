@@ -444,17 +444,13 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	// if the app is already deployed, there are restrictions on what can be changed.
-	dynInsts := make(map[edgeproto.AppInstKey]struct{})
-
-	appInstExists := false
-	for _, field := range in.Fields {
-		if appInstApi.UsesApp(&in.Key, dynInsts) {
-			appInstExists = true
-			if field == edgeproto.AppFieldAccessPorts || field == edgeproto.AppFieldSkipHcPorts {
-				return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified when AppInsts exist")
-			}
-		}
+	inUseCannotUpdate := []string{
+		edgeproto.AppFieldAccessPorts,
+		edgeproto.AppFieldSkipHcPorts,
+		edgeproto.AppFieldDeployment,
+		edgeproto.AppFieldDeploymentGenerator,
 	}
+
 	fields := edgeproto.MakeFieldMap(in.Fields)
 	if err := in.Validate(fields); err != nil {
 		return &edgeproto.Result{}, err
@@ -466,11 +462,19 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
+		refs := edgeproto.AppInstRefs{}
+		appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
+		appInstExists := len(refs.Insts) > 0
 		if appInstExists {
 			if cur.Deployment != cloudcommon.DeploymentTypeKubernetes &&
 				cur.Deployment != cloudcommon.DeploymentTypeDocker &&
 				cur.Deployment != cloudcommon.DeploymentTypeHelm {
 				return fmt.Errorf("Update App not supported for deployment: %s when AppInsts exist", cur.Deployment)
+			}
+			for _, field := range inUseCannotUpdate {
+				if _, found := fields[field]; found {
+					return fmt.Errorf("Cannot update %s when AppInst exists", edgeproto.AppAllFieldsStringMap[field])
+				}
 			}
 			// don't allow change from regular docker to docker-compose or docker-compose zip if instances exist
 			if cur.Deployment == cloudcommon.DeploymentTypeDocker {

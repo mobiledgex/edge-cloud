@@ -554,6 +554,7 @@ var UpdateAppOptionalArgs = []string{
 	"authpublickey",
 	"command",
 	"annotations",
+	"deployment",
 	"deploymentmanifest",
 	"androidpackagename",
 	"delopt",
