@@ -221,17 +221,6 @@ func (s *JWKS) GenerateCookie(claims Claims) (string, error) {
 	return cookie, err
 }
 
-func (s *JWKS) GenerateApiKey(claims Claims) (string, error) {
-	skey, kid, ok := s.GetCurrentKey()
-	if !ok {
-		return "", errors.New("no signing key")
-	}
-	claims.SetKid(kid)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	cookie, err := token.SignedString([]byte(skey))
-	return cookie, err
-}
-
 func (s *JWKS) VerifyCookie(cookie string, claims Claims) (*jwt.Token, error) {
 	if cookie == "" {
 		return nil, errors.New("VerifyCookie failed: missing cookie")
