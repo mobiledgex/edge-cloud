@@ -165,7 +165,7 @@ func TestCRM(t *testing.T) {
 	ctrlMgr := notify.ServerMgr{}
 	ctrlHandler.RegisterServer(&ctrlMgr)
 	// handle access API
-	keyServer := node.NewAccessKeyServer(&ctrlHandler.CloudletCache)
+	keyServer := node.NewAccessKeyServer(&ctrlHandler.CloudletCache, "")
 	accessKeyGrpcServer := node.AccessKeyGrpcServer{}
 	basicUpgradeHandler := node.BasicUpgradeHandler{
 		KeyServer: keyServer,

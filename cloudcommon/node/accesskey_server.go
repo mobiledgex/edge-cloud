@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vault"
 	"golang.org/x/crypto/ed25519"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -50,27 +52,20 @@ func ContextGetAccessKeyVerified(ctx context.Context) *AccessKeyVerified {
 // AccessKeyServer maintains state to validate clients.
 type AccessKeyServer struct {
 	cloudletCache       *edgeproto.CloudletCache
-	crmVaultRole        string
-	crmVaultSecret      string
+	vaultAddr           string
 	requireTlsAccessKey bool
 }
 
-func NewAccessKeyServer(cloudletCache *edgeproto.CloudletCache) *AccessKeyServer {
+func NewAccessKeyServer(cloudletCache *edgeproto.CloudletCache, vaultAddr string) *AccessKeyServer {
 	server := &AccessKeyServer{
-		cloudletCache:  cloudletCache,
-		crmVaultRole:   os.Getenv("CRM_VAULT_ROLE_ID"),
-		crmVaultSecret: os.Getenv("CRM_VAULT_SECRET_ID"),
+		cloudletCache: cloudletCache,
+		vaultAddr:     vaultAddr,
 	}
 	// for testing, reduce bad auth delay
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
 		BadAuthDelay = time.Millisecond
 	}
 	return server
-}
-
-func (s *AccessKeyServer) SetCrmVaultAuth(role, secret string) {
-	s.crmVaultRole = role
-	s.crmVaultSecret = secret
 }
 
 func (s *AccessKeyServer) SetRequireTlsAccessKey(require bool) {
@@ -137,14 +132,16 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 		}
 		verified.UpgradeRequired = true
 
-		crmVaultKey := s.crmVaultRole + s.crmVaultSecret
-		if crmVaultKey == "" {
-			// Controller is not configured to allow Vault-based auth
-			// for backwards compatibility.
-			return nil, fmt.Errorf("Vault-based auth not allowed")
+		idkey := strings.Split(vaultSig[0], ",")
+		if len(idkey) != 2 {
+			return nil, fmt.Errorf("Vault signature format error, expected id,key but has %d fields", len(idkey))
 		}
-		if crmVaultKey != vaultSig[0] {
-			return nil, fmt.Errorf("Vault-based auth key mismatch")
+		// to authenticate, try to log into Vault
+		vaultConfig := vault.NewAppRoleConfig(s.vaultAddr, idkey[0], idkey[1])
+		_, err := vaultConfig.Login()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "failed to verify vault credentials", "err", err)
+			return nil, fmt.Errorf("Failed to verify Vault credentials")
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "verified vault keys", "CloudletKey", verified.Key)
 		return verified, nil
