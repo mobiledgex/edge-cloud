@@ -383,6 +383,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return err
 		}
 
+		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
+
 		if ignoreCRMState(cctx) {
 			in.State = edgeproto.TrackedState_READY
 		} else {
@@ -770,6 +772,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		if crmUpdateReqd && !ignoreCRM(cctx) {
 			cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
+		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, cur)
 		return nil
 	})

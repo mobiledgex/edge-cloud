@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -37,6 +39,7 @@ func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.
 		if err := s.checkCloudletsExist(stm, in); err != nil {
 			return err
 		}
+		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -70,6 +73,7 @@ func (s *CloudletPoolApi) UpdateCloudletPool(ctx context.Context, in *edgeproto.
 		if err := s.checkCloudletsExist(stm, &cur); err != nil {
 			return err
 		}
+		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})

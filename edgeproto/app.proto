@@ -8,6 +8,7 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -159,6 +160,10 @@ message App {
   // Numerical values must be decimal format.
   // i.e. tcp:80,udp:10002,http:443
   string skip_hc_ports = 34;
+    // Created at time
+  distributed_match_engine.Timestamp created_at = 35 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+    // Updated at time
+  distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -166,7 +171,7 @@ message App {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "DeletePrepare";
+  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }

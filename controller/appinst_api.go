@@ -1034,6 +1034,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 			}
 			cur.PowerState = powerState
 		}
+		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
