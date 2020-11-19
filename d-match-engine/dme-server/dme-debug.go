@@ -13,7 +13,6 @@ import (
 
 func InitDebug(nodeMgr *node.NodeMgr) {
 	nodeMgr.Debug.AddDebugFunc(dmeutil.RequestAppInstLatency, requestAppInstLatency)
-	nodeMgr.Debug.AddDebugFunc(dmeutil.ShowAppInstLatency, showAppInstLatency)
 }
 
 func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
@@ -24,37 +23,6 @@ func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) str
 
 	dmecommon.EEHandler.SendLatencyRequestEdgeEvent(ctx, *appInstKey)
 	return "successfully sent latency request"
-}
-
-func showAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
-	appInstKey, err := createAppInstKeyFromRequest(req)
-	if err != nil {
-		return err.Error()
-	}
-
-	apiStatCall := &dmecommon.ApiStatCall{
-		Key: dmecommon.StatKey{
-			AppKey:         appInstKey.AppKey,
-			CloudletFound:  appInstKey.ClusterInstKey.CloudletKey,
-			Method:         dmecommon.EdgeEventLatencyMethod,
-			ClusterKey:     appInstKey.ClusterInstKey.ClusterKey,
-			ClusterInstOrg: appInstKey.ClusterInstKey.Organization,
-		},
-	}
-
-	apiStat, found := dmecommon.Stats.LookupApiStatCall(apiStatCall)
-	if !found {
-		return "unable to find apiStat"
-	}
-	apiStat.Mux.Lock()
-	defer apiStat.Mux.Unlock()
-
-	latencyStats := apiStat.AppInstLatencyStats
-	b, err := json.Marshal(latencyStats)
-	if err != nil {
-		return "unable to marshall AppInstLatencyStats"
-	}
-	return string(b)
 }
 
 func createAppInstKeyFromRequest(req *edgeproto.DebugRequest) (*edgeproto.AppInstKey, error) {

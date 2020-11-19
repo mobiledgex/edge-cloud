@@ -11,7 +11,6 @@ import (
 // Constants for Debug
 const (
 	RequestAppInstLatency = "request-appinst-latency"
-	ShowAppInstLatency    = "show-appinst-latency"
 )
 
 // Distances from Device to AppInst in km

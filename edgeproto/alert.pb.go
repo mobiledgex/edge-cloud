@@ -1175,7 +1175,6 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowAppInst":         struct{}{},
 	"ShowAppInstInfo":     struct{}{},
 	"ShowAppInstMetrics":  struct{}{},
-	"ShowAppInstLatency":  struct{}{},
 	"ShowCloudletRefs":    struct{}{},
 	"ShowClusterRefs":     struct{}{},
 	"ShowAppInstRefs":     struct{}{},

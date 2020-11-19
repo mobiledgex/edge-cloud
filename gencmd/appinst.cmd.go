@@ -732,85 +732,8 @@ func RequestAppInstLatencys(c *cli.Command, data []edgeproto.AppInstLatency, err
 	}
 }
 
-var ShowAppInstLatencyCmd = &cli.Command{
-	Use:          "ShowAppInstLatency",
-	OptionalArgs: strings.Join(append(AppInstLatencyRequiredArgs, AppInstLatencyOptionalArgs...), " "),
-	AliasArgs:    strings.Join(AppInstLatencyAliasArgs, " "),
-	SpecialArgs:  &AppInstLatencySpecialArgs,
-	Comments:     AppInstLatencyComments,
-	ReqData:      &edgeproto.AppInstLatency{},
-	ReplyData:    &edgeproto.AppInstLatency{},
-	Run:          runShowAppInstLatency,
-}
-
-func runShowAppInstLatency(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.AppInstLatency)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowAppInstLatency(c, obj)
-}
-
-func ShowAppInstLatency(c *cli.Command, in *edgeproto.AppInstLatency) error {
-	if AppInstLatencyApiCmd == nil {
-		return fmt.Errorf("AppInstLatencyApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := AppInstLatencyApiCmd.ShowAppInstLatency(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowAppInstLatency failed: %s", errstr)
-	}
-
-	objs := make([]*edgeproto.AppInstLatency, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowAppInstLatency recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowAppInstLatencys(c *cli.Command, data []edgeproto.AppInstLatency, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowAppInstLatency %v\n", data[ii])
-		myerr := ShowAppInstLatency(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var AppInstLatencyApiCmds = []*cobra.Command{
 	RequestAppInstLatencyCmd.GenCmd(),
-	ShowAppInstLatencyCmd.GenCmd(),
 }
 
 var AppInstKeyRequiredArgs = []string{}
