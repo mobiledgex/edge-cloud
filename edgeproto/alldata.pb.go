@@ -646,6 +646,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.CrmAccessPublicKey")
 	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "Cloudlets.CreatedAt")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "Cloudlets.UpdatedAt")
+	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.NotifyId")
 	}
@@ -654,6 +660,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.Status")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "CloudletPools.CreatedAt")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "CloudletPools.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.State")
@@ -691,6 +703,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.Resources")
 	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "ClusterInsts.CreatedAt")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "ClusterInsts.UpdatedAt")
+	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Apps.DeploymentManifest")
 	}
@@ -705,6 +723,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Apps.DeletePrepare")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "Apps.CreatedAt")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "Apps.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.Uri")
@@ -750,6 +774,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.OptRes")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "AppInstances.UpdatedAt")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "VmPools.Vms.UpdatedAt")
