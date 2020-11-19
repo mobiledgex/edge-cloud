@@ -84,6 +84,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.OptRes = ""
 	}
+	if _, found := tags["timestamp"]; found {
+		in.UpdatedAt = distributed_match_engine.Timestamp{}
+	}
 }
 
 func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {

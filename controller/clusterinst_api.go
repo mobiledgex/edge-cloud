@@ -438,6 +438,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
 		cloudletRefsApi.store.STMPut(stm, &refs)
 
+		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
+
 		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_READY
 		} else {
@@ -537,6 +539,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if !ignoreCRM(cctx) {
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
+		inbuf.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})

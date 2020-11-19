@@ -152,6 +152,8 @@ message AppInst {
   string vm_flavor = 34 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   // Optional Resources required by OS flavor if any
   string opt_res = 35 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
+  // Updated at time
+  distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -161,7 +163,7 @@ message AppInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,NodeFlavor,ExternalVolumeSize,AvailabilityZone,State";
+  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,NodeFlavor,ExternalVolumeSize,AvailabilityZone,State,UpdatedAt";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
   option (protogen.not_required) = "Key.ClusterInstKey.Organization,Key.ClusterInstKey.ClusterKey.Name";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
