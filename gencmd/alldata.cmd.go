@@ -64,6 +64,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].CrmAccessPublicKey = ""
 		}
+		if _, found := tags["timestamp"]; found {
+			in.Cloudlets[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.Cloudlets[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -89,6 +95,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
+		if _, found := tags["timestamp"]; found {
+			in.CloudletPools[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.CloudletPools[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicies); i0++ {
 		for i1 := 0; i1 < len(in.AutoProvPolicies[i0].Cloudlets); i1++ {
@@ -139,6 +151,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].Resources = edgeproto.InfraResources{}
 		}
+		if _, found := tags["timestamp"]; found {
+			in.ClusterInsts[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.ClusterInsts[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -157,6 +175,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Apps[i0].DeletePrepare = false
+		}
+		if _, found := tags["timestamp"]; found {
+			in.Apps[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.Apps[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
@@ -208,6 +232,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].OptRes = ""
+		}
+		if _, found := tags["timestamp"]; found {
+			in.AppInstances[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
 	}
 	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
@@ -339,6 +366,10 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.vmpool",
 	"cloudlets:#.crmaccesspublickey",
 	"cloudlets:#.crmaccesskeyupgraderequired",
+	"cloudlets:#.createdat.seconds",
+	"cloudlets:#.createdat.nanos",
+	"cloudlets:#.updatedat.seconds",
+	"cloudlets:#.updatedat.nanos",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -384,6 +415,10 @@ var AllDataOptionalArgs = []string{
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
 	"cloudletpools:#.cloudlets",
+	"cloudletpools:#.createdat.seconds",
+	"cloudletpools:#.createdat.nanos",
+	"cloudletpools:#.updatedat.seconds",
+	"cloudletpools:#.updatedat.nanos",
 	"autoprovpolicies:#.fields",
 	"autoprovpolicies:#.key.organization",
 	"autoprovpolicies:#.key.name",
@@ -468,6 +503,10 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.resources.vms:#.containers:#.status",
 	"clusterinsts:#.resources.vms:#.containers:#.clusterip",
 	"clusterinsts:#.resources.vms:#.containers:#.restarts",
+	"clusterinsts:#.createdat.seconds",
+	"clusterinsts:#.createdat.nanos",
+	"clusterinsts:#.updatedat.seconds",
+	"clusterinsts:#.updatedat.nanos",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -499,6 +538,10 @@ var AllDataOptionalArgs = []string{
 	"apps:#.autoprovpolicies",
 	"apps:#.templatedelimiter",
 	"apps:#.skiphcports",
+	"apps:#.createdat.seconds",
+	"apps:#.createdat.nanos",
+	"apps:#.updatedat.seconds",
+	"apps:#.updatedat.nanos",
 	"appinstances:#.fields",
 	"appinstances:#.key.appkey.organization",
 	"appinstances:#.key.appkey.name",
@@ -552,6 +595,8 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.availabilityzone",
 	"appinstances:#.vmflavor",
 	"appinstances:#.optres",
+	"appinstances:#.updatedat.seconds",
+	"appinstances:#.updatedat.nanos",
 	"appinstrefs:#.key.organization",
 	"appinstrefs:#.key.name",
 	"appinstrefs:#.key.version",
