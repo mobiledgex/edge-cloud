@@ -178,8 +178,8 @@ func DeleteApps(c *cli.Command, data []edgeproto.App, err *error) {
 
 var UpdateAppCmd = &cli.Command{
 	Use:          "UpdateApp",
-	RequiredArgs: strings.Join(UpdateAppRequiredArgs, " "),
-	OptionalArgs: strings.Join(UpdateAppOptionalArgs, " "),
+	RequiredArgs: strings.Join(AppRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppAliasArgs, " "),
 	SpecialArgs:  &AppSpecialArgs,
 	Comments:     AppComments,
@@ -549,34 +549,3 @@ var AppAutoProvPolicyComments = map[string]string{
 	"autoprovpolicy":      "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}
-var UpdateAppRequiredArgs = []string{
-	"app-org",
-	"appname",
-	"appvers",
-}
-var UpdateAppOptionalArgs = []string{
-	"imagepath",
-	"imagetype",
-	"accessports",
-	"defaultflavor",
-	"authpublickey",
-	"command",
-	"annotations",
-	"deploymentmanifest",
-	"androidpackagename",
-	"delopt",
-	"configs:#.kind",
-	"configs:#.config",
-	"scalewithcluster",
-	"internalports",
-	"revision",
-	"officialfqdn",
-	"md5sum",
-	"defaultsharedvolumesize",
-	"autoprovpolicy",
-	"accesstype",
-	"defaultprivacypolicy",
-	"autoprovpolicies",
-	"templatedelimiter",
-	"skiphcports",
-}
