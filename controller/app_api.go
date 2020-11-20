@@ -216,11 +216,43 @@ func validateSkipHcPorts(app *edgeproto.App) error {
 	return nil
 }
 
-// updates fields that need manipulation on setting, or fetched remotely
-func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) error {
-	// for update, trigger regenerating deployment manifest
-	if in.DeploymentGenerator != "" {
-		in.DeploymentManifest = ""
+// Configure and validate App. Common code for Create and Update.
+func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edgeproto.App, revision string) error {
+	var err error
+	if s.AndroidPackageConflicts(in) {
+		return fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
+	}
+	if in.Deployment == "" {
+		in.Deployment, err = cloudcommon.GetDefaultDeploymentType(in.ImageType)
+		if err != nil {
+			return err
+		}
+	} else if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_UNKNOWN {
+		in.ImageType, err = cloudcommon.GetImageTypeForDeployment(in.Deployment)
+		if err != nil {
+			return err
+		}
+	}
+	if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidAppDeployments) {
+		return fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidAppDeployments)
+	}
+	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
+		return fmt.Errorf("Deployment is not valid for image type")
+	}
+	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
+		return err
+	}
+	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
+	if err != nil {
+		return err
+	}
+	if in.AccessType != newAccessType {
+		log.SpanLog(ctx, log.DebugLevelApi, "updating access type", "newAccessType", newAccessType)
+		in.AccessType = newAccessType
+	}
+
+	if in.Deployment == cloudcommon.DeploymentTypeVM && in.Command != "" {
+		return fmt.Errorf("Invalid argument, command is not supported for VM based deployments")
 	}
 
 	if in.ImagePath == "" {
@@ -331,6 +363,50 @@ func updateAppFields(ctx context.Context, in *edgeproto.App, revision string) er
 	log.DebugLog(log.DebugLevelApi, "setting App revision", "revision", revision)
 	in.Revision = revision
 
+	err = validateSkipHcPorts(in)
+	if err != nil {
+		return err
+	}
+	ports, err := edgeproto.ParseAppPorts(in.AccessPorts)
+	if err != nil {
+		return err
+	}
+
+	if in.DeploymentManifest != "" {
+		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest, ports)
+		if err != nil {
+			return fmt.Errorf("Invalid deployment manifest, %v", err)
+		}
+	}
+	err = validatePortRangeForAccessType(ports, in.AccessType, in.Deployment)
+	if err != nil {
+		return err
+	}
+
+	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
+		authApi := &cloudcommon.VaultRegistryAuthApi{
+			VaultConfig: vaultConfig,
+		}
+		_, err = k8smgmt.GetAppEnvVars(ctx, in, authApi, &k8smgmt.TestReplacementVars)
+		if err != nil {
+			return err
+		}
+	}
+
+	if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
+		return in.DefaultFlavor.NotFoundError()
+	}
+	if err := s.validatePolicies(stm, in); err != nil {
+		return err
+	}
+	if in.DefaultPrivacyPolicy != "" {
+		apKey := edgeproto.PolicyKey{}
+		apKey.Organization = in.Key.Organization
+		apKey.Name = in.DefaultPrivacyPolicy
+		if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
+			return apKey.NotFoundError()
+		}
+	}
 	return nil
 }
 
@@ -340,92 +416,14 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
-	if in.Deployment == "" {
-		in.Deployment, err = cloudcommon.GetDefaultDeploymentType(in.ImageType)
-		if err != nil {
-			return &edgeproto.Result{}, err
-		}
-	} else if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_UNKNOWN {
-		in.ImageType, err = cloudcommon.GetImageTypeForDeployment(in.Deployment)
-		if err != nil {
-			return &edgeproto.Result{}, err
-		}
-	}
-	if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidAppDeployments) {
-		return &edgeproto.Result{}, fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidAppDeployments)
-	}
-	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
-		return &edgeproto.Result{}, fmt.Errorf("Deployment is not valid for image type")
-	}
-	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
-		return &edgeproto.Result{}, err
-	}
-	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
-		authApi := &cloudcommon.VaultRegistryAuthApi{
-			VaultConfig: vaultConfig,
-		}
-		_, err = k8smgmt.GetAppEnvVars(ctx, in, authApi, &k8smgmt.TestReplacementVars)
-		if err != nil {
-			return &edgeproto.Result{}, err
-		}
-	}
-	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
-	if in.AccessType != newAccessType {
-		log.SpanLog(ctx, log.DebugLevelApi, "updating access type", "newAccessType", newAccessType)
-		in.AccessType = newAccessType
-	}
-
-	if in.Deployment == cloudcommon.DeploymentTypeVM && in.Command != "" {
-		return &edgeproto.Result{}, fmt.Errorf("Invalid argument, command is not supported for VM based deployments")
-	}
-	err = updateAppFields(ctx, in, in.Revision)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
-	ports, err := edgeproto.ParseAppPorts(in.AccessPorts)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
-
-	err = validateSkipHcPorts(in)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
-
-	if in.DeploymentManifest != "" {
-		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest, ports)
-		if err != nil {
-			return &edgeproto.Result{}, fmt.Errorf("Invalid deployment manifest, %v", err)
-		}
-	}
-	err = validatePortRangeForAccessType(ports, in.AccessType, in.Deployment)
-	if err != nil {
-		return nil, err
-	}
-	if s.AndroidPackageConflicts(in) {
-		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
-	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
-			return in.DefaultFlavor.NotFoundError()
-		}
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
-		if err := s.validatePolicies(stm, in); err != nil {
+		err = s.configureApp(ctx, stm, in, in.Revision)
+		if err != nil {
 			return err
-		}
-		if in.DefaultPrivacyPolicy != "" {
-			apKey := edgeproto.PolicyKey{}
-			apKey.Organization = in.Key.Organization
-			apKey.Name = in.DefaultPrivacyPolicy
-			if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
-				return apKey.NotFoundError()
-			}
 		}
 		appInstRefsApi.createRef(stm, &in.Key)
 
@@ -441,22 +439,13 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
-	if s.AndroidPackageConflicts(in) {
-		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
+	inUseCannotUpdate := []string{
+		edgeproto.AppFieldAccessPorts,
+		edgeproto.AppFieldSkipHcPorts,
+		edgeproto.AppFieldDeployment,
+		edgeproto.AppFieldDeploymentGenerator,
 	}
 
-	// if the app is already deployed, there are restrictions on what can be changed.
-	dynInsts := make(map[edgeproto.AppInstKey]struct{})
-
-	appInstExists := false
-	for _, field := range in.Fields {
-		if appInstApi.UsesApp(&in.Key, dynInsts) {
-			appInstExists = true
-			if field == edgeproto.AppFieldAccessPorts || field == edgeproto.AppFieldSkipHcPorts {
-				return &edgeproto.Result{}, fmt.Errorf("Field cannot be modified when AppInsts exist")
-			}
-		}
-	}
 	fields := edgeproto.MakeFieldMap(in.Fields)
 	if err := in.Validate(fields); err != nil {
 		return &edgeproto.Result{}, err
@@ -464,15 +453,22 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.App{}
-
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
+		refs := edgeproto.AppInstRefs{}
+		appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
+		appInstExists := len(refs.Insts) > 0
 		if appInstExists {
 			if cur.Deployment != cloudcommon.DeploymentTypeKubernetes &&
 				cur.Deployment != cloudcommon.DeploymentTypeDocker &&
 				cur.Deployment != cloudcommon.DeploymentTypeHelm {
 				return fmt.Errorf("Update App not supported for deployment: %s when AppInsts exist", cur.Deployment)
+			}
+			for _, field := range inUseCannotUpdate {
+				if _, found := fields[field]; found {
+					return fmt.Errorf("Cannot update %s when AppInst exists", edgeproto.AppAllFieldsStringMap[field])
+				}
 			}
 			// don't allow change from regular docker to docker-compose or docker-compose zip if instances exist
 			if cur.Deployment == cloudcommon.DeploymentTypeDocker {
@@ -483,11 +479,14 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				}
 			}
 		}
-		// If config is being updated, make sure that it's valid for the DeploymentType
-		if _, found := fields[edgeproto.AppFieldConfigs]; found {
-			if err := validateAppConfigsForDeployment(in.Configs, cur.Deployment); err != nil {
-				return err
-			}
+		_, deploymentSpecified := fields[edgeproto.AppFieldDeployment]
+		if deploymentSpecified {
+			// likely any existing manifest is no longer valid,
+			// reset it in case a new manifest was not specified
+			// and it needs to be auto-generated.
+			// If a new manifest is specified during update, it
+			// will overwrite this blank setting.
+			cur.DeploymentManifest = ""
 		}
 		_, deploymentManifestSpecified := fields[edgeproto.AppFieldDeploymentManifest]
 		_, accessPortSpecified := fields[edgeproto.AppFieldAccessPorts]
@@ -505,42 +504,16 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 		cur.CopyInFields(in)
-		if err := s.validatePolicies(stm, &cur); err != nil {
-			return err
-		}
-		ports, err := edgeproto.ParseAppPorts(cur.AccessPorts)
-		if err != nil {
-			return err
+		// for update, trigger regenerating deployment manifest
+		if cur.DeploymentGenerator != "" {
+			cur.DeploymentManifest = ""
 		}
 		newRevision := in.Revision
 		if newRevision == "" {
 			newRevision = time.Now().Format("2006-01-02T150405")
 			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
 		}
-		if err := updateAppFields(ctx, &cur, newRevision); err != nil {
-			return err
-		}
-		err = validateSkipHcPorts(&cur)
-		if err != nil {
-			return err
-		}
-		if in.DeploymentManifest != "" {
-			err = cloudcommon.IsValidDeploymentManifest(cur.Deployment, cur.Command, cur.DeploymentManifest, ports)
-			if err != nil {
-				return fmt.Errorf("Invalid deployment manifest, %v", err)
-			}
-		}
-		if cur.Deployment == cloudcommon.DeploymentTypeKubernetes {
-			authApi := &cloudcommon.VaultRegistryAuthApi{
-				VaultConfig: vaultConfig,
-			}
-			_, err = k8smgmt.GetAppEnvVars(ctx, &cur, authApi, &k8smgmt.TestReplacementVars)
-			if err != nil {
-				return err
-			}
-		}
-		err = validatePortRangeForAccessType(ports, cur.AccessType, cur.Deployment)
-		if err != nil {
+		if err := s.configureApp(ctx, stm, &cur, newRevision); err != nil {
 			return err
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
