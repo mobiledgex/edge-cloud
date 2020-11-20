@@ -344,14 +344,15 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		in.AccessVars = nil
 	}
 
-	accessKey, err := node.GenerateAccessKey()
-	if err != nil {
-		return err
+	if in.InfraApiAccess != edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
+		accessKey, err := node.GenerateAccessKey()
+		if err != nil {
+			return err
+		}
+		in.CrmAccessPublicKey = accessKey.PublicPEM
+		in.CrmAccessKeyUpgradeRequired = true
+		pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
 	}
-	in.CrmAccessPublicKey = accessKey.PublicPEM
-	in.CrmAccessKeyUpgradeRequired = true
-	pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
-
 	vmPool := edgeproto.VMPool{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -1326,9 +1327,34 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 	if err != nil {
 		return nil, err
 	}
+	accessKey, err := node.GenerateAccessKey()
+	if err != nil {
+		return nil, err
+	}
+	pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
 	vmPool := edgeproto.VMPool{}
 	caches := getCaches(ctx, &vmPool)
-	return cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, accessApi, &pfFlavor, caches)
+	manifest, err := cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, accessApi, &pfFlavor, caches)
+	if err != nil {
+		return nil, err
+	}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cloudlet := &edgeproto.Cloudlet{}
+		if s.store.STMGet(stm, &in.Key, cloudlet) {
+			return in.Key.NotFoundError()
+		}
+		if cloudlet.CrmAccessPublicKey != "" {
+			return fmt.Errorf("Cloudlet has access key registered, please revoke the current access key first so a new one can be generated for the manifest")
+		}
+		cloudlet.CrmAccessPublicKey = accessKey.PublicPEM
+		cloudlet.CrmAccessKeyUpgradeRequired = true
+		s.store.STMPut(stm, cloudlet)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
