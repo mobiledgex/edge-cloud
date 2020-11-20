@@ -28,6 +28,7 @@ message CloudletKey {
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
 }
 
 // Operation time limits

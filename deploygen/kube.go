@@ -47,7 +47,10 @@ func kubeBasic(app *AppSpec) (string, error) {
 		return "", gen.err
 	}
 	return strings.Join(gen.files, "---\n"), nil
+}
 
+func appID(app *AppSpec) string {
+	return app.Name + app.Version
 }
 
 // Translate PortSpec objects to the KubePort representation.
@@ -115,8 +118,8 @@ func (g *kubeBasicGen) kubeLb(protos []string) {
 		return
 	}
 	lb := lbData{
-		Name:  util.DNSSanitize(g.app.Name + "-" + protos[0]),
-		Run:   util.K8SSanitize(g.app.Name),
+		Name:  util.DNSSanitize(appID(g.app) + "-" + protos[0]),
+		Run:   util.K8SSanitize(appID(g.app)),
 		Ports: []kubePort{},
 	}
 	for _, port := range g.ports {
@@ -179,9 +182,9 @@ func (g *kubeBasicGen) kubeApp() {
 		registrySecret = hostname[0] + "-" + hostname[1]
 	}
 	data := appData{
-		Name:           util.DNSSanitize(g.app.Name + "-deployment"),
-		DNSName:        util.DNSSanitize(g.app.Name),
-		Run:            util.K8SSanitize(g.app.Name),
+		Name:           util.DNSSanitize(appID(g.app) + "-deployment"),
+		DNSName:        util.DNSSanitize(appID(g.app)),
+		Run:            util.K8SSanitize(appID(g.app)),
 		Ports:          g.ports,
 		ImagePath:      g.app.ImagePath,
 		Command:        cs,
