@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
-
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -36,7 +35,7 @@ func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgep
 			// CloudletKey: in.Key.ClusterInstKey.CloudletKey, // When DME per cloudlet is implemented
 			// Region: nodeMgr.Region, // should be region of appinst
 		},
-		Cmd:  dmeutil.RequestAppInstLatency,
+		Cmd:  dmecommon.RequestAppInstLatency,
 		Args: args,
 	}
 

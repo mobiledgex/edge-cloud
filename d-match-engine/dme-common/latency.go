@@ -1,4 +1,4 @@
-package dmeutil
+package dmecommon
 
 import (
 	"math"
@@ -7,61 +7,22 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
-
-// Samples implements sort.Interface so that we can sort by Timestamp (oldest samples first)
-type Samples []*dme.Sample
-
-/*
-import (
-	"math"
-	"sort"
-	"time"
-
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-)
-
-func (s Samples) Len() int {
-	return len(s)
-}
-
-func (s Samples) Less(i, j int) bool {
-	if s[i].Timestamp.Seconds == s[j].Timestamp.Seconds {
-		return s[i].Timestamp.Nanos < s[j].Timestamp.Nanos
-	} else {
-		return s[i].Timestamp.Seconds < s[j].Timestamp.Seconds
-	}
-}
-
-func (s Samples) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
 
 type RollingLatency struct {
 	Latency          *dme.Latency
-	Samples          Samples
-	UniqueClients    map[string]int // Maps unique client to number of occurences of that unique client
+	UniqueClients    map[CookieKey]int // Maps unique client to number of occurences of that unique client
 	NumUniqueClients uint64
-	Duration         time.Duration // length of rolling window
 }
 
-func NewRollingLatency(duration time.Duration) *RollingLatency {
+func NewRollingLatency() *RollingLatency {
 	r := new(RollingLatency)
-	r.Samples = make([]*dme.Sample, 0)
-	r.UniqueClients = make(map[string]int)
+	r.UniqueClients = make(map[CookieKey]int)
 	r.Latency = new(dme.Latency)
-	r.Duration = duration
 	return r
 }
 
-// Update RollingLatency struct (Latency, Samples, UniqueClients, NumUniqueClients) with new Samples
-func (r *RollingLatency) UpdateRollingLatency(samples []*dme.Sample, sessionCookie string) {
-	r.RemoveOldSamples()
-	r.AddNewSamples(samples, sessionCookie)
-}
-
 // Add new samples to RollingLatency struct and update RollingLatency statistics
-func (r *RollingLatency) AddNewSamples(samples []*dme.Sample, sessionCookie string) {
+func (r *RollingLatency) UpdateRollingLatency(samples []*dme.Sample, sessionCookieKey CookieKey) {
 	// Previous statistics used to calculate rolling variance
 	prevNumSamples := r.Latency.NumSamples
 	prevAvg := r.Latency.Avg
@@ -77,20 +38,8 @@ func (r *RollingLatency) AddNewSamples(samples []*dme.Sample, sessionCookie stri
 		}
 		total += sample.Value
 		r.Latency.NumSamples++
-		// Fill in values that may not have been provided
-		if sample.SessionCookie == "" {
-			sample.SessionCookie = sessionCookie
-		}
-		if sample.Timestamp == nil {
-			ts := cloudcommon.TimeToTimestamp(time.Now())
-			sample.Timestamp = &ts
-		}
 		// Add client to UniqueClients map
-		r.AddUniqueClient(sample.SessionCookie)
-		// Add Sample to list of samples
-		r.Samples = append(r.Samples, sample)
-		// Sort by timestamp to make removing old samples faster
-		sort.Sort(Samples(r.Samples))
+		r.AddUniqueClient(sessionCookieKey)
 	}
 	// Return empty latency if no samples
 	if r.Latency.NumSamples == 0 {
@@ -109,6 +58,7 @@ func (r *RollingLatency) AddNewSamples(samples []*dme.Sample, sessionCookie stri
 	r.Latency.StdDev = math.Sqrt(r.Latency.Variance)
 }
 
+/*
 // Remove samples that are older than time.Now() - duration and update RollingLatency statistics
 func (r *RollingLatency) RemoveOldSamples() {
 	// Previous statistics used to calculate rolling variance
@@ -160,18 +110,20 @@ func (r *RollingLatency) RemoveOldSamples() {
 		r.Latency.StdDev = math.Sqrt(r.Latency.Variance)
 	}
 }
+*/
 
 // Add client to map of UniqueClients, update NumUniqueClients
-func (r *RollingLatency) AddUniqueClient(sessionCookie string) {
-	num, ok := r.UniqueClients[sessionCookie]
+func (r *RollingLatency) AddUniqueClient(sessionCookieKey CookieKey) {
+	num, ok := r.UniqueClients[sessionCookieKey]
 	if !ok {
-		r.UniqueClients[sessionCookie] = 1
+		r.UniqueClients[sessionCookieKey] = 1
 	} else {
-		r.UniqueClients[sessionCookie] = num + 1
+		r.UniqueClients[sessionCookieKey] = num + 1
 	}
 	r.NumUniqueClients = uint64(len(r.UniqueClients))
 }
 
+/*
 // Remove client to map of UniqueClients, update NumUniqueClients
 func (r *RollingLatency) RemoveUniqueClient(sessionCookie string) {
 	if num, ok := r.UniqueClients[sessionCookie]; ok {
@@ -184,6 +136,7 @@ func (r *RollingLatency) RemoveUniqueClient(sessionCookie string) {
 	r.NumUniqueClients = uint64(len(r.UniqueClients))
 }
 */
+
 // Utility function that returns Latency struct with Avg, Min, Max, StdDev, and NumSamples
 func CalculateLatency(samples []*dme.Sample) dme.Latency {
 	// Create latency struct

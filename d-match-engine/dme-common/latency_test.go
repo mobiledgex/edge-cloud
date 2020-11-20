@@ -1,4 +1,4 @@
-package dmeutil
+package dmecommon
 
 /*
 import (

@@ -7,12 +7,11 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
-	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 func InitDebug(nodeMgr *node.NodeMgr) {
-	nodeMgr.Debug.AddDebugFunc(dmeutil.RequestAppInstLatency, requestAppInstLatency)
+	nodeMgr.Debug.AddDebugFunc(dmecommon.RequestAppInstLatency, requestAppInstLatency)
 }
 
 func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
