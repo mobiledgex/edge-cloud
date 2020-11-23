@@ -1,6 +1,7 @@
 package dmecommon
 
 import (
+	"encoding/json"
 	"flag"
 	"strconv"
 	"strings"
@@ -26,10 +27,7 @@ var PlatformClientsCache edgeproto.DeviceCache
 
 var ScaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
-var rollingInterval = flag.Int("rollingInterval", 60, "AppInstLatency stats are collected per rollingInterver. Reset after rollingInterval")
-
-const EdgeEventLatencyMethod = "appinst-latency"
-const GpsLocationUpdateMethod = "gps-location"
+var rollingInterval = flag.Int("rollingInterval", 1, "AppInstLatency stats are collected per rollingInterver. Reset after rollingInterval")
 
 var Stats *DmeStats
 
@@ -54,7 +52,7 @@ type ApiStat struct {
 	Errs                uint64
 	Latency             grpcstats.LatencyMetric
 	AppInstLatencyStats *AppInstLatencyStats // Aggregated latency stats from persistent connection (resets every hour)
-	GpsLocationStats    []*GpsLocationStat   // Gps Locations update
+	GpsLocationStats    *GpsLocationStats    // Gps Locations update
 	Mux                 sync.Mutex
 	Changed             bool
 }
@@ -126,17 +124,17 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 		stat.Errs++
 	}
 	stat.Latency.AddLatency(call.Latency)
-	if call.Key.Method == EdgeEventLatencyMethod {
+	if call.Key.Method == cloudcommon.AppInstLatencyMetrics {
 		// Update RollingLatency statistics
 		if stat.AppInstLatencyStats == nil {
 			stat.AppInstLatencyStats = NewAppInstLatencyStats(LatencyTimes)
 		}
 		stat.AppInstLatencyStats.Update(call.AppInstLatency)
-	} else if call.Key.Method == GpsLocationUpdateMethod {
+	} else if call.Key.Method == cloudcommon.GpsLocationMetric {
 		if stat.GpsLocationStats == nil {
-			stat.GpsLocationStats = make([]*GpsLocationStat, 0)
+			stat.GpsLocationStats = NewGpsLocationStats()
 		}
-		stat.GpsLocationStats = append(stat.GpsLocationStats, call.GpsLocationStat)
+		stat.GpsLocationStats.Stats = append(stat.GpsLocationStats.Stats, call.GpsLocationStat)
 	}
 	stat.Changed = true
 	shard.mux.Unlock()
@@ -156,36 +154,34 @@ func (s *DmeStats) RunNotify() {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
 					if stat.Changed {
-						if key.Method != EdgeEventLatencyMethod && key.Method != GpsLocationUpdateMethod {
+						switch key.Method {
+						case cloudcommon.AppInstLatencyMetrics:
+							// Update every hour
+							if time.Since(stat.AppInstLatencyStats.StartTime) > time.Duration(*rollingInterval)*time.Minute {
+								metrics := getAppInstLatencyStatsToMetrics(ts, &key, stat)
+								for _, metric := range metrics {
+									s.send(ctx, metric)
+								}
+								stat.AppInstLatencyStats = nil
+								stat.Changed = false
+							}
+						// TODO: Maybe update every time a dme api is called
+						case cloudcommon.GpsLocationMetric:
+							// Update every hour
+							if time.Since(stat.GpsLocationStats.StartTime) > time.Duration(*rollingInterval)*time.Minute {
+								for _, gpsStat := range stat.GpsLocationStats.Stats {
+									s.send(ctx, GpsLocationStatToMetric(ts, &key, stat, gpsStat))
+								}
+								stat.GpsLocationStats = nil
+								stat.Changed = false
+							}
+						default:
 							s.send(ctx, ApiStatToMetric(ts, &key, stat))
 							stat.Changed = false
 						}
 					}
 				}
 				s.shards[ii].mux.Unlock()
-			}
-		case <-time.After(time.Duration(*rollingInterval) * time.Minute):
-			ts, _ := types.TimestampProto(time.Now())
-			for ii, _ := range s.shards {
-				s.shards[ii].mux.Lock()
-				for key, stat := range s.shards[ii].apiStatMap {
-					if stat.Changed {
-						if key.Method == EdgeEventLatencyMethod {
-							metrics := getAppInstLatencyStatsToMetrics(ts, &key, stat)
-							for _, metric := range metrics {
-								s.send(ctx, metric)
-							}
-							stat.AppInstLatencyStats = nil
-							stat.Changed = false
-						} else if key.Method == GpsLocationUpdateMethod {
-							for _, gpsStat := range stat.GpsLocationStats {
-								s.send(ctx, GpsLocationStatToMetric(&key, stat, gpsStat))
-							}
-							stat.GpsLocationStats = nil
-							stat.Changed = false
-						}
-					}
-				}
 			}
 		case <-s.stop:
 			done = true
@@ -215,10 +211,10 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	return &metric
 }
 
-func AppInstLatencyStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat, latencyStats *LatencyStats, indVar string, varType string) *edgeproto.Metric {
+func AppInstLatencyStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat, latencyStats *LatencyStats, metricName string, indepVarName string, indepVar string) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
-	metric.Name = EdgeEventLatencyMethod
+	metric.Name = metricName
 	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
 	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
 	metric.AddIntVal("reqs", stat.Reqs)
@@ -232,7 +228,9 @@ func AppInstLatencyStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat
 	metric.AddTag("cluster", key.ClusterKey.Name)
 	metric.AddTag("clusterorg", key.ClusterInstOrg)
 	// Latency information
-	metric.AddIntVal("timeelapsed", uint64(ts.Seconds-stat.AppInstLatencyStats.StartTime.Seconds))
+	metric.AddTag(indepVarName, indepVar) // eg. "carrier" -> "TDG"
+	elapsed := ts.Seconds - int64(stat.AppInstLatencyStats.StartTime.Second())
+	metric.AddIntVal("timeelapsed", uint64(elapsed))
 	latencyStats.LatencyMetric.AddToMetric(&metric)
 	metric.AddIntVal("numclients", latencyStats.RollingLatency.NumUniqueClients)
 	metric.AddDoubleVal("avg", latencyStats.RollingLatency.Latency.Avg)
@@ -246,18 +244,26 @@ func AppInstLatencyStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat
 func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *StatKey, stat *ApiStat) []*edgeproto.Metric {
 	metrics := make([]*edgeproto.Metric, 0)
 	for carrier, latencystats := range stat.AppInstLatencyStats.LatencyPerCarrier {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, "carrier", carrier))
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerCarrierMetric, "carrier", carrier))
 	}
 	for netdatatype, latencystats := range stat.AppInstLatencyStats.LatencyPerNetDataType {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, "networkdatatype", netdatatype))
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, "networkdatatype", netdatatype))
+	}
+	for deviceos, latencystats := range stat.AppInstLatencyStats.LatencyPerDeviceOs {
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDeviceOSMetric, "deviceos", deviceos))
+	}
+	for dist, dirmap := range stat.AppInstLatencyStats.LatencyPerLoc {
+		for orientation, latencystats := range dirmap {
+			metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerLocationMetric, "location", strconv.Itoa(dist)+"+"+orientation))
+		}
 	}
 	return metrics
 }
 
-func GpsLocationStatToMetric(key *StatKey, stat *ApiStat, gpsStat *GpsLocationStat) *edgeproto.Metric {
+func GpsLocationStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat, gpsStat *GpsLocationStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = types.Timestamp(gpsStat.Timestamp)
-	metric.Name = GpsLocationUpdateMethod
+	metric.Name = cloudcommon.GpsLocationMetric
 	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
 	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
 	// AppInst information
@@ -269,9 +275,17 @@ func GpsLocationStatToMetric(key *StatKey, stat *ApiStat, gpsStat *GpsLocationSt
 	metric.AddTag("cluster", key.ClusterKey.Name)
 	metric.AddTag("clusterorg", key.ClusterInstOrg)
 	// GpsLocation information
-	// TODO HASH session cookie
-	// metric.AddTag("sessioncookie", gpsStat.SessionCookieKey)
 	metric.AddTag("carrier", gpsStat.Carrier)
+	metric.AddDoubleVal("longitude", gpsStat.GpsLocation.Longitude)
+	metric.AddDoubleVal("latitude", gpsStat.GpsLocation.Latitude)
+	elapsed := ts.Seconds - int64(stat.GpsLocationStats.StartTime.Second())
+	metric.AddIntVal("timeelapsed", uint64(elapsed))
+	// TODO HASH session cookie (make sure kid is nil)
+	b, err := json.Marshal(gpsStat.SessionCookieKey)
+	if err != nil {
+		return &metric
+	}
+	metric.AddTag("sessioncookie", string(b))
 	return &metric
 }
 

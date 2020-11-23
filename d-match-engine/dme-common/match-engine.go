@@ -865,9 +865,9 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 			// If there does not exist a map for SentStatsContextKey, we have not updated gps stats
 			needGpsUpdate = true
 		} else {
-			// Checks if GpsLocationUpdateMethod is in the map
+			// Checks if GpsLocationMetric is in the map
 			// If not, we have not updated gps stats
-			if _, ok := stats[GpsLocationUpdateMethod]; !ok {
+			if _, ok := stats[cloudcommon.GpsLocationMetric]; !ok {
 				needGpsUpdate = true
 			}
 		}
@@ -1104,11 +1104,12 @@ loop:
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
 				return err
 			}
-			call.Key.Method = EdgeEventLatencyMethod // override method name
+			call.Key.Method = cloudcommon.AppInstLatencyMetrics // override method name
 			call.AppInstLatency = &AppInstLatencyData{
 				Samples:          cupdate.Samples,
 				Latency:          latency,
 				SessionCookieKey: *sessionCookieKey,
+				Carrier:          cupdate.CarrierName,
 				GpsLocation:      cupdate.GpsLocation,
 				DataNetworkType:  cupdate.DataNetworkType,
 			}
@@ -1116,7 +1117,7 @@ loop:
 			Stats.RecordApiStatCall(&call)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
-			log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookie, "location", cupdate.GpsLocation)
+			// log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookie, "location", cupdate.GpsLocation)
 			// Gps location stats update
 			updateGpsLocationStats(cupdate.GpsLocation, appInstKey, *sessionCookieKey, cupdate.CarrierName)
 			// Update context with stats that have been sent
@@ -1124,7 +1125,7 @@ loop:
 			if !ok {
 				stats = make(map[string]struct{})
 			}
-			stats[GpsLocationUpdateMethod] = struct{}{}
+			stats[cloudcommon.GpsLocationMetric] = struct{}{}
 			ctx = context.WithValue(ctx, SentStatsContextKey, stats)
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
@@ -1163,7 +1164,7 @@ func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sess
 	call.Key.CloudletFound = appInstKey.ClusterInstKey.CloudletKey
 	call.Key.ClusterKey = appInstKey.ClusterInstKey.ClusterKey
 	call.Key.ClusterInstOrg = appInstKey.ClusterInstKey.Organization
-	call.Key.Method = GpsLocationUpdateMethod // override method name
+	call.Key.Method = cloudcommon.GpsLocationMetric // override method name
 	call.GpsLocationStat = &GpsLocationStat{
 		GpsLocation:      loc,
 		SessionCookieKey: sessionCookieKey,

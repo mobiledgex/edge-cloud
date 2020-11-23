@@ -63,6 +63,15 @@ var AppInstEvent = "appinst"
 var AppInstCheckpoints = "appinst-checkpoints"
 var MonthlyInterval = "MONTH"
 
+// Persistent Influx variables
+var PersistentConnDbName = "persistentstats"
+var GpsLocationMetric = "gps-location"
+var AppInstLatencyMetrics = "appinst-latency" // used to find the ApiStat that holds the following LatencyPer metrics
+var LatencyPerCarrierMetric = "latency-per-carrier"
+var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
+var LatencyPerLocationMetric = "latency-per-location"
+var LatencyPerDeviceOSMetric = "latency-per-os"
+
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
 var RemoteServerNone = ""
