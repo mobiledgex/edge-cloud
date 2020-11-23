@@ -265,8 +265,8 @@ func TestAppInstApi(t *testing.T) {
 	// Test Fqdn prefix
 	for _, data := range appInstApi.cache.Objs {
 		obj := data.Obj
-		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
-		if app_name == "helmapp" || app_name == "vmlb" {
+		app_name := util.K8SSanitize(obj.Key.AppKey.Name + obj.Key.AppKey.Version)
+		if obj.Key.AppKey.Name == "helmApp" || obj.Key.AppKey.Name == "vm lb" {
 			continue
 		}
 		for _, port := range obj.MappedPorts {
@@ -277,7 +277,7 @@ func TestAppInstApi(t *testing.T) {
 			if lproto == "http" {
 				continue
 			}
-			test_prefix := fmt.Sprintf("%s-%s.", app_name, lproto)
+			test_prefix := fmt.Sprintf("%s-%s.", util.DNSSanitize(app_name), lproto)
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}

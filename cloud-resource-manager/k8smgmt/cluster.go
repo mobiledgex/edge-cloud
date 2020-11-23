@@ -3,6 +3,7 @@ package k8smgmt
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -32,6 +33,11 @@ func CleanupClusterConfig(ctx context.Context, client ssh.Client, clusterInst *e
 	err = pc.DeleteDir(ctx, client, configDir, pc.NoSudo)
 	if err != nil {
 		return fmt.Errorf("failed to delete cluster config dir %s: %v", configDir, err)
+	}
+	kconfname := GetKconfName(clusterInst)
+	out, err := client.Output("rm " + kconfname)
+	if err != nil && !strings.Contains(out, "No such file or directory") {
+		return fmt.Errorf("failed to delete kubeconf %s: %v, %v", kconfname, out, err)
 	}
 	return nil
 }
