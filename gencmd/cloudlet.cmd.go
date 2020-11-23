@@ -1120,13 +1120,16 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 
 var CloudletKeyRequiredArgs = []string{}
 var CloudletKeyOptionalArgs = []string{
-	"organization",
-	"name",
+	"cloudlet-org",
+	"cloudlet",
 }
-var CloudletKeyAliasArgs = []string{}
+var CloudletKeyAliasArgs = []string{
+	"cloudlet-org=organization",
+	"cloudlet=name",
+}
 var CloudletKeyComments = map[string]string{
-	"organization": "Organization of the cloudlet site",
-	"name":         "Name of the cloudlet",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
 }
 var CloudletKeySpecialArgs = map[string]string{}
 var OperationTimeLimitsRequiredArgs = []string{}

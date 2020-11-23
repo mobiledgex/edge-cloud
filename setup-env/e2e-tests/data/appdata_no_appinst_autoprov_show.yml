@@ -561,7 +561,7 @@ appinstances:
   - proto: LProtoTcp
     internalport: 81
     publicport: 81
-    fqdnprefix: autoprovapp-tcp.
+    fqdnprefix: autoprovapp10-tcp.
   flavor:
     name: x1.small
   runtimeinfo:
