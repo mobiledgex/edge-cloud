@@ -1,7 +1,6 @@
 package dmecommon
 
 import (
-	"encoding/json"
 	"flag"
 	"strconv"
 	"strings"
@@ -27,7 +26,6 @@ var PlatformClientsCache edgeproto.DeviceCache
 
 var ScaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "AppInstClient UUID Type used for monitoring purposes")
-var rollingInterval = flag.Int("rollingInterval", 1, "AppInstLatency stats are collected per rollingInterver. Reset after rollingInterval")
 
 var Stats *DmeStats
 
@@ -40,11 +38,9 @@ var LatencyTimes = []time.Duration{
 }
 
 type ApiStatCall struct {
-	Key             StatKey
-	Fail            bool
-	Latency         time.Duration
-	AppInstLatency  *AppInstLatencyData // Latency samples for EdgeEvents
-	GpsLocationStat *GpsLocationStat    // Gps Location update
+	Key     StatKey
+	Fail    bool
+	Latency time.Duration
 }
 
 type ApiStat struct {
@@ -124,18 +120,6 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 		stat.Errs++
 	}
 	stat.Latency.AddLatency(call.Latency)
-	if call.Key.Method == cloudcommon.AppInstLatencyMetrics {
-		// Update RollingLatency statistics
-		if stat.AppInstLatencyStats == nil {
-			stat.AppInstLatencyStats = NewAppInstLatencyStats(LatencyTimes)
-		}
-		stat.AppInstLatencyStats.Update(call.AppInstLatency)
-	} else if call.Key.Method == cloudcommon.GpsLocationMetric {
-		if stat.GpsLocationStats == nil {
-			stat.GpsLocationStats = NewGpsLocationStats()
-		}
-		stat.GpsLocationStats.Stats = append(stat.GpsLocationStats.Stats, call.GpsLocationStat)
-	}
 	stat.Changed = true
 	shard.mux.Unlock()
 }
@@ -154,31 +138,9 @@ func (s *DmeStats) RunNotify() {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
 					if stat.Changed {
-						switch key.Method {
-						case cloudcommon.AppInstLatencyMetrics:
-							// Update every hour
-							if time.Since(stat.AppInstLatencyStats.StartTime) > time.Duration(*rollingInterval)*time.Minute {
-								metrics := getAppInstLatencyStatsToMetrics(ts, &key, stat)
-								for _, metric := range metrics {
-									s.send(ctx, metric)
-								}
-								stat.AppInstLatencyStats = nil
-								stat.Changed = false
-							}
-						// TODO: Maybe update every time a dme api is called
-						case cloudcommon.GpsLocationMetric:
-							// Update every hour
-							if time.Since(stat.GpsLocationStats.StartTime) > time.Duration(*rollingInterval)*time.Minute {
-								for _, gpsStat := range stat.GpsLocationStats.Stats {
-									s.send(ctx, GpsLocationStatToMetric(ts, &key, stat, gpsStat))
-								}
-								stat.GpsLocationStats = nil
-								stat.Changed = false
-							}
-						default:
-							s.send(ctx, ApiStatToMetric(ts, &key, stat))
-							stat.Changed = false
-						}
+						s.send(ctx, ApiStatToMetric(ts, &key, stat))
+						stat.Changed = false
+
 					}
 				}
 				s.shards[ii].mux.Unlock()
@@ -208,84 +170,6 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	// Cell ID is just a unique number - keep it as a string
 	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
 	stat.Latency.AddToMetric(&metric)
-	return &metric
-}
-
-func AppInstLatencyStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat, latencyStats *LatencyStats, metricName string, indepVarName string, indepVar string) *edgeproto.Metric {
-	metric := edgeproto.Metric{}
-	metric.Timestamp = *ts
-	metric.Name = metricName
-	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
-	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
-	metric.AddIntVal("reqs", stat.Reqs)
-	metric.AddIntVal("errs", stat.Errs)
-	// AppInst information
-	metric.AddTag("app", key.AppKey.Name)
-	metric.AddTag("apporg", key.AppKey.Organization)
-	metric.AddTag("ver", key.AppKey.Version)
-	metric.AddTag("cloudlet", key.CloudletFound.Name)
-	metric.AddTag("cloudletorg", key.CloudletFound.Organization)
-	metric.AddTag("cluster", key.ClusterKey.Name)
-	metric.AddTag("clusterorg", key.ClusterInstOrg)
-	// Latency information
-	metric.AddTag(indepVarName, indepVar) // eg. "carrier" -> "TDG"
-	elapsed := ts.Seconds - int64(stat.AppInstLatencyStats.StartTime.Second())
-	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	latencyStats.LatencyMetric.AddToMetric(&metric)
-	metric.AddIntVal("numclients", latencyStats.RollingLatency.NumUniqueClients)
-	metric.AddDoubleVal("avg", latencyStats.RollingLatency.Latency.Avg)
-	metric.AddDoubleVal("stddev", latencyStats.RollingLatency.Latency.StdDev)
-	metric.AddDoubleVal("min", latencyStats.RollingLatency.Latency.Min)
-	metric.AddDoubleVal("max", latencyStats.RollingLatency.Latency.Max)
-	return &metric
-}
-
-// Compiles all of the AppInstLatencyStats fields into metrics, returns a slice of metrics
-func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *StatKey, stat *ApiStat) []*edgeproto.Metric {
-	metrics := make([]*edgeproto.Metric, 0)
-	for carrier, latencystats := range stat.AppInstLatencyStats.LatencyPerCarrier {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerCarrierMetric, "carrier", carrier))
-	}
-	for netdatatype, latencystats := range stat.AppInstLatencyStats.LatencyPerNetDataType {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, "networkdatatype", netdatatype))
-	}
-	for deviceos, latencystats := range stat.AppInstLatencyStats.LatencyPerDeviceOs {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDeviceOSMetric, "deviceos", deviceos))
-	}
-	for dist, dirmap := range stat.AppInstLatencyStats.LatencyPerLoc {
-		for orientation, latencystats := range dirmap {
-			metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerLocationMetric, "location", strconv.Itoa(dist)+"+"+orientation))
-		}
-	}
-	return metrics
-}
-
-func GpsLocationStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat, gpsStat *GpsLocationStat) *edgeproto.Metric {
-	metric := edgeproto.Metric{}
-	metric.Timestamp = types.Timestamp(gpsStat.Timestamp)
-	metric.Name = cloudcommon.GpsLocationMetric
-	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
-	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
-	// AppInst information
-	metric.AddTag("app", key.AppKey.Name)
-	metric.AddTag("apporg", key.AppKey.Organization)
-	metric.AddTag("ver", key.AppKey.Version)
-	metric.AddTag("cloudlet", key.CloudletFound.Name)
-	metric.AddTag("cloudletorg", key.CloudletFound.Organization)
-	metric.AddTag("cluster", key.ClusterKey.Name)
-	metric.AddTag("clusterorg", key.ClusterInstOrg)
-	// GpsLocation information
-	metric.AddTag("carrier", gpsStat.Carrier)
-	metric.AddDoubleVal("longitude", gpsStat.GpsLocation.Longitude)
-	metric.AddDoubleVal("latitude", gpsStat.GpsLocation.Latitude)
-	elapsed := ts.Seconds - int64(stat.GpsLocationStats.StartTime.Second())
-	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	// TODO HASH session cookie (make sure kid is nil)
-	b, err := json.Marshal(gpsStat.SessionCookieKey)
-	if err != nil {
-		return &metric
-	}
-	metric.AddTag("sessioncookie", string(b))
 	return &metric
 }
 

@@ -103,6 +103,11 @@ type StatKey struct {
 	ClusterInstOrg string
 }
 
+type EdgeEventStatKey struct {
+	AppInstKey edgeproto.AppInstKey
+	Metric     string
+}
+
 // This is for passing the carrier/cloudlet in the context
 type StatKeyContextType string
 
@@ -1094,18 +1099,15 @@ loop:
 			break loop
 		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
 			// Client sent latency samples to be processed
-			call := ApiStatCall{}
-			call.Key.AppKey = appInstKey.AppKey
-			call.Key.CloudletFound = appInstKey.ClusterInstKey.CloudletKey
-			call.Key.ClusterKey = appInstKey.ClusterInstKey.ClusterKey
-			call.Key.ClusterInstOrg = appInstKey.ClusterInstKey.Organization
+			call := EdgeEventStatCall{}
+			call.Key.AppInstKey = *appInstKey
 			latency, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
 				return err
 			}
-			call.Key.Method = cloudcommon.AppInstLatencyMetrics // override method name
-			call.AppInstLatency = &AppInstLatencyData{
+			call.Key.Metric = cloudcommon.AppInstLatencyMetrics // override method name
+			call.AppInstLatencyInfo = &AppInstLatencyInfo{
 				Samples:          cupdate.Samples,
 				Latency:          latency,
 				SessionCookieKey: *sessionCookieKey,
@@ -1113,8 +1115,8 @@ loop:
 				GpsLocation:      cupdate.GpsLocation,
 				DataNetworkType:  cupdate.DataNetworkType,
 			}
-			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
-			Stats.RecordApiStatCall(&call)
+			// log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
+			EEStats.RecordEdgeEventStatCall(&call)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			// log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookie, "location", cupdate.GpsLocation)
@@ -1159,19 +1161,15 @@ loop:
 }
 
 func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey CookieKey, carrier string) {
-	call := ApiStatCall{}
-	call.Key.AppKey = appInstKey.AppKey
-	call.Key.CloudletFound = appInstKey.ClusterInstKey.CloudletKey
-	call.Key.ClusterKey = appInstKey.ClusterInstKey.ClusterKey
-	call.Key.ClusterInstOrg = appInstKey.ClusterInstKey.Organization
-	call.Key.Method = cloudcommon.GpsLocationMetric // override method name
-	call.GpsLocationStat = &GpsLocationStat{
+	call := EdgeEventStatCall{}
+	call.Key.AppInstKey = *appInstKey
+	call.GpsLocationInfo = &GpsLocationInfo{
 		GpsLocation:      loc,
 		SessionCookieKey: sessionCookieKey,
 		Timestamp:        cloudcommon.TimeToTimestamp(time.Now()),
 		Carrier:          carrier,
 	}
-	Stats.RecordApiStatCall(&call)
+	EEStats.RecordEdgeEventStatCall(&call)
 }
 
 func ListAppinstTbl(ctx context.Context) {

@@ -49,6 +49,7 @@ var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cer
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
+var edgeEventsStatsInterval = flag.Int("edgeEventsStatsInterval", 1, "AppInstLatency stats and gps location stats are pushed to influx per interval")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
@@ -525,6 +526,11 @@ func main() {
 	dmecommon.Stats = dmecommon.NewDmeStats(interval, *statsShards, sendMetric.Update)
 	dmecommon.Stats.Start()
 	defer dmecommon.Stats.Stop()
+
+	edgeEventsInterval := time.Duration(*edgeEventsStatsInterval) * time.Minute
+	dmecommon.EEStats = dmecommon.NewEdgeEventStats(edgeEventsInterval, *statsShards, sendMetric.Update)
+	dmecommon.EEStats.Start()
+	defer dmecommon.EEStats.Stop()
 
 	dmecommon.InitAppInstClients()
 

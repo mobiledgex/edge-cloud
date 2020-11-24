@@ -611,7 +611,7 @@ func NewControllerMetricsReceiver(metricsInflux *influxq.InfluxQ, persConnInflux
 // Send metric to correct influxdb
 func (c *ControllerMetricsReceiver) RecvMetric(ctx context.Context, metric *edgeproto.Metric) {
 	switch metric.Name {
-	case cloudcommon.GpsLocationMetric, cloudcommon.AppInstLatencyMetrics, cloudcommon.LatencyPerCarrierMetric, cloudcommon.LatencyPerDataNetworkMetric, cloudcommon.LatencyPerLocationMetric:
+	case cloudcommon.GpsLocationMetric, cloudcommon.LatencyPerCarrierMetric, cloudcommon.LatencyPerDataNetworkMetric, cloudcommon.LatencyPerLocationMetric:
 		c.persConnInflux.AddMetric(metric)
 	default:
 		c.metricsInflux.AddMetric(metric)
