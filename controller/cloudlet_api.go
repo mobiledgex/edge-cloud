@@ -278,7 +278,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
 		}
 	}
-
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
@@ -376,6 +375,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
 				return fmt.Errorf("VM Pool %s not found", in.VmPool)
+			}
+		}
+		if in.PrivacyPolicy != "" {
+			if in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE && in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+				platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+				return fmt.Errorf("Privacy Policy not supported on %s", platName)
+			}
+			policy := edgeproto.PrivacyPolicy{}
+			if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
+				return err
 			}
 		}
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
@@ -1390,4 +1399,16 @@ func (s *CloudletApi) GenerateAccessKey(ctx context.Context, key *edgeproto.Clou
 	})
 	log.SpanLog(ctx, log.DebugLevelApi, "generated crm access key", "CloudletKey", *key, "err", err)
 	return &res, err
+}
+
+func (s *CloudletApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		cloudlet := data.Obj
+		if cloudlet.PrivacyPolicy == key.Name && cloudlet.Key.Organization == key.Organization {
+			return true
+		}
+	}
+	return false
 }

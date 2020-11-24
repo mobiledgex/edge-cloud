@@ -83,8 +83,6 @@ message ClusterInst {
   string reserved_by = 22 [(protogen.backend) = true];
   // Size of an optional shared volume to be mounted on the master
   uint64 shared_volume_size = 23;
-  // Optional privacy policy name
-  string privacy_policy = 24;
   // Generic flavor for k8s master VM when worker nodes > 0
   string master_node_flavor = 25 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // Prevents cleanup of resources on failure within CRM, used for diagnostic purposes
@@ -142,7 +140,7 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "Flavor,NumMasters,AvailabilityZone,Reservable,SharedVolumeSize,PrivacyPolicy,IpAccess,Deployment,ImageName";
+    option (protogen.method_noconfig) = "Flavor,NumMasters,AvailabilityZone,Reservable,SharedVolumeSize,IpAccess,Deployment,ImageName";
   }
   // Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {

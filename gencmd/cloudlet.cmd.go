@@ -1264,6 +1264,7 @@ var CloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
+	"privacypolicy",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1334,6 +1335,7 @@ var CloudletComments = map[string]string{
 	"vmpool":                              "VM Pool",
 	"crmaccesspublickey":                  "CRM access public key",
 	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
+	"privacypolicy":                       "Optional Privacy Policy",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1575,6 +1577,7 @@ var CreateCloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
+	"privacypolicy",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1597,6 +1600,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"envvar",
 	"accessvars",
 	"maintenancestate",
+	"privacypolicy",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

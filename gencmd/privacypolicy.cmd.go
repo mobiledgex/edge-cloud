@@ -282,23 +282,23 @@ var PrivacyPolicyApiCmds = []*cobra.Command{
 	ShowPrivacyPolicyCmd.GenCmd(),
 }
 
-var OutboundSecurityRuleRequiredArgs = []string{}
-var OutboundSecurityRuleOptionalArgs = []string{
+var SecurityRuleRequiredArgs = []string{}
+var SecurityRuleOptionalArgs = []string{
 	"protocol",
 	"portrangemin",
 	"portrangemax",
 	"remotecidr",
 }
-var OutboundSecurityRuleAliasArgs = []string{}
-var OutboundSecurityRuleComments = map[string]string{
+var SecurityRuleAliasArgs = []string{}
+var SecurityRuleComments = map[string]string{
 	"protocol":     "tcp, udp, icmp",
 	"portrangemin": "TCP or UDP port range start",
 	"portrangemax": "TCP or UDP port range end",
 	"remotecidr":   "remote CIDR X.X.X.X/X",
 }
-var OutboundSecurityRuleSpecialArgs = map[string]string{}
+var SecurityRuleSpecialArgs = map[string]string{}
 var PrivacyPolicyRequiredArgs = []string{
-	"cluster-org",
+	"cloudlet-org",
 	"name",
 }
 var PrivacyPolicyOptionalArgs = []string{
@@ -306,19 +306,27 @@ var PrivacyPolicyOptionalArgs = []string{
 	"outboundsecurityrules:#.portrangemin",
 	"outboundsecurityrules:#.portrangemax",
 	"outboundsecurityrules:#.remotecidr",
+	"inboundsecurityrules:#.protocol",
+	"inboundsecurityrules:#.portrangemin",
+	"inboundsecurityrules:#.portrangemax",
+	"inboundsecurityrules:#.remotecidr",
 }
 var PrivacyPolicyAliasArgs = []string{
-	"cluster-org=key.organization",
+	"cloudlet-org=key.organization",
 	"name=key.name",
 }
 var PrivacyPolicyComments = map[string]string{
 	"fields":                               "Fields are used for the Update API to specify which fields to apply",
-	"cluster-org":                          "Name of the organization for the cluster that this policy will apply to",
+	"cloudlet-org":                         "Name of the organization for the cluster that this policy will apply to",
 	"name":                                 "Policy name",
 	"outboundsecurityrules:#.protocol":     "tcp, udp, icmp",
 	"outboundsecurityrules:#.portrangemin": "TCP or UDP port range start",
 	"outboundsecurityrules:#.portrangemax": "TCP or UDP port range end",
 	"outboundsecurityrules:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"inboundsecurityrules:#.protocol":      "tcp, udp, icmp",
+	"inboundsecurityrules:#.portrangemin":  "TCP or UDP port range start",
+	"inboundsecurityrules:#.portrangemax":  "TCP or UDP port range end",
+	"inboundsecurityrules:#.remotecidr":    "remote CIDR X.X.X.X/X",
 }
 var PrivacyPolicySpecialArgs = map[string]string{
 	"fields": "StringArray",

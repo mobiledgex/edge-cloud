@@ -74,18 +74,6 @@ func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	return false
 }
 
-func (s *AppApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
-		app := data.Obj
-		if app.Key.Organization == key.Organization && app.DefaultPrivacyPolicy == key.Name {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *AppApi) AutoDeleteAppsForOrganization(ctx context.Context, org string) {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting Apps ", "org", org)
@@ -418,14 +406,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		if err := s.validatePolicies(stm, in); err != nil {
 			return err
-		}
-		if in.DefaultPrivacyPolicy != "" {
-			apKey := edgeproto.PolicyKey{}
-			apKey.Organization = in.Key.Organization
-			apKey.Name = in.DefaultPrivacyPolicy
-			if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
-				return apKey.NotFoundError()
-			}
 		}
 		appInstRefsApi.createRef(stm, &in.Key)
 

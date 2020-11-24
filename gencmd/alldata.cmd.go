@@ -113,6 +113,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	for i0 := 0; i0 < len(in.PrivacyPolicies); i0++ {
 		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].OutboundSecurityRules); i1++ {
 		}
+		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].InboundSecurityRules); i1++ {
+		}
 	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -370,6 +372,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.createdat.nanos",
 	"cloudlets:#.updatedat.seconds",
 	"cloudlets:#.updatedat.nanos",
+	"cloudlets:#.privacypolicy",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -458,6 +461,10 @@ var AllDataOptionalArgs = []string{
 	"privacypolicies:#.outboundsecurityrules:#.portrangemin",
 	"privacypolicies:#.outboundsecurityrules:#.portrangemax",
 	"privacypolicies:#.outboundsecurityrules:#.remotecidr",
+	"privacypolicies:#.inboundsecurityrules:#.protocol",
+	"privacypolicies:#.inboundsecurityrules:#.portrangemin",
+	"privacypolicies:#.inboundsecurityrules:#.portrangemax",
+	"privacypolicies:#.inboundsecurityrules:#.remotecidr",
 	"clusterinsts:#.fields",
 	"clusterinsts:#.key.clusterkey.name",
 	"clusterinsts:#.key.cloudletkey.organization",
@@ -488,7 +495,6 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.reservable",
 	"clusterinsts:#.reservedby",
 	"clusterinsts:#.sharedvolumesize",
-	"clusterinsts:#.privacypolicy",
 	"clusterinsts:#.masternodeflavor",
 	"clusterinsts:#.skipcrmcleanuponfailure",
 	"clusterinsts:#.optres",
@@ -533,7 +539,6 @@ var AllDataOptionalArgs = []string{
 	"apps:#.defaultsharedvolumesize",
 	"apps:#.autoprovpolicy",
 	"apps:#.accesstype",
-	"apps:#.defaultprivacypolicy",
 	"apps:#.deleteprepare",
 	"apps:#.autoprovpolicies",
 	"apps:#.templatedelimiter",
@@ -727,6 +732,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.vmpool":                                         "VM Pool",
 	"cloudlets:#.crmaccesspublickey":                             "CRM access public key",
 	"cloudlets:#.crmaccesskeyupgraderequired":                    "CRM access key upgrade required",
+	"cloudlets:#.privacypolicy":                                  "Optional Privacy Policy",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -799,6 +805,10 @@ var AllDataComments = map[string]string{
 	"privacypolicies:#.outboundsecurityrules:#.portrangemin":     "TCP or UDP port range start",
 	"privacypolicies:#.outboundsecurityrules:#.portrangemax":     "TCP or UDP port range end",
 	"privacypolicies:#.outboundsecurityrules:#.remotecidr":       "remote CIDR X.X.X.X/X",
+	"privacypolicies:#.inboundsecurityrules:#.protocol":          "tcp, udp, icmp",
+	"privacypolicies:#.inboundsecurityrules:#.portrangemin":      "TCP or UDP port range start",
+	"privacypolicies:#.inboundsecurityrules:#.portrangemax":      "TCP or UDP port range end",
+	"privacypolicies:#.inboundsecurityrules:#.remotecidr":        "remote CIDR X.X.X.X/X",
 	"clusterinsts:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"clusterinsts:#.key.clusterkey.name":                         "Cluster name",
 	"clusterinsts:#.key.cloudletkey.organization":                "Organization of the cloudlet site",
@@ -823,7 +833,6 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.reservable":                                  "If ClusterInst is reservable",
 	"clusterinsts:#.reservedby":                                  "For reservable MobiledgeX ClusterInsts, the current developer tenant",
 	"clusterinsts:#.sharedvolumesize":                            "Size of an optional shared volume to be mounted on the master",
-	"clusterinsts:#.privacypolicy":                               "Optional privacy policy name",
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
 	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"clusterinsts:#.optres":                                      "Optional Resources required by OS flavor if any",
@@ -862,7 +871,6 @@ var AllDataComments = map[string]string{
 	"apps:#.defaultsharedvolumesize":                             "shared volume size when creating auto cluster",
 	"apps:#.autoprovpolicy":                                      "(_deprecated_) Auto provisioning policy name",
 	"apps:#.accesstype":                                          "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
-	"apps:#.defaultprivacypolicy":                                "Privacy policy when creating auto cluster",
 	"apps:#.deleteprepare":                                       "Preparing to be deleted",
 	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names",
 	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",

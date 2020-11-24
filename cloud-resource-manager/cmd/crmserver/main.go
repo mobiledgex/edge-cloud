@@ -333,6 +333,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		DeploymentTag:       nodeMgr.DeploymentTag,
 		Upgrade:             *upgrade,
 		AccessApi:           accessApi,
+		PrivacyPolicy:       cloudlet.PrivacyPolicy,
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
 	err := platform.Init(ctx, &pc, caches, updateCallback)

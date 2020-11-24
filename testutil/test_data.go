@@ -1210,14 +1210,14 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 			Name:         "privacy-policy0",
 			Organization: DevData[0],
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "8.100.0.0/16",
 				PortRangeMin: 443,
 				PortRangeMax: 443,
 			},
-			edgeproto.OutboundSecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "udp",
 				RemoteCidr:   "0.0.0.0/0",
 				PortRangeMin: 53,
@@ -1230,14 +1230,14 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 			Name:         "privacy-policy1",
 			Organization: DevData[1],
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "8.100.0.0/16",
 				PortRangeMin: 443,
 				PortRangeMax: 443,
 			},
-			edgeproto.OutboundSecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "udp",
 				RemoteCidr:   "0.0.0.0/0",
 				PortRangeMin: 53,
@@ -1250,12 +1250,12 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 			Name:         "privacy-policy2",
 			Organization: DevData[2],
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:   "icmp",
 				RemoteCidr: "0.0.0.0/0",
 			},
-			edgeproto.OutboundSecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "10.0.0.0/8",
 				PortRangeMin: 1,
@@ -1272,8 +1272,8 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 			Name:         "privacy-policy3",
 			Organization: DevData[0],
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "10.1.0.0/16",
 				PortRangeMin: 201,
@@ -1287,8 +1287,8 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 			Name:         "privacy-policy4",
 			Organization: DevData[1],
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "10.0.0.0/50",
 				PortRangeMin: 22,
@@ -1302,8 +1302,8 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 			Name:         "privacy-policy5",
 			Organization: DevData[2],
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMax: 22,

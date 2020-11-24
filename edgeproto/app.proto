@@ -146,8 +146,6 @@ message App {
   string auto_prov_policy = 28;
   // Access type
   AccessType access_type = 29; 
-  // Privacy policy when creating auto cluster
-  string default_privacy_policy = 30;
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Auto provisioning policy names

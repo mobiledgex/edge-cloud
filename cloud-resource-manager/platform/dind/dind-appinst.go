@@ -83,7 +83,7 @@ func (s *Platform) CreateAppInstInternal(ctx context.Context, clusterInst *edgep
 	return nil
 }
 
-func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "call runKubectlCreateApp for dind")
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
