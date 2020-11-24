@@ -1441,7 +1441,7 @@ var ClientEdgeEventComments = map[string]string{
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"samples:#.value":                "latency value",
 	"samples:#.tags":                 "_(optional)_ Vendor specific data",
-	"carriername":                    "Carrier name used to find closer cloudlet if event_type is EVENT_LOCATION_UPDATE",
+	"carriername":                    "Carrier name used to find closer cloudlet if event_type is EVENT_LOCATION_UPDATE TODO: PUT carrier in edge-events-cookie",
 	"datanetworktype":                "LTE, 5G, etc.",
 	"tags":                           "_(optional)_ Vendor specific data",
 }

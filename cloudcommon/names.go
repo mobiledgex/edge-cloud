@@ -66,7 +66,7 @@ var MonthlyInterval = "MONTH"
 // Persistent Influx variables
 var PersistentConnDbName = "persistent_metrics"
 var GpsLocationMetric = "gps-location"
-var AppInstLatencyMetrics = "appinst-latency" // used to find the ApiStat that holds the following LatencyPer metrics
+var AppInstLatencyMetric = "appinst-latency"
 var LatencyPerCarrierMetric = "latency-per-carrier"
 var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
 var LatencyPerLocationMetric = "latency-per-location"

@@ -1,7 +1,7 @@
 package dmecommon
 
 import (
-	"encoding/json"
+	"crypto/md5"
 	"strconv"
 	"sync"
 	"time"
@@ -146,7 +146,7 @@ func (e *EdgeEventStats) RunNotify() {
 	e.waitGroup.Done()
 }
 
-func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, latencyStats *LatencyStats, metricName string, indepVarName string, indepVar string) *edgeproto.Metric {
+func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, latencyStats *LatencyStats, metricName string, indVarMap map[string]string) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = metricName
@@ -161,7 +161,9 @@ func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat
 	metric.AddTag("cluster", key.AppInstKey.ClusterInstKey.ClusterKey.Name)
 	metric.AddTag("clusterorg", key.AppInstKey.ClusterInstKey.Organization)
 	// Latency information
-	metric.AddTag(indepVarName, indepVar) // eg. "carrier" -> "TDG"
+	for indepVarName, indepVar := range indVarMap {
+		metric.AddTag(indepVarName, indepVar) // eg. "carrier" -> "TDG"
+	}
 	elapsed := ts.Seconds - int64(stat.AppInstLatencyStats.StartTime.Second())
 	metric.AddIntVal("timeelapsed", uint64(elapsed))
 	latencyStats.LatencyMetric.AddToMetric(&metric)
@@ -177,17 +179,17 @@ func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat
 func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat) []*edgeproto.Metric {
 	metrics := make([]*edgeproto.Metric, 0)
 	for carrier, latencystats := range stat.AppInstLatencyStats.LatencyPerCarrier {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerCarrierMetric, "carrier", carrier))
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerCarrierMetric, map[string]string{"carrier": carrier}))
 	}
 	for netdatatype, latencystats := range stat.AppInstLatencyStats.LatencyPerNetDataType {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, "networkdatatype", netdatatype))
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, map[string]string{"networkdatatype": netdatatype}))
 	}
 	for deviceos, latencystats := range stat.AppInstLatencyStats.LatencyPerDeviceOs {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDeviceOSMetric, "deviceos", deviceos))
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDeviceOSMetric, map[string]string{"deviceos": deviceos}))
 	}
 	for dist, dirmap := range stat.AppInstLatencyStats.LatencyPerLoc {
 		for orientation, latencystats := range dirmap {
-			metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerLocationMetric, "location", strconv.Itoa(dist)+"+"+orientation))
+			metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerLocationMetric, map[string]string{"distance": strconv.Itoa(dist), "direction": orientation}))
 		}
 	}
 	return metrics
@@ -213,11 +215,9 @@ func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *E
 	metric.AddDoubleVal("latitude", gpsInfo.GpsLocation.Latitude)
 	elapsed := ts.Seconds - int64(stat.GpsLocationStats.StartTime.Second())
 	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	// TODO HASH session cookie (make sure kid is nil)
-	b, err := json.Marshal(gpsInfo.SessionCookieKey)
-	if err != nil {
-		return &metric
-	}
-	metric.AddTag("sessioncookie", string(b))
+	// Hash "session cookie" generated from CookieKey
+	sessCookie := gpsInfo.SessionCookieKey.AppName + gpsInfo.SessionCookieKey.AppVers + gpsInfo.SessionCookieKey.OrgName + gpsInfo.SessionCookieKey.UniqueId + gpsInfo.SessionCookieKey.UniqueIdType
+	hSess := md5.Sum([]byte(sessCookie))
+	metric.AddTag("sessioncookie", string(hSess[:]))
 	return &metric
 }

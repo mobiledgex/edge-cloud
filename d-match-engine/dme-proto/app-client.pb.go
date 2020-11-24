@@ -1831,6 +1831,7 @@ type ClientEdgeEvent struct {
 	// Latency Samples if event_type is EVENT_LATENCY_SAMPLES
 	Samples []*Sample `protobuf:"bytes,5,rep,name=samples,proto3" json:"samples,omitempty"`
 	// Carrier name used to find closer cloudlet if event_type is EVENT_LOCATION_UPDATE
+	// TODO: PUT carrier in edge-events-cookie
 	CarrierName string `protobuf:"bytes,6,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// LTE, 5G, etc.
 	DataNetworkType string `protobuf:"bytes,7,opt,name=data_network_type,json=dataNetworkType,proto3" json:"data_network_type,omitempty"`

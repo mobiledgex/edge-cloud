@@ -1,0 +1,92 @@
+package dmecommon
+
+import (
+	"math"
+	"time"
+
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+)
+
+// Filled in by DME. Added to EdgeEventStatCall to update stats
+type GpsLocationInfo struct {
+	GpsLocation      *dme.Loc
+	SessionCookieKey CookieKey
+	Timestamp        dme.Timestamp
+	Carrier          string
+}
+
+type GpsLocationStats struct {
+	Stats     []*GpsLocationInfo
+	StartTime time.Time
+}
+
+// Distances from Device to AppInst in km
+var DistsFromDeviceToAppInst = []int{
+	0,
+	1,
+	5,
+	10,
+	50,
+	100,
+}
+
+type GpsLocationBearing string
+
+const (
+	Northeast = "Northeast"
+	Southeast = "Southeast"
+	Southwest = "Southwest"
+	Northwest = "Northwest"
+)
+
+func NewGpsLocationStats() *GpsLocationStats {
+	g := new(GpsLocationStats)
+	g.Stats = make([]*GpsLocationInfo, 0)
+	g.StartTime = time.Now()
+	return g
+}
+
+func GetDistanceBucketFromAppInst(appinst *DmeAppInst, loc dme.Loc) int {
+	return GetDistanceBucket(appinst.location, loc)
+}
+
+func GetDistanceBucket(loc1, loc2 dme.Loc) int {
+	dist := DistanceBetween(loc1, loc2)
+	i := 0
+	bucket := 0
+	for i, bucket = range DistsFromDeviceToAppInst {
+		if dist < float64(bucket) {
+			i--
+			break
+		}
+	}
+	return DistsFromDeviceToAppInst[i]
+}
+
+func GetBearingFromAppInst(appinst *DmeAppInst, loc dme.Loc) GpsLocationBearing {
+	return GetBearingFrom(appinst.location, loc)
+}
+
+// Determines the orientation that loc2 is in relation to loc1
+// Formula provided: https://www.movable-type.co.uk/scripts/latlong.html
+func GetBearingFrom(loc1, loc2 dme.Loc) GpsLocationBearing {
+	long1 := torads(loc1.Longitude)
+	lat1 := torads(loc1.Latitude)
+	long2 := torads(loc2.Longitude)
+	lat2 := torads(loc2.Latitude)
+	y := math.Sin(long2-long1) * math.Cos(lat2)
+	x := (math.Cos(lat1) * math.Sin(lat2)) - (math.Sin(lat1) * math.Cos(lat2) * math.Cos(long2-long1))
+	theta := math.Atan2(y, x)
+	deg := todegsUnitCircle(theta)
+
+	// North == 0 degrees, bearings move clockwise
+	if deg >= 0 && deg < 90 {
+		return Northeast
+	} else if deg >= 90 && deg < 180 {
+		return Southeast
+	} else if deg >= 180 && deg < 270 {
+		return Southwest
+	} else {
+		return Northwest
+	}
+}

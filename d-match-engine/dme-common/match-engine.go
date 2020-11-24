@@ -596,6 +596,19 @@ type foundAppInst struct {
 	appInstCarrier string
 }
 
+// Given an AppInstKey and carrier, return the corresponding DmeAppInst
+func findAppInst(appInstKey *edgeproto.AppInstKey, carrier string) *DmeAppInst {
+	dmeapp, ok := DmeAppTbl.Apps[appInstKey.AppKey]
+	if !ok {
+		return nil
+	}
+	dmeappinsts, ok := dmeapp.Carriers[carrier]
+	if !ok {
+		return nil
+	}
+	return dmeappinsts.Insts[appInstKey.ClusterInstKey]
+}
+
 // given the carrier, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
 func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.AppKey, loc *dme.Loc, resultLimit int) []*foundAppInst {
@@ -864,7 +877,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
 
 		// Gps location stats update
-		stats, ok := ctx.Value(SentStatsContextKey).(map[string]struct{})
+		/*stats, ok := ctx.Value(SentStatsContextKey).(map[string]struct{})
 		needGpsUpdate := false
 		if !ok {
 			// If there does not exist a map for SentStatsContextKey, we have not updated gps stats
@@ -887,7 +900,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 				return nil
 			}
 			updateGpsLocationStats(loc, appInstKey, *ckey, carrier)
-		}
+		}*/
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
 	} else {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
@@ -1109,6 +1122,7 @@ loop:
 			call.Key.Metric = cloudcommon.AppInstLatencyMetrics // override method name
 			call.AppInstLatencyInfo = &AppInstLatencyInfo{
 				Samples:          cupdate.Samples,
+				DmeAppInst:       findAppInst(appInstKey, cupdate.CarrierName),
 				Latency:          latency,
 				SessionCookieKey: *sessionCookieKey,
 				Carrier:          cupdate.CarrierName,
@@ -1163,6 +1177,7 @@ loop:
 func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey CookieKey, carrier string) {
 	call := EdgeEventStatCall{}
 	call.Key.AppInstKey = *appInstKey
+	call.Key.Metric = cloudcommon.GpsLocationMetric
 	call.GpsLocationInfo = &GpsLocationInfo{
 		GpsLocation:      loc,
 		SessionCookieKey: sessionCookieKey,

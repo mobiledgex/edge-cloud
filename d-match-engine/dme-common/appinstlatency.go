@@ -11,19 +11,13 @@ import (
 
 // Filled in by DME. Added to EdgeEventStatCall to update stats
 type AppInstLatencyInfo struct {
-	Samples          []*dme.Sample
-	Latency          *dme.Latency
-	SessionCookieKey CookieKey // SessionCookie to identify unique clients for EdgeEvents
+	DmeAppInst       *DmeAppInst  // Information about appinst
+	Latency          *dme.Latency // Latency avg, min, max, and std dev
+	SessionCookieKey CookieKey    // SessionCookie to identify unique clients for EdgeEvents
 	GpsLocation      *dme.Loc
 	DataNetworkType  string
 	Carrier          string
 	DeviceOs         string
-}
-
-// Wrapper struct that holds latency stats
-type LatencyStats struct {
-	LatencyMetric  grpcstats.LatencyMetric // buckets for counts
-	RollingLatency *RollingLatency         // General stats: Avg, StdDev, Min, Max, NumClients
 }
 
 // Rolling avg, min, max, std dev, and number of clients
@@ -31,6 +25,12 @@ type RollingLatency struct {
 	Latency          *dme.Latency
 	UniqueClients    map[CookieKey]int // Maps unique client to number of occurences of that unique client
 	NumUniqueClients uint64
+}
+
+// Wrapper struct that holds latency stats
+type LatencyStats struct {
+	LatencyCounts  grpcstats.LatencyMetric // buckets for counts
+	RollingLatency *RollingLatency         // General stats: Avg, StdDev, Min, Max, NumClients
 }
 
 // Held in memory by ApiStat. Stats/trends per independent variable
@@ -58,7 +58,7 @@ func NewRollingLatency() *RollingLatency {
 }
 
 // Add new samples to RollingLatency struct and update RollingLatency statistics
-func (r *RollingLatency) UpdateRollingLatency(samples []*dme.Sample, sessionCookieKey CookieKey) {
+func (r *RollingLatency) UpdateRollingLatency(sessionCookieKey CookieKey, samples ...float64) {
 	// Previous statistics used to calculate rolling variance
 	prevNumSamples := r.Latency.NumSamples
 	prevAvg := r.Latency.Avg
@@ -66,13 +66,13 @@ func (r *RollingLatency) UpdateRollingLatency(samples []*dme.Sample, sessionCook
 	// Update Min, Max, and Avg
 	total := r.Latency.Avg * float64(r.Latency.NumSamples)
 	for _, sample := range samples {
-		if sample.Value < r.Latency.Min || r.Latency.Min == 0 {
-			r.Latency.Min = sample.Value
+		if sample < r.Latency.Min || r.Latency.Min == 0 {
+			r.Latency.Min = sample
 		}
-		if sample.Value > r.Latency.Max || r.Latency.Max == 0 {
-			r.Latency.Max = sample.Value
+		if sample > r.Latency.Max || r.Latency.Max == 0 {
+			r.Latency.Max = sample
 		}
-		total += sample.Value
+		total += sample
 		r.Latency.NumSamples++
 		// Add client to UniqueClients map
 		r.AddUniqueClient(sessionCookieKey)
@@ -85,68 +85,19 @@ func (r *RollingLatency) UpdateRollingLatency(samples []*dme.Sample, sessionCook
 	r.Latency.Avg = total / float64(r.Latency.NumSamples)
 	// Calulate Rolling variance and std dev (Using Welford's Algorithm)
 	// NewSumSquared = OldSumSquared + (sample - OldAverage)(sample - NewAverage)
-	prevSumSquared := prevVariance * float64(prevNumSamples-1)
+	unbiasedPrevNumSamples := prevNumSamples - 1
+	prevSumSquared := prevVariance * float64(unbiasedPrevNumSamples)
 	newSumSquared := prevSumSquared
 	for _, sample := range samples {
-		newSumSquared += (sample.Value - prevAvg) * (sample.Value - r.Latency.Avg)
+		newSumSquared += (sample - prevAvg) * (sample - r.Latency.Avg)
 	}
-	r.Latency.Variance = newSumSquared / float64(r.Latency.NumSamples-1)
+	unbiasedNumSamples := r.Latency.NumSamples - 1
+	if unbiasedNumSamples == 0 {
+		unbiasedNumSamples = 1
+	}
+	r.Latency.Variance = newSumSquared / float64(unbiasedNumSamples)
 	r.Latency.StdDev = math.Sqrt(r.Latency.Variance)
 }
-
-/*
-// Remove samples that are older than time.Now() - duration and update RollingLatency statistics
-func (r *RollingLatency) RemoveOldSamples() {
-	// Previous statistics used to calculate rolling variance
-	prevNumSamples := r.Latency.NumSamples
-	prevAvg := r.Latency.Avg
-	prevVariance := r.Latency.Variance
-	prevSamples := r.Samples
-	// Update Min, Max, and Avg
-	total := r.Latency.Avg * float64(r.Latency.NumSamples)
-	recalculateLatency := false
-	for _, sample := range r.Samples {
-		if time.Since(cloudcommon.TimestampToTime(*sample.Timestamp)) > r.Duration {
-			// remove first element in slice
-			r.Samples = r.Samples[1:]
-			total = total - sample.Value
-			r.Latency.NumSamples--
-			r.RemoveUniqueClient(sample.SessionCookie)
-		} else {
-			break
-		}
-		if sample.Value == r.Latency.Min || sample.Value == r.Latency.Max {
-			recalculateLatency = true
-		}
-	}
-	if recalculateLatency {
-		// If a removed sample was min or max, we have to iterate through entire list of samples to find new min/max
-		latency := CalculateLatency(r.Samples)
-		r.Latency = &latency
-	} else {
-		// Update rolling Latency without iterating through entire list of samples
-		// Return empty latency if no samples
-		if r.Latency.NumSamples == 0 {
-			r.Latency = new(dme.Latency)
-			return
-		}
-		r.Latency.Avg = total / float64(r.Latency.NumSamples)
-		// Calulate Rolling variance and std dev (Using Welford's Algorithm) (Removing samples)
-		// NewSumSquared = OldSumSquared - (sample - OldAverage)(sample - NewAverage)
-		prevSumSquared := prevVariance * float64(prevNumSamples-1)
-		newSumSquared := prevSumSquared
-		for _, sample := range prevSamples {
-			if time.Since(cloudcommon.TimestampToTime(*sample.Timestamp)) > r.Duration {
-				newSumSquared -= (sample.Value - prevAvg) * (sample.Value - r.Latency.Avg)
-			} else {
-				break
-			}
-		}
-		r.Latency.Variance = newSumSquared / float64(r.Latency.NumSamples-1)
-		r.Latency.StdDev = math.Sqrt(r.Latency.Variance)
-	}
-}
-*/
 
 // Add client to map of UniqueClients, update NumUniqueClients
 func (r *RollingLatency) AddUniqueClient(sessionCookieKey CookieKey) {
@@ -158,20 +109,6 @@ func (r *RollingLatency) AddUniqueClient(sessionCookieKey CookieKey) {
 	}
 	r.NumUniqueClients = uint64(len(r.UniqueClients))
 }
-
-/*
-// Remove client to map of UniqueClients, update NumUniqueClients
-func (r *RollingLatency) RemoveUniqueClient(sessionCookie string) {
-	if num, ok := r.UniqueClients[sessionCookie]; ok {
-		if num == 1 {
-			delete(r.UniqueClients, sessionCookie)
-		} else {
-			r.UniqueClients[sessionCookie] = num - 1
-		}
-	}
-	r.NumUniqueClients = uint64(len(r.UniqueClients))
-}
-*/
 
 // Utility function that returns Latency struct with Avg, Min, Max, StdDev, and NumSamples
 func CalculateLatency(samples []*dme.Sample) dme.Latency {
@@ -208,7 +145,7 @@ func CalculateLatency(samples []*dme.Sample) dme.Latency {
 
 func NewLatencyStats(latencyBuckets []time.Duration) *LatencyStats {
 	l := new(LatencyStats)
-	grpcstats.InitLatencyMetric(&l.LatencyMetric, latencyBuckets)
+	grpcstats.InitLatencyMetric(&l.LatencyCounts, latencyBuckets)
 	l.RollingLatency = NewRollingLatency()
 	return l
 }
@@ -218,7 +155,7 @@ func NewAppInstLatencyStats(latencyBuckets []time.Duration) *AppInstLatencyStats
 	a.latencyBuckets = latencyBuckets
 	a.LatencyTotal = NewLatencyStats(latencyBuckets)
 	a.LatencyPerLoc = make(map[int]map[string]*LatencyStats)
-	for _, dist := range GpsLocationDists {
+	for _, dist := range DistsFromDeviceToAppInst {
 		a.LatencyPerLoc[dist] = make(map[string]*LatencyStats)
 	}
 	a.LatencyPerCarrier = make(map[string]*LatencyStats)
@@ -229,32 +166,34 @@ func NewAppInstLatencyStats(latencyBuckets []time.Duration) *AppInstLatencyStats
 }
 
 func (a *AppInstLatencyStats) Update(data *AppInstLatencyInfo) {
-	latencyAvg := time.Duration(data.Latency.Avg) * time.Millisecond
 	// Update LatencyTotal
-	a.LatencyTotal.LatencyMetric.AddLatency(latencyAvg)
-	a.LatencyTotal.RollingLatency.UpdateRollingLatency(data.Samples, data.SessionCookieKey)
+	a.LatencyTotal.LatencyCounts.AddLatency(time.Duration(data.Latency.Avg) * time.Millisecond)
+	a.LatencyTotal.RollingLatency.UpdateRollingLatency(data.SessionCookieKey, data.Latency.Avg)
 	// Update LatencyPer Maps
-	a.UpdateLatencyMaps(a.LatencyPerCarrier, data, data.Carrier, latencyAvg)
-	a.UpdateLatencyMaps(a.LatencyPerNetDataType, data, data.DataNetworkType, latencyAvg)
-	a.UpdateLatencyMaps(a.LatencyPerDeviceOs, data, data.DeviceOs, latencyAvg)
-	// TODO: Algorithmically determine location "section"
-	// Figure out distance and figure out orientation
-	a.UpdateLatencyMaps(a.LatencyPerLoc[1], data, "Northeast", latencyAvg)
+	a.UpdateLatencyMaps(a.LatencyPerCarrier, data, data.Carrier, data.Latency.Avg)
+	a.UpdateLatencyMaps(a.LatencyPerNetDataType, data, data.DataNetworkType, data.Latency.Avg)
+	a.UpdateLatencyMaps(a.LatencyPerDeviceOs, data, data.DeviceOs, data.Latency.Avg)
+	if data.DmeAppInst != nil {
+		// Figure out distance and figure out orientation
+		distBucket := GetDistanceBucketFromAppInst(data.DmeAppInst, *data.GpsLocation)
+		bearing := GetBearingFromAppInst(data.DmeAppInst, *data.GpsLocation)
+		a.UpdateLatencyMaps(a.LatencyPerLoc[distBucket], data, string(bearing), data.Latency.Avg)
+	}
 }
 
-// TODO: SHOULD ROLLINGLATENCY AND BUCKETS BE PER SAMPLE OR PER BATCH (ie. avg for a batch)???
-func (a *AppInstLatencyStats) UpdateLatencyMaps(latencyMap map[string]*LatencyStats, data *AppInstLatencyInfo, key string, sample time.Duration) {
+func (a *AppInstLatencyStats) UpdateLatencyMaps(latencyMap map[string]*LatencyStats, data *AppInstLatencyInfo, key string, sample float64) {
 	if key == "" {
 		key = "unknown"
 	}
+	dsample := time.Duration(sample) * time.Millisecond
 	val, ok := latencyMap[key]
 	if ok {
-		val.LatencyMetric.AddLatency(sample)
-		val.RollingLatency.UpdateRollingLatency(data.Samples, data.SessionCookieKey)
+		val.LatencyCounts.AddLatency(dsample)
+		val.RollingLatency.UpdateRollingLatency(data.SessionCookieKey, sample)
 	} else {
 		val = NewLatencyStats(a.latencyBuckets)
-		val.LatencyMetric.AddLatency(sample)
-		val.RollingLatency.UpdateRollingLatency(data.Samples, data.SessionCookieKey)
+		val.LatencyCounts.AddLatency(dsample)
+		val.RollingLatency.UpdateRollingLatency(data.SessionCookieKey, sample)
 	}
 	latencyMap[key] = val
 }
