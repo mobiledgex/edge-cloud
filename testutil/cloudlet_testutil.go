@@ -615,18 +615,6 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 				}
 				*outp = append(*outp, out...)
 			}
-		case "getcloudletmanifest":
-			out, err := r.client.GetCloudletManifest(r.ctx, obj)
-			if err != nil {
-				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
-				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
-			} else {
-				outp, ok := dataOut.(*[]edgeproto.CloudletManifest)
-				if !ok {
-					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.CloudletManifest, but was %T", dataOut))
-				}
-				*outp = append(*outp, *out)
-			}
 		}
 	}
 }
@@ -636,6 +624,17 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
+		case "getcloudletmanifest":
+			out, err := r.client.GetCloudletManifest(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletManifest)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[]edgeproto.CloudletManifest, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "revokeaccesskey":
 			out, err := r.client.RevokeAccessKey(r.ctx, obj)
 			if err != nil {
@@ -782,13 +781,6 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 		return err
 	})
 	return err
-}
-
-func (s *DummyServer) GetCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
-	if s.CudNoop {
-		return &edgeproto.CloudletManifest{}, nil
-	}
-	return &edgeproto.CloudletManifest{}, nil
 }
 
 func (r *Run) CloudletInfoApi(data *[]edgeproto.CloudletInfo, dataMap interface{}, dataOut interface{}) {
@@ -1014,12 +1006,12 @@ func (s *CliClient) ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([
 	return output, err
 }
 
-func (s *ApiClient) GetCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
+func (s *ApiClient) GetCloudletManifest(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	return api.GetCloudletManifest(ctx, in)
 }
 
-func (s *CliClient) GetCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
+func (s *CliClient) GetCloudletManifest(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error) {
 	out := edgeproto.CloudletManifest{}
 	args := append(s.BaseArgs, "controller", "GetCloudletManifest")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
@@ -1103,7 +1095,7 @@ type CloudletApiClient interface {
 	DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 	UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 	ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error)
-	GetCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error)
+	GetCloudletManifest(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error)
 	GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error)
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
