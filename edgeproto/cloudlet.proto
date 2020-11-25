@@ -332,12 +332,12 @@ service CloudletApi {
     option (protogen.mc2_custom_authz) = true;
   }
   // Get Cloudlet Manifest. Shows deployment manifest required to setup cloudlet
-  rpc GetCloudletManifest(Cloudlet) returns (CloudletManifest) {
+  rpc GetCloudletManifest(CloudletKey) returns (CloudletManifest) {
     option (google.api.http) = {
       post: "/get/cloudlet/manifest"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
   // Get Cloudlet Properties. Shows all the infra properties used to setup cloudlet
   rpc GetCloudletProps(CloudletProps) returns (CloudletProps) {
