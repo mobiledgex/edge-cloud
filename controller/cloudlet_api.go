@@ -1300,20 +1300,20 @@ func RecordCloudletEvent(ctx context.Context, cloudletKey *edgeproto.CloudletKey
 	services.events.AddMetric(&metric)
 }
 
-func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletManifest, error) {
+func (s *CloudletApi) GetCloudletManifest(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error) {
 	cloudlet := &edgeproto.Cloudlet{}
-	if !cloudletApi.cache.Get(&in.Key, cloudlet) {
-		return nil, in.Key.NotFoundError()
+	if !cloudletApi.cache.Get(key, cloudlet) {
+		return nil, key.NotFoundError()
 	}
 
 	pfFlavor := edgeproto.Flavor{}
-	if in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
-		if in.Flavor.Name == "" || in.Flavor.Name == DefaultPlatformFlavor.Key.Name {
-			in.Flavor = DefaultPlatformFlavor.Key
+	if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+		if cloudlet.Flavor.Name == "" || cloudlet.Flavor.Name == DefaultPlatformFlavor.Key.Name {
+			cloudlet.Flavor = DefaultPlatformFlavor.Key
 			pfFlavor = DefaultPlatformFlavor
 		} else {
-			if !flavorApi.cache.Get(&in.Flavor, &pfFlavor) {
-				return nil, in.Flavor.NotFoundError()
+			if !flavorApi.cache.Get(&cloudlet.Flavor, &pfFlavor) {
+				return nil, cloudlet.Flavor.NotFoundError()
 			}
 		}
 	}
@@ -1322,7 +1322,7 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 	if err != nil {
 		return nil, err
 	}
-	accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
+	accessApi := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
 		return nil, err
@@ -1340,8 +1340,8 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, in *edgeproto.Clo
 	}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := &edgeproto.Cloudlet{}
-		if s.store.STMGet(stm, &in.Key, cloudlet) {
-			return in.Key.NotFoundError()
+		if s.store.STMGet(stm, key, cloudlet) {
+			return key.NotFoundError()
 		}
 		if cloudlet.CrmAccessPublicKey != "" {
 			return fmt.Errorf("Cloudlet has access key registered, please revoke the current access key first so a new one can be generated for the manifest")
