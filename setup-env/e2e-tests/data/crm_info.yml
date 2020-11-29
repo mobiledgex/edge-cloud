@@ -53,6 +53,26 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-cluster-vm-0
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.10
+    - name: fake-cluster-vm-1
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.11
+    - name: fake-cluster-vm-2
+      type: cluster-node
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.12
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -71,6 +91,26 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-cluster-vm-0
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.10
+    - name: fake-cluster-vm-1
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.11
+    - name: fake-cluster-vm-2
+      type: cluster-node
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.12
 - key:
     clusterkey:
       name: autoclustersomeapplication2
@@ -89,6 +129,26 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-cluster-vm-0
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.10
+    - name: fake-cluster-vm-1
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.11
+    - name: fake-cluster-vm-2
+      type: cluster-node
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.100.100.12
 cloudlets:
 - key:
     organization: tmus
@@ -135,11 +195,22 @@ cloudletinfos:
     vcpus: 10
     ram: 101024
     disk: 500
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -153,12 +224,22 @@ cloudletinfos:
     vcpus: 10
     ram: 101024
     disk: 500
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 apps:
 - key:
     organization: AcmeAppCo
@@ -174,9 +255,9 @@ apps:
     apiVersion: v1
     kind: Service
     metadata:
-      name: someapplication1-tcp
+      name: someapplication110-tcp
       labels:
-        run: someapplication1
+        run: someapplication11.0
     spec:
       type: LoadBalancer
       ports:
@@ -189,14 +270,14 @@ apps:
         port: 443
         targetPort: 443
       selector:
-        run: someapplication1
+        run: someapplication11.0
     ---
     apiVersion: v1
     kind: Service
     metadata:
-      name: someapplication1-udp
+      name: someapplication110-udp
       labels:
-        run: someapplication1
+        run: someapplication11.0
     spec:
       type: LoadBalancer
       ports:
@@ -205,27 +286,27 @@ apps:
         port: 10002
         targetPort: 10002
       selector:
-        run: someapplication1
+        run: someapplication11.0
     ---
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: someapplication1-deployment
+      name: someapplication110-deployment
     spec:
       replicas: 1
       selector:
         matchLabels:
-          run: someapplication1
+          run: someapplication11.0
       template:
         metadata:
           labels:
-            run: someapplication1
+            run: someapplication11.0
         spec:
           volumes:
           imagePullSecrets:
           - name: registry.mobiledgex.net
           containers:
-          - name: someapplication1
+          - name: someapplication110
             image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
             imagePullPolicy: Always
             ports:
@@ -251,9 +332,9 @@ apps:
     apiVersion: v1
     kind: Service
     metadata:
-      name: someapplication2-tcp
+      name: someapplication210-tcp
       labels:
-        run: someapplication2
+        run: someapplication21.0
     spec:
       type: LoadBalancer
       ports:
@@ -262,14 +343,14 @@ apps:
         port: 23
         targetPort: 23
       selector:
-        run: someapplication2
+        run: someapplication21.0
     ---
     apiVersion: v1
     kind: Service
     metadata:
-      name: someapplication2-udp
+      name: someapplication210-udp
       labels:
-        run: someapplication2
+        run: someapplication21.0
     spec:
       type: LoadBalancer
       ports:
@@ -278,26 +359,26 @@ apps:
         port: 10003
         targetPort: 10003
       selector:
-        run: someapplication2
+        run: someapplication21.0
     ---
     apiVersion: apps/v1
     kind: DaemonSet
     metadata:
-      name: someapplication2-deployment
+      name: someapplication210-deployment
     spec:
       selector:
         matchLabels:
-          run: someapplication2
+          run: someapplication21.0
       template:
         metadata:
           labels:
-            run: someapplication2
+            run: someapplication21.0
         spec:
           volumes:
           imagePullSecrets:
           - name: registry.mobiledgex.net
           containers:
-          - name: someapplication2
+          - name: someapplication210
             image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication2:1.0
             imagePullPolicy: Always
             ports:
@@ -387,15 +468,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   state: Ready
@@ -480,11 +561,11 @@ appinstances:
   - proto: LProtoTcp
     internalport: 23
     publicport: 23
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10003
     publicport: 10003
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   state: Ready
@@ -515,15 +596,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   state: Ready

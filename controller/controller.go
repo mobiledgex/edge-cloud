@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
@@ -46,6 +47,7 @@ var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address"
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
 var notifyRootAddrs = flag.String("notifyRootAddrs", "", "Comma separated list of notifyroots")
 var notifyParentAddrs = flag.String("notifyParentAddrs", "", "Comma separated list of notify parents")
+var accessApiAddr = flag.String("accessApiAddr", "127.0.0.1:41001", "listener address for external services with access key")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var edgeTurnAddr = flag.String("edgeTurnAddr", "127.0.0.1:6080", "Address to EdgeTurn Server")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
@@ -63,6 +65,7 @@ var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs from LetsEncrypt. If false then CRM will generate its onwn self-signed cert")
 var checkpointInterval = flag.String("checkpointInterval", "MONTH", "Interval at which to checkpoint cluster usage")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
+var requireNotifyAccessKey = flag.Bool("requireNotifyAccessKey", false, "Require AccessKey authentication on notify API")
 
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
@@ -80,20 +83,24 @@ var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
 
 type Services struct {
-	etcdLocal       *process.Etcd
-	sync            *Sync
-	influxQ         *influxq.InfluxQ
-	events          *influxq.InfluxQ
-	notifyServerMgr bool
-	grpcServer      *grpc.Server
-	httpServer      *http.Server
-	notifyClient    *notify.Client
+	etcdLocal           *process.Etcd
+	sync                *Sync
+	influxQ             *influxq.InfluxQ
+	events              *influxq.InfluxQ
+	notifyServerMgr     bool
+	grpcServer          *grpc.Server
+	httpServer          *http.Server
+	notifyClient        *notify.Client
+	accessKeyGrpcServer node.AccessKeyGrpcServer
+	listeners           []net.Listener
+	publicCertManager   *node.PublicCertManager
 }
 
 func main() {
 	nodeMgr.InitFlags()
 	flag.Parse()
 
+	services.listeners = make([]net.Listener, 0)
 	err := startServices()
 	if err != nil {
 		stopServices()
@@ -129,7 +136,10 @@ func validateFields(ctx context.Context) error {
 			return fmt.Errorf("Invalid registry path")
 		}
 		platform_registry_path := *cloudletRegistryPath + ":" + strings.TrimSpace(string(*versionTag))
-		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, vaultConfig)
+		authApi := &cloudcommon.VaultRegistryAuthApi{
+			VaultConfig: vaultConfig,
+		}
+		err = cloudcommon.ValidateDockerRegistryPath(ctx, platform_registry_path, authApi)
 		if err != nil {
 			return err
 		}
@@ -212,11 +222,16 @@ func startServices() error {
 	if err != nil {
 		return fmt.Errorf("Failed to listen on address %s, %v", *apiAddr, err)
 	}
+	services.listeners = append(services.listeners, lis)
 
 	sync := InitSync(objStore)
 	InitApis(sync)
 	sync.Start()
 	services.sync = sync
+	// requireNotifyAccessKey allows for backwards compatibility when
+	// set to false, because it allows CRMs to connect to notify without
+	// an access key (as long as pki internal cert is verified).
+	cloudletApi.accessKeyServer.SetRequireTlsAccessKey(*requireNotifyAccessKey)
 
 	// register controller must be called before starting Notify protocol
 	// to set up controllerAliveLease.
@@ -283,9 +298,46 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
-	notify.ServerMgrOne.Start(nodeMgr.Name(), *notifyAddr, notifyServerTls)
+	notifyUnaryInterceptor := grpc.UnaryInterceptor(
+		grpc_middleware.ChainUnaryServer(
+			cloudcommon.AuditUnaryInterceptor,
+			cloudletApi.accessKeyServer.UnaryTlsAccessKey,
+		))
+	notifyStreamInterceptor := grpc.StreamInterceptor(
+		grpc_middleware.ChainStreamServer(
+			cloudcommon.AuditStreamInterceptor,
+			cloudletApi.accessKeyServer.StreamTlsAccessKey,
+		))
+	notify.ServerMgrOne.Start(nodeMgr.Name(), *notifyAddr, notifyServerTls,
+		notify.ServerUnaryInterceptor(notifyUnaryInterceptor),
+		notify.ServerStreamInterceptor(notifyStreamInterceptor),
+	)
 	services.notifyServerMgr = true
 
+	// Get TLS config for access server
+	var getPublicCertApi node.GetPublicCertApi
+	getPublicCertApi = &node.VaultPublicCertApi{
+		VaultConfig: vaultConfig,
+	}
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
+		getPublicCertApi = &node.TestPublicCertApi{}
+	}
+	services.publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
+	accessServerTlsConfig, err := services.publicCertManager.GetServerTlsConfig(ctx)
+	if err != nil {
+		return err
+	}
+	services.publicCertManager.StartRefresh()
+	// Start access server
+	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, accessServerTlsConfig, func(accessServer *grpc.Server) {
+		edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
+		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
+	})
+	if err != nil {
+		return err
+	}
+
+	// External API (for clients or MC).
 	apiTlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
 		nodeMgr.CommonName(),
 		node.CertIssuerRegional,
@@ -398,6 +450,9 @@ func startServices() error {
 	}
 	go runCheckpoints(ctx)
 
+	// setup cleanup timer to remove expired stream messages
+	go streamObjs.SetupCleanupTimer()
+
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
 }
@@ -409,6 +464,10 @@ func stopServices() {
 	if services.grpcServer != nil {
 		services.grpcServer.Stop()
 	}
+	if services.publicCertManager != nil {
+		services.publicCertManager.StopRefresh()
+	}
+	services.accessKeyGrpcServer.Stop()
 	if services.notifyServerMgr {
 		notify.ServerMgrOne.Stop()
 	}
@@ -426,6 +485,9 @@ func stopServices() {
 	}
 	if services.etcdLocal != nil {
 		services.etcdLocal.StopLocal()
+	}
+	for _, lis := range services.listeners {
+		lis.Close()
 	}
 	nodeMgr.Finish()
 }
@@ -471,8 +533,6 @@ func InitApis(sync *Sync) {
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
 	InitAppInstRefsApi(sync)
-	InitStreamObjApi(sync)
-	InitStreamObjInfoApi(sync)
 	InitControllerApi(sync)
 	InitCloudletPoolApi(sync)
 	InitExecApi()
@@ -510,7 +570,6 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)
-	notify.ServerMgrOne.RegisterRecv(notify.NewStreamObjInfoRecvMany(&streamObjInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(&vmPoolInfoApi))

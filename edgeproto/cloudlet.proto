@@ -9,6 +9,7 @@ import "flavor.proto";
 import "result.proto";
 import "restagtable.proto";
 import "common.proto";
+import "infraresources.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 
@@ -27,6 +28,7 @@ message CloudletKey {
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
 }
 
 // Operation time limits
@@ -56,8 +58,8 @@ message PlatformConfig {
   string cloudlet_vm_image_path = 2;
   // Address of controller notify port (can be multiple of these)
   string notify_ctrl_addrs = 3;
-  // Vault address
-  string vault_addr  = 4;
+  // Vault address (4) deprecated, platform no longer has direct access to vault.
+
   // TLS cert file
   string tls_cert_file = 5;
   // TLS key file
@@ -90,11 +92,27 @@ message PlatformConfig {
   int32 chef_client_interval = 18  [(gogoproto.casttype) = "Duration"];
   // Deployment Tag
   string deployment_tag = 19;
+  // crm access private key
+  string crm_access_private_key = 22;
+  // controller access API address
+  string access_api_addr = 23;
 }
 
 // Platform Type
 //
 // PlatformType is the supported list of cloudlet types
+//
+// 0: `PLATFORM_TYPE_FAKE`
+// 1: `PLATFORM_TYPE_DIND`
+// 2: `PLATFORM_TYPE_OPENSTACK`
+// 3: `PLATFORM_TYPE_AZURE`
+// 4: `PLATFORM_TYPE_GCP`
+// 5: `PLATFORM_TYPE_EDGEBOX`
+// 6: `PLATFORM_TYPE_FAKEINFRA`
+// 7: `PLATFORM_TYPE_VSPHERE`
+// 8: `PLATFORM_TYPE_AWS_EKS`
+// 9: `PLATFORM_TYPE_VM_POOL`
+// 10: `PLATFORM_TYPE_AWS_EC2`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -135,6 +153,9 @@ message CloudletResMap {
 // Infra API Access
 //
 // InfraApiAccess is the type of access available to Infra API endpoint
+//
+// 0: `DIRECT_ACCESS`
+// 1: `RESTRICTED_ACCESS`
 enum InfraApiAccess {
 	// Infra API endpoint is accessible from public network
 	DIRECT_ACCESS = 0;
@@ -217,6 +238,10 @@ message Cloudlet {
   string crm_access_public_key = 33 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // CRM access key upgrade required
   bool crm_access_key_upgrade_required = 34 [(protogen.backend) = true];
+    // Created at time
+  distributed_match_engine.Timestamp created_at = 35 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // Updated at time
+  distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -225,7 +250,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -309,12 +334,12 @@ service CloudletApi {
     option (protogen.mc2_custom_authz) = true;
   }
   // Get Cloudlet Manifest. Shows deployment manifest required to setup cloudlet
-  rpc GetCloudletManifest(Cloudlet) returns (CloudletManifest) {
+  rpc GetCloudletManifest(CloudletKey) returns (CloudletManifest) {
     option (google.api.http) = {
       post: "/get/cloudlet/manifest"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
   // Get Cloudlet Properties. Shows all the infra properties used to setup cloudlet
   rpc GetCloudletProps(CloudletProps) returns (CloudletProps) {
@@ -371,7 +396,18 @@ service CloudletApi {
   }
 }
 
+// CloudletState
+//
 // CloudletState is the state of the Cloudlet.
+//
+//  0: `CLOUDLET_STATE_UNKNOWN`
+//  1: `CLOUDLET_STATE_ERRORS`
+//  2: `CLOUDLET_STATE_READY`
+//  3: `CLOUDLET_STATE_OFFLINE`
+//  4: `CLOUDLET_STATE_NOT_PRESENT`
+//  5: `CLOUDLET_STATE_INIT`
+//  6: `CLOUDLET_STATE_UPGRADE`
+//  7: `CLOUDLET_STATE_NEED_SYNC`
 enum CloudletState {
   // Unknown
   CLOUDLET_STATE_UNKNOWN = 0;
@@ -443,7 +479,7 @@ message CloudletInfo {
   // Supported flavors by the Cloudlet
   repeated FlavorInfo flavors = 10;
   // status is used to reflect progress of creation or other events
-  StatusInfo status = 11 [(gogoproto.nullable) = false];
+  StatusInfo status = 11 [(gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Cloudlet container version
   string container_version = 12;
   // Availability Zones if any
@@ -454,6 +490,8 @@ message CloudletInfo {
   bool controller_cache_received = 15;
   // State for maintenance
   MaintenanceState maintenance_state = 16;
+   // Resources used by cloudlet
+  InfraResources resources = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
@@ -463,6 +501,7 @@ message CloudletInfo {
   option (protogen.notify_recv_hook) = true;
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "none";
+  option (protogen.noconfig) = "Resources";
 }
 
 service CloudletInfoApi {

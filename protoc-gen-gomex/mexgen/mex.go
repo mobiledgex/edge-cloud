@@ -1503,8 +1503,8 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	bufferedMsgs := []string{}
-	recvdStatus := false
+	lastMsgId := 0
+	var lastMsg string
 	var err error
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
@@ -1515,33 +1515,26 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.ToString()
-			var msg string
-			if statusString != ""{
-				msg = statusString			
-				recvdStatus = true
-			} else {
-				msg = {{.WaitForState}}_CamelName[int32(curState)]
-			}
-			if recvdStatus {
-				// recvdStatus flag is for backwards compatibility.
-				// With current code we support msg streaming via streamObjs,
-				// but in case there are old versions of CRM sending msgs via
-				// status msg, only then we send msgs to cb
-                                for _, bufMsg := range bufferedMsgs {
-                                        send(&Result{Message: bufMsg})
-                                }
-                                bufferedMsgs = nil
-                                send(&Result{Message: msg})
-                        } else {
-				// NotPresent is a state msg generated from this code, hence
-				// allow it
-				if msg == {{.WaitForState}}_CamelName[int32({{.WaitForState}}_NOT_PRESENT)] {
-					send(&Result{Message: msg})
-				} else {
-					bufferedMsgs = append(bufferedMsgs, msg)
+			if len(info.Status.Msgs) > 0 {
+				for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+					if lastMsg == info.Status.Msgs[ii] {
+						continue
+					}
+					send(&Result{Message: info.Status.Msgs[ii]})
+					lastMsg = info.Status.Msgs[ii]
+					lastMsgId++
 				}
-                        }
+			} else {
+				statusString := info.Status.ToString()
+				var msg string
+				if statusString != "" {
+					msg = statusString
+				} else {
+					msg = {{.WaitForState}}_CamelName[int32(curState)]
+				}
+				lastMsg = msg
+				send(&Result{Message: msg})
+			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for {{.Name}}")
 		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)], "status", info.Status)

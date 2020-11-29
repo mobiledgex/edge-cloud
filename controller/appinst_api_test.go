@@ -21,13 +21,13 @@ var (
 )
 
 type StreamoutMsg struct {
-	Msgs []*edgeproto.StreamMsg
+	Msgs []edgeproto.Result
 	grpc.ServerStream
 	Ctx context.Context
 }
 
-func (x *StreamoutMsg) Send(msg *edgeproto.StreamMsg) error {
-	x.Msgs = append(x.Msgs, msg)
+func (x *StreamoutMsg) Send(msg *edgeproto.Result) error {
+	x.Msgs = append(x.Msgs, *msg)
 	return nil
 }
 
@@ -41,44 +41,38 @@ func NewStreamoutMsg(ctx context.Context) *StreamoutMsg {
 	}
 }
 
-func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, pass bool) []*edgeproto.StreamMsg {
+func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, pass bool) []edgeproto.Result {
 	// Verify stream appInst
 	streamAppInst := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamAppInst(key, streamAppInst)
 	if pass {
 		require.Nil(t, err, "stream appinst")
-		if len(streamAppInst.Msgs) > 0 {
-			require.Equal(t, streamAppInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
-		}
+		require.Greater(t, len(streamAppInst.Msgs), 0, "contains stream messages")
 	} else {
 		require.NotNil(t, err, "stream appinst should return error")
 	}
 	return streamAppInst.Msgs
 }
 
-func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, pass bool) []*edgeproto.StreamMsg {
+func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, pass bool) []edgeproto.Result {
 	// Verify stream clusterInst
 	streamClusterInst := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamClusterInst(key, streamClusterInst)
 	if pass {
 		require.Nil(t, err, "stream clusterinst")
-		if len(streamClusterInst.Msgs) > 0 {
-			require.Equal(t, streamClusterInst.Msgs[0].Id, uint32(1), "stream messages start with id 1")
-		}
+		require.Greater(t, len(streamClusterInst.Msgs), 0, "contains stream messages")
 	} else {
 		require.NotNil(t, err, "stream clusterinst should return error")
 	}
 	return streamClusterInst.Msgs
 }
 
-func GetCloudletStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey) []*edgeproto.StreamMsg {
+func GetCloudletStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey) []edgeproto.Result {
 	// Verify stream cloudlet
 	streamCloudlet := NewStreamoutMsg(ctx)
 	err := streamObjApi.StreamCloudlet(key, streamCloudlet)
 	require.Nil(t, err, "stream cloudlet")
-	if len(streamCloudlet.Msgs) > 0 {
-		require.Equal(t, streamCloudlet.Msgs[0].Id, uint32(1), "stream messages start with id 1")
-	}
+	require.Greater(t, len(streamCloudlet.Msgs), 0, "contains stream messages")
 	return streamCloudlet.Msgs
 }
 
@@ -178,7 +172,7 @@ func TestAppInstApi(t *testing.T) {
 
 	obj = testutil.AppInstData[0]
 	// check override of error DELETE_ERROR
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_DELETE_ERROR)
 	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -190,7 +184,7 @@ func TestAppInstApi(t *testing.T) {
 	require.Greater(t, len(msgs), 0, "progress messages")
 
 	// check override of error CREATE_ERROR
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_CREATE_ERROR)
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -214,7 +208,7 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create appinst")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_UPDATE_ERROR)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_UPDATE_ERROR, responder)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_UPDATE_ERROR)
 	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -256,7 +250,7 @@ func TestAppInstApi(t *testing.T) {
 		obj = testutil.AppInstData[0]
 		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state)
+		err = forceAppInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, commonApi, &obj, state)
 		obj = testutil.AppInstData[0]
@@ -271,8 +265,8 @@ func TestAppInstApi(t *testing.T) {
 	// Test Fqdn prefix
 	for _, data := range appInstApi.cache.Objs {
 		obj := data.Obj
-		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
-		if app_name == "helmapp" || app_name == "vmlb" {
+		app_name := util.K8SSanitize(obj.Key.AppKey.Name + obj.Key.AppKey.Version)
+		if obj.Key.AppKey.Name == "helmApp" || obj.Key.AppKey.Name == "vm lb" {
 			continue
 		}
 		for _, port := range obj.MappedPorts {
@@ -283,7 +277,7 @@ func TestAppInstApi(t *testing.T) {
 			if lproto == "http" {
 				continue
 			}
-			test_prefix := fmt.Sprintf("%s-%s.", app_name, lproto)
+			test_prefix := fmt.Sprintf("%s-%s.", util.DNSSanitize(app_name), lproto)
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}
@@ -441,7 +435,15 @@ func checkAppInstState(t *testing.T, ctx context.Context, api *testutil.AppInstC
 	}
 }
 
-func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgeproto.TrackedState) error {
+func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgeproto.TrackedState, responder *DummyInfoResponder) error {
+	if responder != nil {
+		// disable responder, otherwise it will respond to certain states
+		// and change the current state
+		responder.enable = false
+		defer func() {
+			responder.enable = true
+		}()
+	}
 	err := appInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		obj := edgeproto.AppInst{}
 		if !appInstApi.store.STMGet(stm, &in.Key, &obj) {
@@ -518,7 +520,7 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		obj = ai
 		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state)
+		err = forceAppInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
@@ -526,20 +528,22 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		obj = aiauto
 		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state)
+		err = forceAppInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
 		clust = ac
-		err = forceClusterInstState(ctx, &clust, state)
+		err = forceClusterInstState(ctx, &clust, state, responder)
 		require.Nil(t, err, "force state")
 		checkClusterInstState(t, ctx, clustApi, &clust, state)
 
 		// delete app (should delete auto cluster and auto app)
 		obj = ai
 		obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
+		log.SpanLog(ctx, log.DebugLevelInfo, "test run appinst delete")
 		err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "override crm and transient state %s", stateName)
+		log.SpanLog(ctx, log.DebugLevelInfo, "test appinst deleted")
 		// make sure autocluster got deleted (means apps also were deleted)
 		showData := testutil.ShowClusterInst{}
 		showData.Init()

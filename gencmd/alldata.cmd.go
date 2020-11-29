@@ -64,6 +64,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].CrmAccessPublicKey = ""
 		}
+		if _, found := tags["timestamp"]; found {
+			in.Cloudlets[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.Cloudlets[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -74,12 +80,27 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].Flavors); i1++ {
 		}
+		if _, found := tags["nocmp"]; found {
+			in.CloudletInfos[i0].Status = edgeproto.StatusInfo{}
+		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].AvailabilityZones); i1++ {
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].OsImages); i1++ {
 		}
+		for i2 := 0; i2 < len(in.CloudletInfos[i0].Resources.Vms); i2++ {
+			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Ipaddresses); i3++ {
+			}
+			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Containers); i3++ {
+			}
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
+		if _, found := tags["timestamp"]; found {
+			in.CloudletPools[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.CloudletPools[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicies); i0++ {
 		for i1 := 0; i1 < len(in.AutoProvPolicies[i0].Cloudlets); i1++ {
@@ -110,6 +131,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.ClusterInsts[i0].NodeFlavor = ""
 		}
 		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].Status = edgeproto.StatusInfo{}
+		}
+		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].ExternalVolumeSize = 0
 		}
 		if _, found := tags["nocmp"]; found {
@@ -123,6 +147,15 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].OptRes = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].Resources = edgeproto.InfraResources{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.ClusterInsts[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.ClusterInsts[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
@@ -143,6 +176,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Apps[i0].DeletePrepare = false
 		}
+		if _, found := tags["timestamp"]; found {
+			in.Apps[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["timestamp"]; found {
+			in.Apps[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -161,6 +200,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["nocmp"]; found {
+			in.AppInstances[i0].Status = edgeproto.StatusInfo{}
 		}
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].Revision = ""
@@ -191,6 +233,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].OptRes = ""
 		}
+		if _, found := tags["timestamp"]; found {
+			in.AppInstances[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
 	}
@@ -208,13 +253,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].CrmOverride = 0
-		}
-	}
-	for i0 := 0; i0 < len(in.StreamObjs); i0++ {
-		for i1 := 0; i1 < len(in.StreamObjs[i0].Msgs); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.StreamObjs[i0].State = 0
 		}
 	}
 }
@@ -281,6 +319,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.status.maxtasks",
 	"cloudlets:#.status.taskname",
 	"cloudlets:#.status.stepname",
+	"cloudlets:#.status.msgcount",
+	"cloudlets:#.status.msgs",
 	"cloudlets:#.state",
 	"cloudlets:#.crmoverride",
 	"cloudlets:#.deploymentlocal",
@@ -293,7 +333,6 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.containerregistrypath",
 	"cloudlets:#.config.cloudletvmimagepath",
 	"cloudlets:#.config.notifyctrladdrs",
-	"cloudlets:#.config.vaultaddr",
 	"cloudlets:#.config.tlscertfile",
 	"cloudlets:#.config.tlskeyfile",
 	"cloudlets:#.config.tlscafile",
@@ -310,6 +349,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.chefserverpath",
 	"cloudlets:#.config.chefclientinterval",
 	"cloudlets:#.config.deploymenttag",
+	"cloudlets:#.config.crmaccessprivatekey",
+	"cloudlets:#.config.accessapiaddr",
 	"cloudlets:#.restagmap:#.key",
 	"cloudlets:#.restagmap:#.value.name",
 	"cloudlets:#.restagmap:#.value.organization",
@@ -325,6 +366,10 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.vmpool",
 	"cloudlets:#.crmaccesspublickey",
 	"cloudlets:#.crmaccesskeyupgraderequired",
+	"cloudlets:#.createdat.seconds",
+	"cloudlets:#.createdat.nanos",
+	"cloudlets:#.updatedat.seconds",
+	"cloudlets:#.updatedat.nanos",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -344,6 +389,8 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.status.maxtasks",
 	"cloudletinfos:#.status.taskname",
 	"cloudletinfos:#.status.stepname",
+	"cloudletinfos:#.status.msgcount",
+	"cloudletinfos:#.status.msgs",
 	"cloudletinfos:#.containerversion",
 	"cloudletinfos:#.availabilityzones:#.name",
 	"cloudletinfos:#.availabilityzones:#.status",
@@ -353,10 +400,25 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.osimages:#.diskformat",
 	"cloudletinfos:#.controllercachereceived",
 	"cloudletinfos:#.maintenancestate",
+	"cloudletinfos:#.resources.vms:#.name",
+	"cloudletinfos:#.resources.vms:#.type",
+	"cloudletinfos:#.resources.vms:#.status",
+	"cloudletinfos:#.resources.vms:#.infraflavor",
+	"cloudletinfos:#.resources.vms:#.ipaddresses:#.externalip",
+	"cloudletinfos:#.resources.vms:#.ipaddresses:#.internalip",
+	"cloudletinfos:#.resources.vms:#.containers:#.name",
+	"cloudletinfos:#.resources.vms:#.containers:#.type",
+	"cloudletinfos:#.resources.vms:#.containers:#.status",
+	"cloudletinfos:#.resources.vms:#.containers:#.clusterip",
+	"cloudletinfos:#.resources.vms:#.containers:#.restarts",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
 	"cloudletpools:#.cloudlets",
+	"cloudletpools:#.createdat.seconds",
+	"cloudletpools:#.createdat.nanos",
+	"cloudletpools:#.updatedat.seconds",
+	"cloudletpools:#.updatedat.nanos",
 	"autoprovpolicies:#.fields",
 	"autoprovpolicies:#.key.organization",
 	"autoprovpolicies:#.key.name",
@@ -417,6 +479,8 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.status.maxtasks",
 	"clusterinsts:#.status.taskname",
 	"clusterinsts:#.status.stepname",
+	"clusterinsts:#.status.msgcount",
+	"clusterinsts:#.status.msgs",
 	"clusterinsts:#.externalvolumesize",
 	"clusterinsts:#.autoscalepolicy",
 	"clusterinsts:#.availabilityzone",
@@ -428,6 +492,21 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.masternodeflavor",
 	"clusterinsts:#.skipcrmcleanuponfailure",
 	"clusterinsts:#.optres",
+	"clusterinsts:#.resources.vms:#.name",
+	"clusterinsts:#.resources.vms:#.type",
+	"clusterinsts:#.resources.vms:#.status",
+	"clusterinsts:#.resources.vms:#.infraflavor",
+	"clusterinsts:#.resources.vms:#.ipaddresses:#.externalip",
+	"clusterinsts:#.resources.vms:#.ipaddresses:#.internalip",
+	"clusterinsts:#.resources.vms:#.containers:#.name",
+	"clusterinsts:#.resources.vms:#.containers:#.type",
+	"clusterinsts:#.resources.vms:#.containers:#.status",
+	"clusterinsts:#.resources.vms:#.containers:#.clusterip",
+	"clusterinsts:#.resources.vms:#.containers:#.restarts",
+	"clusterinsts:#.createdat.seconds",
+	"clusterinsts:#.createdat.nanos",
+	"clusterinsts:#.updatedat.seconds",
+	"clusterinsts:#.updatedat.nanos",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -459,6 +538,10 @@ var AllDataOptionalArgs = []string{
 	"apps:#.autoprovpolicies",
 	"apps:#.templatedelimiter",
 	"apps:#.skiphcports",
+	"apps:#.createdat.seconds",
+	"apps:#.createdat.nanos",
+	"apps:#.updatedat.seconds",
+	"apps:#.updatedat.nanos",
 	"appinstances:#.fields",
 	"appinstances:#.key.appkey.organization",
 	"appinstances:#.key.appkey.name",
@@ -497,6 +580,8 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.status.maxtasks",
 	"appinstances:#.status.taskname",
 	"appinstances:#.status.stepname",
+	"appinstances:#.status.msgcount",
+	"appinstances:#.status.msgs",
 	"appinstances:#.revision",
 	"appinstances:#.forceupdate",
 	"appinstances:#.updatemultiple",
@@ -510,6 +595,8 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.availabilityzone",
 	"appinstances:#.vmflavor",
 	"appinstances:#.optres",
+	"appinstances:#.updatedat.seconds",
+	"appinstances:#.updatedat.nanos",
 	"appinstrefs:#.key.organization",
 	"appinstrefs:#.key.name",
 	"appinstrefs:#.key.version",
@@ -537,20 +624,9 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.status.maxtasks",
 	"vmpools:#.status.taskname",
 	"vmpools:#.status.stepname",
+	"vmpools:#.status.msgcount",
+	"vmpools:#.status.msgs",
 	"vmpools:#.crmoverride",
-	"streamobjs:#.key.appkey.organization",
-	"streamobjs:#.key.appkey.name",
-	"streamobjs:#.key.appkey.version",
-	"streamobjs:#.key.clusterinstkey.clusterkey.name",
-	"streamobjs:#.key.clusterinstkey.cloudletkey.organization",
-	"streamobjs:#.key.clusterinstkey.cloudletkey.name",
-	"streamobjs:#.key.clusterinstkey.organization",
-	"streamobjs:#.msgs:#.id",
-	"streamobjs:#.msgs:#.msg",
-	"streamobjs:#.state",
-	"streamobjs:#.lastid",
-	"streamobjs:#.lease",
-	"streamobjs:#.errormsg",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -607,7 +683,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.timelimits.updateappinsttimeout":                "override default max time to update an app instance (duration)",
 	"cloudlets:#.timelimits.deleteappinsttimeout":                "override default max time to delete an app instance (duration)",
 	"cloudlets:#.errors":                                         "Any errors trying to create, update, or delete the Cloudlet.",
-	"cloudlets:#.state":                                          "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"cloudlets:#.state":                                          "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudlets:#.crmoverride":                                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                "Deploy cloudlet services locally",
 	"cloudlets:#.platformtype":                                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd",
@@ -619,7 +695,6 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.containerregistrypath":                   "Path to Docker registry holding edge-cloud image",
 	"cloudlets:#.config.cloudletvmimagepath":                     "Path to platform base image",
 	"cloudlets:#.config.notifyctrladdrs":                         "Address of controller notify port (can be multiple of these)",
-	"cloudlets:#.config.vaultaddr":                               "Vault address",
 	"cloudlets:#.config.tlscertfile":                             "TLS cert file",
 	"cloudlets:#.config.tlskeyfile":                              "TLS key file",
 	"cloudlets:#.config.tlscafile":                               "TLS ca file",
@@ -636,6 +711,8 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.chefserverpath":                          "Path to Chef Server",
 	"cloudlets:#.config.chefclientinterval":                      "Chef client interval",
 	"cloudlets:#.config.deploymenttag":                           "Deployment Tag",
+	"cloudlets:#.config.crmaccessprivatekey":                     "crm access private key",
+	"cloudlets:#.config.accessapiaddr":                           "controller access API address",
 	"cloudlets:#.restagmap:#.value.name":                         "Resource Table Name",
 	"cloudlets:#.restagmap:#.value.organization":                 "Operator organization of the cloudlet site.",
 	"cloudlets:#.accessvars":                                     "Variables required to access cloudlet",
@@ -672,6 +749,15 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.osimages:#.diskformat":                      "format qcow2, img, etc",
 	"cloudletinfos:#.controllercachereceived":                    "Indicates all controller data has been sent to CRM",
 	"cloudletinfos:#.maintenancestate":                           "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"cloudletinfos:#.resources.vms:#.name":                       "Virtual machine name",
+	"cloudletinfos:#.resources.vms:#.type":                       "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"cloudletinfos:#.resources.vms:#.status":                     "Runtime status of the VM",
+	"cloudletinfos:#.resources.vms:#.infraflavor":                "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"cloudletinfos:#.resources.vms:#.containers:#.name":          "Name of the container",
+	"cloudletinfos:#.resources.vms:#.containers:#.type":          "Type can be docker or kubernetes",
+	"cloudletinfos:#.resources.vms:#.containers:#.status":        "Runtime status of the container",
+	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "IP within the CNI and is applicable to kubernetes only",
+	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "Restart count, applicable to kubernetes only",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
@@ -721,7 +807,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.flavor.name":                                 "Flavor name",
 	"clusterinsts:#.liveness":                                    "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"clusterinsts:#.auto":                                        "Auto is set to true when automatically created by back-end (internal use only)",
-	"clusterinsts:#.state":                                       "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"clusterinsts:#.state":                                       "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"clusterinsts:#.errors":                                      "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
 	"clusterinsts:#.crmoverride":                                 "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"clusterinsts:#.ipaccess":                                    "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
@@ -741,6 +827,15 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
 	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"clusterinsts:#.optres":                                      "Optional Resources required by OS flavor if any",
+	"clusterinsts:#.resources.vms:#.name":                        "Virtual machine name",
+	"clusterinsts:#.resources.vms:#.type":                        "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"clusterinsts:#.resources.vms:#.status":                      "Runtime status of the VM",
+	"clusterinsts:#.resources.vms:#.infraflavor":                 "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"clusterinsts:#.resources.vms:#.containers:#.name":           "Name of the container",
+	"clusterinsts:#.resources.vms:#.containers:#.type":           "Type can be docker or kubernetes",
+	"clusterinsts:#.resources.vms:#.containers:#.status":         "Runtime status of the container",
+	"clusterinsts:#.resources.vms:#.containers:#.clusterip":      "IP within the CNI and is applicable to kubernetes only",
+	"clusterinsts:#.resources.vms:#.containers:#.restarts":       "Restart count, applicable to kubernetes only",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",
@@ -797,7 +892,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.mappedports:#.tls":                           "TLS termination for this port",
 	"appinstances:#.mappedports:#.nginx":                         "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"appinstances:#.flavor.name":                                 "Flavor name",
-	"appinstances:#.state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"appinstances:#.state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"appinstances:#.errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"appinstances:#.crmoverride":                                 "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"appinstances:#.runtimeinfo.containerids":                    "List of container names",
@@ -834,27 +929,15 @@ var AllDataComments = map[string]string{
 	"vmpools:#.vms:#.flavor.ram":                                 "Ram in MB on the Cloudlet",
 	"vmpools:#.vms:#.flavor.disk":                                "Amount of disk in GB on the Cloudlet",
 	"vmpools:#.vms:#.flavor.propmap":                             "OS Flavor Properties, if any",
-	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"vmpools:#.state":                                            "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"vmpools:#.errors":                                           "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                      "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
-	"streamobjs:#.key.appkey.organization":                       "App developer organization",
-	"streamobjs:#.key.appkey.name":                               "App name",
-	"streamobjs:#.key.appkey.version":                            "App version",
-	"streamobjs:#.key.clusterinstkey.clusterkey.name":            "Cluster name",
-	"streamobjs:#.key.clusterinstkey.cloudletkey.organization":   "Organization of the cloudlet site",
-	"streamobjs:#.key.clusterinstkey.cloudletkey.name":           "Name of the cloudlet",
-	"streamobjs:#.key.clusterinstkey.organization":               "Name of Developer organization that this cluster belongs to",
-	"streamobjs:#.msgs:#.id":                                     "Unique message ID",
-	"streamobjs:#.msgs:#.msg":                                    "Stream message",
-	"streamobjs:#.state":                                         "Current state of the obj on the Cloudlet, one of StreamUnknown, StreamStart, StreamStop, StreamError",
-	"streamobjs:#.lastid":                                        "Last ID to track duplicate messages",
-	"streamobjs:#.lease":                                         "Lease time",
-	"streamobjs:#.errormsg":                                      "Stream error message, if any",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
 	"appinstances:#.fields":                   "StringArray",
 	"appinstances:#.runtimeinfo.containerids": "StringArray",
+	"appinstances:#.status.msgs":              "StringArray",
 	"apps:#.autoprovpolicies":                 "StringArray",
 	"apps:#.fields":                           "StringArray",
 	"autoprovpolicies:#.fields":               "StringArray",
@@ -862,6 +945,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudletinfos:#.errors":                  "StringArray",
 	"cloudletinfos:#.fields":                  "StringArray",
 	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
+	"cloudletinfos:#.status.msgs":             "StringArray",
 	"cloudletpools:#.cloudlets":               "StringArray",
 	"cloudletpools:#.fields":                  "StringArray",
 	"cloudlets:#.accessvars":                  "StringToString",
@@ -870,8 +954,10 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudlets:#.envvar":                      "StringToString",
 	"cloudlets:#.errors":                      "StringArray",
 	"cloudlets:#.fields":                      "StringArray",
+	"cloudlets:#.status.msgs":                 "StringArray",
 	"clusterinsts:#.errors":                   "StringArray",
 	"clusterinsts:#.fields":                   "StringArray",
+	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
 	"privacypolicies:#.fields":                "StringArray",
@@ -880,5 +966,6 @@ var AllDataSpecialArgs = map[string]string{
 	"settings.fields":                         "StringArray",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
+	"vmpools:#.status.msgs":                   "StringArray",
 	"vmpools:#.vms:#.flavor.propmap":          "StringToString",
 }

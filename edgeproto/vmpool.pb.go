@@ -45,6 +45,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // VM State
 //
 // VMState is the state of the VM
+//
+// 0: `VM_FREE`
+// 1: `VM_IN_PROGRESS`
+// 2: `VM_IN_USE`
+// 3: `VM_ADD`
+// 4: `VM_REMOVE`
+// 5: `VM_UPDATE`
+// 6: `VM_FORCE_FREE`
 type VMState int32
 
 const (
@@ -95,6 +103,10 @@ func (VMState) EnumDescriptor() ([]byte, []int) {
 // VM Action
 //
 // VMAction is the action to be performed on VM Pool
+//
+// 0: `VM_ACTION_DONE`
+// 1: `VM_ACTION_ALLOCATE`
+// 2: `VM_ACTION_RELEASE`
 type VMAction int32
 
 const (
@@ -1617,6 +1629,8 @@ const VMPoolFieldStatusTaskNumber = "6.1"
 const VMPoolFieldStatusMaxTasks = "6.2"
 const VMPoolFieldStatusTaskName = "6.3"
 const VMPoolFieldStatusStepName = "6.4"
+const VMPoolFieldStatusMsgCount = "6.5"
+const VMPoolFieldStatusMsgs = "6.6"
 const VMPoolFieldCrmOverride = "7"
 
 var VMPoolAllFields = []string{
@@ -1642,6 +1656,8 @@ var VMPoolAllFields = []string{
 	VMPoolFieldStatusMaxTasks,
 	VMPoolFieldStatusTaskName,
 	VMPoolFieldStatusStepName,
+	VMPoolFieldStatusMsgCount,
+	VMPoolFieldStatusMsgs,
 	VMPoolFieldCrmOverride,
 }
 
@@ -1668,6 +1684,8 @@ var VMPoolAllFieldsMap = map[string]struct{}{
 	VMPoolFieldStatusMaxTasks:        struct{}{},
 	VMPoolFieldStatusTaskName:        struct{}{},
 	VMPoolFieldStatusStepName:        struct{}{},
+	VMPoolFieldStatusMsgCount:        struct{}{},
+	VMPoolFieldStatusMsgs:            struct{}{},
 	VMPoolFieldCrmOverride:           struct{}{},
 }
 
@@ -1694,6 +1712,8 @@ var VMPoolAllFieldsStringMap = map[string]string{
 	VMPoolFieldStatusMaxTasks:        "Status Max Tasks",
 	VMPoolFieldStatusTaskName:        "Status Task Name",
 	VMPoolFieldStatusStepName:        "Status Step Name",
+	VMPoolFieldStatusMsgCount:        "Status Msg Count",
+	VMPoolFieldStatusMsgs:            "Status Msgs",
 	VMPoolFieldCrmOverride:           "Crm Override",
 }
 
@@ -1833,6 +1853,22 @@ func (m *VMPool) DiffFields(o *VMPool, fields map[string]struct{}) {
 		fields[VMPoolFieldStatusStepName] = struct{}{}
 		fields[VMPoolFieldStatus] = struct{}{}
 	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[VMPoolFieldStatusMsgCount] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[VMPoolFieldStatusMsgs] = struct{}{}
+		fields[VMPoolFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
+				fields[VMPoolFieldStatusMsgs] = struct{}{}
+				fields[VMPoolFieldStatus] = struct{}{}
+				break
+			}
+		}
+	}
 	if m.CrmOverride != o.CrmOverride {
 		fields[VMPoolFieldCrmOverride] = struct{}{}
 	}
@@ -1946,6 +1982,21 @@ func (m *VMPool) CopyInFields(src *VMPool) int {
 		if _, set := fmap["6.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["6.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["6.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}
@@ -2489,8 +2540,8 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	bufferedMsgs := []string{}
-	recvdStatus := false
+	lastMsgId := 0
+	var lastMsg string
 	var err error
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
@@ -2501,32 +2552,25 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			statusString := info.Status.ToString()
-			var msg string
-			if statusString != "" {
-				msg = statusString
-				recvdStatus = true
-			} else {
-				msg = TrackedState_CamelName[int32(curState)]
-			}
-			if recvdStatus {
-				// recvdStatus flag is for backwards compatibility.
-				// With current code we support msg streaming via streamObjs,
-				// but in case there are old versions of CRM sending msgs via
-				// status msg, only then we send msgs to cb
-				for _, bufMsg := range bufferedMsgs {
-					send(&Result{Message: bufMsg})
+			if len(info.Status.Msgs) > 0 {
+				for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+					if lastMsg == info.Status.Msgs[ii] {
+						continue
+					}
+					send(&Result{Message: info.Status.Msgs[ii]})
+					lastMsg = info.Status.Msgs[ii]
+					lastMsgId++
 				}
-				bufferedMsgs = nil
-				send(&Result{Message: msg})
 			} else {
-				// NotPresent is a state msg generated from this code, hence
-				// allow it
-				if msg == TrackedState_CamelName[int32(TrackedState_NOT_PRESENT)] {
-					send(&Result{Message: msg})
+				statusString := info.Status.ToString()
+				var msg string
+				if statusString != "" {
+					msg = statusString
 				} else {
-					bufferedMsgs = append(bufferedMsgs, msg)
+					msg = TrackedState_CamelName[int32(curState)]
 				}
+				lastMsg = msg
+				send(&Result{Message: msg})
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for VMPool")
@@ -2944,6 +2988,8 @@ const VMPoolInfoFieldStatusTaskNumber = "7.1"
 const VMPoolInfoFieldStatusMaxTasks = "7.2"
 const VMPoolInfoFieldStatusTaskName = "7.3"
 const VMPoolInfoFieldStatusStepName = "7.4"
+const VMPoolInfoFieldStatusMsgCount = "7.5"
+const VMPoolInfoFieldStatusMsgs = "7.6"
 
 var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldKeyOrganization,
@@ -2969,6 +3015,8 @@ var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldStatusMaxTasks,
 	VMPoolInfoFieldStatusTaskName,
 	VMPoolInfoFieldStatusStepName,
+	VMPoolInfoFieldStatusMsgCount,
+	VMPoolInfoFieldStatusMsgs,
 }
 
 var VMPoolInfoAllFieldsMap = map[string]struct{}{
@@ -2995,6 +3043,8 @@ var VMPoolInfoAllFieldsMap = map[string]struct{}{
 	VMPoolInfoFieldStatusMaxTasks:        struct{}{},
 	VMPoolInfoFieldStatusTaskName:        struct{}{},
 	VMPoolInfoFieldStatusStepName:        struct{}{},
+	VMPoolInfoFieldStatusMsgCount:        struct{}{},
+	VMPoolInfoFieldStatusMsgs:            struct{}{},
 }
 
 var VMPoolInfoAllFieldsStringMap = map[string]string{
@@ -3021,6 +3071,8 @@ var VMPoolInfoAllFieldsStringMap = map[string]string{
 	VMPoolInfoFieldStatusMaxTasks:        "Status Max Tasks",
 	VMPoolInfoFieldStatusTaskName:        "Status Task Name",
 	VMPoolInfoFieldStatusStepName:        "Status Step Name",
+	VMPoolInfoFieldStatusMsgCount:        "Status Msg Count",
+	VMPoolInfoFieldStatusMsgs:            "Status Msgs",
 }
 
 func (m *VMPoolInfo) IsKeyField(s string) bool {
@@ -3162,6 +3214,22 @@ func (m *VMPoolInfo) DiffFields(o *VMPoolInfo, fields map[string]struct{}) {
 		fields[VMPoolInfoFieldStatusStepName] = struct{}{}
 		fields[VMPoolInfoFieldStatus] = struct{}{}
 	}
+	if m.Status.MsgCount != o.Status.MsgCount {
+		fields[VMPoolInfoFieldStatusMsgCount] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
+	}
+	if len(m.Status.Msgs) != len(o.Status.Msgs) {
+		fields[VMPoolInfoFieldStatusMsgs] = struct{}{}
+		fields[VMPoolInfoFieldStatus] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.Status.Msgs); i1++ {
+			if m.Status.Msgs[i1] != o.Status.Msgs[i1] {
+				fields[VMPoolInfoFieldStatusMsgs] = struct{}{}
+				fields[VMPoolInfoFieldStatus] = struct{}{}
+				break
+			}
+		}
+	}
 }
 
 func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
@@ -3233,6 +3301,21 @@ func (m *VMPoolInfo) CopyInFields(src *VMPoolInfo) int {
 		if _, set := fmap["7.4"]; set {
 			if m.Status.StepName != src.Status.StepName {
 				m.Status.StepName = src.Status.StepName
+				changed++
+			}
+		}
+		if _, set := fmap["7.5"]; set {
+			if m.Status.MsgCount != src.Status.MsgCount {
+				m.Status.MsgCount = src.Status.MsgCount
+				changed++
+			}
+		}
+		if _, set := fmap["7.6"]; set {
+			if src.Status.Msgs != nil {
+				m.Status.Msgs = src.Status.Msgs
+				changed++
+			} else if m.Status.Msgs != nil {
+				m.Status.Msgs = nil
 				changed++
 			}
 		}

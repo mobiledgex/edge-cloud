@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Issue certificate to RegionalCloudlet service.
@@ -46,26 +48,37 @@ func (s *CloudletApi) GetCas(ctx context.Context, req *edgeproto.GetCasRequest) 
 }
 
 func (s *CloudletApi) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
-	key, pubPEM, err := s.accessKeyServer.UpgradeAccessKey(stream)
-	if err != nil {
-		return err
-	}
-	if pubPEM == "" {
-		// no new key
-		return nil
-	}
-	// save newly generated key
 	ctx := stream.Context()
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "upgrade access key")
+	return s.accessKeyServer.UpgradeAccessKey(stream, s.commitAccessPublicKey)
+}
+
+func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
+	return s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, key, &cloudlet) {
 			// deleted
 			return nil
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "commit upgraded key")
 		cloudlet.CrmAccessPublicKey = pubPEM
 		cloudlet.CrmAccessKeyUpgradeRequired = false
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})
-	return err
+}
+
+func (s *CloudletApi) GetAccessData(ctx context.Context, req *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
+	verified := node.ContextGetAccessKeyVerified(ctx)
+	if verified == nil {
+		// should never reach here if it wasn't verified
+		return nil, fmt.Errorf("Client authentication not verified")
+	}
+	cloudlet := &edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(&verified.Key, cloudlet) {
+		return nil, verified.Key.NotFoundError()
+	}
+	vaultClient := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
+	handler := accessapi.NewControllerHandler(vaultClient)
+	return handler.GetAccessData(ctx, req)
 }

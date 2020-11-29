@@ -8,6 +8,7 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -35,6 +36,11 @@ message AppKey {
 // ImageType
 //
 // ImageType specifies image type of an App
+//
+// 0: `IMAGE_TYPE_UNKNOWN`
+// 1: `IMAGE_TYPE_DOCKER`
+// 2: `IMAGE_TYPE_QCOW`
+// 3: `IMAGE_TYPE_HELM`
 enum ImageType {
   // Unknown image type
   IMAGE_TYPE_UNKNOWN = 0;
@@ -49,6 +55,9 @@ enum ImageType {
 // DeleteType
 //
 // DeleteType specifies if AppInst can be auto deleted or not
+//
+// 0: `NO_AUTO_DELETE`
+// 1: `AUTO_DELETE`
 enum DeleteType {
   // No autodelete
   NO_AUTO_DELETE = 0;
@@ -56,7 +65,13 @@ enum DeleteType {
   AUTO_DELETE = 1;
 }
 
-
+// AccessType
+//
+// AccessType indicates how to access the app
+//
+// 0: `ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT`
+// 1: `ACCESS_TYPE_DIRECT`
+// 2: `ACCESS_TYPE_LOAD_BALANCER`
 enum AccessType {
   // Default load balancer or direct based on deployment
   ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT = 0;
@@ -145,6 +160,10 @@ message App {
   // Numerical values must be decimal format.
   // i.e. tcp:80,udp:10002,http:443
   string skip_hc_ports = 34;
+    // Created at time
+  distributed_match_engine.Timestamp created_at = 35 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+    // Updated at time
+  distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -152,7 +171,7 @@ message App {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "DeletePrepare";
+  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }
@@ -190,7 +209,6 @@ service AppApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "Deployment,DeploymentGenerator";
     option (protogen.mc2_custom_authz) = true;
   }
   // Show Applications. Lists all Application definitions managed from the Edge Controller.

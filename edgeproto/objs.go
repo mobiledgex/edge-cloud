@@ -35,7 +35,8 @@ var ValidConfigKinds = map[string]struct{}{
 }
 
 var ReservedPlatformPorts = map[string]string{
-	"tcp:22": "Platform inter-node SSH",
+	"tcp:22":    "Platform inter-node SSH",
+	"tcp:20800": "Kubernetes master join server",
 }
 
 // sort each slice by key
@@ -87,9 +88,6 @@ func (a *AllData) Sort() {
 	})
 	sort.Slice(a.VmPools[:], func(i, j int) bool {
 		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
-	})
-	sort.Slice(a.StreamObjs[:], func(i, j int) bool {
-		return a.StreamObjs[i].Key.GetKeyString() < a.StreamObjs[j].Key.GetKeyString()
 	})
 }
 
@@ -452,14 +450,6 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 }
 
 func (s *AppInstRefs) Validate(fields map[string]struct{}) error {
-	return nil
-}
-
-func (s *StreamObj) Validate(fields map[string]struct{}) error {
-	return nil
-}
-
-func (s *StreamObjInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 

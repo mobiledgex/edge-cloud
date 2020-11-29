@@ -85,7 +85,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
 
-	if err := s.AccessKeyClient.init(initCtx, tlsClientIssuer, opts.cloudletKey); err != nil {
+	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
 		return initCtx, nil, err
 	}
@@ -105,12 +105,14 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	}
 
 	// init pki before logging, because access to logger needs pki certs
+	log.SpanLog(initCtx, log.DebugLevelInfo, "init internal pki")
 	err := s.initInternalPki(initCtx)
 	if err != nil {
 		return initCtx, nil, err
 	}
 
 	// init logger
+	log.SpanLog(initCtx, log.DebugLevelInfo, "get logger tls")
 	loggerTls, err := s.GetPublicClientTlsConfig(initCtx)
 	if err != nil {
 		return initCtx, nil, err

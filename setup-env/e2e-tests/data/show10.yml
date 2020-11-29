@@ -498,6 +498,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -517,6 +531,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-3
@@ -536,6 +564,21 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
+
 - key:
     organization: tmus
     name: tmus-cloud-4
@@ -555,6 +598,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-5
@@ -574,6 +631,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-6
@@ -593,6 +664,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-7
@@ -612,6 +697,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: azure
     name: azure-cloud-9
@@ -631,6 +730,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-1
@@ -650,6 +763,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 - key:
     organization: tmus
     name: tmus-cloud-8
@@ -669,7 +796,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 apps:
 - key:
     organization: Samsung
@@ -750,15 +890,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -784,15 +924,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -818,15 +958,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -852,15 +992,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -886,15 +1026,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -920,15 +1060,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -954,15 +1094,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -988,15 +1128,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1022,15 +1162,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1056,15 +1196,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1090,15 +1230,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1124,15 +1264,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1158,15 +1298,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1192,15 +1332,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1226,15 +1366,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1260,15 +1400,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1294,15 +1434,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1328,15 +1468,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1362,15 +1502,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1396,15 +1536,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication2-tcp.
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication2-udp.
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:

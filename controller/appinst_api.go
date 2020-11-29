@@ -1034,6 +1034,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 			}
 			cur.PowerState = powerState
 		}
+		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
@@ -1116,7 +1117,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if err := in.Key.ClusterInstKey.ValidateKey(); err != nil {
 			return err
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
+		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR &&
+			in.State != edgeproto.TrackedState_DELETE_DONE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			log.SpanLog(ctx, log.DebugLevelApi, "AppInst busy, cannot delete", "state", in.State)
 			return errors.New("AppInst busy, cannot delete")
 		}
@@ -1203,7 +1205,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.TimeDuration(), "Deleted AppInst successfully", cb.Send)
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
-			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
+			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_DELETE_DONE)
 			cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 			err = nil
 		}
@@ -1224,7 +1226,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
 		if autoerr != nil {
 			log.InfoLog("Failed to delete auto-ClusterInst",
-				"clusterInst", clusterInst, "err", err)
+				"clusterInst", clusterInst, "err", autoerr)
 		}
 	}
 	return err
@@ -1232,6 +1234,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.AppInst) error {
+		obj.Status = edgeproto.StatusInfo{}
 		err := cb.Send(obj)
 		return err
 	})
@@ -1290,7 +1293,8 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 				inst.RuntimeInfo = in.RuntimeInfo
 				inst.Status = in.Status
 				s.store.STMPut(stm, &inst)
-			} else if inst.Status != in.Status {
+			} else if (in.Status.MsgCount > 0 && in.Status.MsgCount != inst.Status.MsgCount) ||
+				(in.Status.TaskName != inst.Status.TaskName || in.Status.StepName != inst.Status.TaskName) {
 				// update status
 				inst.Status = in.Status
 				s.store.STMPut(stm, &inst)
@@ -1314,6 +1318,9 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		s.store.STMPut(stm, &inst)
 		return nil
 	})
+	if in.State == edgeproto.TrackedState_DELETE_DONE {
+		s.DeleteFromInfo(ctx, in)
+	}
 }
 
 func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
@@ -1325,10 +1332,11 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			return nil
 		}
 		// please see state_transitions.md
-		if inst.State != edgeproto.TrackedState_DELETING && inst.State != edgeproto.TrackedState_DELETE_REQUESTED {
+		if inst.State != edgeproto.TrackedState_DELETING && inst.State != edgeproto.TrackedState_DELETE_REQUESTED &&
+			inst.State != edgeproto.TrackedState_DELETE_DONE {
 			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
 				"key", &in.Key, "cur", inst.State,
-				"next", edgeproto.TrackedState_NOT_PRESENT)
+				"next", edgeproto.TrackedState_DELETE_DONE)
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
@@ -1349,7 +1357,7 @@ func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppIns
 			inst.State != edgeproto.TrackedState_UPDATE_ERROR {
 			return nil
 		}
-		if newState == edgeproto.TrackedState_NOT_PRESENT {
+		if newState == edgeproto.TrackedState_DELETE_DONE {
 			s.store.STMDel(stm, &in.Key)
 			appInstRefsApi.removeRef(stm, &in.Key)
 		} else {

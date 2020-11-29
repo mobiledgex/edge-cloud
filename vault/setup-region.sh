@@ -62,12 +62,20 @@ path "secret/data/$REGION/accounts/*" {
   capabilities = [ "read" ]
 }
 
+path "secret/data/accounts/chef" {
+  capabilities = [ "read" ]
+}
+
 path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
 
 path "pki-regional-cloudlet/issue/$REGION" {
   capabilities = [ "read", "update" ]
+}
+
+path "ssh/sign/machine" {
+  capabilities = [ "create", "update" ]
 }
 EOF
 vault policy write $REGION.controller /tmp/controller-pol.hcl
@@ -76,51 +84,6 @@ vault write auth/approle/role/$REGION.controller period="720h" policies="$REGION
 # get controller app roleID and generate secretID
 vault read auth/approle/role/$REGION.controller/role-id
 vault write -f auth/approle/role/$REGION.controller/secret-id
-
-# set crm approle
-cat > /tmp/crm-pol.hcl <<EOF
-path "auth/approle/login" {
-  capabilities = [ "create", "read" ]
-}
-
-path "secret/data/registry/*" {
-  capabilities = [ "read" ]
-}
-
-path "secret/data/accounts/chef" {
-  capabilities = [ "read" ]
-}
-
-path "secret/data/$REGION/cloudlet/openstack/*" {
-  capabilities = [ "create", "update", "delete", "read" ]
-}
-
-path "secret/metadata/$REGION/cloudlet/openstack/*" {
-  capabilities = [ "delete" ]
-}
-
-path "secret/data/cloudlet/openstack/mexenv.json" {
-  capabilities = [ "read" ]
-}
-
-path "pki-regional-cloudlet/issue/$REGION" {
-  capabilities = [ "read", "update" ]
-}
-
-path "secret/data/keys/id_rsa_mex" {
-  capabilities = [ "read" ]
-}
-
-path "ssh/sign/machine" {
-  capabilities = [ "create", "update" ]
-}
-EOF
-vault policy write $REGION.crm /tmp/crm-pol.hcl
-rm /tmp/crm-pol.hcl
-vault write auth/approle/role/$REGION.crm period="720h" policies="$REGION.crm"
-# get crm app roleID and generate secretID
-vault read auth/approle/role/$REGION.crm/role-id
-vault write -f auth/approle/role/$REGION.crm/secret-id
 
 # set dme approle
 cat > /tmp/dme-pol.hcl <<EOF

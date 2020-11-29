@@ -53,6 +53,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Status = edgeproto.StatusInfo{}
+	}
+	if _, found := tags["nocmp"]; found {
 		in.Revision = ""
 	}
 	if _, found := tags["nocmp"]; found {
@@ -80,6 +83,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.OptRes = ""
+	}
+	if _, found := tags["timestamp"]; found {
+		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
 }
 
@@ -754,7 +760,7 @@ var AppInstComments = map[string]string{
 	"mappedports:#.tls":              "TLS termination for this port",
 	"mappedports:#.nginx":            "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"flavor":                         "Flavor name",
-	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names",
@@ -777,6 +783,7 @@ var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
 	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
+	"status.msgs":              "StringArray",
 }
 var AppInstRuntimeRequiredArgs = []string{}
 var AppInstRuntimeOptionalArgs = []string{
@@ -807,6 +814,8 @@ var AppInstInfoOptionalArgs = []string{
 	"status.maxtasks",
 	"status.taskname",
 	"status.stepname",
+	"status.msgcount",
+	"status.msgs",
 	"powerstate",
 }
 var AppInstInfoAliasArgs = []string{}
@@ -820,7 +829,7 @@ var AppInstInfoComments = map[string]string{
 	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
 	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
 	"notifyid":                                    "Id of client assigned by server (internal use only)",
-	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies",
+	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                    "List of container names",
 	"powerstate":                                  "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
@@ -829,6 +838,7 @@ var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
 	"fields":                   "StringArray",
 	"runtimeinfo.containerids": "StringArray",
+	"status.msgs":              "StringArray",
 }
 var AppInstMetricsRequiredArgs = []string{}
 var AppInstMetricsOptionalArgs = []string{
@@ -865,6 +875,32 @@ var AppInstLookupComments = map[string]string{
 	"policykey.name":                              "Policy name",
 }
 var AppInstLookupSpecialArgs = map[string]string{}
+var AppInstLookup2RequiredArgs = []string{
+	"key.appkey.organization",
+	"key.appkey.name",
+	"key.appkey.version",
+	"key.clusterinstkey.clusterkey.name",
+	"key.clusterinstkey.cloudletkey.organization",
+	"key.clusterinstkey.cloudletkey.name",
+	"key.clusterinstkey.organization",
+}
+var AppInstLookup2OptionalArgs = []string{
+	"cloudletkey.organization",
+	"cloudletkey.name",
+}
+var AppInstLookup2AliasArgs = []string{}
+var AppInstLookup2Comments = map[string]string{
+	"key.appkey.organization":                     "App developer organization",
+	"key.appkey.name":                             "App name",
+	"key.appkey.version":                          "App version",
+	"key.clusterinstkey.clusterkey.name":          "Cluster name",
+	"key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
+	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
+	"cloudletkey.organization":                    "Organization of the cloudlet site",
+	"cloudletkey.name":                            "Name of the cloudlet",
+}
+var AppInstLookup2SpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{
 	"app-org",
 	"appname",

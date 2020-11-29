@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -17,6 +18,18 @@ import (
 
 func GetCloudletLogFile(filePrefix string) string {
 	return "/tmp/" + filePrefix + ".log"
+}
+
+func GetLocalAccessKeyDir() string {
+	return "/tmp/accesskeys"
+}
+
+func GetLocalAccessKeyFile(filePrefix string) string {
+	return GetLocalAccessKeyDir() + "/" + filePrefix + ".key"
+}
+
+func GetCrmAccessKeyFile() string {
+	return "/root/accesskey/accesskey.pem"
 }
 
 func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) (*process.Crm, []process.StartOp, error) {
@@ -43,6 +56,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	appDNSRoot := ""
 	chefServerPath := ""
 	deploymentTag := ""
+	accessApiAddr := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
@@ -51,7 +65,6 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		tlsCertFile = pfConfig.TlsCertFile
 		tlsKeyFile = pfConfig.TlsKeyFile
 		tlsCAFile = pfConfig.TlsCaFile
-		vaultAddr = pfConfig.VaultAddr
 		testMode = pfConfig.TestMode
 		span = pfConfig.Span
 		cloudletVMImagePath = pfConfig.CloudletVmImagePath
@@ -62,6 +75,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		appDNSRoot = pfConfig.AppDnsRoot
 		chefServerPath = pfConfig.ChefServerPath
 		deploymentTag = pfConfig.DeploymentTag
+		accessApiAddr = pfConfig.AccessApiAddr
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
@@ -97,16 +111,8 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
 		DeploymentTag:       deploymentTag,
+		AccessApiAddr:       accessApiAddr,
 	}, opts, nil
-}
-
-func GetCRMCmd(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) (string, *map[string]string, error) {
-	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return crmProc.String(opts...), &crmProc.Common.EnvVars, nil
 }
 
 func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) ([]string, *map[string]string, error) {
@@ -114,6 +120,7 @@ func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformCon
 	if err != nil {
 		return nil, nil, err
 	}
+	crmProc.AccessKeyFile = GetCrmAccessKeyFile()
 
 	return crmProc.GetArgs(opts...), &crmProc.Common.EnvVars, nil
 }
@@ -130,11 +137,26 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	}
 	cloudlet.NotifySrvAddr = newAddr
 
+	accessKeyFile := GetLocalAccessKeyFile(cloudlet.Key.Name)
+	if pfConfig.CrmAccessPrivateKey != "" {
+		// Write access key to local disk
+		err = os.MkdirAll(GetLocalAccessKeyDir(), 0744)
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(accessKeyFile, []byte(pfConfig.CrmAccessPrivateKey), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	// track all local crm processes
 	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
 		return err
 	}
+	crmProc.AccessKeyFile = accessKeyFile
 
 	err = crmProc.StartLocal(GetCloudletLogFile(cloudlet.Key.Name), opts...)
 	if err != nil {

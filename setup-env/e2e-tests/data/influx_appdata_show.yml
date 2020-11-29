@@ -110,6 +110,20 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
+  resources:
+    vms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: m4.small
+      ipaddresses:
+      - externalip: 10.101.100.11
 
 apps:
 - key:
@@ -280,15 +294,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication1-udp.
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:

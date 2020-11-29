@@ -47,16 +47,19 @@ func TestInternalPki(t *testing.T) {
 	defer vp.StopLocal()
 
 	node.BadAuthDelay = time.Millisecond
+	node.VerifyDelay = time.Millisecond
+	node.VerifyRetry = 3
 
+	vaultAddr := "http://127.0.0.1:8200"
 	// Set up fake Controller to serve access key API
 	dcUS := &DummyController{}
-	dcUS.Init(ctx, "us", vroles)
+	dcUS.Init(ctx, "us", vroles, vaultAddr)
 	dcUS.Start(ctx)
 	defer dcUS.Stop()
 
 	// Set up fake Controller to serve access key API
 	dcEU := &DummyController{}
-	dcEU.Init(ctx, "eu", vroles)
+	dcEU.Init(ctx, "eu", vroles, vaultAddr)
 	dcEU.Start(ctx)
 	defer dcEU.Stop()
 
@@ -491,14 +494,14 @@ func TestInternalPki(t *testing.T) {
 		Client:                     crmClientUS,
 		ControllerRequireAccessKey: true,
 		InvalidateClientKey:        true,
-		ExpectErr:                  "AccessKey authentication failed",
+		ExpectErr:                  "Failed to verify cloudlet access key signature",
 	})
 	ccTests.add(ClientController{
 		Controller:                 dcEU,
 		Client:                     crmClientEU,
 		ControllerRequireAccessKey: true,
 		InvalidateClientKey:        true,
-		ExpectErr:                  "AccessKey authentication failed",
+		ExpectErr:                  "Failed to verify cloudlet access key signature",
 	})
 	// ignore invalid keys or missing keys for backwards compatibility
 	// with CRMs that were not upgraded
@@ -545,7 +548,8 @@ func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRo
 	mgr.InternalDomain = "mobiledgex.net"
 	if cfg.AccessKeyFile != "" && cfg.AccessApiAddr != "" {
 		mgr.AccessKeyClient.AccessKeyFile = cfg.AccessKeyFile
-		mgr.AccessKeyClient.AccessApiAddr = "notls://" + cfg.AccessApiAddr
+		mgr.AccessKeyClient.AccessApiAddr = cfg.AccessApiAddr
+		mgr.AccessKeyClient.TestSkipTlsVerify = true
 	}
 	// nodeMgr init will attempt to issue a cert to be able to talk
 	// to Jaeger/ElasticSearch
@@ -604,7 +608,8 @@ func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, err
 	nodeMgr.InternalDomain = "mobiledgex.net"
 	if s.AccessKeyFile != "" && s.AccessApiAddr != "" {
 		nodeMgr.AccessKeyClient.AccessKeyFile = s.AccessKeyFile
-		nodeMgr.AccessKeyClient.AccessApiAddr = "notls://" + s.AccessApiAddr
+		nodeMgr.AccessKeyClient.AccessApiAddr = s.AccessApiAddr
+		nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
 	}
 	opts := []node.NodeOp{
 		node.WithRegion(s.Region),
@@ -841,8 +846,8 @@ type DummyController struct {
 	TlsRegisterCb func(server *grpc.Server)
 }
 
-func (s *DummyController) Init(ctx context.Context, region string, vroles *process.VaultRoles) error {
-	s.DummyController.Init()
+func (s *DummyController) Init(ctx context.Context, region string, vroles *process.VaultRoles, vaultAddr string) error {
+	s.DummyController.Init(vaultAddr)
 	s.DummyController.ApiRegisterCb = func(serv *grpc.Server) {
 		// add APIs to issue certs to CRM/etc
 		edgeproto.RegisterCloudletAccessApiServer(serv, s)
@@ -853,7 +858,6 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 		echo.RegisterEchoServer(serv, es)
 	}
 	// no crm vault role/secret env vars for controller (no backwards compatability)
-	s.KeyServer.SetCrmVaultAuth("", "")
 	s.vroles = vroles
 
 	vc := getVaultConfig(node.NodeTypeController, region, vroles)
@@ -864,7 +868,7 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 }
 
 func (s *DummyController) Start(ctx context.Context) {
-	s.DummyController.Start()
+	s.DummyController.Start(ctx, "127.0.0.1:0")
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err.Error())
@@ -940,4 +944,8 @@ func (s *DummyController) GetCas(ctx context.Context, req *edgeproto.GetCasReque
 	}
 	reply.CaChainPem = string(cab)
 	return reply, err
+}
+
+func (s *DummyController) GetAccessData(ctx context.Context, in *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
+	return &edgeproto.AccessDataReply{}, nil
 }

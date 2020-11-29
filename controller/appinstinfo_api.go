@@ -23,7 +23,7 @@ func (s *AppInstInfoApi) Update(ctx context.Context, in *edgeproto.AppInstInfo, 
 }
 
 func (s *AppInstInfoApi) Delete(ctx context.Context, in *edgeproto.AppInstInfo, rev int64) {
-	appInstApi.DeleteFromInfo(ctx, in)
+	// no-op
 }
 
 func (s *AppInstInfoApi) Flush(ctx context.Context, notifyId int64) {

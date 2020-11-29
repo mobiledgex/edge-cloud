@@ -10,6 +10,8 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/mobiledgex/edge-cloud/cli"
+	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
@@ -49,6 +51,12 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.DeletePrepare = false
+	}
+	if _, found := tags["timestamp"]; found {
+		in.CreatedAt = distributed_match_engine.Timestamp{}
+	}
+	if _, found := tags["timestamp"]; found {
+		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
 }
 
@@ -170,8 +178,8 @@ func DeleteApps(c *cli.Command, data []edgeproto.App, err *error) {
 
 var UpdateAppCmd = &cli.Command{
 	Use:          "UpdateApp",
-	RequiredArgs: strings.Join(UpdateAppRequiredArgs, " "),
-	OptionalArgs: strings.Join(UpdateAppOptionalArgs, " "),
+	RequiredArgs: strings.Join(AppRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppAliasArgs, " "),
 	SpecialArgs:  &AppSpecialArgs,
 	Comments:     AppComments,
@@ -541,34 +549,3 @@ var AppAutoProvPolicyComments = map[string]string{
 	"autoprovpolicy":      "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}
-var UpdateAppRequiredArgs = []string{
-	"app-org",
-	"appname",
-	"appvers",
-}
-var UpdateAppOptionalArgs = []string{
-	"imagepath",
-	"imagetype",
-	"accessports",
-	"defaultflavor",
-	"authpublickey",
-	"command",
-	"annotations",
-	"deploymentmanifest",
-	"androidpackagename",
-	"delopt",
-	"configs:#.kind",
-	"configs:#.config",
-	"scalewithcluster",
-	"internalports",
-	"revision",
-	"officialfqdn",
-	"md5sum",
-	"defaultsharedvolumesize",
-	"autoprovpolicy",
-	"accesstype",
-	"defaultprivacypolicy",
-	"autoprovpolicies",
-	"templatedelimiter",
-	"skiphcports",
-}

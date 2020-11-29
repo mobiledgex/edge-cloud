@@ -5,7 +5,6 @@ package apis
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -14,10 +13,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	yaml "github.com/mobiledgex/yaml/v2"
 )
 
 var appData edgeproto.AllData
@@ -161,6 +158,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			output := &testutil.AllDataStreamOut{}
 			testutil.RunAllDataStreamApis(run, &appData, output)
 			util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
+		case "showfiltered":
+			output := &edgeproto.AllData{}
+			testutil.RunAllDataShowApis(run, &appData, output)
+			util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
+			*retry = true
 		default:
 			log.Printf("Error: unsupported controller API %s\n", api)
 			rc = false
@@ -276,38 +278,30 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 		if c.PhysicalName == "" {
 			c.PhysicalName = c.Key.Name
 		}
+		c.ContainerVersion = ctrl.VersionTag
 
 		pfConfig := edgeproto.PlatformConfig{}
-
-		rolesfile := outputDir + "/roles.yaml"
-		dat, err := ioutil.ReadFile(rolesfile)
-		if err != nil {
-			return err
-		}
-		vroles := process.VaultRoles{}
-		err = yaml.Unmarshal(dat, &vroles)
-		if err != nil {
-			return err
-		}
 		region := ctrl.Region
 		if region == "" {
 			region = "local"
 		}
-		roles := vroles.RegionRoles[region]
 		pfConfig.EnvVar = make(map[string]string)
-		pfConfig.EnvVar["VAULT_ROLE_ID"] = roles.CRMRoleID
-		pfConfig.EnvVar["VAULT_SECRET_ID"] = roles.CRMSecretID
 
 		// Defaults
 		pfConfig.PlatformTag = ""
 		pfConfig.TlsCertFile = ctrl.TLS.ServerCert
 		pfConfig.TlsKeyFile = ctrl.TLS.ServerKey
 		pfConfig.TlsCaFile = ctrl.TLS.CACert
+		pfConfig.UseVaultCas = ctrl.UseVaultCAs
 		pfConfig.UseVaultCerts = ctrl.UseVaultCerts
-		pfConfig.VaultAddr = "http://127.0.0.1:8200"
 		pfConfig.ContainerRegistryPath = "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
 		pfConfig.TestMode = true
 		pfConfig.NotifyCtrlAddrs = ctrl.NotifyAddr
+		pfConfig.DeploymentTag = ctrl.DeploymentTag
+		pfConfig.AccessApiAddr = ctrl.AccessApiAddr
+		for k, v := range ctrl.Common.EnvVars {
+			pfConfig.EnvVar[k] = v
+		}
 
 		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig); err != nil {
 			return err

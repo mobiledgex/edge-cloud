@@ -77,9 +77,6 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 	s.InternalPki.vaultConfig = s.VaultConfig
 	if s.AccessKeyClient.enabled {
 		s.InternalPki.accessKeyClient = &s.AccessKeyClient
-		s.InternalPki.enabled = true
-		s.InternalPki.UseVaultCAs = true
-		s.InternalPki.UseVaultCerts = true
 		s.InternalPki.vaultConfig = nil // should never talk to Vault
 		pkiDesc = append(pkiDesc, "useAccessKey")
 	}
@@ -146,9 +143,9 @@ func (s *internalPki) loadCerts(certFile, keyFile, caFile string) error {
 
 func (s *internalPki) refreshCerts() {
 	// for e2e-tests, to test refresh set a low refresh interval.
-	// e2e-tests last 5 minutes or so, so it doesn't have to be super fast.
+	// e2e-tests last 15 minutes or so, so it doesn't have to be super fast.
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
-		refreshCertInterval = 10 * time.Second
+		refreshCertInterval = 30 * time.Second
 	}
 
 	interval := refreshCertInterval
@@ -189,6 +186,7 @@ func (s *internalPki) RefreshNow(ctx context.Context) error {
 		if err != nil {
 			str := fmt.Sprintf("cert %v: %v", id, err)
 			failures = append(failures, str)
+			continue
 		}
 		s.mux.Lock()
 		s.certs[id] = cert

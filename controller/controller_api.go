@@ -89,7 +89,7 @@ func (s *ControllerApi) RunJobs(run func(arg interface{}, addr string) error, ar
 			err := run(arg, ctrlAddr)
 			if err != nil {
 				mux.Lock()
-				if joberr != nil {
+				if err != nil {
 					joberr = err
 				}
 				mux.Unlock()

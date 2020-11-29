@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	NoAuth            = "noauth"
 	BasicAuth         = "basic"
 	TokenAuth         = "token"
 	ApiKeyAuth        = "apikey"
@@ -46,6 +47,10 @@ func getVaultRegistryPath(registry string) string {
 	return fmt.Sprintf("/secret/data/registry/%s", registry)
 }
 
+type RegistryAuthApi interface {
+	GetRegistryAuth(ctx context.Context, imgUrl string) (*RegistryAuth, error)
+}
+
 func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Config) (*RegistryAuth, error) {
 	if vaultConfig == nil || vaultConfig.Addr == "" {
 		return nil, fmt.Errorf("no vault specified")
@@ -63,6 +68,12 @@ func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Conf
 	log.SpanLog(ctx, log.DebugLevelApi, "get registry auth", "vault-path", vaultPath)
 	auth := &RegistryAuth{}
 	err = vault.GetData(vaultConfig, vaultPath, 0, auth)
+	if err != nil && strings.Contains(err.Error(), "no secrets") {
+		// no secrets found, assume public registry
+		log.SpanLog(ctx, log.DebugLevelApi, "warning, no registry credentials in vault, assume public registry", "err", err)
+		auth.AuthType = NoAuth
+		err = nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -201,10 +212,10 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
  * - The Registry authorizes the client by validating the Bearer token and the claim set embedded within
  *   it and begins the session as usual
  */
-func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.Config, reqConfig *RequestConfig) (*http.Response, error) {
-	auth, err := GetRegistryAuth(ctx, regUrl, vaultConfig)
+func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAuthApi, reqConfig *RequestConfig) (*http.Response, error) {
+	auth, err := authApi.GetRegistryAuth(ctx, regUrl)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
+		return nil, err
 	}
 	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth, reqConfig)
 	if err != nil {
@@ -236,7 +247,7 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, vaultConfig *vault.
 	}
 }
 
-func ValidateDockerRegistryPath(ctx context.Context, regUrl string, vaultConfig *vault.Config) error {
+func ValidateDockerRegistryPath(ctx context.Context, regUrl string, authApi RegistryAuthApi) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validate registry path", "path", regUrl)
 
 	if regUrl == "" {
@@ -268,7 +279,7 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl string, vaultConfig 
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.SpanLog(ctx, log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	resp, err := SendHTTPReq(ctx, "GET", regUrl, vaultConfig, nil)
+	resp, err := SendHTTPReq(ctx, "GET", regUrl, authApi, nil)
 	if err != nil {
 		return err
 	}
@@ -294,13 +305,13 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl string, vaultConfig 
 	return fmt.Errorf("Invalid registry path: %s", http.StatusText(resp.StatusCode))
 }
 
-func ValidateVMRegistryPath(ctx context.Context, imgUrl string, vaultConfig *vault.Config) error {
+func ValidateVMRegistryPath(ctx context.Context, imgUrl string, authApi RegistryAuthApi) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validate vm-image path", "path", imgUrl)
 	if imgUrl == "" {
 		return fmt.Errorf("image path is empty")
 	}
 
-	resp, err := SendHTTPReq(ctx, "GET", imgUrl, vaultConfig, nil)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, nil)
 	if err != nil {
 		return err
 	}
@@ -309,4 +320,19 @@ func ValidateVMRegistryPath(ctx context.Context, imgUrl string, vaultConfig *vau
 		return nil
 	}
 	return fmt.Errorf("Invalid image path: %s", http.StatusText(resp.StatusCode))
+}
+
+type VaultRegistryAuthApi struct {
+	VaultConfig *vault.Config
+}
+
+func (s *VaultRegistryAuthApi) GetRegistryAuth(ctx context.Context, imgUrl string) (*RegistryAuth, error) {
+	return GetRegistryAuth(ctx, imgUrl, s.VaultConfig)
+}
+
+// For unit tests
+type DummyRegistryAuthApi struct{}
+
+func (s *DummyRegistryAuthApi) GetRegistryAuth(ctx context.Context, imgUrl string) (*RegistryAuth, error) {
+	return &RegistryAuth{}, nil
 }

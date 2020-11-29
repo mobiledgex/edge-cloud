@@ -11,7 +11,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
-	"github.com/mobiledgex/edge-cloud/vault"
 	yaml "github.com/mobiledgex/yaml/v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -71,12 +70,12 @@ func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
 	meta.Labels[cloudcommon.MexAppVersionLabel] = util.DNSSanitize(app.Key.Version)
 }
 
-func GetAppEnvVars(ctx context.Context, app *edgeproto.App, vaultConfig *vault.Config, deploymentVars *crmutil.DeploymentReplaceVars) (*[]v1.EnvVar, error) {
+func GetAppEnvVars(ctx context.Context, app *edgeproto.App, authApi cloudcommon.RegistryAuthApi, deploymentVars *crmutil.DeploymentReplaceVars) (*[]v1.EnvVar, error) {
 	var envVars []v1.EnvVar
 	for _, v := range app.Configs {
 		if v.Kind == edgeproto.AppConfigEnvYaml {
 			var curVars []v1.EnvVar
-			cfg, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, v.Config)
+			cfg, err := cloudcommon.GetDeploymentManifest(ctx, authApi, v.Config)
 			if err != nil {
 				return nil, err
 			}
@@ -102,17 +101,17 @@ func GetAppEnvVars(ctx context.Context, app *edgeproto.App, vaultConfig *vault.C
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(ctx context.Context, vaultConfig *vault.Config, app *edgeproto.App, kubeManifest string, imagePullSecrets []string) (string, error) {
+func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app *edgeproto.App, kubeManifest string, imagePullSecrets []string) (string, error) {
 	var files []string
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecrets", imagePullSecrets)
-	envVars, err := GetAppEnvVars(ctx, app, vaultConfig, deploymentVars)
+	envVars, err := GetAppEnvVars(ctx, app, authApi, deploymentVars)
 	if err != nil {
 		return "", err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "Merging environment variables", "envVars", envVars)
-	mf, err := cloudcommon.GetDeploymentManifest(ctx, vaultConfig, kubeManifest)
+	mf, err := cloudcommon.GetDeploymentManifest(ctx, authApi, kubeManifest)
 	if err != nil {
 		return mf, err
 	}
