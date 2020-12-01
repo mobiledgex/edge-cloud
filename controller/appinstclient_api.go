@@ -128,7 +128,7 @@ func (s *AppInstClientApi) RecvAppInstClient(ctx context.Context, client *edgepr
 func (s *AppInstClientApi) Prune(ctx context.Context, keys map[edgeproto.AppInstClientKey]struct{}) {}
 
 func (s *AppInstClientApi) StreamAppInstClientsLocal(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_StreamAppInstClientsLocalServer) error {
-	// Resuest this AppInst to be sent
+	// Request this AppInst to be sent
 	recvCh := make(chan edgeproto.AppInstClient, int(settingsApi.Get().MaxTrackedDmeClients))
 	s.SetRecvChan(cb.Context(), in, recvCh)
 
