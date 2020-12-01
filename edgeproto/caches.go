@@ -14,6 +14,7 @@ type CacheUpdateType int
 const (
 	UpdateTask CacheUpdateType = 0
 	UpdateStep CacheUpdateType = 1
+	NewTask    CacheUpdateType = 2
 )
 
 type ClusterInstCacheUpdateParms struct {
@@ -82,6 +83,19 @@ func (s *ClusterInstInfoCache) SetResources(ctx context.Context, key *ClusterIns
 	info.Resources = *resources
 	s.Update(ctx, &info, 0)
 	return nil
+}
+
+func (s *ClusterInstInfoCache) NewStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
+	log.DebugLog(log.DebugLevelApi, "NewStatusTask", "key", key, "taskName", taskName)
+	info := ClusterInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("NewStatusTask failed, did not find clusterInst in cache")
+		return
+	}
+	info.Status.StatusReset()
+	info.Status.SetTask(taskName)
+	s.Update(ctx, &info, 0)
 }
 
 func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
@@ -312,6 +326,19 @@ func (s *AppInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *AppInstKe
 		return
 	}
 	info.Status.SetMaxTasks(maxTasks)
+	s.Update(ctx, &info, 0)
+}
+
+func (s *AppInstInfoCache) NewStatusTask(ctx context.Context, key *AppInstKey, taskName string) {
+	log.DebugLog(log.DebugLevelApi, "NewStatusTask", "key", key, "taskName", taskName)
+	info := AppInstInfo{}
+	if !s.Get(key, &info) {
+		// we don't want to override the state in the cache if it is not present
+		log.InfoLog("NewStatusTask failed, did not find appInst in cache")
+		return
+	}
+	info.Status.StatusReset()
+	info.Status.SetTask(taskName)
 	s.Update(ctx, &info, 0)
 }
 

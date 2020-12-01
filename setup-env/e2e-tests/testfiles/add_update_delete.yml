@@ -47,6 +47,14 @@ tests:
     yaml2: "{{datadir}}/appdata_show_after_cluster_update.yml"
     filetype: appdata
 
+- name: Verify stream data
+  apifile: "{{datadir}}/update_appdata.yml"
+  actions: [ctrlapi-stream]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/update_appdata_stream.yml"
+    filetype: appstream
+
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
   apifile: "{{datadir}}/appdata.yml"
