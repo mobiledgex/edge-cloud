@@ -144,17 +144,6 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 	s.Update(ctx, &info, 0)
 }
 
-func (s *ClusterInstInfoCache) StatusReset(ctx context.Context, key *ClusterInstKey) {
-	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	s.UpdateModFunc(ctx, key, 0, func(old *ClusterInstInfo) (newObj *ClusterInstInfo, changed bool) {
-		if old == nil {
-			return old, false
-		}
-		old.Status.StatusReset()
-		return old, true
-	})
-}
-
 // If CRM crashes or reconnects to controller, controller will resend
 // current state. This is needed to:
 // -restart actions that were lost due to a crash
@@ -374,28 +363,6 @@ func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errSta
 	info.Errors = append(info.Errors, err)
 	info.State = errState
 	s.Update(ctx, &info, 0)
-}
-
-func (s *AppInstInfoCache) StatusReset(ctx context.Context, key *AppInstKey) {
-	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
-		if old == nil {
-			return old, false
-		}
-		old.Status.StatusReset()
-		return old, true
-	})
-}
-
-func (s *CloudletInfoCache) StatusReset(ctx context.Context, key *CloudletKey) {
-	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	s.UpdateModFunc(ctx, key, 0, func(old *CloudletInfo) (newObj *CloudletInfo, changed bool) {
-		if old == nil {
-			return old, false
-		}
-		old.Status.StatusReset()
-		return old, true
-	})
 }
 
 func (s *CloudletInfoCache) SetStatusTask(ctx context.Context, key *CloudletKey, taskName string) {
