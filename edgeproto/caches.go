@@ -87,19 +87,6 @@ func (s *ClusterInstInfoCache) SetResources(ctx context.Context, key *ClusterIns
 	return nil
 }
 
-func (s *ClusterInstInfoCache) NewStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
-	log.SpanLog(ctx, log.DebugLevelApi, "NewStatusTask", "key", key, "taskName", taskName)
-	info := ClusterInstInfo{}
-	if !s.Get(key, &info) {
-		// we don't want to override the state in the cache if it is not present
-		log.InfoLog("NewStatusTask failed, did not find clusterInst in cache")
-		return
-	}
-	info.Status.StatusReset()
-	info.Status.SetTask(taskName)
-	s.Update(ctx, &info, 0)
-}
-
 func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string, resetStatus bool) {
 	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := ClusterInstInfo{}
