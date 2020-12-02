@@ -202,24 +202,25 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	if !cloudletApi.cache.Get(key, cloudlet) {
 		return key.NotFoundError()
 	}
-	if cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS {
+	if cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS ||
+		(cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS && cloudlet.State != edgeproto.TrackedState_READY) {
+		// If restricted scenario, then stream msgs only if either cloudlet obj was not created successfully or it is updating
 		return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
-	}
-	if cloudlet.State != edgeproto.TrackedState_READY {
-		// Either cloudlet obj was not created successfully or it is updating, skip
-		return nil
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &cloudletInfo) {
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
+			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
 			return nil
 		}
 	}
+
+	// Fetch platform specific status
 	pfConfig, err := getPlatformConfig(ctx, cloudlet)
 	if err != nil {
 		return err
 	}
-	// Fetch platform specific status
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
 		return fmt.Errorf("Failed to get platform: %v", err)
@@ -230,6 +231,8 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	if err != nil {
 		return fmt.Errorf("Failed to get cloudlet run status: %v", err)
 	}
+
+	// Fetch cloudlet info status
 	lastMsgId := 0
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
@@ -248,7 +251,8 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 
 		curState := cloudletInfo.State
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
+			curState == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
 			failed <- true
 			return
 		}
