@@ -1,0 +1,22 @@
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: AcmeAppCo
+
+appinstances:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo

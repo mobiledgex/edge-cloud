@@ -1,0 +1,30 @@
+streamobjs:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo
+  msgs:
+  - message: Updating
+  - message: fake appInst updated
+  - message: Ready
+- key:
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  msgs:
+  - message: Updating
+  - message: Updating Cluster Inst
+  - message: Ready
+  - message: Updated ClusterInst successfully
