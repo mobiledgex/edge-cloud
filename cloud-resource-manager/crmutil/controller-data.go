@@ -154,21 +154,23 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
+	resetStatus := edgeproto.NoResetStatus
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
-		case edgeproto.NewTask:
-			cd.ClusterInstInfoCache.NewStatusTask(ctx, &new.Key, value)
 		case edgeproto.UpdateTask:
-			cd.ClusterInstInfoCache.SetStatusTask(ctx, &new.Key, value)
+			cd.ClusterInstInfoCache.SetStatusTask(ctx, &new.Key, value, resetStatus)
 		case edgeproto.UpdateStep:
-			cd.ClusterInstInfoCache.SetStatusStep(ctx, &new.Key, value)
+			cd.ClusterInstInfoCache.SetStatusStep(ctx, &new.Key, value, resetStatus)
 		}
+		resetStatus = edgeproto.NoResetStatus
 	}
 
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		// create or update k8s cluster on this cloudlet
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateClusterCacheCallback)
 		if err != nil {
@@ -224,6 +226,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateClusterCacheCallback)
 		if err != nil {
 			return
@@ -282,6 +286,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		// clusterInst was deleted
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback)
 		if err != nil {
@@ -336,18 +342,20 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 
 	// do request
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstChanged", "AppInst", new)
+	resetStatus := edgeproto.NoResetStatus
 	updateAppCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
-		case edgeproto.NewTask:
-			cd.AppInstInfoCache.NewStatusTask(ctx, &new.Key, value)
 		case edgeproto.UpdateTask:
-			cd.AppInstInfoCache.SetStatusTask(ctx, &new.Key, value)
+			cd.AppInstInfoCache.SetStatusTask(ctx, &new.Key, value, resetStatus)
 		case edgeproto.UpdateStep:
-			cd.AppInstInfoCache.SetStatusStep(ctx, &new.Key, value)
+			cd.AppInstInfoCache.SetStatusStep(ctx, &new.Key, value, resetStatus)
 		}
+		resetStatus = edgeproto.NoResetStatus
 	}
 
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		// create
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&new.Flavor, &flavor)
@@ -411,6 +419,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
 		if err != nil {
 			return
@@ -458,6 +468,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
@@ -526,15 +538,11 @@ func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgepro
 }
 
 func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgeproto.ClusterInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
-	taskType := edgeproto.UpdateTask
-	if edgeproto.IsTransientState(state) {
-		taskType = edgeproto.NewTask
-	}
 	if cd.ClusterInstInfoCache.Get(key, &edgeproto.ClusterInstInfo{}) {
-		updateCallback(taskType, edgeproto.TrackedState_CamelName[int32(state)])
+		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	} else {
 		// If info obj is not yet created, send status msg after it is created
-		defer updateCallback(taskType, edgeproto.TrackedState_CamelName[int32(state)])
+		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	}
 	if err := cd.ClusterInstInfoCache.SetState(ctx, key, state); err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
@@ -558,15 +566,11 @@ func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.A
 }
 
 func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
-	taskType := edgeproto.UpdateTask
-	if edgeproto.IsTransientState(state) {
-		taskType = edgeproto.NewTask
-	}
 	if cd.AppInstInfoCache.Get(key, &edgeproto.AppInstInfo{}) {
-		updateCallback(taskType, edgeproto.TrackedState_CamelName[int32(state)])
+		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	} else {
 		// If info obj is not yet created, send status msg after it is created
-		defer updateCallback(taskType, edgeproto.TrackedState_CamelName[int32(state)])
+		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	}
 
 	if err := cd.AppInstInfoCache.SetState(ctx, key, state); err != nil {
