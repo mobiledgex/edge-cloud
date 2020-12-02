@@ -14,6 +14,9 @@ type CacheUpdateType int
 const (
 	UpdateTask CacheUpdateType = 0
 	UpdateStep CacheUpdateType = 1
+
+	ResetStatus   bool = true
+	NoResetStatus bool = false
 )
 
 type ClusterInstCacheUpdateParms struct {
@@ -61,7 +64,7 @@ func (s *ClusterInstInfoCache) SetState(ctx context.Context, key *ClusterInstKey
 		} else {
 			err = StateConflict(old.State, state)
 			if err != nil {
-				log.DebugLog(log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
+				log.SpanLog(ctx, log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
 				return old, false
 			}
 			*info = *old
@@ -84,20 +87,23 @@ func (s *ClusterInstInfoCache) SetResources(ctx context.Context, key *ClusterIns
 	return nil
 }
 
-func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
+func (s *ClusterInstInfoCache) SetStatusTask(ctx context.Context, key *ClusterInstKey, taskName string, resetStatus bool) {
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
 		log.InfoLog("SetStatusTask failed, did not find clusterInst in cache")
 		return
 	}
+	if resetStatus {
+		info.Status.StatusReset()
+	}
 	info.Status.SetTask(taskName)
 	s.Update(ctx, &info, 0)
 }
 
 func (s *ClusterInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *ClusterInstKey, maxTasks uint32) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusMaxTasks", "key", key, "maxTasks", maxTasks)
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusMaxTasks", "key", key, "maxTasks", maxTasks)
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
@@ -108,13 +114,16 @@ func (s *ClusterInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *Clust
 	s.Update(ctx, &info, 0)
 }
 
-func (s *ClusterInstInfoCache) SetStatusStep(ctx context.Context, key *ClusterInstKey, stepName string) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
+func (s *ClusterInstInfoCache) SetStatusStep(ctx context.Context, key *ClusterInstKey, stepName string, resetStatus bool) {
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
 		log.InfoLog("SetStatusStep failed, did not find clusterInst in cache")
 		return
+	}
+	if resetStatus {
+		info.Status.StatusReset()
 	}
 	info.Status.SetStep(stepName)
 	s.Update(ctx, &info, 0)
@@ -128,17 +137,6 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 	info.Errors = append(info.Errors, err)
 	info.State = errState
 	s.Update(ctx, &info, 0)
-}
-
-func (s *ClusterInstInfoCache) StatusReset(ctx context.Context, key *ClusterInstKey) {
-	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	s.UpdateModFunc(ctx, key, 0, func(old *ClusterInstInfo) (newObj *ClusterInstInfo, changed bool) {
-		if old == nil {
-			return old, false
-		}
-		old.Status.StatusReset()
-		return old, true
-	})
 }
 
 // If CRM crashes or reconnects to controller, controller will resend
@@ -257,7 +255,7 @@ func (s *AppInstInfoCache) SetPowerState(ctx context.Context, key *AppInstKey, s
 		} else {
 			err = PowerStateConflict(old.PowerState, state)
 			if err != nil {
-				log.DebugLog(log.DebugLevelApi, "SetPowerState conflict", "oldState", old.PowerState, "newState", state, "err", err)
+				log.SpanLog(ctx, log.DebugLevelApi, "SetPowerState conflict", "oldState", old.PowerState, "newState", state, "err", err)
 				return old, false
 			}
 			*info = *old
@@ -279,7 +277,7 @@ func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state 
 		} else {
 			err = StateConflict(old.State, state)
 			if err != nil {
-				log.DebugLog(log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
+				log.SpanLog(ctx, log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
 				return old, false
 			}
 			*info = *old
@@ -304,7 +302,7 @@ func (s *AppInstInfoCache) SetStateRuntime(ctx context.Context, key *AppInstKey,
 }
 
 func (s *AppInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *AppInstKey, maxTasks uint32) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusMaxTasks", "key", key, "maxTasks", maxTasks)
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusMaxTasks", "key", key, "maxTasks", maxTasks)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
@@ -315,25 +313,31 @@ func (s *AppInstInfoCache) SetStatusMaxTasks(ctx context.Context, key *AppInstKe
 	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetStatusTask(ctx context.Context, key *AppInstKey, taskName string) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
+func (s *AppInstInfoCache) SetStatusTask(ctx context.Context, key *AppInstKey, taskName string, resetStatus bool) {
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
 		log.InfoLog("SetStatusTask failed, did not find appInstInfo in cache")
 		return
 	}
+	if resetStatus {
+		info.Status.StatusReset()
+	}
 	info.Status.SetTask(taskName)
 	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SetStatusStep(ctx context.Context, key *AppInstKey, stepName string) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
+func (s *AppInstInfoCache) SetStatusStep(ctx context.Context, key *AppInstKey, stepName string, resetStatus bool) {
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
 		log.InfoLog("SetStatusStep failed, did not find appInstInfo in cache")
 		return
+	}
+	if resetStatus {
+		info.Status.StatusReset()
 	}
 	info.Status.SetStep(stepName)
 	s.Update(ctx, &info, 0)
@@ -349,30 +353,8 @@ func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errSta
 	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) StatusReset(ctx context.Context, key *AppInstKey) {
-	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
-		if old == nil {
-			return old, false
-		}
-		old.Status.StatusReset()
-		return old, true
-	})
-}
-
-func (s *CloudletInfoCache) StatusReset(ctx context.Context, key *CloudletKey) {
-	log.DebugLog(log.DebugLevelApi, "StatusReset", "key", key)
-	s.UpdateModFunc(ctx, key, 0, func(old *CloudletInfo) (newObj *CloudletInfo, changed bool) {
-		if old == nil {
-			return old, false
-		}
-		old.Status.StatusReset()
-		return old, true
-	})
-}
-
 func (s *CloudletInfoCache) SetStatusTask(ctx context.Context, key *CloudletKey, taskName string) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusTask", "key", key, "taskName", taskName)
 	info := CloudletInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
@@ -384,7 +366,7 @@ func (s *CloudletInfoCache) SetStatusTask(ctx context.Context, key *CloudletKey,
 }
 
 func (s *CloudletInfoCache) SetStatusStep(ctx context.Context, key *CloudletKey, stepName string) {
-	log.DebugLog(log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
+	log.SpanLog(ctx, log.DebugLevelApi, "SetStatusStep", "key", key, "stepName", stepName)
 	info := CloudletInfo{}
 	if !s.Get(key, &info) {
 		// we don't want to override the state in the cache if it is not present
