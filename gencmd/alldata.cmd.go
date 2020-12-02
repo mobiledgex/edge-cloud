@@ -113,8 +113,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	for i0 := 0; i0 < len(in.PrivacyPolicies); i0++ {
 		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].OutboundSecurityRules); i1++ {
 		}
-		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].InboundSecurityRules); i1++ {
-		}
 	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -461,10 +459,6 @@ var AllDataOptionalArgs = []string{
 	"privacypolicies:#.outboundsecurityrules:#.portrangemin",
 	"privacypolicies:#.outboundsecurityrules:#.portrangemax",
 	"privacypolicies:#.outboundsecurityrules:#.remotecidr",
-	"privacypolicies:#.inboundsecurityrules:#.protocol",
-	"privacypolicies:#.inboundsecurityrules:#.portrangemin",
-	"privacypolicies:#.inboundsecurityrules:#.portrangemax",
-	"privacypolicies:#.inboundsecurityrules:#.remotecidr",
 	"clusterinsts:#.fields",
 	"clusterinsts:#.key.clusterkey.name",
 	"clusterinsts:#.key.cloudletkey.organization",
@@ -805,10 +799,6 @@ var AllDataComments = map[string]string{
 	"privacypolicies:#.outboundsecurityrules:#.portrangemin":     "TCP or UDP port range start",
 	"privacypolicies:#.outboundsecurityrules:#.portrangemax":     "TCP or UDP port range end",
 	"privacypolicies:#.outboundsecurityrules:#.remotecidr":       "remote CIDR X.X.X.X/X",
-	"privacypolicies:#.inboundsecurityrules:#.protocol":          "tcp, udp, icmp",
-	"privacypolicies:#.inboundsecurityrules:#.portrangemin":      "TCP or UDP port range start",
-	"privacypolicies:#.inboundsecurityrules:#.portrangemax":      "TCP or UDP port range end",
-	"privacypolicies:#.inboundsecurityrules:#.remotecidr":        "remote CIDR X.X.X.X/X",
 	"clusterinsts:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"clusterinsts:#.key.clusterkey.name":                         "Cluster name",
 	"clusterinsts:#.key.cloudletkey.organization":                "Organization of the cloudlet site",

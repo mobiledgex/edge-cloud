@@ -82,7 +82,7 @@ func loadPlugin(ctx context.Context) (*plugin.Plugin, error) {
 }
 
 func GetCloudletPrivacyPolicy(ctx context.Context, platformConfig *pf.PlatformConfig, caches *pf.Caches) (*edgeproto.PrivacyPolicy, error) {
-	log.WarnLog("GetPrivacyPolicy")
+	log.SpanLog(ctx, log.DebugLevelInfo, "GetCloudletPrivacyPolicy")
 	if platformConfig.PrivacyPolicy != "" {
 		pp := edgeproto.PrivacyPolicy{}
 		pk := edgeproto.PolicyKey{

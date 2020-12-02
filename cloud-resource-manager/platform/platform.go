@@ -109,6 +109,8 @@ type Platform interface {
 	GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error)
 	// Platform-sepcific access data lookup (only called from Controller context)
 	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
+	// Update the cloudlet's Privacy Policy
+	UpdatePrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy) error
 }
 
 type ClusterSvc interface {

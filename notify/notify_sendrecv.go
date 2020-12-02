@@ -121,6 +121,7 @@ type SendRecv struct {
 	cloudletSend       *CloudletSend
 	clusterInstSend    *ClusterInstSend
 	appInstSend        *AppInstSend
+	privacyPolicySend  *PrivacyPolicySend
 	sendRunning        chan struct{}
 	recvRunning        chan struct{}
 	signal             chan bool
@@ -159,6 +160,8 @@ func (s *SendRecv) registerSend(send NotifySend) {
 		s.clusterInstSend = v
 	case *AppInstSend:
 		s.appInstSend = v
+	case *PrivacyPolicySend:
+		s.privacyPolicySend = v
 	}
 }
 
@@ -379,6 +382,23 @@ func (s *SendRecv) hasCloudletKey(key *edgeproto.CloudletKey) bool {
 	defer s.mux.Unlock()
 	_, found := s.cloudletKeys[*key]
 	return found
+}
+
+func (s *SendRecv) hasPrivacyPolicy(org string, polname string) bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	for ck := range s.cloudletKeys {
+		cloudlet := edgeproto.Cloudlet{}
+		var modRev int64
+		if ck.Organization == org {
+			if s.cloudletSend.handler.GetWithRev(&ck, &cloudlet, &modRev) {
+				if cloudlet.PrivacyPolicy == polname {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (s *SendRecv) updateCloudletKey(action edgeproto.NoticeAction, key *edgeproto.CloudletKey) {

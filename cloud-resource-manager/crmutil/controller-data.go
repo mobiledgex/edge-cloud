@@ -85,6 +85,8 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
+	// cd.PrivacyPolicyCache.SetUpdatedCb(cd.privacyPolicyChanged)
+
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
 
@@ -135,6 +137,11 @@ func (cd *ControllerData) GatherInsts() {
 
 func (cd *ControllerData) settingsChanged(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
 	cd.settings = *new
+}
+
+func (cd *ControllerData) PrivacyPolicyChanged(ctx context.Context, old *edgeproto.PrivacyPolicy, new *edgeproto.PrivacyPolicy) {
+	log.WarnLog("xxxxx PrivacyPolicyChanged", "old", old, "new", new)
+	cd.platform.UpdatePrivacyPolicy(ctx, new)
 }
 
 func (cd *ControllerData) flavorChanged(ctx context.Context, old *edgeproto.Flavor, new *edgeproto.Flavor) {
