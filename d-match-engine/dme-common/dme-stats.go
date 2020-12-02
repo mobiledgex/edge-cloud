@@ -30,6 +30,7 @@ var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "
 var Stats *DmeStats
 
 var LatencyTimes = []time.Duration{
+	0 * time.Millisecond,
 	5 * time.Millisecond,
 	10 * time.Millisecond,
 	25 * time.Millisecond,
@@ -44,13 +45,11 @@ type ApiStatCall struct {
 }
 
 type ApiStat struct {
-	Reqs                uint64
-	Errs                uint64
-	Latency             grpcstats.LatencyMetric
-	AppInstLatencyStats *AppInstLatencyStats // Aggregated latency stats from persistent connection (resets every hour)
-	GpsLocationStats    *GpsLocationStats    // Gps Locations update
-	Mux                 sync.Mutex
-	Changed             bool
+	reqs    uint64
+	errs    uint64
+	latency grpcstats.LatencyMetric
+	mux     sync.Mutex
+	changed bool
 }
 
 type MapShard struct {
@@ -94,16 +93,6 @@ func (s *DmeStats) Stop() {
 	s.waitGroup.Wait()
 }
 
-func (s *DmeStats) LookupApiStatCall(call *ApiStatCall) (*ApiStat, bool) {
-	idx := util.GetShardIndex(call.Key.Method+call.Key.AppKey.Organization+call.Key.AppKey.Name, s.numShards)
-
-	shard := &s.shards[idx]
-	shard.mux.Lock()
-	defer shard.mux.Unlock()
-	stat, found := shard.apiStatMap[call.Key]
-	return stat, found
-}
-
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	idx := util.GetShardIndex(call.Key.Method+call.Key.AppKey.Organization+call.Key.AppKey.Name, s.numShards)
 
@@ -112,15 +101,15 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	stat, found := shard.apiStatMap[call.Key]
 	if !found {
 		stat = &ApiStat{}
-		grpcstats.InitLatencyMetric(&stat.Latency, LatencyTimes)
+		grpcstats.InitLatencyMetric(&stat.latency, LatencyTimes)
 		shard.apiStatMap[call.Key] = stat
 	}
-	stat.Reqs++
+	stat.reqs++
 	if call.Fail {
-		stat.Errs++
+		stat.errs++
 	}
-	stat.Latency.AddLatency(call.Latency)
-	stat.Changed = true
+	stat.latency.AddLatency(call.Latency)
+	stat.changed = true
 	shard.mux.Unlock()
 }
 
@@ -137,10 +126,9 @@ func (s *DmeStats) RunNotify() {
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
-					if stat.Changed {
+					if stat.changed {
 						s.send(ctx, ApiStatToMetric(ts, &key, stat))
-						stat.Changed = false
-
+						stat.changed = false
 					}
 				}
 				s.shards[ii].mux.Unlock()
@@ -163,13 +151,13 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("cloudlet", MyCloudletKey.Name)
 	metric.AddTag("id", *ScaleID)
 	metric.AddTag("method", key.Method)
-	metric.AddIntVal("reqs", stat.Reqs)
-	metric.AddIntVal("errs", stat.Errs)
+	metric.AddIntVal("reqs", stat.reqs)
+	metric.AddIntVal("errs", stat.errs)
 	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
 	metric.AddTag("foundOperator", key.CloudletFound.Organization)
 	// Cell ID is just a unique number - keep it as a string
 	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
-	stat.Latency.AddToMetric(&metric)
+	stat.latency.AddToMetric(&metric)
 	return &metric
 }
 
@@ -186,21 +174,17 @@ func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
 			key.AppKey.Version = tag.Val
 		case "method":
 			key.Method = tag.Val
-		case "clusterinstorg":
-			key.ClusterInstOrg = tag.Val
-		case "clustername":
-			key.ClusterKey.Name = tag.Val
 		}
 	}
 	for _, val := range metric.Vals {
 		switch val.Name {
 		case "reqs":
-			stat.Reqs = val.GetIval()
+			stat.reqs = val.GetIval()
 		case "errs":
-			stat.Errs = val.GetIval()
+			stat.errs = val.GetIval()
 		}
 	}
-	stat.Latency.FromMetric(metric)
+	stat.latency.FromMetric(metric)
 	return key, stat
 }
 

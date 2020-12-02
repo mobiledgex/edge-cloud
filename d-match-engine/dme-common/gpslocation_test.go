@@ -38,6 +38,8 @@ func TestGpsLocation(t *testing.T) {
 		Latitude:  40.7128,
 		Longitude: -74.0060,
 	}
+
+	// Test Distance buckets
 	dist1 := GetDistanceBucket(sanjose, sanfran)
 	require.Equal(t, 50, dist1)
 
@@ -47,6 +49,7 @@ func TestGpsLocation(t *testing.T) {
 	dist3 := GetDistanceBucket(anchorage, austin)
 	require.Equal(t, 100, dist3)
 
+	// Test Bearings
 	bearing1 := GetBearingFrom(sanjose, sanfran)
 	require.Equal(t, "Northwest", string(bearing1))
 

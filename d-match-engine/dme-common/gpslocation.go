@@ -13,6 +13,7 @@ type GpsLocationInfo struct {
 	SessionCookieKey CookieKey
 	Timestamp        dme.Timestamp
 	Carrier          string
+	DeviceOs         string
 }
 
 type GpsLocationStats struct {
@@ -67,9 +68,10 @@ func GetBearingFromAppInst(appinst *DmeAppInst, loc dme.Loc) GpsLocationBearing 
 	return GetBearingFrom(appinst.location, loc)
 }
 
-// Determines the orientation that loc2 is in relation to loc1
+// Gets Bearing in degrees from loc1 to loc2
+// 0 degrees is North and move clockwise (ie. 90 degrees is East)
 // Formula provided: https://www.movable-type.co.uk/scripts/latlong.html
-func GetBearingFrom(loc1, loc2 dme.Loc) GpsLocationBearing {
+func GetDegreesBearingFrom(loc1, loc2 dme.Loc) float64 {
 	long1 := torads(loc1.Longitude)
 	lat1 := torads(loc1.Latitude)
 	long2 := torads(loc2.Longitude)
@@ -78,7 +80,12 @@ func GetBearingFrom(loc1, loc2 dme.Loc) GpsLocationBearing {
 	x := (math.Cos(lat1) * math.Sin(lat2)) - (math.Sin(lat1) * math.Cos(lat2) * math.Cos(long2-long1))
 	theta := math.Atan2(y, x)
 	deg := todegsUnitCircle(theta)
+	return deg
+}
 
+// Determines the orientation (NW, NE, SW, or SE) that loc2 is in relation to loc1
+func GetBearingFrom(loc1, loc2 dme.Loc) GpsLocationBearing {
+	deg := GetDegreesBearingFrom(loc1, loc2)
 	// North == 0 degrees, bearings move clockwise
 	if deg >= 0 && deg < 90 {
 		return Northeast

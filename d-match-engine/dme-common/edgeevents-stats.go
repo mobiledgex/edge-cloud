@@ -2,6 +2,7 @@ package dmecommon
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"strconv"
 	"sync"
 	"time"
@@ -89,7 +90,7 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 		stat = &EdgeEventStat{}
 		shard.edgeEventStatMap[call.Key] = stat
 	}
-	if call.Key.Metric == cloudcommon.AppInstLatencyMetrics {
+	if call.Key.Metric == cloudcommon.AppInstLatencyMetric {
 		if stat.AppInstLatencyStats == nil {
 			stat.AppInstLatencyStats = NewAppInstLatencyStats(LatencyTimes)
 		}
@@ -116,22 +117,19 @@ func (e *EdgeEventStats) RunNotify() {
 				for key, stat := range e.shards[ii].edgeEventStatMap {
 					if stat.Changed {
 						switch key.Metric {
-						case cloudcommon.AppInstLatencyMetrics:
+						case cloudcommon.AppInstLatencyMetric:
 							metrics := getAppInstLatencyStatsToMetrics(ts, &key, stat)
 							for _, metric := range metrics {
 								e.send(ctx, metric)
 							}
 							stat.AppInstLatencyStats = nil
 							stat.Changed = false
-						// TODO: Maybe update every time a dme api is called
 						case cloudcommon.GpsLocationMetric:
-							// Update every hour
 							for _, gpsStat := range stat.GpsLocationStats.Stats {
 								e.send(ctx, GpsLocationStatToMetric(ts, &key, stat, gpsStat))
 							}
 							stat.GpsLocationStats = nil
 							stat.Changed = false
-
 						default:
 							continue
 						}
@@ -144,6 +142,32 @@ func (e *EdgeEventStats) RunNotify() {
 		}
 	}
 	e.waitGroup.Done()
+}
+
+// Compiles all of the AppInstLatencyStats fields into metrics, returns a slice of metrics
+func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat) []*edgeproto.Metric {
+	metrics := make([]*edgeproto.Metric, 0)
+	// Latency per Appinst (LatencyTotal) metric
+	metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, stat.AppInstLatencyStats.LatencyTotal, cloudcommon.AppInstLatencyMetric, nil))
+	// Latency per carrier metrics
+	for carrier, latencystats := range stat.AppInstLatencyStats.LatencyPerCarrier {
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerCarrierMetric, map[string]string{"carrier": carrier}))
+	}
+	// Latency per data network type metrics
+	for netdatatype, latencystats := range stat.AppInstLatencyStats.LatencyPerNetDataType {
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, map[string]string{"networkdatatype": netdatatype}))
+	}
+	// Latency per device os metrics
+	for deviceos, latencystats := range stat.AppInstLatencyStats.LatencyPerDeviceOs {
+		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDeviceOSMetric, map[string]string{"deviceos": deviceos}))
+	}
+	// Latency per location metrics
+	for dist, dirmap := range stat.AppInstLatencyStats.LatencyPerLoc {
+		for orientation, latencystats := range dirmap {
+			metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerLocationMetric, map[string]string{"distance": strconv.Itoa(dist), "direction": orientation}))
+		}
+	}
+	return metrics
 }
 
 func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, latencyStats *LatencyStats, metricName string, indVarMap map[string]string) *edgeproto.Metric {
@@ -166,33 +190,13 @@ func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat
 	}
 	elapsed := ts.Seconds - int64(stat.AppInstLatencyStats.StartTime.Second())
 	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	latencyStats.LatencyMetric.AddToMetric(&metric)
 	metric.AddIntVal("numclients", latencyStats.RollingLatency.NumUniqueClients)
 	metric.AddDoubleVal("avg", latencyStats.RollingLatency.Latency.Avg)
 	metric.AddDoubleVal("stddev", latencyStats.RollingLatency.Latency.StdDev)
 	metric.AddDoubleVal("min", latencyStats.RollingLatency.Latency.Min)
 	metric.AddDoubleVal("max", latencyStats.RollingLatency.Latency.Max)
+	latencyStats.LatencyCounts.AddToMetric(&metric)
 	return &metric
-}
-
-// Compiles all of the AppInstLatencyStats fields into metrics, returns a slice of metrics
-func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat) []*edgeproto.Metric {
-	metrics := make([]*edgeproto.Metric, 0)
-	for carrier, latencystats := range stat.AppInstLatencyStats.LatencyPerCarrier {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerCarrierMetric, map[string]string{"carrier": carrier}))
-	}
-	for netdatatype, latencystats := range stat.AppInstLatencyStats.LatencyPerNetDataType {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, map[string]string{"networkdatatype": netdatatype}))
-	}
-	for deviceos, latencystats := range stat.AppInstLatencyStats.LatencyPerDeviceOs {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDeviceOSMetric, map[string]string{"deviceos": deviceos}))
-	}
-	for dist, dirmap := range stat.AppInstLatencyStats.LatencyPerLoc {
-		for orientation, latencystats := range dirmap {
-			metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerLocationMetric, map[string]string{"distance": strconv.Itoa(dist), "direction": orientation}))
-		}
-	}
-	return metrics
 }
 
 func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, gpsInfo *GpsLocationInfo) *edgeproto.Metric {
@@ -211,13 +215,13 @@ func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *E
 	metric.AddTag("clusterorg", key.AppInstKey.ClusterInstKey.Organization)
 	// GpsLocation information
 	metric.AddTag("carrier", gpsInfo.Carrier)
+	metric.AddTag("deviceos", gpsInfo.DeviceOs)
 	metric.AddDoubleVal("longitude", gpsInfo.GpsLocation.Longitude)
 	metric.AddDoubleVal("latitude", gpsInfo.GpsLocation.Latitude)
-	elapsed := ts.Seconds - int64(stat.GpsLocationStats.StartTime.Second())
-	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	// Hash "session cookie" generated from CookieKey
-	sessCookie := gpsInfo.SessionCookieKey.AppName + gpsInfo.SessionCookieKey.AppVers + gpsInfo.SessionCookieKey.OrgName + gpsInfo.SessionCookieKey.UniqueId + gpsInfo.SessionCookieKey.UniqueIdType
-	hSess := md5.Sum([]byte(sessCookie))
-	metric.AddTag("sessioncookie", string(hSess[:]))
+	k := gpsInfo.SessionCookieKey
+	cookieKeyStr := k.OrgName + k.AppName + k.AppVers + k.UniqueIdType + k.UniqueId + strconv.Itoa(k.Kid)
+	hash := md5.Sum([]byte(cookieKeyStr))
+	sessCookie := hex.EncodeToString(hash[:])
+	metric.AddTag("sessioncookie", sessCookie)
 	return &metric
 }

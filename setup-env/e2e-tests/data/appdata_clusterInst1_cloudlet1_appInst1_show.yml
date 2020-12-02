@@ -17,6 +17,8 @@ settings:
   chefclientinterval: 10m
   cloudletmaintenancetimeout: 5m
   updatevmpooltimeout: 20m0s
+  dmeapimetricscollectioninterval: 1s
+  persistentconnectionmetricscollectioninterval: 1h0m0s
 cloudlets:
 - key:
     organization: tmus

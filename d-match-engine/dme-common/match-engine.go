@@ -598,7 +598,12 @@ type foundAppInst struct {
 
 // Given an AppInstKey and carrier, return the corresponding DmeAppInst
 func findAppInst(appInstKey *edgeproto.AppInstKey, carrier string) *DmeAppInst {
-	dmeapp, ok := DmeAppTbl.Apps[appInstKey.AppKey]
+	tbl := DmeAppTbl
+	carrier = translateCarrierName(carrier)
+
+	tbl.RLock()
+	defer tbl.RUnlock()
+	dmeapp, ok := tbl.Apps[appInstKey.AppKey]
 	if !ok {
 		return nil
 	}
@@ -869,27 +874,12 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 			CloudletOrg:  best.appInst.clusterInstKey.CloudletKey.Organization,
 			CloudletName: best.appInst.clusterInstKey.CloudletKey.Name,
 		}
-		cookie, _ := GenerateEdgeEventsCookie(&key, ctx, edgeEventsCookieExpiration)
-		mreply.EdgeEventsCookie = cookie
-		// TODO: Once DME per cloudlet is implemented, Set the DmeFqdn to the DNS name for the DME on the cloudlet of app inst provided
-
+		eecookie, _ := GenerateEdgeEventsCookie(&key, ctx, edgeEventsCookieExpiration)
+		mreply.EdgeEventsCookie = eecookie
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
-
 		// Gps location stats update
-		/*stats, ok := ctx.Value(SentStatsContextKey).(map[string]struct{})
-		needGpsUpdate := false
-		if !ok {
-			// If there does not exist a map for SentStatsContextKey, we have not updated gps stats
-			needGpsUpdate = true
-		} else {
-			// Checks if GpsLocationMetric is in the map
-			// If not, we have not updated gps stats
-			if _, ok := stats[cloudcommon.GpsLocationMetric]; !ok {
-				needGpsUpdate = true
-			}
-		}
-		if needGpsUpdate {
+		if requiresStatsUpdateFromContext(ctx, cloudcommon.GpsLocationMetric) {
 			appInstKey := &edgeproto.AppInstKey{
 				AppKey:         *appkey,
 				ClusterInstKey: best.appInst.clusterInstKey,
@@ -897,10 +887,10 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 			ckey, ok := CookieFromContext(ctx)
 			if !ok {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to find session cookie")
-				return nil
+			} else {
+				updateGpsLocationStats(loc, appInstKey, *ckey, carrier, "") // TODO: Get device os here
 			}
-			updateGpsLocationStats(loc, appInstKey, *ckey, carrier)
-		}*/
+		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
 	} else {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
@@ -1119,23 +1109,21 @@ loop:
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
 				return err
 			}
-			call.Key.Metric = cloudcommon.AppInstLatencyMetrics // override method name
+			call.Key.Metric = cloudcommon.AppInstLatencyMetric // override method name
+			dmeappinst := findAppInst(appInstKey, edgeEventsCookieKey.CloudletOrg)
 			call.AppInstLatencyInfo = &AppInstLatencyInfo{
-				Samples:          cupdate.Samples,
-				DmeAppInst:       findAppInst(appInstKey, cupdate.CarrierName),
+				DmeAppInst:       dmeappinst,
 				Latency:          latency,
 				SessionCookieKey: *sessionCookieKey,
-				Carrier:          cupdate.CarrierName,
+				Carrier:          translateCarrierName(cupdate.CarrierName),
 				GpsLocation:      cupdate.GpsLocation,
 				DataNetworkType:  cupdate.DataNetworkType,
 			}
-			// log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
 			EEStats.RecordEdgeEventStatCall(&call)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
-			// log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookie, "location", cupdate.GpsLocation)
 			// Gps location stats update
-			updateGpsLocationStats(cupdate.GpsLocation, appInstKey, *sessionCookieKey, cupdate.CarrierName)
+			updateGpsLocationStats(cupdate.GpsLocation, appInstKey, *sessionCookieKey, cupdate.CarrierName, cupdate.DeviceOs)
 			// Update context with stats that have been sent
 			stats, ok := ctx.Value(SentStatsContextKey).(map[string]struct{})
 			if !ok {
@@ -1174,7 +1162,7 @@ loop:
 	return reterr
 }
 
-func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey CookieKey, carrier string) {
+func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey CookieKey, carrier string, deviceos string) {
 	call := EdgeEventStatCall{}
 	call.Key.AppInstKey = *appInstKey
 	call.Key.Metric = cloudcommon.GpsLocationMetric
@@ -1182,9 +1170,28 @@ func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sess
 		GpsLocation:      loc,
 		SessionCookieKey: sessionCookieKey,
 		Timestamp:        cloudcommon.TimeToTimestamp(time.Now()),
-		Carrier:          carrier,
+		Carrier:          translateCarrierName(carrier),
+		DeviceOs:         deviceos,
 	}
-	EEStats.RecordEdgeEventStatCall(&call)
+	if EEStats != nil {
+		EEStats.RecordEdgeEventStatCall(&call)
+	}
+}
+
+func requiresStatsUpdateFromContext(ctx context.Context, metric string) bool {
+	stats, ok := ctx.Value(SentStatsContextKey).(map[string]struct{})
+	needUpdate := false
+	if !ok {
+		// If there does not exist a map for SentStatsContextKey, we have not updated specified metric
+		needUpdate = true
+	} else {
+		// Checks if metric is in the map
+		// If not, we have not updated specified metric
+		if _, ok := stats[metric]; !ok {
+			needUpdate = true
+		}
+	}
+	return needUpdate
 }
 
 func ListAppinstTbl(ctx context.Context) {

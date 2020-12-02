@@ -756,7 +756,6 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.timestamp.seconds",
 	"cloudletlocation.timestamp.nanos",
 	"edgeeventscookie",
-	"dmefqdn",
 	"tags",
 }
 var FindCloudletReplyAliasArgs = []string{}
@@ -779,7 +778,6 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
-	"dmefqdn":                             "Fully Qualified Domain Name of the DME on the cloudlet for specified AppInst",
 	"tags":                                "_(optional)_ Vendor specific data",
 }
 var FindCloudletReplySpecialArgs = map[string]string{
@@ -1425,6 +1423,7 @@ var ClientEdgeEventOptionalArgs = []string{
 	"samples:#.tags",
 	"carriername",
 	"datanetworktype",
+	"deviceos",
 	"tags",
 }
 var ClientEdgeEventAliasArgs = []string{}
@@ -1441,8 +1440,9 @@ var ClientEdgeEventComments = map[string]string{
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"samples:#.value":                "latency value",
 	"samples:#.tags":                 "_(optional)_ Vendor specific data",
-	"carriername":                    "Carrier name used to find closer cloudlet if event_type is EVENT_LOCATION_UPDATE TODO: PUT carrier in edge-events-cookie",
-	"datanetworktype":                "LTE, 5G, etc.",
+	"carriername":                    "Carrier name for EVENT_LATENCY_SAMPLES or EVENT_LOCATION_UPDATE (can be different from cloudlet org if used )",
+	"datanetworktype":                "LTE, 5G, etc. for EVENT_LATENCY_SAMPLES",
+	"deviceos":                       "Android or iOS for EVENT_LOCATION_UPDATE",
 	"tags":                           "_(optional)_ Vendor specific data",
 }
 var ClientEdgeEventSpecialArgs = map[string]string{
@@ -1483,7 +1483,6 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.cloudletlocation.timestamp.seconds",
 	"newcloudlet.cloudletlocation.timestamp.nanos",
 	"newcloudlet.edgeeventscookie",
-	"newcloudlet.dmefqdn",
 	"newcloudlet.tags",
 	"tags",
 }
@@ -1513,7 +1512,6 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.cloudletlocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"newcloudlet.cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"newcloudlet.edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
-	"newcloudlet.dmefqdn":                             "Fully Qualified Domain Name of the DME on the cloudlet for specified AppInst",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
 	"tags":                                            "_(optional)_ Vendor specific data",
 }

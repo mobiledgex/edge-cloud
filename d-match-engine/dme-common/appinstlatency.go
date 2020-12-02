@@ -17,7 +17,6 @@ type AppInstLatencyInfo struct {
 	GpsLocation      *dme.Loc
 	DataNetworkType  string
 	Carrier          string
-	DeviceOs         string
 }
 
 // Rolling avg, min, max, std dev, and number of clients
@@ -172,7 +171,6 @@ func (a *AppInstLatencyStats) Update(data *AppInstLatencyInfo) {
 	// Update LatencyPer Maps
 	a.UpdateLatencyMaps(a.LatencyPerCarrier, data, data.Carrier, data.Latency.Avg)
 	a.UpdateLatencyMaps(a.LatencyPerNetDataType, data, data.DataNetworkType, data.Latency.Avg)
-	a.UpdateLatencyMaps(a.LatencyPerDeviceOs, data, data.DeviceOs, data.Latency.Avg)
 	if data.DmeAppInst != nil {
 		// Figure out distance and figure out orientation
 		distBucket := GetDistanceBucketFromAppInst(data.DmeAppInst, *data.GpsLocation)

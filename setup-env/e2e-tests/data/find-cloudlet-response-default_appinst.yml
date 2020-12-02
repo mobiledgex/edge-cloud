@@ -11,4 +11,3 @@ ports:
   internalport: 10002
   publicport: 10002
 cloudletlocation: {}
-dmefqdn: dme.mobiledgex.net

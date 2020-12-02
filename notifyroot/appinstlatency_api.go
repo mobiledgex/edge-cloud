@@ -32,8 +32,6 @@ func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgep
 	req := &edgeproto.DebugRequest{
 		Node: edgeproto.NodeKey{
 			Type: node.NodeTypeDME,
-			// CloudletKey: in.Key.ClusterInstKey.CloudletKey, // When DME per cloudlet is implemented
-			// Region: nodeMgr.Region, // should be region of appinst
 		},
 		Cmd:  dmecommon.RequestAppInstLatency,
 		Args: args,

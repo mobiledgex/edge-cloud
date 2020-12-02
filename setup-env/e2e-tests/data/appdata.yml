@@ -14,6 +14,8 @@ settings:
   chefclientinterval: 10m
   influxdbmetricsretention: 2h
   cloudletmaintenancetimeout: 2s
+  dmeapimetricscollectioninterval: 1s
+  persistentconnectionmetricscollectioninterval: 1h0m0s
 flavors:
 - key:
     name: x1.tiny
