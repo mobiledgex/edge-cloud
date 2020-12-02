@@ -230,14 +230,71 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	if err != nil {
 		return fmt.Errorf("Failed to get cloudlet run status: %v", err)
 	}
-	// Fetch status messages from cloudlet info
-	// Wait for CRM to connect to controller
-	err = cloudletApi.WaitForCloudlet(
-		ctx, key,
-		edgeproto.TrackedState_CREATE_ERROR, // Set error state
-		"Created Cloudlet successfully",     // Set success message
-		PlatformInitTimeout, cb.Send,
-	)
+	lastMsgId := 0
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "wait for cloudlet state", "key", key)
+
+	checkState := func(key *edgeproto.CloudletKey) {
+		cloudlet := edgeproto.Cloudlet{}
+		if !cloudletApi.cache.Get(key, &cloudlet) {
+			return
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.cache.Get(key, &cloudletInfo) {
+			return
+		}
+
+		curState := cloudletInfo.State
+
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+			failed <- true
+			return
+		}
+
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			done <- true
+			return
+		}
+	}
+
+	log.SpanLog(ctx, log.DebugLevelApi, "watch event for CloudletInfo")
+	info := edgeproto.CloudletInfo{}
+	cancel := cloudletInfoApi.cache.WatchKey(key, func(ctx context.Context) {
+		if !cloudletInfoApi.cache.Get(key, &info) {
+			return
+		}
+		for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+			cb.Send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			lastMsgId++
+		}
+		checkState(key)
+	})
+
+	// After setting up watch, check current state,
+	// as it may have already changed to target state
+	checkState(key)
+
+	select {
+	case <-done:
+		err = nil
+		cb.Send(&edgeproto.Result{Message: "Cloudlet setup successfully"})
+	case <-failed:
+		if cloudletInfoApi.cache.Get(key, &info) {
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
+		} else {
+			err = fmt.Errorf("Unknown failure")
+		}
+		cb.Send(&edgeproto.Result{Message: err.Error()})
+	case <-time.After(PlatformInitTimeout):
+		err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
+		cb.Send(&edgeproto.Result{Message: "platform bringup timed out"})
+	}
+
+	cancel()
+
 	return err
 }
 
