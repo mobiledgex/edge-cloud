@@ -197,7 +197,48 @@ func stopCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, streamS
 }
 
 func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.StreamObjApi_StreamCloudletServer) error {
-	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
+	ctx := cb.Context()
+	cloudlet := &edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(key, cloudlet) {
+		return key.NotFoundError()
+	}
+	if cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS {
+		return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
+	}
+	if cloudlet.State != edgeproto.TrackedState_READY {
+		// Either cloudlet obj was not created successfully or it is updating, skip
+		return nil
+	}
+	cloudletInfo := edgeproto.CloudletInfo{}
+	if cloudletInfoApi.cache.Get(key, &cloudletInfo) {
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			return nil
+		}
+	}
+	pfConfig, err := getPlatformConfig(ctx, cloudlet)
+	if err != nil {
+		return err
+	}
+	// Fetch platform specific status
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return fmt.Errorf("Failed to get platform: %v", err)
+	}
+	accessApi := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
+	updatecb := updateCloudletCallback{cloudlet, cb}
+	err = cloudletPlatform.GetCloudletRunStatus(ctx, cloudlet, pfConfig, accessApi, updatecb.cb)
+	if err != nil {
+		return fmt.Errorf("Failed to get cloudlet run status: %v", err)
+	}
+	// Fetch status messages from cloudlet info
+	// Wait for CRM to connect to controller
+	err = cloudletApi.WaitForCloudlet(
+		ctx, key,
+		edgeproto.TrackedState_CREATE_ERROR, // Set error state
+		"Created Cloudlet successfully",     // Set success message
+		PlatformInitTimeout, cb.Send,
+	)
+	return err
 }
 
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {

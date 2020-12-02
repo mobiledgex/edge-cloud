@@ -279,3 +279,7 @@ func (s *Platform) GetCloudletProps(ctx context.Context) (*edgeproto.CloudletPro
 func (s *Platform) GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error) {
 	return nil, nil
 }
+
+func (s *Platform) GetCloudletRunStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
+	return nil
+}
