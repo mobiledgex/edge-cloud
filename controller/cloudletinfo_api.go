@@ -173,8 +173,6 @@ func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo
 			"key", in.Key, "err", err)
 	} else {
 		nodeMgr.Event(ctx, "Cloudlet offline", in.Key.Organization, in.Key.GetTags(), nil, "reason", "notify disconnect")
-		// Send a cloudlet down alert
-		CloudletDownAlert(ctx, in)
 	}
 }
 
@@ -198,12 +196,17 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 	info := edgeproto.CloudletInfo{}
 	for ii, _ := range matches {
 		info.Key = matches[ii]
+		cloudletReady := false
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if s.store.STMGet(stm, &info.Key, &info) {
 				if info.NotifyId != notifyId || info.Controller != ControllerId {
 					// Updated by another thread or controller
 					return nil
 				}
+			}
+			cloudlet := edgeproto.Cloudlet{}
+			if cloudletApi.store.STMGet(stm, &info.Key, &cloudlet) {
+				cloudletReady = (cloudlet.State == edgeproto.TrackedState_READY)
 			}
 			info.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
@@ -214,8 +217,10 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
 		} else {
 			nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
-			// Send a cloudlet down alert
-			CloudletDownAlert(ctx, &info)
+			// Send a cloudlet down alert if a cloudlet was ready
+			if cloudletReady {
+				CloudletDownAlert(ctx, &info)
+			}
 		}
 	}
 }
@@ -270,8 +275,8 @@ func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.C
 // Only delete if state is Offline.
 func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeproto.CloudletKey) {
 	done := make(chan bool, 1)
+	info := edgeproto.CloudletInfo{}
 	checkState := func() {
-		info := edgeproto.CloudletInfo{}
 		if !s.cache.Get(key, &info) {
 			done <- true
 			return
@@ -307,6 +312,8 @@ func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeprot
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "cleanup CloudletInfo failed", "err", err)
 	}
+	// clean up any associated alerts with this cloudlet
+	ClearCloudletDownAlert(ctx, &info)
 }
 
 func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, targetState, errorState edgeproto.MaintenanceState, timeout time.Duration, result *edgeproto.CloudletInfo) error {
