@@ -560,7 +560,7 @@ func (m *PrivacyPolicy) Matches(o *PrivacyPolicy, fopts ...MatchOpt) bool {
 		if m.OutboundSecurityRules == nil && o.OutboundSecurityRules != nil || m.OutboundSecurityRules != nil && o.OutboundSecurityRules == nil {
 			return false
 		} else if m.OutboundSecurityRules != nil && o.OutboundSecurityRules != nil {
-			if len(m.OutboundSecurityRules) != len(o.OutboundSecurityRules) {
+			if !opts.Filter && len(m.OutboundSecurityRules) != len(o.OutboundSecurityRules) {
 				return false
 			}
 			for i := 0; i < len(m.OutboundSecurityRules); i++ {
