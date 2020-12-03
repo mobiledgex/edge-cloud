@@ -806,11 +806,11 @@ func (m *ResTagTable) Matches(o *ResTagTable, fopts ...MatchOpt) bool {
 		if m.Tags == nil && o.Tags != nil || m.Tags != nil && o.Tags == nil {
 			return false
 		} else if m.Tags != nil && o.Tags != nil {
-			if len(m.Tags) != len(o.Tags) {
+			if !opts.Filter && len(m.Tags) != len(o.Tags) {
 				return false
 			}
-			for k, _ := range m.Tags {
-				_, ok := o.Tags[k]
+			for k, _ := range o.Tags {
+				_, ok := m.Tags[k]
 				if !ok {
 					return false
 				}

@@ -794,7 +794,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		if m.Clusters == nil && o.Clusters != nil || m.Clusters != nil && o.Clusters == nil {
 			return false
 		} else if m.Clusters != nil && o.Clusters != nil {
-			if len(m.Clusters) != len(o.Clusters) {
+			if !opts.Filter && len(m.Clusters) != len(o.Clusters) {
 				return false
 			}
 			if opts.SortArrayedKeys {
@@ -831,11 +831,11 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		if m.RootLbPorts == nil && o.RootLbPorts != nil || m.RootLbPorts != nil && o.RootLbPorts == nil {
 			return false
 		} else if m.RootLbPorts != nil && o.RootLbPorts != nil {
-			if len(m.RootLbPorts) != len(o.RootLbPorts) {
+			if !opts.Filter && len(m.RootLbPorts) != len(o.RootLbPorts) {
 				return false
 			}
-			for k, _ := range m.RootLbPorts {
-				_, ok := o.RootLbPorts[k]
+			for k, _ := range o.RootLbPorts {
+				_, ok := m.RootLbPorts[k]
 				if !ok {
 					return false
 				}
@@ -859,11 +859,11 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		if m.OptResUsedMap == nil && o.OptResUsedMap != nil || m.OptResUsedMap != nil && o.OptResUsedMap == nil {
 			return false
 		} else if m.OptResUsedMap != nil && o.OptResUsedMap != nil {
-			if len(m.OptResUsedMap) != len(o.OptResUsedMap) {
+			if !opts.Filter && len(m.OptResUsedMap) != len(o.OptResUsedMap) {
 				return false
 			}
-			for k, _ := range m.OptResUsedMap {
-				_, ok := o.OptResUsedMap[k]
+			for k, _ := range o.OptResUsedMap {
+				_, ok := m.OptResUsedMap[k]
 				if !ok {
 					return false
 				}
@@ -1509,7 +1509,7 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 		if m.Apps == nil && o.Apps != nil || m.Apps != nil && o.Apps == nil {
 			return false
 		} else if m.Apps != nil && o.Apps != nil {
-			if len(m.Apps) != len(o.Apps) {
+			if !opts.Filter && len(m.Apps) != len(o.Apps) {
 				return false
 			}
 			if opts.SortArrayedKeys {
@@ -2142,11 +2142,11 @@ func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
 		if m.Insts == nil && o.Insts != nil || m.Insts != nil && o.Insts == nil {
 			return false
 		} else if m.Insts != nil && o.Insts != nil {
-			if len(m.Insts) != len(o.Insts) {
+			if !opts.Filter && len(m.Insts) != len(o.Insts) {
 				return false
 			}
-			for k, _ := range m.Insts {
-				_, ok := o.Insts[k]
+			for k, _ := range o.Insts {
+				_, ok := m.Insts[k]
 				if !ok {
 					return false
 				}
