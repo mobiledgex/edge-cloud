@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -111,11 +113,43 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo state transition error",
 			"key", in.Key, "err", err)
 	}
+	if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		ClearCloudletDownAlert(ctx, in)
+	}
 }
 
 func (s *CloudletInfoApi) Del(ctx context.Context, key *edgeproto.CloudletKey, wait func(int64)) {
 	in := edgeproto.CloudletInfo{Key: *key}
 	s.store.Delete(ctx, &in, wait)
+}
+
+func cloudletInfoToAlertLabels(in *edgeproto.CloudletInfo) map[string]string {
+	labels := make(map[string]string)
+	// Set tags that match cloudlet
+	labels["alertname"] = cloudcommon.AlertCloudletDown
+	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopeCloudlet
+	labels[edgeproto.CloudletKeyTagName] = in.Key.Name
+	labels[edgeproto.CloudletKeyTagOrganization] = in.Key.Organization
+	return labels
+}
+
+// Raise the alarm when the cloudlet goes down
+func CloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
+	alert := edgeproto.Alert{}
+	alert.State = "firing"
+	alert.ActiveAt = distributed_match_engine.Timestamp{}
+	ts := time.Now()
+	alert.ActiveAt.Seconds = ts.Unix()
+	alert.ActiveAt.Nanos = int32(ts.Nanosecond())
+	alert.Labels = cloudletInfoToAlertLabels(in)
+	// send an update
+	alertApi.Update(ctx, &alert, 0)
+}
+
+func ClearCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
+	alert := edgeproto.Alert{}
+	alert.Labels = cloudletInfoToAlertLabels(in)
+	alertApi.Delete(ctx, &alert, 0)
 }
 
 // Delete from notify just marks the cloudlet offline
@@ -162,12 +196,17 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 	info := edgeproto.CloudletInfo{}
 	for ii, _ := range matches {
 		info.Key = matches[ii]
+		cloudletReady := false
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if s.store.STMGet(stm, &info.Key, &info) {
 				if info.NotifyId != notifyId || info.Controller != ControllerId {
 					// Updated by another thread or controller
 					return nil
 				}
+			}
+			cloudlet := edgeproto.Cloudlet{}
+			if cloudletApi.store.STMGet(stm, &info.Key, &cloudlet) {
+				cloudletReady = (cloudlet.State == edgeproto.TrackedState_READY)
 			}
 			info.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
@@ -178,6 +217,10 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
 		} else {
 			nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
+			// Send a cloudlet down alert if a cloudlet was ready
+			if cloudletReady {
+				CloudletDownAlert(ctx, &info)
+			}
 		}
 	}
 }
@@ -232,8 +275,8 @@ func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.C
 // Only delete if state is Offline.
 func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeproto.CloudletKey) {
 	done := make(chan bool, 1)
+	info := edgeproto.CloudletInfo{}
 	checkState := func() {
-		info := edgeproto.CloudletInfo{}
 		if !s.cache.Get(key, &info) {
 			done <- true
 			return
@@ -269,6 +312,8 @@ func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeprot
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "cleanup CloudletInfo failed", "err", err)
 	}
+	// clean up any associated alerts with this cloudlet
+	ClearCloudletDownAlert(ctx, &info)
 }
 
 func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, targetState, errorState edgeproto.MaintenanceState, timeout time.Duration, result *edgeproto.CloudletInfo) error {
