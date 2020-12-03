@@ -270,6 +270,16 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	pfConfig.CrmAccessPrivateKey = res.Message
 	pfConfig.AccessApiAddr = services.accessKeyGrpcServer.ApiAddr()
 
+	streamCloudlet := NewStreamoutMsg(ctx)
+	go func() {
+		// copy objects required for WatchKey on cloudletInfo
+		cloudletInfoApi.cache.Objs = ctrlHandler.CloudletInfoCache.Objs
+		cloudletInfoApi.cache.KeyWatchers = ctrlHandler.CloudletInfoCache.KeyWatchers
+		// setup cloudlet stream
+		err = streamObjApi.StreamCloudlet(&cloudlet.Key, streamCloudlet)
+		require.Nil(t, err, "stream cloudlet")
+	}()
+
 	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig)
 	require.Nil(t, err, "start cloudlet")
 	defer func() {
@@ -289,6 +299,12 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 
 	cloudlet.State = edgeproto.TrackedState_READY
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+	require.Equal(t, len(streamCloudlet.Msgs), 5, "progress messages")
+	cloudletMsgs := []string{"Setting up cloudlet", "Initializing platform", "Done intializing fake platform", "Gathering Cloudlet Info", "Cloudlet setup successfully"}
+	for ii, msg := range cloudletMsgs {
+		require.Equal(t, streamCloudlet.Msgs[ii].Message, msg, "message matches")
+	}
 
 	cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
