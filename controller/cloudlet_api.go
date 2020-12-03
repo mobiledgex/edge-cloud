@@ -227,7 +227,7 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	}
 	accessApi := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
 	updatecb := updateCloudletCallback{cloudlet, cb}
-	err = cloudletPlatform.GetCloudletRunStatus(ctx, cloudlet, pfConfig, accessApi, updatecb.cb)
+	err = cloudletPlatform.GetRestrictedCloudletStatus(ctx, cloudlet, pfConfig, accessApi, updatecb.cb)
 	if err != nil {
 		return fmt.Errorf("Failed to get cloudlet run status: %v", err)
 	}

@@ -283,7 +283,7 @@ func (s *Platform) GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudl
 	return nil, nil
 }
 
-func (s *Platform) GetCloudletRunStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Setting up cloudlet")
 	return nil
 }
