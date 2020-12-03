@@ -197,7 +197,109 @@ func stopCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, streamS
 }
 
 func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.StreamObjApi_StreamCloudletServer) error {
-	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
+	ctx := cb.Context()
+	cloudlet := &edgeproto.Cloudlet{}
+	if !cloudletApi.cache.Get(key, cloudlet) {
+		return key.NotFoundError()
+	}
+	if cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS ||
+		(cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS && cloudlet.State != edgeproto.TrackedState_READY) {
+		// If restricted scenario, then stream msgs only if either cloudlet obj was not created successfully or it is updating
+		return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
+	}
+	cloudletInfo := edgeproto.CloudletInfo{}
+	if cloudletInfoApi.cache.Get(key, &cloudletInfo) {
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
+			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+			return nil
+		}
+	}
+
+	// Fetch platform specific status
+	pfConfig, err := getPlatformConfig(ctx, cloudlet)
+	if err != nil {
+		return err
+	}
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return fmt.Errorf("Failed to get platform: %v", err)
+	}
+	accessApi := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
+	updatecb := updateCloudletCallback{cloudlet, cb}
+	err = cloudletPlatform.GetRestrictedCloudletStatus(ctx, cloudlet, pfConfig, accessApi, updatecb.cb)
+	if err != nil {
+		return fmt.Errorf("Failed to get cloudlet run status: %v", err)
+	}
+
+	// Fetch cloudlet info status
+	lastMsgId := 0
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "wait for cloudlet state", "key", key)
+
+	checkState := func(key *edgeproto.CloudletKey) {
+		cloudlet := edgeproto.Cloudlet{}
+		if !cloudletApi.cache.Get(key, &cloudlet) {
+			return
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.cache.Get(key, &cloudletInfo) {
+			return
+		}
+
+		curState := cloudletInfo.State
+
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
+			curState == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+			failed <- true
+			return
+		}
+
+		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			done <- true
+			return
+		}
+	}
+
+	log.SpanLog(ctx, log.DebugLevelApi, "watch event for CloudletInfo")
+	info := edgeproto.CloudletInfo{}
+	cancel := cloudletInfoApi.cache.WatchKey(key, func(ctx context.Context) {
+		if !cloudletInfoApi.cache.Get(key, &info) {
+			return
+		}
+		for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
+			cb.Send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			lastMsgId++
+		}
+		checkState(key)
+	})
+
+	// After setting up watch, check current state,
+	// as it may have already changed to target state
+	checkState(key)
+
+	select {
+	case <-done:
+		err = nil
+		cb.Send(&edgeproto.Result{Message: "Cloudlet setup successfully"})
+	case <-failed:
+		if cloudletInfoApi.cache.Get(key, &info) {
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
+		} else {
+			err = fmt.Errorf("Unknown failure")
+		}
+		cb.Send(&edgeproto.Result{Message: err.Error()})
+	case <-time.After(PlatformInitTimeout):
+		err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
+		cb.Send(&edgeproto.Result{Message: "platform bringup timed out"})
+	}
+
+	cancel()
+
+	return err
 }
 
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
