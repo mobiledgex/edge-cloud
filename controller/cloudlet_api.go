@@ -1340,7 +1340,7 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, key *edgeproto.Cl
 	}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := &edgeproto.Cloudlet{}
-		if s.store.STMGet(stm, key, cloudlet) {
+		if !s.store.STMGet(stm, key, cloudlet) {
 			return key.NotFoundError()
 		}
 		if cloudlet.CrmAccessPublicKey != "" {
