@@ -1109,7 +1109,7 @@ func (m *AutoProvPolicy) Matches(o *AutoProvPolicy, fopts ...MatchOpt) bool {
 		if m.Cloudlets == nil && o.Cloudlets != nil || m.Cloudlets != nil && o.Cloudlets == nil {
 			return false
 		} else if m.Cloudlets != nil && o.Cloudlets != nil {
-			if len(m.Cloudlets) != len(o.Cloudlets) {
+			if !opts.Filter && len(m.Cloudlets) != len(o.Cloudlets) {
 				return false
 			}
 			for i := 0; i < len(m.Cloudlets); i++ {
@@ -2387,7 +2387,7 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 		if m.Completed == nil && o.Completed != nil || m.Completed != nil && o.Completed == nil {
 			return false
 		} else if m.Completed != nil && o.Completed != nil {
-			if len(m.Completed) != len(o.Completed) {
+			if !opts.Filter && len(m.Completed) != len(o.Completed) {
 				return false
 			}
 			for i := 0; i < len(m.Completed); i++ {
@@ -2401,7 +2401,7 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
-			if len(m.Errors) != len(o.Errors) {
+			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
 			for i := 0; i < len(m.Errors); i++ {
