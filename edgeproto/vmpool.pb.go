@@ -1560,7 +1560,7 @@ func (m *VMPool) Matches(o *VMPool, fopts ...MatchOpt) bool {
 		if m.Vms == nil && o.Vms != nil || m.Vms != nil && o.Vms == nil {
 			return false
 		} else if m.Vms != nil && o.Vms != nil {
-			if len(m.Vms) != len(o.Vms) {
+			if !opts.Filter && len(m.Vms) != len(o.Vms) {
 				return false
 			}
 			for i := 0; i < len(m.Vms); i++ {
@@ -1579,7 +1579,7 @@ func (m *VMPool) Matches(o *VMPool, fopts ...MatchOpt) bool {
 			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
-				if len(m.Errors) != len(o.Errors) {
+				if !opts.Filter && len(m.Errors) != len(o.Errors) {
 					return false
 				}
 				for i := 0; i < len(m.Errors); i++ {
@@ -2923,7 +2923,7 @@ func (m *VMPoolInfo) Matches(o *VMPoolInfo, fopts ...MatchOpt) bool {
 		if m.Vms == nil && o.Vms != nil || m.Vms != nil && o.Vms == nil {
 			return false
 		} else if m.Vms != nil && o.Vms != nil {
-			if len(m.Vms) != len(o.Vms) {
+			if !opts.Filter && len(m.Vms) != len(o.Vms) {
 				return false
 			}
 			for i := 0; i < len(m.Vms); i++ {
@@ -2942,7 +2942,7 @@ func (m *VMPoolInfo) Matches(o *VMPoolInfo, fopts ...MatchOpt) bool {
 			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
-				if len(m.Errors) != len(o.Errors) {
+				if !opts.Filter && len(m.Errors) != len(o.Errors) {
 					return false
 				}
 				for i := 0; i < len(m.Errors); i++ {
