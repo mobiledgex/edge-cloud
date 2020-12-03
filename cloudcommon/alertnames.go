@@ -5,6 +5,14 @@ var AlertAutoScaleUp = "AutoScaleUp"
 var AlertAutoScaleDown = "AutoScaleDown"
 var AlertAppInstDown = "AppInstDown"
 var AlertAutoUndeploy = "AutoProvUndeploy"
+var AlertCloudletDown = "CloudletDown"
+
+// Alert types
+const (
+	AlertScopeTypeTag  = "scope"
+	AlertScopeApp      = "Application"
+	AlertScopeCloudlet = "Cloudlet"
+)
 
 // Alert annotation keys
 // for autoscale:
@@ -33,6 +41,7 @@ func IsMonitoredAlert(alertName string) bool {
 	if alertName == AlertAutoScaleUp ||
 		alertName == AlertAutoScaleDown ||
 		alertName == AlertAppInstDown ||
+		alertName == AlertCloudletDown ||
 		alertName == AlertAutoUndeploy {
 		return true
 	}
