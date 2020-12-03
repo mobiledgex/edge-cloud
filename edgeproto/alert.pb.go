@@ -366,11 +366,11 @@ func (m *Alert) Matches(o *Alert, fopts ...MatchOpt) bool {
 		if m.Labels == nil && o.Labels != nil || m.Labels != nil && o.Labels == nil {
 			return false
 		} else if m.Labels != nil && o.Labels != nil {
-			if len(m.Labels) != len(o.Labels) {
+			if !opts.Filter && len(m.Labels) != len(o.Labels) {
 				return false
 			}
-			for k, _ := range m.Labels {
-				_, ok := o.Labels[k]
+			for k, _ := range o.Labels {
+				_, ok := m.Labels[k]
 				if !ok {
 					return false
 				}
@@ -384,11 +384,11 @@ func (m *Alert) Matches(o *Alert, fopts ...MatchOpt) bool {
 		if m.Annotations == nil && o.Annotations != nil || m.Annotations != nil && o.Annotations == nil {
 			return false
 		} else if m.Annotations != nil && o.Annotations != nil {
-			if len(m.Annotations) != len(o.Annotations) {
+			if !opts.Filter && len(m.Annotations) != len(o.Annotations) {
 				return false
 			}
-			for k, _ := range m.Annotations {
-				_, ok := o.Annotations[k]
+			for k, _ := range o.Annotations {
+				_, ok := m.Annotations[k]
 				if !ok {
 					return false
 				}

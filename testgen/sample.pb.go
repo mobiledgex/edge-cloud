@@ -1338,7 +1338,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedInt == nil && o.RepeatedInt != nil || m.RepeatedInt != nil && o.RepeatedInt == nil {
 			return false
 		} else if m.RepeatedInt != nil && o.RepeatedInt != nil {
-			if len(m.RepeatedInt) != len(o.RepeatedInt) {
+			if !opts.Filter && len(m.RepeatedInt) != len(o.RepeatedInt) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedInt); i++ {
@@ -1352,7 +1352,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.Ip == nil && o.Ip != nil || m.Ip != nil && o.Ip == nil {
 			return false
 		} else if m.Ip != nil && o.Ip != nil {
-			if len(m.Ip) != len(o.Ip) {
+			if !opts.Filter && len(m.Ip) != len(o.Ip) {
 				return false
 			}
 			for i := 0; i < len(m.Ip); i++ {
@@ -1366,7 +1366,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.Names == nil && o.Names != nil || m.Names != nil && o.Names == nil {
 			return false
 		} else if m.Names != nil && o.Names != nil {
-			if len(m.Names) != len(o.Names) {
+			if !opts.Filter && len(m.Names) != len(o.Names) {
 				return false
 			}
 			for i := 0; i < len(m.Names); i++ {
@@ -1380,7 +1380,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedMsg == nil && o.RepeatedMsg != nil || m.RepeatedMsg != nil && o.RepeatedMsg == nil {
 			return false
 		} else if m.RepeatedMsg != nil && o.RepeatedMsg != nil {
-			if len(m.RepeatedMsg) != len(o.RepeatedMsg) {
+			if !opts.Filter && len(m.RepeatedMsg) != len(o.RepeatedMsg) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedMsg); i++ {
@@ -1391,7 +1391,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedMsgNonnull == nil && o.RepeatedMsgNonnull != nil || m.RepeatedMsgNonnull != nil && o.RepeatedMsgNonnull == nil {
 			return false
 		} else if m.RepeatedMsgNonnull != nil && o.RepeatedMsgNonnull != nil {
-			if len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
+			if !opts.Filter && len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedMsgNonnull); i++ {
@@ -1402,7 +1402,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedFields == nil && o.RepeatedFields != nil || m.RepeatedFields != nil && o.RepeatedFields == nil {
 			return false
 		} else if m.RepeatedFields != nil && o.RepeatedFields != nil {
-			if len(m.RepeatedFields) != len(o.RepeatedFields) {
+			if !opts.Filter && len(m.RepeatedFields) != len(o.RepeatedFields) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedFields); i++ {
@@ -1413,7 +1413,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedFieldsNonnull == nil && o.RepeatedFieldsNonnull != nil || m.RepeatedFieldsNonnull != nil && o.RepeatedFieldsNonnull == nil {
 			return false
 		} else if m.RepeatedFieldsNonnull != nil && o.RepeatedFieldsNonnull != nil {
-			if len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
+			if !opts.Filter && len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedFieldsNonnull); i++ {
@@ -1424,7 +1424,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedInnerMsg == nil && o.RepeatedInnerMsg != nil || m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg == nil {
 			return false
 		} else if m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg != nil {
-			if len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
+			if !opts.Filter && len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedInnerMsg); i++ {
@@ -1435,7 +1435,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedInnerMsgNonnull == nil && o.RepeatedInnerMsgNonnull != nil || m.RepeatedInnerMsgNonnull != nil && o.RepeatedInnerMsgNonnull == nil {
 			return false
 		} else if m.RepeatedInnerMsgNonnull != nil && o.RepeatedInnerMsgNonnull != nil {
-			if len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
+			if !opts.Filter && len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedInnerMsgNonnull); i++ {
@@ -1446,7 +1446,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedLoc == nil && o.RepeatedLoc != nil || m.RepeatedLoc != nil && o.RepeatedLoc == nil {
 			return false
 		} else if m.RepeatedLoc != nil && o.RepeatedLoc != nil {
-			if len(m.RepeatedLoc) != len(o.RepeatedLoc) {
+			if !opts.Filter && len(m.RepeatedLoc) != len(o.RepeatedLoc) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedLoc); i++ {
@@ -1457,7 +1457,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.RepeatedLocNonnull == nil && o.RepeatedLocNonnull != nil || m.RepeatedLocNonnull != nil && o.RepeatedLocNonnull == nil {
 			return false
 		} else if m.RepeatedLocNonnull != nil && o.RepeatedLocNonnull != nil {
-			if len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
+			if !opts.Filter && len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
 				return false
 			}
 			for i := 0; i < len(m.RepeatedLocNonnull); i++ {
@@ -1468,11 +1468,11 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.IntMap == nil && o.IntMap != nil || m.IntMap != nil && o.IntMap == nil {
 			return false
 		} else if m.IntMap != nil && o.IntMap != nil {
-			if len(m.IntMap) != len(o.IntMap) {
+			if !opts.Filter && len(m.IntMap) != len(o.IntMap) {
 				return false
 			}
-			for k, _ := range m.IntMap {
-				_, ok := o.IntMap[k]
+			for k, _ := range o.IntMap {
+				_, ok := m.IntMap[k]
 				if !ok {
 					return false
 				}
@@ -1486,11 +1486,11 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		if m.MsgMap == nil && o.MsgMap != nil || m.MsgMap != nil && o.MsgMap == nil {
 			return false
 		} else if m.MsgMap != nil && o.MsgMap != nil {
-			if len(m.MsgMap) != len(o.MsgMap) {
+			if !opts.Filter && len(m.MsgMap) != len(o.MsgMap) {
 				return false
 			}
-			for k, _ := range m.MsgMap {
-				_, ok := o.MsgMap[k]
+			for k, _ := range o.MsgMap {
+				_, ok := m.MsgMap[k]
 				if !ok {
 					return false
 				}
