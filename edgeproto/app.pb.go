@@ -1449,7 +1449,7 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 		if m.Configs == nil && o.Configs != nil || m.Configs != nil && o.Configs == nil {
 			return false
 		} else if m.Configs != nil && o.Configs != nil {
-			if len(m.Configs) != len(o.Configs) {
+			if !opts.Filter && len(m.Configs) != len(o.Configs) {
 				return false
 			}
 			for i := 0; i < len(m.Configs); i++ {
@@ -1512,7 +1512,7 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 		if m.AutoProvPolicies == nil && o.AutoProvPolicies != nil || m.AutoProvPolicies != nil && o.AutoProvPolicies == nil {
 			return false
 		} else if m.AutoProvPolicies != nil && o.AutoProvPolicies != nil {
-			if len(m.AutoProvPolicies) != len(o.AutoProvPolicies) {
+			if !opts.Filter && len(m.AutoProvPolicies) != len(o.AutoProvPolicies) {
 				return false
 			}
 			for i := 0; i < len(m.AutoProvPolicies); i++ {

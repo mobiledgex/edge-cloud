@@ -3819,7 +3819,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
-				if len(m.Errors) != len(o.Errors) {
+				if !opts.Filter && len(m.Errors) != len(o.Errors) {
 					return false
 				}
 				for i := 0; i < len(m.Errors); i++ {
@@ -3875,11 +3875,11 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		if m.EnvVar == nil && o.EnvVar != nil || m.EnvVar != nil && o.EnvVar == nil {
 			return false
 		} else if m.EnvVar != nil && o.EnvVar != nil {
-			if len(m.EnvVar) != len(o.EnvVar) {
+			if !opts.Filter && len(m.EnvVar) != len(o.EnvVar) {
 				return false
 			}
-			for k, _ := range m.EnvVar {
-				_, ok := o.EnvVar[k]
+			for k, _ := range o.EnvVar {
+				_, ok := m.EnvVar[k]
 				if !ok {
 					return false
 				}
@@ -3901,11 +3901,11 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 			if m.ResTagMap == nil && o.ResTagMap != nil || m.ResTagMap != nil && o.ResTagMap == nil {
 				return false
 			} else if m.ResTagMap != nil && o.ResTagMap != nil {
-				if len(m.ResTagMap) != len(o.ResTagMap) {
+				if !opts.Filter && len(m.ResTagMap) != len(o.ResTagMap) {
 					return false
 				}
-				for k, _ := range m.ResTagMap {
-					_, ok := o.ResTagMap[k]
+				for k, _ := range o.ResTagMap {
+					_, ok := m.ResTagMap[k]
 					if !ok {
 						return false
 					}
@@ -3920,11 +3920,11 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		if m.AccessVars == nil && o.AccessVars != nil || m.AccessVars != nil && o.AccessVars == nil {
 			return false
 		} else if m.AccessVars != nil && o.AccessVars != nil {
-			if len(m.AccessVars) != len(o.AccessVars) {
+			if !opts.Filter && len(m.AccessVars) != len(o.AccessVars) {
 				return false
 			}
-			for k, _ := range m.AccessVars {
-				_, ok := o.AccessVars[k]
+			for k, _ := range o.AccessVars {
+				_, ok := m.AccessVars[k]
 				if !ok {
 					return false
 				}
@@ -3954,11 +3954,11 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 			if m.ChefClientKey == nil && o.ChefClientKey != nil || m.ChefClientKey != nil && o.ChefClientKey == nil {
 				return false
 			} else if m.ChefClientKey != nil && o.ChefClientKey != nil {
-				if len(m.ChefClientKey) != len(o.ChefClientKey) {
+				if !opts.Filter && len(m.ChefClientKey) != len(o.ChefClientKey) {
 					return false
 				}
-				for k, _ := range m.ChefClientKey {
-					_, ok := o.ChefClientKey[k]
+				for k, _ := range o.ChefClientKey {
+					_, ok := m.ChefClientKey[k]
 					if !ok {
 						return false
 					}
@@ -6329,7 +6329,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
-			if len(m.Errors) != len(o.Errors) {
+			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
 			for i := 0; i < len(m.Errors); i++ {
@@ -6343,7 +6343,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		if m.Flavors == nil && o.Flavors != nil || m.Flavors != nil && o.Flavors == nil {
 			return false
 		} else if m.Flavors != nil && o.Flavors != nil {
-			if len(m.Flavors) != len(o.Flavors) {
+			if !opts.Filter && len(m.Flavors) != len(o.Flavors) {
 				return false
 			}
 			for i := 0; i < len(m.Flavors); i++ {
@@ -6359,7 +6359,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		if m.AvailabilityZones == nil && o.AvailabilityZones != nil || m.AvailabilityZones != nil && o.AvailabilityZones == nil {
 			return false
 		} else if m.AvailabilityZones != nil && o.AvailabilityZones != nil {
-			if len(m.AvailabilityZones) != len(o.AvailabilityZones) {
+			if !opts.Filter && len(m.AvailabilityZones) != len(o.AvailabilityZones) {
 				return false
 			}
 			for i := 0; i < len(m.AvailabilityZones); i++ {
@@ -6370,7 +6370,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		if m.OsImages == nil && o.OsImages != nil || m.OsImages != nil && o.OsImages == nil {
 			return false
 		} else if m.OsImages != nil && o.OsImages != nil {
-			if len(m.OsImages) != len(o.OsImages) {
+			if !opts.Filter && len(m.OsImages) != len(o.OsImages) {
 				return false
 			}
 			for i := 0; i < len(m.OsImages); i++ {
