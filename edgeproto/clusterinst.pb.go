@@ -2799,7 +2799,7 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 			}
 			err = nil
 		} else {
-			err = fmt.Errorf("Timed out; expected state %s but is %s",
+			err = fmt.Errorf("Timed out; expected State %s but is %s",
 				TrackedState_CamelName[int32(targetState)],
 				TrackedState_CamelName[int32(curState)])
 		}

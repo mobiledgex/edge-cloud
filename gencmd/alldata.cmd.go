@@ -70,6 +70,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.Cloudlets[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].PrivacyPolicyState = 0
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -286,6 +289,7 @@ var AllDataOptionalArgs = []string{
 	"settings.influxdbmetricsretention",
 	"settings.cloudletmaintenancetimeout",
 	"settings.updatevmpooltimeout",
+	"settings.updateprivacypolicytimeout",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -371,6 +375,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.updatedat.seconds",
 	"cloudlets:#.updatedat.nanos",
 	"cloudlets:#.privacypolicy",
+	"cloudlets:#.privacypolicystate",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -412,6 +417,7 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.resources.vms:#.containers:#.status",
 	"cloudletinfos:#.resources.vms:#.containers:#.clusterip",
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts",
+	"cloudletinfos:#.privacypolicystate",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -656,6 +662,7 @@ var AllDataComments = map[string]string{
 	"settings.influxdbmetricsretention":                          "Default influxDB metrics retention policy (duration)",
 	"settings.cloudletmaintenancetimeout":                        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
 	"settings.updatevmpooltimeout":                               "Update VM pool timeout (duration)",
+	"settings.updateprivacypolicytimeout":                        "Update Privacy Policy timeout (duration)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -727,6 +734,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.crmaccesspublickey":                             "CRM access public key",
 	"cloudlets:#.crmaccesskeyupgraderequired":                    "CRM access key upgrade required",
 	"cloudlets:#.privacypolicy":                                  "Optional Privacy Policy",
+	"cloudlets:#.privacypolicystate":                             "State of privacy policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -758,6 +766,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.resources.vms:#.containers:#.status":        "Runtime status of the container",
 	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "IP within the CNI and is applicable to kubernetes only",
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "Restart count, applicable to kubernetes only",
+	"cloudletinfos:#.privacypolicystate":                         "Privacy Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",

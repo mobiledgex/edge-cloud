@@ -256,9 +256,11 @@ func main() {
 				}
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-
-				controllerData.PrivacyPolicyCache.SetUpdatedCb(controllerData.PrivacyPolicyChanged)
-
+				if cloudlet.PrivacyPolicy == "" {
+					myCloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_NOT_PRESENT
+				} else {
+					myCloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_READY
+				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 				resources, err := platform.GetCloudletInfraResources(ctx)
 				if err != nil {

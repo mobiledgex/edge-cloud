@@ -44,6 +44,10 @@ func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(ctx context.Context, in *edgeprot
 	cur := edgeproto.PrivacyPolicy{}
 	changed := 0
 
+	// if there are cloudlets in sync state forbid this operation
+	if cloudletApi.UsesPrivacyPolicy(&in.Key, edgeproto.TrackedState_UPDATING) {
+		return &edgeproto.Result{}, fmt.Errorf("Policy in use by Cloudlet")
+	}
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
 		if o.PortRangeMax == 0 {
@@ -73,7 +77,8 @@ func (s *PrivacyPolicyApi) DeletePrivacyPolicy(ctx context.Context, in *edgeprot
 	if !s.cache.HasKey(&in.Key) {
 		return &edgeproto.Result{}, in.Key.NotFoundError()
 	}
-	if cloudletApi.UsesPrivacyPolicy(&in.Key) {
+	// look for cloudlets in any state
+	if cloudletApi.UsesPrivacyPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
 		return &edgeproto.Result{}, fmt.Errorf("Policy in use by Cloudlet")
 	}
 	return s.store.Delete(ctx, in, s.sync.syncWait)

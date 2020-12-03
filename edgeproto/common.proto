@@ -182,6 +182,8 @@ enum MaintenanceState {
   CRM_ERROR = 8 [(protogen.enum_backend) = true];
   // Request CRM to transition to normal operation
   NORMAL_OPERATION_INIT = 9 [(protogen.enum_backend) = true];
+  // Updating privacy policy configuration
+  CRM_PRIVACY_POLICY_UPDATING = 10 [(protogen.enum_backend) = true];
   // Under maintenance
   UNDER_MAINTENANCE = 31 [(protogen.enum_backend) = true];
 }

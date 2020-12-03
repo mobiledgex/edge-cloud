@@ -9,7 +9,6 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/dind"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/fake"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
@@ -79,23 +78,4 @@ func loadPlugin(ctx context.Context) (*plugin.Plugin, error) {
 		return nil, fmt.Errorf("failed to load plugin %s, err: %v", solib, err)
 	}
 	return plug, nil
-}
-
-func GetCloudletPrivacyPolicy(ctx context.Context, platformConfig *pf.PlatformConfig, caches *pf.Caches) (*edgeproto.PrivacyPolicy, error) {
-	log.SpanLog(ctx, log.DebugLevelInfo, "GetCloudletPrivacyPolicy")
-	if platformConfig.PrivacyPolicy != "" {
-		pp := edgeproto.PrivacyPolicy{}
-		pk := edgeproto.PolicyKey{
-			Name:         platformConfig.PrivacyPolicy,
-			Organization: platformConfig.CloudletKey.Organization,
-		}
-		if !caches.PrivacyPolicyCache.Get(&pk, &pp) {
-			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find Privacy Policy from cache", "pk", pk, "pp", pp)
-			return nil, fmt.Errorf("fail to find Privacy Policy from cache: %s", pk)
-		} else {
-			log.SpanLog(ctx, log.DebugLevelInfra, "Found Privacy Policy from cache", "pk", pk, "pp", pp)
-			return &pp, nil
-		}
-	}
-	return nil, fmt.Errorf("No privacy policy specified")
 }

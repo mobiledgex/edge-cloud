@@ -139,11 +139,6 @@ func (cd *ControllerData) settingsChanged(ctx context.Context, old *edgeproto.Se
 	cd.settings = *new
 }
 
-func (cd *ControllerData) PrivacyPolicyChanged(ctx context.Context, old *edgeproto.PrivacyPolicy, new *edgeproto.PrivacyPolicy) {
-	log.WarnLog("xxxxx PrivacyPolicyChanged", "old", old, "new", new)
-	cd.platform.UpdatePrivacyPolicy(ctx, new)
-}
-
 func (cd *ControllerData) flavorChanged(ctx context.Context, old *edgeproto.Flavor, new *edgeproto.Flavor) {
 	//Do I need to do anything on a flavor change? update existing apps/clusters on this flavor?
 	//flavor := edgeproto.Flavor{}
@@ -154,6 +149,29 @@ func (cd *ControllerData) flavorChanged(ctx context.Context, old *edgeproto.Flav
 	// } else {
 	// 	// CRM TODO: delete flavor?
 	// }
+}
+
+// GetCloudletPrivacyPolicy finds the policy from the cache.  If a blank policy name is specified, an empty policy is returned
+func GetCloudletPrivacyPolicy(ctx context.Context, name string, cloudletOrg string, privPolCache *edgeproto.PrivacyPolicyCache) (*edgeproto.PrivacyPolicy, error) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "GetCloudletPrivacyPolicy")
+	if name != "" {
+		pp := edgeproto.PrivacyPolicy{}
+		pk := edgeproto.PolicyKey{
+			Name:         name,
+			Organization: cloudletOrg,
+		}
+		if !privPolCache.Get(&pk, &pp) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find Privacy Policy from cache", "pk", pk, "pp", pp)
+			return nil, fmt.Errorf("fail to find Privacy Policy from cache: %s", pk)
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Found Privacy Policy from cache", "pk", pk, "pp", pp)
+			return &pp, nil
+		}
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Returning empty privacy policy for empty name")
+		emptyPol := &edgeproto.PrivacyPolicy{}
+		return emptyPol, nil
+	}
 }
 
 func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
@@ -665,6 +683,41 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 	if updateInfo {
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+	if old != nil && old.PrivacyPolicyState != new.PrivacyPolicyState {
+		switch new.PrivacyPolicyState {
+		case edgeproto.TrackedState_UPDATE_REQUESTED:
+
+			log.SpanLog(ctx, log.DebugLevelInfra, "Updating Privacy Policy")
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			if new.State != edgeproto.TrackedState_READY {
+				log.SpanLog(ctx, log.DebugLevelInfra, "Update policy cannot be done until cloudlet is ready")
+				cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			} else {
+				privacyPolicy, err := GetCloudletPrivacyPolicy(ctx, new.PrivacyPolicy, new.Key.Organization, &cd.PrivacyPolicyCache)
+				if err != nil {
+					cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+
+				} else {
+					cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATING
+					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+					err = cd.platform.UpdatePrivacyPolicy(ctx, privacyPolicy)
+					log.SpanLog(ctx, log.DebugLevelInfra, "Update Privacy Done", "err", err)
+					if err != nil {
+						cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+					} else {
+						if new.PrivacyPolicy == "" {
+							cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_NOT_PRESENT
+						} else {
+							cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_READY
+						}
+					}
+					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+				}
+			}
+		}
 	}
 
 	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {

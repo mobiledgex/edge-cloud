@@ -68,6 +68,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
+	if _, found := tags["nocmp"]; found {
+		in.PrivacyPolicyState = 0
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -1336,6 +1339,7 @@ var CloudletComments = map[string]string{
 	"crmaccesspublickey":                  "CRM access public key",
 	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
 	"privacypolicy":                       "Optional Privacy Policy",
+	"privacypolicystate":                  "State of privacy policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1488,6 +1492,7 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages:#.diskformat",
 	"controllercachereceived",
 	"maintenancestate",
+	"privacypolicystate",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1525,6 +1530,7 @@ var CloudletInfoComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
+	"privacypolicystate":                     "Privacy Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",

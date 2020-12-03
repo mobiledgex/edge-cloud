@@ -94,6 +94,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
 			return key.NotFoundError()
 		}
+		if newCloudlet.PrivacyPolicyState != in.PrivacyPolicyState {
+			newCloudlet.PrivacyPolicyState = in.PrivacyPolicyState
+			updateObj = true
+		}
 		if newCloudlet.State != newState {
 			newCloudlet.State = newState
 			updateObj = true

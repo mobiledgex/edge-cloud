@@ -1092,14 +1092,15 @@ func (s *{{.Name}}Store) STMDel(stm concurrency.STM, key *{{.KeyType}}) {
 `
 
 type cacheTemplateArgs struct {
-	Name          string
-	KeyType       string
-	CudCache      bool
-	NotifyCache   bool
-	NotifyFlush   bool
-	WaitForState  string
-	ObjAndKey     bool
-	CustomKeyType string
+	Name             string
+	KeyType          string
+	CudCache         bool
+	NotifyCache      bool
+	NotifyFlush      bool
+	WaitForStateEnum string
+	WaitForStateType string
+	ObjAndKey        bool
+	CustomKeyType    string
 }
 
 var cacheTemplateIn = `
@@ -1498,9 +1499,9 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 }
 {{- end}}
 
-{{if ne (.WaitForState) ("")}}
-func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error) error {
-	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
+{{if ne (.WaitForStateEnum) ("")}}
+func (c *{{.Name}}Cache) WaitFor{{.WaitForStateType}}(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForStateEnum}}, transitionStates map[{{.WaitForStateEnum}}]struct{}, errorState {{.WaitForStateEnum}}, timeout time.Duration, successMsg string, send func(*Result) error) error {
+	curState := {{.WaitForStateEnum}}_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	lastMsgId := 0
@@ -1510,9 +1511,9 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := {{.Name}}{}
 		if c.Get(key, &info) {
-			curState = info.State
+			curState = info.{{.WaitForStateType}}
 		} else {
-			curState = {{.WaitForState}}_NOT_PRESENT
+			curState = {{.WaitForStateEnum}}_NOT_PRESENT
 		}
 		if send != nil {
 			if len(info.Status.Msgs) > 0 {
@@ -1530,14 +1531,14 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 				if statusString != "" {
 					msg = statusString
 				} else {
-					msg = {{.WaitForState}}_CamelName[int32(curState)]
+					msg = {{.WaitForStateEnum}}_CamelName[int32(curState)]
 				}
 				lastMsg = msg
 				send(&Result{Message: msg})
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for {{.Name}}")
-		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)], "status", info.Status)
+		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForStateEnum}}_CamelName[int32(curState)], "status", info.Status)
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
@@ -1548,9 +1549,9 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	// as it may have already changed to target state
 	info := {{.Name}}{}
 	if c.Get(key, &info) {
-		curState = info.State
+		curState = info.{{.WaitForStateType}}
 	} else {
-		curState = {{.WaitForState}}_NOT_PRESENT
+		curState = {{.WaitForStateEnum}}_NOT_PRESENT
 	}
 	if curState == targetState {
 		done <- true
@@ -1573,24 +1574,24 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	case <-time.After(timeout):
 		hasInfo := c.Get(key, &info)
-		if hasInfo && info.State == errorState {
+		if hasInfo && info.{{.WaitForStateType}} == errorState {
 			// error may have been sent back before watch started
 			errs := strings.Join(info.Errors, ", ")
 			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else if _, found := transitionStates[info.State]; hasInfo && found {
+		} else if _, found := transitionStates[info.{{.WaitForStateType}}]; hasInfo && found {
 			// no success response, but state is a valid transition
 			// state. That means work is still in progress.
 			// Notify user that this is not an error.
 			// Do not undo since CRM is still busy.
 			if send != nil {
-				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(info.State)])
+				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForStateEnum}}_CamelName[int32(info.{{.WaitForStateType}})])
 				send(&Result{Message: msg})
 			}
 			err = nil
 		} else {
-			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				{{.WaitForState}}_CamelName[int32(targetState)],
-				{{.WaitForState}}_CamelName[int32(curState)])
+			err = fmt.Errorf("Timed out; expected {{.WaitForStateType}} %s but is %s",
+				{{.WaitForStateEnum}}_CamelName[int32(targetState)],
+				{{.WaitForStateEnum}}_CamelName[int32(curState)])
 		}
 	}
 	cancel()
@@ -1939,20 +1940,22 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		if err != nil {
 			m.gen.Fail(err.Error())
 		}
+		waitForStateEnum, waitForStateType := GetGenerateWaitForState(message)
 		args := cacheTemplateArgs{
-			Name:          *message.Name,
-			CudCache:      GetGenerateCud(message),
-			NotifyCache:   GetNotifyCache(message),
-			NotifyFlush:   GetNotifyFlush(message),
-			WaitForState:  GetGenerateWaitForState(message),
-			ObjAndKey:     gensupport.GetObjAndKey(message),
-			CustomKeyType: gensupport.GetCustomKeyType(message),
-			KeyType:       keyType,
+			Name:             *message.Name,
+			CudCache:         GetGenerateCud(message),
+			NotifyCache:      GetNotifyCache(message),
+			NotifyFlush:      GetNotifyFlush(message),
+			WaitForStateEnum: waitForStateEnum,
+			WaitForStateType: waitForStateType,
+			ObjAndKey:        gensupport.GetObjAndKey(message),
+			CustomKeyType:    gensupport.GetCustomKeyType(message),
+			KeyType:          keyType,
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
 		m.importLog = true
-		if args.WaitForState != "" {
+		if args.WaitForStateEnum != "" {
 			m.importErrors = true
 			m.importTime = true
 			m.importStrings = true
@@ -2499,8 +2502,13 @@ func GetGenerateCache(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCache, false)
 }
 
-func GetGenerateWaitForState(message *descriptor.DescriptorProto) string {
-	return gensupport.GetStringExtension(message.Options, protogen.E_GenerateWaitForState, "")
+func GetGenerateWaitForState(message *descriptor.DescriptorProto) (string, string) {
+	ex := gensupport.GetStringExtension(message.Options, protogen.E_GenerateWaitForState, "")
+	ss := strings.Split(ex, ":")
+	if len(ss) == 1 {
+		return ss[0], "State"
+	}
+	return ss[0], ss[1]
 }
 
 func GetGenerateLookupBySublist(message *descriptor.DescriptorProto) string {

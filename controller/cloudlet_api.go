@@ -54,6 +54,10 @@ const (
 	PlatformInitTimeout = 20 * time.Minute
 )
 
+var UpdatePrivacyPolicyTransitions = map[edgeproto.TrackedState]struct{}{
+	edgeproto.TrackedState_UPDATING: {},
+}
+
 type updateCloudletCallback struct {
 	in       *edgeproto.Cloudlet
 	callback edgeproto.CloudletApi_CreateCloudletServer
@@ -76,6 +80,14 @@ func (s *updateCloudletCallback) cb(updateType edgeproto.CacheUpdateType, value 
 func ignoreCRMState(cctx *CallContext) bool {
 	if cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
+		return true
+	}
+	return false
+}
+
+func supportsPrivacyPolicy(platformType edgeproto.PlatformType) bool {
+	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK ||
+		platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 		return true
 	}
 	return false
@@ -378,7 +390,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 		}
 		if in.PrivacyPolicy != "" {
-			if in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE && in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+			if !supportsPrivacyPolicy(in.PlatformType) {
 				platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
 				return fmt.Errorf("Privacy Policy not supported on %s", platName)
 			}
@@ -765,8 +777,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	var newMaintenanceState edgeproto.MaintenanceState
 	maintenanceChanged := false
+	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldPrivacyPolicy]
+
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := &edgeproto.Cloudlet{}
+		cur = &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return in.Key.NotFoundError()
 		}
@@ -778,8 +792,39 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			// don't change maintenance here, we handle it below
 			cur.MaintenanceState = oldmstate
 		}
+		if privPolUpdateRequested {
+			if !ignoreCRM(cctx) {
+				if maintenanceChanged {
+					return fmt.Errorf("Cannot perform privacy policy update at same time as maintenance state update")
+				}
+				if cur.State != edgeproto.TrackedState_READY {
+					return fmt.Errorf("Privacy policy cannot be changed while cloudlet is not ready")
+				}
+			}
+			if in.PrivacyPolicy != "" {
+				if !supportsPrivacyPolicy(in.PlatformType) {
+					platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+					return fmt.Errorf("Privacy Policy not supported on %s", platName)
+				}
+				policy := edgeproto.PrivacyPolicy{}
+				if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
+					return err
+				}
+			}
+		}
 		if crmUpdateReqd && !ignoreCRM(cctx) {
 			cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		if privPolUpdateRequested {
+			if ignoreCRM(cctx) {
+				if cur.PrivacyPolicy == "" {
+					cur.PrivacyPolicyState = edgeproto.TrackedState_NOT_PRESENT
+				} else {
+					cur.PrivacyPolicyState = edgeproto.TrackedState_READY
+				}
+			} else {
+				cur.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_REQUESTED
+			}
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, cur)
@@ -802,6 +847,21 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			"Cloudlet updated successfully",     // Set success message
 			PlatformInitTimeout, cb.Send,
 		)
+		return err
+	}
+	if privPolUpdateRequested && !ignoreCRM(cctx) {
+		// Wait for cloudlet to finish upgrading
+		err := cb.Send(&edgeproto.Result{
+			Message: "Doing PrivacyPolicy Update",
+		})
+		if err != nil {
+			return err
+		}
+		if cur.PrivacyPolicy == "" {
+			err = s.cache.WaitForPrivacyPolicyState(cb.Context(), &cur.Key, edgeproto.TrackedState_NOT_PRESENT, UpdatePrivacyPolicyTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdatePrivacyPolicyTimeout.TimeDuration(), "", cb.Send)
+		} else {
+			err = s.cache.WaitForPrivacyPolicyState(cb.Context(), &cur.Key, edgeproto.TrackedState_READY, UpdatePrivacyPolicyTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdatePrivacyPolicyTimeout.TimeDuration(), "", cb.Send)
+		}
 		return err
 	}
 
@@ -1401,13 +1461,15 @@ func (s *CloudletApi) GenerateAccessKey(ctx context.Context, key *edgeproto.Clou
 	return &res, err
 }
 
-func (s *CloudletApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
+func (s *CloudletApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey, stateMatch edgeproto.TrackedState) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		cloudlet := data.Obj
 		if cloudlet.PrivacyPolicy == key.Name && cloudlet.Key.Organization == key.Organization {
-			return true
+			if stateMatch == edgeproto.TrackedState_TRACKED_STATE_UNKNOWN || stateMatch == cloudlet.State {
+				return true
+			}
 		}
 	}
 	return false

@@ -39,7 +39,7 @@ message PrivacyPolicy {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.notify_custom_update) = true;
+ //  option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
