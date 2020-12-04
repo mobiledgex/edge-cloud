@@ -7,7 +7,7 @@ const (
 	AlertAppInstDown             = "AppInstDown"
 	AlertAutoUndeploy            = "AutoProvUndeploy"
 	AlertCloudletDown            = "CloudletDown"
-	AlertCloudletDownDescription = "Cloudlet Infrastructure is unresponsive"
+	AlertCloudletDownDescription = "Cloudlet resource manager is offline"
 )
 
 // Alert types
