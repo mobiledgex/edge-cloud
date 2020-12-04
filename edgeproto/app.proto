@@ -150,7 +150,7 @@ message App {
   string default_privacy_policy = 30;
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Auto provisioning policy names
+  // Auto provisioning policy names, may be specified multiple times
   repeated string auto_prov_policies = 32;
   // Delimiter to be used for template parsing, defaults to "[[ ]]"
   string template_delimiter = 33;
@@ -171,7 +171,7 @@ message App {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt";
+  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,AutoProvPolicy";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }
