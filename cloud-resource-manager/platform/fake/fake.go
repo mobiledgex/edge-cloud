@@ -221,7 +221,10 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 }
 
 func (s *Platform) UpdatePrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy) error {
-	log.DebugLog(log.DebugLevelInfra, "update fake PrivacyPolicy", "policy", privacyPolicy)
+	log.DebugLog(log.DebugLevelInfra, "fake UpdatePrivacyPolicy begin", "policy", privacyPolicy)
+	// sleep to simulate the update taking some time
+	time.Sleep(time.Second * 5)
+	log.DebugLog(log.DebugLevelInfra, "fake UpdatePrivacyPolicy done", "policy", privacyPolicy)
 	return nil
 }
 

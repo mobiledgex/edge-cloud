@@ -36,7 +36,8 @@ message PrivacyPolicy {
   repeated SecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
-  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_test) = true;  
+  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
  //  option (protogen.notify_custom_update) = true;
@@ -46,28 +47,31 @@ message PrivacyPolicy {
 
 service PrivacyPolicyApi {
   // Create a Privacy Policy
-  rpc CreatePrivacyPolicy(PrivacyPolicy) returns (Result) {
+  rpc CreatePrivacyPolicy(PrivacyPolicy) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/privacypolicy"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete a Privacy policy
-  rpc DeletePrivacyPolicy(PrivacyPolicy) returns (Result) {
+  rpc DeletePrivacyPolicy(PrivacyPolicy) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/privacypolicy"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
   // Update a Privacy policy
-  rpc UpdatePrivacyPolicy(PrivacyPolicy) returns (Result) {
+  rpc UpdatePrivacyPolicy(PrivacyPolicy) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/privacypolicy"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
   // Show Privacy Policies. Any fields specified will be used to filter results.

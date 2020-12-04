@@ -29,7 +29,7 @@ type AllDataOut struct {
 	AutoProvPolicies        []edgeproto.Result
 	AutoProvPolicyCloudlets []edgeproto.Result
 	AutoScalePolicies       []edgeproto.Result
-	PrivacyPolicies         []edgeproto.Result
+	PrivacyPolicies         [][]edgeproto.Result
 	ClusterInsts            [][]edgeproto.Result
 	Apps                    []edgeproto.Result
 	AppInstances            [][]edgeproto.Result

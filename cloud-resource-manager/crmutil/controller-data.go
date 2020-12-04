@@ -687,9 +687,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	if old != nil && old.PrivacyPolicyState != new.PrivacyPolicyState {
 		switch new.PrivacyPolicyState {
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
-
 			log.SpanLog(ctx, log.DebugLevelInfra, "Updating Privacy Policy")
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			if new.State != edgeproto.TrackedState_READY {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Update policy cannot be done until cloudlet is ready")
 				cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
@@ -697,9 +695,9 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			} else {
 				privacyPolicy, err := GetCloudletPrivacyPolicy(ctx, new.PrivacyPolicy, new.Key.Organization, &cd.PrivacyPolicyCache)
 				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "Error getting privacy policy", "err", err)
 					cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
 					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-
 				} else {
 					cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATING
 					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)

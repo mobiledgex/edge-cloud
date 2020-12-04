@@ -55,6 +55,17 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
+func (s *AppApi) GetNonPrivateApps(apps map[edgeproto.AppKey]struct{}) {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		app := data.Obj
+		if !app.PrivacyEnabled && !app.InternalPorts {
+			apps[app.Key] = struct{}{}
+		}
+	}
+}
+
 func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -471,6 +482,9 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		_, deploymentManifestSpecified := fields[edgeproto.AppFieldDeploymentManifest]
 		_, accessPortSpecified := fields[edgeproto.AppFieldAccessPorts]
+		_, privacyEnabledSpecified := fields[edgeproto.AppFieldPrivacyEnabled]
+		_, internalPortsSpecified := fields[edgeproto.AppFieldInternalPorts]
+
 		if deploymentManifestSpecified {
 			// reset the deployment generator
 			cur.DeploymentGenerator = ""
@@ -482,6 +496,17 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			} else if cur.Deployment != cloudcommon.DeploymentTypeDocker {
 				// force regeneration of manifest for k8s
 				cur.DeploymentManifest = ""
+			}
+		}
+		// removing InternalPorts or PrivacyEnabled is not allowed if the app is already on
+		// a private cloudlet
+		if (privacyEnabledSpecified && !in.PrivacyEnabled) || (internalPortsSpecified && !in.InternalPorts) {
+			appInstKeys := make(map[edgeproto.AppInstKey]struct{})
+			appInstApi.cache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
+				appInstKeys[*k] = struct{}{}
+			})
+			if cloudletApi.AppInstUsesPrivateCloudlet(appInstKeys) {
+				return fmt.Errorf("Cannot change PrivacyEnabled or InternalPorts settings for App in use by private cloudlet")
 			}
 		}
 		cur.CopyInFields(in)

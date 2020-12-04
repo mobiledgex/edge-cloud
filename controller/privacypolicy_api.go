@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -24,7 +23,8 @@ func InitPrivacyPolicyApi(sync *Sync) {
 	sync.RegisterCache(&privacyPolicyApi.cache)
 }
 
-func (s *PrivacyPolicyApi) CreatePrivacyPolicy(ctx context.Context, in *edgeproto.PrivacyPolicy) (*edgeproto.Result, error) {
+func (s *PrivacyPolicyApi) CreatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_CreatePrivacyPolicyServer) error {
+	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "CreatePrivacyPolicy", "policy", in)
 
 	// port range max is optional, set it to min if min is present but not max
@@ -35,18 +35,21 @@ func (s *PrivacyPolicyApi) CreatePrivacyPolicy(ctx context.Context, in *edgeprot
 		}
 	}
 	if err := in.Validate(nil); err != nil {
-		return &edgeproto.Result{}, err
+		return err
 	}
-	return s.store.Create(ctx, in, s.sync.syncWait)
+	_, err := s.store.Create(ctx, in, s.sync.syncWait)
+	return err
+
 }
 
-func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(ctx context.Context, in *edgeproto.PrivacyPolicy) (*edgeproto.Result, error) {
+func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_UpdatePrivacyPolicyServer) error {
+	ctx := cb.Context()
 	cur := edgeproto.PrivacyPolicy{}
 	changed := 0
 
 	// if there are cloudlets in sync state forbid this operation
 	if cloudletApi.UsesPrivacyPolicy(&in.Key, edgeproto.TrackedState_UPDATING) {
-		return &edgeproto.Result{}, fmt.Errorf("Policy in use by Cloudlet")
+		return fmt.Errorf("Policy in use by Cloudlet")
 	}
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
@@ -70,18 +73,21 @@ func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(ctx context.Context, in *edgeprot
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
-	return &edgeproto.Result{}, err
+	cloudletApi.UpdateCloudletsUsingPrivacyPolicy(ctx, &cur, cb)
+	return err
 }
 
-func (s *PrivacyPolicyApi) DeletePrivacyPolicy(ctx context.Context, in *edgeproto.PrivacyPolicy) (*edgeproto.Result, error) {
+func (s *PrivacyPolicyApi) DeletePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_DeletePrivacyPolicyServer) error {
+	ctx := cb.Context()
 	if !s.cache.HasKey(&in.Key) {
-		return &edgeproto.Result{}, in.Key.NotFoundError()
+		return in.Key.NotFoundError()
 	}
 	// look for cloudlets in any state
 	if cloudletApi.UsesPrivacyPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
-		return &edgeproto.Result{}, fmt.Errorf("Policy in use by Cloudlet")
+		return fmt.Errorf("Policy in use by Cloudlet")
 	}
-	return s.store.Delete(ctx, in, s.sync.syncWait)
+	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
+	return err
 }
 
 func (s *PrivacyPolicyApi) ShowPrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_ShowPrivacyPolicyServer) error {

@@ -162,17 +162,6 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 					s.sendrecv.appInstSend.Update(ctx, &k, nil, modRev)
 				}
 			}
-			/*
-				if s.sendrecv.privacyPolicySend != nil {
-					privPols := make(map[edgeproto.PolicyKey]int64)
-					s.sendrecv.privacyPolicySend.handler.GetForCloudlet(&buf.Key, func(key *edgeproto.PolicyKey, modRev int64) {
-						privPols[*key] = modRev
-					})
-					for k, modRev := range privPols {
-						s.sendrecv.privacyPolicySend.Update(ctx, &k, nil, modRev)
-						log.WarnLog("XXXXX loop policy", "key", k)
-					}
-				}*/
 			s.sendrecv.triggerSendAllEnd()
 
 		}

@@ -31,7 +31,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
-func request_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client PrivacyPolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client PrivacyPolicyApiClient, req *http.Request, pathParams map[string]string) (PrivacyPolicyApi_CreatePrivacyPolicyClient, runtime.ServerMetadata, error) {
 	var protoReq PrivacyPolicy
 	var metadata runtime.ServerMetadata
 
@@ -43,12 +43,20 @@ func request_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreatePrivacyPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.CreatePrivacyPolicy(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func local_request_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server PrivacyPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_PrivacyPolicyApi_DeletePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client PrivacyPolicyApiClient, req *http.Request, pathParams map[string]string) (PrivacyPolicyApi_DeletePrivacyPolicyClient, runtime.ServerMetadata, error) {
 	var protoReq PrivacyPolicy
 	var metadata runtime.ServerMetadata
 
@@ -60,12 +68,20 @@ func local_request_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx context.Context, m
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.CreatePrivacyPolicy(ctx, &protoReq)
-	return msg, metadata, err
+	stream, err := client.DeletePrivacyPolicy(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_PrivacyPolicyApi_DeletePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client PrivacyPolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_PrivacyPolicyApi_UpdatePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client PrivacyPolicyApiClient, req *http.Request, pathParams map[string]string) (PrivacyPolicyApi_UpdatePrivacyPolicyClient, runtime.ServerMetadata, error) {
 	var protoReq PrivacyPolicy
 	var metadata runtime.ServerMetadata
 
@@ -77,59 +93,16 @@ func request_PrivacyPolicyApi_DeletePrivacyPolicy_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeletePrivacyPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_PrivacyPolicyApi_DeletePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server PrivacyPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PrivacyPolicy
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	stream, err := client.UpdatePrivacyPolicy(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
 	}
-
-	msg, err := server.DeletePrivacyPolicy(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-func request_PrivacyPolicyApi_UpdatePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client PrivacyPolicyApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PrivacyPolicy
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UpdatePrivacyPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_PrivacyPolicyApi_UpdatePrivacyPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server PrivacyPolicyApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PrivacyPolicy
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.UpdatePrivacyPolicy(ctx, &protoReq)
-	return msg, metadata, err
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -164,63 +137,24 @@ func request_PrivacyPolicyApi_ShowPrivacyPolicy_0(ctx context.Context, marshaler
 func RegisterPrivacyPolicyApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server PrivacyPolicyApiServer) error {
 
 	mux.Handle("POST", pattern_PrivacyPolicyApi_CreatePrivacyPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_PrivacyPolicyApi_CreatePrivacyPolicy_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_PrivacyPolicyApi_DeletePrivacyPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_PrivacyPolicyApi_DeletePrivacyPolicy_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_PrivacyPolicyApi_DeletePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_PrivacyPolicyApi_UpdatePrivacyPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_PrivacyPolicyApi_UpdatePrivacyPolicy_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_PrivacyPolicyApi_UpdatePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_PrivacyPolicyApi_ShowPrivacyPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -287,7 +221,7 @@ func RegisterPrivacyPolicyApiHandlerClient(ctx context.Context, mux *runtime.Ser
 			return
 		}
 
-		forward_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_PrivacyPolicyApi_CreatePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -307,7 +241,7 @@ func RegisterPrivacyPolicyApiHandlerClient(ctx context.Context, mux *runtime.Ser
 			return
 		}
 
-		forward_PrivacyPolicyApi_DeletePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_PrivacyPolicyApi_DeletePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -327,7 +261,7 @@ func RegisterPrivacyPolicyApiHandlerClient(ctx context.Context, mux *runtime.Ser
 			return
 		}
 
-		forward_PrivacyPolicyApi_UpdatePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_PrivacyPolicyApi_UpdatePrivacyPolicy_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -365,11 +299,11 @@ var (
 )
 
 var (
-	forward_PrivacyPolicyApi_CreatePrivacyPolicy_0 = runtime.ForwardResponseMessage
+	forward_PrivacyPolicyApi_CreatePrivacyPolicy_0 = runtime.ForwardResponseStream
 
-	forward_PrivacyPolicyApi_DeletePrivacyPolicy_0 = runtime.ForwardResponseMessage
+	forward_PrivacyPolicyApi_DeletePrivacyPolicy_0 = runtime.ForwardResponseStream
 
-	forward_PrivacyPolicyApi_UpdatePrivacyPolicy_0 = runtime.ForwardResponseMessage
+	forward_PrivacyPolicyApi_UpdatePrivacyPolicy_0 = runtime.ForwardResponseStream
 
 	forward_PrivacyPolicyApi_ShowPrivacyPolicy_0 = runtime.ForwardResponseStream
 )

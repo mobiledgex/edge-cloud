@@ -35,7 +35,7 @@ func TestPrivacyPolicyApi(t *testing.T) {
 }
 
 func expectCreatePolicyError(t *testing.T, ctx context.Context, in *edgeproto.PrivacyPolicy, msg string) {
-	_, err := privacyPolicyApi.CreatePrivacyPolicy(ctx, in)
+	err := privacyPolicyApi.CreatePrivacyPolicy(in, testutil.NewCudStreamoutPrivacyPolicy(ctx))
 	require.NotNil(t, err, "create %v", in)
 	require.Contains(t, err.Error(), msg, "error %v contains %s", err, msg)
 }

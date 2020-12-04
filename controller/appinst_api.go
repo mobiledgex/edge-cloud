@@ -76,6 +76,21 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
+func (s *AppInstApi) NonPrivateAppInstUsesCloudlet(in *edgeproto.CloudletKey) bool {
+	nonPrivateApps := make(map[edgeproto.AppKey]struct{})
+	appApi.GetNonPrivateApps(nonPrivateApps)
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, data := range s.cache.Objs {
+		val := data.Obj
+		_, nonPrivate := nonPrivateApps[val.Key.AppKey]
+		if nonPrivate && key.ClusterInstKey.CloudletKey.Matches(in) {
+			return true
+		}
+	}
+	return false
+}
+
 // Checks if there is some action in progress by AppInst on the cloudlet
 func (s *AppInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 	s.cache.Mux.Lock()
@@ -408,7 +423,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey); err != nil {
 			return err
 		}
-
 		cikey := &in.Key.ClusterInstKey
 		// Explicit auto-cluster requirement
 		if cikey.ClusterKey.Name == "" {
@@ -420,6 +434,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if app.DeletePrepare {
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
+		}
+		if cloudlet.PrivacyPolicy != "" && !app.PrivacyEnabled && !app.InternalPorts {
+			return fmt.Errorf("Cannot start App on Private Cloudlet without PrivacyEnabled or InternalPorts")
 		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested

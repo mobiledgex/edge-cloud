@@ -56,7 +56,7 @@ func CreatePrivacyPolicy(c *cli.Command, in *edgeproto.PrivacyPolicy) error {
 		return fmt.Errorf("PrivacyPolicyApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := PrivacyPolicyApiCmd.CreatePrivacyPolicy(ctx, in)
+	stream, err := PrivacyPolicyApiCmd.CreatePrivacyPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -65,7 +65,31 @@ func CreatePrivacyPolicy(c *cli.Command, in *edgeproto.PrivacyPolicy) error {
 		}
 		return fmt.Errorf("CreatePrivacyPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreatePrivacyPolicy recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -113,7 +137,7 @@ func DeletePrivacyPolicy(c *cli.Command, in *edgeproto.PrivacyPolicy) error {
 		return fmt.Errorf("PrivacyPolicyApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := PrivacyPolicyApiCmd.DeletePrivacyPolicy(ctx, in)
+	stream, err := PrivacyPolicyApiCmd.DeletePrivacyPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -122,7 +146,31 @@ func DeletePrivacyPolicy(c *cli.Command, in *edgeproto.PrivacyPolicy) error {
 		}
 		return fmt.Errorf("DeletePrivacyPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeletePrivacyPolicy recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
@@ -171,7 +219,7 @@ func UpdatePrivacyPolicy(c *cli.Command, in *edgeproto.PrivacyPolicy) error {
 		return fmt.Errorf("PrivacyPolicyApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := PrivacyPolicyApiCmd.UpdatePrivacyPolicy(ctx, in)
+	stream, err := PrivacyPolicyApiCmd.UpdatePrivacyPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -180,7 +228,31 @@ func UpdatePrivacyPolicy(c *cli.Command, in *edgeproto.PrivacyPolicy) error {
 		}
 		return fmt.Errorf("UpdatePrivacyPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdatePrivacyPolicy recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
 	return nil
 }
 
