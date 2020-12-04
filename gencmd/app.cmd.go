@@ -484,7 +484,6 @@ var AppOptionalArgs = []string{
 	"officialfqdn",
 	"md5sum",
 	"defaultsharedvolumesize",
-	"autoprovpolicy",
 	"accesstype",
 	"defaultprivacypolicy",
 	"autoprovpolicies",
@@ -526,7 +525,7 @@ var AppComments = map[string]string{
 	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
 	"deleteprepare":           "Preparing to be deleted",
-	"autoprovpolicies":        "Auto provisioning policy names",
+	"autoprovpolicies":        "Auto provisioning policy names, may be specified multiple times",
 	"templatedelimiter":       "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"skiphcports":             "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 }
