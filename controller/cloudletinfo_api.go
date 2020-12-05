@@ -142,6 +142,9 @@ func CloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
 	alert.ActiveAt.Seconds = ts.Unix()
 	alert.ActiveAt.Nanos = int32(ts.Nanosecond())
 	alert.Labels = cloudletInfoToAlertLabels(in)
+	alert.Annotations = make(map[string]string)
+	alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertCloudletDown
+	alert.Annotations[cloudcommon.AlertAnnotationDescription] = cloudcommon.AlertCloudletDownDescription
 	// send an update
 	alertApi.Update(ctx, &alert, 0)
 }
