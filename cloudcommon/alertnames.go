@@ -1,17 +1,22 @@
 package cloudcommon
 
 // Alert names
-var AlertAutoScaleUp = "AutoScaleUp"
-var AlertAutoScaleDown = "AutoScaleDown"
-var AlertAppInstDown = "AppInstDown"
-var AlertAutoUndeploy = "AutoProvUndeploy"
-var AlertCloudletDown = "CloudletDown"
+const (
+	AlertAutoScaleUp             = "AutoScaleUp"
+	AlertAutoScaleDown           = "AutoScaleDown"
+	AlertAppInstDown             = "AppInstDown"
+	AlertAutoUndeploy            = "AutoProvUndeploy"
+	AlertCloudletDown            = "CloudletDown"
+	AlertCloudletDownDescription = "Cloudlet resource manager is offline"
+)
 
 // Alert types
 const (
-	AlertScopeTypeTag  = "scope"
-	AlertScopeApp      = "Application"
-	AlertScopeCloudlet = "Cloudlet"
+	AlertAnnotationTitle       = "title"
+	AlertAnnotationDescription = "description"
+	AlertScopeTypeTag          = "scope"
+	AlertScopeApp              = "Application"
+	AlertScopeCloudlet         = "Cloudlet"
 )
 
 // Alert annotation keys
