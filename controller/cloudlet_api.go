@@ -199,10 +199,9 @@ func stopCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, streamS
 func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.StreamObjApi_StreamCloudletServer) error {
 	ctx := cb.Context()
 	cloudlet := &edgeproto.Cloudlet{}
-	if !cloudletApi.cache.Get(key, cloudlet) {
-		return key.NotFoundError()
-	}
-	if cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS ||
+	// if cloudlet is absent, then stream the deletion status messages
+	if !cloudletApi.cache.Get(key, cloudlet) ||
+		cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS ||
 		(cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS && cloudlet.State != edgeproto.TrackedState_READY) {
 		// If restricted scenario, then stream msgs only if either cloudlet obj was not created successfully or it is updating
 		return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
