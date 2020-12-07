@@ -6,7 +6,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-// CloudletPoolMgr interface used by events to determine if cloudlet
+// CloudletPoolLookup interface used by events to determine if cloudlet
 // is in a CloudletPool for proper RBAC marking of events.
 type CloudletPoolLookup interface {
 	InPool(region string, key edgeproto.CloudletKey) bool
