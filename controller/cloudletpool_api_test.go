@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -17,6 +18,9 @@ func TestCloudletPoolApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	cplookup := &node.CloudletPoolCache{}
+	cplookup.Init()
+	nodeMgr.CloudletPoolLookup = cplookup
 
 	dummy := dummyEtcd{}
 	dummy.Start()
