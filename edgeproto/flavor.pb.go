@@ -714,11 +714,11 @@ func (m *Flavor) Matches(o *Flavor, fopts ...MatchOpt) bool {
 		if m.OptResMap == nil && o.OptResMap != nil || m.OptResMap != nil && o.OptResMap == nil {
 			return false
 		} else if m.OptResMap != nil && o.OptResMap != nil {
-			if len(m.OptResMap) != len(o.OptResMap) {
+			if !opts.Filter && len(m.OptResMap) != len(o.OptResMap) {
 				return false
 			}
-			for k, _ := range m.OptResMap {
-				_, ok := o.OptResMap[k]
+			for k, _ := range o.OptResMap {
+				_, ok := m.OptResMap[k]
 				if !ok {
 					return false
 				}

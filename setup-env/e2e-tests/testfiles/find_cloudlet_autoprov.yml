@@ -6,6 +6,8 @@ tests:
 - name: Add and show provisioning without appinst
   apifile: "{{datadir}}/appdata_no_appinst.yml"
   actions: [ctrlapi-create,ctrlapi-add,ctrlapi-show]
+  retrycount: 20
+  retryintervalsec: 0.5
   compareyaml:
     yaml1: "{{datadir}}/appdata_no_appinst_show.yml"
     yaml2: "{{outputdir}}/show-commands.yml"
