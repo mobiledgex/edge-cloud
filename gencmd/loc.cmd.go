@@ -61,8 +61,8 @@ var SampleComments = map[string]string{
 var SampleSpecialArgs = map[string]string{
 	"tags": "StringToString",
 }
-var LatencyRequiredArgs = []string{}
-var LatencyOptionalArgs = []string{
+var StatisticsRequiredArgs = []string{}
+var StatisticsOptionalArgs = []string{
 	"avg",
 	"min",
 	"max",
@@ -72,9 +72,9 @@ var LatencyOptionalArgs = []string{
 	"timestamp.seconds",
 	"timestamp.nanos",
 }
-var LatencyAliasArgs = []string{}
-var LatencyComments = map[string]string{
+var StatisticsAliasArgs = []string{}
+var StatisticsComments = map[string]string{
 	"stddev":   "Square root of unbiased variance",
 	"variance": "Unbiased variance",
 }
-var LatencySpecialArgs = map[string]string{}
+var StatisticsSpecialArgs = map[string]string{}

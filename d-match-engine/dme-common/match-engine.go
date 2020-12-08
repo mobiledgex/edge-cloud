@@ -888,7 +888,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 			if !ok {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to find session cookie")
 			} else {
-				updateGpsLocationStats(loc, appInstKey, *ckey, carrier, "") // TODO: Get device os here
+				updateGpsLocationStats(loc, appInstKey, *ckey, carrier, "", "") // TODO: Get device os and device model here
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
@@ -1104,7 +1104,7 @@ loop:
 			// Client sent latency samples to be processed
 			call := EdgeEventStatCall{}
 			call.Key.AppInstKey = *appInstKey
-			latency, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			stats, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
 				return err
@@ -1113,7 +1113,7 @@ loop:
 			dmeappinst := findAppInst(appInstKey, edgeEventsCookieKey.CloudletOrg)
 			call.AppInstLatencyInfo = &AppInstLatencyInfo{
 				DmeAppInst:       dmeappinst,
-				Latency:          latency,
+				Statistics:       stats,
 				SessionCookieKey: *sessionCookieKey,
 				Carrier:          translateCarrierName(cupdate.CarrierName),
 				GpsLocation:      cupdate.GpsLocation,
@@ -1123,7 +1123,7 @@ loop:
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			// Gps location stats update
-			updateGpsLocationStats(cupdate.GpsLocation, appInstKey, *sessionCookieKey, cupdate.CarrierName, cupdate.DeviceOs)
+			updateGpsLocationStats(cupdate.GpsLocation, appInstKey, *sessionCookieKey, cupdate.CarrierName, cupdate.DeviceOs, cupdate.DeviceModel)
 			// Update context with stats that have been sent
 			stats, ok := ctx.Value(SentStatsContextKey).(map[string]struct{})
 			if !ok {
@@ -1151,6 +1151,21 @@ loop:
 				newCloudletEdgeEvent.NewCloudlet = fcreply
 				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
 			}
+		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
+			// Client sent custom stat to be stored
+			call := EdgeEventStatCall{}
+			call.Key.AppInstKey = *appInstKey
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
+				return err
+			}
+			call.Key.Metric = cloudcommon.CustomMetric // override method name
+			call.CustomStatInfo = &CustomStatInfo{
+				Name:             cupdate.CustomEvent.Name,
+				Value:            cupdate.CustomEvent.Data,
+				SessionCookieKey: *sessionCookieKey,
+			}
+			EEStats.RecordEdgeEventStatCall(&call)
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
@@ -1162,7 +1177,7 @@ loop:
 	return reterr
 }
 
-func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey CookieKey, carrier string, deviceos string) {
+func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey CookieKey, carrier string, deviceos string, devicemodel string) {
 	call := EdgeEventStatCall{}
 	call.Key.AppInstKey = *appInstKey
 	call.Key.Metric = cloudcommon.GpsLocationMetric
@@ -1172,7 +1187,9 @@ func updateGpsLocationStats(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sess
 		Timestamp:        cloudcommon.TimeToTimestamp(time.Now()),
 		Carrier:          translateCarrierName(carrier),
 		DeviceOs:         deviceos,
+		DeviceModel:      devicemodel,
 	}
+	// FindCloudlet will try to record gps stats regardless of whether EdgeEventStats was started
 	if EEStats != nil {
 		EEStats.RecordEdgeEventStatCall(&call)
 	}

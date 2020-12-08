@@ -14,6 +14,7 @@ type GpsLocationInfo struct {
 	Timestamp        dme.Timestamp
 	Carrier          string
 	DeviceOs         string
+	DeviceModel      string
 }
 
 type GpsLocationStats struct {

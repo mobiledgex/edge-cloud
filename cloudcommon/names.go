@@ -71,6 +71,7 @@ var LatencyPerCarrierMetric = "latency-per-carrier"
 var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
 var LatencyPerLocationMetric = "latency-per-location"
 var LatencyPerDeviceOSMetric = "latency-per-os"
+var CustomMetric = "custom-metrics"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"

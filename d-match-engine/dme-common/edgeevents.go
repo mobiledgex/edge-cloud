@@ -13,7 +13,7 @@ type EdgeEventsHandler interface {
 	RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
 	RemoveAppInstKey(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	SendLatencyRequestEdgeEvent(ctx context.Context, appInstKey edgeproto.AppInstKey)
-	ProcessLatencySamples(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, samples []*dme.Sample) (*dme.Latency, error)
+	ProcessLatencySamples(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, samples []*dme.Sample) (*dme.Statistics, error)
 	SendAppInstStateEvent(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType)
 	SendEdgeEventToClient(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
 }
@@ -40,9 +40,9 @@ func (e *EmptyEdgeEventsHandler) SendLatencyRequestEdgeEvent(ctx context.Context
 	return
 }
 
-func (e *EmptyEdgeEventsHandler) ProcessLatencySamples(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, samples []*dme.Sample) (*dme.Latency, error) {
+func (e *EmptyEdgeEventsHandler) ProcessLatencySamples(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, samples []*dme.Sample) (*dme.Statistics, error) {
 	log.DebugLog(log.DebugLevelDmereq, "ProcessLatency in EmptyEdgeEventHandler returning fake latency")
-	fakelatency := &dme.Latency{
+	fakestats := &dme.Statistics{
 		Avg:        3.21,
 		Min:        1.34,
 		Max:        6.3453,
@@ -54,7 +54,7 @@ func (e *EmptyEdgeEventsHandler) ProcessLatencySamples(ctx context.Context, appI
 			Nanos:   1000000000,
 		},
 	}
-	return fakelatency, nil
+	return fakestats, nil
 }
 
 func (e *EmptyEdgeEventsHandler) SendAppInstStateEvent(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType) {

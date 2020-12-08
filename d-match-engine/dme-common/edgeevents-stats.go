@@ -1,8 +1,6 @@
 package dmecommon
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"strconv"
 	"sync"
 	"time"
@@ -20,11 +18,13 @@ type EdgeEventStatCall struct {
 	Key                EdgeEventStatKey
 	AppInstLatencyInfo *AppInstLatencyInfo // Latency samples for EdgeEvents
 	GpsLocationInfo    *GpsLocationInfo    // Gps Location update
+	CustomStatInfo     *CustomStatInfo     // Custom stat update
 }
 
 type EdgeEventStat struct {
 	AppInstLatencyStats *AppInstLatencyStats // Aggregated latency stats from persistent connection (resets every hour)
 	GpsLocationStats    *GpsLocationStats    // Gps Locations update
+	CustomStats         *CustomStats         // Application defined custom stats
 	Mux                 sync.Mutex
 	Changed             bool
 }
@@ -100,6 +100,11 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 			stat.GpsLocationStats = NewGpsLocationStats()
 		}
 		stat.GpsLocationStats.Stats = append(stat.GpsLocationStats.Stats, call.GpsLocationInfo)
+	} else if call.Key.Metric == cloudcommon.CustomMetric {
+		if stat.CustomStats == nil {
+			stat.CustomStats = NewCustomStats()
+		}
+		stat.CustomStats.Update(call.CustomStatInfo)
 	}
 	stat.Changed = true
 	shard.mux.Unlock()
@@ -129,6 +134,13 @@ func (e *EdgeEventStats) RunNotify() {
 								e.send(ctx, GpsLocationStatToMetric(ts, &key, stat, gpsStat))
 							}
 							stat.GpsLocationStats = nil
+							stat.Changed = false
+						case cloudcommon.CustomMetric:
+							cmetrics := getCustomStatsToMetrics(ts, &key, stat)
+							for _, cmetric := range cmetrics {
+								e.send(ctx, cmetric)
+							}
+							stat.CustomStats = nil
 							stat.Changed = false
 						default:
 							continue
@@ -170,6 +182,14 @@ func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey,
 	return metrics
 }
 
+func getCustomStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat) []*edgeproto.Metric {
+	cmetrics := make([]*edgeproto.Metric, 0)
+	for name, cstat := range stat.CustomStats.Stats {
+		cmetrics = append(cmetrics, CustomStatToMetric(ts, key, stat.CustomStats, name, cstat))
+	}
+	return cmetrics
+}
+
 func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, latencyStats *LatencyStats, metricName string, indVarMap map[string]string) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
@@ -190,11 +210,11 @@ func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat
 	}
 	elapsed := ts.Seconds - int64(stat.AppInstLatencyStats.StartTime.Second())
 	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	metric.AddIntVal("numclients", latencyStats.RollingLatency.NumUniqueClients)
-	metric.AddDoubleVal("avg", latencyStats.RollingLatency.Latency.Avg)
-	metric.AddDoubleVal("stddev", latencyStats.RollingLatency.Latency.StdDev)
-	metric.AddDoubleVal("min", latencyStats.RollingLatency.Latency.Min)
-	metric.AddDoubleVal("max", latencyStats.RollingLatency.Latency.Max)
+	metric.AddIntVal("numclients", latencyStats.RollingStatistics.NumUniqueClients)
+	metric.AddDoubleVal("avg", latencyStats.RollingStatistics.Statistics.Avg)
+	metric.AddDoubleVal("stddev", latencyStats.RollingStatistics.Statistics.StdDev)
+	metric.AddDoubleVal("min", latencyStats.RollingStatistics.Statistics.Min)
+	metric.AddDoubleVal("max", latencyStats.RollingStatistics.Statistics.Max)
 	latencyStats.LatencyCounts.AddToMetric(&metric)
 	return &metric
 }
@@ -216,12 +236,36 @@ func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *E
 	// GpsLocation information
 	metric.AddTag("carrier", gpsInfo.Carrier)
 	metric.AddTag("deviceos", gpsInfo.DeviceOs)
+	metric.AddTag("devicemodel", gpsInfo.DeviceModel)
 	metric.AddDoubleVal("longitude", gpsInfo.GpsLocation.Longitude)
 	metric.AddDoubleVal("latitude", gpsInfo.GpsLocation.Latitude)
-	k := gpsInfo.SessionCookieKey
-	cookieKeyStr := k.OrgName + k.AppName + k.AppVers + k.UniqueIdType + k.UniqueId + strconv.Itoa(k.Kid)
-	hash := md5.Sum([]byte(cookieKeyStr))
-	sessCookie := hex.EncodeToString(hash[:])
-	metric.AddTag("sessioncookie", sessCookie)
+	metric.AddTag("uniqueid", gpsInfo.SessionCookieKey.UniqueId)
+	return &metric
+}
+
+func CustomStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, customStats *CustomStats, statName string, customStat *CustomStat) *edgeproto.Metric {
+	metric := edgeproto.Metric{}
+	metric.Timestamp = *ts
+	metric.Name = cloudcommon.GpsLocationMetric
+	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
+	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
+	// AppInst information
+	metric.AddTag("app", key.AppInstKey.AppKey.Name)
+	metric.AddTag("apporg", key.AppInstKey.AppKey.Organization)
+	metric.AddTag("ver", key.AppInstKey.AppKey.Version)
+	metric.AddTag("cloudlet", key.AppInstKey.ClusterInstKey.CloudletKey.Name)
+	metric.AddTag("cloudletorg", key.AppInstKey.ClusterInstKey.CloudletKey.Organization)
+	metric.AddTag("cluster", key.AppInstKey.ClusterInstKey.ClusterKey.Name)
+	metric.AddTag("clusterorg", key.AppInstKey.ClusterInstKey.Organization)
+	// Custom Stats info
+	metric.AddTag("statname", statName)
+	elapsed := ts.Seconds - int64(customStats.StartTime.Second())
+	metric.AddIntVal("timeelapsed", uint64(elapsed))
+	metric.AddIntVal("count", customStat.Count)
+	metric.AddIntVal("numclients", customStat.RollingStatistics.NumUniqueClients)
+	metric.AddDoubleVal("avg", customStat.RollingStatistics.Statistics.Avg)
+	metric.AddDoubleVal("stddev", customStat.RollingStatistics.Statistics.StdDev)
+	metric.AddDoubleVal("min", customStat.RollingStatistics.Statistics.Min)
+	metric.AddDoubleVal("max", customStat.RollingStatistics.Statistics.Max)
 	return &metric
 }

@@ -1424,13 +1424,16 @@ var ClientEdgeEventOptionalArgs = []string{
 	"carriername",
 	"datanetworktype",
 	"deviceos",
+	"devicemodel",
+	"customevent.name",
+	"customevent.data",
 	"tags",
 }
 var ClientEdgeEventAliasArgs = []string{}
 var ClientEdgeEventComments = map[string]string{
 	"sessioncookie":                  "Session Cookie from RegisterClientReply",
 	"edgeeventscookie":               "Session Cookie from FindCloudletReply",
-	"eventtype":                      ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate",
+	"eventtype":                      ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate, EventCustomEvent",
 	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -1443,26 +1446,38 @@ var ClientEdgeEventComments = map[string]string{
 	"carriername":                    "Carrier name for EVENT_LATENCY_SAMPLES or EVENT_LOCATION_UPDATE (can be different from cloudlet org if used )",
 	"datanetworktype":                "LTE, 5G, etc. for EVENT_LATENCY_SAMPLES",
 	"deviceos":                       "Android or iOS for EVENT_LOCATION_UPDATE",
+	"devicemodel":                    "Device model for EVENT_LOCATION_UPDATE",
+	"customevent.data":               "Will calculate average, min, max, std dev stats if data is provided",
 	"tags":                           "_(optional)_ Vendor specific data",
 }
 var ClientEdgeEventSpecialArgs = map[string]string{
 	"samples:#.tags": "StringToString",
 	"tags":           "StringToString",
 }
+var CustomEdgeEventRequiredArgs = []string{}
+var CustomEdgeEventOptionalArgs = []string{
+	"name",
+	"data",
+}
+var CustomEdgeEventAliasArgs = []string{}
+var CustomEdgeEventComments = map[string]string{
+	"data": "Will calculate average, min, max, std dev stats if data is provided",
+}
+var CustomEdgeEventSpecialArgs = map[string]string{}
 var ServerEdgeEventRequiredArgs = []string{}
 var ServerEdgeEventOptionalArgs = []string{
 	"eventtype",
 	"cloudletstate",
 	"maintenancestate",
 	"healthcheck",
-	"latency.avg",
-	"latency.min",
-	"latency.max",
-	"latency.stddev",
-	"latency.variance",
-	"latency.numsamples",
-	"latency.timestamp.seconds",
-	"latency.timestamp.nanos",
+	"statistics.avg",
+	"statistics.min",
+	"statistics.max",
+	"statistics.stddev",
+	"statistics.variance",
+	"statistics.numsamples",
+	"statistics.timestamp.seconds",
+	"statistics.timestamp.nanos",
 	"newcloudlet.ver",
 	"newcloudlet.status",
 	"newcloudlet.fqdn",
@@ -1492,8 +1507,8 @@ var ServerEdgeEventComments = map[string]string{
 	"cloudletstate":                                   "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
 	"maintenancestate":                                "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
 	"healthcheck":                                     "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
-	"latency.stddev":                                  "Square root of unbiased variance",
-	"latency.variance":                                "Unbiased variance",
+	"statistics.stddev":                               "Square root of unbiased variance",
+	"statistics.variance":                             "Unbiased variance",
 	"newcloudlet.ver":                                 "API version _(hidden)_ Reserved for future use",
 	"newcloudlet.status":                              "Status return, one of FindUnknown, FindFound, FindNotfound",
 	"newcloudlet.fqdn":                                "Fully Qualified Domain Name of the Closest App instance",

@@ -664,9 +664,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		// Ignore Timestamp in latency
 		ss := []dmeproto.ServerEdgeEvent{s1, s2}
 		for _, s := range ss {
-			if s.Latency != nil {
-				s.Latency.Timestamp.Seconds = 0
-				s.Latency.Timestamp.Nanos = 0
+			if s.Statistics != nil {
+				s.Statistics.Timestamp.Seconds = 0
+				s.Statistics.Timestamp.Nanos = 0
 			}
 		}
 		y1 = s1
