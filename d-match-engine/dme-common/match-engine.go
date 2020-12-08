@@ -39,6 +39,7 @@ type DmeAppInst struct {
 	maintenanceState edgeproto.MaintenanceState
 	// Health state of the appInst
 	appInstHealth edgeproto.HealthCheck
+	trackedState  edgeproto.TrackedState
 }
 
 type DmeAppInsts struct {
@@ -115,6 +116,9 @@ func SetupMatchEngine() {
 // Returns if this AppInstance is usable or not
 func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
+		return false
+	}
+	if appInst.trackedState != edgeproto.TrackedState_READY {
 		return false
 	}
 	if appInst.maintenanceState == edgeproto.MaintenanceState_UNDER_MAINTENANCE {
@@ -224,6 +228,7 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	cl.location = appInst.CloudletLoc
 	cl.ports = appInst.MappedPorts
 	cl.appInstHealth = appInst.HealthCheck
+	cl.trackedState = appInst.State
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
 		cl.cloudletState = cloudlet.State
 		cl.maintenanceState = cloudlet.MaintenanceState

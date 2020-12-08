@@ -148,7 +148,7 @@ message App {
   AccessType access_type = 29; 
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // Auto provisioning policy names
+  // Auto provisioning policy names, may be specified multiple times
   repeated string auto_prov_policies = 32;
   // Delimiter to be used for template parsing, defaults to "[[ ]]"
   string template_delimiter = 33;
@@ -172,7 +172,7 @@ message App {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt";
+  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,AutoProvPolicy";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }
@@ -210,7 +210,6 @@ service AppApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "Deployment,DeploymentGenerator";
     option (protogen.mc2_custom_authz) = true;
   }
   // Show Applications. Lists all Application definitions managed from the Edge Controller.

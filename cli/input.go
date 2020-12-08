@@ -170,7 +170,7 @@ func ConvertDecodeErr(err error, reals map[string]string) error {
 				suberr = ne.Err
 			}
 			if e.To == reflect.Bool {
-				help = ", valid values are true, false, 1, 0"
+				help = ", valid values are true, false"
 			}
 			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: %v%s`, name, e.Val, e.To, suberr, help)
 		case *mapstructure.OverflowError:

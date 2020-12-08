@@ -874,7 +874,7 @@ var AllDataComments = map[string]string{
 	"apps:#.autoprovpolicy":                                      "(_deprecated_) Auto provisioning policy name",
 	"apps:#.accesstype":                                          "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"apps:#.deleteprepare":                                       "Preparing to be deleted",
-	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names",
+	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names, may be specified multiple times",
 	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"apps:#.skiphcports":                                         "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 	"apps:#.privacyenabled":                                      "Indicates that an instance of this app can be started on a private cloudlet",

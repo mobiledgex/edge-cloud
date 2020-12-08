@@ -35,3 +35,7 @@ func (s *DummyServer) GenerateAccessKey(ctx context.Context, key *edgeproto.Clou
 func (s *DummyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
 	return nil
 }
+
+func (s *DummyServer) GetCloudletManifest(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error) {
+	return &edgeproto.CloudletManifest{}, nil
+}

@@ -297,12 +297,16 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  37.774929,
 			Longitude: -122.419418,
 		},
-		Flavor:        FlavorData[0].Key,
-		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		NotifySrvAddr: "127.0.0.1:51003",
-		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
-		PhysicalName:  "SanFranciscoSite",
-		Deployment:    "docker",
+		Flavor:         FlavorData[0].Key,
+		PlatformType:   edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		NotifySrvAddr:  "127.0.0.1:51003",
+		InfraApiAccess: edgeproto.InfraApiAccess_RESTRICTED_ACCESS,
+		InfraConfig: edgeproto.InfraConfig{
+			FlavorName:          FlavorData[0].Key.Name,
+			ExternalNetworkName: "testnet",
+		},
+		PhysicalName: "SanFranciscoSite",
+		Deployment:   "docker",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{

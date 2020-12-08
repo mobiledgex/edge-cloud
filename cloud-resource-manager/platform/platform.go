@@ -111,6 +111,8 @@ type Platform interface {
 	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
 	// Update the cloudlet's Privacy Policy
 	UpdatePrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy) error
+	// Get restricted cloudlet create status
+	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 }
 
 type ClusterSvc interface {

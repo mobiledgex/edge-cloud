@@ -192,8 +192,8 @@ func CreateCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 
 var DeleteCloudletCmd = &cli.Command{
 	Use:          "DeleteCloudlet",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	RequiredArgs: strings.Join(DeleteCloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(DeleteCloudletOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
 	SpecialArgs:  &CloudletSpecialArgs,
 	Comments:     CloudletComments,
@@ -432,12 +432,12 @@ func ShowCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
 
 var GetCloudletManifestCmd = &cli.Command{
 	Use:          "GetCloudletManifest",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
-	SpecialArgs:  &CloudletSpecialArgs,
-	Comments:     CloudletComments,
-	ReqData:      &edgeproto.Cloudlet{},
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
 	ReplyData:    &edgeproto.CloudletManifest{},
 	Run:          runGetCloudletManifest,
 }
@@ -446,7 +446,7 @@ func runGetCloudletManifest(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.Cloudlet)
+	obj := c.ReqData.(*edgeproto.CloudletKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
@@ -454,7 +454,7 @@ func runGetCloudletManifest(c *cli.Command, args []string) error {
 	return GetCloudletManifest(c, obj)
 }
 
-func GetCloudletManifest(c *cli.Command, in *edgeproto.Cloudlet) error {
+func GetCloudletManifest(c *cli.Command, in *edgeproto.CloudletKey) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
@@ -473,7 +473,7 @@ func GetCloudletManifest(c *cli.Command, in *edgeproto.Cloudlet) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func GetCloudletManifests(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+func GetCloudletManifests(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
 	if *err != nil {
 		return
 	}
@@ -1126,13 +1126,16 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 
 var CloudletKeyRequiredArgs = []string{}
 var CloudletKeyOptionalArgs = []string{
-	"organization",
-	"name",
+	"cloudlet-org",
+	"cloudlet",
 }
-var CloudletKeyAliasArgs = []string{}
+var CloudletKeyAliasArgs = []string{
+	"cloudlet-org=organization",
+	"cloudlet=name",
+}
 var CloudletKeyComments = map[string]string{
-	"organization": "Organization of the cloudlet site",
-	"name":         "Name of the cloudlet",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
 }
 var CloudletKeySpecialArgs = map[string]string{}
 var OperationTimeLimitsRequiredArgs = []string{}
@@ -1574,9 +1577,40 @@ var CreateCloudletOptionalArgs = []string{
 	"physicalname",
 	"envvar",
 	"containerversion",
-	"restagmap:#.key",
-	"restagmap:#.value.name",
-	"restagmap:#.value.organization",
+	"accessvars",
+	"vmimageversion",
+	"deployment",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
+	"maintenancestate",
+	"overridepolicycontainerversion",
+	"vmpool",
+}
+var DeleteCloudletRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+}
+var DeleteCloudletOptionalArgs = []string{
+	"location.latitude",
+	"location.longitude",
+	"location.altitude",
+	"ipsupport",
+	"staticips",
+	"numdynamicips",
+	"timelimits.createclusterinsttimeout",
+	"timelimits.updateclusterinsttimeout",
+	"timelimits.deleteclusterinsttimeout",
+	"timelimits.createappinsttimeout",
+	"timelimits.updateappinsttimeout",
+	"timelimits.deleteappinsttimeout",
+	"crmoverride",
+	"deploymentlocal",
+	"platformtype",
+	"flavor.name",
+	"physicalname",
+	"envvar",
+	"containerversion",
 	"accessvars",
 	"vmimageversion",
 	"deployment",
@@ -1610,6 +1644,40 @@ var UpdateCloudletOptionalArgs = []string{
 	"accessvars",
 	"maintenancestate",
 	"privacypolicy",
+}
+var ShowCloudletRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+}
+var ShowCloudletOptionalArgs = []string{
+	"location.latitude",
+	"location.longitude",
+	"location.altitude",
+	"ipsupport",
+	"staticips",
+	"numdynamicips",
+	"timelimits.createclusterinsttimeout",
+	"timelimits.updateclusterinsttimeout",
+	"timelimits.deleteclusterinsttimeout",
+	"timelimits.createappinsttimeout",
+	"timelimits.updateappinsttimeout",
+	"timelimits.deleteappinsttimeout",
+	"crmoverride",
+	"deploymentlocal",
+	"platformtype",
+	"flavor.name",
+	"physicalname",
+	"envvar",
+	"containerversion",
+	"accessvars",
+	"vmimageversion",
+	"deployment",
+	"infraapiaccess",
+	"infraconfig.externalnetworkname",
+	"infraconfig.flavorname",
+	"maintenancestate",
+	"overridepolicycontainerversion",
+	"vmpool",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

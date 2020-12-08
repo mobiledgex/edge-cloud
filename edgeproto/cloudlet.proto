@@ -28,6 +28,7 @@ message CloudletKey {
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
 }
 
 // Operation time limits
@@ -304,6 +305,7 @@ service CloudletApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
+    option (protogen.method_noconfig) = "ResTagMap";
   }
   // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
   // from the Edge Controller.
@@ -314,6 +316,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_noconfig) = "ResTagMap";
   }
   // Update Cloudlet. Updates the Cloudlet configuration and manages the upgrade of Cloudlet services.
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
@@ -323,7 +326,7 @@ service CloudletApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool";
+    option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool,ResTagMap";
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
@@ -333,14 +336,15 @@ service CloudletApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
     option (protogen.mc2_custom_authz) = true;
+    option (protogen.method_noconfig) = "ResTagMap";
   }
   // Get Cloudlet Manifest. Shows deployment manifest required to setup cloudlet
-  rpc GetCloudletManifest(Cloudlet) returns (CloudletManifest) {
+  rpc GetCloudletManifest(CloudletKey) returns (CloudletManifest) {
     option (google.api.http) = {
       post: "/get/cloudlet/manifest"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
   // Get Cloudlet Properties. Shows all the infra properties used to setup cloudlet
   rpc GetCloudletProps(CloudletProps) returns (CloudletProps) {
