@@ -400,7 +400,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		} else {
 			in.State = edgeproto.TrackedState_CREATING
 		}
-
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -687,7 +686,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 func (s *CloudletApi) AppInstUsesPrivateCloudlet(appInsts map[edgeproto.AppInstKey]struct{}) bool {
 	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
 	privateCloudletKeys := make(map[edgeproto.CloudletKey]struct{})
 	for key, data := range s.cache.Objs {
 		val := data.Obj
@@ -867,11 +865,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		if privPolUpdateRequested {
 			if ignoreCRM(cctx) {
-				if cur.PrivacyPolicy == "" {
-					cur.PrivacyPolicyState = edgeproto.TrackedState_NOT_PRESENT
-				} else {
-					cur.PrivacyPolicyState = edgeproto.TrackedState_READY
-				}
+				cur.PrivacyPolicyState = edgeproto.TrackedState_READY
 			}
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())

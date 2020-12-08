@@ -1,0 +1,6 @@
+apps:
+- key:
+    organization: AcmeAppCo
+    name: privateapp
+    version: "1.0"
+  privacyenabled: false

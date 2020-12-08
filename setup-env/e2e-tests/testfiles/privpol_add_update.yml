@@ -1,0 +1,29 @@
+##
+##
+description: test privacy policy
+
+tests:
+
+- name: create provisioning for privacy policy test
+  apifile: "{{datadir}}/appdata_private.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+
+- name: add privacy policy to cloudlet with nonpriv app (should fail)
+  apifile: "{{datadir}}/appdata_update_cloudlet2_privpol.yml"
+  actions: [ctrlapi-update-expecterr,ctrlapi-show]
+  compareyaml:
+    yaml1: '{{outputdir}}/api-output.yml'
+    yaml2: '{{datadir}}/privpol_error_add_nonpriv_apps.yml'
+
+- name: disable privacy from app on private cloudlet (should fail)
+  apifile: "{{datadir}}/appdata_update_disable_privacy.yml"
+  actions: [ctrlapi-update-expecterr,ctrlapi-show]
+  compareyaml:
+    yaml1: '{{outputdir}}/api-output.yml'
+    yaml2: '{{datadir}}/privpol_error_disable_app.yml'
+
+- name: delete privacy policy test data
+  apifile: "{{datadir}}/appdata_private.yml"
+  actions: [ctrlapi-delete]
+
+

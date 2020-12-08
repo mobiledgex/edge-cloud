@@ -1208,7 +1208,7 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 	edgeproto.PrivacyPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy0",
-			Organization: DevData[0],
+			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
@@ -1228,7 +1228,7 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 	edgeproto.PrivacyPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy1",
-			Organization: DevData[1],
+			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
@@ -1248,7 +1248,7 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 	edgeproto.PrivacyPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy2",
-			Organization: DevData[2],
+			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
@@ -1270,7 +1270,7 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 	edgeproto.PrivacyPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy3",
-			Organization: DevData[0],
+			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
@@ -1285,7 +1285,7 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 	edgeproto.PrivacyPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy4",
-			Organization: DevData[1],
+			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
@@ -1300,7 +1300,7 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 	edgeproto.PrivacyPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy5",
-			Organization: DevData[2],
+			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{

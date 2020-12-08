@@ -102,6 +102,9 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
 		}
 	}
+	if _, found := tags["nocmp"]; found {
+		in.PrivacyPolicyState = 0
+	}
 }
 
 var CloudletApiCmd edgeproto.CloudletApiClient

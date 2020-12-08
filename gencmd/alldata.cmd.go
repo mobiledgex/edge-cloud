@@ -36,6 +36,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
 	}
+	for i0 := 0; i0 < len(in.PrivacyPolicies); i0++ {
+		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].OutboundSecurityRules); i1++ {
+		}
+	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Errors = nil
@@ -96,6 +100,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Containers); i3++ {
 			}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.CloudletInfos[i0].PrivacyPolicyState = 0
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 		if _, found := tags["timestamp"]; found {
@@ -112,10 +119,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	for i0 := 0; i0 < len(in.AutoProvPolicyCloudlets); i0++ {
 	}
 	for i0 := 0; i0 < len(in.AutoScalePolicies); i0++ {
-	}
-	for i0 := 0; i0 < len(in.PrivacyPolicies); i0++ {
-		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].OutboundSecurityRules); i1++ {
-		}
 	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -297,6 +300,13 @@ var AllDataOptionalArgs = []string{
 	"restagtables:#.key.organization",
 	"restagtables:#.tags",
 	"restagtables:#.azone",
+	"privacypolicies:#.fields",
+	"privacypolicies:#.key.organization",
+	"privacypolicies:#.key.name",
+	"privacypolicies:#.outboundsecurityrules:#.protocol",
+	"privacypolicies:#.outboundsecurityrules:#.portrangemin",
+	"privacypolicies:#.outboundsecurityrules:#.portrangemax",
+	"privacypolicies:#.outboundsecurityrules:#.remotecidr",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
@@ -458,13 +468,6 @@ var AllDataOptionalArgs = []string{
 	"autoscalepolicies:#.scaleupcputhresh",
 	"autoscalepolicies:#.scaledowncputhresh",
 	"autoscalepolicies:#.triggertimesec",
-	"privacypolicies:#.fields",
-	"privacypolicies:#.key.organization",
-	"privacypolicies:#.key.name",
-	"privacypolicies:#.outboundsecurityrules:#.protocol",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemin",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemax",
-	"privacypolicies:#.outboundsecurityrules:#.remotecidr",
 	"clusterinsts:#.fields",
 	"clusterinsts:#.key.clusterkey.name",
 	"clusterinsts:#.key.cloudletkey.organization",
@@ -669,6 +672,13 @@ var AllDataComments = map[string]string{
 	"restagtables:#.key.organization":                            "Operator organization of the cloudlet site.",
 	"restagtables:#.tags":                                        "one or more string tags",
 	"restagtables:#.azone":                                       "availability zone(s) of resource if required",
+	"privacypolicies:#.fields":                                   "Fields are used for the Update API to specify which fields to apply",
+	"privacypolicies:#.key.organization":                         "Name of the organization for the cluster that this policy will apply to",
+	"privacypolicies:#.key.name":                                 "Policy name",
+	"privacypolicies:#.outboundsecurityrules:#.protocol":         "tcp, udp, icmp",
+	"privacypolicies:#.outboundsecurityrules:#.portrangemin":     "TCP or UDP port range start",
+	"privacypolicies:#.outboundsecurityrules:#.portrangemax":     "TCP or UDP port range end",
+	"privacypolicies:#.outboundsecurityrules:#.remotecidr":       "remote CIDR X.X.X.X/X",
 	"cloudlets:#.fields":                                         "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                               "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                       "Name of the cloudlet",
@@ -801,13 +811,6 @@ var AllDataComments = map[string]string{
 	"autoscalepolicies:#.scaleupcputhresh":                       "Scale up cpu threshold (percentage 1 to 100)",
 	"autoscalepolicies:#.scaledowncputhresh":                     "Scale down cpu threshold (percentage 1 to 100)",
 	"autoscalepolicies:#.triggertimesec":                         "Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.",
-	"privacypolicies:#.fields":                                   "Fields are used for the Update API to specify which fields to apply",
-	"privacypolicies:#.key.organization":                         "Name of the organization for the cluster that this policy will apply to",
-	"privacypolicies:#.key.name":                                 "Policy name",
-	"privacypolicies:#.outboundsecurityrules:#.protocol":         "tcp, udp, icmp",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemin":     "TCP or UDP port range start",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemax":     "TCP or UDP port range end",
-	"privacypolicies:#.outboundsecurityrules:#.remotecidr":       "remote CIDR X.X.X.X/X",
 	"clusterinsts:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"clusterinsts:#.key.clusterkey.name":                         "Cluster name",
 	"clusterinsts:#.key.cloudletkey.organization":                "Organization of the cloudlet site",

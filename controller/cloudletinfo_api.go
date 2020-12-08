@@ -61,7 +61,6 @@ func (s *CloudletInfoApi) SetPrivacyPolicyState(ctx context.Context, key *edgepr
 	})
 }
 
-
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	var err error
 	// for now assume all fields have been specified
@@ -108,7 +107,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
 			return key.NotFoundError()
 		}
-		if newCloudlet.PrivacyPolicyState != in.PrivacyPolicyState {
+		if newCloudlet.PrivacyPolicyState != in.PrivacyPolicyState && in.PrivacyPolicyState != edgeproto.TrackedState_TRACKED_STATE_UNKNOWN {
 			newCloudlet.PrivacyPolicyState = in.PrivacyPolicyState
 			updateObj = true
 		}

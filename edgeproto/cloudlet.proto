@@ -495,7 +495,7 @@ message CloudletInfo {
   // Resources used by cloudlet
   InfraResources resources = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Privacy Policy State
-  TrackedState privacy_policy_state = 18;
+  TrackedState privacy_policy_state = 18 [(protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
