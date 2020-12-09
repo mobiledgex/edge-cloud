@@ -6,10 +6,3 @@ devices:
     seconds: 1596232439
     nanos: 844942000
   notifyid: 4
-- key:
-    uniqueidtype: GSAFKDF:platos:platosEnablementLayer
-    uniqueid: "123"
-  firstseen:
-    seconds: 1596232440
-    nanos: 87496000
-  notifyid: 4

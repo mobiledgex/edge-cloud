@@ -3,6 +3,7 @@ package edgeproto
 import (
 	"encoding/json"
 	fmt "fmt"
+	strings "strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -1222,4 +1223,28 @@ func RedoCloudletPools(ctx context.Context, objStore objstore.KVStore) error {
 		return err
 	}
 	return nil
+}
+
+var PlatosEnablingLayer = "PlatosEnablingLayer"
+
+func PruneplatosPlatformDevices(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "PruneplatosPlatformDevices")
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Device"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var device Device
+		err2 := json.Unmarshal(val, &device)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
+			return err2
+		}
+		if strings.Contains(strings.ToLower(device.Key.UniqueIdType), strings.ToLower(PlatosEnablingLayer)) {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Prune a MEL device", "device", device)
+			_, err := objStore.Delete(ctx, string(key))
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to delete platform device key", "key", string(key))
+			}
+		}
+		return nil
+	})
+	return err
 }
