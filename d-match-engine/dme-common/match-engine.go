@@ -1013,6 +1013,9 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	if err != nil && err != io.EOF {
 		return err
 	}
+	if initMsg == nil {
+		return fmt.Errorf("Initial message is nil")
+	}
 	// On first message:
 	// Verify Session Cookie and EdgeEvents Cookie
 	// Then add connection, client, and appinst to Plugin hashmap
@@ -1070,7 +1073,7 @@ loop:
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
 			if strings.Contains(err.Error(), "rpc error") {
 				reterr = err
-				break
+				break loop
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
@@ -1122,7 +1125,6 @@ loop:
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
-			break
 		}
 	}
 	// Remove Client from edgeevents plugin
