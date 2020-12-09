@@ -26,6 +26,7 @@ enum VersionHash {
   HASH_e8360aa30f234ecefdfdb9fb2dc79c20 = 18;
   HASH_c53c7840d242efc7209549a36fcf9e04 = 19 [(protogen.upgrade_func) = "RedoCloudletPools"];
   HASH_1a57396698c4ade15f0579c9f5714cd6 = 20 [(protogen.upgrade_func) = "CheckForHttpPorts"];
+  HASH_71c580746ee2a6b7d1a4182b3a54407a = 21 [(protogen.upgrade_func) = "PruneplatosPlatformDevices"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "3";
+  option (protogen.version_hash_salt) = "0";
 }
