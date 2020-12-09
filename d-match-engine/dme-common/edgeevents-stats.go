@@ -169,10 +169,6 @@ func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey,
 	for netdatatype, latencystats := range stat.AppInstLatencyStats.LatencyPerNetDataType {
 		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, map[string]string{"networkdatatype": netdatatype}))
 	}
-	// Latency per device os metrics
-	for deviceos, latencystats := range stat.AppInstLatencyStats.LatencyPerDeviceOs {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDeviceOSMetric, map[string]string{"deviceos": deviceos}))
-	}
 	// Latency per location metrics
 	for dist, dirmap := range stat.AppInstLatencyStats.LatencyPerLoc {
 		for orientation, latencystats := range dirmap {
@@ -246,7 +242,7 @@ func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *E
 func CustomStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, customStats *CustomStats, statName string, customStat *CustomStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
-	metric.Name = cloudcommon.GpsLocationMetric
+	metric.Name = cloudcommon.CustomMetric
 	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
 	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
 	// AppInst information

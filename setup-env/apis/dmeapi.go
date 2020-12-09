@@ -303,7 +303,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		log.Printf("Using session cookie: %s\n", sessionCookie)
 
 		// If StreamEdgeEvent, we need the edgeeventscookie from FindCloudletReply as well
-		if api == "edgeeventinit" || api == "edgeeventlatency" {
+		if api == "edgeeventinit" || api == "edgeeventlatency" || api == "edgeeventnewcloudlet" {
 			var findCloudlet findcloudlet
 			err := util.ReadYamlFile(outputDir+"/edgeeventfindcloudlet.yml", &findCloudlet)
 			if err != nil || findCloudlet.Req.CarrierName != apiRequest.Fcreq.CarrierName ||
@@ -522,9 +522,11 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			latencyEvent := new(dmeproto.ClientEdgeEvent)
 			latencyEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_LATENCY_SAMPLES
 			latencyEvent.GpsLocation = &dmeproto.Loc{
-				Longitude: 38.32,
-				Latitude:  100.342,
+				Latitude:  31.00,
+				Longitude: -91.00,
 			}
+			latencyEvent.CarrierName = "tmus"
+			latencyEvent.DataNetworkType = "LTE"
 			samples := make([]*dmeproto.Sample, 0)
 			// Create dummy samples
 			list := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
@@ -540,6 +542,41 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			}
 			latencyEvent.Samples = samples
 			err = resp.Send(latencyEvent)
+			// Receive processed latency samples
+			dmereply, err = resp.Recv()
+			if err != nil {
+				break
+			}
+			// Terminate persistent connection
+			terminateEvent := new(dmeproto.ClientEdgeEvent)
+			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
+			err = resp.Send(terminateEvent)
+		}
+		dmeerror = err
+	case "edgeeventnewcloudlet":
+		apiRequest.Eereq.SessionCookie = sessionCookie
+		apiRequest.Eereq.EdgeEventsCookie = eeCookie
+		log.Printf("StreamEdgeEvent request: %+v\n", apiRequest.Eereq)
+		resp, err := client.StreamEdgeEvent(ctx)
+		if err == nil {
+			// Send init request
+			err = resp.Send(&apiRequest.Eereq)
+			// Receive init confirmation
+			_, err = resp.Recv()
+			if err != nil {
+				break
+			}
+			// Send dummy latency samples as Latency Event
+			gpsUpdateEvent := new(dmeproto.ClientEdgeEvent)
+			gpsUpdateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_LOCATION_UPDATE
+			gpsUpdateEvent.GpsLocation = &dmeproto.Loc{
+				Latitude:  35.00,
+				Longitude: -95.00,
+			}
+			gpsUpdateEvent.CarrierName = "tmus"
+			gpsUpdateEvent.DeviceOs = "Android"
+			gpsUpdateEvent.DeviceModel = "SM-G920F"
+			err = resp.Send(gpsUpdateEvent)
 			// Receive processed latency samples
 			dmereply, err = resp.Recv()
 			if err != nil {

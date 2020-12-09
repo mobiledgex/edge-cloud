@@ -99,9 +99,6 @@ func (a *AppInstLatencyStats) Update(data *AppInstLatencyInfo) {
 }
 
 func (a *AppInstLatencyStats) UpdateLatencyMaps(latencyMap map[string]*LatencyStats, data *AppInstLatencyInfo, key string, sample float64) {
-	if key == "" {
-		key = "unknown"
-	}
 	dsample := time.Duration(sample) * time.Millisecond
 	val, ok := latencyMap[key]
 	if !ok {

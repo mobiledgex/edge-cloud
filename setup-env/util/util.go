@@ -661,12 +661,15 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err1 = ReadYamlFile(firstYamlFile, &s1)
 		err2 = ReadYamlFile(secondYamlFile, &s2)
 
-		// Ignore Timestamp in latency
+		// Ignore dynamic fields (timestamp in statistics, and edgeeventscookie in newcloudlet)
 		ss := []dmeproto.ServerEdgeEvent{s1, s2}
 		for _, s := range ss {
 			if s.Statistics != nil {
 				s.Statistics.Timestamp.Seconds = 0
 				s.Statistics.Timestamp.Nanos = 0
+			}
+			if s.NewCloudlet != nil {
+				s.NewCloudlet.EdgeEventsCookie = ""
 			}
 		}
 		y1 = s1
