@@ -5,7 +5,7 @@ Every now and again your build is going to fail with an error message that looks
 ```
 ======WARNING=======
 Current data model hash(HASH_b0497a835ca283bda2cf00778783a508) doesn't match the latest supported one(HASH_52e6980599cd59bbbd0de8d5f4d53d4b).
-This is due to an upsupported change in the key of some objects in a .proto file.
+This is due to an unsupported change in the key of some objects in a .proto file.
 In order to ensure a smooth upgrade for the production environment please make sure to add the following to version.proto file:
 
 enum VersionHash {
