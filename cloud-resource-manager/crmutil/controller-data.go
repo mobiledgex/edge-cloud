@@ -85,8 +85,6 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
 	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
-	// cd.PrivacyPolicyCache.SetUpdatedCb(cd.privacyPolicyChanged)
-
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
 
