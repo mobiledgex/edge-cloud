@@ -1586,6 +1586,7 @@ var CreateCloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
+	"privacypolicy",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1678,6 +1679,7 @@ var ShowCloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
+	"privacypolicy",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

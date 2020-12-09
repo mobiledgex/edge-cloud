@@ -398,14 +398,6 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if err := s.validatePolicies(stm, in); err != nil {
 		return err
 	}
-	if in.DefaultPrivacyPolicy != "" {
-		apKey := edgeproto.PolicyKey{}
-		apKey.Organization = in.Key.Organization
-		apKey.Name = in.DefaultPrivacyPolicy
-		if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
-			return apKey.NotFoundError()
-		}
-	}
 	return nil
 }
 

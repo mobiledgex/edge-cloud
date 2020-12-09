@@ -548,37 +548,3 @@ var AppAutoProvPolicyComments = map[string]string{
 	"autoprovpolicy":      "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}
-<<<<<<< HEAD
-var UpdateAppRequiredArgs = []string{
-	"app-org",
-	"appname",
-	"appvers",
-}
-var UpdateAppOptionalArgs = []string{
-	"imagepath",
-	"imagetype",
-	"accessports",
-	"defaultflavor",
-	"authpublickey",
-	"command",
-	"annotations",
-	"deploymentmanifest",
-	"androidpackagename",
-	"delopt",
-	"configs:#.kind",
-	"configs:#.config",
-	"scalewithcluster",
-	"internalports",
-	"revision",
-	"officialfqdn",
-	"md5sum",
-	"defaultsharedvolumesize",
-	"autoprovpolicy",
-	"accesstype",
-	"autoprovpolicies",
-	"templatedelimiter",
-	"skiphcports",
-	"privacyenabled",
-}
-=======
->>>>>>> 78a2e75cf0802d391ef505bde227935db321b8b4

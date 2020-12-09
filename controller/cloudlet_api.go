@@ -637,6 +637,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	fatal := make(chan bool, 1)
 	update := make(chan bool, 1)
 
+	var privPolState edgeproto.TrackedState
 	var err error
 
 	go func() {
@@ -670,10 +671,10 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletInfoApi.cache.Get(key, &cloudletInfo) {
 			return
 		}
-
 		curState := cloudletInfo.State
 		localVersion := cloudlet.ContainerVersion
 		remoteVersion := cloudletInfo.ContainerVersion
+		privPolState = cloudletInfo.PrivacyPolicyState
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
@@ -771,11 +772,11 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if err == nil {
 			cloudlet.Errors = nil
 			cloudlet.State = edgeproto.TrackedState_READY
+			cloudlet.PrivacyPolicyState = privPolState
 		} else {
 			cloudlet.Errors = []string{err.Error()}
 			cloudlet.State = errorState
 		}
-
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})
