@@ -154,7 +154,7 @@ func TestAllUpgradeFuncs(t *testing.T) {
 		err = edgeproto.RunSingleUpgrade(ctx, &objStore, fn)
 		require.Nil(t, err, "Upgrade failed")
 		err = compareDbToExpected(&objStore, edgeproto.VersionHash_UpgradeFuncNames[ii])
-		require.Nil(t, err, "Unexpected result from upgrade function")
+		require.Nil(t, err, "Unexpected result from upgrade function(%s)", edgeproto.VersionHash_UpgradeFuncNames[ii])
 		// Stop it, so it's re-created again
 		objStore.Stop()
 	}
