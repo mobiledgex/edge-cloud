@@ -4,13 +4,15 @@ import (
 	"math"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 // Filled in by DME. Added to EdgeEventStatCall to update stats
 type GpsLocationInfo struct {
 	GpsLocation      *dme.Loc
-	SessionCookieKey CookieKey
+	SessionCookieKey *CookieKey
 	Timestamp        dme.Timestamp
 	Carrier          string
 	DeviceOs         string
@@ -46,6 +48,24 @@ func NewGpsLocationStats() *GpsLocationStats {
 	g.Stats = make([]*GpsLocationInfo, 0)
 	g.StartTime = time.Now()
 	return g
+}
+
+func RecordGpsLocationStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, carrier string, deviceos string, devicemodel string) {
+	if EEStats == nil {
+		return
+	}
+	call := EdgeEventStatCall{}
+	call.Key.AppInstKey = *appInstKey
+	call.Key.Metric = cloudcommon.GpsLocationMetric
+	call.GpsLocationInfo = &GpsLocationInfo{
+		GpsLocation:      loc,
+		SessionCookieKey: sessionCookieKey,
+		Timestamp:        cloudcommon.TimeToTimestamp(time.Now()),
+		Carrier:          translateCarrierName(carrier),
+		DeviceOs:         deviceos,
+		DeviceModel:      devicemodel,
+	}
+	EEStats.RecordEdgeEventStatCall(&call)
 }
 
 func GetDistanceBucketFromAppInst(appinst *DmeAppInst, loc dme.Loc) int {

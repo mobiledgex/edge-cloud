@@ -3,6 +3,9 @@ package dmecommon
 import (
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
 )
 
@@ -10,7 +13,7 @@ import (
 type CustomStatInfo struct {
 	Name             string
 	Value            float64
-	SessionCookieKey CookieKey // SessionCookie to identify unique clients for EdgeEvents
+	SessionCookieKey *CookieKey // SessionCookie to identify unique clients for EdgeEvents
 }
 
 type CustomStat struct {
@@ -34,6 +37,21 @@ func NewCustomStats() *CustomStats {
 	c.Stats = make(map[string]*CustomStat)
 	c.StartTime = time.Now()
 	return c
+}
+
+func RecordCustomStatCall(appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, customEvent *dme.CustomEdgeEvent) {
+	if EEStats == nil {
+		return
+	}
+	call := EdgeEventStatCall{}
+	call.Key.AppInstKey = *appInstKey
+	call.Key.Metric = cloudcommon.CustomMetric // override method name
+	call.CustomStatInfo = &CustomStatInfo{
+		Name:             customEvent.EventType,
+		Value:            customEvent.Data,
+		SessionCookieKey: sessionCookieKey,
+	}
+	EEStats.RecordEdgeEventStatCall(&call)
 }
 
 func (c *CustomStats) Update(info *CustomStatInfo) {

@@ -3,7 +3,9 @@ package dmecommon
 import (
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
 )
 
@@ -11,7 +13,7 @@ import (
 type AppInstLatencyInfo struct {
 	DmeAppInst       *DmeAppInst     // Information about appinst
 	Statistics       *dme.Statistics // Latency avg, min, max, and std dev
-	SessionCookieKey CookieKey       // SessionCookie to identify unique clients for EdgeEvents
+	SessionCookieKey *CookieKey      // SessionCookie to identify unique clients for EdgeEvents
 	GpsLocation      *dme.Loc
 	DataNetworkType  string
 	Carrier          string
@@ -60,6 +62,25 @@ func NewAppInstLatencyStats(latencyBuckets []time.Duration) *AppInstLatencyStats
 	a.LatencyPerDeviceOs = make(map[string]*LatencyStats)
 	a.StartTime = time.Now()
 	return a
+}
+
+func RecordAppInstLatencyStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, edgeEventsCookieKey *EdgeEventsCookieKey, stats *dme.Statistics, carrier string, dataNetworkType string) {
+	if EEStats == nil {
+		return
+	}
+	call := EdgeEventStatCall{}
+	call.Key.AppInstKey = *appInstKey
+	call.Key.Metric = cloudcommon.AppInstLatencyMetric // override method name
+	dmeappinst := findAppInst(appInstKey, edgeEventsCookieKey.CloudletOrg)
+	call.AppInstLatencyInfo = &AppInstLatencyInfo{
+		DmeAppInst:       dmeappinst,
+		Statistics:       stats,
+		SessionCookieKey: sessionCookieKey,
+		Carrier:          translateCarrierName(carrier),
+		GpsLocation:      loc,
+		DataNetworkType:  dataNetworkType,
+	}
+	EEStats.RecordEdgeEventStatCall(&call)
 }
 
 func (a *AppInstLatencyStats) Update(data *AppInstLatencyInfo) {

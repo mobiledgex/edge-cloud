@@ -346,6 +346,13 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 				client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
 				// Update list of clients on the side and if there is a listener, send it
 				go UpdateClientsBuffer(ctx, client)
+				// Update persistent stats influx db with gps locations
+				fcreq, ok := req.(*dme.FindCloudletRequest)
+				if ok {
+					tags := fcreq.Tags
+					RecordGpsLocationStatCall(&client.Location, &client.ClientKey.Key, ckey, fcreq.CarrierName, tags["deviceos"], tags["devicemodel"])
+				}
+
 			}
 		}
 	}

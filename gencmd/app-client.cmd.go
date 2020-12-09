@@ -1425,7 +1425,7 @@ var ClientEdgeEventOptionalArgs = []string{
 	"datanetworktype",
 	"deviceos",
 	"devicemodel",
-	"customevent.name",
+	"customevent.eventtype",
 	"customevent.data",
 	"tags",
 }
@@ -1456,7 +1456,7 @@ var ClientEdgeEventSpecialArgs = map[string]string{
 }
 var CustomEdgeEventRequiredArgs = []string{}
 var CustomEdgeEventOptionalArgs = []string{
-	"name",
+	"eventtype",
 	"data",
 }
 var CustomEdgeEventAliasArgs = []string{}
