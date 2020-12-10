@@ -996,6 +996,7 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 }
 
 func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) error {
+	startTime := time.Now()
 	var appInstKey *edgeproto.AppInstKey
 	var sessionCookie string
 	var sessionCookieKey *CookieKey
@@ -1062,9 +1063,14 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
-	// Loop while persistent connection is up
+	// Loop while persistent connection is up and edgeeventscookie has not expired
 loop:
 	for {
+		if time.Since(startTime) > *EdgeEventsCookieExpiration {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEventsCookie has expired. Terminating connection")
+			reterr = fmt.Errorf("EdgeEventsCookie has expired. Terminating connection")
+			break loop
+		}
 		//receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
@@ -1079,6 +1085,7 @@ loop:
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
 		if cupdate == nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent is nil. Ending connection")
+			reterr = fmt.Errorf("ClientEdgeEvent is nil. Ending connection")
 			break loop
 		}
 		// Handle Different Client events
@@ -1092,7 +1099,8 @@ loop:
 			stats, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
-				return err
+				reterr = err
+				break loop
 			}
 			RecordAppInstLatencyStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, edgeEventsCookieKey, stats, cupdate.CarrierName, cupdate.DataNetworkType)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
