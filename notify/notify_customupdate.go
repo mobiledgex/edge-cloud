@@ -47,15 +47,6 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 	return true
 }
 
-func (s *PrivacyPolicySend) UpdateOk(ctx context.Context, key *edgeproto.PolicyKey) bool {
-	if s.sendrecv.filterCloudletKeys {
-		if !s.sendrecv.hasPrivacyPolicy(key.Organization, key.Name) {
-			return false
-		}
-	}
-	return true
-}
-
 func (s *ClusterInstSend) UpdateOk(ctx context.Context, key *edgeproto.ClusterInstKey) bool {
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.cloudletReady {
@@ -90,10 +81,6 @@ func (s *AppInstSend) UpdateAllOk() bool {
 
 func (s *CloudletSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
-}
-
-func (s *PrivacyPolicySend) UpdateAllOk() bool {
-	return true
 }
 
 func (s *ClusterInstSend) UpdateAllOk() bool {

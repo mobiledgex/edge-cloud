@@ -968,7 +968,11 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		if privPolUpdateRequested {
 			if ignoreCRM(cctx) {
-				cur.PrivacyPolicyState = edgeproto.TrackedState_READY
+				if cur.PrivacyPolicy != "" {
+					cur.PrivacyPolicyState = edgeproto.TrackedState_READY
+				} else {
+					cur.PrivacyPolicyState = edgeproto.TrackedState_NOT_PRESENT
+				}
 			}
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
@@ -1686,7 +1690,6 @@ func (s *CloudletApi) UpdateCloudletsUsingPrivacyPolicy(ctx context.Context, pri
 		}
 	}
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})
-
 }
 
 func (s *CloudletApi) WaitForPrivacyPolicyState(ctx context.Context, key *edgeproto.CloudletKey, targetState edgeproto.TrackedState, errorState edgeproto.TrackedState, timeout time.Duration) error {

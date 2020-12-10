@@ -17,9 +17,7 @@ import (
 )
 
 type Platform struct {
-	consoleServer  *httptest.Server
-	platformConfig *platform.PlatformConfig
-	caches         *platform.Caches
+	consoleServer *httptest.Server
 }
 
 func (s *Platform) GetType() string {
@@ -43,9 +41,6 @@ var fakeProps = map[string]*edgeproto.PropertyInfo{
 
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
-
-	s.caches = caches
-	s.platformConfig = platformConfig
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
@@ -225,9 +220,6 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 
 func (s *Platform) UpdatePrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy) error {
 	log.DebugLog(log.DebugLevelInfra, "fake UpdatePrivacyPolicy begin", "policy", privacyPolicy)
-	// sleep to simulate the update taking some time
-	time.Sleep(time.Second * 5)
-	log.DebugLog(log.DebugLevelInfra, "fake UpdatePrivacyPolicy done", "policy", privacyPolicy)
 	return nil
 }
 
