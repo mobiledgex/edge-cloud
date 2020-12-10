@@ -806,8 +806,8 @@ func (s *CloudletApi) AppInstUsesPrivateCloudlet(appInsts map[edgeproto.AppInstK
 	return false
 }
 
-// updatePrivacyPolicyInternal optionally changes the local privacyPolicy state to TrackedState_UPDATE_REQUESTED and then
-// waits for the update to complete.  If the cloudlet state was already set, setToUpdating should be set to false
+// updatePrivacyPolicyInternal updates the PrivacyPolicyState to TrackedState_UPDATE_REQUESTED
+// and then waits for the update to complete.
 func (s *CloudletApi) updatePrivacyPolicyInternal(ctx context.Context, ckey *edgeproto.CloudletKey, policyName string, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "updatePrivacyPolicyInternal", "policyName", policyName)
 
@@ -818,29 +818,39 @@ func (s *CloudletApi) updatePrivacyPolicyInternal(ctx context.Context, ckey *edg
 		return err
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
-	if !cloudletInfoApi.cache.Get(ckey, &cloudletInfo) {
-		return fmt.Errorf("CloudletInfo not found for %s", ckey.String())
-	}
-	if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		return fmt.Errorf("Cannot modify privacy policy for cloudlet in state: %s", cloudletInfo.State)
-	}
+	cloudlet := &edgeproto.Cloudlet{}
+	var updateErr error
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cloudlet := &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, ckey, cloudlet) {
 			return ckey.NotFoundError()
 		}
-		cloudlet.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_REQUESTED
+		if !cloudletInfoApi.cache.Get(ckey, &cloudletInfo) {
+			updateErr = fmt.Errorf("CloudletInfo not found for %s", ckey.String())
+		} else {
+			if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
+				updateErr = fmt.Errorf("Cannot modify privacy policy for cloudlet in state: %s", cloudletInfo.State)
+			}
+		}
+		if updateErr != nil {
+			cloudlet.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+		} else {
+			cloudlet.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
 		cloudlet.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, cloudlet)
 		return nil
 	})
-
-	if policyName == "" {
-		err = s.WaitForPrivacyPolicyState(ctx, ckey, edgeproto.TrackedState_NOT_PRESENT, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdatePrivacyPolicyTimeout.TimeDuration())
-	} else {
-		err = s.WaitForPrivacyPolicyState(ctx, ckey, edgeproto.TrackedState_READY, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdatePrivacyPolicyTimeout.TimeDuration())
+	if err != nil {
+		return err
 	}
-	return err
+	if updateErr != nil {
+		return updateErr
+	}
+	targetState := edgeproto.TrackedState_READY
+	if policyName == "" {
+		targetState = edgeproto.TrackedState_NOT_PRESENT
+	}
+	return s.WaitForPrivacyPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdatePrivacyPolicyTimeout.TimeDuration())
 }
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_UpdateCloudletServer) (reterr error) {
@@ -1639,7 +1649,7 @@ func (s *CloudletApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey, stateMatch edg
 	return false
 }
 
-func (s *CloudletApi) UpdateCloudletsUsingPrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_CreatePrivacyPolicyServer) {
+func (s *CloudletApi) UpdateCloudletsUsingPrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_CreatePrivacyPolicyServer) error {
 	s.cache.Mux.Lock()
 	type updateResult struct {
 		errString string
@@ -1690,10 +1700,14 @@ func (s *CloudletApi) UpdateCloudletsUsingPrivacyPolicy(ctx context.Context, pri
 		}
 	}
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})
+	if numPassed == 0 {
+		return fmt.Errorf("Failed to update privacy policy on any cloudlets")
+	}
+	return nil
 }
 
 func (s *CloudletApi) WaitForPrivacyPolicyState(ctx context.Context, key *edgeproto.CloudletKey, targetState edgeproto.TrackedState, errorState edgeproto.TrackedState, timeout time.Duration) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "wait for Privacy Policy state", "target", targetState, "timeout", timeout)
+	log.SpanLog(ctx, log.DebugLevelApi, "WaitForPrivacyPolicyState", "target", targetState, "timeout", timeout)
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	cloudlet := edgeproto.Cloudlet{}

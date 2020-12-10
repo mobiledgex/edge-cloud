@@ -73,8 +73,10 @@ func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb e
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
-	cloudletApi.UpdateCloudletsUsingPrivacyPolicy(ctx, &cur, cb)
-	return err
+	if err != nil {
+		return err
+	}
+	return cloudletApi.UpdateCloudletsUsingPrivacyPolicy(ctx, &cur, cb)
 }
 
 func (s *PrivacyPolicyApi) DeletePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_DeletePrivacyPolicyServer) error {
