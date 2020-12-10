@@ -445,6 +445,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		} else {
 			in.State = edgeproto.TrackedState_CREATE_REQUESTED
 		}
+		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -540,6 +541,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
 		inbuf.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		inbuf.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})
@@ -637,6 +639,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		prevState = in.State
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
+		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -808,7 +811,16 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		inst.Resources = in.Resources
-		inst.Status = in.Status
+		lastMsgId := int(inst.Status.MsgCount)
+		if lastMsgId < len(in.Status.Msgs) {
+			inst.Status.Msgs = []string{}
+			for ii := lastMsgId; ii < len(in.Status.Msgs); ii++ {
+				inst.Status.Msgs = append(inst.Status.Msgs, in.Status.Msgs[ii])
+			}
+			inst.Status.MsgCount += uint32(len(inst.Status.Msgs))
+		} else {
+			inst.Status.Msgs = []string{}
+		}
 
 		if inst.State == in.State {
 			log.SpanLog(ctx, log.DebugLevelApi, "no state change")
@@ -821,7 +833,6 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		inst.State = in.State
-		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {
