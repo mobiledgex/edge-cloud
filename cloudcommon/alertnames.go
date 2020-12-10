@@ -1,10 +1,23 @@
 package cloudcommon
 
 // Alert names
-var AlertAutoScaleUp = "AutoScaleUp"
-var AlertAutoScaleDown = "AutoScaleDown"
-var AlertAppInstDown = "AppInstDown"
-var AlertAutoUndeploy = "AutoProvUndeploy"
+const (
+	AlertAutoScaleUp             = "AutoScaleUp"
+	AlertAutoScaleDown           = "AutoScaleDown"
+	AlertAppInstDown             = "AppInstDown"
+	AlertAutoUndeploy            = "AutoProvUndeploy"
+	AlertCloudletDown            = "CloudletDown"
+	AlertCloudletDownDescription = "Cloudlet resource manager is offline"
+)
+
+// Alert types
+const (
+	AlertAnnotationTitle       = "title"
+	AlertAnnotationDescription = "description"
+	AlertScopeTypeTag          = "scope"
+	AlertScopeApp              = "Application"
+	AlertScopeCloudlet         = "Cloudlet"
+)
 
 // Alert annotation keys
 // for autoscale:
@@ -33,6 +46,7 @@ func IsMonitoredAlert(alertName string) bool {
 	if alertName == AlertAutoScaleUp ||
 		alertName == AlertAutoScaleDown ||
 		alertName == AlertAppInstDown ||
+		alertName == AlertCloudletDown ||
 		alertName == AlertAutoUndeploy {
 		return true
 	}

@@ -389,7 +389,7 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	repeated := false
 	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
-		m.P("if len(m.", name, ") != len(o.", name, ") {")
+		m.P("if !opts.Filter && len(m.", name, ") != len(o.", name, ") {")
 		m.P("return false")
 		m.P("}")
 		if mapType == nil {
@@ -410,8 +410,8 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 			m.P("for i := 0; i < len(m.", name, "); i++ {")
 			name = name + "[i]"
 		} else {
-			m.P("for k, _ := range m.", name, " {")
-			m.P("_, ok := o.", name, "[k]")
+			m.P("for k, _ := range o.", name, " {")
+			m.P("_, ok := m.", name, "[k]")
 			m.P("if !ok {")
 			m.P("return false")
 			m.P("}")

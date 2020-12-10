@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
 import "gogoproto/gogo.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -33,12 +34,16 @@ message CloudletPool {
   CloudletPoolKey key = 2 [(gogoproto.nullable) = false];
   // Cloudlets part of the pool
   repeated string cloudlets = 3;
+    // Created at time
+  distributed_match_engine.Timestamp created_at = 4 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+    // Updated at time
+  distributed_match_engine.Timestamp updated_at = 5 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
-  option (protogen.noconfig) = "Members";
+  option (protogen.noconfig) = "Members,CreatedAt,UpdatedAt";
   option (protogen.alias) = "name=Key.Name,org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }

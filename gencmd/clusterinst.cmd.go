@@ -10,6 +10,8 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/mobiledgex/edge-cloud/cli"
+	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
@@ -68,6 +70,12 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Resources = edgeproto.InfraResources{}
+	}
+	if _, found := tags["timestamp"]; found {
+		in.CreatedAt = distributed_match_engine.Timestamp{}
+	}
+	if _, found := tags["timestamp"]; found {
+		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
 }
 

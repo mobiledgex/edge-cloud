@@ -154,22 +154,23 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
+	resetStatus := edgeproto.NoResetStatus
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.ClusterInstInfoCache.SetStatusTask(ctx, &new.Key, value)
+			cd.ClusterInstInfoCache.SetStatusTask(ctx, &new.Key, value, resetStatus)
 		case edgeproto.UpdateStep:
-			cd.ClusterInstInfoCache.SetStatusStep(ctx, &new.Key, value)
+			cd.ClusterInstInfoCache.SetStatusStep(ctx, &new.Key, value, resetStatus)
 		}
+		resetStatus = edgeproto.NoResetStatus
 	}
 
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
-		// reset status messages
-		cd.ClusterInstInfoCache.StatusReset(ctx, &new.Key)
-
 		// create
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		// create or update k8s cluster on this cloudlet
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateClusterCacheCallback)
 		if err != nil {
@@ -224,9 +225,9 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		// reset status messages
-		cd.ClusterInstInfoCache.StatusReset(ctx, &new.Key)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateClusterCacheCallback)
 		if err != nil {
 			return
@@ -284,9 +285,9 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
-		// reset status messages
-		cd.ClusterInstInfoCache.StatusReset(ctx, &new.Key)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
+		// reset status messages
+		resetStatus = edgeproto.ResetStatus
 		// clusterInst was deleted
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback)
 		if err != nil {
@@ -341,18 +342,20 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 
 	// do request
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstChanged", "AppInst", new)
+	resetStatus := edgeproto.NoResetStatus
 	updateAppCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
 		case edgeproto.UpdateTask:
-			cd.AppInstInfoCache.SetStatusTask(ctx, &new.Key, value)
+			cd.AppInstInfoCache.SetStatusTask(ctx, &new.Key, value, resetStatus)
 		case edgeproto.UpdateStep:
-			cd.AppInstInfoCache.SetStatusStep(ctx, &new.Key, value)
+			cd.AppInstInfoCache.SetStatusStep(ctx, &new.Key, value, resetStatus)
 		}
+		resetStatus = edgeproto.NoResetStatus
 	}
 
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// reset status messages
-		cd.AppInstInfoCache.StatusReset(ctx, &new.Key)
+		resetStatus = edgeproto.ResetStatus
 		// create
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&new.Flavor, &flavor)
@@ -417,7 +420,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// reset status messages
-		cd.AppInstInfoCache.StatusReset(ctx, &new.Key)
+		resetStatus = edgeproto.ResetStatus
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
 		if err != nil {
 			return
@@ -466,7 +469,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// reset status messages
-		cd.AppInstInfoCache.StatusReset(ctx, &new.Key)
+		resetStatus = edgeproto.ResetStatus
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
@@ -700,9 +703,6 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 
 	if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
-		// Reset old Status
-		cd.CloudletInfoCache.StatusReset(ctx, &new.Key)
-
 		cloudlet := edgeproto.Cloudlet{}
 		// Check current thread state
 		if cloudletFound := cd.CloudletCache.Get(&new.Key, &cloudlet); cloudletFound {
@@ -721,6 +721,8 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet update already in progress", "key", new.Key)
 			return
 		}
+		// Reset old Status
+		cloudletInfo.Status.StatusReset()
 		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
