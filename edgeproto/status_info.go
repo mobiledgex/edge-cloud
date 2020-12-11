@@ -50,7 +50,7 @@ func (s *StatusInfo) SetTask(task string) {
 	s.TaskNumber++
 	s.TaskName = task
 	s.StepName = ""
-
+	s.MsgCount++
 	s.Msgs = append(s.Msgs, s.ToString())
 }
 

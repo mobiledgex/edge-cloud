@@ -811,17 +811,8 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		inst.Resources = in.Resources
-		lastMsgId := int(inst.Status.MsgCount)
-		if lastMsgId < len(in.Status.Msgs) {
-			inst.Status.Msgs = []string{}
-			for ii := lastMsgId; ii < len(in.Status.Msgs); ii++ {
-				inst.Status.Msgs = append(inst.Status.Msgs, in.Status.Msgs[ii])
-			}
-			inst.Status.MsgCount += uint32(len(inst.Status.Msgs))
-		} else {
-			inst.Status.Msgs = []string{}
-		}
-
+		// update only diff of status msgs
+		edgeproto.UpdateStatusDiff(&in.Status, &inst.Status)
 		if inst.State == in.State {
 			log.SpanLog(ctx, log.DebugLevelApi, "no state change")
 			s.store.STMPut(stm, &inst)

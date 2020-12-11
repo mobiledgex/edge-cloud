@@ -2747,7 +2747,6 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 	failed := make(chan bool, 1)
 	var lastMsg string
 	var err error
-	var isStatusMsgs bool
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := ClusterInst{}
@@ -2764,8 +2763,7 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 					lastMsg = msg
 				}
 			} else {
-				if len(info.Status.Msgs) > 0 {
-					isStatusMsgs = true
+				if len(info.Status.Msgs) > 0 || info.Status.MsgCount > 0 {
 					for ii := 0; ii < len(info.Status.Msgs); ii++ {
 						if lastMsg == info.Status.Msgs[ii] {
 							continue
@@ -2783,9 +2781,7 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 						msg = TrackedState_CamelName[int32(curState)]
 					}
 					lastMsg = msg
-					if !isStatusMsgs {
-						send(&Result{Message: msg})
-					}
+					send(&Result{Message: msg})
 				}
 			}
 		}

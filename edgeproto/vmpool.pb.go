@@ -2542,7 +2542,6 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 	failed := make(chan bool, 1)
 	var lastMsg string
 	var err error
-	var isStatusMsgs bool
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := VMPool{}
@@ -2559,8 +2558,7 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 					lastMsg = msg
 				}
 			} else {
-				if len(info.Status.Msgs) > 0 {
-					isStatusMsgs = true
+				if len(info.Status.Msgs) > 0 || info.Status.MsgCount > 0 {
 					for ii := 0; ii < len(info.Status.Msgs); ii++ {
 						if lastMsg == info.Status.Msgs[ii] {
 							continue
@@ -2578,9 +2576,7 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 						msg = TrackedState_CamelName[int32(curState)]
 					}
 					lastMsg = msg
-					if !isStatusMsgs {
-						send(&Result{Message: msg})
-					}
+					send(&Result{Message: msg})
 				}
 			}
 		}
