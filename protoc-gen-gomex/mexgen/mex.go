@@ -1503,7 +1503,6 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
-	lastMsgId := 0
 	var lastMsg string
 	var err error
 
@@ -1515,25 +1514,33 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
-			if len(info.Status.Msgs) > 0 {
-				for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
-					if lastMsg == info.Status.Msgs[ii] {
-						continue
-					}
-					send(&Result{Message: info.Status.Msgs[ii]})
-					lastMsg = info.Status.Msgs[ii]
-					lastMsgId++
+			if curState == {{.WaitForState}}_NOT_PRESENT {
+				msg := {{.WaitForState}}_CamelName[int32(curState)]
+				if lastMsg != msg {
+					send(&Result{Message: msg})
+					lastMsg = msg
 				}
 			} else {
-				statusString := info.Status.ToString()
-				var msg string
-				if statusString != "" {
-					msg = statusString
+				if len(info.Status.Msgs) > 0  || info.Status.MsgCount > 0 {
+					for ii := 0; ii < len(info.Status.Msgs); ii++ {
+						if lastMsg == info.Status.Msgs[ii] {
+							continue
+						}
+						send(&Result{Message: info.Status.Msgs[ii]})
+						lastMsg = info.Status.Msgs[ii]
+					}
 				} else {
-					msg = {{.WaitForState}}_CamelName[int32(curState)]
+					// for backwards compatibility
+					statusString := info.Status.ToString()
+					var msg string
+					if statusString != "" {
+						msg = statusString
+					} else {
+						msg = {{.WaitForState}}_CamelName[int32(curState)]
+					}
+					lastMsg = msg
+					send(&Result{Message: msg})
 				}
-				lastMsg = msg
-				send(&Result{Message: msg})
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for {{.Name}}")
