@@ -532,6 +532,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
+		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		appInstRefsApi.addRef(stm, &in.Key)
 		return nil
@@ -842,6 +843,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			}
 			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
+		curr.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, &curr)
 		return nil
 	})
@@ -1192,6 +1194,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			appInstRefsApi.removeRef(stm, &in.Key)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
+			in.Status = edgeproto.StatusInfo{}
 			s.store.STMPut(stm, in)
 		}
 		return nil
@@ -1286,19 +1289,15 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			inst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN {
 			inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
 		}
+		// update only diff of status msgs
+		edgeproto.UpdateStatusDiff(&in.Status, &inst.Status)
 		if inst.State == in.State {
 			// already in that state
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
-				inst.Status = in.Status
-				s.store.STMPut(stm, &inst)
-			} else if (in.Status.MsgCount > 0 && in.Status.MsgCount != inst.Status.MsgCount) ||
-				(in.Status.TaskName != inst.Status.TaskName || in.Status.StepName != inst.Status.TaskName) {
-				// update status
-				inst.Status = in.Status
-				s.store.STMPut(stm, &inst)
 			}
+			s.store.STMPut(stm, &inst)
 			return nil
 		}
 		// please see state_transitions.md
@@ -1308,7 +1307,6 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			return nil
 		}
 		inst.State = in.State
-		inst.Status = in.Status
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {
