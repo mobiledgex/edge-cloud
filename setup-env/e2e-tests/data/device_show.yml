@@ -1,6 +1,6 @@
 devices:
 - key:
-    uniqueidtype: platos
+    uniqueidtype: GSAFKDF:platos:PlatosEnablingLayer
     uniqueid: "123"
   firstseen:
     seconds: 1596232439
