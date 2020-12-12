@@ -1214,9 +1214,10 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.Cloudlet) error {
-		obj.Status = edgeproto.StatusInfo{}
-		obj.ChefClientKey = make(map[string]string)
-		err := cb.Send(obj)
+		copy := *obj
+		copy.Status = edgeproto.StatusInfo{}
+		copy.ChefClientKey = make(map[string]string)
+		err := cb.Send(&copy)
 		return err
 	})
 	return err
