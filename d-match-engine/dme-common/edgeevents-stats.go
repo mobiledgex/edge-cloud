@@ -8,6 +8,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
 )
@@ -70,6 +71,23 @@ func (e *EdgeEventStats) Stop() {
 	e.waitGroup.Wait()
 }
 
+func (e *EdgeEventStats) UpdateSettings(interval time.Duration) {
+	if e.interval == interval {
+		return
+	}
+	restart := false
+	if e.stop != nil {
+		e.Stop()
+		restart = true
+	}
+	e.mux.Lock()
+	e.interval = interval
+	e.mux.Unlock()
+	if restart {
+		e.Start()
+	}
+}
+
 func (e *EdgeEventStats) LookupEdgeEventStatCall(call *EdgeEventStatCall) (*EdgeEventStat, bool) {
 	idx := util.GetShardIndex(call.Key, e.numShards)
 
@@ -112,10 +130,12 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 
 func (e *EdgeEventStats) RunNotify() {
 	done := false
-	ctx := context.Background()
 	for !done {
 		select {
-		case <-time.After(e.interval):
+		case <-time.After(time.Now().Truncate(e.interval).Add(e.interval).Sub(time.Now())):
+			span := log.StartSpan(log.DebugLevelMetrics, "edgeevents-stats")
+			ctx := log.ContextWithSpan(context.Background(), span)
+
 			ts, _ := types.TimestampProto(time.Now())
 			for ii, _ := range e.shards {
 				e.shards[ii].mux.Lock()

@@ -93,6 +93,23 @@ func (s *DmeStats) Stop() {
 	s.waitGroup.Wait()
 }
 
+func (s *DmeStats) UpdateSettings(interval time.Duration) {
+	if s.interval == interval {
+		return
+	}
+	restart := false
+	if s.stop != nil {
+		s.Stop()
+		restart = true
+	}
+	s.mux.Lock()
+	s.interval = interval
+	s.mux.Unlock()
+	if restart {
+		s.Start()
+	}
+}
+
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	idx := util.GetShardIndex(call.Key.Method+call.Key.AppKey.Organization+call.Key.AppKey.Name, s.numShards)
 

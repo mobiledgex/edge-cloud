@@ -11,10 +11,10 @@ import (
 
 // Filled in by DME. Added to EdgeEventStatCall to update stats
 type AppInstLatencyInfo struct {
-	DmeAppInst       *DmeAppInst     // Information about appinst
 	Statistics       *dme.Statistics // Latency avg, min, max, and std dev
 	SessionCookieKey *CookieKey      // SessionCookie to identify unique clients for EdgeEvents
-	GpsLocation      *dme.Loc
+	GpsLocation      *dme.Loc        // Client GPSLocation
+	AppInstLocation  *dme.Loc        // AppInst GPSLocation
 	DataNetworkType  string
 	Carrier          string
 }
@@ -71,13 +71,13 @@ func RecordAppInstLatencyStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey
 	call := EdgeEventStatCall{}
 	call.Key.AppInstKey = *appInstKey
 	call.Key.Metric = cloudcommon.AppInstLatencyMetric // override method name
-	dmeappinst := findAppInst(appInstKey, edgeEventsCookieKey.CloudletOrg)
+	dmecloudlet := findDmeCloudlet(appInstKey)
 	call.AppInstLatencyInfo = &AppInstLatencyInfo{
-		DmeAppInst:       dmeappinst,
 		Statistics:       stats,
 		SessionCookieKey: sessionCookieKey,
 		Carrier:          translateCarrierName(carrier),
 		GpsLocation:      loc,
+		AppInstLocation:  &dmecloudlet.GpsLocation,
 		DataNetworkType:  dataNetworkType,
 	}
 	EEStats.RecordEdgeEventStatCall(&call)
@@ -90,10 +90,10 @@ func (a *AppInstLatencyStats) Update(data *AppInstLatencyInfo) {
 	// Update LatencyPer Maps
 	a.UpdateLatencyMaps(a.LatencyPerCarrier, data, data.Carrier, data.Statistics.Avg)
 	a.UpdateLatencyMaps(a.LatencyPerNetDataType, data, data.DataNetworkType, data.Statistics.Avg)
-	if data.DmeAppInst != nil {
+	if data.AppInstLocation != nil {
 		// Figure out distance and figure out orientation
-		distBucket := GetDistanceBucketFromAppInst(data.DmeAppInst, *data.GpsLocation)
-		bearing := GetBearingFromAppInst(data.DmeAppInst, *data.GpsLocation)
+		distBucket := GetDistanceBucket(*data.AppInstLocation, *data.GpsLocation)
+		bearing := GetBearingFrom(*data.AppInstLocation, *data.GpsLocation)
 		a.UpdateLatencyMaps(a.LatencyPerLoc[distBucket], data, string(bearing), data.Statistics.Avg)
 	}
 }

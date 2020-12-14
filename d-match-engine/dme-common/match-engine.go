@@ -66,6 +66,7 @@ type DmeCloudlet struct {
 	CloudletKey      edgeproto.CloudletKey
 	State            dme.CloudletState
 	MaintenanceState dme.MaintenanceState
+	GpsLocation      dme.Loc
 }
 
 type AutoProvPolicy struct {
@@ -515,6 +516,7 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		tbl.Cloudlets[in.Key] = cloudlet
 	}
 	cloudlet.MaintenanceState = in.MaintenanceState
+	cloudlet.GpsLocation = in.Location
 
 	for _, app := range tbl.Apps {
 		app.Lock()
@@ -559,6 +561,19 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 	}
 }
 
+// Given an AppInstKey, return the corresponding DmeCloudlet
+func findDmeCloudlet(appInstKey *edgeproto.AppInstKey) DmeCloudlet {
+	tbl := DmeAppTbl
+
+	tbl.RLock()
+	defer tbl.RUnlock()
+	dmecloudlet, ok := tbl.Cloudlets[appInstKey.ClusterInstKey.CloudletKey]
+	if !ok {
+		return DmeCloudlet{}
+	}
+	return *dmecloudlet
+}
+
 // translateCarrierName translates carrier name (mcc+mnc) to
 // mobiledgex operator name, otherwise returns original value
 func translateCarrierName(carrierName string) string {
@@ -591,24 +606,6 @@ type foundAppInst struct {
 	distance       float64
 	appInst        *DmeAppInst
 	appInstCarrier string
-}
-
-// Given an AppInstKey and carrier, return the corresponding DmeAppInst
-func findAppInst(appInstKey *edgeproto.AppInstKey, carrier string) *DmeAppInst {
-	tbl := DmeAppTbl
-	carrier = translateCarrierName(carrier)
-
-	tbl.RLock()
-	defer tbl.RUnlock()
-	dmeapp, ok := tbl.Apps[appInstKey.AppKey]
-	if !ok {
-		return nil
-	}
-	dmeappinsts, ok := dmeapp.Carriers[carrier]
-	if !ok {
-		return nil
-	}
-	return dmeappinsts.Insts[appInstKey.ClusterInstKey]
 }
 
 // given the carrier, update the reply if we find a cloudlet closer
@@ -996,7 +993,6 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 }
 
 func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) error {
-	startTime := time.Now()
 	var appInstKey *edgeproto.AppInstKey
 	var sessionCookie string
 	var sessionCookieKey *CookieKey
@@ -1063,14 +1059,9 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
-	// Loop while persistent connection is up and edgeeventscookie has not expired
+	// Loop while persistent connection is up
 loop:
 	for {
-		if time.Since(startTime) > *EdgeEventsCookieExpiration {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEventsCookie has expired. Terminating connection")
-			reterr = fmt.Errorf("EdgeEventsCookie has expired. Terminating connection")
-			break loop
-		}
 		//receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
@@ -1079,14 +1070,14 @@ loop:
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
 			if strings.Contains(err.Error(), "rpc error") {
 				reterr = err
-				break loop
+				break
 			}
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
 		if cupdate == nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent is nil. Ending connection")
 			reterr = fmt.Errorf("ClientEdgeEvent is nil. Ending connection")
-			break loop
+			break
 		}
 		// Handle Different Client events
 		switch cupdate.EventType {
@@ -1129,7 +1120,7 @@ loop:
 			}
 		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
 			// Client sent custom stat to be stored
-			RecordCustomStatCall(appInstKey, sessionCookieKey, cupdate.CustomEvent)
+			RecordCustomStatCall(appInstKey, sessionCookieKey, cupdate.CustomEvent, cupdate.Samples)
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
@@ -1214,4 +1205,6 @@ func AppExists(orgname string, appname string, appvers string) bool {
 
 func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
 	autoProvStats.UpdateSettings(new.AutoDeployIntervalSec)
+	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
+	EEStats.UpdateSettings(time.Duration(new.PersistentConnectionMetricsCollectionInterval))
 }

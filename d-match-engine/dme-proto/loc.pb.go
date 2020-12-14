@@ -129,7 +129,8 @@ var xxx_messageInfo_Loc proto.InternalMessageInfo
 // Latency Sample
 type Sample struct {
 	// latency value
-	Value     float64    `protobuf:"fixed64,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value float64 `protobuf:"fixed64,1,opt,name=value,proto3" json:"value,omitempty"`
+	// timestamp
 	Timestamp *Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// _(optional)_ Vendor specific data
 	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`

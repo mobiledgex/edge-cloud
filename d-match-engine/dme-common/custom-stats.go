@@ -12,7 +12,7 @@ import (
 // Filled in by DME. Added to EdgeEventStatCall to update stats
 type CustomStatInfo struct {
 	Name             string
-	Value            float64
+	Samples          []*dme.Sample
 	SessionCookieKey *CookieKey // SessionCookie to identify unique clients for EdgeEvents
 }
 
@@ -39,7 +39,7 @@ func NewCustomStats() *CustomStats {
 	return c
 }
 
-func RecordCustomStatCall(appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, customEvent *dme.CustomEdgeEvent) {
+func RecordCustomStatCall(appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, eventName string, samples []*dme.Sample) {
 	if EEStats == nil {
 		return
 	}
@@ -47,8 +47,8 @@ func RecordCustomStatCall(appInstKey *edgeproto.AppInstKey, sessionCookieKey *Co
 	call.Key.AppInstKey = *appInstKey
 	call.Key.Metric = cloudcommon.CustomMetric // override method name
 	call.CustomStatInfo = &CustomStatInfo{
-		Name:             customEvent.EventType,
-		Value:            customEvent.Data,
+		Name:             eventName,
+		Samples:          samples,
 		SessionCookieKey: sessionCookieKey,
 	}
 	EEStats.RecordEdgeEventStatCall(&call)
@@ -60,5 +60,6 @@ func (c *CustomStats) Update(info *CustomStatInfo) {
 		stat = NewCustomStat()
 	}
 	stat.Count++
-	stat.RollingStatistics.UpdateRollingStatistics(info.SessionCookieKey.UniqueId, info.Value)
+	statistics := grpcstats.CalculateStatistics(info.Samples)
+	stat.RollingStatistics.UpdateRollingStatistics(info.SessionCookieKey.UniqueId, statistics.Avg)
 }

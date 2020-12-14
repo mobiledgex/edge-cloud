@@ -10,7 +10,7 @@ import (
 
 // Rolling avg, min, max, std dev, and number of clients
 type RollingStatistics struct {
-	Statistics       *dme.Statistics
+	Statistics       dme.Statistics
 	UniqueClients    map[string]int // Maps unique client to number of occurences of that unique client
 	NumUniqueClients uint64
 }
@@ -18,12 +18,14 @@ type RollingStatistics struct {
 func NewRollingStatistics() *RollingStatistics {
 	r := new(RollingStatistics)
 	r.UniqueClients = make(map[string]int)
-	r.Statistics = new(dme.Statistics)
 	return r
 }
 
 // Add new samples to RollingStatistics struct and update RollingLatency statistics
 func (r *RollingStatistics) UpdateRollingStatistics(uniqueId string, samples ...float64) {
+	if len(samples) == 0 {
+		return
+	}
 	// Previous statistics used to calculate rolling variance
 	prevNumSamples := r.Statistics.NumSamples
 	prevAvg := r.Statistics.Avg
@@ -31,6 +33,10 @@ func (r *RollingStatistics) UpdateRollingStatistics(uniqueId string, samples ...
 	// Update Min, Max, and Avg
 	total := r.Statistics.Avg * float64(r.Statistics.NumSamples)
 	for _, sample := range samples {
+		// Don't add 0
+		if sample == 0 {
+			continue
+		}
 		if sample < r.Statistics.Min || r.Statistics.Min == 0 {
 			r.Statistics.Min = sample
 		}
@@ -42,9 +48,7 @@ func (r *RollingStatistics) UpdateRollingStatistics(uniqueId string, samples ...
 		// Add client to UniqueClients map
 		r.AddUniqueClient(uniqueId)
 	}
-	// Return empty statistics if no samples
 	if r.Statistics.NumSamples == 0 {
-		r.Statistics = new(dme.Statistics)
 		return
 	}
 	r.Statistics.Avg = total / float64(r.Statistics.NumSamples)

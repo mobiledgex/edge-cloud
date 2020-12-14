@@ -1425,8 +1425,7 @@ var ClientEdgeEventOptionalArgs = []string{
 	"datanetworktype",
 	"deviceos",
 	"devicemodel",
-	"customevent.eventtype",
-	"customevent.data",
+	"customevent",
 	"tags",
 }
 var ClientEdgeEventAliasArgs = []string{}
@@ -1447,23 +1446,13 @@ var ClientEdgeEventComments = map[string]string{
 	"datanetworktype":                "LTE, 5G, etc. for EVENT_LATENCY_SAMPLES",
 	"deviceos":                       "Android or iOS for EVENT_LOCATION_UPDATE",
 	"devicemodel":                    "Device model for EVENT_LOCATION_UPDATE",
-	"customevent.data":               "Will calculate average, min, max, std dev stats if data is provided",
+	"customevent":                    "Custom event specified by the application",
 	"tags":                           "_(optional)_ Vendor specific data",
 }
 var ClientEdgeEventSpecialArgs = map[string]string{
 	"samples:#.tags": "StringToString",
 	"tags":           "StringToString",
 }
-var CustomEdgeEventRequiredArgs = []string{}
-var CustomEdgeEventOptionalArgs = []string{
-	"eventtype",
-	"data",
-}
-var CustomEdgeEventAliasArgs = []string{}
-var CustomEdgeEventComments = map[string]string{
-	"data": "Will calculate average, min, max, std dev stats if data is provided",
-}
-var CustomEdgeEventSpecialArgs = map[string]string{}
 var ServerEdgeEventRequiredArgs = []string{}
 var ServerEdgeEventOptionalArgs = []string{
 	"eventtype",

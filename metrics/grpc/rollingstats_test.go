@@ -41,6 +41,9 @@ func TestRollingStatsCalculations(t *testing.T) {
 	r := NewRollingStatistics()
 	list2 := []float64{.53, 14.2, 21.3, 6.7, 8.8}
 	client1 := "123"
+	// Try adding no elements and 0
+	r.UpdateRollingStatistics(client1)
+	r.UpdateRollingStatistics(client1, 0)
 	// Add elements one by one
 	for _, elem := range list2 {
 		r.UpdateRollingStatistics(client1, elem)
