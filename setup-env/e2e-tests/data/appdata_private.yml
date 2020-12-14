@@ -50,7 +50,7 @@ privacypolicies:
       portrangemin: 53
       remotecidr: "0.0.0.0/0"
     - protocol: icmp
-      remotecidr: "80.0.0.0/8"
+      remotecidr: "8.0.0.0/8"
 
 cloudlets:
 - key:
@@ -113,7 +113,16 @@ apps:
   defaultflavor:
     name: x1.small
   accessports: "tcp:80"
-  privacyenabled: true
+  privacycompliant: true
+  requiredoutboundconnections:
+  - protocol: tcp
+    remoteip: 35.247.68.151
+    port: 443
+  - protocol: udp
+    remoteip: 1.1.1.1
+    port: 53
+  - protocol: icmp
+    remoteip: 8.8.8.8
 - key:
     organization: AcmeAppCo
     name: nonprivateapp

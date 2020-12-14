@@ -188,6 +188,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.Apps[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
+		for i1 := 0; i1 < len(in.Apps[i0].RequiredOutboundConnections); i1++ {
+		}
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -550,7 +552,10 @@ var AllDataOptionalArgs = []string{
 	"apps:#.createdat.nanos",
 	"apps:#.updatedat.seconds",
 	"apps:#.updatedat.nanos",
-	"apps:#.privacyenabled",
+	"apps:#.privacycompliant",
+	"apps:#.requiredoutboundconnections:#.protocol",
+	"apps:#.requiredoutboundconnections:#.port",
+	"apps:#.requiredoutboundconnections:#.remoteip",
 	"appinstances:#.fields",
 	"appinstances:#.key.appkey.organization",
 	"appinstances:#.key.appkey.name",
@@ -877,7 +882,10 @@ var AllDataComments = map[string]string{
 	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names, may be specified multiple times",
 	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"apps:#.skiphcports":                                         "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
-	"apps:#.privacyenabled":                                      "Indicates that an instance of this app can be started on a private cloudlet",
+	"apps:#.privacycompliant":                                    "Indicates that an instance of this app can be started on a private cloudlet",
+	"apps:#.requiredoutboundconnections:#.protocol":              "tcp, udp",
+	"apps:#.requiredoutboundconnections:#.port":                  "TCP or UDP port",
+	"apps:#.requiredoutboundconnections:#.remoteip":              "remote IP X.X.X.X",
 	"appinstances:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                     "App developer organization",
 	"appinstances:#.key.appkey.name":                             "App name",

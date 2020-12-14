@@ -1,4 +1,4 @@
 errors:
 - desc: CloudletApi[0]
-  msg: 'read Result stream failed, rpc error: code = Unknown desc = Privacy Policy
-    cannot be added due to non-privacy enabled app instances'
+  msg: 'read Result stream failed, rpc error: code = Unknown desc = App is not privacy
+    compliant: organization:"AcmeAppCo" name:"nonprivateapp" version:"1.0" '

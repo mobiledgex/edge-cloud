@@ -384,23 +384,6 @@ func (s *SendRecv) hasCloudletKey(key *edgeproto.CloudletKey) bool {
 	return found
 }
 
-func (s *SendRecv) hasPrivacyPolicy(org string, polname string) bool {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	for ck := range s.cloudletKeys {
-		cloudlet := edgeproto.Cloudlet{}
-		var modRev int64
-		if ck.Organization == org {
-			if s.cloudletSend.handler.GetWithRev(&ck, &cloudlet, &modRev) {
-				if cloudlet.PrivacyPolicy == polname {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
 func (s *SendRecv) updateCloudletKey(action edgeproto.NoticeAction, key *edgeproto.CloudletKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()

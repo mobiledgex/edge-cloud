@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -55,15 +56,49 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
-func (s *AppApi) GetNonPrivateApps(apps map[edgeproto.AppKey]struct{}) {
+func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		app := data.Obj
-		if !app.PrivacyEnabled && !app.InternalPorts {
-			apps[app.Key] = struct{}{}
+		apps[app.Key] = app
+	}
+}
+
+func CheckAppCompatibleWithPrivacyPolicy(app *edgeproto.App, privacyPolicy *edgeproto.PrivacyPolicy) error {
+	if app.InternalPorts {
+		return nil
+	}
+	if !app.PrivacyCompliant {
+		return fmt.Errorf("App is not privacy compliant: %s", app.Key.String())
+	}
+	for _, r := range app.RequiredOutboundConnections {
+		policyMatchFound := false
+		ip := net.ParseIP(r.RemoteIp)
+		for _, outboundRule := range privacyPolicy.OutboundSecurityRules {
+			if strings.ToLower(r.Protocol) != strings.ToLower(outboundRule.Protocol) {
+				continue
+			}
+			_, remoteNet, err := net.ParseCIDR(outboundRule.RemoteCidr)
+			if err != nil {
+				return fmt.Errorf("Invalid remote CIDR in policy: %s - %v", outboundRule.RemoteCidr, err)
+			}
+			if !remoteNet.Contains(ip) {
+				continue
+			}
+			if strings.ToLower(r.Protocol) != "icmp" {
+				if r.Port < outboundRule.PortRangeMin || r.Port > outboundRule.PortRangeMax {
+					continue
+				}
+			}
+			policyMatchFound = true
+			break
+		}
+		if !policyMatchFound {
+			return fmt.Errorf("No outbound rule in policy to match required connection %s:%s:%d for App %s", r.Protocol, r.RemoteIp, r.Port, app.Key.GetKeyString())
 		}
 	}
+	return nil
 }
 
 func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
@@ -239,6 +274,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		return fmt.Errorf("Deployment is not valid for image type")
 	}
 	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
+		return err
+	}
+	if err := validateRequiredOutboundConnections(in.RequiredOutboundConnections); err != nil {
 		return err
 	}
 	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
@@ -481,8 +519,9 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		_, deploymentManifestSpecified := fields[edgeproto.AppFieldDeploymentManifest]
 		_, accessPortSpecified := fields[edgeproto.AppFieldAccessPorts]
-		_, privacyEnabledSpecified := fields[edgeproto.AppFieldPrivacyEnabled]
+		_, privacyCompliantSpecified := fields[edgeproto.AppFieldPrivacyCompliant]
 		_, internalPortsSpecified := fields[edgeproto.AppFieldInternalPorts]
+		_, requiredOutboundSpecified := fields[edgeproto.AppFieldRequiredOutboundConnections]
 
 		if deploymentManifestSpecified {
 			// reset the deployment generator
@@ -497,18 +536,21 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				cur.DeploymentManifest = ""
 			}
 		}
-		// removing InternalPorts or PrivacyEnabled is not allowed if the app is already on
-		// a private cloudlet
-		if (privacyEnabledSpecified && !in.PrivacyEnabled) || (internalPortsSpecified && !in.InternalPorts) {
+		cur.CopyInFields(in)
+		// for any changes that can affect privacy policy, verify the app is still valid for all
+		// cloudlets onto which it is deployed.
+		if requiredOutboundSpecified ||
+			(privacyCompliantSpecified && !in.PrivacyCompliant) ||
+			(internalPortsSpecified && !in.InternalPorts) {
 			appInstKeys := make(map[edgeproto.AppInstKey]struct{})
 			appInstApi.cache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
 				appInstKeys[*k] = struct{}{}
 			})
-			if cloudletApi.AppInstUsesPrivateCloudlet(appInstKeys) {
-				return fmt.Errorf("Cannot change PrivacyEnabled or InternalPorts settings for App in use by private cloudlet")
+			err = cloudletApi.VerifyPrivacyPoliciesForAppInsts(&cur, appInstKeys)
+			if err != nil {
+				return err
 			}
 		}
-		cur.CopyInFields(in)
 		// for update, trigger regenerating deployment manifest
 		if cur.DeploymentGenerator != "" {
 			cur.DeploymentManifest = ""
@@ -661,6 +703,31 @@ func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment
 	for _, cfg := range configs {
 		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.DeploymentTypeHelm {
 			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
+		}
+	}
+	return nil
+}
+
+func validateRequiredOutboundConnections(req []*edgeproto.RemoteConnection) error {
+	for _, r := range req {
+		proto := strings.ToLower(r.Protocol)
+		ip := net.ParseIP(r.RemoteIp)
+		if ip == nil {
+			return fmt.Errorf("Invalid remote IP: %v", r.RemoteIp)
+		}
+		switch proto {
+		case "icmp":
+			if r.Port != 0 {
+				return fmt.Errorf("Port must be 0 for icmp")
+			}
+		case "tcp":
+			fallthrough
+		case "udp":
+			if r.Port < 1 || r.Port > 65535 {
+				return fmt.Errorf("Remote port out of range: %d", r.Port)
+			}
+		default:
+			return fmt.Errorf("Invalid protocol specified for remote connection: %s", proto)
 		}
 	}
 	return nil

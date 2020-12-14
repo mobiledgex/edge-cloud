@@ -109,3 +109,12 @@ func (s *PrivacyPolicyApi) STMFind(stm concurrency.STM, name, org string, policy
 	}
 	return nil
 }
+
+func (s *PrivacyPolicyApi) GetPrivacyPolicies(policies map[edgeproto.PolicyKey]*edgeproto.PrivacyPolicy) {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		pol := data.Obj
+		policies[pol.Key] = pol
+	}
+}

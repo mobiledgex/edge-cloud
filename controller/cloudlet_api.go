@@ -806,6 +806,38 @@ func (s *CloudletApi) AppInstUsesPrivateCloudlet(appInsts map[edgeproto.AppInstK
 	return false
 }
 
+func (s *CloudletApi) VerifyPrivacyPoliciesForAppInsts(app *edgeproto.App, appInsts map[edgeproto.AppInstKey]struct{}) error {
+	privacyPolicies := make(map[edgeproto.PolicyKey]*edgeproto.PrivacyPolicy)
+	privacyPolicyApi.GetPrivacyPolicies(privacyPolicies)
+	s.cache.Mux.Lock()
+	privateCloudlets := make(map[edgeproto.CloudletKey]*edgeproto.Cloudlet)
+	for key, data := range s.cache.Objs {
+		val := data.Obj
+		if val.PrivacyPolicy != "" {
+			privateCloudlets[key] = val
+		}
+	}
+	s.cache.Mux.Unlock()
+	for akey := range appInsts {
+		cloudlet, cloudletFound := privateCloudlets[akey.ClusterInstKey.CloudletKey]
+		if cloudletFound {
+			pkey := edgeproto.PolicyKey{
+				Organization: cloudlet.Key.Organization,
+				Name:         cloudlet.PrivacyPolicy,
+			}
+			policy, policyFound := privacyPolicies[pkey]
+			if !policyFound {
+				return fmt.Errorf("Unable to find privacy policy in cache: %s", pkey.String())
+			}
+			err := CheckAppCompatibleWithPrivacyPolicy(app, policy)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // updatePrivacyPolicyInternal updates the PrivacyPolicyState to TrackedState_UPDATE_REQUESTED
 // and then waits for the update to complete.
 func (s *CloudletApi) updatePrivacyPolicyInternal(ctx context.Context, ckey *edgeproto.CloudletKey, policyName string, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
@@ -936,13 +968,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	maintenanceChanged := false
 	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldPrivacyPolicy]
 
-	if privPolUpdateRequested && cur.PrivacyPolicy == "" && in.PrivacyPolicy != "" {
-		if appInstApi.NonPrivateAppInstUsesCloudlet(&in.Key) {
-			log.SpanLog(ctx, log.DebugLevelApi, "Non private app uses cloudlet", "cur.PrivacyPolicy", cur.PrivacyPolicy)
-			return fmt.Errorf("Privacy Policy cannot be added due to non-privacy enabled app instances")
-		}
-	}
-
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur = &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
@@ -957,6 +982,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			cur.MaintenanceState = oldmstate
 		}
 		if privPolUpdateRequested {
+			if maintenanceChanged {
+				return fmt.Errorf("Cannot change both maintance state and privacy policy at the same time")
+			}
 			if !ignoreCRM(cctx) {
 				if cur.State != edgeproto.TrackedState_READY {
 					return fmt.Errorf("Privacy policy cannot be changed while cloudlet is not ready")
@@ -969,6 +997,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				}
 				policy := edgeproto.PrivacyPolicy{}
 				if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
+					return err
+				}
+				if err := appInstApi.CheckCloudletAppinstsCompatibleWithPrivacyPolicy(&in.Key, &policy); err != nil {
 					return err
 				}
 			}
@@ -1008,10 +1039,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		)
 		return err
 	}
-	// cloudletInfoApi.SetPrivacyPolicyState(ctx, &in.Key, edgeproto.TrackedState_UPDATE_REQUESTED)
 	if privPolUpdateRequested && !ignoreCRM(cctx) {
 		// Wait for policy to update
-		return s.updatePrivacyPolicyInternal(ctx, &in.Key, cur.PrivacyPolicy, cb)
+		return s.updatePrivacyPolicyInternal(ctx, &in.Key, in.PrivacyPolicy, cb)
 	}
 
 	// since default maintenance state is NORMAL_OPERATION, it is better to check
@@ -1670,12 +1700,16 @@ func (s *CloudletApi) UpdateCloudletsUsingPrivacyPolicy(ctx context.Context, pri
 	if len(cloudlets) == 0 {
 		log.SpanLog(ctx, log.DebugLevelApi, "no cloudlets matched", "key", privacyPolicy.Key)
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("No cloudlets using privacy policy to update")})
+		return nil
 	}
 
 	for ckey, _ := range cloudlets {
 		go func(k edgeproto.CloudletKey) {
 			log.SpanLog(ctx, log.DebugLevelApi, "updating privacy policy for cloudlet", "key", k)
-			err := s.updatePrivacyPolicyInternal(ctx, &k, privacyPolicy.Key.Name, cb)
+			err := appInstApi.CheckCloudletAppinstsCompatibleWithPrivacyPolicy(&k, privacyPolicy)
+			if err == nil {
+				err = s.updatePrivacyPolicyInternal(ctx, &k, privacyPolicy.Key.Name, cb)
+			}
 			if err == nil {
 				updateResults[k] <- updateResult{errString: ""}
 			} else {

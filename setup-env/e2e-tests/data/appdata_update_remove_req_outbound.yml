@@ -3,4 +3,5 @@ apps:
     organization: AcmeAppCo
     name: privateapp
     version: "1.0"
-  privacycompliant: false
+  requiredoutboundconnections:
+  

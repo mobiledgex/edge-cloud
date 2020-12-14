@@ -76,19 +76,26 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
-func (s *AppInstApi) NonPrivateAppInstUsesCloudlet(in *edgeproto.CloudletKey) bool {
-	nonPrivateApps := make(map[edgeproto.AppKey]struct{})
-	appApi.GetNonPrivateApps(nonPrivateApps)
+func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithPrivacyPolicy(ckey *edgeproto.CloudletKey, privacyPolicy *edgeproto.PrivacyPolicy) error {
+	apps := make(map[edgeproto.AppKey]*edgeproto.App)
+	appApi.GetAllApps(apps)
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for key, data := range s.cache.Objs {
+		if !key.ClusterInstKey.CloudletKey.Matches(ckey) {
+			continue
+		}
 		val := data.Obj
-		_, nonPrivate := nonPrivateApps[val.Key.AppKey]
-		if nonPrivate && key.ClusterInstKey.CloudletKey.Matches(in) {
-			return true
+		app, found := apps[val.Key.AppKey]
+		if !found {
+			return fmt.Errorf("App not found: %s", val.Key.AppKey.String())
+		}
+		err := CheckAppCompatibleWithPrivacyPolicy(app, privacyPolicy)
+		if err != nil {
+			return err
 		}
 	}
-	return false
+	return nil
 }
 
 // Checks if there is some action in progress by AppInst on the cloudlet
@@ -435,8 +442,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if app.DeletePrepare {
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
-		if cloudlet.PrivacyPolicy != "" && !app.PrivacyEnabled && !app.InternalPorts {
-			return fmt.Errorf("Cannot start App on Private Cloudlet without PrivacyEnabled or InternalPorts")
+		if cloudlet.PrivacyPolicy != "" && !app.PrivacyCompliant && !app.InternalPorts {
+			return fmt.Errorf("Cannot start App on Private Cloudlet without PrivacyCompliant or InternalPorts")
 		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested

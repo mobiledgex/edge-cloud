@@ -17,32 +17,33 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform                 platform.Platform
-	AppCache                 edgeproto.AppCache
-	AppInstCache             edgeproto.AppInstCache
-	CloudletCache            edgeproto.CloudletCache
-	VMPoolCache              edgeproto.VMPoolCache
-	FlavorCache              edgeproto.FlavorCache
-	ClusterInstCache         edgeproto.ClusterInstCache
-	AppInstInfoCache         edgeproto.AppInstInfoCache
-	CloudletInfoCache        edgeproto.CloudletInfoCache
-	VMPoolInfoCache          edgeproto.VMPoolInfoCache
-	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
-	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
-	AutoProvPolicyCache      edgeproto.AutoProvPolicyCache
-	AlertCache               edgeproto.AlertCache
-	SettingsCache            edgeproto.SettingsCache
-	ResTagTableCache         edgeproto.ResTagTableCache
-	ExecReqHandler           *ExecReqHandler
-	ExecReqSend              *notify.ExecRequestSend
-	ControllerWait           chan bool
-	ControllerSyncInProgress bool
-	ControllerSyncDone       chan bool
-	settings                 edgeproto.Settings
-	NodeMgr                  *node.NodeMgr
-	VMPool                   edgeproto.VMPool
-	VMPoolMux                sync.Mutex
-	updateVMWorkers          tasks.KeyWorkers
+	platform                      platform.Platform
+	AppCache                      edgeproto.AppCache
+	AppInstCache                  edgeproto.AppInstCache
+	CloudletCache                 edgeproto.CloudletCache
+	VMPoolCache                   edgeproto.VMPoolCache
+	FlavorCache                   edgeproto.FlavorCache
+	ClusterInstCache              edgeproto.ClusterInstCache
+	AppInstInfoCache              edgeproto.AppInstInfoCache
+	CloudletInfoCache             edgeproto.CloudletInfoCache
+	VMPoolInfoCache               edgeproto.VMPoolInfoCache
+	ClusterInstInfoCache          edgeproto.ClusterInstInfoCache
+	PrivacyPolicyCache            edgeproto.PrivacyPolicyCache
+	AutoProvPolicyCache           edgeproto.AutoProvPolicyCache
+	AlertCache                    edgeproto.AlertCache
+	SettingsCache                 edgeproto.SettingsCache
+	ResTagTableCache              edgeproto.ResTagTableCache
+	ExecReqHandler                *ExecReqHandler
+	ExecReqSend                   *notify.ExecRequestSend
+	ControllerWait                chan bool
+	ControllerSyncInProgress      bool
+	ControllerSyncDone            chan bool
+	settings                      edgeproto.Settings
+	NodeMgr                       *node.NodeMgr
+	VMPool                        edgeproto.VMPool
+	VMPoolMux                     sync.Mutex
+	updateVMWorkers               tasks.KeyWorkers
+	updatePrivacyPolicyKeyworkers tasks.KeyWorkers
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -91,6 +92,8 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.NodeMgr = nodeMgr
 
 	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdateVMPool)
+	cd.updatePrivacyPolicyKeyworkers.Init("update-privacypolicy", cd.UpdatePrivacyPolicy)
+
 	return cd
 }
 
@@ -694,27 +697,9 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 				cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
 				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			} else {
-				privacyPolicy, err := GetCloudletPrivacyPolicy(ctx, new.PrivacyPolicy, new.Key.Organization, &cd.PrivacyPolicyCache)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelInfra, "Error getting privacy policy", "err", err)
-					cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
-					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-				} else {
-					cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATING
-					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-					err = cd.platform.UpdatePrivacyPolicy(ctx, privacyPolicy)
-					log.SpanLog(ctx, log.DebugLevelInfra, "Update Privacy Done", "err", err)
-					if err != nil {
-						cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
-					} else {
-						if new.PrivacyPolicy == "" {
-							cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_NOT_PRESENT
-						} else {
-							cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_READY
-						}
-					}
-					cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-				}
+				cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATING
+				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+				cd.updatePrivacyPolicyKeyworkers.NeedsWork(ctx, new.Key)
 			}
 		}
 	}
@@ -1027,4 +1012,50 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
 
 	// TODO calculate Flavor info and send CloudletInfo again
+}
+
+func (cd *ControllerData) UpdatePrivacyPolicy(ctx context.Context, k interface{}) {
+	cloudletKey, ok := k.(edgeproto.CloudletKey)
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Unexpected failure, key not CloudletKey", "cloudletKey", cloudletKey)
+		return
+	}
+	log.SetContextTags(ctx, cloudletKey.GetTags())
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdatePrivacyPolicy", "cloudletKey", cloudletKey)
+
+	var cloudlet edgeproto.Cloudlet
+	if !cd.CloudletCache.Get(&cloudletKey, &cloudlet) {
+		log.FatalLog("failed to fetch cloudlet from cache")
+	}
+	var privacyPolicy edgeproto.PrivacyPolicy
+	if cloudlet.PrivacyPolicy != "" {
+		pkey := edgeproto.PolicyKey{
+			Organization: cloudlet.Key.Organization,
+			Name:         cloudlet.PrivacyPolicy,
+		}
+		if !cd.PrivacyPolicyCache.Get(&pkey, &privacyPolicy) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to fetch privacy policy from cache")
+			return
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "found privacyPolicy", "privacyPolicy", privacyPolicy)
+	err := cd.platform.UpdatePrivacyPolicy(ctx, &privacyPolicy)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Update Privacy Done", "err", err)
+	cloudletInfo := edgeproto.CloudletInfo{}
+	found := cd.CloudletInfoCache.Get(&cloudletKey, &cloudletInfo)
+	if !found {
+		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", cloudletKey)
+		return
+	}
+	if err != nil {
+		cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+	} else {
+		if cloudlet.PrivacyPolicy == "" {
+			cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_NOT_PRESENT
+		} else {
+			cloudletInfo.PrivacyPolicyState = edgeproto.TrackedState_READY
+		}
+	}
+	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+
 }
