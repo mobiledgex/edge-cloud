@@ -868,3 +868,19 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 	}
 	return keys
 }
+
+// Status from info will always contain the full status update list,
+// changes we copy to status that is saved to etcd is only the diff
+// from the last update.
+func UpdateStatusDiff(infoStatus *StatusInfo, diffStatus *StatusInfo) {
+	lastMsgId := int(diffStatus.MsgCount)
+	if lastMsgId < len(infoStatus.Msgs) {
+		diffStatus.Msgs = []string{}
+		for ii := lastMsgId; ii < len(infoStatus.Msgs); ii++ {
+			diffStatus.Msgs = append(diffStatus.Msgs, infoStatus.Msgs[ii])
+		}
+		diffStatus.MsgCount += uint32(len(diffStatus.Msgs))
+	} else {
+		diffStatus.Msgs = []string{}
+	}
+}

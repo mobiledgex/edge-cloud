@@ -23,7 +23,8 @@ func (s *ClusterInstInfoApi) Update(ctx context.Context, in *edgeproto.ClusterIn
 }
 
 func (s *ClusterInstInfoApi) Delete(ctx context.Context, in *edgeproto.ClusterInstInfo, rev int64) {
-	// no-op
+	// for backwards compatibility
+	clusterInstApi.DeleteFromInfo(ctx, in)
 }
 
 func (s *ClusterInstInfoApi) Flush(ctx context.Context, notifyId int64) {
