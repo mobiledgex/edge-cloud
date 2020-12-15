@@ -983,7 +983,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		if privPolUpdateRequested {
 			if maintenanceChanged {
-				return fmt.Errorf("Cannot change both maintance state and privacy policy at the same time")
+				return fmt.Errorf("Cannot change both maintenance state and privacy policy at the same time")
 			}
 			if !ignoreCRM(cctx) {
 				if cur.State != edgeproto.TrackedState_READY {
