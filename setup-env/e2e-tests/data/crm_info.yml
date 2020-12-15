@@ -449,6 +449,7 @@ apps:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
   internalports: true
+  privacycompliant: true
   accesstype: AccessTypeLoadBalancer
 
 appinstances:

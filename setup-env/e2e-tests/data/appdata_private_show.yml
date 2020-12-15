@@ -304,6 +304,7 @@ apps:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
   internalports: true
+  privacycompliant: true
   accesstype: AccessTypeLoadBalancer
   createdat:
     seconds: 1607989352

@@ -377,6 +377,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
+  privacycompliant: true
   defaultflavor:
     name: x1.medium
   annotations: version=7.1.1
@@ -445,6 +446,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
+  privacycompliant: true
 - key:
     organization: AcmeAppCo1
     name: vmapp1

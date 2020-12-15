@@ -442,8 +442,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if app.DeletePrepare {
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
-		if cloudlet.PrivacyPolicy != "" && !app.PrivacyCompliant && !app.InternalPorts {
-			return fmt.Errorf("Cannot start App on Private Cloudlet without PrivacyCompliant or InternalPorts")
+		if cloudlet.PrivacyPolicy != "" && !app.PrivacyCompliant {
+			return fmt.Errorf("Cannot start App on Private Cloudlet without PrivacyCompliant")
 		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested

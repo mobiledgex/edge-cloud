@@ -10,11 +10,12 @@ import (
 )
 
 var oldPrometheusControllerApp = edgeproto.App{
-	Key:           MEXPrometheusAppKey,
-	ImagePath:     "stable/prometheus-operator",
-	Deployment:    cloudcommon.DeploymentTypeHelm,
-	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
-	InternalPorts: true,
+	Key:              MEXPrometheusAppKey,
+	ImagePath:        "stable/prometheus-operator",
+	Deployment:       cloudcommon.DeploymentTypeHelm,
+	DelOpt:           edgeproto.DeleteType_AUTO_DELETE,
+	InternalPorts:    true,
+	PrivacyCompliant: true,
 }
 var durationShort = "5s"
 var durationLong = "45s"

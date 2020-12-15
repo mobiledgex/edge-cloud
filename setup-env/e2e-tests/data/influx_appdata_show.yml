@@ -153,6 +153,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
+  privacycompliant: true
   accesstype: AccessTypeLoadBalancer
 - key:
     organization: MobiledgeX
@@ -162,6 +163,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
+  privacycompliant: true
   accesstype: AccessTypeLoadBalancer
   defaultflavor:
     name: x1.medium

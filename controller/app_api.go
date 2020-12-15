@@ -1,4 +1,4 @@
-// app config
+//app config
 
 package main
 
@@ -66,9 +66,6 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 }
 
 func CheckAppCompatibleWithPrivacyPolicy(app *edgeproto.App, privacyPolicy *edgeproto.PrivacyPolicy) error {
-	if app.InternalPorts {
-		return nil
-	}
 	if !app.PrivacyCompliant {
 		return fmt.Errorf("App is not privacy compliant: %s", app.Key.String())
 	}
@@ -520,7 +517,6 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		_, deploymentManifestSpecified := fields[edgeproto.AppFieldDeploymentManifest]
 		_, accessPortSpecified := fields[edgeproto.AppFieldAccessPorts]
 		_, privacyCompliantSpecified := fields[edgeproto.AppFieldPrivacyCompliant]
-		_, internalPortsSpecified := fields[edgeproto.AppFieldInternalPorts]
 		_, requiredOutboundSpecified := fields[edgeproto.AppFieldRequiredOutboundConnections]
 
 		if deploymentManifestSpecified {
@@ -540,8 +536,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// for any changes that can affect privacy policy, verify the app is still valid for all
 		// cloudlets onto which it is deployed.
 		if requiredOutboundSpecified ||
-			(privacyCompliantSpecified && !in.PrivacyCompliant) ||
-			(internalPortsSpecified && !in.InternalPorts) {
+			(privacyCompliantSpecified && !in.PrivacyCompliant) {
 			appInstKeys := make(map[edgeproto.AppInstKey]struct{})
 			appInstApi.cache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
 				appInstKeys[*k] = struct{}{}
