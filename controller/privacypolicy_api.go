@@ -47,10 +47,6 @@ func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb e
 	cur := edgeproto.PrivacyPolicy{}
 	changed := 0
 
-	// if there are cloudlets in sync state forbid this operation
-	if cloudletApi.UsesPrivacyPolicy(&in.Key, edgeproto.TrackedState_UPDATING) {
-		return fmt.Errorf("Policy in use by Cloudlet")
-	}
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
 		if o.PortRangeMax == 0 {
