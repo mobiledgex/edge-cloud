@@ -357,7 +357,7 @@ type App struct {
 	UpdatedAt dme_proto.Timestamp `protobuf:"bytes,36,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at"`
 	// Indicates that an instance of this app can be started on a private cloudlet
 	PrivacyCompliant bool `protobuf:"varint,37,opt,name=privacy_compliant,json=privacyCompliant,proto3" json:"privacy_compliant,omitempty"`
-	// Connections this app requires, in the format protocol:remoteip:port to determine if the app is compatible with a privacy policy
+	// Connections this app require to determine if the app is compatible with a privacy policy
 	RequiredOutboundConnections []*RemoteConnection `protobuf:"bytes,38,rep,name=required_outbound_connections,json=requiredOutboundConnections,proto3" json:"required_outbound_connections,omitempty"`
 }
 
