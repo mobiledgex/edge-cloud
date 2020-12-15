@@ -50,19 +50,6 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 	return err
 }
 
-func (s *CloudletInfoApi) SetPrivacyPolicyState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.TrackedState) {
-	log.SpanLog(ctx, log.DebugLevelApi, "SetPrivacyPolicyState", "key", key, "state", state)
-
-	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		info := edgeproto.CloudletInfo{}
-		if s.store.STMGet(stm, key, &info) {
-			info.PrivacyPolicyState = state
-			s.store.STMPut(stm, &info)
-		}
-		return nil
-	})
-}
-
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	var err error
 	// for now assume all fields have been specified
