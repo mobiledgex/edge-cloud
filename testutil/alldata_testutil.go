@@ -23,7 +23,7 @@ type AllDataOut struct {
 	Settings                *edgeproto.Result
 	OperatorCodes           []edgeproto.Result
 	ResTagTables            []edgeproto.Result
-	PrivacyPolicies         [][]edgeproto.Result
+	TrustPolicies           [][]edgeproto.Result
 	Cloudlets               [][]edgeproto.Result
 	CloudletInfos           []edgeproto.Result
 	CloudletPools           []edgeproto.Result
@@ -42,7 +42,7 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
-	run.PrivacyPolicyApi(&in.PrivacyPolicies, inMap["privacypolicies"], &out.PrivacyPolicies)
+	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
@@ -67,7 +67,7 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
-	run.PrivacyPolicyApi(&in.PrivacyPolicies, inMap["privacypolicies"], &out.PrivacyPolicies)
+	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
@@ -80,7 +80,7 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.SettingsApi(in.Settings, nil, &out.Settings)
 	run.OperatorCodeApi(&in.OperatorCodes, nil, &out.OperatorCodes)
 	run.ResTagTableApi(&in.ResTagTables, nil, &out.ResTagTables)
-	run.PrivacyPolicyApi(&in.PrivacyPolicies, nil, &out.PrivacyPolicies)
+	run.TrustPolicyApi(&in.TrustPolicies, nil, &out.TrustPolicies)
 	run.CloudletApi(&in.Cloudlets, nil, &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, nil, &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, nil, &out.CloudletPools)

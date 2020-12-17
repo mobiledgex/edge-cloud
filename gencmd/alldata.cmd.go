@@ -36,8 +36,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
 	}
-	for i0 := 0; i0 < len(in.PrivacyPolicies); i0++ {
-		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].OutboundSecurityRules); i1++ {
+	for i0 := 0; i0 < len(in.TrustPolicies); i0++ {
+		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
 		}
 	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
@@ -75,7 +75,7 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.Cloudlets[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].PrivacyPolicyState = 0
+			in.Cloudlets[i0].TrustPolicyState = 0
 		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
@@ -101,7 +101,7 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			}
 		}
 		if _, found := tags["nocmp"]; found {
-			in.CloudletInfos[i0].PrivacyPolicyState = 0
+			in.CloudletInfos[i0].TrustPolicyState = 0
 		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
@@ -294,7 +294,7 @@ var AllDataOptionalArgs = []string{
 	"settings.influxdbmetricsretention",
 	"settings.cloudletmaintenancetimeout",
 	"settings.updatevmpooltimeout",
-	"settings.updateprivacypolicytimeout",
+	"settings.updatetrustpolicytimeout",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -302,13 +302,13 @@ var AllDataOptionalArgs = []string{
 	"restagtables:#.key.organization",
 	"restagtables:#.tags",
 	"restagtables:#.azone",
-	"privacypolicies:#.fields",
-	"privacypolicies:#.key.organization",
-	"privacypolicies:#.key.name",
-	"privacypolicies:#.outboundsecurityrules:#.protocol",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemin",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemax",
-	"privacypolicies:#.outboundsecurityrules:#.remotecidr",
+	"trustpolicies:#.fields",
+	"trustpolicies:#.key.organization",
+	"trustpolicies:#.key.name",
+	"trustpolicies:#.outboundsecurityrules:#.protocol",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemin",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemax",
+	"trustpolicies:#.outboundsecurityrules:#.remotecidr",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
@@ -386,8 +386,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.createdat.nanos",
 	"cloudlets:#.updatedat.seconds",
 	"cloudlets:#.updatedat.nanos",
-	"cloudlets:#.privacypolicy",
-	"cloudlets:#.privacypolicystate",
+	"cloudlets:#.trustpolicy",
+	"cloudlets:#.trustpolicystate",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -429,7 +429,7 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.resources.vms:#.containers:#.status",
 	"cloudletinfos:#.resources.vms:#.containers:#.clusterip",
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts",
-	"cloudletinfos:#.privacypolicystate",
+	"cloudletinfos:#.trustpolicystate",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -552,7 +552,7 @@ var AllDataOptionalArgs = []string{
 	"apps:#.createdat.nanos",
 	"apps:#.updatedat.seconds",
 	"apps:#.updatedat.nanos",
-	"apps:#.privacycompliant",
+	"apps:#.trusted",
 	"apps:#.requiredoutboundconnections:#.protocol",
 	"apps:#.requiredoutboundconnections:#.port",
 	"apps:#.requiredoutboundconnections:#.remoteip",
@@ -670,20 +670,20 @@ var AllDataComments = map[string]string{
 	"settings.influxdbmetricsretention":                          "Default influxDB metrics retention policy (duration)",
 	"settings.cloudletmaintenancetimeout":                        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
 	"settings.updatevmpooltimeout":                               "Update VM pool timeout (duration)",
-	"settings.updateprivacypolicytimeout":                        "Update Privacy Policy timeout (duration)",
+	"settings.updatetrustpolicytimeout":                          "Update Trust Policy timeout (duration)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
 	"restagtables:#.key.organization":                            "Operator organization of the cloudlet site.",
 	"restagtables:#.tags":                                        "one or more string tags",
 	"restagtables:#.azone":                                       "availability zone(s) of resource if required",
-	"privacypolicies:#.fields":                                   "Fields are used for the Update API to specify which fields to apply",
-	"privacypolicies:#.key.organization":                         "Name of the organization for the cluster that this policy will apply to",
-	"privacypolicies:#.key.name":                                 "Policy name",
-	"privacypolicies:#.outboundsecurityrules:#.protocol":         "tcp, udp, icmp",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemin":     "TCP or UDP port range start",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemax":     "TCP or UDP port range end",
-	"privacypolicies:#.outboundsecurityrules:#.remotecidr":       "remote CIDR X.X.X.X/X",
+	"trustpolicies:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
+	"trustpolicies:#.key.organization":                           "Name of the organization for the cluster that this policy will apply to",
+	"trustpolicies:#.key.name":                                   "Policy name",
+	"trustpolicies:#.outboundsecurityrules:#.protocol":           "tcp, udp, icmp",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemin":       "TCP or UDP port range start",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemax":       "TCP or UDP port range end",
+	"trustpolicies:#.outboundsecurityrules:#.remotecidr":         "remote CIDR X.X.X.X/X",
 	"cloudlets:#.fields":                                         "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                               "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                       "Name of the cloudlet",
@@ -748,8 +748,8 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.vmpool":                                         "VM Pool",
 	"cloudlets:#.crmaccesspublickey":                             "CRM access public key",
 	"cloudlets:#.crmaccesskeyupgraderequired":                    "CRM access key upgrade required",
-	"cloudlets:#.privacypolicy":                                  "Optional Privacy Policy",
-	"cloudlets:#.privacypolicystate":                             "State of privacy policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"cloudlets:#.trustpolicy":                                    "Optional Trust Policy",
+	"cloudlets:#.trustpolicystate":                               "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -781,7 +781,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.resources.vms:#.containers:#.status":        "Runtime status of the container",
 	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "IP within the CNI and is applicable to kubernetes only",
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "Restart count, applicable to kubernetes only",
-	"cloudletinfos:#.privacypolicystate":                         "Privacy Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"cloudletinfos:#.trustpolicystate":                           "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
@@ -882,7 +882,7 @@ var AllDataComments = map[string]string{
 	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names, may be specified multiple times",
 	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"apps:#.skiphcports":                                         "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
-	"apps:#.privacycompliant":                                    "Indicates that an instance of this app can be started on a private cloudlet",
+	"apps:#.trusted":                                             "Indicates that an instance of this app can be started on a trusted cloudlet",
 	"apps:#.requiredoutboundconnections:#.protocol":              "tcp, udp",
 	"apps:#.requiredoutboundconnections:#.port":                  "TCP or UDP port",
 	"apps:#.requiredoutboundconnections:#.remoteip":              "remote IP X.X.X.X",
@@ -978,10 +978,10 @@ var AllDataSpecialArgs = map[string]string{
 	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
-	"privacypolicies:#.fields":                "StringArray",
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
+	"trustpolicies:#.fields":                  "StringArray",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
 	"vmpools:#.status.msgs":                   "StringArray",

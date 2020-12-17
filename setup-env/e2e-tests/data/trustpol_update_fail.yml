@@ -1,4 +1,4 @@
 errors:
-- desc: PrivacyPolicyApi[0]
+- desc: TrustPolicyApi[0]
   msg: 'read Result stream failed, rpc error: code = Unknown desc = Failed to update
-    privacy policy on any cloudlets'
+    trust policy on any cloudlets'

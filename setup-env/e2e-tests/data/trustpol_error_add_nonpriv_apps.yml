@@ -1,0 +1,4 @@
+errors:
+- desc: CloudletApi[0]
+  msg: 'read Result stream failed, rpc error: code = Unknown desc = App is not trusted:
+    organization:"AcmeAppCo" name:"nontrustedapp" version:"1.0" '

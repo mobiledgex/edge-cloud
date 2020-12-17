@@ -1,7 +1,7 @@
-privacypolicies:
+trustpolicies:
 -  key:
       organization: tmus
-      name: PrivPolicy1
+      name: TrustPolicy1
    outboundsecurityrules:
     - protocol: udp
       portrangemin: 53

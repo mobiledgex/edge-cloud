@@ -71,8 +71,8 @@ func (a *AllData) Sort() {
 	sort.Slice(a.AutoProvPolicies[:], func(i, j int) bool {
 		return a.AutoProvPolicies[i].Key.GetKeyString() < a.AutoProvPolicies[j].Key.GetKeyString()
 	})
-	sort.Slice(a.PrivacyPolicies[:], func(i, j int) bool {
-		return a.PrivacyPolicies[i].Key.GetKeyString() < a.PrivacyPolicies[j].Key.GetKeyString()
+	sort.Slice(a.TrustPolicies[:], func(i, j int) bool {
+		return a.TrustPolicies[i].Key.GetKeyString() < a.TrustPolicies[j].Key.GetKeyString()
 	})
 	sort.Slice(a.AutoProvPolicyCloudlets[:], func(i, j int) bool {
 		if a.AutoProvPolicyCloudlets[i].Key.GetKeyString() == a.AutoProvPolicyCloudlets[j].Key.GetKeyString() {
@@ -517,7 +517,7 @@ func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
+func (s *TrustPolicy) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}

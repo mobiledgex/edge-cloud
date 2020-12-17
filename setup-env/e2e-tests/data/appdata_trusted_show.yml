@@ -35,11 +35,11 @@ settings:
   influxdbmetricsretention: 2h0m0s
   cloudletmaintenancetimeout: 2s
   updatevmpooltimeout: 20m0s
-  updateprivacypolicytimeout: 5s
-privacypolicies:
+  updatetrustpolicytimeout: 5s
+trustpolicies:
 - key:
     organization: tmus
-    name: PrivPolicy1
+    name: TrustPolicy1
   outboundsecurityrules:
   - protocol: tcp
     portrangemin: 443
@@ -78,8 +78,8 @@ cloudlets:
   createdat:
     seconds: 1607989351
     nanos: 425508000
-  privacypolicy: PrivPolicy1
-  privacypolicystate: Ready
+  trustpolicy: TrustPolicy1
+  trustpolicystate: Ready
 - key:
     organization: tmus
     name: cloudlet2
@@ -102,7 +102,7 @@ cloudlets:
   createdat:
     seconds: 1607989352
     nanos: 116783000
-  privacypolicystate: NotPresent
+  trustpolicystate: NotPresent
 cloudletinfos:
 - key:
     organization: tmus
@@ -134,7 +134,7 @@ cloudletinfos:
       infraflavor: m4.small
       ipaddresses:
       - externalip: 10.101.100.11
-  privacypolicystate: Ready
+  trustpolicystate: Ready
 - key:
     organization: tmus
     name: cloudlet2
@@ -165,7 +165,7 @@ cloudletinfos:
       infraflavor: m4.small
       ipaddresses:
       - externalip: 10.101.100.11
-  privacypolicystate: NotPresent
+  trustpolicystate: NotPresent
 clusterinsts:
 - key:
     clusterkey:
@@ -304,16 +304,16 @@ apps:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
   internalports: true
-  privacycompliant: true
+  trusted: true
   accesstype: AccessTypeLoadBalancer
   createdat:
     seconds: 1607989352
     nanos: 739348000
 - key:
     organization: AcmeAppCo
-    name: privateapp
+    name: trustedapp
     version: "1.0"
-  imagepath: docker.mobiledgex.net/AcmeAppCo/images/privateapp:1.0
+  imagepath: docker.mobiledgex.net/AcmeAppCo/images/trustedapp:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80
   defaultflavor:
@@ -323,9 +323,9 @@ apps:
     apiVersion: v1
     kind: Service
     metadata:
-      name: privateapp10-tcp
+      name: trustedapp10-tcp
       labels:
-        run: privateapp1.0
+        run: trustedapp1.0
     spec:
       type: LoadBalancer
       ports:
@@ -334,28 +334,28 @@ apps:
         port: 80
         targetPort: 80
       selector:
-        run: privateapp1.0
+        run: trustedapp1.0
     ---
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: privateapp10-deployment
+      name: trustedapp10-deployment
     spec:
       replicas: 1
       selector:
         matchLabels:
-          run: privateapp1.0
+          run: trustedapp1.0
       template:
         metadata:
           labels:
-            run: privateapp1.0
+            run: trustedapp1.0
         spec:
           volumes:
           imagePullSecrets:
           - name: docker.mobiledgex.net
           containers:
-          - name: privateapp10
-            image: docker.mobiledgex.net/AcmeAppCo/images/privateapp:1.0
+          - name: trustedapp10
+            image: docker.mobiledgex.net/AcmeAppCo/images/trustedapp:1.0
             imagePullPolicy: Always
             ports:
             - containerPort: 80
@@ -365,7 +365,7 @@ apps:
   createdat:
     seconds: 1607989353
     nanos: 898975000
-  privacycompliant: true
+  trusted: true
   requiredoutboundconnections:
   - protocol: tcp
     port: 443
@@ -377,9 +377,9 @@ apps:
     remoteip: 8.8.8.8
 - key:
     organization: AcmeAppCo
-    name: nonprivateapp
+    name: nontrustedapp
     version: "1.0"
-  imagepath: docker.mobiledgex.net/AcmeAppCo/images/nonprivateapp:1.0
+  imagepath: docker.mobiledgex.net/AcmeAppCo/images/nontrustedapp:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:90
   defaultflavor:
@@ -389,9 +389,9 @@ apps:
     apiVersion: v1
     kind: Service
     metadata:
-      name: nonprivateapp10-tcp
+      name: nontrustedapp10-tcp
       labels:
-        run: nonprivateapp1.0
+        run: nontrustedapp1.0
     spec:
       type: LoadBalancer
       ports:
@@ -400,28 +400,28 @@ apps:
         port: 90
         targetPort: 90
       selector:
-        run: nonprivateapp1.0
+        run: nontrustedapp1.0
     ---
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: nonprivateapp10-deployment
+      name: nontrustedapp10-deployment
     spec:
       replicas: 1
       selector:
         matchLabels:
-          run: nonprivateapp1.0
+          run: nontrustedapp1.0
       template:
         metadata:
           labels:
-            run: nonprivateapp1.0
+            run: nontrustedapp1.0
         spec:
           volumes:
           imagePullSecrets:
           - name: docker.mobiledgex.net
           containers:
-          - name: nonprivateapp10
-            image: docker.mobiledgex.net/AcmeAppCo/images/nonprivateapp:1.0
+          - name: nontrustedapp10
+            image: docker.mobiledgex.net/AcmeAppCo/images/nontrustedapp:1.0
             imagePullPolicy: Always
             ports:
             - containerPort: 90
@@ -495,7 +495,7 @@ appinstances:
 - key:
     appkey:
       organization: AcmeAppCo
-      name: privateapp
+      name: trustedapp
       version: "1.0"
     clusterinstkey:
       clusterkey:
@@ -513,7 +513,7 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: privateapp10-tcp.
+    fqdnprefix: trustedapp10-tcp.
   flavor:
     name: x1.small
   state: Ready
@@ -530,7 +530,7 @@ appinstances:
 - key:
     appkey:
       organization: AcmeAppCo
-      name: nonprivateapp
+      name: nontrustedapp
       version: "1.0"
     clusterinstkey:
       clusterkey:
@@ -548,7 +548,7 @@ appinstances:
   - proto: LProtoTcp
     internalport: 90
     publicport: 90
-    fqdnprefix: nonprivateapp10-tcp.
+    fqdnprefix: nontrustedapp10-tcp.
   flavor:
     name: x1.small
   state: Ready
@@ -574,15 +574,15 @@ appinstrefs:
     : 1
 - key:
     organization: AcmeAppCo
-    name: privateapp
+    name: trustedapp
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"privateapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster1"},"cloudlet_key":{"organization":"tmus","name":"cloudlet1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"trustedapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster1"},"cloudlet_key":{"organization":"tmus","name":"cloudlet1"},"organization":"AcmeAppCo"}}'
     : 1
 - key:
     organization: AcmeAppCo
-    name: nonprivateapp
+    name: nontrustedapp
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"nonprivateapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster2"},"cloudlet_key":{"organization":"tmus","name":"cloudlet2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"nontrustedapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster2"},"cloudlet_key":{"organization":"tmus","name":"cloudlet2"},"organization":"AcmeAppCo"}}'
     : 1

@@ -30,20 +30,20 @@ type PlatformConfig struct {
 	DeploymentTag       string
 	Upgrade             bool
 	AccessApi           AccessApi
-	PrivacyPolicy       string
+	TrustPolicy         string
 }
 
 type Caches struct {
-	SettingsCache      *edgeproto.SettingsCache
-	FlavorCache        *edgeproto.FlavorCache
-	PrivacyPolicyCache *edgeproto.PrivacyPolicyCache
-	ClusterInstCache   *edgeproto.ClusterInstCache
-	AppInstCache       *edgeproto.AppInstCache
-	AppCache           *edgeproto.AppCache
-	ResTagTableCache   *edgeproto.ResTagTableCache
-	CloudletCache      *edgeproto.CloudletCache
-	VMPoolCache        *edgeproto.VMPoolCache
-	VMPoolInfoCache    *edgeproto.VMPoolInfoCache
+	SettingsCache    *edgeproto.SettingsCache
+	FlavorCache      *edgeproto.FlavorCache
+	TrustPolicyCache *edgeproto.TrustPolicyCache
+	ClusterInstCache *edgeproto.ClusterInstCache
+	AppInstCache     *edgeproto.AppInstCache
+	AppCache         *edgeproto.AppCache
+	ResTagTableCache *edgeproto.ResTagTableCache
+	CloudletCache    *edgeproto.CloudletCache
+	VMPoolCache      *edgeproto.VMPoolCache
+	VMPoolInfoCache  *edgeproto.VMPoolInfoCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
@@ -110,7 +110,7 @@ type Platform interface {
 	// Platform-sepcific access data lookup (only called from Controller context)
 	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
 	// Update the cloudlet's Privacy Policy
-	UpdatePrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy) error
+	UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error
 	// Get restricted cloudlet create status
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 }

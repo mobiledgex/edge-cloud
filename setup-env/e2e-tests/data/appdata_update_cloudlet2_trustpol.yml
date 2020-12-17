@@ -3,4 +3,4 @@ cloudlets:
 - key:
     organization: tmus
     name: cloudlet2
-  privacypolicy: PrivPolicy1
+  trustpolicy: TrustPolicy1

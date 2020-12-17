@@ -72,10 +72,10 @@ func PruneSamsungPlatformDevices(ctx context.Context, objStore objstore.KVStore)
 	return err
 }
 
-// SetPrivacyCompliant sets the PrivacyCompliant bit to true for all InternalPorts apps on
+// SetTrusted sets the Trusted bit to true for all InternalPorts apps on
 // the assumption that Internal-only apps are privacy compliant
-func SetPrivacyCompliant(ctx context.Context, objStore objstore.KVStore) error {
-	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetPrivacyCompliant")
+func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetTrusted")
 
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
@@ -85,10 +85,10 @@ func SetPrivacyCompliant(ctx context.Context, objStore objstore.KVStore) error {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
 			return err2
 		}
-		log.SpanLog(ctx, log.DebugLevelUpgrade, "SetPrivacyCompliant found app", "appkey", app.Key.String(), "InternalPorts", app.InternalPorts)
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "SetTrusted found app", "appkey", app.Key.String(), "InternalPorts", app.InternalPorts)
 		if app.InternalPorts {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Setting PrivacyComplaint to true for internal ports app", "app", app)
-			app.PrivacyCompliant = true
+			app.Trusted = true
 			val, err2 = json.Marshal(app)
 			if err2 != nil {
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)

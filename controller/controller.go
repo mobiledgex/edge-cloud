@@ -370,7 +370,7 @@ func startServices() error {
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
-	edgeproto.RegisterPrivacyPolicyApiServer(server, &privacyPolicyApi)
+	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
@@ -405,7 +405,7 @@ func startServices() error {
 			edgeproto.RegisterAutoScalePolicyApiHandler,
 			edgeproto.RegisterAutoProvPolicyApiHandler,
 			edgeproto.RegisterResTagTableApiHandler,
-			edgeproto.RegisterPrivacyPolicyApiHandler,
+			edgeproto.RegisterTrustPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
@@ -541,7 +541,7 @@ func InitApis(sync *Sync) {
 	InitAutoProvPolicyApi(sync)
 	InitAutoProvInfoApi(sync)
 	InitResTagTableApi(sync)
-	InitPrivacyPolicyApi(sync)
+	InitTrustPolicyApi(sync)
 	InitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
@@ -555,7 +555,7 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendVMPoolCache(&vmPoolApi.cache)
 	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
-	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)

@@ -13,7 +13,7 @@ settings:
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
   loadbalancermaxportrange: 50
-  updateprivacypolicytimeout: 10m
+  updatetrustpolicytimeout: 10m
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   cloudletmaintenancetimeout: 5m
@@ -166,7 +166,7 @@ cloudlets:
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
   deployment: docker
-  privacypolicystate: NotPresent
+  trustpolicystate: NotPresent
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -182,7 +182,7 @@ cloudlets:
   physicalname: tmus-cloud-2
   containerversion: 2019-10-24
   deployment: docker
-  privacypolicystate: NotPresent
+  trustpolicystate: NotPresent
 
 cloudletinfos:
 - key:
@@ -214,7 +214,7 @@ cloudletinfos:
       infraflavor: m4.small
       ipaddresses:
       - externalip: 10.101.100.11
-  privacypolicystate: NotPresent
+  trustpolicystate: NotPresent
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -244,7 +244,7 @@ cloudletinfos:
       infraflavor: m4.small
       ipaddresses:
       - externalip: 10.101.100.11
-  privacypolicystate: NotPresent
+  trustpolicystate: NotPresent
 apps:
 - key:
     organization: AcmeAppCo
@@ -449,7 +449,7 @@ apps:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
   internalports: true
-  privacycompliant: true
+  trusted: true
   accesstype: AccessTypeLoadBalancer
 
 appinstances:

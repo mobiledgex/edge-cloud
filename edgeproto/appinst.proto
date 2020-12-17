@@ -210,7 +210,7 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.method_not_required) = "Key.ClusterInstKey";
-    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,Configs,PowerState,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,Configs,PowerState,TrustPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
   }
   // Update Application Instance. Updates an Application instance and then refreshes it.
   rpc UpdateAppInst(AppInst) returns (stream Result) {
@@ -220,7 +220,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
-    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,UpdateMultiple,ForceUpdate,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,UpdateMultiple,ForceUpdate,TrustPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
   }
   // Show Application Instances. Lists all the Application instances managed by the Edge Controller.
   // Any fields specified will be used to filter results.

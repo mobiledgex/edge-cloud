@@ -65,14 +65,14 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 	}
 }
 
-func CheckAppCompatibleWithPrivacyPolicy(app *edgeproto.App, privacyPolicy *edgeproto.PrivacyPolicy) error {
-	if !app.PrivacyCompliant {
-		return fmt.Errorf("App is not privacy compliant: %s", app.Key.String())
+func CheckAppCompatibleWithTrustPolicy(app *edgeproto.App, TrustPolicy *edgeproto.TrustPolicy) error {
+	if !app.Trusted {
+		return fmt.Errorf("App is not trusted: %s", app.Key.String())
 	}
 	for _, r := range app.RequiredOutboundConnections {
 		policyMatchFound := false
 		ip := net.ParseIP(r.RemoteIp)
-		for _, outboundRule := range privacyPolicy.OutboundSecurityRules {
+		for _, outboundRule := range TrustPolicy.OutboundSecurityRules {
 			if strings.ToLower(r.Protocol) != strings.ToLower(outboundRule.Protocol) {
 				continue
 			}
@@ -516,7 +516,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		_, deploymentManifestSpecified := fields[edgeproto.AppFieldDeploymentManifest]
 		_, accessPortSpecified := fields[edgeproto.AppFieldAccessPorts]
-		_, privacyCompliantSpecified := fields[edgeproto.AppFieldPrivacyCompliant]
+		_, TrustedSpecified := fields[edgeproto.AppFieldTrusted]
 		_, requiredOutboundSpecified := fields[edgeproto.AppFieldRequiredOutboundConnections]
 
 		if deploymentManifestSpecified {
@@ -536,12 +536,12 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// for any changes that can affect privacy policy, verify the app is still valid for all
 		// cloudlets onto which it is deployed.
 		if requiredOutboundSpecified ||
-			(privacyCompliantSpecified && !in.PrivacyCompliant) {
+			(TrustedSpecified && !in.Trusted) {
 			appInstKeys := make(map[edgeproto.AppInstKey]struct{})
 			appInstApi.cache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
 				appInstKeys[*k] = struct{}{}
 			})
-			err = cloudletApi.VerifyPrivacyPoliciesForAppInsts(&cur, appInstKeys)
+			err = cloudletApi.VerifyTrustPoliciesForAppInsts(&cur, appInstKeys)
 			if err != nil {
 				return err
 			}

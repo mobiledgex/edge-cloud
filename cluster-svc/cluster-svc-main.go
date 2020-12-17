@@ -98,13 +98,13 @@ var MEXPrometheusAppKey = edgeproto.AppKey{
 // Define prometheus operator App.
 // Version 7.1.1 tested with helm 2.15 and kubernetes 1.16
 var MEXPrometheusApp = edgeproto.App{
-	Key:              MEXPrometheusAppKey,
-	ImagePath:        "stable/prometheus-operator",
-	Deployment:       cloudcommon.DeploymentTypeHelm,
-	DelOpt:           edgeproto.DeleteType_AUTO_DELETE,
-	InternalPorts:    true,
-	PrivacyCompliant: true,
-	Annotations:      "version=7.1.1",
+	Key:           MEXPrometheusAppKey,
+	ImagePath:     "stable/prometheus-operator",
+	Deployment:    cloudcommon.DeploymentTypeHelm,
+	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
+	InternalPorts: true,
+	Trusted:       true,
+	Annotations:   "version=7.1.1",
 }
 
 var dialOpts grpc.DialOption
@@ -137,13 +137,13 @@ var NFSAutoProvAppKey = edgeproto.AppKey{
 }
 
 var NFSAutoProvisionApp = edgeproto.App{
-	Key:              NFSAutoProvAppKey,
-	ImagePath:        "stable/nfs-client-provisioner",
-	Deployment:       cloudcommon.DeploymentTypeHelm,
-	DelOpt:           edgeproto.DeleteType_AUTO_DELETE,
-	InternalPorts:    true,
-	PrivacyCompliant: true,
-	Annotations:      "version=1.2.8",
+	Key:           NFSAutoProvAppKey,
+	ImagePath:     "stable/nfs-client-provisioner",
+	Deployment:    cloudcommon.DeploymentTypeHelm,
+	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
+	InternalPorts: true,
+	Trusted:       true,
+	Annotations:   "version=1.2.8",
 }
 
 var NFSAutoProvisionAppTemplate = `nfs:

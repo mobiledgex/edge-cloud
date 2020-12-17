@@ -69,7 +69,7 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.PrivacyPolicyState = 0
+		in.TrustPolicyState = 0
 	}
 }
 
@@ -103,7 +103,7 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 		}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.PrivacyPolicyState = 0
+		in.TrustPolicyState = 0
 	}
 }
 
@@ -1273,7 +1273,7 @@ var CloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
-	"privacypolicy",
+	"trustpolicy",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1344,8 +1344,8 @@ var CloudletComments = map[string]string{
 	"vmpool":                              "VM Pool",
 	"crmaccesspublickey":                  "CRM access public key",
 	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
-	"privacypolicy":                       "Optional Privacy Policy",
-	"privacypolicystate":                  "State of privacy policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"trustpolicy":                         "Optional Trust Policy",
+	"trustpolicystate":                    "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1498,7 +1498,7 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages:#.diskformat",
 	"controllercachereceived",
 	"maintenancestate",
-	"privacypolicystate",
+	"trustpolicystate",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1536,7 +1536,7 @@ var CloudletInfoComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
-	"privacypolicystate":                     "Privacy Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"trustpolicystate":                       "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
@@ -1586,7 +1586,7 @@ var CreateCloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
-	"privacypolicy",
+	"trustpolicy",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1621,7 +1621,7 @@ var DeleteCloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
-	"privacypolicy",
+	"trustpolicy",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1644,7 +1644,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"envvar",
 	"accessvars",
 	"maintenancestate",
-	"privacypolicy",
+	"trustpolicy",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1679,7 +1679,7 @@ var ShowCloudletOptionalArgs = []string{
 	"maintenancestate",
 	"overridepolicycontainerversion",
 	"vmpool",
-	"privacypolicy",
+	"trustpolicy",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

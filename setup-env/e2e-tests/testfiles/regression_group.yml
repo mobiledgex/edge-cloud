@@ -36,7 +36,7 @@ tests:
   - includefile: verify_loc.yml
     api: rest
   - includefile: get_pos_qos.yml
-  - includefile: privpol_add_update.yml
+  - includefile: trustpol_add_update.yml
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 

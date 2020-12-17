@@ -12,7 +12,7 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
-  updateprivacypolicytimeout: 10m
+  updatetrustpolicytimeout: 10m
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
@@ -129,7 +129,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
-  privacycompliant: true
+  trusted: true
   defaultflavor:
     name: x1.medium
   annotations: version=7.1.1

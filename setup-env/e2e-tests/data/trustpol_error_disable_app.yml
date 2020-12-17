@@ -1,0 +1,4 @@
+errors:
+- desc: AppApi[0]
+  msg: 'rpc error: code = Unknown desc = App is not trusted: organization:"AcmeAppCo"
+    name:"trustedapp" version:"1.0" '

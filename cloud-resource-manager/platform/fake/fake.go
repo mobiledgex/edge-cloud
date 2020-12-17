@@ -218,8 +218,8 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) UpdatePrivacyPolicy(ctx context.Context, privacyPolicy *edgeproto.PrivacyPolicy) error {
-	log.DebugLog(log.DebugLevelInfra, "fake UpdatePrivacyPolicy begin", "policy", privacyPolicy)
+func (s *Platform) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error {
+	log.DebugLog(log.DebugLevelInfra, "fake UpdateTrustPolicy begin", "policy", TrustPolicy)
 	return nil
 }
 

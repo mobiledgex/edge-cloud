@@ -8,24 +8,24 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-type PrivacyPolicyApi struct {
+type TrustPolicyApi struct {
 	sync  *Sync
-	store edgeproto.PrivacyPolicyStore
-	cache edgeproto.PrivacyPolicyCache
+	store edgeproto.TrustPolicyStore
+	cache edgeproto.TrustPolicyCache
 }
 
-var privacyPolicyApi = PrivacyPolicyApi{}
+var trustPolicyApi = TrustPolicyApi{}
 
-func InitPrivacyPolicyApi(sync *Sync) {
-	privacyPolicyApi.sync = sync
-	privacyPolicyApi.store = edgeproto.NewPrivacyPolicyStore(sync.store)
-	edgeproto.InitPrivacyPolicyCache(&privacyPolicyApi.cache)
-	sync.RegisterCache(&privacyPolicyApi.cache)
+func InitTrustPolicyApi(sync *Sync) {
+	trustPolicyApi.sync = sync
+	trustPolicyApi.store = edgeproto.NewTrustPolicyStore(sync.store)
+	edgeproto.InitTrustPolicyCache(&trustPolicyApi.cache)
+	sync.RegisterCache(&trustPolicyApi.cache)
 }
 
-func (s *PrivacyPolicyApi) CreatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_CreatePrivacyPolicyServer) error {
+func (s *TrustPolicyApi) CreateTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
 	ctx := cb.Context()
-	log.SpanLog(ctx, log.DebugLevelApi, "CreatePrivacyPolicy", "policy", in)
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicy", "policy", in)
 
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
@@ -42,9 +42,9 @@ func (s *PrivacyPolicyApi) CreatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb e
 
 }
 
-func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_UpdatePrivacyPolicyServer) error {
+func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_UpdateTrustPolicyServer) error {
 	ctx := cb.Context()
-	cur := edgeproto.PrivacyPolicy{}
+	cur := edgeproto.TrustPolicy{}
 	changed := 0
 
 	// port range max is optional, set it to min if min is present but not max
@@ -72,41 +72,41 @@ func (s *PrivacyPolicyApi) UpdatePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb e
 	if err != nil {
 		return err
 	}
-	return cloudletApi.UpdateCloudletsUsingPrivacyPolicy(ctx, &cur, cb)
+	return cloudletApi.UpdateCloudletsUsingTrustPolicy(ctx, &cur, cb)
 }
 
-func (s *PrivacyPolicyApi) DeletePrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_DeletePrivacyPolicyServer) error {
+func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) error {
 	ctx := cb.Context()
 	if !s.cache.HasKey(&in.Key) {
 		return in.Key.NotFoundError()
 	}
 	// look for cloudlets in any state
-	if cloudletApi.UsesPrivacyPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
+	if cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
 		return fmt.Errorf("Policy in use by Cloudlet")
 	}
 	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
 	return err
 }
 
-func (s *PrivacyPolicyApi) ShowPrivacyPolicy(in *edgeproto.PrivacyPolicy, cb edgeproto.PrivacyPolicyApi_ShowPrivacyPolicyServer) error {
-	err := s.cache.Show(in, func(obj *edgeproto.PrivacyPolicy) error {
+func (s *TrustPolicyApi) ShowTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_ShowTrustPolicyServer) error {
+	err := s.cache.Show(in, func(obj *edgeproto.TrustPolicy) error {
 		err := cb.Send(obj)
 		return err
 	})
 	return err
 }
 
-func (s *PrivacyPolicyApi) STMFind(stm concurrency.STM, name, org string, policy *edgeproto.PrivacyPolicy) error {
+func (s *TrustPolicyApi) STMFind(stm concurrency.STM, name, org string, policy *edgeproto.TrustPolicy) error {
 	key := edgeproto.PolicyKey{}
 	key.Name = name
 	key.Organization = org
 	if !s.store.STMGet(stm, &key, policy) {
-		return fmt.Errorf("PrivacyPolicy %s for organization %s not found", name, org)
+		return fmt.Errorf("TrustPolicy %s for organization %s not found", name, org)
 	}
 	return nil
 }
 
-func (s *PrivacyPolicyApi) GetPrivacyPolicies(policies map[edgeproto.PolicyKey]*edgeproto.PrivacyPolicy) {
+func (s *TrustPolicyApi) GetTrustPolicies(policies map[edgeproto.PolicyKey]*edgeproto.TrustPolicy) {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {

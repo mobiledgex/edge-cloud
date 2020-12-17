@@ -1,4 +1,0 @@
-errors:
-- desc: AppApi[0]
-  msg: 'rpc error: code = Unknown desc = App is not privacy compliant: organization:"AcmeAppCo"
-    name:"privateapp" version:"1.0" '

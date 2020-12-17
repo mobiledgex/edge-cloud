@@ -1208,8 +1208,8 @@ var AutoProvPolicyData = []edgeproto.AutoProvPolicy{
 	},
 }
 
-var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
-	edgeproto.PrivacyPolicy{
+var TrustPolicyData = []edgeproto.TrustPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy0",
 			Organization: CloudletData[2].Key.Organization,
@@ -1229,7 +1229,7 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 			},
 		},
 	},
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy1",
 			Organization: CloudletData[2].Key.Organization,
@@ -1249,7 +1249,7 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 			},
 		},
 	},
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy2",
 			Organization: CloudletData[2].Key.Organization,
@@ -1269,9 +1269,9 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 	},
 }
 
-var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
+var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 	// Failure case, max port > min port
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy3",
 			Organization: CloudletData[2].Key.Organization,
@@ -1286,7 +1286,7 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 		},
 	},
 	// Failure case, bad CIDR
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy4",
 			Organization: CloudletData[2].Key.Organization,
@@ -1301,7 +1301,7 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 		},
 	},
 	// Failure case, missing min port but max port present
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
 			Name:         "privacy-policy5",
 			Organization: CloudletData[2].Key.Organization,

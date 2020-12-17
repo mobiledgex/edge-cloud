@@ -12,7 +12,7 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
-  updateprivacypolicytimeout: 10m
+  updatetrustpolicytimeout: 10m
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
   chefclientinterval: 10m

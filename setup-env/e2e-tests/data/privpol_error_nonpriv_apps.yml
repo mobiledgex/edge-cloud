@@ -1,4 +1,0 @@
-errors:
-- desc: AppApi[0]
-  msg: 'rpc error: code = Unknown desc = Cannot change PrivacyEnabled or InternalPorts
-    settings for App in use by private cloudlet'

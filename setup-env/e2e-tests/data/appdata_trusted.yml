@@ -8,7 +8,7 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
-  updateprivacypolicytimeout: 5s
+  updatetrustpolicytimeout: 5s
   masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
@@ -34,10 +34,10 @@ flavors:
   disk: 4
 
 
-privacypolicies:
+trustpolicies:
 -  key:
       organization: tmus
-      name: PrivPolicy1
+      name: TrustPolicy1
    outboundsecurityrules:
     - protocol:  tcp
       portrangemin: 443
@@ -62,7 +62,7 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
   platformtype: PlatformTypeFake
-  privacypolicy: PrivPolicy1
+  trustpolicy: TrustPolicy1
 - key:
     organization: tmus
     name: cloudlet2
@@ -106,14 +106,14 @@ clusterinsts:
 apps:
 - key:
     organization: AcmeAppCo
-    name: privateapp
+    name: trustedapp
     version: "1.0"
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
   accessports: "tcp:80"
-  privacycompliant: true
+  trusted: true
   requiredoutboundconnections:
   - protocol: tcp
     remoteip: 35.247.68.151
@@ -125,7 +125,7 @@ apps:
     remoteip: 8.8.8.8
 - key:
     organization: AcmeAppCo
-    name: nonprivateapp
+    name: nontrustedapp
     version: "1.0"
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
@@ -137,7 +137,7 @@ appinstances:
 - key:
     appkey:
       organization: AcmeAppCo
-      name: privateapp
+      name: trustedapp
       version: "1.0"
     clusterinstkey:
       clusterkey:
@@ -150,7 +150,7 @@ appinstances:
 - key:
     appkey:
       organization: AcmeAppCo
-      name: nonprivateapp
+      name: nontrustedapp
       version: "1.0"
     clusterinstkey:
       clusterkey:

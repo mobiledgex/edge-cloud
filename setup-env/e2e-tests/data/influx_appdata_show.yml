@@ -12,7 +12,7 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
-  updateprivacypolicytimeout: 5s
+  updatetrustpolicytimeout: 5s
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
@@ -153,7 +153,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
-  privacycompliant: true
+  trusted: true
   accesstype: AccessTypeLoadBalancer
 - key:
     organization: MobiledgeX
@@ -163,7 +163,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
-  privacycompliant: true
+  trusted: true
   accesstype: AccessTypeLoadBalancer
   defaultflavor:
     name: x1.medium

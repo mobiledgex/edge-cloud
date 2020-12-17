@@ -76,7 +76,7 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
-func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithPrivacyPolicy(ckey *edgeproto.CloudletKey, privacyPolicy *edgeproto.PrivacyPolicy) error {
+func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, TrustPolicy *edgeproto.TrustPolicy) error {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	appApi.GetAllApps(apps)
 	s.cache.Mux.Lock()
@@ -90,7 +90,7 @@ func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithPrivacyPolicy(ckey *edge
 		if !found {
 			return fmt.Errorf("App not found: %s", val.Key.AppKey.String())
 		}
-		err := CheckAppCompatibleWithPrivacyPolicy(app, privacyPolicy)
+		err := CheckAppCompatibleWithTrustPolicy(app, TrustPolicy)
 		if err != nil {
 			return err
 		}
@@ -442,8 +442,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if app.DeletePrepare {
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
-		if cloudlet.PrivacyPolicy != "" && !app.PrivacyCompliant {
-			return fmt.Errorf("Cannot start App on Private Cloudlet without PrivacyCompliant")
+		if cloudlet.TrustPolicy != "" && !app.Trusted {
+			return fmt.Errorf("Cannot start App on Private Cloudlet without Trusted")
 		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
