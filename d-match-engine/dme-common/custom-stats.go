@@ -62,4 +62,5 @@ func (c *CustomStats) Update(info *CustomStatInfo) {
 	stat.Count++
 	statistics := grpcstats.CalculateStatistics(info.Samples)
 	stat.RollingStatistics.UpdateRollingStatistics(info.SessionCookieKey.UniqueId, statistics.Avg)
+	c.Stats[info.Name] = stat
 }

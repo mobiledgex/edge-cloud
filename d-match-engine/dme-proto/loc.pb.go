@@ -174,14 +174,19 @@ var xxx_messageInfo_Sample proto.InternalMessageInfo
 
 // Statistics
 type Statistics struct {
+	// average
 	Avg float64 `protobuf:"fixed64,1,opt,name=avg,proto3" json:"avg,omitempty"`
+	// minimum
 	Min float64 `protobuf:"fixed64,2,opt,name=min,proto3" json:"min,omitempty"`
+	// maximum
 	Max float64 `protobuf:"fixed64,3,opt,name=max,proto3" json:"max,omitempty"`
-	// Square root of unbiased variance
+	// square root of unbiased variance
 	StdDev float64 `protobuf:"fixed64,4,opt,name=std_dev,json=stdDev,proto3" json:"std_dev,omitempty"`
-	// Unbiased variance
-	Variance             float64    `protobuf:"fixed64,5,opt,name=variance,proto3" json:"variance,omitempty"`
-	NumSamples           uint64     `protobuf:"varint,6,opt,name=num_samples,json=numSamples,proto3" json:"num_samples,omitempty"`
+	// unbiased variance
+	Variance float64 `protobuf:"fixed64,5,opt,name=variance,proto3" json:"variance,omitempty"`
+	// number of samples to create stats
+	NumSamples uint64 `protobuf:"varint,6,opt,name=num_samples,json=numSamples,proto3" json:"num_samples,omitempty"`
+	// timestamp
 	Timestamp            *Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`

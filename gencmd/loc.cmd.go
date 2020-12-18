@@ -74,7 +74,11 @@ var StatisticsOptionalArgs = []string{
 }
 var StatisticsAliasArgs = []string{}
 var StatisticsComments = map[string]string{
-	"stddev":   "Square root of unbiased variance",
-	"variance": "Unbiased variance",
+	"avg":        "average",
+	"min":        "minimum",
+	"max":        "maximum",
+	"stddev":     "square root of unbiased variance",
+	"variance":   "unbiased variance",
+	"numsamples": "number of samples to create stats",
 }
 var StatisticsSpecialArgs = map[string]string{}
