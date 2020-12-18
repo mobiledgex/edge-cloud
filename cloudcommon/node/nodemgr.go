@@ -49,6 +49,7 @@ type NodeMgr struct {
 	DeploymentTag      string
 	AccessKeyClient    AccessKeyClient
 	CloudletPoolLookup CloudletPoolLookup
+	CloudletLookup     CloudletLookup
 
 	unitTestMode bool
 }
@@ -95,6 +96,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
 	s.CloudletPoolLookup = opts.cloudletPoolLookup
+	s.CloudletLookup = opts.cloudletLookup
 
 	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
@@ -149,6 +151,13 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 		lookup := &CloudletPoolCache{}
 		lookup.Init()
 		s.CloudletPoolLookup = lookup
+	}
+
+	if s.CloudletLookup == nil {
+		// single region lookup for events
+		lookup := &CloudletCache{}
+		lookup.Init()
+		s.CloudletLookup = lookup
 	}
 	err = s.initEvents(ctx, opts)
 	if err != nil {
@@ -205,6 +214,7 @@ type NodeOptions struct {
 	esUrls             string
 	parentSpan         string
 	cloudletPoolLookup CloudletPoolLookup
+	cloudletLookup     CloudletLookup
 }
 
 type CloudletInPoolFunc func(region, key edgeproto.CloudletKey) bool
@@ -245,6 +255,10 @@ func WithParentSpan(parentSpan string) NodeOp {
 
 func WithCloudletPoolLookup(cloudletPoolLookup CloudletPoolLookup) NodeOp {
 	return func(opts *NodeOptions) { opts.cloudletPoolLookup = cloudletPoolLookup }
+}
+
+func WithCloudletLookup(cloudletLookup CloudletLookup) NodeOp {
+	return func(opts *NodeOptions) { opts.cloudletLookup = cloudletLookup }
 }
 
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {

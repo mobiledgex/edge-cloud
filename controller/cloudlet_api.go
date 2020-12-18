@@ -27,7 +27,7 @@ import (
 type CloudletApi struct {
 	sync            *Sync
 	store           edgeproto.CloudletStore
-	cache           edgeproto.CloudletCache
+	cache           *edgeproto.CloudletCache
 	accessKeyServer *node.AccessKeyServer
 }
 
@@ -105,9 +105,9 @@ func supportsTrustPolicy(platformType edgeproto.PlatformType) bool {
 func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
-	edgeproto.InitCloudletCache(&cloudletApi.cache)
-	sync.RegisterCache(&cloudletApi.cache)
-	cloudletApi.accessKeyServer = node.NewAccessKeyServer(&cloudletApi.cache, nodeMgr.VaultAddr)
+	cloudletApi.cache = nodeMgr.CloudletLookup.GetCloudletCache("")
+	sync.RegisterCache(cloudletApi.cache)
+	cloudletApi.accessKeyServer = node.NewAccessKeyServer(cloudletApi.cache, nodeMgr.VaultAddr)
 }
 
 func (s *CloudletApi) Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
@@ -404,7 +404,7 @@ func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
 	caches := pf.Caches{
 		SettingsCache: &settingsApi.cache,
 		FlavorCache:   &flavorApi.cache,
-		CloudletCache: &cloudletApi.cache,
+		CloudletCache: cloudletApi.cache,
 	}
 	if vmPool != nil && vmPool.Key.Name != "" {
 		var vmPoolMux sync.Mutex
