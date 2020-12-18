@@ -366,8 +366,11 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 				// Update persistent stats influx db with gps locations
 				fcreq, ok := req.(*dme.FindCloudletRequest)
 				if ok {
-					tags := fcreq.Tags
-					RecordGpsLocationStatCall(&client.Location, &client.ClientKey.Key, ckey, fcreq.CarrierName, tags["deviceos"], tags["devicemodel"])
+					deviceInfo := dme.DeviceInfo{}
+					if fcreq.DeviceInfo != nil {
+						deviceInfo = *fcreq.DeviceInfo
+					}
+					RecordGpsLocationStatCall(&client.Location, &client.ClientKey.Key, ckey, fcreq.CarrierName, deviceInfo)
 				}
 
 			}

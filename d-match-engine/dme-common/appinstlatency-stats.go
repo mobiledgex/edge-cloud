@@ -64,7 +64,7 @@ func NewAppInstLatencyStats(latencyBuckets []time.Duration) *AppInstLatencyStats
 	return a
 }
 
-func RecordAppInstLatencyStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, edgeEventsCookieKey *EdgeEventsCookieKey, stats *dme.Statistics, carrier string, dataNetworkType string) {
+func RecordAppInstLatencyStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, edgeEventsCookieKey *EdgeEventsCookieKey, stats *dme.Statistics, carrier string, deviceInfo dme.DeviceInfo) {
 	if EEStats == nil {
 		return
 	}
@@ -78,7 +78,7 @@ func RecordAppInstLatencyStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey
 		Carrier:          translateCarrierName(carrier),
 		GpsLocation:      loc,
 		AppInstLocation:  &dmecloudlet.GpsLocation,
-		DataNetworkType:  dataNetworkType,
+		DataNetworkType:  deviceInfo.DataNetworkType,
 	}
 	EEStats.RecordEdgeEventStatCall(&call)
 }

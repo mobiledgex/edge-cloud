@@ -50,7 +50,7 @@ func NewGpsLocationStats() *GpsLocationStats {
 	return g
 }
 
-func RecordGpsLocationStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, carrier string, deviceos string, devicemodel string) {
+func RecordGpsLocationStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, carrier string, deviceInfo dme.DeviceInfo) {
 	if EEStats == nil {
 		return
 	}
@@ -62,8 +62,8 @@ func RecordGpsLocationStatCall(loc *dme.Loc, appInstKey *edgeproto.AppInstKey, s
 		SessionCookieKey: sessionCookieKey,
 		Timestamp:        cloudcommon.TimeToTimestamp(time.Now()),
 		Carrier:          translateCarrierName(carrier),
-		DeviceOs:         deviceos,
-		DeviceModel:      devicemodel,
+		DeviceOs:         deviceInfo.DeviceOs,
+		DeviceModel:      deviceInfo.DeviceModel,
 	}
 	EEStats.RecordEdgeEventStatCall(&call)
 }

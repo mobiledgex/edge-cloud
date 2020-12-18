@@ -126,7 +126,7 @@ func (m *Loc) XXX_DiscardUnknown() {
 var xxx_messageInfo_Loc proto.InternalMessageInfo
 
 //
-// Latency Sample
+// Sample
 type Sample struct {
 	// latency value
 	Value float64 `protobuf:"fixed64,1,opt,name=value,proto3" json:"value,omitempty"`

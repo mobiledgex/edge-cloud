@@ -695,6 +695,10 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
+	"deviceinfo.datanetworktype",
+	"deviceinfo.deviceos",
+	"deviceinfo.devicemodel",
+	"deviceinfo.signalstrength",
 	"tags",
 }
 var FindCloudletRequestAliasArgs = []string{}
@@ -710,6 +714,10 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
+	"deviceinfo.datanetworktype":     "LTE, 5G, etc.",
+	"deviceinfo.deviceos":            "Android or iOS",
+	"deviceinfo.devicemodel":         "Device model",
+	"deviceinfo.signalstrength":      "Device signal strength (0-5)",
 	"tags":                           "Tags _(optional)_ Vendor specific data",
 }
 var FindCloudletRequestSpecialArgs = map[string]string{
@@ -1422,9 +1430,10 @@ var ClientEdgeEventOptionalArgs = []string{
 	"samples:#.timestamp.nanos",
 	"samples:#.tags",
 	"carriername",
-	"datanetworktype",
-	"deviceos",
-	"devicemodel",
+	"deviceinfo.datanetworktype",
+	"deviceinfo.deviceos",
+	"deviceinfo.devicemodel",
+	"deviceinfo.signalstrength",
 	"customevent",
 	"tags",
 }
@@ -1443,9 +1452,10 @@ var ClientEdgeEventComments = map[string]string{
 	"samples:#.value":                "latency value",
 	"samples:#.tags":                 "_(optional)_ Vendor specific data",
 	"carriername":                    "Carrier name for EVENT_LATENCY_SAMPLES or EVENT_LOCATION_UPDATE (can be different from cloudlet org if used )",
-	"datanetworktype":                "LTE, 5G, etc. for EVENT_LATENCY_SAMPLES",
-	"deviceos":                       "Android or iOS for EVENT_LOCATION_UPDATE",
-	"devicemodel":                    "Device model for EVENT_LOCATION_UPDATE",
+	"deviceinfo.datanetworktype":     "LTE, 5G, etc.",
+	"deviceinfo.deviceos":            "Android or iOS",
+	"deviceinfo.devicemodel":         "Device model",
+	"deviceinfo.signalstrength":      "Device signal strength (0-5)",
 	"customevent":                    "Custom event specified by the application",
 	"tags":                           "_(optional)_ Vendor specific data",
 }

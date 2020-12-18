@@ -526,7 +526,9 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				Longitude: -91.00,
 			}
 			latencyEvent.CarrierName = "tmus"
-			latencyEvent.DataNetworkType = "LTE"
+			latencyEvent.DeviceInfo = &dmeproto.DeviceInfo{
+				DataNetworkType: "LTE",
+			}
 			samples := make([]*dmeproto.Sample, 0)
 			// Create dummy samples
 			list := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
@@ -574,8 +576,10 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				Longitude: -95.00,
 			}
 			gpsUpdateEvent.CarrierName = "tmus"
-			gpsUpdateEvent.DeviceOs = "Android"
-			gpsUpdateEvent.DeviceModel = "SM-G920F"
+			gpsUpdateEvent.DeviceInfo = &dmeproto.DeviceInfo{
+				DeviceOs:    "Android",
+				DeviceModel: "SM-G920F",
+			}
 			err = resp.Send(gpsUpdateEvent)
 			// Receive processed latency samples
 			dmereply, err = resp.Recv()

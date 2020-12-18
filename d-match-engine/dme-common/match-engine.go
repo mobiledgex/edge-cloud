@@ -1093,11 +1093,19 @@ loop:
 				reterr = err
 				break loop
 			}
-			RecordAppInstLatencyStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, edgeEventsCookieKey, stats, cupdate.CarrierName, cupdate.DataNetworkType)
+			deviceInfo := dme.DeviceInfo{}
+			if cupdate.DeviceInfo != nil {
+				deviceInfo = *cupdate.DeviceInfo
+			}
+			RecordAppInstLatencyStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, edgeEventsCookieKey, stats, cupdate.CarrierName, deviceInfo)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			// Gps location stats update
-			RecordGpsLocationStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, cupdate.CarrierName, cupdate.DeviceOs, cupdate.DeviceModel)
+			deviceInfo := dme.DeviceInfo{}
+			if cupdate.DeviceInfo != nil {
+				deviceInfo = *cupdate.DeviceInfo
+			}
+			RecordGpsLocationStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, cupdate.CarrierName, deviceInfo)
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
 			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, fcreply, EdgeEventsCookieExpiration)
