@@ -1,15 +1,8 @@
 devices:
 - key:
-    uniqueidtype: Samsung
+    uniqueidtype: GSAFKDF:Samsung:SamsungEnablingLayer
     uniqueid: "123"
   firstseen:
     seconds: 1596232439
     nanos: 844942000
-  notifyid: 4
-- key:
-    uniqueidtype: GSAFKDF:Samsung:SamsungEnablementLayer
-    uniqueid: "123"
-  firstseen:
-    seconds: 1596232440
-    nanos: 87496000
   notifyid: 4
