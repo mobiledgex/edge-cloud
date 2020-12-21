@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -21,6 +22,9 @@ func TestAlertApi(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	testinit()
+	cplookup := &node.CloudletPoolCache{}
+	cplookup.Init()
+	nodeMgr.CloudletPoolLookup = cplookup
 
 	dummy := dummyEtcd{}
 	dummy.Start()

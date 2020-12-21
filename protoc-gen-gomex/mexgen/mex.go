@@ -1699,6 +1699,30 @@ func (s *{{.Name}}By{{.LookupName}}) Find(lookup {{.LookupType}}) []{{.KeyType}}
 	return list
 }
 
+func (s *{{.Name}}By{{.LookupName}}) HasRef(lookup {{.LookupType}}) bool {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	_, found := s.{{.LookupName}}s[lookup]
+	return found
+}
+
+// Convert to dumpable format. JSON cannot marshal maps with struct keys.
+func (s *{{.Name}}By{{.LookupName}}) Dumpable() map[string]interface{} {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	dat := make(map[string]interface{})
+	for lookup, keys := range s.{{.LookupName}}s {
+		keystrs := make(map[string]interface{})
+		for k, _ := range keys {
+			keystrs[k.GetKeyString()] = struct{}{}
+		}
+		dat[lookup.GetKeyString()] = keystrs
+	}
+	return dat
+}
+
 `
 
 type subfieldLookupTemplateArgs struct {
@@ -1986,6 +2010,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			}
 			m.sublistLookupTemplate.Execute(m.gen.Buffer, args)
 			m.importUtil = true
+			m.importJson = true
 		}
 	}
 	if lookups := GetGenerateLookupBySubfield(message); lookups != "" {

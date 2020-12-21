@@ -869,6 +869,18 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 	return keys
 }
 
+func (s *CloudletPool) GetCloudletKeys() map[CloudletKey]struct{} {
+	keys := make(map[CloudletKey]struct{})
+	for _, name := range s.Cloudlets {
+		key := CloudletKey{
+			Organization: s.Key.Organization,
+			Name:         name,
+		}
+		keys[key] = struct{}{}
+	}
+	return keys
+}
+
 // Status from info will always contain the full status update list,
 // changes we copy to status that is saved to etcd is only the diff
 // from the last update.
