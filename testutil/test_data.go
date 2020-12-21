@@ -1211,7 +1211,7 @@ var AutoProvPolicyData = []edgeproto.AutoProvPolicy{
 var TrustPolicyData = []edgeproto.TrustPolicy{
 	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy0",
+			Name:         "trust-policy0",
 			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
@@ -1231,7 +1231,7 @@ var TrustPolicyData = []edgeproto.TrustPolicy{
 	},
 	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy1",
+			Name:         "trust-policy1",
 			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
@@ -1251,7 +1251,7 @@ var TrustPolicyData = []edgeproto.TrustPolicy{
 	},
 	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy2",
+			Name:         "trust-policy2",
 			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
@@ -1273,7 +1273,7 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 	// Failure case, max port > min port
 	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy3",
+			Name:         "trust-policy3",
 			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
@@ -1288,7 +1288,7 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 	// Failure case, bad CIDR
 	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy4",
+			Name:         "trust-policy4",
 			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
@@ -1303,7 +1303,7 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 	// Failure case, missing min port but max port present
 	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy5",
+			Name:         "trust-policy5",
 			Organization: CloudletData[2].Key.Organization,
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{

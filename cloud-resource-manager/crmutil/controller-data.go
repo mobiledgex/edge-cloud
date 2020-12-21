@@ -162,14 +162,14 @@ func GetCloudletTrustPolicy(ctx context.Context, name string, cloudletOrg string
 			Organization: cloudletOrg,
 		}
 		if !privPolCache.Get(&pk, &pp) {
-			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find Privacy Policy from cache", "pk", pk, "pp", pp)
-			return nil, fmt.Errorf("fail to find Privacy Policy from cache: %s", pk)
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find Trust Policy from cache", "pk", pk, "pp", pp)
+			return nil, fmt.Errorf("fail to find Trust Policy from cache: %s", pk)
 		} else {
-			log.SpanLog(ctx, log.DebugLevelInfra, "Found Privacy Policy from cache", "pk", pk, "pp", pp)
+			log.SpanLog(ctx, log.DebugLevelInfra, "Found Trust Policy from cache", "pk", pk, "pp", pp)
 			return &pp, nil
 		}
 	} else {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Returning empty privacy policy for empty name")
+		log.SpanLog(ctx, log.DebugLevelInfo, "Returning empty trust policy for empty name")
 		emptyPol := &edgeproto.TrustPolicy{}
 		return emptyPol, nil
 	}
@@ -1034,7 +1034,7 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 			Name:         cloudlet.TrustPolicy,
 		}
 		if !cd.TrustPolicyCache.Get(&pkey, &TrustPolicy) {
-			log.SpanLog(ctx, log.DebugLevelInfra, "failed to fetch privacy policy from cache")
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to fetch trust policy from cache")
 			return
 		}
 	}

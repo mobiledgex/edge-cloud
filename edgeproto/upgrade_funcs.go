@@ -73,7 +73,7 @@ func PruneSamsungPlatformDevices(ctx context.Context, objStore objstore.KVStore)
 }
 
 // SetTrusted sets the Trusted bit to true for all InternalPorts apps on
-// the assumption that Internal-only apps are privacy compliant
+// the assumption that Internal-only apps are trusted
 func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetTrusted")
 

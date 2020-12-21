@@ -787,47 +787,33 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	return err
 }
 
-func (s *CloudletApi) AppInstUsesPrivateCloudlet(appInsts map[edgeproto.AppInstKey]struct{}) bool {
-	s.cache.Mux.Lock()
-	privateCloudletKeys := make(map[edgeproto.CloudletKey]struct{})
-	for key, data := range s.cache.Objs {
-		val := data.Obj
-		if val.TrustPolicy != "" {
-			privateCloudletKeys[key] = struct{}{}
-		}
-	}
-	s.cache.Mux.Unlock()
-	for akey := range appInsts {
-		_, ok := privateCloudletKeys[akey.ClusterInstKey.CloudletKey]
-		if ok {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *CloudletApi) VerifyTrustPoliciesForAppInsts(app *edgeproto.App, appInsts map[edgeproto.AppInstKey]struct{}) error {
 	TrustPolicies := make(map[edgeproto.PolicyKey]*edgeproto.TrustPolicy)
 	trustPolicyApi.GetTrustPolicies(TrustPolicies)
 	s.cache.Mux.Lock()
-	privateCloudlets := make(map[edgeproto.CloudletKey]*edgeproto.Cloudlet)
+	trustedCloudlets := make(map[edgeproto.CloudletKey]*edgeproto.PolicyKey)
 	for key, data := range s.cache.Objs {
 		val := data.Obj
 		if val.TrustPolicy != "" {
-			privateCloudlets[key] = val
+			pkey := edgeproto.PolicyKey{
+				Organization: val.Key.Organization,
+				Name:         val.TrustPolicy,
+			}
+			trustedCloudlets[key] = &pkey
 		}
+
 	}
 	s.cache.Mux.Unlock()
 	for akey := range appInsts {
-		cloudlet, cloudletFound := privateCloudlets[akey.ClusterInstKey.CloudletKey]
+		pkey, cloudletFound := trustedCloudlets[akey.ClusterInstKey.CloudletKey]
 		if cloudletFound {
 			pkey := edgeproto.PolicyKey{
-				Organization: cloudlet.Key.Organization,
-				Name:         cloudlet.TrustPolicy,
+				Organization: pkey.Organization,
+				Name:         pkey.Name,
 			}
 			policy, policyFound := TrustPolicies[pkey]
 			if !policyFound {
-				return fmt.Errorf("Unable to find privacy policy in cache: %s", pkey.String())
+				return fmt.Errorf("Unable to find trust policy in cache: %s", pkey.String())
 			}
 			err := CheckAppCompatibleWithTrustPolicy(app, policy)
 			if err != nil {
@@ -860,7 +846,7 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 			updateErr = fmt.Errorf("CloudletInfo not found for %s", ckey.String())
 		} else {
 			if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
-				updateErr = fmt.Errorf("Cannot modify privacy policy for cloudlet in state: %s", cloudletInfo.State)
+				updateErr = fmt.Errorf("Cannot modify trust policy for cloudlet in state: %s", cloudletInfo.State)
 			}
 		}
 		if updateErr != nil {
@@ -983,7 +969,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		if privPolUpdateRequested {
 			if maintenanceChanged {
-				return fmt.Errorf("Cannot change both maintenance state and privacy policy at the same time")
+				return fmt.Errorf("Cannot change both maintenance state and trust policy at the same time")
 			}
 			if !ignoreCRM(cctx) {
 				if cur.State != edgeproto.TrackedState_READY {
@@ -1685,27 +1671,15 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, Trust
 		errString string
 	}
 	updateResults := make(map[edgeproto.CloudletKey]chan updateResult)
-	cloudlets := make(map[edgeproto.CloudletKey]struct{})
 
 	for k, data := range s.cache.Objs {
 		val := data.Obj
 		if k.Organization != TrustPolicy.Key.Organization || val.TrustPolicy != TrustPolicy.Key.Name {
 			continue
 		}
-		cloudlets[k] = struct{}{}
 		updateResults[k] = make(chan updateResult)
-	}
-	s.cache.Mux.Unlock()
-
-	if len(cloudlets) == 0 {
-		log.SpanLog(ctx, log.DebugLevelApi, "no cloudlets matched", "key", TrustPolicy.Key)
-		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("No cloudlets using privacy policy to update")})
-		return nil
-	}
-
-	for ckey, _ := range cloudlets {
 		go func(k edgeproto.CloudletKey) {
-			log.SpanLog(ctx, log.DebugLevelApi, "updating privacy policy for cloudlet", "key", k)
+			log.SpanLog(ctx, log.DebugLevelApi, "updating trust policy for cloudlet", "key", k)
 			err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(&k, TrustPolicy)
 			if err == nil {
 				err = s.updateTrustPolicyInternal(ctx, &k, TrustPolicy.Key.Name, cb)
@@ -1715,7 +1689,13 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, Trust
 			} else {
 				updateResults[k] <- updateResult{errString: err.Error()}
 			}
-		}(ckey)
+		}(k)
+	}
+	s.cache.Mux.Unlock()
+	if len(updateResults) == 0 {
+		log.SpanLog(ctx, log.DebugLevelApi, "no cloudlets matched", "key", TrustPolicy.Key)
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("No cloudlets using trust policy to update")})
+		return nil
 	}
 
 	numPassed := 0

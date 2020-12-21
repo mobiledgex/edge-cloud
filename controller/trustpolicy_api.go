@@ -111,6 +111,8 @@ func (s *TrustPolicyApi) GetTrustPolicies(policies map[edgeproto.PolicyKey]*edge
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		pol := data.Obj
-		policies[pol.Key] = pol
+		copy := &edgeproto.TrustPolicy{}
+		copy.DeepCopyIn(pol)
+		policies[pol.Key] = copy
 	}
 }

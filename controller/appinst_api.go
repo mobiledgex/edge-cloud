@@ -443,7 +443,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
 		if cloudlet.TrustPolicy != "" && !app.Trusted {
-			return fmt.Errorf("Cannot start App on Private Cloudlet without Trusted")
+			return fmt.Errorf("Cannot start non Trusted App on Trusted cloudlet")
 		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested

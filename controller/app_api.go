@@ -65,14 +65,14 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 	}
 }
 
-func CheckAppCompatibleWithTrustPolicy(app *edgeproto.App, TrustPolicy *edgeproto.TrustPolicy) error {
+func CheckAppCompatibleWithTrustPolicy(app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
 	if !app.Trusted {
-		return fmt.Errorf("App is not trusted: %s", app.Key.String())
+		return fmt.Errorf("Non trusted app: %s in use by trust policy: %s", app.Key.String(), trustPolicy.Key.String())
 	}
 	for _, r := range app.RequiredOutboundConnections {
 		policyMatchFound := false
 		ip := net.ParseIP(r.RemoteIp)
-		for _, outboundRule := range TrustPolicy.OutboundSecurityRules {
+		for _, outboundRule := range trustPolicy.OutboundSecurityRules {
 			if strings.ToLower(r.Protocol) != strings.ToLower(outboundRule.Protocol) {
 				continue
 			}
@@ -533,14 +533,18 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 		cur.CopyInFields(in)
-		// for any changes that can affect privacy policy, verify the app is still valid for all
+		// for any changes that can affect trust policy, verify the app is still valid for all
 		// cloudlets onto which it is deployed.
 		if requiredOutboundSpecified ||
 			(TrustedSpecified && !in.Trusted) {
 			appInstKeys := make(map[edgeproto.AppInstKey]struct{})
-			appInstApi.cache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
-				appInstKeys[*k] = struct{}{}
-			})
+
+			for k, _ := range refs.Insts {
+				// disallow delete if static instances are present
+				inst := edgeproto.AppInst{}
+				edgeproto.AppInstKeyStringParse(k, &inst.Key)
+				appInstKeys[inst.Key] = struct{}{}
+			}
 			err = cloudletApi.VerifyTrustPoliciesForAppInsts(&cur, appInstKeys)
 			if err != nil {
 				return err
