@@ -15,7 +15,7 @@ import (
 type CloudletPoolApi struct {
 	sync  *Sync
 	store edgeproto.CloudletPoolStore
-	cache edgeproto.CloudletPoolCache
+	cache *edgeproto.CloudletPoolCache
 }
 
 var cloudletPoolApi = CloudletPoolApi{}
@@ -23,8 +23,8 @@ var cloudletPoolApi = CloudletPoolApi{}
 func InitCloudletPoolApi(sync *Sync) {
 	cloudletPoolApi.sync = sync
 	cloudletPoolApi.store = edgeproto.NewCloudletPoolStore(sync.store)
-	edgeproto.InitCloudletPoolCache(&cloudletPoolApi.cache)
-	sync.RegisterCache(&cloudletPoolApi.cache)
+	cloudletPoolApi.cache = nodeMgr.CloudletPoolLookup.GetCloudletPoolCache("")
+	sync.RegisterCache(cloudletPoolApi.cache)
 }
 
 func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (*edgeproto.Result, error) {

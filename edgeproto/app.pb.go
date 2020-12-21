@@ -2742,6 +2742,30 @@ func (s *AppByAutoProvPolicy) Find(lookup PolicyKey) []AppKey {
 	return list
 }
 
+func (s *AppByAutoProvPolicy) HasRef(lookup PolicyKey) bool {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	_, found := s.AutoProvPolicys[lookup]
+	return found
+}
+
+// Convert to dumpable format. JSON cannot marshal maps with struct keys.
+func (s *AppByAutoProvPolicy) Dumpable() map[string]interface{} {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+
+	dat := make(map[string]interface{})
+	for lookup, keys := range s.AutoProvPolicys {
+		keystrs := make(map[string]interface{})
+		for k, _ := range keys {
+			keystrs[k.GetKeyString()] = struct{}{}
+		}
+		dat[lookup.GetKeyString()] = keystrs
+	}
+	return dat
+}
+
 func (m *App) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
