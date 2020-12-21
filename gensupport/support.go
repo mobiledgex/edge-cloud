@@ -14,6 +14,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
@@ -420,6 +421,9 @@ func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescrip
 func (s *PluginSupport) GetMessageKeyType(g *generator.Generator, desc *generator.Descriptor) (string, error) {
 	message := desc.DescriptorProto
 	if field := GetMessageKey(message); field != nil {
+		if typ := gogoproto.GetCastType(field); typ != "" {
+			return typ, nil
+		}
 		return s.GoType(g, field), nil
 	} else if typ := GetCustomKeyType(message); typ != "" {
 		pkg := s.GetPackage(desc)

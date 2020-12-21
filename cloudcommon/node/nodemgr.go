@@ -20,6 +20,7 @@ var NodeTypeController = "controller"
 var NodeTypeClusterSvc = "cluster-svc"
 var NodeTypeNotifyRoot = "notifyroot"
 var NodeTypeEdgeTurn = "edgeturn"
+var NodeTypeMC = "mc"
 
 // Node tracks all the nodes connected via notify, and handles common
 // requests over all nodes.
@@ -29,18 +30,21 @@ type NodeMgr struct {
 	iTlsCAFile   string
 	VaultAddr    string
 
-	MyNode          edgeproto.Node
-	NodeCache       RegionNodeCache
-	Debug           DebugNode
-	VaultConfig     *vault.Config
-	Region          string
-	InternalPki     internalPki
-	InternalDomain  string
-	ESClient        *elasticsearch.Client
-	tlsClientIssuer string
-	commonName      string
-	DeploymentTag   string
-	AccessKeyClient AccessKeyClient
+	MyNode             edgeproto.Node
+	NodeCache          RegionNodeCache
+	Debug              DebugNode
+	VaultConfig        *vault.Config
+	Region             string
+	InternalPki        internalPki
+	InternalDomain     string
+	ESClient           *elasticsearch.Client
+	tlsClientIssuer    string
+	commonName         string
+	DeploymentTag      string
+	AccessKeyClient    AccessKeyClient
+	CloudletPoolLookup CloudletPoolLookup
+
+	unitTestMode bool
 }
 
 // Most of the time there will only be one NodeMgr per process, and these
@@ -84,6 +88,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.MyNode.ContainerVersion = opts.containerVersion
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
+	s.CloudletPoolLookup = opts.cloudletPoolLookup
 
 	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
@@ -133,6 +138,12 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	// start pki refresh after logging initialized
 	s.InternalPki.start()
 
+	if s.CloudletPoolLookup == nil {
+		// single region lookup for events
+		lookup := &CloudletPoolCache{}
+		lookup.Init()
+		s.CloudletPoolLookup = lookup
+	}
 	err = s.initEvents(ctx, opts)
 	if err != nil {
 		span.Finish()
@@ -142,7 +153,6 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	edgeproto.InitNodeCache(&s.NodeCache.NodeCache)
 	s.NodeCache.setRegion = opts.region
 	s.Debug.Init(s)
-
 	if opts.updateMyNode {
 		s.UpdateMyNode(ctx)
 	}
@@ -158,15 +168,18 @@ func (s *NodeMgr) Finish() {
 }
 
 type NodeOptions struct {
-	name             string
-	cloudletKey      edgeproto.CloudletKey
-	updateMyNode     bool
-	containerVersion string
-	region           string
-	vaultConfig      *vault.Config
-	esUrls           string
-	parentSpan       string
+	name               string
+	cloudletKey        edgeproto.CloudletKey
+	updateMyNode       bool
+	containerVersion   string
+	region             string
+	vaultConfig        *vault.Config
+	esUrls             string
+	parentSpan         string
+	cloudletPoolLookup CloudletPoolLookup
 }
+
+type CloudletInPoolFunc func(region, key edgeproto.CloudletKey) bool
 
 type NodeOp func(s *NodeOptions)
 
@@ -202,6 +215,10 @@ func WithParentSpan(parentSpan string) NodeOp {
 	return func(opts *NodeOptions) { opts.parentSpan = parentSpan }
 }
 
+func WithCloudletPoolLookup(cloudletPoolLookup CloudletPoolLookup) NodeOp {
+	return func(opts *NodeOptions) { opts.cloudletPoolLookup = cloudletPoolLookup }
+}
+
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {
 	s.NodeCache.Update(ctx, &s.MyNode, 0)
 }
@@ -209,11 +226,21 @@ func (s *NodeMgr) UpdateMyNode(ctx context.Context) {
 func (s *NodeMgr) RegisterClient(client *notify.Client) {
 	client.RegisterSendNodeCache(&s.NodeCache)
 	s.Debug.RegisterClient(client)
+	// MC notify handling of CloudletPoolCache is done outside of nodemgr.
+	if s.MyNode.Key.Type != NodeTypeMC && s.MyNode.Key.Type != NodeTypeNotifyRoot && s.MyNode.Key.Type != NodeTypeController {
+		cache := s.CloudletPoolLookup.GetCloudletPoolCache(s.Region)
+		client.RegisterRecvCloudletPoolCache(cache)
+	}
 }
 
 func (s *NodeMgr) RegisterServer(server *notify.ServerMgr) {
 	server.RegisterRecvNodeCache(&s.NodeCache)
 	s.Debug.RegisterServer(server)
+	// MC notify handling of CloudletPoolCache is done outside of nodemgr.
+	if s.MyNode.Key.Type != NodeTypeMC && s.MyNode.Key.Type != NodeTypeNotifyRoot {
+		cache := s.CloudletPoolLookup.GetCloudletPoolCache(s.Region)
+		server.RegisterSendCloudletPoolCache(cache)
+	}
 }
 
 func (s *NodeMgr) GetInternalTlsCertFile() string {
