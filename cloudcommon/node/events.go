@@ -15,6 +15,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/mitchellh/mapstructure"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"go.uber.org/zap/zapcore"
@@ -87,7 +88,7 @@ var (
 
 type EventData struct {
 	Name      string            `json:"name"`
-	Org       string            `json:"org"`
+	Org       []string          `json:"org"`
 	Type      string            `json:"type"`
 	Region    string            `json:"region,omitempty"`
 	Timestamp time.Time         `json:"timestamp"`
@@ -143,6 +144,7 @@ type SearchVal struct {
 }
 type SearchResult struct {
 	Source *json.RawMessage `json:"_source"`
+	Score  float32          `json:"_score"`
 }
 
 // These aggr structs are just for parsing the aggr response from ElasticSearch
@@ -257,7 +259,7 @@ func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[
 	}
 	event := EventData{
 		Name:      name,
-		Org:       org,
+		Org:       []string{org},
 		Type:      typ,
 		Region:    s.Region,
 		Timestamp: ts,
@@ -276,8 +278,17 @@ func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[
 			)
 		}
 	}
+	eventRegion := event.Region
+	cloudletKey := edgeproto.CloudletKey{}
 	for k, v := range keyTags {
 		event.Tags = append(event.Tags, EventTag{k, v})
+		if k == edgeproto.CloudletKeyTagOrganization {
+			cloudletKey.Organization = v
+		} else if k == edgeproto.CloudletKeyTagName {
+			cloudletKey.Name = v
+		} else if k == "region" && eventRegion == "" {
+			eventRegion = v
+		}
 	}
 	if len(keysAndValues)%2 != 0 {
 		panic(fmt.Sprintf("non-even keyAndValues len: %d", len(keysAndValues)))
@@ -287,6 +298,16 @@ func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[
 		val := keysAndValues[ii*2+1]
 		event.Tags = append(event.Tags, EventTag{key, val})
 	}
+	// To allow operators to see events on Cloudlets in CloudletPools,
+	// add the operator org to the allowed orgs if the event is tagged
+	// with such a cloudlet.
+	if cloudletKey.Organization != "" && cloudletKey.Name != "" &&
+		cloudletKey.Organization != org {
+		if s.CloudletPoolLookup.InPool(eventRegion, cloudletKey) {
+			event.Org = append(event.Org, cloudletKey.Organization)
+		}
+	}
+
 	ec := zapcore.NewEntryCaller(runtime.Caller(2))
 	event.Tags = append(event.Tags, EventTag{"lineno", ec.TrimmedPath()})
 	event.Tags = append(event.Tags, EventTag{"hostname", s.MyNode.Hostname})
@@ -342,6 +363,12 @@ func (s *NodeMgr) searchEvents(ctx context.Context, searchType string, search *E
 		Index: []string{esEventLog + "-*"},
 		Body:  strings.NewReader(string(dat)),
 	}
+	if s.unitTestMode && searchType == searchTypeRelevance {
+		// For relevance queries, multiple shards cause non-deterministic
+		// ordering, so force ordering for results between shards.
+		// This should not be used for production.
+		req.SearchType = "dfs_query_then_fetch"
+	}
 	res, err := req.Do(ctx, s.ESClient)
 	if err == nil && res.StatusCode/100 != http.StatusOK/100 {
 		defer res.Body.Close()
@@ -369,6 +396,9 @@ func (s *NodeMgr) searchEvents(ctx context.Context, searchType string, search *E
 		err = json.Unmarshal(*hit.Source, &ed)
 		if err != nil {
 			return nil, err
+		}
+		if s.unitTestMode {
+			log.SpanLog(ctx, log.DebugLevelInfo, "searchEvents result", "event", ed.Name, "score", hit.Score)
 		}
 		if len(ed.Tags) > 0 {
 			ed.Mtags = make(map[string]string)

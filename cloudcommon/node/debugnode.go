@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -28,6 +29,7 @@ const (
 	GetMemProfileCmd     = "get-mem-profile"
 	DisableSampleLog     = "disable-sample-logging"
 	EnableSampleLog      = "enable-sample-logging"
+	DumpCloudletPools    = "dump-cloudlet-pools"
 )
 
 type DebugNode struct {
@@ -72,6 +74,15 @@ func (s *DebugNode) Init(mgr *NodeMgr) {
 		})
 	s.AddDebugFunc(DisableSampleLog, disableSampledLogging)
 	s.AddDebugFunc(EnableSampleLog, enableSampledLogging)
+	s.AddDebugFunc(DumpCloudletPools,
+		func(ctx context.Context, req *edgeproto.DebugRequest) string {
+			dat := mgr.CloudletPoolLookup.Dumpable()
+			out, err := json.Marshal(dat)
+			if err != nil {
+				return err.Error()
+			}
+			return string(out)
+		})
 }
 
 func (s *DebugNode) AddDebugFunc(cmd string, f DebugFunc) {
