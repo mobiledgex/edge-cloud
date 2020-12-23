@@ -1,2 +1,0 @@
-1/Settings/settings
-{"shepherd_metrics_collection_interval":"5s","shepherd_health_check_retries":3,"shepherd_health_check_interval":"5s","auto_deploy_interval_sec":300,"auto_deploy_offset_sec":20,"auto_deploy_max_intervals":10,"create_app_inst_timeout":"30m0s","update_app_inst_timeout":"30m0s","delete_app_inst_timeout":"20m0s","create_cluster_inst_timeout":"30m0s","update_cluster_inst_timeout":"20m0s","delete_cluster_inst_timeout":"20m0s","load_balancer_max_port_range":50,"max_tracked_dme_clients":100}

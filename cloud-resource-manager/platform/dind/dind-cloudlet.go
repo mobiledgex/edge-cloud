@@ -28,6 +28,11 @@ func (s *Platform) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return nil
 }
 
+func (s *Platform) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error {
+	log.DebugLog(log.DebugLevelInfra, "update dind TrustPolicy", "policy", TrustPolicy)
+	return nil
+}
+
 func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "delete cloudlet for dind")
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")

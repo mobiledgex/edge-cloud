@@ -23,13 +23,13 @@ type AllDataOut struct {
 	Settings                *edgeproto.Result
 	OperatorCodes           []edgeproto.Result
 	ResTagTables            []edgeproto.Result
+	TrustPolicies           [][]edgeproto.Result
 	Cloudlets               [][]edgeproto.Result
 	CloudletInfos           []edgeproto.Result
 	CloudletPools           []edgeproto.Result
 	AutoProvPolicies        []edgeproto.Result
 	AutoProvPolicyCloudlets []edgeproto.Result
 	AutoScalePolicies       []edgeproto.Result
-	PrivacyPolicies         []edgeproto.Result
 	ClusterInsts            [][]edgeproto.Result
 	Apps                    []edgeproto.Result
 	AppInstances            [][]edgeproto.Result
@@ -42,13 +42,13 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
+	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
-	run.PrivacyPolicyApi(&in.PrivacyPolicies, inMap["privacypolicies"], &out.PrivacyPolicies)
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
@@ -61,13 +61,13 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
-	run.PrivacyPolicyApi(&in.PrivacyPolicies, inMap["privacypolicies"], &out.PrivacyPolicies)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
+	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
@@ -80,12 +80,12 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.SettingsApi(in.Settings, nil, &out.Settings)
 	run.OperatorCodeApi(&in.OperatorCodes, nil, &out.OperatorCodes)
 	run.ResTagTableApi(&in.ResTagTables, nil, &out.ResTagTables)
+	run.TrustPolicyApi(&in.TrustPolicies, nil, &out.TrustPolicies)
 	run.CloudletApi(&in.Cloudlets, nil, &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, nil, &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, nil, &out.CloudletPools)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, nil, &out.AutoProvPolicies)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, nil, &out.AutoScalePolicies)
-	run.PrivacyPolicyApi(&in.PrivacyPolicies, nil, &out.PrivacyPolicies)
 	run.ClusterInstApi(&in.ClusterInsts, nil, &out.ClusterInsts)
 	run.AppApi(&in.Apps, nil, &out.Apps)
 	run.AppInstApi(&in.AppInstances, nil, &out.AppInstances)

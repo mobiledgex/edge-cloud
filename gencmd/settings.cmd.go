@@ -216,6 +216,7 @@ var SettingsOptionalArgs = []string{
 	"influxdbmetricsretention",
 	"cloudletmaintenancetimeout",
 	"updatevmpooltimeout",
+	"updatetrustpolicytimeout",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -240,6 +241,7 @@ var SettingsComments = map[string]string{
 	"influxdbmetricsretention":          "Default influxDB metrics retention policy (duration)",
 	"cloudletmaintenancetimeout":        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
 	"updatevmpooltimeout":               "Update VM pool timeout (duration)",
+	"updatetrustpolicytimeout":          "Update Trust Policy timeout (duration)",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

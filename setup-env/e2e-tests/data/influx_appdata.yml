@@ -9,6 +9,7 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  updatetrustpolicytimeout: 5s
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
@@ -30,24 +31,6 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
-privacypolicies:
--  key:
-      organization: AcmeAppCo
-      name: PrivPolicy1
-   outboundsecurityrules:
-    - protocol:  tcp
-      portrangemin: 443
-      remotecidr: "35.247.68.151/32"
-    - protocol:  tcp
-      portrangemin: 8080
-      portrangemax: 8088
-      remotecidr: "0.0.0.0/0"
-    - protocol: udp
-      portrangemin: 53
-      remotecidr: "0.0.0.0/0"
-    - protocol: icmp
-      remotecidr: "80.0.0.0/8"
 
 clusterinsts:
 - key:

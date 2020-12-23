@@ -81,6 +81,14 @@ func ignoreCRMState(cctx *CallContext) bool {
 	return false
 }
 
+func supportsTrustPolicy(platformType edgeproto.PlatformType) bool {
+	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK ||
+		platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+		return true
+	}
+	return false
+}
+
 func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
@@ -167,13 +175,6 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.DeploymentTag = nodeMgr.DeploymentTag
 
 	return &pfConfig, nil
-}
-
-func isOperatorInfraCloudlet(in *edgeproto.Cloudlet) bool {
-	if !in.DeploymentLocal && in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK {
-		return true
-	}
-	return false
 }
 
 func startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) (*streamSend, edgeproto.CloudletApi_CreateCloudletServer, error) {
@@ -379,7 +380,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
 		}
 	}
-
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
@@ -480,6 +480,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				return fmt.Errorf("VM Pool %s not found", in.VmPool)
 			}
 		}
+		if in.TrustPolicy != "" {
+			if !supportsTrustPolicy(in.PlatformType) {
+				platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+				return fmt.Errorf("Privacy Policy not supported on %s", platName)
+			}
+			policy := edgeproto.TrustPolicy{}
+			if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
+				return err
+			}
+		}
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
 		if err != nil {
 			return err
@@ -492,7 +502,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		} else {
 			in.State = edgeproto.TrackedState_CREATING
 		}
-
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -628,6 +637,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	fatal := make(chan bool, 1)
 	update := make(chan bool, 1)
 
+	var privPolState edgeproto.TrackedState
 	var err error
 
 	go func() {
@@ -661,10 +671,10 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletInfoApi.cache.Get(key, &cloudletInfo) {
 			return
 		}
-
 		curState := cloudletInfo.State
 		localVersion := cloudlet.ContainerVersion
 		remoteVersion := cloudletInfo.ContainerVersion
+		privPolState = cloudletInfo.TrustPolicyState
 
 		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
@@ -762,11 +772,11 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if err == nil {
 			cloudlet.Errors = nil
 			cloudlet.State = edgeproto.TrackedState_READY
+			cloudlet.TrustPolicyState = privPolState
 		} else {
 			cloudlet.Errors = []string{err.Error()}
 			cloudlet.State = errorState
 		}
-
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})
@@ -775,6 +785,86 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	}
 
 	return err
+}
+
+func (s *CloudletApi) VerifyTrustPoliciesForAppInsts(app *edgeproto.App, appInsts map[edgeproto.AppInstKey]struct{}) error {
+	TrustPolicies := make(map[edgeproto.PolicyKey]*edgeproto.TrustPolicy)
+	trustPolicyApi.GetTrustPolicies(TrustPolicies)
+	s.cache.Mux.Lock()
+	trustedCloudlets := make(map[edgeproto.CloudletKey]*edgeproto.PolicyKey)
+	for key, data := range s.cache.Objs {
+		val := data.Obj
+		if val.TrustPolicy != "" {
+			pkey := edgeproto.PolicyKey{
+				Organization: val.Key.Organization,
+				Name:         val.TrustPolicy,
+			}
+			trustedCloudlets[key] = &pkey
+		}
+
+	}
+	s.cache.Mux.Unlock()
+	for akey := range appInsts {
+		pkey, cloudletFound := trustedCloudlets[akey.ClusterInstKey.CloudletKey]
+		if cloudletFound {
+			policy, policyFound := TrustPolicies[*pkey]
+			if !policyFound {
+				return fmt.Errorf("Unable to find trust policy in cache: %s", pkey.String())
+			}
+			err := CheckAppCompatibleWithTrustPolicy(app, policy)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// updateTrustPolicyInternal updates the TrustPolicyState to TrackedState_UPDATE_REQUESTED
+// and then waits for the update to complete.
+func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgeproto.CloudletKey, policyName string, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "updateTrustPolicyInternal", "policyName", policyName)
+
+	err := cb.Send(&edgeproto.Result{
+		Message: fmt.Sprintf("Doing TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String()),
+	})
+	if err != nil {
+		return err
+	}
+	cloudletInfo := edgeproto.CloudletInfo{}
+	cloudlet := &edgeproto.Cloudlet{}
+	var updateErr error
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, ckey, cloudlet) {
+			return ckey.NotFoundError()
+		}
+		if !cloudletInfoApi.cache.Get(ckey, &cloudletInfo) {
+			updateErr = fmt.Errorf("CloudletInfo not found for %s", ckey.String())
+		} else {
+			if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
+				updateErr = fmt.Errorf("Cannot modify trust policy for cloudlet in state: %s", cloudletInfo.State)
+			}
+		}
+		if updateErr != nil {
+			cloudlet.TrustPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+		} else {
+			cloudlet.TrustPolicyState = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		cloudlet.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		s.store.STMPut(stm, cloudlet)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if updateErr != nil {
+		return updateErr
+	}
+	targetState := edgeproto.TrackedState_READY
+	if policyName == "" {
+		targetState = edgeproto.TrackedState_NOT_PRESENT
+	}
+	return s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
 }
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_UpdateCloudletServer) (reterr error) {
@@ -858,8 +948,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	var newMaintenanceState edgeproto.MaintenanceState
 	maintenanceChanged := false
+	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldTrustPolicy]
+
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := &edgeproto.Cloudlet{}
+		cur = &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return in.Key.NotFoundError()
 		}
@@ -871,8 +963,40 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			// don't change maintenance here, we handle it below
 			cur.MaintenanceState = oldmstate
 		}
+		if privPolUpdateRequested {
+			if maintenanceChanged {
+				return fmt.Errorf("Cannot change both maintenance state and trust policy at the same time")
+			}
+			if !ignoreCRM(cctx) {
+				if cur.State != edgeproto.TrackedState_READY {
+					return fmt.Errorf("Privacy policy cannot be changed while cloudlet is not ready")
+				}
+			}
+			if in.TrustPolicy != "" {
+				if !supportsTrustPolicy(in.PlatformType) {
+					platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+					return fmt.Errorf("Privacy Policy not supported on %s", platName)
+				}
+				policy := edgeproto.TrustPolicy{}
+				if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
+					return err
+				}
+				if err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(&in.Key, &policy); err != nil {
+					return err
+				}
+			}
+		}
 		if crmUpdateReqd && !ignoreCRM(cctx) {
 			cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		if privPolUpdateRequested {
+			if ignoreCRM(cctx) {
+				if cur.TrustPolicy != "" {
+					cur.TrustPolicyState = edgeproto.TrackedState_READY
+				} else {
+					cur.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
+				}
+			}
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, cur)
@@ -896,6 +1020,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			PlatformInitTimeout, cb.Send,
 		)
 		return err
+	}
+	if privPolUpdateRequested && !ignoreCRM(cctx) {
+		// Wait for policy to update
+		return s.updateTrustPolicyInternal(ctx, &in.Key, in.TrustPolicy, cb)
 	}
 
 	// since default maintenance state is NORMAL_OPERATION, it is better to check
@@ -1519,4 +1647,105 @@ func (s *CloudletApi) GenerateAccessKey(ctx context.Context, key *edgeproto.Clou
 	})
 	log.SpanLog(ctx, log.DebugLevelApi, "generated crm access key", "CloudletKey", *key, "err", err)
 	return &res, err
+}
+
+func (s *CloudletApi) UsesTrustPolicy(key *edgeproto.PolicyKey, stateMatch edgeproto.TrackedState) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		cloudlet := data.Obj
+		if cloudlet.TrustPolicy == key.Name && cloudlet.Key.Organization == key.Organization {
+			if stateMatch == edgeproto.TrackedState_TRACKED_STATE_UNKNOWN || stateMatch == cloudlet.State {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
+	s.cache.Mux.Lock()
+	type updateResult struct {
+		errString string
+	}
+	updateResults := make(map[edgeproto.CloudletKey]chan updateResult)
+
+	for k, data := range s.cache.Objs {
+		val := data.Obj
+		if k.Organization != TrustPolicy.Key.Organization || val.TrustPolicy != TrustPolicy.Key.Name {
+			continue
+		}
+		updateResults[k] = make(chan updateResult)
+		go func(k edgeproto.CloudletKey) {
+			log.SpanLog(ctx, log.DebugLevelApi, "updating trust policy for cloudlet", "key", k)
+			err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(&k, TrustPolicy)
+			if err == nil {
+				err = s.updateTrustPolicyInternal(ctx, &k, TrustPolicy.Key.Name, cb)
+			}
+			if err == nil {
+				updateResults[k] <- updateResult{errString: ""}
+			} else {
+				updateResults[k] <- updateResult{errString: err.Error()}
+			}
+		}(k)
+	}
+	s.cache.Mux.Unlock()
+	if len(updateResults) == 0 {
+		log.SpanLog(ctx, log.DebugLevelApi, "no cloudlets matched", "key", TrustPolicy.Key)
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("No cloudlets using trust policy to update")})
+		return nil
+	}
+
+	numPassed := 0
+	numFailed := 0
+	numTotal := 0
+	for k, r := range updateResults {
+		numTotal++
+		result := <-r
+		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
+		if result.errString == "" {
+			numPassed++
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful update of %s", k.GetKeyString())})
+		} else {
+			numFailed++
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failure during update of %s - %s", k.String(), result.errString)})
+		}
+	}
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})
+	if numPassed == 0 {
+		return fmt.Errorf("Failed to update trust policy on any cloudlets")
+	}
+	return nil
+}
+
+func (s *CloudletApi) WaitForTrustPolicyState(ctx context.Context, key *edgeproto.CloudletKey, targetState edgeproto.TrackedState, errorState edgeproto.TrackedState, timeout time.Duration) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState", "target", targetState, "timeout", timeout)
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+	cloudlet := edgeproto.Cloudlet{}
+	check := func(ctx context.Context) {
+		if !s.cache.Get(key, &cloudlet) {
+			log.SpanLog(ctx, log.DebugLevelApi, "Error: WaitForTrustPolicyState cloudlet not found", "key", key)
+			failed <- true
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState initial get from cache", "curState", cloudlet.TrustPolicyState, "targetState", targetState)
+		if cloudlet.TrustPolicyState == targetState {
+			done <- true
+		} else if cloudlet.TrustPolicyState == errorState {
+			failed <- true
+		}
+	}
+	cancel := s.cache.WatchKey(key, check)
+	check(ctx)
+	var err error
+	select {
+	case <-done:
+	case <-failed:
+		err = fmt.Errorf("Error in updating Privacy Policy")
+	case <-time.After(timeout):
+		err = fmt.Errorf("Timed out waiting for Privacy Policy")
+	}
+	cancel()
+	log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState state done", "target", targetState, "curState", cloudlet.TrustPolicyState)
+	return err
 }

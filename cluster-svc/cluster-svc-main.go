@@ -103,6 +103,7 @@ var MEXPrometheusApp = edgeproto.App{
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Trusted:       true,
 	Annotations:   "version=7.1.1",
 }
 
@@ -141,6 +142,7 @@ var NFSAutoProvisionApp = edgeproto.App{
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Trusted:       true,
 	Annotations:   "version=1.2.8",
 }
 

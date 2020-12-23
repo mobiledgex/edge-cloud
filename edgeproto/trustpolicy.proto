@@ -13,7 +13,7 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
-message OutboundSecurityRule {
+message SecurityRule {
   // tcp, udp, icmp
   string protocol = 1;
   // TCP or UDP port range start
@@ -25,54 +25,58 @@ message OutboundSecurityRule {
 }
 
 
-// PrivacyPolicy defines security restrictions for cluster instances
+// TrustPolicy defines security restrictions for cluster instances
 // nodes scaled up or down.
-message PrivacyPolicy {
+message TrustPolicy {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
   PolicyKey key = 2 [(gogoproto.nullable) = false];
   // list of outbound security rules for whitelisting traffic
-  repeated OutboundSecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
+  repeated SecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
-  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_test) = true;  
+  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,cluster-org=Key.Organization";
+  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
 
-service PrivacyPolicyApi {
-  // Create a Privacy Policy
-  rpc CreatePrivacyPolicy(PrivacyPolicy) returns (Result) {
+service TrustPolicyApi {
+  // Create a Trust Policy
+  rpc CreateTrustPolicy(TrustPolicy) returns (stream Result) {
     option (google.api.http) = {
-      post: "/create/privacypolicy"
+      post: "/create/trustpolicy"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
-  // Delete a Privacy policy
-  rpc DeletePrivacyPolicy(PrivacyPolicy) returns (Result) {
+  // Delete a Trust policy
+  rpc DeleteTrustPolicy(TrustPolicy) returns (stream Result) {
     option (google.api.http) = {
-      post: "/delete/privacypolicy"
+      post: "/delete/trustpolicy"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
-  // Update a Privacy policy
-  rpc UpdatePrivacyPolicy(PrivacyPolicy) returns (Result) {
+  // Update a Trust policy
+  rpc UpdateTrustPolicy(TrustPolicy) returns (stream Result) {
     option (google.api.http) = {
-      post: "/update/privacypolicy"
+      post: "/update/trustpolicy"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
-  // Show Privacy Policies. Any fields specified will be used to filter results.
-  rpc ShowPrivacyPolicy(PrivacyPolicy) returns (stream PrivacyPolicy) {
+  // Show Trust Policies. Any fields specified will be used to filter results.
+  rpc ShowTrustPolicy(TrustPolicy) returns (stream TrustPolicy) {
     option (google.api.http) = {
-      post: "/show/privacypolicy"
+      post: "/show/trustpolicy"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Organization";
