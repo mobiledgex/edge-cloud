@@ -807,11 +807,7 @@ func (s *CloudletApi) VerifyTrustPoliciesForAppInsts(app *edgeproto.App, appInst
 	for akey := range appInsts {
 		pkey, cloudletFound := trustedCloudlets[akey.ClusterInstKey.CloudletKey]
 		if cloudletFound {
-			pkey := edgeproto.PolicyKey{
-				Organization: pkey.Organization,
-				Name:         pkey.Name,
-			}
-			policy, policyFound := TrustPolicies[pkey]
+			policy, policyFound := TrustPolicies[*pkey]
 			if !policyFound {
 				return fmt.Errorf("Unable to find trust policy in cache: %s", pkey.String())
 			}
