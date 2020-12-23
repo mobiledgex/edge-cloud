@@ -1,6 +1,6 @@
 devices:
 - key:
-    uniqueidtype: Samsung
+    uniqueidtype: GSAFKDF:Samsung:SamsungEnablingLayer
     uniqueid: "123"
   firstseen:
     seconds: 1596232439

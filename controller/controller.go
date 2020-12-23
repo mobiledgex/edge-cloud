@@ -294,6 +294,7 @@ func startServices() error {
 		[]node.MatchCA{
 			node.SameRegionalMatchCA(),
 			node.SameRegionalCloudletMatchCA(),
+			node.GlobalMatchCA(),
 		})
 	if err != nil {
 		return err

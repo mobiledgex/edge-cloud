@@ -46,6 +46,8 @@ message CloudletPool {
   option (protogen.noconfig) = "Members,CreatedAt,UpdatedAt";
   option (protogen.alias) = "name=Key.Name,org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
+  option (protogen.notify_cache) = true;
+  option (protogen.generate_lookup_by_sublist) = "CloudletKey";  
 }
 
 // CloudletPoolMember is used to add and remove a Cloudlet from a CloudletPool
