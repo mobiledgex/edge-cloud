@@ -14,6 +14,16 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+
+message RemoteConnection {
+  // tcp, udp
+  string protocol = 1;
+  // TCP or UDP port
+  uint32 port = 2;  
+  // remote IP X.X.X.X
+  string remote_ip = 4;
+}
+
 // It is important that embedded key structs are not referenced by a
 // pointer, otherwise the enclosing struct cannot properly function
 // as the key to a hash table. Thus embedded key structs have nullable false.
@@ -146,8 +156,6 @@ message App {
   string auto_prov_policy = 28;
   // Access type
   AccessType access_type = 29; 
-  // Privacy policy when creating auto cluster
-  string default_privacy_policy = 30;
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Auto provisioning policy names, may be specified multiple times
@@ -164,6 +172,10 @@ message App {
   distributed_match_engine.Timestamp created_at = 35 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
     // Updated at time
   distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // Indicates that an instance of this app can be started on a trusted cloudlet
+  bool trusted = 37;
+  // Connections this app require to determine if the app is compatible with a trust policy
+  repeated RemoteConnection required_outbound_connections = 38; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

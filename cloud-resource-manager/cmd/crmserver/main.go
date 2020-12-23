@@ -189,15 +189,15 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		caches := pf.Caches{
-			FlavorCache:        &controllerData.FlavorCache,
-			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
-			ClusterInstCache:   &controllerData.ClusterInstCache,
-			AppCache:           &controllerData.AppCache,
-			AppInstCache:       &controllerData.AppInstCache,
-			ResTagTableCache:   &controllerData.ResTagTableCache,
-			CloudletCache:      &controllerData.CloudletCache,
-			VMPoolCache:        &controllerData.VMPoolCache,
-			VMPoolInfoCache:    &controllerData.VMPoolInfoCache,
+			FlavorCache:      &controllerData.FlavorCache,
+			TrustPolicyCache: &controllerData.TrustPolicyCache,
+			ClusterInstCache: &controllerData.ClusterInstCache,
+			AppCache:         &controllerData.AppCache,
+			AppInstCache:     &controllerData.AppInstCache,
+			ResTagTableCache: &controllerData.ResTagTableCache,
+			CloudletCache:    &controllerData.CloudletCache,
+			VMPoolCache:      &controllerData.VMPoolCache,
+			VMPoolInfoCache:  &controllerData.VMPoolInfoCache,
 		}
 
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
@@ -256,6 +256,11 @@ func main() {
 				}
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+				if cloudlet.TrustPolicy == "" {
+					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
+				} else {
+					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
+				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 				resources, err := platform.GetCloudletInfraResources(ctx)
 				if err != nil {
@@ -333,6 +338,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		DeploymentTag:       nodeMgr.DeploymentTag,
 		Upgrade:             *upgrade,
 		AccessApi:           accessApi,
+		TrustPolicy:         cloudlet.TrustPolicy,
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
 	err := platform.Init(ctx, &pc, caches, updateCallback)

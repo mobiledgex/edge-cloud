@@ -1183,7 +1183,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowClusterInst":     struct{}{},
 	"ShowClusterInstInfo": struct{}{},
 	"ShowAutoProvPolicy":  struct{}{},
-	"ShowPrivacyPolicy":   struct{}{},
+	"ShowTrustPolicy":     struct{}{},
 	"ShowAppInst":         struct{}{},
 	"ShowAppInstInfo":     struct{}{},
 	"ShowAppInstMetrics":  struct{}{},

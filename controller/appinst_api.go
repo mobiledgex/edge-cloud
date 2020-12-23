@@ -76,6 +76,28 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
+func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, TrustPolicy *edgeproto.TrustPolicy) error {
+	apps := make(map[edgeproto.AppKey]*edgeproto.App)
+	appApi.GetAllApps(apps)
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, data := range s.cache.Objs {
+		if !key.ClusterInstKey.CloudletKey.Matches(ckey) {
+			continue
+		}
+		val := data.Obj
+		app, found := apps[val.Key.AppKey]
+		if !found {
+			return fmt.Errorf("App not found: %s", val.Key.AppKey.String())
+		}
+		err := CheckAppCompatibleWithTrustPolicy(app, TrustPolicy)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Checks if there is some action in progress by AppInst on the cloudlet
 func (s *AppInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
 	s.cache.Mux.Lock()
@@ -236,18 +258,6 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	for _, data := range s.cache.Objs {
 		app := data.Obj
 		if app.Flavor.Matches(key) {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *AppInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
-		appinst := data.Obj
-		if edgeproto.GetOrg(appinst) == key.Organization && appinst.PrivacyPolicy == key.Name {
 			return true
 		}
 	}
@@ -420,7 +430,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey); err != nil {
 			return err
 		}
-
 		cikey := &in.Key.ClusterInstKey
 		// Explicit auto-cluster requirement
 		if cikey.ClusterKey.Name == "" {
@@ -432,6 +441,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if app.DeletePrepare {
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
+		}
+		if cloudlet.TrustPolicy != "" && !app.Trusted {
+			return fmt.Errorf("Cannot start non Trusted App on Trusted cloudlet")
 		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
@@ -510,21 +522,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.SharedVolumeSize == 0 {
 			in.SharedVolumeSize = app.DefaultSharedVolumeSize
 		}
-		if in.PrivacyPolicy == "" {
-			in.PrivacyPolicy = app.DefaultPrivacyPolicy
-		} else {
-			if !autocluster && cloudcommon.IsClusterInstReqd(&app) {
-				return fmt.Errorf("Cannot specify Privacy Policy for an AppInst on an existing cluster")
-			}
-		}
-		if in.PrivacyPolicy != "" {
-			policy := edgeproto.PrivacyPolicy{}
-			err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.AppKey.Organization, &policy)
-			if err != nil {
-				return err
-			}
-		}
-
 		if err := autoProvPolicyApi.appInstCheck(ctx, stm, cloudcommon.Create, &app, in); err != nil {
 			return err
 		}
@@ -572,7 +569,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		clusterInst.IpAccess = in.AutoClusterIpAccess
 		clusterInst.Deployment = appDeploymentType
 		clusterInst.SharedVolumeSize = in.SharedVolumeSize
-		clusterInst.PrivacyPolicy = in.PrivacyPolicy
 		if appDeploymentType == cloudcommon.DeploymentTypeKubernetes ||
 			appDeploymentType == cloudcommon.DeploymentTypeHelm {
 			clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes

@@ -36,6 +36,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
 	}
+	for i0 := 0; i0 < len(in.TrustPolicies); i0++ {
+		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
+		}
+	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Errors = nil
@@ -70,6 +74,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.Cloudlets[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].TrustPolicyState = 0
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -93,6 +100,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			for i3 := 0; i3 < len(in.CloudletInfos[i0].Resources.Vms[i2].Containers); i3++ {
 			}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.CloudletInfos[i0].TrustPolicyState = 0
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 		if _, found := tags["timestamp"]; found {
@@ -109,10 +119,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	for i0 := 0; i0 < len(in.AutoProvPolicyCloudlets); i0++ {
 	}
 	for i0 := 0; i0 < len(in.AutoScalePolicies); i0++ {
-	}
-	for i0 := 0; i0 < len(in.PrivacyPolicies); i0++ {
-		for i1 := 0; i1 < len(in.PrivacyPolicies[i0].OutboundSecurityRules); i1++ {
-		}
 	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -181,6 +187,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["timestamp"]; found {
 			in.Apps[i0].UpdatedAt = distributed_match_engine.Timestamp{}
+		}
+		for i1 := 0; i1 < len(in.Apps[i0].RequiredOutboundConnections); i1++ {
 		}
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
@@ -286,6 +294,7 @@ var AllDataOptionalArgs = []string{
 	"settings.influxdbmetricsretention",
 	"settings.cloudletmaintenancetimeout",
 	"settings.updatevmpooltimeout",
+	"settings.updatetrustpolicytimeout",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -293,6 +302,13 @@ var AllDataOptionalArgs = []string{
 	"restagtables:#.key.organization",
 	"restagtables:#.tags",
 	"restagtables:#.azone",
+	"trustpolicies:#.fields",
+	"trustpolicies:#.key.organization",
+	"trustpolicies:#.key.name",
+	"trustpolicies:#.outboundsecurityrules:#.protocol",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemin",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemax",
+	"trustpolicies:#.outboundsecurityrules:#.remotecidr",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
@@ -370,6 +386,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.createdat.nanos",
 	"cloudlets:#.updatedat.seconds",
 	"cloudlets:#.updatedat.nanos",
+	"cloudlets:#.trustpolicy",
+	"cloudlets:#.trustpolicystate",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -411,6 +429,7 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.resources.vms:#.containers:#.status",
 	"cloudletinfos:#.resources.vms:#.containers:#.clusterip",
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts",
+	"cloudletinfos:#.trustpolicystate",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -451,13 +470,6 @@ var AllDataOptionalArgs = []string{
 	"autoscalepolicies:#.scaleupcputhresh",
 	"autoscalepolicies:#.scaledowncputhresh",
 	"autoscalepolicies:#.triggertimesec",
-	"privacypolicies:#.fields",
-	"privacypolicies:#.key.organization",
-	"privacypolicies:#.key.name",
-	"privacypolicies:#.outboundsecurityrules:#.protocol",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemin",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemax",
-	"privacypolicies:#.outboundsecurityrules:#.remotecidr",
 	"clusterinsts:#.fields",
 	"clusterinsts:#.key.clusterkey.name",
 	"clusterinsts:#.key.cloudletkey.organization",
@@ -488,7 +500,6 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.reservable",
 	"clusterinsts:#.reservedby",
 	"clusterinsts:#.sharedvolumesize",
-	"clusterinsts:#.privacypolicy",
 	"clusterinsts:#.masternodeflavor",
 	"clusterinsts:#.skipcrmcleanuponfailure",
 	"clusterinsts:#.optres",
@@ -533,7 +544,6 @@ var AllDataOptionalArgs = []string{
 	"apps:#.defaultsharedvolumesize",
 	"apps:#.autoprovpolicy",
 	"apps:#.accesstype",
-	"apps:#.defaultprivacypolicy",
 	"apps:#.deleteprepare",
 	"apps:#.autoprovpolicies",
 	"apps:#.templatedelimiter",
@@ -542,6 +552,10 @@ var AllDataOptionalArgs = []string{
 	"apps:#.createdat.nanos",
 	"apps:#.updatedat.seconds",
 	"apps:#.updatedat.nanos",
+	"apps:#.trusted",
+	"apps:#.requiredoutboundconnections:#.protocol",
+	"apps:#.requiredoutboundconnections:#.port",
+	"apps:#.requiredoutboundconnections:#.remoteip",
 	"appinstances:#.fields",
 	"appinstances:#.key.appkey.organization",
 	"appinstances:#.key.appkey.name",
@@ -589,7 +603,6 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.configs:#.config",
 	"appinstances:#.sharedvolumesize",
 	"appinstances:#.healthcheck",
-	"appinstances:#.privacypolicy",
 	"appinstances:#.powerstate",
 	"appinstances:#.externalvolumesize",
 	"appinstances:#.availabilityzone",
@@ -657,12 +670,20 @@ var AllDataComments = map[string]string{
 	"settings.influxdbmetricsretention":                          "Default influxDB metrics retention policy (duration)",
 	"settings.cloudletmaintenancetimeout":                        "Default Cloudlet Maintenance timeout (used twice for AutoProv and Cloudlet)",
 	"settings.updatevmpooltimeout":                               "Update VM pool timeout (duration)",
+	"settings.updatetrustpolicytimeout":                          "Update Trust Policy timeout (duration)",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
 	"restagtables:#.key.organization":                            "Operator organization of the cloudlet site.",
 	"restagtables:#.tags":                                        "one or more string tags",
 	"restagtables:#.azone":                                       "availability zone(s) of resource if required",
+	"trustpolicies:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
+	"trustpolicies:#.key.organization":                           "Name of the organization for the cluster that this policy will apply to",
+	"trustpolicies:#.key.name":                                   "Policy name",
+	"trustpolicies:#.outboundsecurityrules:#.protocol":           "tcp, udp, icmp",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemin":       "TCP or UDP port range start",
+	"trustpolicies:#.outboundsecurityrules:#.portrangemax":       "TCP or UDP port range end",
+	"trustpolicies:#.outboundsecurityrules:#.remotecidr":         "remote CIDR X.X.X.X/X",
 	"cloudlets:#.fields":                                         "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                               "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                       "Name of the cloudlet",
@@ -727,6 +748,8 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.vmpool":                                         "VM Pool",
 	"cloudlets:#.crmaccesspublickey":                             "CRM access public key",
 	"cloudlets:#.crmaccesskeyupgraderequired":                    "CRM access key upgrade required",
+	"cloudlets:#.trustpolicy":                                    "Optional Trust Policy",
+	"cloudlets:#.trustpolicystate":                               "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -758,6 +781,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.resources.vms:#.containers:#.status":        "Runtime status of the container",
 	"cloudletinfos:#.resources.vms:#.containers:#.clusterip":     "IP within the CNI and is applicable to kubernetes only",
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "Restart count, applicable to kubernetes only",
+	"cloudletinfos:#.trustpolicystate":                           "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                   "CloudletPool Name",
@@ -792,13 +816,6 @@ var AllDataComments = map[string]string{
 	"autoscalepolicies:#.scaleupcputhresh":                       "Scale up cpu threshold (percentage 1 to 100)",
 	"autoscalepolicies:#.scaledowncputhresh":                     "Scale down cpu threshold (percentage 1 to 100)",
 	"autoscalepolicies:#.triggertimesec":                         "Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.",
-	"privacypolicies:#.fields":                                   "Fields are used for the Update API to specify which fields to apply",
-	"privacypolicies:#.key.organization":                         "Name of the organization for the cluster that this policy will apply to",
-	"privacypolicies:#.key.name":                                 "Policy name",
-	"privacypolicies:#.outboundsecurityrules:#.protocol":         "tcp, udp, icmp",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemin":     "TCP or UDP port range start",
-	"privacypolicies:#.outboundsecurityrules:#.portrangemax":     "TCP or UDP port range end",
-	"privacypolicies:#.outboundsecurityrules:#.remotecidr":       "remote CIDR X.X.X.X/X",
 	"clusterinsts:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"clusterinsts:#.key.clusterkey.name":                         "Cluster name",
 	"clusterinsts:#.key.cloudletkey.organization":                "Organization of the cloudlet site",
@@ -823,7 +840,6 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.reservable":                                  "If ClusterInst is reservable",
 	"clusterinsts:#.reservedby":                                  "For reservable MobiledgeX ClusterInsts, the current developer tenant",
 	"clusterinsts:#.sharedvolumesize":                            "Size of an optional shared volume to be mounted on the master",
-	"clusterinsts:#.privacypolicy":                               "Optional privacy policy name",
 	"clusterinsts:#.masternodeflavor":                            "Generic flavor for k8s master VM when worker nodes > 0",
 	"clusterinsts:#.skipcrmcleanuponfailure":                     "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"clusterinsts:#.optres":                                      "Optional Resources required by OS flavor if any",
@@ -862,11 +878,14 @@ var AllDataComments = map[string]string{
 	"apps:#.defaultsharedvolumesize":                             "shared volume size when creating auto cluster",
 	"apps:#.autoprovpolicy":                                      "(_deprecated_) Auto provisioning policy name",
 	"apps:#.accesstype":                                          "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
-	"apps:#.defaultprivacypolicy":                                "Privacy policy when creating auto cluster",
 	"apps:#.deleteprepare":                                       "Preparing to be deleted",
 	"apps:#.autoprovpolicies":                                    "Auto provisioning policy names, may be specified multiple times",
 	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"apps:#.skiphcports":                                         "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
+	"apps:#.trusted":                                             "Indicates that an instance of this app can be started on a trusted cloudlet",
+	"apps:#.requiredoutboundconnections:#.protocol":              "tcp, udp",
+	"apps:#.requiredoutboundconnections:#.port":                  "TCP or UDP port",
+	"apps:#.requiredoutboundconnections:#.remoteip":              "remote IP X.X.X.X",
 	"appinstances:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                     "App developer organization",
 	"appinstances:#.key.appkey.name":                             "App name",
@@ -904,7 +923,6 @@ var AllDataComments = map[string]string{
 	"appinstances:#.configs:#.config":                            "config file contents or URI reference",
 	"appinstances:#.sharedvolumesize":                            "shared volume size when creating auto cluster",
 	"appinstances:#.healthcheck":                                 "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
-	"appinstances:#.privacypolicy":                               "Optional privacy policy name",
 	"appinstances:#.powerstate":                                  "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"appinstances:#.externalvolumesize":                          "Size of external volume to be attached to nodes.  This is for the root partition",
 	"appinstances:#.availabilityzone":                            "Optional Availability Zone if any",
@@ -960,10 +978,10 @@ var AllDataSpecialArgs = map[string]string{
 	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
-	"privacypolicies:#.fields":                "StringArray",
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
+	"trustpolicies:#.fields":                  "StringArray",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
 	"vmpools:#.status.msgs":                   "StringArray",
