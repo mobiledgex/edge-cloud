@@ -77,18 +77,6 @@ func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
 	return false
 }
 
-func (s *ClusterInstApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
-		cluster := data.Obj
-		if cluster.PrivacyPolicy == key.Name && cluster.Key.Organization == key.Organization {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.ClusterInstKey]struct{}) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -158,17 +146,6 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 			return clusterInst.IpAccess, fmt.Errorf("IpAccessDedicated not supported platform: %s", platformType)
 		}
-	}
-	// Privacy Policy required dedicated
-	if clusterInst.PrivacyPolicy != "" {
-		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for privacy policy enabled cluster "})
-			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
-		}
-		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-			return clusterInst.IpAccess, fmt.Errorf("IpAccessShared not supported for privacy policy enabled cluster")
-		}
-		return clusterInst.IpAccess, nil
 	}
 	switch clusterInst.Deployment {
 	case cloudcommon.DeploymentTypeKubernetes:
@@ -572,16 +549,6 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 		return errors.New("Specified Cloudlet not found")
-	}
-	if in.PrivacyPolicy != "" {
-		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE && cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
-			platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-			return fmt.Errorf("Privacy Policy not supported on %s", platName)
-		}
-		policy := edgeproto.PrivacyPolicy{}
-		if err := privacyPolicyApi.STMFind(stm, in.PrivacyPolicy, in.Key.Organization, &policy); err != nil {
-			return err
-		}
 	}
 	if in.AutoScalePolicy != "" {
 		policy := edgeproto.AutoScalePolicy{}

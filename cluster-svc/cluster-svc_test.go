@@ -15,6 +15,7 @@ var oldPrometheusControllerApp = edgeproto.App{
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Trusted:       true,
 }
 var durationShort = "5s"
 var durationLong = "45s"

@@ -1,5 +1,5 @@
 orgs:
-- message: in use by some App, AppInst, ClusterInst, PrivacyPolicy
+- message: in use by some App, AppInst, ClusterInst
   code: 1
 - message: in use by some App, AppInst
   code: 1

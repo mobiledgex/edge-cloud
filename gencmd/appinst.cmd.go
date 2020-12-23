@@ -719,7 +719,6 @@ var AppInstOptionalArgs = []string{
 	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
-	"privacypolicy",
 	"powerstate",
 	"vmflavor",
 	"optres",
@@ -772,7 +771,6 @@ var AppInstComments = map[string]string{
 	"configs:#.config":               "config file contents or URI reference",
 	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
-	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
@@ -918,7 +916,6 @@ var CreateAppInstOptionalArgs = []string{
 	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
-	"privacypolicy",
 	"vmflavor",
 	"optres",
 }
@@ -941,7 +938,6 @@ var DeleteAppInstOptionalArgs = []string{
 	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
-	"privacypolicy",
 	"vmflavor",
 	"optres",
 }
