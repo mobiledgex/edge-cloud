@@ -1,4 +1,4 @@
-// app config
+//app config
 
 package main
 
@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -55,6 +56,48 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
+func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		app := data.Obj
+		apps[app.Key] = app
+	}
+}
+
+func CheckAppCompatibleWithTrustPolicy(app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
+	if !app.Trusted {
+		return fmt.Errorf("Non trusted app: %s in use by trust policy: %s", app.Key.String(), trustPolicy.Key.String())
+	}
+	for _, r := range app.RequiredOutboundConnections {
+		policyMatchFound := false
+		ip := net.ParseIP(r.RemoteIp)
+		for _, outboundRule := range trustPolicy.OutboundSecurityRules {
+			if strings.ToLower(r.Protocol) != strings.ToLower(outboundRule.Protocol) {
+				continue
+			}
+			_, remoteNet, err := net.ParseCIDR(outboundRule.RemoteCidr)
+			if err != nil {
+				return fmt.Errorf("Invalid remote CIDR in policy: %s - %v", outboundRule.RemoteCidr, err)
+			}
+			if !remoteNet.Contains(ip) {
+				continue
+			}
+			if strings.ToLower(r.Protocol) != "icmp" {
+				if r.Port < outboundRule.PortRangeMin || r.Port > outboundRule.PortRangeMax {
+					continue
+				}
+			}
+			policyMatchFound = true
+			break
+		}
+		if !policyMatchFound {
+			return fmt.Errorf("No outbound rule in policy to match required connection %s:%s:%d for App %s", r.Protocol, r.RemoteIp, r.Port, app.Key.GetKeyString())
+		}
+	}
+	return nil
+}
+
 func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -69,18 +112,6 @@ func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
 					return true
 				}
 			}
-		}
-	}
-	return false
-}
-
-func (s *AppApi) UsesPrivacyPolicy(key *edgeproto.PolicyKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
-		app := data.Obj
-		if app.Key.Organization == key.Organization && app.DefaultPrivacyPolicy == key.Name {
-			return true
 		}
 	}
 	return false
@@ -242,6 +273,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
 		return err
 	}
+	if err := validateRequiredOutboundConnections(in.RequiredOutboundConnections); err != nil {
+		return err
+	}
 	newAccessType, err := cloudcommon.GetMappedAccessType(in.AccessType, in.Deployment, in.DeploymentManifest)
 	if err != nil {
 		return err
@@ -399,14 +433,6 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if err := s.validatePolicies(stm, in); err != nil {
 		return err
 	}
-	if in.DefaultPrivacyPolicy != "" {
-		apKey := edgeproto.PolicyKey{}
-		apKey.Organization = in.Key.Organization
-		apKey.Name = in.DefaultPrivacyPolicy
-		if !privacyPolicyApi.store.STMGet(stm, &apKey, nil) {
-			return apKey.NotFoundError()
-		}
-	}
 	return nil
 }
 
@@ -490,6 +516,9 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		_, deploymentManifestSpecified := fields[edgeproto.AppFieldDeploymentManifest]
 		_, accessPortSpecified := fields[edgeproto.AppFieldAccessPorts]
+		_, TrustedSpecified := fields[edgeproto.AppFieldTrusted]
+		_, requiredOutboundSpecified := fields[edgeproto.AppFieldRequiredOutboundConnections]
+
 		if deploymentManifestSpecified {
 			// reset the deployment generator
 			cur.DeploymentGenerator = ""
@@ -504,6 +533,23 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 		cur.CopyInFields(in)
+		// for any changes that can affect trust policy, verify the app is still valid for all
+		// cloudlets onto which it is deployed.
+		if requiredOutboundSpecified ||
+			(TrustedSpecified && !in.Trusted) {
+			appInstKeys := make(map[edgeproto.AppInstKey]struct{})
+
+			for k, _ := range refs.Insts {
+				// disallow delete if static instances are present
+				inst := edgeproto.AppInst{}
+				edgeproto.AppInstKeyStringParse(k, &inst.Key)
+				appInstKeys[inst.Key] = struct{}{}
+			}
+			err = cloudletApi.VerifyTrustPoliciesForAppInsts(&cur, appInstKeys)
+			if err != nil {
+				return err
+			}
+		}
 		// for update, trigger regenerating deployment manifest
 		if cur.DeploymentGenerator != "" {
 			cur.DeploymentManifest = ""
@@ -656,6 +702,31 @@ func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment
 	for _, cfg := range configs {
 		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.DeploymentTypeHelm {
 			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
+		}
+	}
+	return nil
+}
+
+func validateRequiredOutboundConnections(req []*edgeproto.RemoteConnection) error {
+	for _, r := range req {
+		proto := strings.ToLower(r.Protocol)
+		ip := net.ParseIP(r.RemoteIp)
+		if ip == nil {
+			return fmt.Errorf("Invalid remote IP: %v", r.RemoteIp)
+		}
+		switch proto {
+		case "icmp":
+			if r.Port != 0 {
+				return fmt.Errorf("Port must be 0 for icmp")
+			}
+		case "tcp":
+			fallthrough
+		case "udp":
+			if r.Port < 1 || r.Port > 65535 {
+				return fmt.Errorf("Remote port out of range: %d", r.Port)
+			}
+		default:
+			return fmt.Errorf("Invalid protocol specified for remote connection: %s", proto)
 		}
 	}
 	return nil

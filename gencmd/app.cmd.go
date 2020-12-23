@@ -58,6 +58,8 @@ func AppHideTags(in *edgeproto.App) {
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
+	for i0 := 0; i0 < len(in.RequiredOutboundConnections); i0++ {
+	}
 }
 
 var AppApiCmd edgeproto.AppApiClient
@@ -434,6 +436,19 @@ var AppApiCmds = []*cobra.Command{
 	RemoveAppAutoProvPolicyCmd.GenCmd(),
 }
 
+var RemoteConnectionRequiredArgs = []string{}
+var RemoteConnectionOptionalArgs = []string{
+	"protocol",
+	"port",
+	"remoteip",
+}
+var RemoteConnectionAliasArgs = []string{}
+var RemoteConnectionComments = map[string]string{
+	"protocol": "tcp, udp",
+	"port":     "TCP or UDP port",
+	"remoteip": "remote IP X.X.X.X",
+}
+var RemoteConnectionSpecialArgs = map[string]string{}
 var AppKeyRequiredArgs = []string{}
 var AppKeyOptionalArgs = []string{
 	"organization",
@@ -485,10 +500,13 @@ var AppOptionalArgs = []string{
 	"md5sum",
 	"defaultsharedvolumesize",
 	"accesstype",
-	"defaultprivacypolicy",
 	"autoprovpolicies",
 	"templatedelimiter",
 	"skiphcports",
+	"trusted",
+	"requiredoutboundconnections:#.protocol",
+	"requiredoutboundconnections:#.port",
+	"requiredoutboundconnections:#.remoteip",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -497,37 +515,40 @@ var AppAliasArgs = []string{
 	"defaultflavor=defaultflavor.name",
 }
 var AppComments = map[string]string{
-	"fields":                  "Fields are used for the Update API to specify which fields to apply",
-	"app-org":                 "App developer organization",
-	"appname":                 "App name",
-	"appvers":                 "App version",
-	"imagepath":               "URI of where image resides",
-	"imagetype":               "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm",
-	"accessports":             "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
-	"defaultflavor":           "Flavor name",
-	"authpublickey":           "public key used for authentication",
-	"command":                 "Command that the container runs to start service",
-	"annotations":             "Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=val 3",
-	"deployment":              "Deployment type (kubernetes, docker, or vm)",
-	"deploymentmanifest":      "Deployment manifest is the deployment specific manifest file/config For docker deployment, this can be a docker-compose or docker run file For kubernetes deployment, this can be a kubernetes yaml or helm chart file",
-	"deploymentgenerator":     "Deployment generator target to generate a basic deployment manifest",
-	"androidpackagename":      "Android package name used to match the App name from the Android package",
-	"delopt":                  "Override actions to Controller, one of NoAutoDelete, AutoDelete",
-	"configs:#.kind":          "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
-	"configs:#.config":        "config file contents or URI reference",
-	"scalewithcluster":        "Option to run App on all nodes of the cluster",
-	"internalports":           "Should this app have access to outside world?",
-	"revision":                "Revision can be specified or defaults to current timestamp when app is updated",
-	"officialfqdn":            "Official FQDN is the FQDN that the app uses to connect by default",
-	"md5sum":                  "MD5Sum of the VM-based app image",
-	"defaultsharedvolumesize": "shared volume size when creating auto cluster",
-	"autoprovpolicy":          "(_deprecated_) Auto provisioning policy name",
-	"accesstype":              "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
-	"defaultprivacypolicy":    "Privacy policy when creating auto cluster",
-	"deleteprepare":           "Preparing to be deleted",
-	"autoprovpolicies":        "Auto provisioning policy names, may be specified multiple times",
-	"templatedelimiter":       "Delimiter to be used for template parsing, defaults to [[ ]]",
-	"skiphcports":             "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
+	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
+	"app-org":                                "App developer organization",
+	"appname":                                "App name",
+	"appvers":                                "App version",
+	"imagepath":                              "URI of where image resides",
+	"imagetype":                              "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm",
+	"accessports":                            "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
+	"defaultflavor":                          "Flavor name",
+	"authpublickey":                          "public key used for authentication",
+	"command":                                "Command that the container runs to start service",
+	"annotations":                            "Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=val 3",
+	"deployment":                             "Deployment type (kubernetes, docker, or vm)",
+	"deploymentmanifest":                     "Deployment manifest is the deployment specific manifest file/config For docker deployment, this can be a docker-compose or docker run file For kubernetes deployment, this can be a kubernetes yaml or helm chart file",
+	"deploymentgenerator":                    "Deployment generator target to generate a basic deployment manifest",
+	"androidpackagename":                     "Android package name used to match the App name from the Android package",
+	"delopt":                                 "Override actions to Controller, one of NoAutoDelete, AutoDelete",
+	"configs:#.kind":                         "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
+	"configs:#.config":                       "config file contents or URI reference",
+	"scalewithcluster":                       "Option to run App on all nodes of the cluster",
+	"internalports":                          "Should this app have access to outside world?",
+	"revision":                               "Revision can be specified or defaults to current timestamp when app is updated",
+	"officialfqdn":                           "Official FQDN is the FQDN that the app uses to connect by default",
+	"md5sum":                                 "MD5Sum of the VM-based app image",
+	"defaultsharedvolumesize":                "shared volume size when creating auto cluster",
+	"autoprovpolicy":                         "(_deprecated_) Auto provisioning policy name",
+	"accesstype":                             "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"deleteprepare":                          "Preparing to be deleted",
+	"autoprovpolicies":                       "Auto provisioning policy names, may be specified multiple times",
+	"templatedelimiter":                      "Delimiter to be used for template parsing, defaults to [[ ]]",
+	"skiphcports":                            "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
+	"trusted":                                "Indicates that an instance of this app can be started on a trusted cloudlet",
+	"requiredoutboundconnections:#.protocol": "tcp, udp",
+	"requiredoutboundconnections:#.port":     "TCP or UDP port",
+	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
 }
 var AppSpecialArgs = map[string]string{
 	"autoprovpolicies": "StringArray",

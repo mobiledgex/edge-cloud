@@ -140,8 +140,6 @@ message AppInst {
   uint64 shared_volume_size = 28;
   // Health Check status
   HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
-  // Optional privacy policy name
-  string privacy_policy = 30;
   // Power State of the AppInst
   PowerState power_state = 31 [(protogen.hidetag) = "nocmp"];
   // Size of external volume to be attached to nodes.  This is for the root partition
@@ -212,7 +210,7 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.method_not_required) = "Key.ClusterInstKey";
-    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,Configs,PowerState,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,Configs,PowerState,TrustPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
   }
   // Update Application Instance. Updates an Application instance and then refreshes it.
   rpc UpdateAppInst(AppInst) returns (stream Result) {
@@ -222,7 +220,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
-    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,UpdateMultiple,ForceUpdate,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,UpdateMultiple,ForceUpdate,TrustPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
   }
   // Show Application Instances. Lists all the Application instances managed by the Edge Controller.
   // Any fields specified will be used to filter results.

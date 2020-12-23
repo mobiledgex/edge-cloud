@@ -1,0 +1,11 @@
+trustpolicies:
+-  key:
+      organization: dmuus
+      name: TrustPolicy1
+   outboundsecurityrules:
+    - protocol: udp
+      portrangemin: 53
+      remotecidr: "0.0.0.0/0"
+    - protocol: icmp
+      remotecidr: "8.0.0.0/8"
+

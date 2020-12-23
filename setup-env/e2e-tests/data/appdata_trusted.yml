@@ -1,0 +1,161 @@
+settings:
+  shepherdmetricscollectioninterval: 1s
+  autodeployintervalsec: 1
+  autodeployoffsetsec: 0.3
+  createappinsttimeout: 3s
+  updateappinsttimeout: 2s
+  deleteappinsttimeout: 2s
+  createclusterinsttimeout: 3s
+  updateclusterinsttimeout: 2s
+  deleteclusterinsttimeout: 2s
+  updatetrustpolicytimeout: 5s
+  masternodeflavor: x1.tiny
+  loadbalancermaxportrange: 100
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  influxdbmetricsretention: 2h
+  cloudletmaintenancetimeout: 2s
+
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+
+trustpolicies:
+-  key:
+      organization: dmuus
+      name: TrustPolicy1
+   outboundsecurityrules:
+    - protocol:  tcp
+      portrangemin: 443
+      remotecidr: "35.247.68.151/32"
+    - protocol:  tcp
+      portrangemin: 8080
+      portrangemax: 8088
+      remotecidr: "0.0.0.0/0"
+    - protocol: udp
+      portrangemin: 53
+      remotecidr: "0.0.0.0/0"
+    - protocol: icmp
+      remotecidr: "8.0.0.0/8"
+
+cloudlets:
+- key:
+    organization: dmuus
+    name: cloudlet1
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+  trustpolicy: TrustPolicy1
+- key:
+    organization: dmuus
+    name: cloudlet2
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: cluster1
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet1
+    organization: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 2
+
+- key:
+    clusterkey:
+      name: cluster2
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet2
+    organization: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 2
+
+
+apps:
+- key:
+    organization: AcmeAppCo
+    name: trustedapp
+    version: "1.0"
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:80"
+  trusted: true
+  requiredoutboundconnections:
+  - protocol: tcp
+    remoteip: 35.247.68.151
+    port: 443
+  - protocol: udp
+    remoteip: 1.1.1.1
+    port: 53
+  - protocol: icmp
+    remoteip: 8.8.8.8
+- key:
+    organization: AcmeAppCo
+    name: nontrustedapp
+    version: "1.0"
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:90"
+
+appinstances:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: trustedapp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: cluster1
+      cloudletkey:
+        organization: dmuus
+        name: cloudlet1
+      organization: AcmeAppCo
+
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: nontrustedapp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: cluster2
+      cloudletkey:
+        organization: dmuus
+        name: cloudlet2
+      organization: AcmeAppCo

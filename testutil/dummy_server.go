@@ -69,10 +69,10 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		autoscale.Key.Organization = org
 		s.AutoScalePolicyCache.Update(ctx, &autoscale, int64(ii))
 
-		priv := edgeproto.PrivacyPolicy{}
-		priv.Key.Name = name + "privacy"
+		priv := edgeproto.TrustPolicy{}
+		priv.Key.Name = name + "trust"
 		priv.Key.Organization = org
-		s.PrivacyPolicyCache.Update(ctx, &priv, int64(ii))
+		s.TrustPolicyCache.Update(ctx, &priv, int64(ii))
 	}
 }
 

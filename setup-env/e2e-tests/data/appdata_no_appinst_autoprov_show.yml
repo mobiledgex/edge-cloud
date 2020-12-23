@@ -12,6 +12,7 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  updatetrustpolicytimeout: 5s
   masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
@@ -404,6 +405,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
+  trusted: true
   defaultflavor:
     name: x1.medium
   annotations: version=7.1.1

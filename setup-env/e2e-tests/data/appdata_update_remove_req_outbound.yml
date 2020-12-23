@@ -1,0 +1,7 @@
+apps:
+- key:
+    organization: AcmeAppCo
+    name: trustedapp
+    version: "1.0"
+  requiredoutboundconnections:
+  

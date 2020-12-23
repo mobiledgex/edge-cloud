@@ -22,7 +22,6 @@ tests:
   - includefile: app_official_fqdn_app1.yml
     api: rest
   - includefile: find_cloudlet.yml
-    loops: 3
   - includefile: find_cloudlet.yml
     api: rest
   - includefile: verify_loc.yml
@@ -34,11 +33,10 @@ tests:
     loops: 2
   - includefile: clustersvc_update.yml
   - includefile: verify_loc.yml
-    loops: 1
   - includefile: verify_loc.yml
     api: rest
   - includefile: get_pos_qos.yml
-    loops: 2
+  - includefile: trustpol_add_update.yml
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 
