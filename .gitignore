@@ -24,3 +24,6 @@ vault/roles.yaml
 *.pem
 envoy/certs/envoyTlsCerts.key
 envoy/certs/envoyTlsCerts.crt
+controller/envoy/certs/envoyTlsCerts.crt
+controller/data_test.json
+controller/etcdLocal_data/*
