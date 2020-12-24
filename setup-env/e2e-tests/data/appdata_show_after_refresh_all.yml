@@ -12,6 +12,7 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  updatetrustpolicytimeout: 5s
   masternodeflavor: x1.tiny
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
@@ -35,26 +36,6 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
-privacypolicies:
-- key:
-    organization: AcmeAppCo
-    name: PrivPolicy1
-  outboundsecurityrules:
-  - protocol: tcp
-    portrangemin: 443
-    portrangemax: 443
-    remotecidr: 35.247.68.151/32
-  - protocol: tcp
-    portrangemin: 8080
-    portrangemax: 8088
-    remotecidr: 0.0.0.0/0
-  - protocol: udp
-    portrangemin: 53
-    portrangemax: 53
-    remotecidr: 0.0.0.0/0
-  - protocol: icmp
-    remotecidr: 80.0.0.0/8
 
 clusterinsts:
 - key:
@@ -86,7 +67,6 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 2
-  privacypolicy: PrivPolicy1
 
 operatorcodes:
 - code: 31026
@@ -397,6 +377,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
+  trusted: true
   defaultflavor:
     name: x1.medium
   annotations: version=7.1.1
@@ -465,6 +446,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
+  trusted: true
 - key:
     organization: AcmeAppCo1
     name: vmapp1

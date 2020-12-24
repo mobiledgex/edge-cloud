@@ -30,19 +30,20 @@ type PlatformConfig struct {
 	DeploymentTag       string
 	Upgrade             bool
 	AccessApi           AccessApi
+	TrustPolicy         string
 }
 
 type Caches struct {
-	SettingsCache      *edgeproto.SettingsCache
-	FlavorCache        *edgeproto.FlavorCache
-	PrivacyPolicyCache *edgeproto.PrivacyPolicyCache
-	ClusterInstCache   *edgeproto.ClusterInstCache
-	AppInstCache       *edgeproto.AppInstCache
-	AppCache           *edgeproto.AppCache
-	ResTagTableCache   *edgeproto.ResTagTableCache
-	CloudletCache      *edgeproto.CloudletCache
-	VMPoolCache        *edgeproto.VMPoolCache
-	VMPoolInfoCache    *edgeproto.VMPoolInfoCache
+	SettingsCache    *edgeproto.SettingsCache
+	FlavorCache      *edgeproto.FlavorCache
+	TrustPolicyCache *edgeproto.TrustPolicyCache
+	ClusterInstCache *edgeproto.ClusterInstCache
+	AppInstCache     *edgeproto.AppInstCache
+	AppCache         *edgeproto.AppCache
+	ResTagTableCache *edgeproto.ResTagTableCache
+	CloudletCache    *edgeproto.CloudletCache
+	VMPoolCache      *edgeproto.VMPoolCache
+	VMPoolInfoCache  *edgeproto.VMPoolInfoCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
@@ -60,17 +61,17 @@ type Platform interface {
 	// Returns true if sync with controller is required
 	GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error
 	// Create a Kubernetes Cluster on the cloudlet.
-	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
+	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
 	// Delete a Kuberentes Cluster on the cloudlet.
 	DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update the cluster
-	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get resources used by the cloudlet
 	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error)
 	// Get resources used by the cluster
 	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error)
 	// Create an AppInst on a Cluster
-	CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error
+	CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete an AppInst on a Cluster
 	DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update an AppInst
@@ -108,6 +109,8 @@ type Platform interface {
 	GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error)
 	// Platform-sepcific access data lookup (only called from Controller context)
 	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
+	// Update the cloudlet's Privacy Policy
+	UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error
 	// Get restricted cloudlet create status
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 }

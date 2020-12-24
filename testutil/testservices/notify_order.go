@@ -20,7 +20,7 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 	cloudlet := reflect.TypeOf((*notify.CloudletSendMany)(nil))
 	clusterInst := reflect.TypeOf((*notify.ClusterInstSendMany)(nil))
 	app := reflect.TypeOf((*notify.AppSendMany)(nil))
-	privacyPolicy := reflect.TypeOf((*notify.PrivacyPolicySendMany)(nil))
+	TrustPolicy := reflect.TypeOf((*notify.TrustPolicySendMany)(nil))
 	autoScalePolicy := reflect.TypeOf((*notify.AutoScalePolicySendMany)(nil))
 	autoProvPolicy := reflect.TypeOf((*notify.AutoProvPolicySendMany)(nil))
 	appInst := reflect.TypeOf((*notify.AppInstSendMany)(nil))
@@ -36,7 +36,7 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 		CheckDep(t, order, o, flavor)
 		CheckDep(t, order, o, cloudlet)
 		CheckDep(t, order, o, autoScalePolicy)
-		CheckDep(t, order, o, privacyPolicy)
+		CheckDep(t, order, o, TrustPolicy)
 	}
 	// App dependecies
 	if o, found := order[app]; found {
@@ -48,7 +48,7 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 		CheckDep(t, order, o, flavor)
 		CheckDep(t, order, o, app)
 		CheckDep(t, order, o, clusterInst)
-		CheckDep(t, order, o, privacyPolicy)
+		CheckDep(t, order, o, TrustPolicy)
 	}
 	// AppInstRefs dependencies
 	if o, found := order[appInstRefs]; found {

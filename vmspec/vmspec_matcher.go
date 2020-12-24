@@ -18,7 +18,7 @@ type VMCreationSpec struct {
 	ExternalVolumeSize uint64
 	AvailabilityZone   string
 	ImageName          string
-	PrivacyPolicy      *edgeproto.PrivacyPolicy
+	TrustPolicy        *edgeproto.TrustPolicy
 	MasterNodeFlavor   string
 	FlavorInfo         *edgeproto.FlavorInfo
 }

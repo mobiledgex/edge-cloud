@@ -1,0 +1,4 @@
+errors:
+- desc: TrustPolicyApi[0]
+  msg: 'read Result stream failed, rpc error: code = Unknown desc = Failed to update
+    trust policy on any cloudlets'

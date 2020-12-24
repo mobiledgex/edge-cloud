@@ -1,0 +1,52 @@
+##
+##
+description: test trust policy
+
+tests:
+
+- name: create provisioning for trust policy test
+  apifile: "{{datadir}}/appdata_trusted.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_trusted_show.yml"
+    filetype: appdata
+
+- name: add trust policy to cloudlet with nonpriv app (should fail)
+  apifile: "{{datadir}}/appdata_update_cloudlet2_trustpol.yml"
+  actions: [ctrlapi-update-expecterr,ctrlapi-show]
+  compareyaml:
+    yaml1: '{{outputdir}}/api-output.yml'
+    yaml2: '{{datadir}}/trustpol_error_add_nonpriv_apps.yml'
+
+- name: disable privacy from app on private cloudlet (should fail)
+  apifile: "{{datadir}}/appdata_update_disable_trust.yml"
+  actions: [ctrlapi-update-expecterr,ctrlapi-show]
+  compareyaml:
+    yaml1: '{{outputdir}}/api-output.yml'
+    yaml2: '{{datadir}}/trustpol_error_disable_app.yml'
+
+- name: remove needed outbound rules from policy (should fail)
+  apifile: "{{datadir}}/appdata_update_remove_outbound_rules.yml"
+  actions: [ctrlapi-update-expecterr,ctrlapi-show]
+  compareyaml:
+    yaml1: '{{outputdir}}/api-output.yml'
+    yaml2: '{{datadir}}/trustpol_update_fail.yml' 
+
+- name: remove required outbound conns from app
+  apifile: "{{datadir}}/appdata_update_remove_req_outbound.yml"
+  actions: [ctrlapi-update]
+
+- name: remove outbound rules from policy after app required conns gone
+  apifile: "{{datadir}}/appdata_update_remove_outbound_rules.yml"
+  actions: [ctrlapi-update]
+
+- name: delete trust policy test data, verify it is empty
+  apifile: "{{datadir}}/appdata_trusted.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+

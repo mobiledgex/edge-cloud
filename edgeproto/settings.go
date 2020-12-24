@@ -87,6 +87,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.CloudletMaintenanceTimeout), 0)
 		case SettingsFieldUpdateVmPoolTimeout:
 			v.CheckGT(f, int64(s.UpdateVmPoolTimeout), 0)
+		case SettingsFieldUpdateTrustPolicyTimeout:
+			v.CheckGT(f, int64(s.UpdateTrustPolicyTimeout), 0)
 		}
 	}
 	return v.err
@@ -114,6 +116,7 @@ func GetDefaultSettings() *Settings {
 	s.ChefClientInterval = Duration(10 * time.Minute)
 	s.CloudletMaintenanceTimeout = Duration(5 * time.Minute)
 	s.UpdateVmPoolTimeout = Duration(20 * time.Minute)
+	s.UpdateTrustPolicyTimeout = Duration(10 * time.Minute)
 	return &s
 }
 

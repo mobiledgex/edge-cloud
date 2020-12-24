@@ -48,6 +48,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.UpdateVmPoolTimeout = edgeproto.GetDefaultSettings().UpdateVmPoolTimeout
 			modified = true
 		}
+		if cur.UpdateTrustPolicyTimeout == 0 {
+			cur.UpdateTrustPolicyTimeout = edgeproto.GetDefaultSettings().UpdateTrustPolicyTimeout
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

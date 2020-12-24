@@ -200,8 +200,8 @@ func TestConversion(t *testing.T) {
 	for _, appinst := range testutil.AppInstData {
 		testConversion(t, input, &appinst, &edgeproto.AppInst{}, &edgeproto.AppInst{}, nil)
 	}
-	for _, pp := range testutil.PrivacyPolicyData {
-		testConversion(t, input, &pp, &edgeproto.PrivacyPolicy{}, &edgeproto.PrivacyPolicy{}, nil)
+	for _, pp := range testutil.TrustPolicyData {
+		testConversion(t, input, &pp, &edgeproto.TrustPolicy{}, &edgeproto.TrustPolicy{}, nil)
 	}
 	settings := edgeproto.GetDefaultSettings()
 	settings.Fields = []string{"16", "4", "9", "2.2"}
