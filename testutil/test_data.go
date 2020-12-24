@@ -1318,10 +1318,14 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 
 var AppInstClientKeyData = []edgeproto.AppInstClientKey{
 	edgeproto.AppInstClientKey{
-		Key: AppInstData[0].Key,
+		Key: edgeproto.AppInstClientLookupKey{
+			Appinstkey: &AppInstData[0].Key,
+		},
 	},
 	edgeproto.AppInstClientKey{
-		Key: AppInstData[3].Key,
+		Key: edgeproto.AppInstClientLookupKey{
+			Appinstkey: &AppInstData[3].Key,
+		},
 	},
 }
 

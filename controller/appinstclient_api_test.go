@@ -94,7 +94,7 @@ func TestAppInstClientApi(t *testing.T) {
 	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch12)
 	// Add a client 2 for AppInst1
 	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[1])
-	// Check that both of the channels recieve the AppInstClient
+	// Check that both of the channels receive the AppInstClient
 	appInstClient = <-ch1
 	assert.Equal(t, testutil.AppInstClientData[1], appInstClient)
 	appInstClient = <-ch12

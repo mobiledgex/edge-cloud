@@ -13,21 +13,30 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+message AppInstClientLookupKey {
+  // AppInst Key
+  AppInstKey appinstkey = 1 [(protogen.keytag) = "appinstkey"];
+  // AppInstClient Unique Id
+  string unique_id = 2 [(protogen.keytag) = "uniqueid"];
+  // AppInstClient Unique Id Type
+  string unique_id_type = 3 [(protogen.keytag) = "uniqueidtype"];
+
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
 // AppKey uniquely identifies an App
 message AppInstClientKey {
-  // AppInst Key
-  AppInstKey key = 1 [(gogoproto.nullable) = false];
-  // AppInstClient Unique Id
-  string unique_id = 2;
-  // AppInstClient Unique Id Type
-  string unique_id_type = 3;
+  AppInstClientLookupKey key = 1 [(gogoproto.nullable) = false];
 
   option (protogen.notify_message) = true;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization";
+  option (protogen.not_required) = "Key.Appinstkey.ClusterInstKey.ClusterKey.Name,Key.Appinstkey.ClusterInstKey.Organization,Key.Appinstkey.ClusterInstKey.CloudletKey.Name,Key.Appinstkey.ClusterInstKey.CloudletKey.Organization,Key.UniqueId,Key.UniqueIdType";
+  option (protogen.alias) = "uniqueid=Key.UniqueId,uniqueidtype=Key.UniqueIdType,appname=Key.Appinstkey.AppKey.Name,appvers=Key.Appinstkey.AppKey.Version,app-org=Key.Appinstkey.AppKey.Organization,cluster=Key.Appinstkey.ClusterInstKey.ClusterKey.Name,cluster-org=Key.Appinstkey.ClusterInstKey.Organization,cloudlet=Key.Appinstkey.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.Appinstkey.ClusterInstKey.CloudletKey.Organization";
   option (protogen.uses_org) = "none";
 }
 
@@ -55,7 +64,7 @@ service AppInstClientApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.AppKey.Organization";
+    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.Appinstkey.AppKey.Organization";
     option (protogen.non_standard_show) = true;
   }
   // This is used unternally to forward AppInstClients to other Controllers
