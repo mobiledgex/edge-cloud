@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -73,6 +74,8 @@ var noSudoMap = map[string]int{
 	"edgebox":   1,
 	"dind":      1,
 }
+
+var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
 
 func init() {
 	DedicatedClients = make(map[string]ssh.Client)
@@ -153,13 +156,24 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", certsDir)
 	} else {
-		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", sudoType)
+		err = pc.CopyFile(client, AtomicCertsUpdater, AtomicCertsUpdater)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to copy atomic certs updater script", "err", err)
+			return
+		}
+		err = pc.WriteFile(client, certFile+".new", tls.CertString, "tls cert", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
+			return
 		}
-		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", sudoType)
+		err = pc.WriteFile(client, keyFile+".new", tls.KeyString, "tls key", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
+			return
+		}
+		err = pc.Run(client, fmt.Sprintf("bash %s %s %s %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile)))
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 		}
 	}
 }
