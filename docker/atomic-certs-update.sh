@@ -62,7 +62,7 @@ if [[ -f $CERT_FILE ]]; then
           common_tls_context:\
             tls_certificate_sds_secret_configs:\
                 sds_config:\
-                    path: '"${envoyPath}"'/sds.yaml' $envoyPath/envoy.yaml
+                    path: /etc/envoy/sds.yaml' $envoyPath/envoy.yaml
 
 	  # write sds.yaml
 	  cat > $envoyPath/sds.yaml <<EOF
@@ -79,9 +79,9 @@ EOF
 	  docker stop $envoyName
 	  docker rm $envoyName
 	  runcmd=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock assaflavie/runlike $envoyName)
-	  runcmd_newimg=$(sed 's/envoy-with-curl.*\? /envoy-with-curl@sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df /g' <<< $runcmd)
-	  echo "$envoyName=>$out"
-  	  $($runcmd_newimg)
+	  new_runcmd=($(sed 's/envoy-with-curl.*\? /envoy-with-curl@sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df /g' <<< $runcmd))
+	  echo "$envoyName=>$new_runcmd"
+	  "${new_runcmd[@]}"
 	done
 fi
 
