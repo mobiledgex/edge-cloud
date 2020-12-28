@@ -426,6 +426,7 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 			return err
 		}
 	}
+
 	if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
 		return in.DefaultFlavor.NotFoundError()
 	}
