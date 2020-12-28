@@ -113,6 +113,8 @@ type Platform interface {
 	UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error
 	// Get restricted cloudlet create status
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
+	// Get ssh clients of all root LBs
+	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
 }
 
 type ClusterSvc interface {
