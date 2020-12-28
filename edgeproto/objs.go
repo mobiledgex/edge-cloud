@@ -467,8 +467,8 @@ func (key *PolicyKey) ValidateKey() error {
 }
 
 func (s *AppInstClientLookupKey) ValidateKey() error {
-	if s.Appinstkey.Matches(&AppInstKey{}) && s.UniqueId == "" && s.UniqueIdType == "" {
-		return fmt.Errorf("At least on the key fields must be non-empty %v", s)
+	if s.AppInstKey.Matches(&AppInstKey{}) && s.UniqueId == "" && s.UniqueIdType == "" {
+		return fmt.Errorf("At least one of the key fields must be non-empty %v", s)
 	}
 	return nil
 }

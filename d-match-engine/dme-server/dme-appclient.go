@@ -40,7 +40,7 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	// if it existed before, update the clientsByAppInst
 	if client, found := clientsMap.clients[clientKey]; found {
 		// remove from the list of clients in the old appInstance
-		list, found := clientsMap.clientsByAppInst[*client.ClientKey.Key.Appinstkey]
+		list, found := clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey]
 		if !found {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Found an orphan client", "client", msg, "old pointer", client)
 		} else {
@@ -48,9 +48,9 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 				if list[ii].ClientKey.Key.UniqueId == client.ClientKey.Key.UniqueId &&
 					list[ii].ClientKey.Key.UniqueIdType == client.ClientKey.Key.UniqueIdType {
 					// remove from the old appInst list
-					clientsMap.clientsByAppInst[*client.ClientKey.Key.Appinstkey] =
-						append(clientsMap.clientsByAppInst[*client.ClientKey.Key.Appinstkey][:ii],
-							clientsMap.clientsByAppInst[*client.ClientKey.Key.Appinstkey][ii+1:]...)
+					clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey] =
+						append(clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey][:ii],
+							clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey][ii+1:]...)
 					break
 				}
 			}
@@ -59,7 +59,7 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	// update the value in the clients map
 	clientsMap.clients[clientKey] = msg
 
-	mapKey := *msg.ClientKey.Key.Appinstkey
+	mapKey := *msg.ClientKey.Key.AppInstKey
 	list, found := clientsMap.clientsByAppInst[mapKey]
 	if !found {
 		clientsMap.clientsByAppInst[mapKey] = []edgeproto.AppInstClient{*msg}
@@ -113,7 +113,7 @@ func SendCachedClients(ctx context.Context, old *edgeproto.AppInstClientKey, new
 	}
 	clientsMap.RLock()
 	defer clientsMap.RUnlock()
-	list, found := clientsMap.clientsByAppInst[*new.Key.Appinstkey]
+	list, found := clientsMap.clientsByAppInst[*new.Key.AppInstKey]
 	// AppInst based request
 	if found {
 		for ii := range list {

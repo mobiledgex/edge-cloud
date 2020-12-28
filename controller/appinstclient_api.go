@@ -162,13 +162,13 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 	var ctrlConns []*grpc.ClientConn
 
 	// Check if the App exists
-	if !appApi.HasApp(&in.Key.Appinstkey.AppKey) {
+	if !appApi.HasApp(&in.Key.AppInstKey.AppKey) {
 		return in.Key.NotFoundError()
 	}
 
 	// Since we don't care about the cluster developer and name set them to ""
-	in.Key.Appinstkey.ClusterInstKey.ClusterKey.Name = ""
-	in.Key.Appinstkey.ClusterInstKey.Organization = ""
+	in.Key.AppInstKey.ClusterInstKey.ClusterKey.Name = ""
+	in.Key.AppInstKey.ClusterInstKey.Organization = ""
 
 	ctrlConns = make([]*grpc.ClientConn, 0)
 	done := false
