@@ -483,7 +483,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if in.TrustPolicy != "" {
 			if !supportsTrustPolicy(in.PlatformType) {
 				platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
-				return fmt.Errorf("Privacy Policy not supported on %s", platName)
+				return fmt.Errorf("Trust Policy not supported on %s", platName)
 			}
 			policy := edgeproto.TrustPolicy{}
 			if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
@@ -969,13 +969,13 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			}
 			if !ignoreCRM(cctx) {
 				if cur.State != edgeproto.TrackedState_READY {
-					return fmt.Errorf("Privacy policy cannot be changed while cloudlet is not ready")
+					return fmt.Errorf("Trust policy cannot be changed while cloudlet is not ready")
 				}
 			}
 			if in.TrustPolicy != "" {
 				if !supportsTrustPolicy(in.PlatformType) {
 					platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
-					return fmt.Errorf("Privacy Policy not supported on %s", platName)
+					return fmt.Errorf("Trust Policy not supported on %s", platName)
 				}
 				policy := edgeproto.TrustPolicy{}
 				if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
@@ -1741,9 +1741,9 @@ func (s *CloudletApi) WaitForTrustPolicyState(ctx context.Context, key *edgeprot
 	select {
 	case <-done:
 	case <-failed:
-		err = fmt.Errorf("Error in updating Privacy Policy")
+		err = fmt.Errorf("Error in updating Trust Policy")
 	case <-time.After(timeout):
-		err = fmt.Errorf("Timed out waiting for Privacy Policy")
+		err = fmt.Errorf("Timed out waiting for Trust Policy")
 	}
 	cancel()
 	log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState state done", "target", targetState, "curState", cloudlet.TrustPolicyState)

@@ -109,7 +109,7 @@ type Platform interface {
 	GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error)
 	// Platform-sepcific access data lookup (only called from Controller context)
 	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
-	// Update the cloudlet's Privacy Policy
+	// Update the cloudlet's Trust Policy
 	UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error
 	// Get restricted cloudlet create status
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
