@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync"
 
@@ -14,7 +15,7 @@ import (
 type AppInstClientApi struct {
 	queueMux       sync.Mutex
 	appInstClients []*edgeproto.AppInstClient
-	clientChan     map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient
+	recvChans      map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient
 }
 
 var appInstClientApi = AppInstClientApi{}
@@ -23,47 +24,51 @@ var appInstClientSendMany *notify.AppInstClientSendMany
 func InitAppInstClientApi() {
 	appInstClientSendMany = notify.NewAppInstClientSendMany()
 	appInstClientApi.appInstClients = make([]*edgeproto.AppInstClient, 0)
-	appInstClientApi.clientChan = make(map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient)
+	appInstClientApi.recvChans = make(map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient)
 }
 
 func (s *AppInstClientApi) SetRecvChan(ctx context.Context, in *edgeproto.AppInstClientKey, ch chan edgeproto.AppInstClient) {
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
-	_, found := s.clientChan[*in]
+	_, found := s.recvChans[*in]
 	if !found {
-		s.clientChan[*in] = []chan edgeproto.AppInstClient{ch}
+		s.recvChans[*in] = []chan edgeproto.AppInstClient{ch}
 	} else {
-		s.clientChan[*in] = append(s.clientChan[*in], ch)
+		s.recvChans[*in] = append(s.recvChans[*in], ch)
 	}
 
-	// use filter match option, since not all parts of the key may be set
-	for ii, client := range s.appInstClients {
-		if client.ClientKey.Matches(in, edgeproto.MatchFilter()) {
-			ch <- *s.appInstClients[ii]
+	// Send cached clients out in a separate go routine
+	// this way reading and writing to this channel will happen simultaneously
+	go func() {
+		// use filter match option, since not all parts of the key may be set
+		for ii, client := range s.appInstClients {
+			if client.ClientKey.Matches(in, edgeproto.MatchFilter()) {
+				ch <- *s.appInstClients[ii]
+			}
 		}
-	}
-
-	if !appInstClientKeyApi.HasKey(in) {
-		appInstClientKeyApi.Update(ctx, in, 0)
-	}
+		// request new clients only after we sent out the cached ones
+		if !appInstClientKeyApi.HasKey(in) {
+			appInstClientKeyApi.Update(ctx, in, 0)
+		}
+	}()
 }
 
 // Returns number of channels in the list that are left
 func (s *AppInstClientApi) ClearRecvChan(ctx context.Context, in *edgeproto.AppInstClientKey, ch chan edgeproto.AppInstClient) int {
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
-	_, found := s.clientChan[*in]
+	_, found := s.recvChans[*in]
 	if !found {
 		log.SpanLog(ctx, log.DebugLevelApi, "No client channels found for appInst", "appInst", in.AppInstKey)
 		return -1
 	}
-	for ii, c := range s.clientChan[*in] {
+	for ii, c := range s.recvChans[*in] {
 		if c == ch {
 			// Found channel - delete it
-			s.clientChan[*in] = append(s.clientChan[*in][:ii], s.clientChan[*in][ii+1:]...)
-			retLen := len(s.clientChan[*in])
+			s.recvChans[*in] = append(s.recvChans[*in][:ii], s.recvChans[*in][ii+1:]...)
+			retLen := len(s.recvChans[*in])
 			if retLen == 0 {
-				delete(s.clientChan, *in)
+				delete(s.recvChans, *in)
 				appInstClientKeyApi.Delete(ctx, in, 0)
 				// We also need to clean up our local buffer - it will be out of sync since DME won't update it
 				for ii, client := range s.appInstClients {
@@ -92,7 +97,7 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 		return
 	}
 	sendList := []chan edgeproto.AppInstClient{}
-	for k, cList := range s.clientChan {
+	for k, cList := range s.recvChans {
 		if client.ClientKey.Matches(&k, edgeproto.MatchFilter()) {
 			sendList = append(sendList, cList...)
 		}
@@ -161,9 +166,9 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 	var connsMux sync.Mutex
 	var ctrlConns []*grpc.ClientConn
 
-	// Check if the App exists
-	if !appApi.HasApp(&in.AppInstKey.AppKey) {
-		return in.NotFoundError()
+	// Check that the appinst org is specified
+	if in.AppInstKey.AppKey.Organization == "" {
+		return fmt.Errorf("Organization must be specified")
 	}
 
 	// Since we don't care about the cluster developer and name set them to ""
