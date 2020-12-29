@@ -700,7 +700,18 @@ func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppA
 
 func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment string) error {
 	for _, cfg := range configs {
-		if cfg.Kind == edgeproto.AppConfigHelmYaml && deployment != cloudcommon.DeploymentTypeHelm {
+		invalid := false
+		switch cfg.Kind {
+		case edgeproto.AppConfigHelmYaml:
+			if deployment != cloudcommon.DeploymentTypeHelm {
+				invalid = true
+			}
+		case edgeproto.AppConfigEnvYaml:
+			if deployment != cloudcommon.DeploymentTypeKubernetes {
+				invalid = true
+			}
+		}
+		if invalid {
 			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
 		}
 	}
