@@ -40,7 +40,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type AppInstClientLookupKey struct {
+type AppInstClientKey struct {
 	// AppInst Key
 	AppInstKey *AppInstKey `protobuf:"bytes,1,opt,name=app_inst_key,json=appInstKey,proto3" json:"app_inst_key,omitempty"`
 	// AppInstClient Unique Id
@@ -49,49 +49,11 @@ type AppInstClientLookupKey struct {
 	UniqueIdType string `protobuf:"bytes,3,opt,name=unique_id_type,json=uniqueIdType,proto3" json:"unique_id_type,omitempty"`
 }
 
-func (m *AppInstClientLookupKey) Reset()         { *m = AppInstClientLookupKey{} }
-func (m *AppInstClientLookupKey) String() string { return proto.CompactTextString(m) }
-func (*AppInstClientLookupKey) ProtoMessage()    {}
-func (*AppInstClientLookupKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a8b03148dc570743, []int{0}
-}
-func (m *AppInstClientLookupKey) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *AppInstClientLookupKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_AppInstClientLookupKey.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *AppInstClientLookupKey) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AppInstClientLookupKey.Merge(m, src)
-}
-func (m *AppInstClientLookupKey) XXX_Size() int {
-	return m.Size()
-}
-func (m *AppInstClientLookupKey) XXX_DiscardUnknown() {
-	xxx_messageInfo_AppInstClientLookupKey.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_AppInstClientLookupKey proto.InternalMessageInfo
-
-// AppKey uniquely identifies an App
-type AppInstClientKey struct {
-	Key AppInstClientLookupKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
-}
-
 func (m *AppInstClientKey) Reset()         { *m = AppInstClientKey{} }
 func (m *AppInstClientKey) String() string { return proto.CompactTextString(m) }
 func (*AppInstClientKey) ProtoMessage()    {}
 func (*AppInstClientKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a8b03148dc570743, []int{1}
+	return fileDescriptor_a8b03148dc570743, []int{0}
 }
 func (m *AppInstClientKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -136,7 +98,7 @@ func (m *AppInstClient) Reset()         { *m = AppInstClient{} }
 func (m *AppInstClient) String() string { return proto.CompactTextString(m) }
 func (*AppInstClient) ProtoMessage()    {}
 func (*AppInstClient) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a8b03148dc570743, []int{2}
+	return fileDescriptor_a8b03148dc570743, []int{1}
 }
 func (m *AppInstClient) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -166,7 +128,6 @@ func (m *AppInstClient) XXX_DiscardUnknown() {
 var xxx_messageInfo_AppInstClient proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*AppInstClientLookupKey)(nil), "edgeproto.AppInstClientLookupKey")
 	proto.RegisterType((*AppInstClientKey)(nil), "edgeproto.AppInstClientKey")
 	proto.RegisterType((*AppInstClient)(nil), "edgeproto.AppInstClient")
 }
@@ -174,64 +135,62 @@ func init() {
 func init() { proto.RegisterFile("appinstclient.proto", fileDescriptor_a8b03148dc570743) }
 
 var fileDescriptor_a8b03148dc570743 = []byte{
-	// 776 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0x31, 0x4f, 0x23, 0x47,
-	0x14, 0xf6, 0xd8, 0x80, 0xec, 0xc1, 0x20, 0xb2, 0x24, 0x68, 0x20, 0xc4, 0x38, 0xae, 0x1c, 0x64,
-	0x7b, 0x11, 0x91, 0xa2, 0xc4, 0x52, 0x94, 0xd8, 0x14, 0x11, 0x02, 0x25, 0x92, 0x49, 0x68, 0xad,
-	0xf5, 0xee, 0xb0, 0x1e, 0xb1, 0x3b, 0x33, 0xd9, 0x9d, 0x0d, 0xd9, 0x54, 0x28, 0xbf, 0x00, 0x91,
-	0x2e, 0x55, 0x94, 0xe6, 0x28, 0x4f, 0x94, 0xae, 0xae, 0xa4, 0x44, 0x77, 0xcd, 0x15, 0xa7, 0x13,
-	0x67, 0xae, 0x38, 0x5d, 0x85, 0x84, 0xb1, 0xae, 0x3c, 0xcd, 0xee, 0x62, 0x6c, 0xdf, 0xf9, 0x38,
-	0x68, 0xec, 0x37, 0xef, 0x7d, 0xdf, 0xbc, 0xef, 0xb3, 0xde, 0x1b, 0xc3, 0x59, 0x8d, 0x73, 0x42,
-	0x5d, 0xa1, 0x5b, 0x04, 0x53, 0x51, 0xe2, 0x0e, 0x13, 0x4c, 0x49, 0x61, 0xc3, 0xc4, 0x41, 0xb8,
-	0xb0, 0x68, 0x32, 0x66, 0x5a, 0x58, 0xd5, 0x38, 0x51, 0x35, 0x4a, 0x99, 0xd0, 0x04, 0x61, 0xd4,
-	0x0d, 0x81, 0x0b, 0xdf, 0x9a, 0x44, 0x34, 0xbd, 0x46, 0x49, 0x67, 0xb6, 0x6a, 0xb3, 0x06, 0xb1,
-	0x24, 0xf1, 0x4f, 0x55, 0x7e, 0x16, 0x75, 0x8b, 0x79, 0x86, 0x1a, 0xe0, 0x4c, 0x4c, 0x7b, 0x41,
-	0xc4, 0x5c, 0xbb, 0x95, 0x69, 0x14, 0x6d, 0x4d, 0xe8, 0xcd, 0x22, 0xa6, 0x26, 0xa1, 0x58, 0x35,
-	0x6c, 0x5c, 0x0c, 0xa8, 0xaa, 0xc5, 0xf4, 0xe8, 0x92, 0xa9, 0x48, 0x7c, 0x74, 0xfc, 0xd4, 0x64,
-	0x26, 0x0b, 0x31, 0x32, 0x0a, 0xb3, 0xb9, 0xc7, 0x00, 0xce, 0x55, 0x38, 0x5f, 0xa7, 0xae, 0x58,
-	0x0b, 0x4c, 0x6e, 0x32, 0xb6, 0xeb, 0xf1, 0x0d, 0xec, 0x2b, 0x3f, 0xc1, 0xb4, 0xc6, 0x79, 0x5d,
-	0x5e, 0x51, 0xdf, 0xc5, 0x3e, 0x02, 0x59, 0x90, 0x9f, 0x5c, 0xfd, 0xac, 0xd4, 0xb3, 0x5f, 0x8a,
-	0x88, 0x1b, 0xd8, 0xaf, 0x4e, 0xb7, 0xba, 0x08, 0x46, 0x0d, 0x77, 0xb1, 0x5f, 0x93, 0x71, 0x54,
-	0x53, 0xbe, 0x82, 0x29, 0x8f, 0x92, 0xdf, 0x3d, 0x5c, 0x27, 0x06, 0x8a, 0x67, 0x41, 0x3e, 0x55,
-	0x4d, 0xb7, 0xba, 0x28, 0x19, 0x26, 0x89, 0x51, 0x8b, 0xa2, 0x75, 0x43, 0xf9, 0x06, 0x4e, 0xf7,
-	0xa0, 0x75, 0xe1, 0x73, 0x8c, 0x12, 0x01, 0x7e, 0xa6, 0xd5, 0x45, 0xe9, 0x6b, 0xbc, 0xcc, 0xd7,
-	0xd2, 0xd7, 0x9c, 0x5f, 0x7d, 0x8e, 0xcb, 0xe9, 0x57, 0x97, 0x08, 0xbc, 0xb9, 0x44, 0xe0, 0xe1,
-	0x7f, 0x4b, 0x20, 0xd7, 0x1e, 0x87, 0x33, 0x03, 0xa6, 0xa4, 0x8a, 0xef, 0x60, 0xe2, 0xc6, 0xc5,
-	0x97, 0xef, 0xba, 0x18, 0xb2, 0x5f, 0x1d, 0x3b, 0x79, 0xbe, 0x14, 0xab, 0x49, 0x4e, 0xf9, 0x70,
-	0x5c, 0x5e, 0x7f, 0x71, 0x89, 0xc0, 0x7e, 0x07, 0x81, 0x83, 0x0e, 0x02, 0x8f, 0x3a, 0x08, 0xfc,
-	0x7b, 0x85, 0x0e, 0x12, 0xd7, 0x9a, 0xbe, 0xdf, 0xc0, 0x7e, 0xe9, 0xb7, 0x48, 0x52, 0xa1, 0x5f,
-	0xe9, 0x40, 0x45, 0x8a, 0x2d, 0x68, 0x9c, 0x53, 0xcd, 0x0e, 0x0b, 0x37, 0x3f, 0xa1, 0x0c, 0xe5,
-	0xd7, 0xcf, 0x9a, 0x1d, 0x40, 0xfe, 0xc0, 0x8e, 0x3b, 0x02, 0xb2, 0x8d, 0x1d, 0x97, 0x30, 0x2a,
-	0x51, 0x45, 0xe6, 0x98, 0x23, 0x50, 0xbf, 0x38, 0xa6, 0x46, 0xc9, 0x5f, 0xc1, 0x48, 0x16, 0x74,
-	0xcb, 0x73, 0x05, 0x76, 0x86, 0xa1, 0x6b, 0x61, 0x7a, 0xe8, 0xd8, 0x93, 0x11, 0xb1, 0xde, 0xd7,
-	0x64, 0x88, 0x39, 0xd4, 0x8c, 0x79, 0x86, 0x85, 0xc5, 0xad, 0xdd, 0x42, 0x58, 0x5f, 0xbb, 0x30,
-	0xf1, 0x11, 0xfd, 0xfa, 0xb9, 0xfd, 0xbd, 0xff, 0xbf, 0x42, 0xcf, 0xc0, 0xdd, 0x4c, 0xde, 0xc1,
-	0xd8, 0x1d, 0xfd, 0xdc, 0xcf, 0x42, 0x61, 0x60, 0x94, 0x86, 0xa7, 0xe7, 0xb8, 0x8b, 0xc6, 0x28,
-	0xa3, 0x38, 0x77, 0x06, 0xe0, 0xd4, 0xc0, 0xe8, 0x2a, 0x73, 0x70, 0x62, 0x87, 0x60, 0xcb, 0x70,
-	0x11, 0xc8, 0x26, 0xf2, 0xa9, 0x5a, 0x74, 0x52, 0x7e, 0x84, 0x30, 0x7c, 0xc0, 0x82, 0x35, 0x8e,
-	0x07, 0x0b, 0xf0, 0xf9, 0xa8, 0x05, 0xb8, 0x19, 0xfd, 0x94, 0xde, 0xdb, 0x9d, 0x1f, 0x60, 0xd2,
-	0x62, 0x7a, 0xa0, 0x2e, 0x58, 0xc8, 0xc9, 0xd5, 0x2f, 0x4a, 0x06, 0x71, 0x85, 0x43, 0x1a, 0x9e,
-	0xc0, 0x46, 0x3d, 0x78, 0x8b, 0xea, 0xe1, 0x5b, 0x54, 0xda, 0x64, 0x7a, 0x74, 0x43, 0x8f, 0xa4,
-	0x2c, 0xc3, 0x14, 0x65, 0x82, 0xec, 0xf8, 0xf2, 0x09, 0x18, 0xcb, 0x82, 0x7c, 0xa2, 0x3a, 0x75,
-	0xd4, 0x41, 0xe0, 0xf0, 0x78, 0x7e, 0x9c, 0x32, 0xdd, 0xe6, 0xb5, 0x64, 0x58, 0x5f, 0x37, 0xca,
-	0x49, 0xb9, 0x5c, 0x17, 0x1d, 0x14, 0x5b, 0x7d, 0x10, 0x1f, 0xda, 0xe3, 0x0a, 0x27, 0x4a, 0x0b,
-	0xc0, 0x4f, 0xb6, 0x9a, 0x6c, 0x6f, 0xd0, 0xfb, 0x87, 0xfc, 0x2c, 0xa0, 0x51, 0xc5, 0x9c, 0xf5,
-	0xba, 0x83, 0xaa, 0x35, 0xec, 0x32, 0xcf, 0xd1, 0x71, 0x85, 0xf3, 0x0a, 0xd5, 0x2c, 0x5f, 0x10,
-	0xdd, 0x2d, 0x54, 0x74, 0x29, 0x7c, 0x9b, 0xe0, 0xbd, 0xc2, 0xed, 0xeb, 0x75, 0x74, 0x85, 0xc0,
-	0x7e, 0x17, 0x81, 0xbf, 0x9f, 0xbc, 0xfc, 0x27, 0x8e, 0x72, 0xb3, 0xaa, 0xdb, 0x64, 0x7b, 0xea,
-	0xc0, 0x9f, 0x47, 0x19, 0x2c, 0xaf, 0x00, 0x65, 0x1b, 0xce, 0x6f, 0x09, 0x07, 0x6b, 0xf6, 0x80,
-	0x0c, 0x77, 0x93, 0xe9, 0x9a, 0x75, 0x5f, 0x0f, 0xb1, 0x15, 0x50, 0x5d, 0x3c, 0x79, 0x91, 0x89,
-	0x9d, 0xb4, 0x33, 0xe0, 0xb4, 0x9d, 0x01, 0x67, 0xed, 0x0c, 0x38, 0x38, 0xcf, 0xc4, 0x4e, 0xcf,
-	0x33, 0xb1, 0xa7, 0xe7, 0x99, 0x58, 0x63, 0x22, 0xa0, 0x7d, 0xfd, 0x36, 0x00, 0x00, 0xff, 0xff,
-	0xe3, 0x96, 0xce, 0xf5, 0xcf, 0x06, 0x00, 0x00,
+	// 738 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xee, 0x94, 0x4a, 0xda, 0xa5, 0x10, 0x5c, 0xd4, 0x0c, 0x88, 0xa5, 0xe9, 0xa9, 0x92, 0xb6,
+	0x4b, 0x30, 0x31, 0x86, 0x04, 0xb5, 0xe5, 0x60, 0x08, 0x44, 0x93, 0x45, 0xb9, 0x36, 0xdb, 0xdd,
+	0x61, 0x3b, 0x61, 0x77, 0x66, 0xdc, 0x9d, 0x15, 0xd7, 0x13, 0xf1, 0x2f, 0x20, 0x7a, 0xf3, 0xa2,
+	0xd1, 0x0b, 0x47, 0xc3, 0xc1, 0x03, 0x27, 0x0e, 0x1e, 0x38, 0x92, 0x78, 0xf1, 0x44, 0x10, 0x3c,
+	0x18, 0xe3, 0x81, 0x84, 0xb6, 0x67, 0xb3, 0x3f, 0x58, 0xdb, 0x8a, 0xfc, 0xf0, 0xb2, 0xfb, 0xe6,
+	0xbd, 0xef, 0x7b, 0xef, 0x7d, 0xc9, 0x7c, 0x23, 0x0c, 0x29, 0x8c, 0x61, 0x62, 0x73, 0xd5, 0xc0,
+	0x88, 0xf0, 0x12, 0xb3, 0x28, 0xa7, 0x62, 0x0a, 0x69, 0x3a, 0xf2, 0xc3, 0x91, 0x51, 0x9d, 0x52,
+	0xdd, 0x40, 0x92, 0xc2, 0xb0, 0xa4, 0x10, 0x42, 0xb9, 0xc2, 0x31, 0x25, 0x76, 0x00, 0x1c, 0xb9,
+	0xa3, 0x63, 0x5e, 0x77, 0x6a, 0x25, 0x95, 0x9a, 0x92, 0x49, 0x6b, 0xd8, 0xf0, 0x88, 0xcf, 0x25,
+	0xef, 0x5b, 0x54, 0x0d, 0xea, 0x68, 0x92, 0x8f, 0xd3, 0x11, 0x89, 0x82, 0x90, 0x39, 0x73, 0x26,
+	0x53, 0x2b, 0x9a, 0x0a, 0x57, 0xeb, 0x45, 0x44, 0x74, 0x4c, 0x90, 0xa4, 0x99, 0xa8, 0xe8, 0x53,
+	0x25, 0x83, 0xaa, 0x61, 0x93, 0xfe, 0x70, 0xf9, 0xf0, 0x78, 0x45, 0xa7, 0x3a, 0x0d, 0x30, 0x5e,
+	0x14, 0x64, 0x73, 0x6f, 0x7b, 0x85, 0xc1, 0x32, 0x63, 0xb3, 0xc4, 0xe6, 0x33, 0xbe, 0xc8, 0x39,
+	0xe4, 0x8a, 0x0f, 0x84, 0xb4, 0xc2, 0x58, 0xd5, 0x23, 0x57, 0x97, 0x91, 0x0b, 0x41, 0x16, 0xe4,
+	0xfb, 0x26, 0xaf, 0x96, 0x22, 0xe1, 0xa5, 0x90, 0x32, 0x87, 0xdc, 0xca, 0xc0, 0x66, 0x0b, 0x0a,
+	0xe1, 0xa8, 0x65, 0xe4, 0xca, 0x5e, 0x1c, 0xd6, 0xc4, 0x9b, 0x42, 0xca, 0x21, 0xf8, 0xa9, 0x83,
+	0xaa, 0x58, 0x83, 0xf1, 0x2c, 0xc8, 0xa7, 0x2a, 0xe9, 0xcd, 0x16, 0x4c, 0x06, 0x49, 0xac, 0xc9,
+	0x61, 0x34, 0xab, 0x89, 0xb7, 0x85, 0x81, 0x08, 0x5a, 0xe5, 0x2e, 0x43, 0xb0, 0xc7, 0xc7, 0x0f,
+	0x6e, 0xb6, 0x60, 0xfa, 0x18, 0xef, 0xe5, 0xe5, 0xf4, 0x31, 0xe7, 0xb1, 0xcb, 0xd0, 0xd4, 0x6e,
+	0xe2, 0xc7, 0x11, 0x04, 0x87, 0x47, 0x10, 0xac, 0x36, 0x20, 0x58, 0x6b, 0x40, 0xb0, 0xd5, 0x80,
+	0xe0, 0x4d, 0x13, 0xfe, 0x8a, 0x1f, 0xb3, 0xa6, 0x9f, 0x84, 0x84, 0x42, 0x7b, 0x9f, 0x28, 0xeb,
+	0xb5, 0x29, 0x28, 0x8c, 0x11, 0xc5, 0x44, 0xd3, 0x7f, 0x84, 0x79, 0x1a, 0xbd, 0xdf, 0x43, 0xc5,
+	0xf4, 0xcb, 0xcf, 0x90, 0x65, 0x9f, 0x50, 0x5e, 0x44, 0x96, 0x8d, 0x29, 0xf1, 0x10, 0x45, 0x6a,
+	0xe9, 0x27, 0x20, 0x1e, 0x59, 0xba, 0x42, 0xf0, 0x0b, 0xff, 0x6a, 0x14, 0x54, 0xc3, 0xb1, 0x39,
+	0xb2, 0xda, 0x61, 0x33, 0x41, 0xaa, 0xeb, 0x18, 0x8d, 0x0e, 0x19, 0xdd, 0xcd, 0xbb, 0x58, 0x5d,
+	0x43, 0xa8, 0xa3, 0x19, 0x88, 0x9f, 0x3a, 0x25, 0x80, 0xb4, 0x8d, 0x09, 0x12, 0x67, 0xcc, 0x69,
+	0xe7, 0xb5, 0xcf, 0x7c, 0xdf, 0x84, 0x9f, 0xc1, 0xf9, 0x45, 0x9d, 0x53, 0xc8, 0x05, 0xf6, 0xbf,
+	0xf8, 0xca, 0x85, 0xe8, 0x5a, 0xb4, 0xdf, 0x84, 0xad, 0x26, 0x04, 0x1b, 0x2d, 0x98, 0x20, 0x94,
+	0xa0, 0x8f, 0xef, 0xc6, 0x40, 0x6e, 0x0f, 0x08, 0xfd, 0x1d, 0x0e, 0x11, 0xaf, 0x09, 0xbd, 0x4b,
+	0x18, 0x19, 0x9a, 0x0d, 0x41, 0xb6, 0x27, 0x9f, 0x92, 0xc3, 0x93, 0x78, 0x5f, 0x10, 0x82, 0x87,
+	0xc2, 0x37, 0x4d, 0xdc, 0x37, 0xcd, 0xf5, 0xbf, 0x4d, 0x13, 0xf9, 0xac, 0x92, 0xd8, 0xde, 0x1d,
+	0x8b, 0xc9, 0x29, 0x35, 0x32, 0xde, 0x3d, 0x21, 0x69, 0x50, 0xd5, 0xdf, 0xce, 0xbf, 0xfe, 0x7d,
+	0x93, 0x37, 0x4a, 0x1a, 0xb6, 0xb9, 0x85, 0x6b, 0x0e, 0x47, 0x5a, 0xd5, 0xf7, 0x7c, 0x35, 0xf0,
+	0x7c, 0x69, 0x9e, 0xaa, 0x61, 0x87, 0x88, 0x24, 0x8e, 0x0b, 0x29, 0x42, 0x39, 0x5e, 0x72, 0x3d,
+	0xc3, 0x25, 0xb2, 0x20, 0xdf, 0x53, 0xe9, 0x5f, 0x6f, 0x40, 0xf0, 0x6a, 0x63, 0xf8, 0x12, 0xa1,
+	0xaa, 0xc9, 0xe4, 0x64, 0x50, 0x9f, 0xd5, 0xa6, 0x92, 0x9e, 0x51, 0x0e, 0x1b, 0x30, 0x36, 0xf9,
+	0x21, 0xde, 0xf5, 0x08, 0x94, 0x19, 0x16, 0x3f, 0x01, 0xe1, 0xf2, 0x42, 0x9d, 0xae, 0x74, 0x6a,
+	0x3f, 0x4d, 0xcf, 0x08, 0xfc, 0x57, 0x31, 0x57, 0xff, 0xd9, 0x80, 0x77, 0x65, 0x64, 0x53, 0xc7,
+	0x52, 0x51, 0x99, 0xb1, 0x32, 0x51, 0x0c, 0x97, 0x63, 0xd5, 0x2e, 0x94, 0x55, 0x6f, 0xf1, 0x45,
+	0x8c, 0x56, 0x0a, 0xa7, 0x5b, 0x67, 0xbd, 0x09, 0xc1, 0x6a, 0x0b, 0x82, 0x97, 0x5f, 0xbe, 0xbf,
+	0x8e, 0xc3, 0xdc, 0x90, 0x64, 0xd7, 0xe9, 0x8a, 0xd4, 0xf1, 0x40, 0x4f, 0x81, 0xf1, 0x09, 0x20,
+	0x2e, 0x0a, 0xc3, 0x0b, 0xdc, 0x42, 0x8a, 0xd9, 0xb1, 0x82, 0x3d, 0x4f, 0x55, 0xc5, 0xf8, 0xdf,
+	0xfd, 0x63, 0x13, 0xa0, 0x32, 0xba, 0xfd, 0x2d, 0x13, 0xdb, 0xde, 0xcf, 0x80, 0x9d, 0xfd, 0x0c,
+	0xd8, 0xdb, 0xcf, 0x80, 0xb5, 0x83, 0x4c, 0x6c, 0xe7, 0x20, 0x13, 0xfb, 0x7a, 0x90, 0x89, 0xd5,
+	0x7a, 0x7d, 0xda, 0xad, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x63, 0x4c, 0x38, 0xd2, 0x33, 0x06,
+	0x00, 0x00,
 }
 
-func (this *AppInstClientLookupKey) GoString() string {
+func (this *AppInstClientKey) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 7)
-	s = append(s, "&edgeproto.AppInstClientLookupKey{")
+	s = append(s, "&edgeproto.AppInstClientKey{")
 	if this.AppInstKey != nil {
 		s = append(s, "AppInstKey: "+fmt.Sprintf("%#v", this.AppInstKey)+",\n")
 	}
@@ -423,7 +382,7 @@ var _AppInstClientApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "appinstclient.proto",
 }
 
-func (m *AppInstClientLookupKey) Marshal() (dAtA []byte, err error) {
+func (m *AppInstClientKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -433,12 +392,12 @@ func (m *AppInstClientLookupKey) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AppInstClientLookupKey) MarshalTo(dAtA []byte) (int, error) {
+func (m *AppInstClientKey) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AppInstClientLookupKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AppInstClientKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -469,39 +428,6 @@ func (m *AppInstClientLookupKey) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i--
 		dAtA[i] = 0xa
 	}
-	return len(dAtA) - i, nil
-}
-
-func (m *AppInstClientKey) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AppInstClientKey) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *AppInstClientKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintAppinstclient(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -573,7 +499,7 @@ func encodeVarintAppinstclient(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *AppInstClientLookupKey) Matches(o *AppInstClientLookupKey, fopts ...MatchOpt) bool {
+func (m *AppInstClientKey) Matches(o *AppInstClientKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
 	if o == nil {
@@ -604,7 +530,7 @@ func (m *AppInstClientLookupKey) Matches(o *AppInstClientLookupKey, fopts ...Mat
 	return true
 }
 
-func (m *AppInstClientLookupKey) CopyInFields(src *AppInstClientLookupKey) int {
+func (m *AppInstClientKey) CopyInFields(src *AppInstClientKey) int {
 	changed := 0
 	if src.AppInstKey != nil {
 		m.AppInstKey = &AppInstKey{}
@@ -651,7 +577,7 @@ func (m *AppInstClientLookupKey) CopyInFields(src *AppInstClientLookupKey) int {
 	return changed
 }
 
-func (m *AppInstClientLookupKey) DeepCopyIn(src *AppInstClientLookupKey) {
+func (m *AppInstClientKey) DeepCopyIn(src *AppInstClientKey) {
 	if src.AppInstKey != nil {
 		var tmp_AppInstKey AppInstKey
 		tmp_AppInstKey.DeepCopyIn(src.AppInstKey)
@@ -661,120 +587,6 @@ func (m *AppInstClientLookupKey) DeepCopyIn(src *AppInstClientLookupKey) {
 	}
 	m.UniqueId = src.UniqueId
 	m.UniqueIdType = src.UniqueIdType
-}
-
-func (m *AppInstClientLookupKey) GetKeyString() string {
-	key, err := json.Marshal(m)
-	if err != nil {
-		log.FatalLog("Failed to marshal AppInstClientLookupKey key string", "obj", m)
-	}
-	return string(key)
-}
-
-func AppInstClientLookupKeyStringParse(str string, key *AppInstClientLookupKey) {
-	err := json.Unmarshal([]byte(str), key)
-	if err != nil {
-		log.FatalLog("Failed to unmarshal AppInstClientLookupKey key string", "str", str)
-	}
-}
-
-func (m *AppInstClientLookupKey) NotFoundError() error {
-	return fmt.Errorf("AppInstClientLookup key %s not found", m.GetKeyString())
-}
-
-func (m *AppInstClientLookupKey) ExistsError() error {
-	return fmt.Errorf("AppInstClientLookup key %s already exists", m.GetKeyString())
-}
-
-var AppInstClientLookupKeyTagUniqueId = "uniqueid"
-var AppInstClientLookupKeyTagUniqueIdType = "uniqueidtype"
-
-func (m *AppInstClientLookupKey) GetTags() map[string]string {
-	tags := make(map[string]string)
-	tags["apporg"] = m.AppInstKey.AppKey.Organization
-	tags["app"] = m.AppInstKey.AppKey.Name
-	tags["appver"] = m.AppInstKey.AppKey.Version
-	tags["cluster"] = m.AppInstKey.ClusterInstKey.ClusterKey.Name
-	tags["cloudletorg"] = m.AppInstKey.ClusterInstKey.CloudletKey.Organization
-	tags["cloudlet"] = m.AppInstKey.ClusterInstKey.CloudletKey.Name
-	tags["clusterorg"] = m.AppInstKey.ClusterInstKey.Organization
-	tags["uniqueid"] = m.UniqueId
-	tags["uniqueidtype"] = m.UniqueIdType
-	return tags
-}
-
-// Helper method to check that enums have valid values
-func (m *AppInstClientLookupKey) ValidateEnums() error {
-	if err := m.AppInstKey.ValidateEnums(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *AppInstClientKey) Matches(o *AppInstClientKey, fopts ...MatchOpt) bool {
-	opts := MatchOptions{}
-	applyMatchOptions(&opts, fopts...)
-	if o == nil {
-		if opts.Filter {
-			return true
-		}
-		return false
-	}
-	if !m.Key.Matches(&o.Key, fopts...) {
-		return false
-	}
-	return true
-}
-
-func (m *AppInstClientKey) CopyInFields(src *AppInstClientKey) int {
-	changed := 0
-	if src.Key.AppInstKey != nil {
-		m.Key.AppInstKey = &AppInstKey{}
-		if m.Key.AppInstKey.AppKey.Organization != src.Key.AppInstKey.AppKey.Organization {
-			m.Key.AppInstKey.AppKey.Organization = src.Key.AppInstKey.AppKey.Organization
-			changed++
-		}
-		if m.Key.AppInstKey.AppKey.Name != src.Key.AppInstKey.AppKey.Name {
-			m.Key.AppInstKey.AppKey.Name = src.Key.AppInstKey.AppKey.Name
-			changed++
-		}
-		if m.Key.AppInstKey.AppKey.Version != src.Key.AppInstKey.AppKey.Version {
-			m.Key.AppInstKey.AppKey.Version = src.Key.AppInstKey.AppKey.Version
-			changed++
-		}
-		if m.Key.AppInstKey.ClusterInstKey.ClusterKey.Name != src.Key.AppInstKey.ClusterInstKey.ClusterKey.Name {
-			m.Key.AppInstKey.ClusterInstKey.ClusterKey.Name = src.Key.AppInstKey.ClusterInstKey.ClusterKey.Name
-			changed++
-		}
-		if m.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization != src.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization {
-			m.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization = src.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization
-			changed++
-		}
-		if m.Key.AppInstKey.ClusterInstKey.CloudletKey.Name != src.Key.AppInstKey.ClusterInstKey.CloudletKey.Name {
-			m.Key.AppInstKey.ClusterInstKey.CloudletKey.Name = src.Key.AppInstKey.ClusterInstKey.CloudletKey.Name
-			changed++
-		}
-		if m.Key.AppInstKey.ClusterInstKey.Organization != src.Key.AppInstKey.ClusterInstKey.Organization {
-			m.Key.AppInstKey.ClusterInstKey.Organization = src.Key.AppInstKey.ClusterInstKey.Organization
-			changed++
-		}
-	} else if m.Key.AppInstKey != nil {
-		m.Key.AppInstKey = nil
-		changed++
-	}
-	if m.Key.UniqueId != src.Key.UniqueId {
-		m.Key.UniqueId = src.Key.UniqueId
-		changed++
-	}
-	if m.Key.UniqueIdType != src.Key.UniqueIdType {
-		m.Key.UniqueIdType = src.Key.UniqueIdType
-		changed++
-	}
-	return changed
-}
-
-func (m *AppInstClientKey) DeepCopyIn(src *AppInstClientKey) {
-	m.Key.DeepCopyIn(&src.Key)
 }
 
 func (s *AppInstClientKey) HasFields() bool {
@@ -790,7 +602,7 @@ func NewAppInstClientKeyStore(kvstore objstore.KVStore) AppInstClientKeyStore {
 }
 
 func (s *AppInstClientKeyStore) Create(ctx context.Context, m *AppInstClientKey, wait func(int64)) (*Result, error) {
-	err := m.Validate(nil)
+	err := m.ValidateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -810,7 +622,7 @@ func (s *AppInstClientKeyStore) Create(ctx context.Context, m *AppInstClientKey,
 }
 
 func (s *AppInstClientKeyStore) Update(ctx context.Context, m *AppInstClientKey, wait func(int64)) (*Result, error) {
-	err := m.Validate(nil)
+	err := m.ValidateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -831,7 +643,7 @@ func (s *AppInstClientKeyStore) Update(ctx context.Context, m *AppInstClientKey,
 }
 
 func (s *AppInstClientKeyStore) Put(ctx context.Context, m *AppInstClientKey, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	err := m.Validate(nil)
+	err := m.ValidateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -881,7 +693,7 @@ func (s *AppInstClientKeyStore) LoadOne(key string) (*AppInstClientKey, int64, e
 	return &obj, rev, nil
 }
 
-func (s *AppInstClientKeyStore) STMGet(stm concurrency.STM, key *AppInstClientLookupKey, buf *AppInstClientKey) bool {
+func (s *AppInstClientKeyStore) STMGet(stm concurrency.STM, key *AppInstClientKey, buf *AppInstClientKey) bool {
 	keystr := objstore.DbKeyString("AppInstClientKey", key)
 	valstr := stm.Get(keystr)
 	if valstr == "" {
@@ -906,7 +718,7 @@ func (s *AppInstClientKeyStore) STMPut(stm concurrency.STM, obj *AppInstClientKe
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *AppInstClientKeyStore) STMDel(stm concurrency.STM, key *AppInstClientLookupKey) {
+func (s *AppInstClientKeyStore) STMDel(stm concurrency.STM, key *AppInstClientKey) {
 	keystr := objstore.DbKeyString("AppInstClientKey", key)
 	stm.Del(keystr)
 }
@@ -923,16 +735,16 @@ type AppInstClientKeyCacheData struct {
 // AppInstClientKeyCache caches AppInstClientKey objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppInstClientKeyCache struct {
-	Objs          map[AppInstClientLookupKey]*AppInstClientKeyCacheData
+	Objs          map[AppInstClientKey]*AppInstClientKeyCacheData
 	Mux           util.Mutex
-	List          map[AppInstClientLookupKey]struct{}
+	List          map[AppInstClientKey]struct{}
 	FlushAll      bool
-	NotifyCbs     []func(ctx context.Context, obj *AppInstClientLookupKey, old *AppInstClientKey, modRev int64)
+	NotifyCbs     []func(ctx context.Context, obj *AppInstClientKey, old *AppInstClientKey, modRev int64)
 	UpdatedCbs    []func(ctx context.Context, old *AppInstClientKey, new *AppInstClientKey)
 	DeletedCbs    []func(ctx context.Context, old *AppInstClientKey)
-	KeyWatchers   map[AppInstClientLookupKey][]*AppInstClientKeyKeyWatcher
-	UpdatedKeyCbs []func(ctx context.Context, key *AppInstClientLookupKey)
-	DeletedKeyCbs []func(ctx context.Context, key *AppInstClientLookupKey)
+	KeyWatchers   map[AppInstClientKey][]*AppInstClientKeyKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AppInstClientKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AppInstClientKey)
 }
 
 func NewAppInstClientKeyCache() *AppInstClientKeyCache {
@@ -942,8 +754,8 @@ func NewAppInstClientKeyCache() *AppInstClientKeyCache {
 }
 
 func InitAppInstClientKeyCache(cache *AppInstClientKeyCache) {
-	cache.Objs = make(map[AppInstClientLookupKey]*AppInstClientKeyCacheData)
-	cache.KeyWatchers = make(map[AppInstClientLookupKey][]*AppInstClientKeyKeyWatcher)
+	cache.Objs = make(map[AppInstClientKey]*AppInstClientKeyCacheData)
+	cache.KeyWatchers = make(map[AppInstClientKey][]*AppInstClientKeyKeyWatcher)
 	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
@@ -955,12 +767,12 @@ func (c *AppInstClientKeyCache) GetTypeString() string {
 	return "AppInstClientKey"
 }
 
-func (c *AppInstClientKeyCache) Get(key *AppInstClientLookupKey, valbuf *AppInstClientKey) bool {
+func (c *AppInstClientKeyCache) Get(key *AppInstClientKey, valbuf *AppInstClientKey) bool {
 	var modRev int64
 	return c.GetWithRev(key, valbuf, &modRev)
 }
 
-func (c *AppInstClientKeyCache) GetWithRev(key *AppInstClientLookupKey, valbuf *AppInstClientKey, modRev *int64) bool {
+func (c *AppInstClientKeyCache) GetWithRev(key *AppInstClientKey, valbuf *AppInstClientKey, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
@@ -971,14 +783,14 @@ func (c *AppInstClientKeyCache) GetWithRev(key *AppInstClientLookupKey, valbuf *
 	return found
 }
 
-func (c *AppInstClientKeyCache) HasKey(key *AppInstClientLookupKey) bool {
+func (c *AppInstClientKeyCache) HasKey(key *AppInstClientKey) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	_, found := c.Objs[*key]
 	return found
 }
 
-func (c *AppInstClientKeyCache) GetAllKeys(ctx context.Context, cb func(key *AppInstClientLookupKey, modRev int64)) {
+func (c *AppInstClientKeyCache) GetAllKeys(ctx context.Context, cb func(key *AppInstClientKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, data := range c.Objs {
@@ -992,7 +804,7 @@ func (c *AppInstClientKeyCache) Update(ctx context.Context, in *AppInstClientKey
 	})
 }
 
-func (c *AppInstClientKeyCache) UpdateModFunc(ctx context.Context, key *AppInstClientLookupKey, modRev int64, modFunc func(old *AppInstClientKey) (new *AppInstClientKey, changed bool)) {
+func (c *AppInstClientKeyCache) UpdateModFunc(ctx context.Context, key *AppInstClientKey, modRev int64, modFunc func(old *AppInstClientKey) (new *AppInstClientKey, changed bool)) {
 	c.Mux.Lock()
 	var old *AppInstClientKey
 	if oldData, found := c.Objs[*key]; found {
@@ -1053,8 +865,8 @@ func (c *AppInstClientKeyCache) Delete(ctx context.Context, in *AppInstClientKey
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
-func (c *AppInstClientKeyCache) Prune(ctx context.Context, validKeys map[AppInstClientLookupKey]struct{}) {
-	notify := make(map[AppInstClientLookupKey]*AppInstClientKeyCacheData)
+func (c *AppInstClientKeyCache) Prune(ctx context.Context, validKeys map[AppInstClientKey]struct{}) {
+	notify := make(map[AppInstClientKey]*AppInstClientKeyCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -1110,14 +922,14 @@ func (c *AppInstClientKeyCache) Show(filter *AppInstClientKey, cb func(ret *AppI
 	return nil
 }
 
-func AppInstClientKeyGenericNotifyCb(fn func(key *AppInstClientLookupKey, old *AppInstClientKey)) func(objstore.ObjKey, objstore.Obj) {
+func AppInstClientKeyGenericNotifyCb(fn func(key *AppInstClientKey, old *AppInstClientKey)) func(objstore.ObjKey, objstore.Obj) {
 	return func(objkey objstore.ObjKey, obj objstore.Obj) {
-		fn(objkey.(*AppInstClientLookupKey), obj.(*AppInstClientKey))
+		fn(objkey.(*AppInstClientKey), obj.(*AppInstClientKey))
 	}
 }
 
-func (c *AppInstClientKeyCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstClientLookupKey, old *AppInstClientKey, modRev int64)) {
-	c.NotifyCbs = []func(ctx context.Context, obj *AppInstClientLookupKey, old *AppInstClientKey, modRev int64){fn}
+func (c *AppInstClientKeyCache) SetNotifyCb(fn func(ctx context.Context, obj *AppInstClientKey, old *AppInstClientKey, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *AppInstClientKey, old *AppInstClientKey, modRev int64){fn}
 }
 
 func (c *AppInstClientKeyCache) SetUpdatedCb(fn func(ctx context.Context, old *AppInstClientKey, new *AppInstClientKey)) {
@@ -1128,12 +940,12 @@ func (c *AppInstClientKeyCache) SetDeletedCb(fn func(ctx context.Context, old *A
 	c.DeletedCbs = []func(ctx context.Context, old *AppInstClientKey){fn}
 }
 
-func (c *AppInstClientKeyCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AppInstClientLookupKey)) {
-	c.UpdatedKeyCbs = []func(ctx context.Context, key *AppInstClientLookupKey){fn}
+func (c *AppInstClientKeyCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AppInstClientKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AppInstClientKey){fn}
 }
 
-func (c *AppInstClientKeyCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AppInstClientLookupKey)) {
-	c.DeletedKeyCbs = []func(ctx context.Context, key *AppInstClientLookupKey){fn}
+func (c *AppInstClientKeyCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AppInstClientKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AppInstClientKey){fn}
 }
 
 func (c *AppInstClientKeyCache) AddUpdatedCb(fn func(ctx context.Context, old *AppInstClientKey, new *AppInstClientKey)) {
@@ -1144,15 +956,15 @@ func (c *AppInstClientKeyCache) AddDeletedCb(fn func(ctx context.Context, old *A
 	c.DeletedCbs = append(c.DeletedCbs, fn)
 }
 
-func (c *AppInstClientKeyCache) AddNotifyCb(fn func(ctx context.Context, obj *AppInstClientLookupKey, old *AppInstClientKey, modRev int64)) {
+func (c *AppInstClientKeyCache) AddNotifyCb(fn func(ctx context.Context, obj *AppInstClientKey, old *AppInstClientKey, modRev int64)) {
 	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
-func (c *AppInstClientKeyCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppInstClientLookupKey)) {
+func (c *AppInstClientKeyCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AppInstClientKey)) {
 	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
 }
 
-func (c *AppInstClientKeyCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AppInstClientLookupKey)) {
+func (c *AppInstClientKeyCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AppInstClientKey)) {
 	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
@@ -1160,7 +972,7 @@ func (c *AppInstClientKeyCache) SetFlushAll() {
 	c.FlushAll = true
 }
 
-func (c *AppInstClientKeyCache) WatchKey(key *AppInstClientLookupKey, cb func(ctx context.Context)) context.CancelFunc {
+func (c *AppInstClientKeyCache) WatchKey(key *AppInstClientKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
@@ -1193,7 +1005,7 @@ func (c *AppInstClientKeyCache) WatchKey(key *AppInstClientLookupKey, cb func(ct
 	}
 }
 
-func (c *AppInstClientKeyCache) TriggerKeyWatchers(ctx context.Context, key *AppInstClientLookupKey) {
+func (c *AppInstClientKeyCache) TriggerKeyWatchers(ctx context.Context, key *AppInstClientKey) {
 	watchers := make([]*AppInstClientKeyKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
@@ -1229,16 +1041,16 @@ func (c *AppInstClientKeyCache) SyncUpdate(ctx context.Context, key, val []byte,
 func (c *AppInstClientKeyCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
 	obj := AppInstClientKey{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	AppInstClientLookupKeyStringParse(keystr, obj.GetKey())
+	AppInstClientKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, modRev)
 }
 
 func (c *AppInstClientKeyCache) SyncListStart(ctx context.Context) {
-	c.List = make(map[AppInstClientLookupKey]struct{})
+	c.List = make(map[AppInstClientKey]struct{})
 }
 
 func (c *AppInstClientKeyCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[AppInstClientLookupKey]*AppInstClientKeyCacheData)
+	deleted := make(map[AppInstClientKey]*AppInstClientKeyCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1269,51 +1081,89 @@ func (c *AppInstClientKeyCache) SyncListEnd(ctx context.Context) {
 func (c *AppInstClientKeyCache) UsesOrg(org string) bool {
 	return false
 }
+func (m *AppInstClientKey) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal AppInstClientKey key string", "obj", m)
+	}
+	return string(key)
+}
+
+func AppInstClientKeyStringParse(str string, key *AppInstClientKey) {
+	err := json.Unmarshal([]byte(str), key)
+	if err != nil {
+		log.FatalLog("Failed to unmarshal AppInstClientKey key string", "str", str)
+	}
+}
+
+func (m *AppInstClientKey) NotFoundError() error {
+	return fmt.Errorf("AppInstClient key %s not found", m.GetKeyString())
+}
+
+func (m *AppInstClientKey) ExistsError() error {
+	return fmt.Errorf("AppInstClient key %s already exists", m.GetKeyString())
+}
+
+var AppInstClientKeyTagUniqueId = "uniqueid"
+var AppInstClientKeyTagUniqueIdType = "uniqueidtype"
+
+func (m *AppInstClientKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["apporg"] = m.AppInstKey.AppKey.Organization
+	tags["app"] = m.AppInstKey.AppKey.Name
+	tags["appver"] = m.AppInstKey.AppKey.Version
+	tags["cluster"] = m.AppInstKey.ClusterInstKey.ClusterKey.Name
+	tags["cloudletorg"] = m.AppInstKey.ClusterInstKey.CloudletKey.Organization
+	tags["cloudlet"] = m.AppInstKey.ClusterInstKey.CloudletKey.Name
+	tags["clusterorg"] = m.AppInstKey.ClusterInstKey.Organization
+	tags["uniqueid"] = m.UniqueId
+	tags["uniqueidtype"] = m.UniqueIdType
+	return tags
+}
 
 func (m *AppInstClientKey) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
 
-func (m *AppInstClientKey) GetKey() *AppInstClientLookupKey {
-	return &m.Key
+func (m *AppInstClientKey) GetKey() *AppInstClientKey {
+	return m
 }
 
-func (m *AppInstClientKey) GetKeyVal() AppInstClientLookupKey {
-	return m.Key
+func (m *AppInstClientKey) GetKeyVal() AppInstClientKey {
+	return *m
 }
 
-func (m *AppInstClientKey) SetKey(key *AppInstClientLookupKey) {
-	m.Key = *key
+func (m *AppInstClientKey) SetKey(key *AppInstClientKey) {
+	*m = *key
 }
 
 func CmpSortAppInstClientKey(a AppInstClientKey, b AppInstClientKey) bool {
-	return a.Key.GetKeyString() < b.Key.GetKeyString()
+	return a.GetKeyString() < b.GetKeyString()
 }
 
 // Helper method to check that enums have valid values
 func (m *AppInstClientKey) ValidateEnums() error {
-	if err := m.Key.ValidateEnums(); err != nil {
+	if err := m.AppInstKey.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
 }
 
 const AppInstClientFieldClientKey = "2"
-const AppInstClientFieldClientKeyKey = "2.1"
-const AppInstClientFieldClientKeyKeyAppInstKey = "2.1.1"
-const AppInstClientFieldClientKeyKeyAppInstKeyAppKey = "2.1.1.1"
-const AppInstClientFieldClientKeyKeyAppInstKeyAppKeyOrganization = "2.1.1.1.1"
-const AppInstClientFieldClientKeyKeyAppInstKeyAppKeyName = "2.1.1.1.2"
-const AppInstClientFieldClientKeyKeyAppInstKeyAppKeyVersion = "2.1.1.1.3"
-const AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKey = "2.1.1.4"
-const AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyClusterKey = "2.1.1.4.1"
-const AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyClusterKeyName = "2.1.1.4.1.1"
-const AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKey = "2.1.1.4.2"
-const AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyOrganization = "2.1.1.4.2.1"
-const AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyName = "2.1.1.4.2.2"
-const AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyOrganization = "2.1.1.4.3"
-const AppInstClientFieldClientKeyKeyUniqueId = "2.1.2"
-const AppInstClientFieldClientKeyKeyUniqueIdType = "2.1.3"
+const AppInstClientFieldClientKeyAppInstKey = "2.1"
+const AppInstClientFieldClientKeyAppInstKeyAppKey = "2.1.1"
+const AppInstClientFieldClientKeyAppInstKeyAppKeyOrganization = "2.1.1.1"
+const AppInstClientFieldClientKeyAppInstKeyAppKeyName = "2.1.1.2"
+const AppInstClientFieldClientKeyAppInstKeyAppKeyVersion = "2.1.1.3"
+const AppInstClientFieldClientKeyAppInstKeyClusterInstKey = "2.1.4"
+const AppInstClientFieldClientKeyAppInstKeyClusterInstKeyClusterKey = "2.1.4.1"
+const AppInstClientFieldClientKeyAppInstKeyClusterInstKeyClusterKeyName = "2.1.4.1.1"
+const AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKey = "2.1.4.2"
+const AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyOrganization = "2.1.4.2.1"
+const AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyName = "2.1.4.2.2"
+const AppInstClientFieldClientKeyAppInstKeyClusterInstKeyOrganization = "2.1.4.3"
+const AppInstClientFieldClientKeyUniqueId = "2.2"
+const AppInstClientFieldClientKeyUniqueIdType = "2.3"
 const AppInstClientFieldLocation = "3"
 const AppInstClientFieldLocationLatitude = "3.1"
 const AppInstClientFieldLocationLongitude = "3.2"
@@ -1328,15 +1178,15 @@ const AppInstClientFieldLocationTimestampNanos = "3.8.2"
 const AppInstClientFieldNotifyId = "4"
 
 var AppInstClientAllFields = []string{
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyOrganization,
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyName,
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyVersion,
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyClusterKeyName,
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyOrganization,
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyName,
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyOrganization,
-	AppInstClientFieldClientKeyKeyUniqueId,
-	AppInstClientFieldClientKeyKeyUniqueIdType,
+	AppInstClientFieldClientKeyAppInstKeyAppKeyOrganization,
+	AppInstClientFieldClientKeyAppInstKeyAppKeyName,
+	AppInstClientFieldClientKeyAppInstKeyAppKeyVersion,
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyClusterKeyName,
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyOrganization,
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyName,
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyOrganization,
+	AppInstClientFieldClientKeyUniqueId,
+	AppInstClientFieldClientKeyUniqueIdType,
 	AppInstClientFieldLocationLatitude,
 	AppInstClientFieldLocationLongitude,
 	AppInstClientFieldLocationHorizontalAccuracy,
@@ -1350,47 +1200,47 @@ var AppInstClientAllFields = []string{
 }
 
 var AppInstClientAllFieldsMap = map[string]struct{}{
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyOrganization:                    struct{}{},
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyName:                            struct{}{},
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyVersion:                         struct{}{},
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyClusterKeyName:          struct{}{},
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyOrganization: struct{}{},
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyName:         struct{}{},
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyOrganization:            struct{}{},
-	AppInstClientFieldClientKeyKeyUniqueId:                                        struct{}{},
-	AppInstClientFieldClientKeyKeyUniqueIdType:                                    struct{}{},
-	AppInstClientFieldLocationLatitude:                                            struct{}{},
-	AppInstClientFieldLocationLongitude:                                           struct{}{},
-	AppInstClientFieldLocationHorizontalAccuracy:                                  struct{}{},
-	AppInstClientFieldLocationVerticalAccuracy:                                    struct{}{},
-	AppInstClientFieldLocationAltitude:                                            struct{}{},
-	AppInstClientFieldLocationCourse:                                              struct{}{},
-	AppInstClientFieldLocationSpeed:                                               struct{}{},
-	AppInstClientFieldLocationTimestampSeconds:                                    struct{}{},
-	AppInstClientFieldLocationTimestampNanos:                                      struct{}{},
-	AppInstClientFieldNotifyId:                                                    struct{}{},
+	AppInstClientFieldClientKeyAppInstKeyAppKeyOrganization:                    struct{}{},
+	AppInstClientFieldClientKeyAppInstKeyAppKeyName:                            struct{}{},
+	AppInstClientFieldClientKeyAppInstKeyAppKeyVersion:                         struct{}{},
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyClusterKeyName:          struct{}{},
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyOrganization: struct{}{},
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyName:         struct{}{},
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyOrganization:            struct{}{},
+	AppInstClientFieldClientKeyUniqueId:                                        struct{}{},
+	AppInstClientFieldClientKeyUniqueIdType:                                    struct{}{},
+	AppInstClientFieldLocationLatitude:                                         struct{}{},
+	AppInstClientFieldLocationLongitude:                                        struct{}{},
+	AppInstClientFieldLocationHorizontalAccuracy:                               struct{}{},
+	AppInstClientFieldLocationVerticalAccuracy:                                 struct{}{},
+	AppInstClientFieldLocationAltitude:                                         struct{}{},
+	AppInstClientFieldLocationCourse:                                           struct{}{},
+	AppInstClientFieldLocationSpeed:                                            struct{}{},
+	AppInstClientFieldLocationTimestampSeconds:                                 struct{}{},
+	AppInstClientFieldLocationTimestampNanos:                                   struct{}{},
+	AppInstClientFieldNotifyId:                                                 struct{}{},
 }
 
 var AppInstClientAllFieldsStringMap = map[string]string{
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyOrganization:                    "Client Key Key App Inst Key App Key Organization",
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyName:                            "Client Key Key App Inst Key App Key Name",
-	AppInstClientFieldClientKeyKeyAppInstKeyAppKeyVersion:                         "Client Key Key App Inst Key App Key Version",
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyClusterKeyName:          "Client Key Key App Inst Key Cluster Inst Key Cluster Key Name",
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyOrganization: "Client Key Key App Inst Key Cluster Inst Key Cloudlet Key Organization",
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyName:         "Client Key Key App Inst Key Cluster Inst Key Cloudlet Key Name",
-	AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyOrganization:            "Client Key Key App Inst Key Cluster Inst Key Organization",
-	AppInstClientFieldClientKeyKeyUniqueId:                                        "Client Key Key Unique Id",
-	AppInstClientFieldClientKeyKeyUniqueIdType:                                    "Client Key Key Unique Id Type",
-	AppInstClientFieldLocationLatitude:                                            "Location Latitude",
-	AppInstClientFieldLocationLongitude:                                           "Location Longitude",
-	AppInstClientFieldLocationHorizontalAccuracy:                                  "Location Horizontal Accuracy",
-	AppInstClientFieldLocationVerticalAccuracy:                                    "Location Vertical Accuracy",
-	AppInstClientFieldLocationAltitude:                                            "Location Altitude",
-	AppInstClientFieldLocationCourse:                                              "Location Course",
-	AppInstClientFieldLocationSpeed:                                               "Location Speed",
-	AppInstClientFieldLocationTimestampSeconds:                                    "Location Timestamp Seconds",
-	AppInstClientFieldLocationTimestampNanos:                                      "Location Timestamp Nanos",
-	AppInstClientFieldNotifyId:                                                    "Notify Id",
+	AppInstClientFieldClientKeyAppInstKeyAppKeyOrganization:                    "Client Key App Inst Key App Key Organization",
+	AppInstClientFieldClientKeyAppInstKeyAppKeyName:                            "Client Key App Inst Key App Key Name",
+	AppInstClientFieldClientKeyAppInstKeyAppKeyVersion:                         "Client Key App Inst Key App Key Version",
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyClusterKeyName:          "Client Key App Inst Key Cluster Inst Key Cluster Key Name",
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyOrganization: "Client Key App Inst Key Cluster Inst Key Cloudlet Key Organization",
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyName:         "Client Key App Inst Key Cluster Inst Key Cloudlet Key Name",
+	AppInstClientFieldClientKeyAppInstKeyClusterInstKeyOrganization:            "Client Key App Inst Key Cluster Inst Key Organization",
+	AppInstClientFieldClientKeyUniqueId:                                        "Client Key Unique Id",
+	AppInstClientFieldClientKeyUniqueIdType:                                    "Client Key Unique Id Type",
+	AppInstClientFieldLocationLatitude:                                         "Location Latitude",
+	AppInstClientFieldLocationLongitude:                                        "Location Longitude",
+	AppInstClientFieldLocationHorizontalAccuracy:                               "Location Horizontal Accuracy",
+	AppInstClientFieldLocationVerticalAccuracy:                                 "Location Vertical Accuracy",
+	AppInstClientFieldLocationAltitude:                                         "Location Altitude",
+	AppInstClientFieldLocationCourse:                                           "Location Course",
+	AppInstClientFieldLocationSpeed:                                            "Location Speed",
+	AppInstClientFieldLocationTimestampSeconds:                                 "Location Timestamp Seconds",
+	AppInstClientFieldLocationTimestampNanos:                                   "Location Timestamp Nanos",
+	AppInstClientFieldNotifyId:                                                 "Notify Id",
 }
 
 func (m *AppInstClient) IsKeyField(s string) bool {
@@ -1398,72 +1248,62 @@ func (m *AppInstClient) IsKeyField(s string) bool {
 }
 
 func (m *AppInstClient) DiffFields(o *AppInstClient, fields map[string]struct{}) {
-	if m.ClientKey.Key.AppInstKey != nil && o.ClientKey.Key.AppInstKey != nil {
-		if m.ClientKey.Key.AppInstKey.AppKey.Organization != o.ClientKey.Key.AppInstKey.AppKey.Organization {
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyAppKeyOrganization] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyAppKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKey] = struct{}{}
+	if m.ClientKey.AppInstKey != nil && o.ClientKey.AppInstKey != nil {
+		if m.ClientKey.AppInstKey.AppKey.Organization != o.ClientKey.AppInstKey.AppKey.Organization {
+			fields[AppInstClientFieldClientKeyAppInstKeyAppKeyOrganization] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyAppKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 			fields[AppInstClientFieldClientKey] = struct{}{}
 		}
-		if m.ClientKey.Key.AppInstKey.AppKey.Name != o.ClientKey.Key.AppInstKey.AppKey.Name {
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyAppKeyName] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyAppKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKey] = struct{}{}
+		if m.ClientKey.AppInstKey.AppKey.Name != o.ClientKey.AppInstKey.AppKey.Name {
+			fields[AppInstClientFieldClientKeyAppInstKeyAppKeyName] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyAppKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 			fields[AppInstClientFieldClientKey] = struct{}{}
 		}
-		if m.ClientKey.Key.AppInstKey.AppKey.Version != o.ClientKey.Key.AppInstKey.AppKey.Version {
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyAppKeyVersion] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyAppKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKey] = struct{}{}
+		if m.ClientKey.AppInstKey.AppKey.Version != o.ClientKey.AppInstKey.AppKey.Version {
+			fields[AppInstClientFieldClientKeyAppInstKeyAppKeyVersion] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyAppKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 			fields[AppInstClientFieldClientKey] = struct{}{}
 		}
-		if m.ClientKey.Key.AppInstKey.ClusterInstKey.ClusterKey.Name != o.ClientKey.Key.AppInstKey.ClusterInstKey.ClusterKey.Name {
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyClusterKeyName] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyClusterKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKey] = struct{}{}
+		if m.ClientKey.AppInstKey.ClusterInstKey.ClusterKey.Name != o.ClientKey.AppInstKey.ClusterInstKey.ClusterKey.Name {
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKeyClusterKeyName] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKeyClusterKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 			fields[AppInstClientFieldClientKey] = struct{}{}
 		}
-		if m.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization != o.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization {
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyOrganization] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKey] = struct{}{}
+		if m.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Organization != o.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Organization {
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyOrganization] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 			fields[AppInstClientFieldClientKey] = struct{}{}
 		}
-		if m.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Name != o.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Name {
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKeyName] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyCloudletKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKey] = struct{}{}
+		if m.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Name != o.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Name {
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKeyName] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKeyCloudletKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 			fields[AppInstClientFieldClientKey] = struct{}{}
 		}
-		if m.ClientKey.Key.AppInstKey.ClusterInstKey.Organization != o.ClientKey.Key.AppInstKey.ClusterInstKey.Organization {
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKeyOrganization] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKeyClusterInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-			fields[AppInstClientFieldClientKeyKey] = struct{}{}
+		if m.ClientKey.AppInstKey.ClusterInstKey.Organization != o.ClientKey.AppInstKey.ClusterInstKey.Organization {
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKeyOrganization] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKeyClusterInstKey] = struct{}{}
+			fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 			fields[AppInstClientFieldClientKey] = struct{}{}
 		}
-	} else if (m.ClientKey.Key.AppInstKey != nil && o.ClientKey.Key.AppInstKey == nil) || (m.ClientKey.Key.AppInstKey == nil && o.ClientKey.Key.AppInstKey != nil) {
-		fields[AppInstClientFieldClientKeyKeyAppInstKey] = struct{}{}
-		fields[AppInstClientFieldClientKeyKey] = struct{}{}
+	} else if (m.ClientKey.AppInstKey != nil && o.ClientKey.AppInstKey == nil) || (m.ClientKey.AppInstKey == nil && o.ClientKey.AppInstKey != nil) {
+		fields[AppInstClientFieldClientKeyAppInstKey] = struct{}{}
 		fields[AppInstClientFieldClientKey] = struct{}{}
 	}
-	if m.ClientKey.Key.UniqueId != o.ClientKey.Key.UniqueId {
-		fields[AppInstClientFieldClientKeyKeyUniqueId] = struct{}{}
-		fields[AppInstClientFieldClientKeyKey] = struct{}{}
+	if m.ClientKey.UniqueId != o.ClientKey.UniqueId {
+		fields[AppInstClientFieldClientKeyUniqueId] = struct{}{}
 		fields[AppInstClientFieldClientKey] = struct{}{}
 	}
-	if m.ClientKey.Key.UniqueIdType != o.ClientKey.Key.UniqueIdType {
-		fields[AppInstClientFieldClientKeyKeyUniqueIdType] = struct{}{}
-		fields[AppInstClientFieldClientKeyKey] = struct{}{}
+	if m.ClientKey.UniqueIdType != o.ClientKey.UniqueIdType {
+		fields[AppInstClientFieldClientKeyUniqueIdType] = struct{}{}
 		fields[AppInstClientFieldClientKey] = struct{}{}
 	}
 	if m.Location.Latitude != o.Location.Latitude {
@@ -1519,75 +1359,73 @@ func (m *AppInstClient) CopyInFields(src *AppInstClient) int {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			if _, set := fmap["2.1.1"]; set {
-				if src.ClientKey.Key.AppInstKey != nil {
-					m.ClientKey.Key.AppInstKey = &AppInstKey{}
+			if src.ClientKey.AppInstKey != nil {
+				m.ClientKey.AppInstKey = &AppInstKey{}
+				if _, set := fmap["2.1.1"]; set {
 					if _, set := fmap["2.1.1.1"]; set {
-						if _, set := fmap["2.1.1.1.1"]; set {
-							if m.ClientKey.Key.AppInstKey.AppKey.Organization != src.ClientKey.Key.AppInstKey.AppKey.Organization {
-								m.ClientKey.Key.AppInstKey.AppKey.Organization = src.ClientKey.Key.AppInstKey.AppKey.Organization
-								changed++
-							}
+						if m.ClientKey.AppInstKey.AppKey.Organization != src.ClientKey.AppInstKey.AppKey.Organization {
+							m.ClientKey.AppInstKey.AppKey.Organization = src.ClientKey.AppInstKey.AppKey.Organization
+							changed++
 						}
-						if _, set := fmap["2.1.1.1.2"]; set {
-							if m.ClientKey.Key.AppInstKey.AppKey.Name != src.ClientKey.Key.AppInstKey.AppKey.Name {
-								m.ClientKey.Key.AppInstKey.AppKey.Name = src.ClientKey.Key.AppInstKey.AppKey.Name
-								changed++
-							}
+					}
+					if _, set := fmap["2.1.1.2"]; set {
+						if m.ClientKey.AppInstKey.AppKey.Name != src.ClientKey.AppInstKey.AppKey.Name {
+							m.ClientKey.AppInstKey.AppKey.Name = src.ClientKey.AppInstKey.AppKey.Name
+							changed++
 						}
-						if _, set := fmap["2.1.1.1.3"]; set {
-							if m.ClientKey.Key.AppInstKey.AppKey.Version != src.ClientKey.Key.AppInstKey.AppKey.Version {
-								m.ClientKey.Key.AppInstKey.AppKey.Version = src.ClientKey.Key.AppInstKey.AppKey.Version
+					}
+					if _, set := fmap["2.1.1.3"]; set {
+						if m.ClientKey.AppInstKey.AppKey.Version != src.ClientKey.AppInstKey.AppKey.Version {
+							m.ClientKey.AppInstKey.AppKey.Version = src.ClientKey.AppInstKey.AppKey.Version
+							changed++
+						}
+					}
+				}
+				if _, set := fmap["2.1.4"]; set {
+					if _, set := fmap["2.1.4.1"]; set {
+						if _, set := fmap["2.1.4.1.1"]; set {
+							if m.ClientKey.AppInstKey.ClusterInstKey.ClusterKey.Name != src.ClientKey.AppInstKey.ClusterInstKey.ClusterKey.Name {
+								m.ClientKey.AppInstKey.ClusterInstKey.ClusterKey.Name = src.ClientKey.AppInstKey.ClusterInstKey.ClusterKey.Name
 								changed++
 							}
 						}
 					}
-					if _, set := fmap["2.1.1.4"]; set {
-						if _, set := fmap["2.1.1.4.1"]; set {
-							if _, set := fmap["2.1.1.4.1.1"]; set {
-								if m.ClientKey.Key.AppInstKey.ClusterInstKey.ClusterKey.Name != src.ClientKey.Key.AppInstKey.ClusterInstKey.ClusterKey.Name {
-									m.ClientKey.Key.AppInstKey.ClusterInstKey.ClusterKey.Name = src.ClientKey.Key.AppInstKey.ClusterInstKey.ClusterKey.Name
-									changed++
-								}
+					if _, set := fmap["2.1.4.2"]; set {
+						if _, set := fmap["2.1.4.2.1"]; set {
+							if m.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Organization != src.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Organization {
+								m.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Organization = src.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Organization
+								changed++
 							}
 						}
-						if _, set := fmap["2.1.1.4.2"]; set {
-							if _, set := fmap["2.1.1.4.2.1"]; set {
-								if m.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization != src.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization {
-									m.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization = src.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Organization
-									changed++
-								}
-							}
-							if _, set := fmap["2.1.1.4.2.2"]; set {
-								if m.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Name != src.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Name {
-									m.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Name = src.ClientKey.Key.AppInstKey.ClusterInstKey.CloudletKey.Name
-									changed++
-								}
-							}
-						}
-						if _, set := fmap["2.1.1.4.3"]; set {
-							if m.ClientKey.Key.AppInstKey.ClusterInstKey.Organization != src.ClientKey.Key.AppInstKey.ClusterInstKey.Organization {
-								m.ClientKey.Key.AppInstKey.ClusterInstKey.Organization = src.ClientKey.Key.AppInstKey.ClusterInstKey.Organization
+						if _, set := fmap["2.1.4.2.2"]; set {
+							if m.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Name != src.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Name {
+								m.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Name = src.ClientKey.AppInstKey.ClusterInstKey.CloudletKey.Name
 								changed++
 							}
 						}
 					}
-				} else if m.ClientKey.Key.AppInstKey != nil {
-					m.ClientKey.Key.AppInstKey = nil
-					changed++
+					if _, set := fmap["2.1.4.3"]; set {
+						if m.ClientKey.AppInstKey.ClusterInstKey.Organization != src.ClientKey.AppInstKey.ClusterInstKey.Organization {
+							m.ClientKey.AppInstKey.ClusterInstKey.Organization = src.ClientKey.AppInstKey.ClusterInstKey.Organization
+							changed++
+						}
+					}
 				}
+			} else if m.ClientKey.AppInstKey != nil {
+				m.ClientKey.AppInstKey = nil
+				changed++
 			}
-			if _, set := fmap["2.1.2"]; set {
-				if m.ClientKey.Key.UniqueId != src.ClientKey.Key.UniqueId {
-					m.ClientKey.Key.UniqueId = src.ClientKey.Key.UniqueId
-					changed++
-				}
+		}
+		if _, set := fmap["2.2"]; set {
+			if m.ClientKey.UniqueId != src.ClientKey.UniqueId {
+				m.ClientKey.UniqueId = src.ClientKey.UniqueId
+				changed++
 			}
-			if _, set := fmap["2.1.3"]; set {
-				if m.ClientKey.Key.UniqueIdType != src.ClientKey.Key.UniqueIdType {
-					m.ClientKey.Key.UniqueIdType = src.ClientKey.Key.UniqueIdType
-					changed++
-				}
+		}
+		if _, set := fmap["2.3"]; set {
+			if m.ClientKey.UniqueIdType != src.ClientKey.UniqueIdType {
+				m.ClientKey.UniqueIdType = src.ClientKey.UniqueIdType
+				changed++
 			}
 		}
 	}
@@ -1691,7 +1529,7 @@ func IgnoreAppInstClientFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(AppInstClient{}, names...)
 }
 
-func (m *AppInstClientLookupKey) Size() (n int) {
+func (m *AppInstClientKey) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1709,17 +1547,6 @@ func (m *AppInstClientLookupKey) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppinstclient(uint64(l))
 	}
-	return n
-}
-
-func (m *AppInstClientKey) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Key.Size()
-	n += 1 + l + sovAppinstclient(uint64(l))
 	return n
 }
 
@@ -1751,7 +1578,7 @@ func sovAppinstclient(x uint64) (n int) {
 func sozAppinstclient(x uint64) (n int) {
 	return sovAppinstclient(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AppInstClientLookupKey) Unmarshal(dAtA []byte) error {
+func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1774,10 +1601,10 @@ func (m *AppInstClientLookupKey) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AppInstClientLookupKey: wiretype end group for non-group")
+			return fmt.Errorf("proto: AppInstClientKey: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AppInstClientLookupKey: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AppInstClientKey: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1879,92 +1706,6 @@ func (m *AppInstClientLookupKey) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.UniqueIdType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAppinstclient(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAppinstclient
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthAppinstclient
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AppInstClientKey) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAppinstclient
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AppInstClientKey: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AppInstClientKey: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppinstclient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAppinstclient
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthAppinstclient
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

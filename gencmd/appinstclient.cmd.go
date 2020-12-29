@@ -206,31 +206,6 @@ var AppInstClientApiCmds = []*cobra.Command{
 	StreamAppInstClientsLocalCmd.GenCmd(),
 }
 
-var AppInstClientLookupKeyRequiredArgs = []string{}
-var AppInstClientLookupKeyOptionalArgs = []string{
-	"appinstkey.appkey.organization",
-	"appinstkey.appkey.name",
-	"appinstkey.appkey.version",
-	"appinstkey.clusterinstkey.clusterkey.name",
-	"appinstkey.clusterinstkey.cloudletkey.organization",
-	"appinstkey.clusterinstkey.cloudletkey.name",
-	"appinstkey.clusterinstkey.organization",
-	"uniqueid",
-	"uniqueidtype",
-}
-var AppInstClientLookupKeyAliasArgs = []string{}
-var AppInstClientLookupKeyComments = map[string]string{
-	"appinstkey.appkey.organization":                     "App developer organization",
-	"appinstkey.appkey.name":                             "App name",
-	"appinstkey.appkey.version":                          "App version",
-	"appinstkey.clusterinstkey.clusterkey.name":          "Cluster name",
-	"appinstkey.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
-	"appinstkey.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
-	"appinstkey.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
-	"uniqueid":                                           "AppInstClient Unique Id",
-	"uniqueidtype":                                       "AppInstClient Unique Id Type",
-}
-var AppInstClientLookupKeySpecialArgs = map[string]string{}
 var AppInstClientKeyRequiredArgs = []string{
 	"app-org",
 	"appname",
@@ -245,15 +220,15 @@ var AppInstClientKeyOptionalArgs = []string{
 	"uniqueidtype",
 }
 var AppInstClientKeyAliasArgs = []string{
-	"app-org=key.appinstkey.appkey.organization",
-	"appname=key.appinstkey.appkey.name",
-	"appvers=key.appinstkey.appkey.version",
-	"cluster=key.appinstkey.clusterinstkey.clusterkey.name",
-	"cloudlet-org=key.appinstkey.clusterinstkey.cloudletkey.organization",
-	"cloudlet=key.appinstkey.clusterinstkey.cloudletkey.name",
-	"cluster-org=key.appinstkey.clusterinstkey.organization",
-	"uniqueid=key.uniqueid",
-	"uniqueidtype=key.uniqueidtype",
+	"app-org=appinstkey.appkey.organization",
+	"appname=appinstkey.appkey.name",
+	"appvers=appinstkey.appkey.version",
+	"cluster=appinstkey.clusterinstkey.clusterkey.name",
+	"cloudlet-org=appinstkey.clusterinstkey.cloudletkey.organization",
+	"cloudlet=appinstkey.clusterinstkey.cloudletkey.name",
+	"cluster-org=appinstkey.clusterinstkey.organization",
+	"uniqueid=uniqueid",
+	"uniqueidtype=uniqueidtype",
 }
 var AppInstClientKeyComments = map[string]string{
 	"app-org":      "App developer organization",
@@ -269,15 +244,15 @@ var AppInstClientKeyComments = map[string]string{
 var AppInstClientKeySpecialArgs = map[string]string{}
 var AppInstClientRequiredArgs = []string{}
 var AppInstClientOptionalArgs = []string{
-	"clientkey.key.appinstkey.appkey.organization",
-	"clientkey.key.appinstkey.appkey.name",
-	"clientkey.key.appinstkey.appkey.version",
-	"clientkey.key.appinstkey.clusterinstkey.clusterkey.name",
-	"clientkey.key.appinstkey.clusterinstkey.cloudletkey.organization",
-	"clientkey.key.appinstkey.clusterinstkey.cloudletkey.name",
-	"clientkey.key.appinstkey.clusterinstkey.organization",
-	"clientkey.key.uniqueid",
-	"clientkey.key.uniqueidtype",
+	"clientkey.appinstkey.appkey.organization",
+	"clientkey.appinstkey.appkey.name",
+	"clientkey.appinstkey.appkey.version",
+	"clientkey.appinstkey.clusterinstkey.clusterkey.name",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.organization",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.name",
+	"clientkey.appinstkey.clusterinstkey.organization",
+	"clientkey.uniqueid",
+	"clientkey.uniqueidtype",
 	"location.latitude",
 	"location.longitude",
 	"location.horizontalaccuracy",
@@ -292,23 +267,23 @@ var AppInstClientOptionalArgs = []string{
 var AppInstClientAliasArgs = []string{}
 var AppInstClientComments = map[string]string{
 	"fields": "Fields are used for the Update API to specify which fields to apply",
-	"clientkey.key.appinstkey.appkey.organization":                     "App developer organization",
-	"clientkey.key.appinstkey.appkey.name":                             "App name",
-	"clientkey.key.appinstkey.appkey.version":                          "App version",
-	"clientkey.key.appinstkey.clusterinstkey.clusterkey.name":          "Cluster name",
-	"clientkey.key.appinstkey.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
-	"clientkey.key.appinstkey.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
-	"clientkey.key.appinstkey.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
-	"clientkey.key.uniqueid":                                           "AppInstClient Unique Id",
-	"clientkey.key.uniqueidtype":                                       "AppInstClient Unique Id Type",
-	"location.latitude":                                                "latitude in WGS 84 coordinates",
-	"location.longitude":                                               "longitude in WGS 84 coordinates",
-	"location.horizontalaccuracy":                                      "horizontal accuracy (radius in meters)",
-	"location.verticalaccuracy":                                        "vertical accuracy (meters)",
-	"location.altitude":                                                "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"location.course":                                                  "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"location.speed":                                                   "speed (IOS) / velocity (Android) (meters/sec)",
-	"notifyid":                                                         "Id of client assigned by server (internal use only)",
+	"clientkey.appinstkey.appkey.organization":                     "App developer organization",
+	"clientkey.appinstkey.appkey.name":                             "App name",
+	"clientkey.appinstkey.appkey.version":                          "App version",
+	"clientkey.appinstkey.clusterinstkey.clusterkey.name":          "Cluster name",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
+	"clientkey.appinstkey.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
+	"clientkey.uniqueid":                                           "AppInstClient Unique Id",
+	"clientkey.uniqueidtype":                                       "AppInstClient Unique Id Type",
+	"location.latitude":                                            "latitude in WGS 84 coordinates",
+	"location.longitude":                                           "longitude in WGS 84 coordinates",
+	"location.horizontalaccuracy":                                  "horizontal accuracy (radius in meters)",
+	"location.verticalaccuracy":                                    "vertical accuracy (meters)",
+	"location.altitude":                                            "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"location.course":                                              "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"location.speed":                                               "speed (IOS) / velocity (Android) (meters/sec)",
+	"notifyid":                                                     "Id of client assigned by server (internal use only)",
 }
 var AppInstClientSpecialArgs = map[string]string{
 	"fields": "StringArray",

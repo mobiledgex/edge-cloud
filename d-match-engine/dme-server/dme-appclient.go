@@ -34,23 +34,23 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	clientsMap.Lock()
 	defer clientsMap.Unlock()
 	clientKey := ClientUuid{
-		UniqueId:     msg.ClientKey.Key.UniqueId,
-		UniqueIdType: msg.ClientKey.Key.UniqueIdType,
+		UniqueId:     msg.ClientKey.UniqueId,
+		UniqueIdType: msg.ClientKey.UniqueIdType,
 	}
 	// if it existed before, update the clientsByAppInst
 	if client, found := clientsMap.clients[clientKey]; found {
 		// remove from the list of clients in the old appInstance
-		list, found := clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey]
+		list, found := clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey]
 		if !found {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Found an orphan client", "client", msg, "old pointer", client)
 		} else {
 			for ii, _ := range list {
-				if list[ii].ClientKey.Key.UniqueId == client.ClientKey.Key.UniqueId &&
-					list[ii].ClientKey.Key.UniqueIdType == client.ClientKey.Key.UniqueIdType {
+				if list[ii].ClientKey.UniqueId == client.ClientKey.UniqueId &&
+					list[ii].ClientKey.UniqueIdType == client.ClientKey.UniqueIdType {
 					// remove from the old appInst list
-					clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey] =
-						append(clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey][:ii],
-							clientsMap.clientsByAppInst[*client.ClientKey.Key.AppInstKey][ii+1:]...)
+					clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey] =
+						append(clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey][:ii],
+							clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey][ii+1:]...)
 					break
 				}
 			}
@@ -59,7 +59,7 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	// update the value in the clients map
 	clientsMap.clients[clientKey] = msg
 
-	mapKey := *msg.ClientKey.Key.AppInstKey
+	mapKey := *msg.ClientKey.AppInstKey
 	list, found := clientsMap.clientsByAppInst[mapKey]
 	if !found {
 		clientsMap.clientsByAppInst[mapKey] = []edgeproto.AppInstClient{*msg}
@@ -90,8 +90,8 @@ func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 		// walk the list and delete all individual clients
 		for _, c := range list {
 			key := ClientUuid{
-				UniqueId:     c.ClientKey.Key.UniqueId,
-				UniqueIdType: c.ClientKey.Key.UniqueIdType,
+				UniqueId:     c.ClientKey.UniqueId,
+				UniqueIdType: c.ClientKey.UniqueIdType,
 			}
 			delete(clientsMap.clients, key)
 		}
@@ -113,7 +113,7 @@ func SendCachedClients(ctx context.Context, old *edgeproto.AppInstClientKey, new
 	}
 	clientsMap.RLock()
 	defer clientsMap.RUnlock()
-	list, found := clientsMap.clientsByAppInst[*new.Key.AppInstKey]
+	list, found := clientsMap.clientsByAppInst[*new.AppInstKey]
 	// AppInst based request
 	if found {
 		for ii := range list {

@@ -13,7 +13,7 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
-message AppInstClientLookupKey {
+message AppInstClientKey {
   // AppInst Key
   AppInstKey app_inst_key = 1 [(protogen.keytag) = "appinstkey"];
   // AppInstClient Unique Id
@@ -21,23 +21,18 @@ message AppInstClientLookupKey {
   // AppInstClient Unique Id Type
   string unique_id_type = 3 [(protogen.keytag) = "uniqueidtype"];
 
-  option (protogen.generate_matches) = true;
-  option (protogen.obj_key) = true;
-  option (gogoproto.gostring) = true;
-}
+//  AppInstClientLookupKey key = 1 [(gogoproto.nullable) = false];
 
-// AppKey uniquely identifies an App
-message AppInstClientKey {
-  AppInstClientLookupKey key = 1 [(gogoproto.nullable) = false];
-
+  option (protogen.obj_and_key) = true;
   option (protogen.notify_message) = true;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.not_required) = "Key.AppInstKey.ClusterInstKey.ClusterKey.Name,Key.AppInstKey.ClusterInstKey.Organization,Key.AppInstKey.ClusterInstKey.CloudletKey.Name,Key.AppInstKey.ClusterInstKey.CloudletKey.Organization,Key.UniqueId,Key.UniqueIdType";
-  option (protogen.alias) = "uniqueid=Key.UniqueId,uniqueidtype=Key.UniqueIdType,appname=Key.AppInstKey.AppKey.Name,appvers=Key.AppInstKey.AppKey.Version,app-org=Key.AppInstKey.AppKey.Organization,cluster=Key.AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=Key.AppInstKey.ClusterInstKey.Organization,cloudlet=Key.AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.AppInstKey.ClusterInstKey.CloudletKey.Organization";
+  option (protogen.not_required) = "AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization,UniqueId,UniqueIdType";
+  option (protogen.alias) = "uniqueid=UniqueId,uniqueidtype=UniqueIdType,appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization";
   option (protogen.uses_org) = "none";
+  option (gogoproto.gostring) = true;
 }
 
 
@@ -64,7 +59,7 @@ service AppInstClientApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.AppInstKey.AppKey.Organization";
+    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,AppInstKey.AppKey.Organization";
     option (protogen.non_standard_show) = true;
   }
   // This is used unternally to forward AppInstClients to other Controllers

@@ -14,7 +14,7 @@ import (
 type AppInstClientApi struct {
 	queueMux       sync.Mutex
 	appInstClients []*edgeproto.AppInstClient
-	clientChan     map[edgeproto.AppInstClientLookupKey][]chan edgeproto.AppInstClient
+	clientChan     map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient
 }
 
 var appInstClientApi = AppInstClientApi{}
@@ -23,27 +23,27 @@ var appInstClientSendMany *notify.AppInstClientSendMany
 func InitAppInstClientApi() {
 	appInstClientSendMany = notify.NewAppInstClientSendMany()
 	appInstClientApi.appInstClients = make([]*edgeproto.AppInstClient, 0)
-	appInstClientApi.clientChan = make(map[edgeproto.AppInstClientLookupKey][]chan edgeproto.AppInstClient)
+	appInstClientApi.clientChan = make(map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient)
 }
 
 func (s *AppInstClientApi) SetRecvChan(ctx context.Context, in *edgeproto.AppInstClientKey, ch chan edgeproto.AppInstClient) {
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
-	_, found := s.clientChan[in.Key]
+	_, found := s.clientChan[*in]
 	if !found {
-		s.clientChan[in.Key] = []chan edgeproto.AppInstClient{ch}
+		s.clientChan[*in] = []chan edgeproto.AppInstClient{ch}
 	} else {
-		s.clientChan[in.Key] = append(s.clientChan[in.Key], ch)
+		s.clientChan[*in] = append(s.clientChan[*in], ch)
 	}
 
 	// use filter match option, since not all parts of the key may be set
 	for ii, client := range s.appInstClients {
-		if client.ClientKey.Key.Matches(&in.Key, edgeproto.MatchFilter()) {
+		if client.ClientKey.Matches(in, edgeproto.MatchFilter()) {
 			ch <- *s.appInstClients[ii]
 		}
 	}
 
-	if !appInstClientKeyApi.HasKey(&in.Key) {
+	if !appInstClientKeyApi.HasKey(in) {
 		appInstClientKeyApi.Update(ctx, in, 0)
 	}
 }
@@ -52,22 +52,22 @@ func (s *AppInstClientApi) SetRecvChan(ctx context.Context, in *edgeproto.AppIns
 func (s *AppInstClientApi) ClearRecvChan(ctx context.Context, in *edgeproto.AppInstClientKey, ch chan edgeproto.AppInstClient) int {
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
-	_, found := s.clientChan[in.Key]
+	_, found := s.clientChan[*in]
 	if !found {
-		log.SpanLog(ctx, log.DebugLevelApi, "No client channels found for appInst", "appInst", in.Key)
+		log.SpanLog(ctx, log.DebugLevelApi, "No client channels found for appInst", "appInst", in.AppInstKey)
 		return -1
 	}
-	for ii, c := range s.clientChan[in.Key] {
+	for ii, c := range s.clientChan[*in] {
 		if c == ch {
 			// Found channel - delete it
-			s.clientChan[in.Key] = append(s.clientChan[in.Key][:ii], s.clientChan[in.Key][ii+1:]...)
-			retLen := len(s.clientChan[in.Key])
+			s.clientChan[*in] = append(s.clientChan[*in][:ii], s.clientChan[*in][ii+1:]...)
+			retLen := len(s.clientChan[*in])
 			if retLen == 0 {
-				delete(s.clientChan, in.Key)
+				delete(s.clientChan, *in)
 				appInstClientKeyApi.Delete(ctx, in, 0)
 				// We also need to clean up our local buffer - it will be out of sync since DME won't update it
 				for ii, client := range s.appInstClients {
-					if client.ClientKey.Key.Matches(&in.Key, edgeproto.MatchFilter()) {
+					if client.ClientKey.Matches(in, edgeproto.MatchFilter()) {
 						if len(s.appInstClients) > ii+1 {
 							s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
 						} else {
@@ -81,7 +81,7 @@ func (s *AppInstClientApi) ClearRecvChan(ctx context.Context, in *edgeproto.AppI
 		}
 	}
 	// We didn't find a channel....log it and return -1
-	log.SpanLog(ctx, log.DebugLevelApi, "Channel not found", "key", in.Key, "chan", ch)
+	log.SpanLog(ctx, log.DebugLevelApi, "Channel not found", "key", in, "chan", ch)
 	return -1
 }
 
@@ -93,7 +93,7 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 	}
 	sendList := []chan edgeproto.AppInstClient{}
 	for k, cList := range s.clientChan {
-		if client.ClientKey.Key.Matches(&k, edgeproto.MatchFilter()) {
+		if client.ClientKey.Matches(&k, edgeproto.MatchFilter()) {
 			sendList = append(sendList, cList...)
 		}
 	}
@@ -104,8 +104,8 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 	// We need to either update, or add the client to the list
 	for ii, c := range s.appInstClients {
 		// Found the same client from before
-		if c.ClientKey.Key.UniqueId == client.ClientKey.Key.UniqueId &&
-			c.ClientKey.Key.UniqueIdType == client.ClientKey.Key.UniqueIdType {
+		if c.ClientKey.UniqueId == client.ClientKey.UniqueId &&
+			c.ClientKey.UniqueIdType == client.ClientKey.UniqueIdType {
 			if len(s.appInstClients) > ii+1 {
 				// remove this client the and append it at the end, since it's new
 				s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
@@ -162,13 +162,13 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 	var ctrlConns []*grpc.ClientConn
 
 	// Check if the App exists
-	if !appApi.HasApp(&in.Key.AppInstKey.AppKey) {
-		return in.Key.NotFoundError()
+	if !appApi.HasApp(&in.AppInstKey.AppKey) {
+		return in.NotFoundError()
 	}
 
 	// Since we don't care about the cluster developer and name set them to ""
-	in.Key.AppInstKey.ClusterInstKey.ClusterKey.Name = ""
-	in.Key.AppInstKey.ClusterInstKey.Organization = ""
+	in.AppInstKey.ClusterInstKey.ClusterKey.Name = ""
+	in.AppInstKey.ClusterInstKey.Organization = ""
 
 	ctrlConns = make([]*grpc.ClientConn, 0)
 	done := false
@@ -262,6 +262,6 @@ func (s *AppInstClientKeyApi) Flush(ctx context.Context, notifyId int64) {
 
 func (s *AppInstClientKeyApi) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {}
 
-func (s *AppInstClientKeyApi) HasKey(key *edgeproto.AppInstClientLookupKey) bool {
+func (s *AppInstClientKeyApi) HasKey(key *edgeproto.AppInstClientKey) bool {
 	return s.cache.HasKey(key)
 }

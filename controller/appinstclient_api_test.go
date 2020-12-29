@@ -62,7 +62,7 @@ func TestAppInstClientApi(t *testing.T) {
 	// Make sure that we didn't save it
 	err = appInstClientApi.ShowAppInstClient(&testutil.AppInstClientKeyData[0], &showServer)
 	require.NotNil(t, err, "Found an unexpected client")
-	require.Contains(t, err.Error(), testutil.AppInstClientKeyData[0].Key.NotFoundError().Error())
+	require.Contains(t, err.Error(), testutil.AppInstClientKeyData[0].NotFoundError().Error())
 
 	// Tests to verify that queue is being handled correctly
 	// Add a channel for appInst1
