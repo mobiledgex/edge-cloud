@@ -52,7 +52,7 @@ service TrustPolicyApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete a Trust policy
