@@ -256,16 +256,16 @@ static_resources:
                   "bytes_received": "%BYTES_RECEIVED%",
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
-				}
+                }
       {{if .UseTLS -}}
       transport_socket:
-	name: "envoy.transport_sockets.tls"
-	typed_config:
-	  "@type": "type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext"
-	  common_tls_context:
-	    tls_certificate_sds_secret_configs:
-		sds_config:
-		    path: /etc/envoy/sds.yaml
+        name: "envoy.transport_sockets.tls"
+        typed_config:
+          "@type": "type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext"
+          common_tls_context:
+            tls_certificate_sds_secret_configs:
+                sds_config:
+                    path: /etc/envoy/sds.yaml
       {{- end}}
   {{- end}}
   {{- range .UDPSpec}}
@@ -336,7 +336,7 @@ admin:
 var sdsYaml = `
 resources:
 - "@type": "type.googleapis.com/envoy.api.v2.auth.Secret"
-  tls_certificates:
+  tls_certificate:
     certificate_chain:
       filename: "/etc/envoy/certs/{{$.CertName}}.crt"
     private_key:

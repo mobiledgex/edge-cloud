@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -77,14 +78,14 @@ var noSudoMap = map[string]int{
 var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
 
 func Init(ctx context.Context, clients map[string]ssh.Client) {
+	if len(DedicatedClients) == 0 {
+		DedicatedClients = make(map[string]ssh.Client)
+	}
 	if clients == nil {
 		return
 	}
 	DedicatedMux.Lock()
 	defer DedicatedMux.Unlock()
-	if len(DedicatedClients) == 0 {
-		DedicatedClients = make(map[string]ssh.Client)
-	}
 	for k, v := range clients {
 		DedicatedClients[k] = v
 	}
@@ -168,7 +169,12 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", certsDir)
 		return fmt.Errorf("failed to create cert dir on rootlb: %s, %v", certsDir, err)
 	} else {
-		err = pc.CopyFile(client, AtomicCertsUpdater, AtomicCertsUpdater)
+		certsScript, err := ioutil.ReadFile(AtomicCertsUpdater)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to read atomic certs updater script", "err", err)
+			return fmt.Errorf("failed to read atomic certs updater script: %v", err)
+		}
+		err = pc.WriteFile(client, AtomicCertsUpdater, string(certsScript), "atomic-certs-updater", pc.SudoOn)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "failed to copy atomic certs updater script", "err", err)
 			return fmt.Errorf("failed to copy atomic certs updater script: %v", err)
@@ -183,7 +189,7 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 			return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
 		}
-		err = pc.Run(client, fmt.Sprintf("bash %s %s %s %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile)))
+		err = pc.Run(client, fmt.Sprintf("bash %s -d %s -c %s -k %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile)))
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 			return fmt.Errorf("failed to atomically update tls certs: %v", err)
