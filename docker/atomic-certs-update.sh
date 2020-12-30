@@ -92,18 +92,18 @@ fi
 
 # Atomic update of certs using symlinks
 if [[ -f $CERT_FILE.new ]]; then
-        NEW_CERTS_DIR=..certs_$(date "+%Y_%m_%d_%H_%M_%S.%s")
-        mkdir -p $NEW_CERTS_DIR
-        mv $CERT_FILE.new $NEW_CERTS_DIR/$CERT_FILE
-        mv $KEY_FILE.new $NEW_CERTS_DIR/$KEY_FILE
-        rm -f ..tmp; ln -snf $NEW_CERTS_DIR ..tmp
-        mv -Tf ..tmp ..data
+	NEW_CERTS_DIR=..certs_$(date "+%Y_%m_%d_%H_%M_%S.%s")
+	mkdir -p $NEW_CERTS_DIR
+	mv $CERT_FILE.new $NEW_CERTS_DIR/$CERT_FILE
+	mv $KEY_FILE.new $NEW_CERTS_DIR/$KEY_FILE
+	rm -f ..tmp; ln -snf $NEW_CERTS_DIR ..tmp
+	mv -Tf ..tmp ..data
 
 	if [[ ! -L $CERT_FILE ]]; then
 	  ln -snf ..data/$CERT_FILE $CERT_FILE
 	  ln -snf ..data/$KEY_FILE $KEY_FILE
 	fi
 
-        # Prune old certs
-        find -type d -name "..certs_*" -not -path "./$NEW_CERTS_DIR" | xargs rm -rf
+	# Prune old certs
+	find -type d -name "..certs_*" -not -path "./$NEW_CERTS_DIR" | xargs rm -rf
 fi
