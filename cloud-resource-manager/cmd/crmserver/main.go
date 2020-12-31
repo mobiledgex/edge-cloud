@@ -297,7 +297,13 @@ func main() {
 			cloudcommon.ClientTypeRootLB,
 		)
 		if err == nil {
-			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, nodeMgr.VaultAddr, platform.GetType(), rootlb, *commercialCerts)
+			lbClients, err := platform.GetRootLBClients(ctx)
+			if err != nil {
+				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
+			proxy.Init(ctx, lbClients)
+			proxy.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, platform.GetType(), rootlb, *commercialCerts)
 		}
 		tlsSpan.Finish()
 	}()
