@@ -17,6 +17,7 @@ import (
 )
 
 var envoyYamlT *template.Template
+var sdsYamlT *template.Template
 
 // this is the default value in envoy, for DOS protection
 const defaultConcurrentConns uint64 = 1024
@@ -25,6 +26,7 @@ const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0
 
 func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
+	sdsYamlT = template.Must(template.New("yaml").Parse(sdsYaml))
 }
 
 func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string, ops ...Op) error {
@@ -53,7 +55,8 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		return err
 	}
 	eyamlName := dir + "/envoy.yaml"
-	err = createEnvoyYaml(ctx, client, eyamlName, name, listenIP, backendIP, ports, skipHcPorts)
+	syamlName := dir + "/sds.yaml"
+	isTLS, err := createEnvoyYaml(ctx, client, dir, name, listenIP, backendIP, ports, skipHcPorts)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
@@ -70,6 +73,10 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	certsDir, _, _, err := GetCertsDirAndFiles(ctx, client)
 	if err != nil {
 		return fmt.Errorf("Unable to get certsDir - %v", "err")
+	}
+	if isTLS {
+		// use envoy SDS (secret discovery service) to refresh certs
+		cmdArgs = append(cmdArgs, "-v", syamlName+":/etc/envoy/sds.yaml")
 	}
 	cmdArgs = append(cmdArgs, []string{
 		"-v", certsDir + ":/etc/envoy/certs",
@@ -114,7 +121,7 @@ func buildPortsMapFromString(portsString string) (map[string]struct{}, error) {
 	return portMap, nil
 }
 
-func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string) error {
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string) (bool, error) {
 	var skipHcAll = false
 	var skipHcPortsMap map[string]struct{}
 	var err error
@@ -130,10 +137,11 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 	} else {
 		skipHcPortsMap, err = buildPortsMapFromString(skipHcPorts)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
+	isTLS := false
 	for _, p := range ports {
 		endPort := p.EndPort
 		if endPort == 0 {
@@ -141,7 +149,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 		} else {
 			// if we have a port range, the internal ports and external ports must match
 			if p.InternalPort != p.PublicPort {
-				return fmt.Errorf("public and internal ports must match when port range in use")
+				return false, fmt.Errorf("public and internal ports must match when port range in use")
 			}
 		}
 		// Currently there is no (known) way to put a port range within Envoy.
@@ -161,9 +169,12 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 					UseTLS:      p.Tls,
 					HealthCheck: !skipHcAll && !skipHealthCheck,
 				}
+				if p.Tls {
+					isTLS = true
+				}
 				tcpconns, err := getTCPConcurrentConnections()
 				if err != nil {
-					return err
+					return false, err
 				}
 				tcpPort.ConcurrentConns = tcpconns
 				spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
@@ -179,7 +190,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 				}
 				udpconns, err := getUDPConcurrentConnections()
 				if err != nil {
-					return err
+					return false, err
 				}
 				udpPort.ConcurrentConns = udpconns
 				spec.UDPSpec = append(spec.UDPSpec, &udpPort)
@@ -191,19 +202,36 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamlname, name, lis
 	buf := bytes.Buffer{}
 	err = envoyYamlT.Execute(&buf, &spec)
 	if err != nil {
-		return err
+		return isTLS, err
 	}
-	err = pc.WriteFile(client, yamlname, buf.String(), "envoy.yaml", pc.NoSudo)
+	err = pc.WriteFile(client, yamldir+"/envoy.yaml", buf.String(), "envoy.yaml", pc.NoSudo)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "write envoy.yaml failed",
 			"name", name, "err", err)
-		return err
+		return isTLS, err
 	}
-	return nil
+	if isTLS {
+		log.SpanLog(ctx, log.DebugLevelInfra, "create sds yaml", "name", name)
+		buf := bytes.Buffer{}
+		err = sdsYamlT.Execute(&buf, &spec)
+		if err != nil {
+			return isTLS, err
+		}
+		err = pc.WriteFile(client, yamldir+"/sds.yaml", buf.String(), "sds.yaml", pc.NoSudo)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "write sds.yaml failed",
+				"name", name, "err", err)
+			return isTLS, err
+		}
+	}
+	return isTLS, nil
 }
 
 // TODO: Probably should eventually find a better way to uniquely name clusters other than just by the port theyre getting proxied from
 var envoyYaml = `
+node:
+  id: {{.Name}}
+  cluster: {{.Name}}
 static_resources:
   listeners:
   {{- range .TCPSpec}}
@@ -228,15 +256,16 @@ static_resources:
                   "bytes_received": "%BYTES_RECEIVED%",
                   "client_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
                   "upstream_cluster": "%UPSTREAM_CLUSTER%"
-				}
+                }
       {{if .UseTLS -}}
-      tls_context:
-        common_tls_context:
-          tls_certificates:
-            - certificate_chain:
-                filename: "/etc/envoy/certs/{{$.CertName}}.crt"
-              private_key:
-                filename: "/etc/envoy/certs/{{$.CertName}}.key"
+      transport_socket:
+        name: "envoy.transport_sockets.tls"
+        typed_config:
+          "@type": "type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext"
+          common_tls_context:
+            tls_certificate_sds_secret_configs:
+                sds_config:
+                    path: /etc/envoy/sds.yaml
       {{- end}}
   {{- end}}
   {{- range .UDPSpec}}
@@ -302,6 +331,16 @@ admin:
     socket_address:
       address: 0.0.0.0
       port_value: {{.MetricPort}}
+`
+
+var sdsYaml = `
+resources:
+- "@type": "type.googleapis.com/envoy.api.v2.auth.Secret"
+  tls_certificate:
+    certificate_chain:
+      filename: "/etc/envoy/certs/{{$.CertName}}.crt"
+    private_key:
+      filename: "/etc/envoy/certs/{{$.CertName}}.key"
 `
 
 func DeleteEnvoyProxy(ctx context.Context, client ssh.Client, name string) error {
