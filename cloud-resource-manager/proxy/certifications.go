@@ -174,7 +174,7 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 			log.SpanLog(ctx, log.DebugLevelInfra, "failed to read atomic certs updater script", "err", err)
 			return fmt.Errorf("failed to read atomic certs updater script: %v", err)
 		}
-		err = pc.WriteFile(client, AtomicCertsUpdater, string(certsScript), "atomic-certs-updater", pc.SudoOn)
+		err = pc.WriteFile(client, AtomicCertsUpdater, string(certsScript), "atomic-certs-updater", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "failed to copy atomic certs updater script", "err", err)
 			return fmt.Errorf("failed to copy atomic certs updater script: %v", err)
@@ -189,7 +189,7 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 			return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
 		}
-		err = pc.Run(client, fmt.Sprintf("bash %s -d %s -c %s -k %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile)))
+		err = pc.Run(client, fmt.Sprintf("bash %s -d %s -c %s -k %s -e %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile), EnvoyImageDigest))
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 			return fmt.Errorf("failed to atomically update tls certs: %v", err)

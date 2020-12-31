@@ -12,12 +12,13 @@ USAGE="usage: $( basename $0 ) <options>
  -h                    Display this help message
 "
 
-while getopts ":hd:c:k:" OPT; do
+while getopts ":hd:c:k:e:" OPT; do
         case "$OPT" in
         h) echo "$USAGE"; exit 0 ;;
         d) CERTS_DIR="$OPTARG" ;;
         c) CERT_FILE="$OPTARG" ;;
         k) KEY_FILE="$OPTARG" ;;
+        e) ENVOY_DIGEST="$OPTARG" ;;
         esac
 done
 shift $(( OPTIND - 1 ))
@@ -30,6 +31,9 @@ die() {
 [[ -z $CERTS_DIR ]] && die "Missing argument '-d'"
 [[ -z $CERT_FILE ]] && die "Missing argument '-c'"
 [[ -z $KEY_FILE ]] && die "Missing argument '-k'"
+if [[ -z $ENVOY_DIGEST ]]; then
+	ENVOY_DIGEST="sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
+fi
 
 cd $CERTS_DIR
 
@@ -78,13 +82,13 @@ resources:
 EOF
 
 	  # stop and start docker with new image
-	  runcmd=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock assaflavie/runlike $envoyName)
+	  runcmd=$(docker run --rm -v /var/run/docker.sock:/var/run/docker.sock assaflavie/runlike:0.7.0 $envoyName)
 	  docker stop $envoyName
 	  docker rm $envoyName
 	  # mount sds.yaml file
 	  runcmd=$(sed "s|--detach|--volume=${envoyPath}/sds.yaml:/etc/envoy/sds.yaml --detach|g" <<< $runcmd)
 	  # use latest envoy-with-curl docker image
-	  new_runcmd=($(sed 's/envoy-with-curl.*? /envoy-with-curl@sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df /g' <<< $runcmd))
+	  new_runcmd=($(sed "s/envoy-with-curl\S* /envoy-with-curl@${ENVOY_DIGEST} /g" <<< $runcmd))
 	  echo "$envoyName=>$new_runcmd"
 	  "${new_runcmd[@]}"
 	done
