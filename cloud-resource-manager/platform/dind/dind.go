@@ -67,3 +67,7 @@ func (s *Platform) GetCloudletProps(ctx context.Context) (*edgeproto.CloudletPro
 func (s *Platform) GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error) {
 	return nil, nil
 }
+
+func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error) {
+	return nil, nil
+}
