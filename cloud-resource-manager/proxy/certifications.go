@@ -74,6 +74,7 @@ var noSudoMap = map[string]int{
 	"edgebox":   1,
 	"dind":      1,
 }
+var fixedCerts = false
 
 var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
 
@@ -109,6 +110,9 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName,
 	_, found := noSudoMap[platformType]
 	if found {
 		sudoType = pc.NoSudo
+	}
+	if strings.Contains(platformType, "fake") {
+		fixedCerts = true
 	}
 	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
 	if err != nil {
@@ -169,6 +173,20 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", certsDir)
 		return fmt.Errorf("failed to create cert dir on rootlb: %s, %v", certsDir, err)
 	} else {
+		if fixedCerts {
+			// For testing, avoid atomic certs update as it will create timestamp based directories
+			err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", sudoType)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
+				return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
+			}
+			err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", sudoType)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
+				return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
+			}
+			return nil
+		}
 		certsScript, err := ioutil.ReadFile(AtomicCertsUpdater)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "failed to read atomic certs updater script", "err", err)
