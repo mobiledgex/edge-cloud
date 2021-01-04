@@ -445,6 +445,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if cloudlet.TrustPolicy != "" && !app.Trusted {
 			return fmt.Errorf("Cannot start non Trusted App on Trusted cloudlet")
 		}
+		// app which is set to auto delete is managed internally, hence mark liveness as Dynamic
+		if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+			in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
+		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
 		if in.Flavor.Name == "" {
