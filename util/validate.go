@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -150,6 +151,15 @@ func IsLongitudeValid(longitude float64) bool {
 }
 
 func ValidateImagePath(imagePath string) error {
+	url, err := ImagePathParse(imagePath)
+	if err != nil {
+		return fmt.Errorf("invalid image path: %v", err)
+	}
+	ext := filepath.Ext(url.Path)
+	if ext == "" {
+		return fmt.Errorf("missing filename from image path")
+	}
+
 	urlInfo := strings.Split(imagePath, "#")
 	if len(urlInfo) != 2 {
 		return fmt.Errorf("md5 checksum of image is required. Please append checksum to imagepath: \"<url>#md5:checksum\"")
@@ -164,7 +174,7 @@ func ValidateImagePath(imagePath string) error {
 	if len(cSum[1]) < 32 {
 		return fmt.Errorf("md5 checksum must be at least 32 characters")
 	}
-	_, err := hex.DecodeString(cSum[1])
+	_, err = hex.DecodeString(cSum[1])
 	if err != nil {
 		return fmt.Errorf("invalid md5 checksum")
 	}
