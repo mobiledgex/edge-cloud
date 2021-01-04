@@ -365,7 +365,7 @@ func (s *AppInstApi) checkForAppinstCollisions(ctx context.Context, key *edgepro
 		existingSanitizedKey := util.DNSSanitize(existingKeyString)
 		if sanitizedKey == existingSanitizedKey && keyString != existingKeyString {
 			log.SpanLog(ctx, log.DebugLevelApi, "AppInst collision", "keyString", keyString, "existingKeyString", existingKeyString, "sanitizedKey", sanitizedKey)
-			return fmt.Errorf("Cannot deploy AppInst due to DNS name collision with existing instance %s", existingKeyString)
+			return fmt.Errorf("Cannot deploy AppInst due to DNS name collision with existing instance %s - %s", existingKeyString, sanitizedKey)
 		}
 	}
 	return nil
