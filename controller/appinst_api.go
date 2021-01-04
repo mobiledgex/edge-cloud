@@ -350,6 +350,27 @@ func (s *StreamObjApi) StreamAppInst(key *edgeproto.AppInstKey, cb edgeproto.Str
 	return s.StreamMsgs(key, cb)
 }
 
+func (s *AppInstApi) checkForAppinstCollisions(ctx context.Context, key *edgeproto.AppInstKey) error {
+	// To avoid name collisions in the CRM after sanitizing the app name, validate that there is not
+	// another app running which will have the same name after sanitizing.   DNSSanitize is used here because
+	// it is the most stringent special character replacement
+	keyString := key.String()
+	sanitizedKey := util.DNSSanitize(keyString)
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+
+	for _, data := range s.cache.Objs {
+		val := data.Obj
+		existingKeyString := val.Key.String()
+		existingSanitizedKey := util.DNSSanitize(existingKeyString)
+		if sanitizedKey == existingSanitizedKey && keyString != existingKeyString {
+			log.SpanLog(ctx, log.DebugLevelApi, "AppInst collision", "keyString", keyString, "existingKeyString", existingKeyString, "sanitizedKey", sanitizedKey)
+			return fmt.Errorf("Cannot deploy AppInst due to DNS name collision with existing instance %s - %s", existingKeyString, sanitizedKey)
+		}
+	}
+	return nil
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, inCb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
@@ -400,6 +421,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization && in.Key.AppKey.Organization != cloudcommon.OrganizationMobiledgeX && !tenant {
 		return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
+	}
+	err = s.checkForAppinstCollisions(ctx, &in.Key)
+	if err != nil {
+		return err
 	}
 	appDeploymentType := ""
 
