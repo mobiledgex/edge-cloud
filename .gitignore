@@ -27,3 +27,4 @@ envoy/certs/envoyTlsCerts.crt
 controller/envoy/certs/envoyTlsCerts.crt
 controller/data_test.json
 controller/etcdLocal_data/*
+cloud-resource-manager/cmd/crmserver/envoy/*
