@@ -221,9 +221,6 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAut
 	if err != nil {
 		return nil, err
 	}
-	// regUrl will be of this format: `https://..../imgName/tags/list`
-	regUrlParts := strings.Split(regUrl, "/")
-	imgName := regUrlParts[len(regUrlParts)-3]
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		// Following is valid only for Docker Registry v2 Authentication
@@ -238,7 +235,7 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAut
 			}
 			log.SpanLog(ctx, log.DebugLevelApi, "unable to handle www-auth", "err", err)
 			if err.Error() == http.StatusText(http.StatusNotFound) {
-				return nil, fmt.Errorf("Please confirm that %s has been uploaded to registry", imgName)
+				return nil, fmt.Errorf("Image at %s not found, please confirm it has been uploaded to the registry", regUrl)
 			}
 		}
 		return nil, fmt.Errorf("Access denied to registry path")
