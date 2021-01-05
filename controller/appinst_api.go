@@ -470,6 +470,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if cloudlet.TrustPolicy != "" && !app.Trusted {
 			return fmt.Errorf("Cannot start non Trusted App on Trusted cloudlet")
 		}
+		if app.Deployment == cloudcommon.DeploymentTypeVM && in.AutoClusterIpAccess != edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			return fmt.Errorf("Cannot specify AutoClusterIpAccess if deployment type is VM")
+		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
 		if in.Flavor.Name == "" {
