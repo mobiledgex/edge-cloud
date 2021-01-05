@@ -171,11 +171,11 @@ func TestImagePath(t *testing.T) {
 		err := ValidateImagePath(imgPath)
 		require.Nil(t, err, "valid image path")
 	}
-	inValidPaths := []string{
+	invalidPaths := []string{
 		"https://artifactory-qa.mobiledgex.net/artifactory/repo-MobiledgeX#md5:5ce8dbcdd8b7c2054779d742f4bf602d",
 		"https://artifactory-qa.mobiledgex.net/artifactory/repo-MobiledgeX/abc.qcow2",
 	}
-	for _, imgPath := range inValidPaths {
+	for _, imgPath := range invalidPaths {
 		err := ValidateImagePath(imgPath)
 		require.NotNil(t, err, "invalid image path")
 	}
