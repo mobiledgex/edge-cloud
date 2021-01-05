@@ -294,18 +294,31 @@ func (s *VM) ValidateName() error {
 	return nil
 }
 
+var invalidVMPoolIPs = map[string]struct{}{
+	"0.0.0.0":   struct{}{},
+	"127.0.0.1": struct{}{},
+}
+
 func (s *VM) Validate() error {
 	if err := s.ValidateName(); err != nil {
 		return err
 	}
-	if s.NetInfo.ExternalIp != "" && net.ParseIP(s.NetInfo.ExternalIp) == nil {
-		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+	if s.NetInfo.ExternalIp != "" {
+		if net.ParseIP(s.NetInfo.ExternalIp) == nil {
+			return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+		}
+		if _, ok := invalidVMPoolIPs[s.NetInfo.ExternalIp]; ok {
+			return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+		}
 	}
 	if s.NetInfo.InternalIp == "" {
 		return fmt.Errorf("Missing internal IP for VM: %s", s.Name)
 	}
 	if net.ParseIP(s.NetInfo.InternalIp) == nil {
 		return fmt.Errorf("Invalid Address: %s", s.NetInfo.InternalIp)
+	}
+	if _, ok := invalidVMPoolIPs[s.NetInfo.InternalIp]; ok {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
 	}
 	return nil
 }
