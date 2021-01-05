@@ -71,7 +71,7 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		case SettingsFieldAutoDeployIntervalSec:
 			v.CheckGT(f, int64(s.AutoDeployIntervalSec), 0)
 		case SettingsFieldAutoDeployOffsetSec:
-			v.CheckFloatGT(f, float64(s.AutoDeployOffsetSec), 0)
+			v.CheckFloatGE(f, float64(s.AutoDeployOffsetSec), 0)
 		case SettingsFieldAutoDeployMaxIntervals:
 			v.CheckGT(f, int64(s.AutoDeployMaxIntervals), 0)
 		case SettingsFieldLoadBalancerMaxPortRange:
