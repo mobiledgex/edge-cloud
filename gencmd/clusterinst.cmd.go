@@ -544,7 +544,6 @@ var ClusterInstOptionalArgs = []string{
 	"reservable",
 	"sharedvolumesize",
 	"skipcrmcleanuponfailure",
-	"optres",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -660,5 +659,4 @@ var UpdateClusterInstOptionalArgs = []string{
 	"numnodes",
 	"autoscalepolicy",
 	"skipcrmcleanuponfailure",
-	"optres",
 }
