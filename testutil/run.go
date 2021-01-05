@@ -3,6 +3,7 @@ package testutil
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -51,6 +52,11 @@ func (r *Run) CheckErrs(api, tag string) {
 	}
 	// should not be any errors
 	for _, err := range r.Errs {
+		if strings.HasPrefix(api, "show") {
+			if strings.Contains(err.Msg, "Forbidden") {
+				continue
+			}
+		}
 		log.Printf("\"%s\" run %s failed: %s\n", api, err.Desc, err.Msg)
 		*r.Rc = false
 	}
