@@ -58,11 +58,30 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 	cm2.Vm = edgeproto.VM{
 		Name: "vmY",
 		NetInfo: edgeproto.VMNetInfo{
+			ExternalIp: "0.0.0.0",
+			InternalIp: "192.168.100.121",
+		},
+	}
+	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm2)
+	require.NotNil(t, err, "invalid external ip")
+
+	cm2.Vm = edgeproto.VM{
+		Name: "vmY",
+		NetInfo: edgeproto.VMNetInfo{
+			ExternalIp: "192.168.1.121",
+			InternalIp: "127.0.0.1",
+		},
+	}
+	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm2)
+	require.NotNil(t, err, "invalid internal ip")
+
+	cm2.Vm = edgeproto.VM{
+		Name: "vmY",
+		NetInfo: edgeproto.VMNetInfo{
 			ExternalIp: "192.168.1.121",
 			InternalIp: "192.168.100.121",
 		},
 	}
-
 	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm2)
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
