@@ -234,6 +234,9 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAut
 				return resp, nil
 			}
 			log.SpanLog(ctx, log.DebugLevelApi, "unable to handle www-auth", "err", err)
+			if err.Error() == http.StatusText(http.StatusNotFound) {
+				return nil, fmt.Errorf("Image at %s not found, please confirm it has been uploaded to the registry", regUrl)
+			}
 		}
 		return nil, fmt.Errorf("Access denied to registry path")
 	case http.StatusForbidden:
