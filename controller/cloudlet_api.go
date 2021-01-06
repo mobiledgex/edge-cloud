@@ -1145,6 +1145,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			Message: "Cloudlet is in maintenance",
 		})
 	}
+	cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 	return nil
 }
 
