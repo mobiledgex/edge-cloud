@@ -555,6 +555,10 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *Notice) IsValidArgsForStreamNotice() error {
+	return nil
+}
+
 func (m *Notice) Size() (n int) {
 	if m == nil {
 		return 0

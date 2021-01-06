@@ -333,6 +333,10 @@ func (m *OrganizationData) ValidateEnums() error {
 	return nil
 }
 
+func (m *Organization) IsValidArgsForOrganizationInUse() error {
+	return nil
+}
+
 func (m *Organization) Size() (n int) {
 	if m == nil {
 		return 0

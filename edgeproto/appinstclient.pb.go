@@ -1431,6 +1431,14 @@ func IgnoreAppInstClientFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(AppInstClient{}, names...)
 }
 
+func (m *AppInstClientKey) IsValidArgsForShowAppInstClient() error {
+	return nil
+}
+
+func (m *AppInstClientKey) IsValidArgsForStreamAppInstClientsLocal() error {
+	return nil
+}
+
 func (m *AppInstClientKey) Size() (n int) {
 	if m == nil {
 		return 0

@@ -1098,6 +1098,22 @@ func (m *AccessDataReply) ValidateEnums() error {
 	return nil
 }
 
+func (m *IssueCertRequest) IsValidArgsForIssueCert() error {
+	return nil
+}
+
+func (m *GetCasRequest) IsValidArgsForGetCas() error {
+	return nil
+}
+
+func (m *AccessDataRequest) IsValidArgsForGetAccessData() error {
+	return nil
+}
+
+func (m *UpgradeAccessKeyClientMsg) IsValidArgsForUpgradeAccessKey() error {
+	return nil
+}
+
 func (m *IssueCertRequest) Size() (n int) {
 	if m == nil {
 		return 0

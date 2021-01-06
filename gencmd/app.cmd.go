@@ -490,7 +490,6 @@ var AppOptionalArgs = []string{
 	"deploymentmanifest",
 	"deploymentgenerator",
 	"androidpackagename",
-	"delopt",
 	"configs:#.kind",
 	"configs:#.config",
 	"scalewithcluster",

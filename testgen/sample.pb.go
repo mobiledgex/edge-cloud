@@ -3272,6 +3272,9 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *TestGen) IsValidArgsForRequest() error {
+	return nil
+}
 
 type MatchOptions struct {
 	// Filter will ignore 0 or nil fields on the passed in object

@@ -1507,6 +1507,14 @@ func (m *Settings) ValidateEnums() error {
 	return nil
 }
 
+func (m *Settings) IsValidArgsForUpdateSettings() error {
+	return nil
+}
+
+func (m *Settings) IsValidArgsForResetSettings() error {
+	return nil
+}
+
 func (m *Settings) Size() (n int) {
 	if m == nil {
 		return 0

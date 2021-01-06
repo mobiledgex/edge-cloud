@@ -3168,6 +3168,26 @@ func IgnoreAutoProvInfoFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(AutoProvInfo{}, names...)
 }
 
+func (m *AutoProvPolicy) IsValidArgsForCreateAutoProvPolicy() error {
+	return nil
+}
+
+func (m *AutoProvPolicy) IsValidArgsForDeleteAutoProvPolicy() error {
+	return nil
+}
+
+func (m *AutoProvPolicy) IsValidArgsForUpdateAutoProvPolicy() error {
+	return nil
+}
+
+func (m *AutoProvPolicyCloudlet) IsValidArgsForAddAutoProvPolicyCloudlet() error {
+	return nil
+}
+
+func (m *AutoProvPolicyCloudlet) IsValidArgsForRemoveAutoProvPolicyCloudlet() error {
+	return nil
+}
+
 func (m *AutoProvPolicy) Size() (n int) {
 	if m == nil {
 		return 0
