@@ -61,14 +61,20 @@ func NewEdgeEventStats(interval time.Duration, numShards uint, send func(ctx con
 func (e *EdgeEventStats) Start() {
 	e.mux.Lock()
 	defer e.mux.Unlock()
+	if e.stop != nil {
+		return
+	}
 	e.stop = make(chan struct{})
 	e.waitGroup.Add(1)
 	go e.RunNotify()
 }
 
 func (e *EdgeEventStats) Stop() {
+	e.mux.Lock()
+	defer e.mux.Unlock()
 	close(e.stop)
 	e.waitGroup.Wait()
+	e.stop = nil
 }
 
 func (e *EdgeEventStats) UpdateSettings(interval time.Duration) {

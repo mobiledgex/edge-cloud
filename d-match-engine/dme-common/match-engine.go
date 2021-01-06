@@ -992,12 +992,19 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
-func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) error {
+func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) (reterr error) {
+	// Catch any unexpected panics
+	defer func() {
+		if err := recover(); err != nil {
+			log.DebugLog(log.DebugLevelDmereq, "Unexpected panic.", "error", err)
+			reterr = fmt.Errorf("Unexpected panic")
+		}
+	}()
+	// Initialize vars used in persistent connection
 	var appInstKey *edgeproto.AppInstKey
 	var sessionCookie string
 	var sessionCookieKey *CookieKey
 	var edgeEventsCookieKey *EdgeEventsCookieKey
-	var reterr error
 	// Intialize send function to be passed to plugin functions
 	sendFunc := func(event *dme.ServerEdgeEvent) {
 		err := svr.Send(event)
@@ -1005,7 +1012,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error sending event to client", "error", err, "eventType", event.EventType)
 		}
 	}
-	//receive first msg from stream
+	// Receive first msg from stream
 	initMsg, err := svr.Recv()
 	if err != nil && err != io.EOF {
 		return err
@@ -1062,10 +1069,10 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	// Loop while persistent connection is up
 loop:
 	for {
-		//receive data from stream
+		// Receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
-		//check receive errors
+		// Check receive errors
 		if err != nil && err != io.EOF {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
 			if strings.Contains(err.Error(), "rpc error") {

@@ -83,14 +83,20 @@ func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.C
 func (s *DmeStats) Start() {
 	s.mux.Lock()
 	defer s.mux.Unlock()
+	if s.stop != nil {
+		return
+	}
 	s.stop = make(chan struct{})
 	s.waitGroup.Add(1)
 	go s.RunNotify()
 }
 
 func (s *DmeStats) Stop() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
 	close(s.stop)
 	s.waitGroup.Wait()
+	s.stop = nil
 }
 
 func (s *DmeStats) UpdateSettings(interval time.Duration) {
