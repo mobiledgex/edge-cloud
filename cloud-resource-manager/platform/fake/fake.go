@@ -292,3 +292,7 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 	updateCallback(edgeproto.UpdateTask, "Setting up cloudlet")
 	return nil
 }
+
+func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error) {
+	return nil, nil
+}

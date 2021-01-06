@@ -1,6 +1,7 @@
 package edgeproto
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -69,8 +70,13 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.ShepherdHealthCheckInterval), 0)
 		case SettingsFieldAutoDeployIntervalSec:
 			v.CheckGT(f, int64(s.AutoDeployIntervalSec), 0)
+		case SettingsFieldAutoDeployOffsetSec:
+			v.CheckFloatGE(f, float64(s.AutoDeployOffsetSec), 0)
 		case SettingsFieldAutoDeployMaxIntervals:
 			v.CheckGT(f, int64(s.AutoDeployMaxIntervals), 0)
+		case SettingsFieldLoadBalancerMaxPortRange:
+			v.CheckGT(f, int64(s.LoadBalancerMaxPortRange), 0)
+			v.CheckLT(f, int64(s.LoadBalancerMaxPortRange), 65536)
 		case SettingsFieldCreateAppInstTimeout:
 			v.CheckGT(f, int64(s.CreateAppInstTimeout), 0)
 		case SettingsFieldUpdateAppInstTimeout:
@@ -83,12 +89,27 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.UpdateClusterInstTimeout), 0)
 		case SettingsFieldDeleteClusterInstTimeout:
 			v.CheckGT(f, int64(s.DeleteClusterInstTimeout), 0)
+		case SettingsFieldMasterNodeFlavor:
+			// no validation
+		case SettingsFieldMaxTrackedDmeClients:
+			v.CheckGT(f, int64(s.MaxTrackedDmeClients), 0)
+		case SettingsFieldChefClientInterval:
+			v.CheckGT(f, int64(s.ChefClientInterval), 0)
 		case SettingsFieldCloudletMaintenanceTimeout:
 			v.CheckGT(f, int64(s.CloudletMaintenanceTimeout), 0)
+		case SettingsFieldInfluxDbMetricsRetention:
+			// no validation
 		case SettingsFieldUpdateVmPoolTimeout:
 			v.CheckGT(f, int64(s.UpdateVmPoolTimeout), 0)
 		case SettingsFieldUpdateTrustPolicyTimeout:
 			v.CheckGT(f, int64(s.UpdateTrustPolicyTimeout), 0)
+		default:
+			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
+			// above.  If no validation is to be done for a field, make an empty case entry
+			_, ok := SettingsAllFieldsMap[f]
+			if ok {
+				return fmt.Errorf("No validation set for settings field: %s - %s", v.fieldDesc[f], f)
+			}
 		}
 	}
 	return v.err

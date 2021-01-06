@@ -4,13 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -24,9 +28,6 @@ var SharedRootLbClient ssh.Client
 var DedicatedClients map[string]ssh.Client
 var DedicatedTls access.TLSCert
 var DedicatedMux sync.Mutex
-
-var DedicatedVmAppClients map[string]ssh.Client
-var DedicatedVmAppMux sync.Mutex
 
 var selfSignedCmd = `openssl req -new -newkey rsa:2048 -nodes -days 90 -nodes -x509 -config <(
 cat <<-EOF
@@ -73,10 +74,22 @@ var noSudoMap = map[string]int{
 	"edgebox":   1,
 	"dind":      1,
 }
+var fixedCerts = false
 
-func init() {
-	DedicatedClients = make(map[string]ssh.Client)
-	DedicatedVmAppClients = make(map[string]ssh.Client)
+var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
+
+func Init(ctx context.Context, clients map[string]ssh.Client) {
+	if len(DedicatedClients) == 0 {
+		DedicatedClients = make(map[string]ssh.Client)
+	}
+	if clients == nil {
+		return
+	}
+	DedicatedMux.Lock()
+	defer DedicatedMux.Unlock()
+	for k, v := range clients {
+		DedicatedClients[k] = v
+	}
 }
 
 // GetCertsDirAndFiles returns certsDir, certFile, keyFile
@@ -93,10 +106,13 @@ func GetCertsDirAndFiles(ctx context.Context, client ssh.Client) (string, string
 }
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
-func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultAddr, platformType string, client ssh.Client, commercialCerts bool) {
+func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, platformType string, client ssh.Client, commercialCerts bool) {
 	_, found := noSudoMap[platformType]
 	if found {
 		sudoType = pc.NoSudo
+	}
+	if strings.Contains(platformType, "fake") {
+		fixedCerts = true
 	}
 	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
 	if err != nil {
@@ -104,22 +120,22 @@ func GetRootLbCerts(ctx context.Context, commonName, dedicatedCommonName, vaultA
 		return
 	}
 	SharedRootLbClient = client
-	getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, certsDir, certFile, keyFile, commercialCerts)
+	getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
 	// refresh every 30 days
 	for {
 		select {
 		case <-time.After(30 * 24 * time.Hour):
-			getRootLbCertsHelper(ctx, commonName, dedicatedCommonName, vaultAddr, certsDir, certFile, keyFile, commercialCerts)
+			getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
 		}
 	}
 }
 
-func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, vaultAddr string, certsDir, certFile, keyFile string, commercialCerts bool) {
+func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool) {
 	var err error
 	var config *vault.Config
 	tls := access.TLSCert{}
 	if commercialCerts {
-		config, err = vault.BestConfig(vaultAddr)
+		config, err = vault.BestConfig(nodeMgr.VaultAddr)
 		if err == nil {
 			err = getCertFromVault(ctx, config, &tls, commonName, dedicatedCommonName)
 		}
@@ -127,41 +143,77 @@ func getRootLbCertsHelper(ctx context.Context, commonName, dedicatedCommonName, 
 		err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
 	}
 	if err == nil {
-		writeCertToRootLb(ctx, &tls, SharedRootLbClient, certsDir, certFile, keyFile)
-		// dedicated clusters
+		err = writeCertToRootLb(ctx, &tls, SharedRootLbClient, certsDir, certFile, keyFile)
+		if err != nil {
+			nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", commonName)
+		}
+		// dedicated LBs
 		DedicatedMux.Lock()
 		DedicatedTls = tls
-		for _, client := range DedicatedClients {
-			writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
+		for lbName, client := range DedicatedClients {
+			if client == nil {
+				nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), fmt.Errorf("missing client"), "rootlb", lbName)
+				continue
+			}
+			err = writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
+			if err != nil {
+				nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", lbName)
+			}
 		}
 		DedicatedMux.Unlock()
-
-		// VM Apps
-		DedicatedVmAppMux.Lock()
-		for _, client := range DedicatedVmAppClients {
-			writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
-		}
-		DedicatedVmAppMux.Unlock()
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
 	}
 }
 
-func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client, certsDir, certFile, keyFile string) {
+func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client, certsDir, certFile, keyFile string) error {
 	// write it to rootlb
 	err := pc.Run(client, "mkdir -p "+certsDir)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "can't create cert dir on rootlb", "certDir", certsDir)
+		return fmt.Errorf("failed to create cert dir on rootlb: %s, %v", certsDir, err)
 	} else {
-		err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", sudoType)
+		if fixedCerts {
+			// For testing, avoid atomic certs update as it will create timestamp based directories
+			err = pc.WriteFile(client, certFile, tls.CertString, "tls cert", sudoType)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
+				return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
+			}
+			err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", sudoType)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
+				return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
+			}
+			return nil
+		}
+		certsScript, err := ioutil.ReadFile(AtomicCertsUpdater)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to read atomic certs updater script", "err", err)
+			return fmt.Errorf("failed to read atomic certs updater script: %v", err)
+		}
+		err = pc.WriteFile(client, AtomicCertsUpdater, string(certsScript), "atomic-certs-updater", sudoType)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to copy atomic certs updater script", "err", err)
+			return fmt.Errorf("failed to copy atomic certs updater script: %v", err)
+		}
+		err = pc.WriteFile(client, certFile+".new", tls.CertString, "tls cert", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
+			return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
 		}
-		err = pc.WriteFile(client, keyFile, tls.KeyString, "tls key", sudoType)
+		err = pc.WriteFile(client, keyFile+".new", tls.KeyString, "tls key", sudoType)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
+			return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
+		}
+		err = pc.Run(client, fmt.Sprintf("bash %s -d %s -c %s -k %s -e %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile), EnvoyImageDigest))
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
+			return fmt.Errorf("failed to atomically update tls certs: %v", err)
 		}
 	}
+	return nil
 }
 
 // GetCertFromVault fills in the cert fields by calling the vault  plugin.  The vault plugin will
@@ -247,38 +299,23 @@ func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonName
 	return nil
 }
 
-func NewDedicatedCluster(ctx context.Context, clustername string, client ssh.Client) {
+func NewDedicatedLB(ctx context.Context, key *edgeproto.CloudletKey, name string, client ssh.Client, nodeMgr *node.NodeMgr) {
 	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Error: failed to get cert dir and files", "clustername", clustername, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error: failed to get cert dir and files", "name", name, "err", err)
 		return
 	}
 	DedicatedMux.Lock()
 	defer DedicatedMux.Unlock()
-	DedicatedClients[clustername] = client
-	writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
+	DedicatedClients[name] = client
+	err = writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
+	if err != nil {
+		nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", name)
+	}
 }
 
-func RemoveDedicatedCluster(ctx context.Context, clustername string) {
+func RemoveDedicatedLB(ctx context.Context, name string) {
 	DedicatedMux.Lock()
 	defer DedicatedMux.Unlock()
-	delete(DedicatedClients, clustername)
-}
-
-func NewDedicatedVmApp(ctx context.Context, appname string, client ssh.Client) {
-	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Error: failed to get cert dir and files", "appname", appname, "err", err)
-		return
-	}
-	DedicatedVmAppMux.Lock()
-	defer DedicatedVmAppMux.Unlock()
-	DedicatedVmAppClients[appname] = client
-	writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
-}
-
-func RemoveDedicatedVmApp(ctx context.Context, appname string) {
-	DedicatedVmAppMux.Lock()
-	defer DedicatedVmAppMux.Unlock()
-	delete(DedicatedVmAppClients, appname)
+	delete(DedicatedClients, name)
 }

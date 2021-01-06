@@ -28,6 +28,8 @@ type Input struct {
 	SpecialArgs *map[string]string
 	// Password arg will prompt for password if not in args list
 	PasswordArg string
+	// API key arg will replace password and avoid prompt for password
+	ApiKeyArg string
 	// Verify password if prompting
 	VerifyPassword bool
 	// Mapstructure DecodeHook functions
@@ -70,6 +72,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 
 	// create generic data map from args
 	passwordFound := false
+	apiKeyFound := false
 	for _, arg := range args {
 		arg = strings.TrimSpace(arg)
 		kv := strings.SplitN(arg, "=", 2)
@@ -97,6 +100,8 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 		setKeyVal(dat, argKey, argVal, specialArgType)
 		if argKey == s.PasswordArg {
 			passwordFound = true
+		} else if argKey == s.ApiKeyArg {
+			apiKeyFound = true
 		}
 	}
 
@@ -110,13 +115,22 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 		return dat, fmt.Errorf("missing required args: %s", strings.Join(missing, " "))
 	}
 
-	// prompt for password if not in arg list
-	if s.PasswordArg != "" && !passwordFound {
-		pw, err := getPassword(s.VerifyPassword)
-		if err != nil {
-			return dat, err
+	if s.PasswordArg != "" && s.ApiKeyArg != "" {
+		if apiKeyFound && passwordFound {
+			return dat, fmt.Errorf("either password or apikey should passed and not both")
 		}
-		setKeyVal(dat, resolveAlias(s.PasswordArg, aliases), pw, "")
+	}
+
+	// Do not prompt for password if API key is passed
+	if s.ApiKeyArg == "" || !apiKeyFound {
+		// prompt for password if not in arg list
+		if s.PasswordArg != "" && !passwordFound {
+			pw, err := getPassword(s.VerifyPassword)
+			if err != nil {
+				return dat, err
+			}
+			setKeyVal(dat, resolveAlias(s.PasswordArg, aliases), pw, "")
+		}
 	}
 
 	// Fill in obj with values. Also checks for args that
