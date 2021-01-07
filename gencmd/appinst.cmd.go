@@ -720,7 +720,6 @@ var AppInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"healthcheck",
 	"powerstate",
-	"vmflavor",
 }
 var AppInstAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -915,7 +914,6 @@ var CreateAppInstOptionalArgs = []string{
 	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
-	"vmflavor",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"app-org",
@@ -936,7 +934,6 @@ var DeleteAppInstOptionalArgs = []string{
 	"configs:#.config",
 	"sharedvolumesize",
 	"healthcheck",
-	"vmflavor",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"app-org",

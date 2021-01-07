@@ -1431,6 +1431,26 @@ func (m *Flavor) ValidateEnums() error {
 	return nil
 }
 
+func (m *Flavor) IsValidArgsForCreateFlavor() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForDeleteFlavor() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForUpdateFlavor() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForAddFlavorRes() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForRemoveFlavorRes() error {
+	return nil
+}
+
 func (m *FlavorKey) Size() (n int) {
 	if m == nil {
 		return 0

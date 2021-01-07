@@ -460,6 +460,68 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	}
 }
 
+func (m *mex) getInvalidMethodFields(names []string, invalidFieldsMap map[string]string, subAllInvalidFields bool, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
+	message := desc.DescriptorProto
+	noconfig := gensupport.GetNoConfig(message, method)
+	noconfigMap := make(map[string]string)
+	for _, nc := range strings.Split(noconfig, ",") {
+		if nc == "" {
+			continue
+		}
+		noconfigMap["."+nc] = "0"
+	}
+	for ii, field := range message.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		if keyField := gensupport.GetMessageKey(message); keyField != nil {
+			if *keyField.Name == *field.Name {
+				continue
+			}
+		}
+		nilval := "0"
+		nilcheck := true
+		name := generator.CamelCase(*field.Name)
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
+			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+			nilval = "nil"
+		} else {
+			switch *field.Type {
+			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+				nilval = "nil"
+				if !gogoproto.IsNullable(field) {
+					nilcheck = false
+				}
+			case descriptor.FieldDescriptorProto_TYPE_STRING:
+				nilval = "\"\""
+			case descriptor.FieldDescriptorProto_TYPE_BOOL:
+				nilval = "false"
+			}
+		}
+		fieldName := strings.Join(append(names, name), ".")
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			if nilcheck {
+				if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
+					invalidFieldsMap[fieldName] = nilval
+					continue
+				}
+			}
+			subAllInvalidFields := false
+			if _, ok := noconfigMap[fieldName]; ok {
+				subAllInvalidFields = true
+				delete(invalidFieldsMap, fieldName)
+			}
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.getInvalidMethodFields(append(names, name), invalidFieldsMap, subAllInvalidFields, subDesc, method)
+		default:
+			if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
+				invalidFieldsMap[fieldName] = nilval
+			}
+		}
+	}
+}
+
 func (m *mex) printCopyInMakeArray(name string, desc *generator.Descriptor, field *descriptor.FieldDescriptorProto) {
 	mapType := m.support.GetMapType(m.gen, field)
 	if mapType != nil {
@@ -2512,7 +2574,27 @@ func (m *mex) generateService(file *generator.FileDescriptor, service *descripto
 }
 
 func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) {
-
+	in := gensupport.GetDesc(m.gen, method.GetInputType())
+	if !gensupport.IsShow(method) {
+		invalidArgsMap := make(map[string]string)
+		m.getInvalidMethodFields([]string{""}, invalidArgsMap, false, in, method)
+		keys := make([]string, 0)
+		for k, _ := range invalidArgsMap {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		m.P("func (m *", *in.DescriptorProto.Name, ") IsValidArgsFor", *method.Name, "() error {")
+		for _, arg := range keys {
+			argnilval := invalidArgsMap[arg]
+			m.P("if m", arg, " != ", argnilval, " {")
+			argStr := strings.TrimLeft(arg, ".")
+			m.P("return fmt.Errorf(\"Invalid field specified: ", argStr, ", this field is only for internal use\")")
+			m.P("}")
+		}
+		m.P("return nil")
+		m.P("}")
+		m.P("")
+	}
 }
 
 func GetGenerateMatches(message *descriptor.DescriptorProto) bool {

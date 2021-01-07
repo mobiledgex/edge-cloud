@@ -183,7 +183,7 @@ message App {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,AutoProvPolicy";
+  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,DelOpt";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }

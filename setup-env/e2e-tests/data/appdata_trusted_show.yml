@@ -448,7 +448,7 @@ appinstances:
     latitude: 31
     longitude: -91
   uri: cluster1.cloudlet1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
@@ -478,7 +478,7 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: cluster2.cloudlet2.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090

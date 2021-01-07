@@ -508,7 +508,7 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: autoclustersomeapplication1.dmuus-cloud-2.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
@@ -535,7 +535,7 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: autoclustersomeapplication2.dmuus-cloud-2.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
@@ -636,7 +636,7 @@ appinstances:
     latitude: 31
     longitude: -91
   uri: autoclustersomeapplication1.dmuus-cloud-1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090

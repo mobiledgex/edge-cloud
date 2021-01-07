@@ -8095,6 +8095,450 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *Cloudlet) IsValidArgsForCreateCloudlet() error {
+	if m.ChefClientKey != nil {
+		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
+	}
+	if m.Config.AccessApiAddr != "" {
+		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.Config.AppDnsRoot != "" {
+		return fmt.Errorf("Invalid field specified: Config.AppDnsRoot, this field is only for internal use")
+	}
+	if m.Config.ChefClientInterval != 0 {
+		return fmt.Errorf("Invalid field specified: Config.ChefClientInterval, this field is only for internal use")
+	}
+	if m.Config.ChefServerPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ChefServerPath, this field is only for internal use")
+	}
+	if m.Config.CleanupMode != false {
+		return fmt.Errorf("Invalid field specified: Config.CleanupMode, this field is only for internal use")
+	}
+	if m.Config.CloudletVmImagePath != "" {
+		return fmt.Errorf("Invalid field specified: Config.CloudletVmImagePath, this field is only for internal use")
+	}
+	if m.Config.CommercialCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.CommercialCerts, this field is only for internal use")
+	}
+	if m.Config.ContainerRegistryPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ContainerRegistryPath, this field is only for internal use")
+	}
+	if m.Config.CrmAccessPrivateKey != "" {
+		return fmt.Errorf("Invalid field specified: Config.CrmAccessPrivateKey, this field is only for internal use")
+	}
+	if m.Config.DeploymentTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.DeploymentTag, this field is only for internal use")
+	}
+	if m.Config.EnvVar != nil {
+		return fmt.Errorf("Invalid field specified: Config.EnvVar, this field is only for internal use")
+	}
+	if m.Config.NotifyCtrlAddrs != "" {
+		return fmt.Errorf("Invalid field specified: Config.NotifyCtrlAddrs, this field is only for internal use")
+	}
+	if m.Config.PlatformTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.PlatformTag, this field is only for internal use")
+	}
+	if m.Config.Region != "" {
+		return fmt.Errorf("Invalid field specified: Config.Region, this field is only for internal use")
+	}
+	if m.Config.Span != "" {
+		return fmt.Errorf("Invalid field specified: Config.Span, this field is only for internal use")
+	}
+	if m.Config.TestMode != false {
+		return fmt.Errorf("Invalid field specified: Config.TestMode, this field is only for internal use")
+	}
+	if m.Config.TlsCaFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCaFile, this field is only for internal use")
+	}
+	if m.Config.TlsCertFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCertFile, this field is only for internal use")
+	}
+	if m.Config.TlsKeyFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsKeyFile, this field is only for internal use")
+	}
+	if m.Config.UseVaultCas != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultCas, this field is only for internal use")
+	}
+	if m.Config.UseVaultCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultCerts, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CrmAccessKeyUpgradeRequired != false {
+		return fmt.Errorf("Invalid field specified: CrmAccessKeyUpgradeRequired, this field is only for internal use")
+	}
+	if m.CrmAccessPublicKey != "" {
+		return fmt.Errorf("Invalid field specified: CrmAccessPublicKey, this field is only for internal use")
+	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.NotifySrvAddr != "" {
+		return fmt.Errorf("Invalid field specified: NotifySrvAddr, this field is only for internal use")
+	}
+	if m.ResTagMap != nil {
+		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.TrustPolicyState != 0 {
+		return fmt.Errorf("Invalid field specified: TrustPolicyState, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *Cloudlet) IsValidArgsForDeleteCloudlet() error {
+	if m.ChefClientKey != nil {
+		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
+	}
+	if m.Config.AccessApiAddr != "" {
+		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.Config.AppDnsRoot != "" {
+		return fmt.Errorf("Invalid field specified: Config.AppDnsRoot, this field is only for internal use")
+	}
+	if m.Config.ChefClientInterval != 0 {
+		return fmt.Errorf("Invalid field specified: Config.ChefClientInterval, this field is only for internal use")
+	}
+	if m.Config.ChefServerPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ChefServerPath, this field is only for internal use")
+	}
+	if m.Config.CleanupMode != false {
+		return fmt.Errorf("Invalid field specified: Config.CleanupMode, this field is only for internal use")
+	}
+	if m.Config.CloudletVmImagePath != "" {
+		return fmt.Errorf("Invalid field specified: Config.CloudletVmImagePath, this field is only for internal use")
+	}
+	if m.Config.CommercialCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.CommercialCerts, this field is only for internal use")
+	}
+	if m.Config.ContainerRegistryPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ContainerRegistryPath, this field is only for internal use")
+	}
+	if m.Config.CrmAccessPrivateKey != "" {
+		return fmt.Errorf("Invalid field specified: Config.CrmAccessPrivateKey, this field is only for internal use")
+	}
+	if m.Config.DeploymentTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.DeploymentTag, this field is only for internal use")
+	}
+	if m.Config.EnvVar != nil {
+		return fmt.Errorf("Invalid field specified: Config.EnvVar, this field is only for internal use")
+	}
+	if m.Config.NotifyCtrlAddrs != "" {
+		return fmt.Errorf("Invalid field specified: Config.NotifyCtrlAddrs, this field is only for internal use")
+	}
+	if m.Config.PlatformTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.PlatformTag, this field is only for internal use")
+	}
+	if m.Config.Region != "" {
+		return fmt.Errorf("Invalid field specified: Config.Region, this field is only for internal use")
+	}
+	if m.Config.Span != "" {
+		return fmt.Errorf("Invalid field specified: Config.Span, this field is only for internal use")
+	}
+	if m.Config.TestMode != false {
+		return fmt.Errorf("Invalid field specified: Config.TestMode, this field is only for internal use")
+	}
+	if m.Config.TlsCaFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCaFile, this field is only for internal use")
+	}
+	if m.Config.TlsCertFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCertFile, this field is only for internal use")
+	}
+	if m.Config.TlsKeyFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsKeyFile, this field is only for internal use")
+	}
+	if m.Config.UseVaultCas != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultCas, this field is only for internal use")
+	}
+	if m.Config.UseVaultCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultCerts, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CrmAccessKeyUpgradeRequired != false {
+		return fmt.Errorf("Invalid field specified: CrmAccessKeyUpgradeRequired, this field is only for internal use")
+	}
+	if m.CrmAccessPublicKey != "" {
+		return fmt.Errorf("Invalid field specified: CrmAccessPublicKey, this field is only for internal use")
+	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.NotifySrvAddr != "" {
+		return fmt.Errorf("Invalid field specified: NotifySrvAddr, this field is only for internal use")
+	}
+	if m.ResTagMap != nil {
+		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.TrustPolicyState != 0 {
+		return fmt.Errorf("Invalid field specified: TrustPolicyState, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *Cloudlet) IsValidArgsForUpdateCloudlet() error {
+	if m.ChefClientKey != nil {
+		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
+	}
+	if m.Config.AccessApiAddr != "" {
+		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.Config.AppDnsRoot != "" {
+		return fmt.Errorf("Invalid field specified: Config.AppDnsRoot, this field is only for internal use")
+	}
+	if m.Config.ChefClientInterval != 0 {
+		return fmt.Errorf("Invalid field specified: Config.ChefClientInterval, this field is only for internal use")
+	}
+	if m.Config.ChefServerPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ChefServerPath, this field is only for internal use")
+	}
+	if m.Config.CleanupMode != false {
+		return fmt.Errorf("Invalid field specified: Config.CleanupMode, this field is only for internal use")
+	}
+	if m.Config.CloudletVmImagePath != "" {
+		return fmt.Errorf("Invalid field specified: Config.CloudletVmImagePath, this field is only for internal use")
+	}
+	if m.Config.CommercialCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.CommercialCerts, this field is only for internal use")
+	}
+	if m.Config.ContainerRegistryPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ContainerRegistryPath, this field is only for internal use")
+	}
+	if m.Config.CrmAccessPrivateKey != "" {
+		return fmt.Errorf("Invalid field specified: Config.CrmAccessPrivateKey, this field is only for internal use")
+	}
+	if m.Config.DeploymentTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.DeploymentTag, this field is only for internal use")
+	}
+	if m.Config.EnvVar != nil {
+		return fmt.Errorf("Invalid field specified: Config.EnvVar, this field is only for internal use")
+	}
+	if m.Config.NotifyCtrlAddrs != "" {
+		return fmt.Errorf("Invalid field specified: Config.NotifyCtrlAddrs, this field is only for internal use")
+	}
+	if m.Config.PlatformTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.PlatformTag, this field is only for internal use")
+	}
+	if m.Config.Region != "" {
+		return fmt.Errorf("Invalid field specified: Config.Region, this field is only for internal use")
+	}
+	if m.Config.Span != "" {
+		return fmt.Errorf("Invalid field specified: Config.Span, this field is only for internal use")
+	}
+	if m.Config.TestMode != false {
+		return fmt.Errorf("Invalid field specified: Config.TestMode, this field is only for internal use")
+	}
+	if m.Config.TlsCaFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCaFile, this field is only for internal use")
+	}
+	if m.Config.TlsCertFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCertFile, this field is only for internal use")
+	}
+	if m.Config.TlsKeyFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsKeyFile, this field is only for internal use")
+	}
+	if m.Config.UseVaultCas != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultCas, this field is only for internal use")
+	}
+	if m.Config.UseVaultCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultCerts, this field is only for internal use")
+	}
+	if m.ContainerVersion != "" {
+		return fmt.Errorf("Invalid field specified: ContainerVersion, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CrmAccessKeyUpgradeRequired != false {
+		return fmt.Errorf("Invalid field specified: CrmAccessKeyUpgradeRequired, this field is only for internal use")
+	}
+	if m.CrmAccessPublicKey != "" {
+		return fmt.Errorf("Invalid field specified: CrmAccessPublicKey, this field is only for internal use")
+	}
+	if m.Deployment != "" {
+		return fmt.Errorf("Invalid field specified: Deployment, this field is only for internal use")
+	}
+	if m.DeploymentLocal != false {
+		return fmt.Errorf("Invalid field specified: DeploymentLocal, this field is only for internal use")
+	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.Flavor.Name != "" {
+		return fmt.Errorf("Invalid field specified: Flavor.Name, this field is only for internal use")
+	}
+	if m.InfraApiAccess != 0 {
+		return fmt.Errorf("Invalid field specified: InfraApiAccess, this field is only for internal use")
+	}
+	if m.InfraConfig.ExternalNetworkName != "" {
+		return fmt.Errorf("Invalid field specified: InfraConfig.ExternalNetworkName, this field is only for internal use")
+	}
+	if m.InfraConfig.FlavorName != "" {
+		return fmt.Errorf("Invalid field specified: InfraConfig.FlavorName, this field is only for internal use")
+	}
+	if m.NotifySrvAddr != "" {
+		return fmt.Errorf("Invalid field specified: NotifySrvAddr, this field is only for internal use")
+	}
+	if m.OverridePolicyContainerVersion != false {
+		return fmt.Errorf("Invalid field specified: OverridePolicyContainerVersion, this field is only for internal use")
+	}
+	if m.PhysicalName != "" {
+		return fmt.Errorf("Invalid field specified: PhysicalName, this field is only for internal use")
+	}
+	if m.PlatformType != 0 {
+		return fmt.Errorf("Invalid field specified: PlatformType, this field is only for internal use")
+	}
+	if m.ResTagMap != nil {
+		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.TrustPolicyState != 0 {
+		return fmt.Errorf("Invalid field specified: TrustPolicyState, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.VmImageVersion != "" {
+		return fmt.Errorf("Invalid field specified: VmImageVersion, this field is only for internal use")
+	}
+	if m.VmPool != "" {
+		return fmt.Errorf("Invalid field specified: VmPool, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletKey) IsValidArgsForGetCloudletManifest() error {
+	return nil
+}
+
+func (m *CloudletProps) IsValidArgsForGetCloudletProps() error {
+	if m.Properties != nil {
+		return fmt.Errorf("Invalid field specified: Properties, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletResMap) IsValidArgsForAddCloudletResMapping() error {
+	return nil
+}
+
+func (m *CloudletResMap) IsValidArgsForRemoveCloudletResMapping() error {
+	return nil
+}
+
+func (m *FlavorMatch) IsValidArgsForFindFlavorMatch() error {
+	return nil
+}
+
+func (m *CloudletKey) IsValidArgsForRevokeAccessKey() error {
+	return nil
+}
+
+func (m *CloudletKey) IsValidArgsForGenerateAccessKey() error {
+	return nil
+}
+
+func (m *CloudletInfo) IsValidArgsForInjectCloudletInfo() error {
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletInfo) IsValidArgsForEvictCloudletInfo() error {
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
+	}
+	return nil
+}
+
 func (m *CloudletKey) Size() (n int) {
 	if m == nil {
 		return 0
