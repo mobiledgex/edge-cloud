@@ -460,7 +460,7 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	}
 }
 
-func (m *mex) getInvalidMethodFields(names []string, invalidFieldsMap map[string]string, allInvalidFields bool, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
+func (m *mex) getInvalidMethodFields(names []string, invalidFieldsMap map[string]string, subAllInvalidFields bool, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
 	message := desc.DescriptorProto
 	noconfig := gensupport.GetNoConfig(message, method)
 	noconfigMap := make(map[string]string)
@@ -502,20 +502,20 @@ func (m *mex) getInvalidMethodFields(names []string, invalidFieldsMap map[string
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			if nilcheck {
-				if _, ok := noconfigMap[fieldName]; ok || allInvalidFields {
+				if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
 					invalidFieldsMap[fieldName] = nilval
 					continue
 				}
 			}
-			allInvalidFields := false
+			subAllInvalidFields := false
 			if _, ok := noconfigMap[fieldName]; ok {
-				allInvalidFields = true
+				subAllInvalidFields = true
 				delete(invalidFieldsMap, fieldName)
 			}
 			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
-			m.getInvalidMethodFields(append(names, name), invalidFieldsMap, allInvalidFields, subDesc, method)
+			m.getInvalidMethodFields(append(names, name), invalidFieldsMap, subAllInvalidFields, subDesc, method)
 		default:
-			if _, ok := noconfigMap[fieldName]; ok || allInvalidFields {
+			if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
 				invalidFieldsMap[fieldName] = nilval
 			}
 		}
@@ -2578,8 +2578,14 @@ func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor
 	if !gensupport.IsShow(method) {
 		invalidArgsMap := make(map[string]string)
 		m.getInvalidMethodFields([]string{""}, invalidArgsMap, false, in, method)
+		keys := make([]string, 0)
+		for k, _ := range invalidArgsMap {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
 		m.P("func (m *", *in.DescriptorProto.Name, ") IsValidArgsFor", *method.Name, "() error {")
-		for arg, argnilval := range invalidArgsMap {
+		for _, arg := range keys {
+			argnilval := invalidArgsMap[arg]
 			m.P("if m", arg, " != ", argnilval, " {")
 			argStr := strings.TrimLeft(arg, ".")
 			m.P("return fmt.Errorf(\"Invalid field specified: ", argStr, ", this field is only for internal use\")")
