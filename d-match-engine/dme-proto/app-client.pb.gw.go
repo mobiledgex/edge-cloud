@@ -362,6 +362,58 @@ func request_MatchEngineApi_GetQosPositionKpi_0(ctx context.Context, marshaler r
 
 }
 
+func request_MatchEngineApi_StreamEdgeEvent_0(ctx context.Context, marshaler runtime.Marshaler, client MatchEngineApiClient, req *http.Request, pathParams map[string]string) (MatchEngineApi_StreamEdgeEventClient, runtime.ServerMetadata, error) {
+	var metadata runtime.ServerMetadata
+	stream, err := client.StreamEdgeEvent(ctx)
+	if err != nil {
+		grpclog.Infof("Failed to start streaming: %v", err)
+		return nil, metadata, err
+	}
+	dec := marshaler.NewDecoder(req.Body)
+	handleSend := func() error {
+		var protoReq ClientEdgeEvent
+		err := dec.Decode(&protoReq)
+		if err == io.EOF {
+			return err
+		}
+		if err != nil {
+			grpclog.Infof("Failed to decode request: %v", err)
+			return err
+		}
+		if err := stream.Send(&protoReq); err != nil {
+			grpclog.Infof("Failed to send request: %v", err)
+			return err
+		}
+		return nil
+	}
+	if err := handleSend(); err != nil {
+		if cerr := stream.CloseSend(); cerr != nil {
+			grpclog.Infof("Failed to terminate client stream: %v", cerr)
+		}
+		if err == io.EOF {
+			return stream, metadata, nil
+		}
+		return nil, metadata, err
+	}
+	go func() {
+		for {
+			if err := handleSend(); err != nil {
+				break
+			}
+		}
+		if err := stream.CloseSend(); err != nil {
+			grpclog.Infof("Failed to terminate client stream: %v", err)
+		}
+	}()
+	header, err := stream.Header()
+	if err != nil {
+		grpclog.Infof("Failed to get header from client: %v", err)
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+}
+
 // RegisterMatchEngineApiHandlerServer registers the http handlers for service MatchEngineApi to "mux".
 // UnaryRPC     :call MatchEngineApiServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -548,6 +600,13 @@ func RegisterMatchEngineApiHandlerServer(ctx context.Context, mux *runtime.Serve
 	})
 
 	mux.Handle("POST", pattern_MatchEngineApi_GetQosPositionKpi_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_MatchEngineApi_StreamEdgeEvent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
 		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -795,6 +854,26 @@ func RegisterMatchEngineApiHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("POST", pattern_MatchEngineApi_StreamEdgeEvent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_MatchEngineApi_StreamEdgeEvent_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MatchEngineApi_StreamEdgeEvent_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -818,6 +897,8 @@ var (
 	pattern_MatchEngineApi_GetAppOfficialFqdn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "getappofficialfqdn"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_MatchEngineApi_GetQosPositionKpi_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "getqospositionkpi"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_MatchEngineApi_StreamEdgeEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "streamedgeevent"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -840,4 +921,6 @@ var (
 	forward_MatchEngineApi_GetAppOfficialFqdn_0 = runtime.ForwardResponseMessage
 
 	forward_MatchEngineApi_GetQosPositionKpi_0 = runtime.ForwardResponseStream
+
+	forward_MatchEngineApi_StreamEdgeEvent_0 = runtime.ForwardResponseStream
 )

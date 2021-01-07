@@ -49,40 +49,20 @@ var LocSpecialArgs = map[string]string{}
 var SampleRequiredArgs = []string{}
 var SampleOptionalArgs = []string{
 	"value",
-	"loc.latitude",
-	"loc.longitude",
-	"loc.horizontalaccuracy",
-	"loc.verticalaccuracy",
-	"loc.altitude",
-	"loc.course",
-	"loc.speed",
-	"loc.timestamp.seconds",
-	"loc.timestamp.nanos",
-	"sessioncookie",
-	"datanetworktype",
 	"timestamp.seconds",
 	"timestamp.nanos",
 	"tags",
 }
 var SampleAliasArgs = []string{}
 var SampleComments = map[string]string{
-	"value":                  "latency value",
-	"loc.latitude":           "latitude in WGS 84 coordinates",
-	"loc.longitude":          "longitude in WGS 84 coordinates",
-	"loc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"loc.verticalaccuracy":   "vertical accuracy (meters)",
-	"loc.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"loc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"loc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"sessioncookie":          "session cookie to differentiate clients",
-	"datanetworktype":        "LTE, 5G, etc.",
-	"tags":                   "_(optional)_ Vendor specific data",
+	"value": "latency value",
+	"tags":  "_(optional)_ Vendor specific data",
 }
 var SampleSpecialArgs = map[string]string{
 	"tags": "StringToString",
 }
-var LatencyRequiredArgs = []string{}
-var LatencyOptionalArgs = []string{
+var StatisticsRequiredArgs = []string{}
+var StatisticsOptionalArgs = []string{
 	"avg",
 	"min",
 	"max",
@@ -92,9 +72,13 @@ var LatencyOptionalArgs = []string{
 	"timestamp.seconds",
 	"timestamp.nanos",
 }
-var LatencyAliasArgs = []string{}
-var LatencyComments = map[string]string{
-	"stddev":   "Square root of unbiased variance",
-	"variance": "Unbiased variance",
+var StatisticsAliasArgs = []string{}
+var StatisticsComments = map[string]string{
+	"avg":        "average",
+	"min":        "minimum",
+	"max":        "maximum",
+	"stddev":     "square root of unbiased variance",
+	"variance":   "unbiased variance",
+	"numsamples": "number of samples to create stats",
 }
-var LatencySpecialArgs = map[string]string{}
+var StatisticsSpecialArgs = map[string]string{}

@@ -66,6 +66,7 @@ type DmeCloudlet struct {
 	CloudletKey      edgeproto.CloudletKey
 	State            dme.CloudletState
 	MaintenanceState dme.MaintenanceState
+	GpsLocation      dme.Loc
 }
 
 type AutoProvPolicy struct {
@@ -103,10 +104,16 @@ type StatKey struct {
 	ClusterInstOrg string
 }
 
+type EdgeEventStatKey struct {
+	AppInstKey edgeproto.AppInstKey
+	Metric     string
+}
+
 // This is for passing the carrier/cloudlet in the context
 type StatKeyContextType string
 
 var StatKeyContextKey = StatKeyContextType("statKey")
+
 var EdgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
 
 // EdgeEventsHandler implementation (loaded from Plugin)
@@ -509,6 +516,7 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		tbl.Cloudlets[in.Key] = cloudlet
 	}
 	cloudlet.MaintenanceState = in.MaintenanceState
+	cloudlet.GpsLocation = in.Location
 
 	for _, app := range tbl.Apps {
 		app.Lock()
@@ -551,6 +559,19 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 		}
 		app.Unlock()
 	}
+}
+
+// Given an AppInstKey, return the corresponding DmeCloudlet
+func findDmeCloudlet(appInstKey *edgeproto.AppInstKey) DmeCloudlet {
+	tbl := DmeAppTbl
+
+	tbl.RLock()
+	defer tbl.RUnlock()
+	dmecloudlet, ok := tbl.Cloudlets[appInstKey.ClusterInstKey.CloudletKey]
+	if !ok {
+		return DmeCloudlet{}
+	}
+	return *dmecloudlet
 }
 
 // translateCarrierName translates carrier name (mcc+mnc) to
@@ -847,10 +868,8 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 			CloudletOrg:  best.appInst.clusterInstKey.CloudletKey.Organization,
 			CloudletName: best.appInst.clusterInstKey.CloudletKey.Name,
 		}
-		cookie, _ := GenerateEdgeEventsCookie(&key, ctx, edgeEventsCookieExpiration)
-		mreply.EdgeEventsCookie = cookie
-		// TODO: Once DME per cloudlet is implemented, Set the DmeFqdn to the DNS name for the DME on the cloudlet of app inst provided
-
+		eecookie, _ := GenerateEdgeEventsCookie(&key, ctx, edgeEventsCookieExpiration)
+		mreply.EdgeEventsCookie = eecookie
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
@@ -973,11 +992,19 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
-func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) error {
+func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) (reterr error) {
+	// Catch any unexpected panics
+	defer func() {
+		if err := recover(); err != nil {
+			log.DebugLog(log.DebugLevelDmereq, "Unexpected panic.", "error", err)
+			reterr = fmt.Errorf("Unexpected panic")
+		}
+	}()
+	// Initialize vars used in persistent connection
 	var appInstKey *edgeproto.AppInstKey
+	var sessionCookie string
 	var sessionCookieKey *CookieKey
 	var edgeEventsCookieKey *EdgeEventsCookieKey
-	var reterr error
 	// Intialize send function to be passed to plugin functions
 	sendFunc := func(event *dme.ServerEdgeEvent) {
 		err := svr.Send(event)
@@ -985,17 +1012,21 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error sending event to client", "error", err, "eventType", event.EventType)
 		}
 	}
-	//receive first msg from stream
+	// Receive first msg from stream
 	initMsg, err := svr.Recv()
 	if err != nil && err != io.EOF {
 		return err
+	}
+	if initMsg == nil {
+		return fmt.Errorf("Initial message is nil")
 	}
 	// On first message:
 	// Verify Session Cookie and EdgeEvents Cookie
 	// Then add connection, client, and appinst to Plugin hashmap
 	if initMsg.EventType == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
 		// Verify session cookie
-		sessionCookieKey, err = VerifyCookie(ctx, initMsg.SessionCookie)
+		sessionCookie = initMsg.SessionCookie
+		sessionCookieKey, err = VerifyCookie(ctx, sessionCookie)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyCookie result", "ckey", sessionCookieKey, "err", err)
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
@@ -1038,10 +1069,10 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	// Loop while persistent connection is up
 loop:
 	for {
-		//receive data from stream
+		// Receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
-		//check receive errors
+		// Check receive errors
 		if err != nil && err != io.EOF {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
 			if strings.Contains(err.Error(), "rpc error") {
@@ -1052,7 +1083,8 @@ loop:
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
 		if cupdate == nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent is nil. Ending connection")
-			break loop
+			reterr = fmt.Errorf("ClientEdgeEvent is nil. Ending connection")
+			break
 		}
 		// Handle Different Client events
 		switch cupdate.EventType {
@@ -1062,29 +1094,25 @@ loop:
 			break loop
 		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
 			// Client sent latency samples to be processed
-			call := ApiStatCall{}
-			call.Key.AppKey = appInstKey.AppKey
-			call.Key.CloudletFound = appInstKey.ClusterInstKey.CloudletKey
-			call.Key.ClusterKey = appInstKey.ClusterInstKey.ClusterKey
-			call.Key.ClusterInstOrg = appInstKey.ClusterInstKey.Organization
-			latency, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			stats, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
-				return err
+				reterr = err
+				break loop
 			}
-			call.Latency = time.Duration(latency.Avg * float64(time.Millisecond))
-			call.Key.Method = EdgeEventLatencyMethod // override method name
-			call.SessionCookie = cupdate.SessionCookie
-			// Set location for each Sample
-			for i := range cupdate.Samples {
-				cupdate.Samples[i].Loc = cupdate.GpsLocation
+			deviceInfo := dme.DeviceInfo{}
+			if cupdate.DeviceInfo != nil {
+				deviceInfo = *cupdate.DeviceInfo
 			}
-			call.Samples = cupdate.Samples
-			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency processing results", "latency", call.Latency)
-			Stats.RecordApiStatCall(&call)
+			RecordAppInstLatencyStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, edgeEventsCookieKey, stats, cupdate.CarrierName, deviceInfo)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
-			log.SpanLog(ctx, log.DebugLevelDmereq, "Location update from client", "client", sessionCookieKey, "location", cupdate.GpsLocation)
+			// Gps location stats update
+			deviceInfo := dme.DeviceInfo{}
+			if cupdate.DeviceInfo != nil {
+				deviceInfo = *cupdate.DeviceInfo
+			}
+			RecordGpsLocationStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, cupdate.CarrierName, deviceInfo)
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
 			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, fcreply, EdgeEventsCookieExpiration)
@@ -1105,10 +1133,12 @@ loop:
 				newCloudletEdgeEvent.NewCloudlet = fcreply
 				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
 			}
+		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
+			// Client sent custom stat to be stored
+			RecordCustomStatCall(appInstKey, sessionCookieKey, cupdate.CustomEvent, cupdate.Samples)
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
-			break
 		}
 	}
 	// Remove Client from edgeevents plugin
@@ -1190,4 +1220,6 @@ func AppExists(orgname string, appname string, appvers string) bool {
 
 func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
 	autoProvStats.UpdateSettings(new.AutoDeployIntervalSec)
+	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
+	EEStats.UpdateSettings(time.Duration(new.PersistentConnectionMetricsCollectionInterval))
 }

@@ -82,7 +82,7 @@ func TestStatDrops(t *testing.T) {
 	dbCount := uint64(0)
 	db.mux.Lock()
 	for _, stat := range db.stats {
-		dbCount += stat.Reqs
+		dbCount += stat.reqs
 	}
 	assert.Equal(t, numThreads, len(db.stats), "stat count")
 	db.mux.Unlock()
@@ -116,10 +116,10 @@ func TestStatChanged(t *testing.T) {
 		Latency: 50 * time.Millisecond,
 	})
 	time.Sleep(100 * time.Microsecond)
-	assert.True(t, stats.shards[0].apiStatMap[key].Changed)
+	assert.True(t, stats.shards[0].apiStatMap[key].changed)
 	mux.Unlock()
 
 	// sleep two intervals to make sure that stats are uploaded to the controller
 	time.Sleep(2 * notifyInterval)
-	assert.False(t, stats.shards[0].apiStatMap[key].Changed)
+	assert.False(t, stats.shards[0].apiStatMap[key].changed)
 }

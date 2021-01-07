@@ -18,6 +18,8 @@ settings:
   chefclientinterval: 10m
   cloudletmaintenancetimeout: 2s
   updatevmpooltimeout: 20m0s
+  dmeapimetricscollectioninterval: 1s
+  persistentconnectionmetricscollectioninterval: 1s
 flavors:
 - key:
     name: x1.tiny

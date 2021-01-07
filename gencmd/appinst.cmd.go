@@ -732,85 +732,8 @@ func RequestAppInstLatencys(c *cli.Command, data []edgeproto.AppInstLatency, err
 	}
 }
 
-var ShowAppInstLatencyCmd = &cli.Command{
-	Use:          "ShowAppInstLatency",
-	OptionalArgs: strings.Join(append(AppInstLatencyRequiredArgs, AppInstLatencyOptionalArgs...), " "),
-	AliasArgs:    strings.Join(AppInstLatencyAliasArgs, " "),
-	SpecialArgs:  &AppInstLatencySpecialArgs,
-	Comments:     AppInstLatencyComments,
-	ReqData:      &edgeproto.AppInstLatency{},
-	ReplyData:    &edgeproto.AppInstLatency{},
-	Run:          runShowAppInstLatency,
-}
-
-func runShowAppInstLatency(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.AppInstLatency)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ShowAppInstLatency(c, obj)
-}
-
-func ShowAppInstLatency(c *cli.Command, in *edgeproto.AppInstLatency) error {
-	if AppInstLatencyApiCmd == nil {
-		return fmt.Errorf("AppInstLatencyApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := AppInstLatencyApiCmd.ShowAppInstLatency(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ShowAppInstLatency failed: %s", errstr)
-	}
-
-	objs := make([]*edgeproto.AppInstLatency, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowAppInstLatency recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ShowAppInstLatencys(c *cli.Command, data []edgeproto.AppInstLatency, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ShowAppInstLatency %v\n", data[ii])
-		myerr := ShowAppInstLatency(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var AppInstLatencyApiCmds = []*cobra.Command{
 	RequestAppInstLatencyCmd.GenCmd(),
-	ShowAppInstLatencyCmd.GenCmd(),
 }
 
 var AppInstKeyRequiredArgs = []string{}
@@ -1015,31 +938,7 @@ var AppInstLatencyRequiredArgs = []string{
 	"cluster-org",
 }
 var AppInstLatencyOptionalArgs = []string{
-	"latency.avg",
-	"latency.min",
-	"latency.max",
-	"latency.stddev",
-	"latency.variance",
-	"latency.numsamples",
-	"latency.timestamp.seconds",
-	"latency.timestamp.nanos",
 	"message",
-	"numclients",
-	"samples:#.value",
-	"samples:#.loc.latitude",
-	"samples:#.loc.longitude",
-	"samples:#.loc.horizontalaccuracy",
-	"samples:#.loc.verticalaccuracy",
-	"samples:#.loc.altitude",
-	"samples:#.loc.course",
-	"samples:#.loc.speed",
-	"samples:#.loc.timestamp.seconds",
-	"samples:#.loc.timestamp.nanos",
-	"samples:#.sessioncookie",
-	"samples:#.datanetworktype",
-	"samples:#.timestamp.seconds",
-	"samples:#.timestamp.nanos",
-	"samples:#.tags",
 }
 var AppInstLatencyAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -1051,31 +950,15 @@ var AppInstLatencyAliasArgs = []string{
 	"cluster-org=key.clusterinstkey.organization",
 }
 var AppInstLatencyComments = map[string]string{
-	"app-org":                          "App developer organization",
-	"appname":                          "App name",
-	"appvers":                          "App version",
-	"cluster":                          "Cluster name",
-	"cloudlet-org":                     "Organization of the cloudlet site",
-	"cloudlet":                         "Name of the cloudlet",
-	"cluster-org":                      "Name of Developer organization that this cluster belongs to",
-	"latency.stddev":                   "Square root of unbiased variance",
-	"latency.variance":                 "Unbiased variance",
-	"numclients":                       "Number of unique clients contributing to latency statistics",
-	"samples:#.value":                  "latency value",
-	"samples:#.loc.latitude":           "latitude in WGS 84 coordinates",
-	"samples:#.loc.longitude":          "longitude in WGS 84 coordinates",
-	"samples:#.loc.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"samples:#.loc.verticalaccuracy":   "vertical accuracy (meters)",
-	"samples:#.loc.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"samples:#.loc.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"samples:#.loc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"samples:#.sessioncookie":          "session cookie to differentiate clients",
-	"samples:#.datanetworktype":        "LTE, 5G, etc.",
-	"samples:#.tags":                   "_(optional)_ Vendor specific data",
+	"app-org":      "App developer organization",
+	"appname":      "App name",
+	"appvers":      "App version",
+	"cluster":      "Cluster name",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"cluster-org":  "Name of Developer organization that this cluster belongs to",
 }
-var AppInstLatencySpecialArgs = map[string]string{
-	"samples:#.tags": "StringToString",
-}
+var AppInstLatencySpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{
 	"app-org",
 	"appname",

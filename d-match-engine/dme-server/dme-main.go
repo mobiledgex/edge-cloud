@@ -48,7 +48,6 @@ var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 var region = flag.String("region", "local", "region name")
@@ -98,8 +97,6 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, err
 	}
 	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, dmecommon.EdgeEventsCookieExpiration)
-	// TODO: Once DME per cloudlet is implemented, This should be the DNS name for the DME on the cloudlet of app inst provided
-	reply.DmeFqdn = nodeMgr.CommonName()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -146,8 +143,6 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
 	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, cookieExpiration)
-	// TODO: Once DME per cloudlet is implemented, This should be the DNS name for the DME on the cloudlet of app inst provided
-	reply.DmeFqdn = nodeMgr.CommonName()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -521,10 +516,15 @@ func main() {
 	notifyClient.Start()
 	defer notifyClient.Stop()
 
-	interval := time.Duration(*statsInterval) * time.Second
+	interval := dmecommon.Settings.DmeApiMetricsCollectionInterval.TimeDuration()
 	dmecommon.Stats = dmecommon.NewDmeStats(interval, *statsShards, sendMetric.Update)
 	dmecommon.Stats.Start()
 	defer dmecommon.Stats.Stop()
+
+	edgeEventsInterval := dmecommon.Settings.PersistentConnectionMetricsCollectionInterval.TimeDuration()
+	dmecommon.EEStats = dmecommon.NewEdgeEventStats(edgeEventsInterval, *statsShards, sendMetric.Update)
+	dmecommon.EEStats.Start()
+	defer dmecommon.EEStats.Stop()
 
 	dmecommon.InitAppInstClients()
 
