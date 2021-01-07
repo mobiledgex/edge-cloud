@@ -1716,6 +1716,62 @@ func (m *CloudletPoolMember) ValidateEnums() error {
 	return nil
 }
 
+func (m *CloudletPool) IsValidArgsForCreateCloudletPool() error {
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletPool) IsValidArgsForDeleteCloudletPool() error {
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletPool) IsValidArgsForUpdateCloudletPool() error {
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletPoolMember) IsValidArgsForAddCloudletPoolMember() error {
+	return nil
+}
+
+func (m *CloudletPoolMember) IsValidArgsForRemoveCloudletPoolMember() error {
+	return nil
+}
+
 func (m *CloudletPoolKey) Size() (n int) {
 	if m == nil {
 		return 0

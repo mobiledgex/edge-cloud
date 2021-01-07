@@ -7225,6 +7225,45 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *RegisterClientRequest) IsValidArgsForRegisterClient() error {
+	return nil
+}
+
+func (m *FindCloudletRequest) IsValidArgsForFindCloudlet() error {
+	return nil
+}
+
+func (m *PlatformFindCloudletRequest) IsValidArgsForPlatformFindCloudlet() error {
+	return nil
+}
+
+func (m *VerifyLocationRequest) IsValidArgsForVerifyLocation() error {
+	return nil
+}
+
+func (m *GetLocationRequest) IsValidArgsForGetLocation() error {
+	return nil
+}
+
+func (m *DynamicLocGroupRequest) IsValidArgsForAddUserToGroup() error {
+	return nil
+}
+
+func (m *AppInstListRequest) IsValidArgsForGetAppInstList() error {
+	return nil
+}
+
+func (m *FqdnListRequest) IsValidArgsForGetFqdnList() error {
+	return nil
+}
+
+func (m *AppOfficialFqdnRequest) IsValidArgsForGetAppOfficialFqdn() error {
+	return nil
+}
+
+func (m *QosPositionRequest) IsValidArgsForGetQosPositionKpi() error {
+	return nil
+}
 
 type MatchOptions struct {
 	// Filter will ignore 0 or nil fields on the passed in object
