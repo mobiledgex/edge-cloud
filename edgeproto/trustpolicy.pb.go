@@ -1343,6 +1343,18 @@ func (m *TrustPolicy) ValidateEnums() error {
 	return nil
 }
 
+func (m *TrustPolicy) IsValidArgsForCreateTrustPolicy() error {
+	return nil
+}
+
+func (m *TrustPolicy) IsValidArgsForDeleteTrustPolicy() error {
+	return nil
+}
+
+func (m *TrustPolicy) IsValidArgsForUpdateTrustPolicy() error {
+	return nil
+}
+
 func (m *SecurityRule) Size() (n int) {
 	if m == nil {
 		return 0

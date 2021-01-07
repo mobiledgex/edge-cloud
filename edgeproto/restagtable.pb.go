@@ -1599,6 +1599,30 @@ func (e *OptResNames) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *ResTagTable) IsValidArgsForCreateResTagTable() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForDeleteResTagTable() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForUpdateResTagTable() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForAddResTag() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForRemoveResTag() error {
+	return nil
+}
+
+func (m *ResTagTableKey) IsValidArgsForGetResTagTable() error {
+	return nil
+}
+
 func (m *ResTagTableKey) Size() (n int) {
 	if m == nil {
 		return 0

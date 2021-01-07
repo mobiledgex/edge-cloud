@@ -625,7 +625,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
@@ -647,7 +647,7 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   flavor:
     name: x1.small
 - key:
@@ -665,7 +665,7 @@ appinstances:
   cloudletloc:
     latitude: 40
     longitude: -99
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
