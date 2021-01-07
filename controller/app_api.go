@@ -67,7 +67,7 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 
 func CheckAppCompatibleWithTrustPolicy(app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
 	if !app.Trusted {
-		return fmt.Errorf("Non trusted app: %s in use by trust policy: %s", app.Key.String(), trustPolicy.Key.String())
+		return fmt.Errorf("Non trusted app: %s not compatible with trust policy: %s", strings.TrimSpace(app.Key.String()), trustPolicy.Key.String())
 	}
 	for _, r := range app.RequiredOutboundConnections {
 		policyMatchFound := false
@@ -547,6 +547,10 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 			err = cloudletApi.VerifyTrustPoliciesForAppInsts(&cur, appInstKeys)
 			if err != nil {
+				if TrustedSpecified && !in.Trusted {
+					// override the usual errmsg to be clear for this scenario
+					return fmt.Errorf("Cannot set app to untrusted which has an instance on a trusted cloudlet")
+				}
 				return err
 			}
 		}
