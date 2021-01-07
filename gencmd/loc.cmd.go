@@ -46,8 +46,23 @@ var LocComments = map[string]string{
 	"speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 }
 var LocSpecialArgs = map[string]string{}
-var LatencyRequiredArgs = []string{}
-var LatencyOptionalArgs = []string{
+var SampleRequiredArgs = []string{}
+var SampleOptionalArgs = []string{
+	"value",
+	"timestamp.seconds",
+	"timestamp.nanos",
+	"tags",
+}
+var SampleAliasArgs = []string{}
+var SampleComments = map[string]string{
+	"value": "latency value",
+	"tags":  "_(optional)_ Vendor specific data",
+}
+var SampleSpecialArgs = map[string]string{
+	"tags": "StringToString",
+}
+var StatisticsRequiredArgs = []string{}
+var StatisticsOptionalArgs = []string{
 	"avg",
 	"min",
 	"max",
@@ -57,9 +72,13 @@ var LatencyOptionalArgs = []string{
 	"timestamp.seconds",
 	"timestamp.nanos",
 }
-var LatencyAliasArgs = []string{}
-var LatencyComments = map[string]string{
-	"stddev":   "Square root of unbiased variance",
-	"variance": "Unbiased variance",
+var StatisticsAliasArgs = []string{}
+var StatisticsComments = map[string]string{
+	"avg":        "average",
+	"min":        "minimum",
+	"max":        "maximum",
+	"stddev":     "square root of unbiased variance",
+	"variance":   "unbiased variance",
+	"numsamples": "number of samples to create stats",
 }
-var LatencySpecialArgs = map[string]string{}
+var StatisticsSpecialArgs = map[string]string{}

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -87,7 +88,7 @@ func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.Cloudlet
 
 func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	// set cloudlet state for the instance accordingly
-	in.State = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+	in.State = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 	dmecommon.SetInstStateFromCloudletInfo(ctx, in)
 }
 

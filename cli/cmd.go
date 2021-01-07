@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strings"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/spf13/cobra"
@@ -224,7 +226,7 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 			SpecialArgs:    c.SpecialArgs,
 			PasswordArg:    c.PasswordArg,
 			VerifyPassword: c.VerifyPassword,
-			DecodeHook:     edgeproto.DecodeHook,
+			DecodeHook:     DecodeHook,
 		}
 		argsMap, err := input.ParseArgs(args, c.ReqData)
 		if err != nil {
@@ -247,6 +249,14 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 		}
 	}
 	return in, nil
+}
+
+func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
+	data, err := edgeproto.DecodeHook(from, to, data)
+	if err != nil {
+		return data, err
+	}
+	return dme.EnumDecodeHook(from, to, data)
 }
 
 func GenGroup(use, short string, cmds []*Command) *cobra.Command {

@@ -125,34 +125,32 @@ func (m *Loc) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Loc proto.InternalMessageInfo
 
-// Latency
-type Latency struct {
-	Avg float64 `protobuf:"fixed64,1,opt,name=avg,proto3" json:"avg,omitempty"`
-	Min float64 `protobuf:"fixed64,2,opt,name=min,proto3" json:"min,omitempty"`
-	Max float64 `protobuf:"fixed64,3,opt,name=max,proto3" json:"max,omitempty"`
-	// Square root of unbiased variance
-	StdDev float64 `protobuf:"fixed64,4,opt,name=std_dev,json=stdDev,proto3" json:"std_dev,omitempty"`
-	// Unbiased variance
-	Variance             float64    `protobuf:"fixed64,5,opt,name=variance,proto3" json:"variance,omitempty"`
-	NumSamples           uint64     `protobuf:"varint,6,opt,name=num_samples,json=numSamples,proto3" json:"num_samples,omitempty"`
-	Timestamp            *Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
-	XXX_unrecognized     []byte     `json:"-"`
-	XXX_sizecache        int32      `json:"-"`
+//
+// Sample
+type Sample struct {
+	// latency value
+	Value float64 `protobuf:"fixed64,1,opt,name=value,proto3" json:"value,omitempty"`
+	// timestamp
+	Timestamp *Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// _(optional)_ Vendor specific data
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
-func (m *Latency) Reset()         { *m = Latency{} }
-func (m *Latency) String() string { return proto.CompactTextString(m) }
-func (*Latency) ProtoMessage()    {}
-func (*Latency) Descriptor() ([]byte, []int) {
+func (m *Sample) Reset()         { *m = Sample{} }
+func (m *Sample) String() string { return proto.CompactTextString(m) }
+func (*Sample) ProtoMessage()    {}
+func (*Sample) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1155fb466575c073, []int{2}
 }
-func (m *Latency) XXX_Unmarshal(b []byte) error {
+func (m *Sample) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Latency) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Sample) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Latency.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Sample.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -162,52 +160,113 @@ func (m *Latency) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Latency) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Latency.Merge(m, src)
+func (m *Sample) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Sample.Merge(m, src)
 }
-func (m *Latency) XXX_Size() int {
+func (m *Sample) XXX_Size() int {
 	return m.Size()
 }
-func (m *Latency) XXX_DiscardUnknown() {
-	xxx_messageInfo_Latency.DiscardUnknown(m)
+func (m *Sample) XXX_DiscardUnknown() {
+	xxx_messageInfo_Sample.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Latency proto.InternalMessageInfo
+var xxx_messageInfo_Sample proto.InternalMessageInfo
+
+// Statistics
+type Statistics struct {
+	// average
+	Avg float64 `protobuf:"fixed64,1,opt,name=avg,proto3" json:"avg,omitempty"`
+	// minimum
+	Min float64 `protobuf:"fixed64,2,opt,name=min,proto3" json:"min,omitempty"`
+	// maximum
+	Max float64 `protobuf:"fixed64,3,opt,name=max,proto3" json:"max,omitempty"`
+	// square root of unbiased variance
+	StdDev float64 `protobuf:"fixed64,4,opt,name=std_dev,json=stdDev,proto3" json:"std_dev,omitempty"`
+	// unbiased variance
+	Variance float64 `protobuf:"fixed64,5,opt,name=variance,proto3" json:"variance,omitempty"`
+	// number of samples to create stats
+	NumSamples uint64 `protobuf:"varint,6,opt,name=num_samples,json=numSamples,proto3" json:"num_samples,omitempty"`
+	// timestamp
+	Timestamp            *Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *Statistics) Reset()         { *m = Statistics{} }
+func (m *Statistics) String() string { return proto.CompactTextString(m) }
+func (*Statistics) ProtoMessage()    {}
+func (*Statistics) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1155fb466575c073, []int{3}
+}
+func (m *Statistics) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Statistics) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Statistics.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Statistics) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Statistics.Merge(m, src)
+}
+func (m *Statistics) XXX_Size() int {
+	return m.Size()
+}
+func (m *Statistics) XXX_DiscardUnknown() {
+	xxx_messageInfo_Statistics.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Statistics proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*Timestamp)(nil), "distributed_match_engine.Timestamp")
 	proto.RegisterType((*Loc)(nil), "distributed_match_engine.Loc")
-	proto.RegisterType((*Latency)(nil), "distributed_match_engine.Latency")
+	proto.RegisterType((*Sample)(nil), "distributed_match_engine.Sample")
+	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.Sample.TagsEntry")
+	proto.RegisterType((*Statistics)(nil), "distributed_match_engine.Statistics")
 }
 
 func init() { proto.RegisterFile("loc.proto", fileDescriptor_1155fb466575c073) }
 
 var fileDescriptor_1155fb466575c073 = []byte{
-	// 372 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0x3f, 0x4f, 0xe3, 0x30,
-	0x18, 0xc6, 0xcf, 0x4d, 0x9b, 0xb4, 0x6f, 0x97, 0x9e, 0xef, 0x74, 0x67, 0x55, 0xa7, 0x5c, 0x55,
-	0x96, 0x4a, 0x48, 0x45, 0x82, 0x91, 0xa9, 0x88, 0xb1, 0x53, 0x60, 0x8f, 0x5c, 0xdb, 0x6a, 0x2d,
-	0x25, 0x76, 0x14, 0x3b, 0x11, 0xe5, 0x23, 0xf1, 0x49, 0x3a, 0x32, 0x32, 0x42, 0x3f, 0x09, 0x8a,
-	0xf3, 0xa7, 0x30, 0xb0, 0xb0, 0xbd, 0xcf, 0xf3, 0xbc, 0x96, 0xde, 0xdf, 0x23, 0xc3, 0x28, 0xd1,
-	0x6c, 0x99, 0xe5, 0xda, 0x6a, 0x4c, 0xb8, 0x34, 0x36, 0x97, 0x9b, 0xc2, 0x0a, 0x1e, 0xa7, 0xd4,
-	0xb2, 0x5d, 0x2c, 0xd4, 0x56, 0x2a, 0x31, 0xbf, 0x86, 0xd1, 0xbd, 0x4c, 0x85, 0xb1, 0x34, 0xcd,
-	0x30, 0x81, 0xc0, 0x08, 0xa6, 0x15, 0x37, 0x04, 0xcd, 0xd0, 0xc2, 0x8b, 0x5a, 0x89, 0x7f, 0xc3,
-	0x40, 0x51, 0xa5, 0x0d, 0xe9, 0xcd, 0xd0, 0x62, 0x10, 0xd5, 0x62, 0xfe, 0xd4, 0x03, 0x6f, 0xad,
-	0x19, 0x9e, 0xc2, 0x30, 0xa1, 0x56, 0xda, 0x82, 0x0b, 0xf7, 0x10, 0x45, 0x9d, 0xc6, 0xff, 0xaa,
-	0x3b, 0xd4, 0xb6, 0x0e, 0x7b, 0x2e, 0x3c, 0x19, 0xf8, 0x02, 0x7e, 0xed, 0x74, 0x2e, 0x1f, 0xb5,
-	0xb2, 0x34, 0x89, 0x29, 0x63, 0x45, 0x4e, 0xd9, 0x9e, 0x78, 0x6e, 0x0f, 0x9f, 0xa2, 0x55, 0x93,
-	0xe0, 0x73, 0xf8, 0x59, 0x8a, 0xdc, 0x4a, 0xf6, 0x71, 0xbd, 0xef, 0xd6, 0x27, 0x6d, 0xd0, 0x2d,
-	0x4f, 0x61, 0x48, 0x93, 0xe6, 0xae, 0x41, 0x7d, 0x57, 0xab, 0xf1, 0x1f, 0xf0, 0x99, 0x2e, 0x72,
-	0x23, 0x88, 0xef, 0x92, 0x46, 0x55, 0xa4, 0x26, 0x13, 0x82, 0x93, 0xc0, 0xd9, 0xb5, 0xc0, 0x2b,
-	0x18, 0xd9, 0xb6, 0x26, 0x32, 0x9c, 0xa1, 0xc5, 0xf8, 0xf2, 0x6c, 0xf9, 0x55, 0xa9, 0xcb, 0xae,
-	0xd1, 0xe8, 0xf4, 0x6a, 0xfe, 0x82, 0x20, 0x58, 0x53, 0x2b, 0x14, 0xdb, 0xe3, 0x09, 0x78, 0xb4,
-	0xdc, 0x36, 0x5d, 0x55, 0x63, 0xe5, 0xa4, 0x52, 0x35, 0x05, 0x55, 0xa3, 0x73, 0xe8, 0x43, 0x53,
-	0x45, 0x35, 0xe2, 0xbf, 0x10, 0x18, 0xcb, 0x63, 0x2e, 0xca, 0x86, 0xd8, 0x37, 0x96, 0xdf, 0x8a,
-	0xb2, 0xe2, 0x2c, 0x69, 0x2e, 0xa9, 0x62, 0x1d, 0x67, 0xab, 0xf1, 0x7f, 0x18, 0xab, 0x22, 0x8d,
-	0x0d, 0x4d, 0xb3, 0x44, 0x18, 0x07, 0xdb, 0x8f, 0x40, 0x15, 0xe9, 0x5d, 0xed, 0x7c, 0x46, 0x0b,
-	0xbe, 0x83, 0x76, 0x33, 0x39, 0xbc, 0x85, 0x3f, 0x0e, 0xc7, 0x10, 0x3d, 0x1f, 0x43, 0xf4, 0x7a,
-	0x0c, 0xd1, 0xc6, 0x77, 0xff, 0xee, 0xea, 0x3d, 0x00, 0x00, 0xff, 0xff, 0xe6, 0x78, 0xe3, 0xca,
-	0x84, 0x02, 0x00, 0x00,
+	// 449 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0x4d, 0x8f, 0xd3, 0x30,
+	0x10, 0xc5, 0x49, 0x9b, 0x36, 0xd3, 0x4b, 0x31, 0x08, 0xa2, 0x0a, 0x95, 0xaa, 0x5c, 0x2a, 0x90,
+	0x8a, 0xb4, 0x1c, 0x40, 0x20, 0x21, 0x2d, 0x82, 0x1b, 0xa7, 0xec, 0xde, 0x23, 0xaf, 0x6d, 0x65,
+	0x2d, 0x12, 0xbb, 0x8a, 0x27, 0x11, 0xe5, 0x27, 0xf1, 0x4b, 0xf6, 0xc8, 0x19, 0x2e, 0xd0, 0x5f,
+	0x82, 0xec, 0x7c, 0x74, 0xf7, 0xb0, 0x97, 0xde, 0xe6, 0xbd, 0x37, 0x23, 0xbf, 0x79, 0x93, 0x40,
+	0x5c, 0x18, 0xbe, 0xdd, 0x55, 0x06, 0x0d, 0x4d, 0x84, 0xb2, 0x58, 0xa9, 0xab, 0x1a, 0xa5, 0xc8,
+	0x4a, 0x86, 0xfc, 0x3a, 0x93, 0x3a, 0x57, 0x5a, 0xae, 0x3f, 0x40, 0x7c, 0xa9, 0x4a, 0x69, 0x91,
+	0x95, 0x3b, 0x9a, 0xc0, 0xc4, 0x4a, 0x6e, 0xb4, 0xb0, 0x09, 0x59, 0x91, 0x4d, 0x98, 0xf6, 0x90,
+	0x3e, 0x86, 0xb1, 0x66, 0xda, 0xd8, 0x24, 0x58, 0x91, 0xcd, 0x38, 0x6d, 0xc1, 0xfa, 0x67, 0x00,
+	0xe1, 0x57, 0xc3, 0xe9, 0x02, 0xa6, 0x05, 0x43, 0x85, 0xb5, 0x90, 0x7e, 0x90, 0xa4, 0x03, 0xa6,
+	0xcf, 0x9c, 0x0f, 0x9d, 0xb7, 0x62, 0xe0, 0xc5, 0x23, 0x41, 0x5f, 0xc3, 0xa3, 0x6b, 0x53, 0xa9,
+	0x1f, 0x46, 0x23, 0x2b, 0x32, 0xc6, 0x79, 0x5d, 0x31, 0xbe, 0x4f, 0x42, 0xdf, 0x47, 0x8f, 0xd2,
+	0x79, 0xa7, 0xd0, 0x57, 0xf0, 0xb0, 0x91, 0x15, 0x2a, 0x7e, 0xbb, 0x7d, 0xe4, 0xdb, 0xe7, 0xbd,
+	0x30, 0x34, 0x2f, 0x60, 0xca, 0x8a, 0xce, 0xd7, 0xb8, 0xf5, 0xd5, 0x63, 0xfa, 0x04, 0x22, 0x6e,
+	0xea, 0xca, 0xca, 0x24, 0xf2, 0x4a, 0x87, 0xdc, 0xa6, 0x76, 0x27, 0xa5, 0x48, 0x26, 0x9e, 0x6e,
+	0x01, 0x3d, 0x87, 0x18, 0xfb, 0x98, 0x92, 0xe9, 0x8a, 0x6c, 0x66, 0x67, 0x2f, 0xb6, 0xf7, 0x85,
+	0xba, 0x1d, 0x12, 0x4d, 0x8f, 0x53, 0xeb, 0xdf, 0x04, 0xa2, 0x0b, 0x56, 0xee, 0x0a, 0xff, 0x46,
+	0xc3, 0x8a, 0xba, 0x0f, 0xab, 0x05, 0x77, 0xdf, 0x08, 0x4e, 0x79, 0x83, 0x7e, 0x84, 0x11, 0xb2,
+	0xdc, 0x26, 0x62, 0x15, 0x6e, 0x66, 0x67, 0x2f, 0xef, 0x9f, 0x6e, 0x8d, 0x6c, 0x2f, 0x59, 0x6e,
+	0xbf, 0x68, 0xac, 0xf6, 0xa9, 0x9f, 0x5b, 0xbc, 0x85, 0x78, 0xa0, 0xe8, 0x1c, 0xc2, 0x6f, 0x72,
+	0xef, 0x3d, 0xc6, 0xa9, 0x2b, 0x8f, 0xbe, 0x03, 0xcf, 0xb5, 0xe0, 0x7d, 0xf0, 0x8e, 0xac, 0xff,
+	0x10, 0x80, 0x0b, 0x64, 0xa8, 0x2c, 0x2a, 0x6e, 0xdd, 0x28, 0x6b, 0xf2, 0x6e, 0x3d, 0x57, 0x3a,
+	0xa6, 0x54, 0xba, 0xfb, 0x00, 0x5c, 0xe9, 0x19, 0xf6, 0xbd, 0x3b, 0xb5, 0x2b, 0xe9, 0x53, 0x98,
+	0x58, 0x14, 0x99, 0x90, 0x4d, 0x77, 0xd1, 0xc8, 0xa2, 0xf8, 0x2c, 0x1b, 0x77, 0xc7, 0x86, 0x55,
+	0x8a, 0x69, 0x3e, 0xdc, 0xb1, 0xc7, 0xf4, 0x39, 0xcc, 0x74, 0x5d, 0x66, 0xd6, 0x2f, 0x64, 0xfd,
+	0x31, 0x47, 0x29, 0xe8, 0xba, 0x6c, 0x57, 0xb4, 0x77, 0x63, 0x9d, 0x9c, 0x12, 0xeb, 0xa7, 0xf9,
+	0xcd, 0xbf, 0xe5, 0x83, 0x9b, 0xc3, 0x92, 0xfc, 0x3a, 0x2c, 0xc9, 0xdf, 0xc3, 0x92, 0x5c, 0x45,
+	0xfe, 0xbf, 0x7a, 0xf3, 0x3f, 0x00, 0x00, 0xff, 0xff, 0x80, 0xf7, 0x13, 0x34, 0x64, 0x03, 0x00,
+	0x00,
 }
 
 func (m *Timestamp) Marshal() (dAtA []byte, err error) {
@@ -328,7 +387,7 @@ func (m *Loc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *Latency) Marshal() (dAtA []byte, err error) {
+func (m *Sample) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -338,12 +397,78 @@ func (m *Latency) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Latency) MarshalTo(dAtA []byte) (int, error) {
+func (m *Sample) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Latency) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Sample) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Tags) > 0 {
+		for k := range m.Tags {
+			v := m.Tags[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintLoc(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintLoc(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintLoc(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x6
+			i--
+			dAtA[i] = 0xa2
+		}
+	}
+	if m.Timestamp != nil {
+		{
+			size, err := m.Timestamp.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintLoc(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Value != 0 {
+		i -= 8
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Value))))
+		i--
+		dAtA[i] = 0x9
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Statistics) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Statistics) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Statistics) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -508,7 +633,66 @@ func (m *Loc) ValidateEnums() error {
 	return nil
 }
 
-func (m *Latency) CopyInFields(src *Latency) int {
+func (m *Sample) CopyInFields(src *Sample) int {
+	changed := 0
+	if m.Value != src.Value {
+		m.Value = src.Value
+		changed++
+	}
+	if src.Timestamp != nil {
+		m.Timestamp = &Timestamp{}
+		if m.Timestamp.Seconds != src.Timestamp.Seconds {
+			m.Timestamp.Seconds = src.Timestamp.Seconds
+			changed++
+		}
+		if m.Timestamp.Nanos != src.Timestamp.Nanos {
+			m.Timestamp.Nanos = src.Timestamp.Nanos
+			changed++
+		}
+	} else if m.Timestamp != nil {
+		m.Timestamp = nil
+		changed++
+	}
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k0, _ := range src.Tags {
+			m.Tags[k0] = src.Tags[k0]
+		}
+	} else if m.Tags != nil {
+		m.Tags = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *Sample) DeepCopyIn(src *Sample) {
+	m.Value = src.Value
+	if src.Timestamp != nil {
+		var tmp_Timestamp Timestamp
+		tmp_Timestamp.DeepCopyIn(src.Timestamp)
+		m.Timestamp = &tmp_Timestamp
+	} else {
+		m.Timestamp = nil
+	}
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k, v := range src.Tags {
+			m.Tags[k] = v
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *Sample) ValidateEnums() error {
+	if err := m.Timestamp.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Statistics) CopyInFields(src *Statistics) int {
 	changed := 0
 	if m.Avg != src.Avg {
 		m.Avg = src.Avg
@@ -551,7 +735,7 @@ func (m *Latency) CopyInFields(src *Latency) int {
 	return changed
 }
 
-func (m *Latency) DeepCopyIn(src *Latency) {
+func (m *Statistics) DeepCopyIn(src *Statistics) {
 	m.Avg = src.Avg
 	m.Min = src.Min
 	m.Max = src.Max
@@ -568,7 +752,7 @@ func (m *Latency) DeepCopyIn(src *Latency) {
 }
 
 // Helper method to check that enums have valid values
-func (m *Latency) ValidateEnums() error {
+func (m *Statistics) ValidateEnums() error {
 	if err := m.Timestamp.ValidateEnums(); err != nil {
 		return err
 	}
@@ -630,7 +814,34 @@ func (m *Loc) Size() (n int) {
 	return n
 }
 
-func (m *Latency) Size() (n int) {
+func (m *Sample) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Value != 0 {
+		n += 9
+	}
+	if m.Timestamp != nil {
+		l = m.Timestamp.Size()
+		n += 1 + l + sovLoc(uint64(l))
+	}
+	if len(m.Tags) > 0 {
+		for k, v := range m.Tags {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovLoc(uint64(len(k))) + 1 + len(v) + sovLoc(uint64(len(v)))
+			n += mapEntrySize + 2 + sovLoc(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Statistics) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -929,7 +1140,7 @@ func (m *Loc) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Latency) Unmarshal(dAtA []byte) error {
+func (m *Sample) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -952,10 +1163,238 @@ func (m *Latency) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Latency: wiretype end group for non-group")
+			return fmt.Errorf("proto: Sample: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Latency: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Sample: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.Value = float64(math.Float64frombits(v))
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowLoc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthLoc
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthLoc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Timestamp == nil {
+				m.Timestamp = &Timestamp{}
+			}
+			if err := m.Timestamp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 100:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowLoc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthLoc
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthLoc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tags == nil {
+				m.Tags = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowLoc
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowLoc
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthLoc
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthLoc
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowLoc
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthLoc
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthLoc
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipLoc(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthLoc
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Tags[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipLoc(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthLoc
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthLoc
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Statistics) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowLoc
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Statistics: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Statistics: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

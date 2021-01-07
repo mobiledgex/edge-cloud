@@ -23,6 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	influxclient "github.com/influxdata/influxdb/client/v2"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -303,8 +304,8 @@ func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 			err = fmt.Errorf("CloudletInfo not found")
 			continue
 		}
-		if info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY && info.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-			err = fmt.Errorf("CloudletInfo bad state %s", edgeproto.CloudletState_name[int32(info.State)])
+		if info.State != dme.CloudletState_CLOUDLET_STATE_READY && info.State != dme.CloudletState_CLOUDLET_STATE_ERRORS {
+			err = fmt.Errorf("CloudletInfo bad state %s", dme.CloudletState_name[int32(info.State)])
 			continue
 		}
 		err = nil
@@ -660,12 +661,15 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err1 = ReadYamlFile(firstYamlFile, &s1)
 		err2 = ReadYamlFile(secondYamlFile, &s2)
 
-		// Ignore Timestamp in latency
+		// Ignore dynamic fields (timestamp in statistics, and edgeeventscookie in newcloudlet)
 		ss := []dmeproto.ServerEdgeEvent{s1, s2}
 		for _, s := range ss {
-			if s.Latency != nil {
-				s.Latency.Timestamp.Seconds = 0
-				s.Latency.Timestamp.Nanos = 0
+			if s.Statistics != nil {
+				s.Statistics.Timestamp.Seconds = 0
+				s.Statistics.Timestamp.Nanos = 0
+			}
+			if s.NewCloudlet != nil {
+				s.NewCloudlet.EdgeEventsCookie = ""
 			}
 		}
 		y1 = s1

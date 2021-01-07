@@ -10,7 +10,6 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	dmeutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-util"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -31,6 +30,7 @@ var monitorUuidType = flag.String("monitorUuidType", "MobiledgeXMonitorProbe", "
 var Stats *DmeStats
 
 var LatencyTimes = []time.Duration{
+	0 * time.Millisecond,
 	5 * time.Millisecond,
 	10 * time.Millisecond,
 	25 * time.Millisecond,
@@ -42,16 +42,14 @@ type ApiStatCall struct {
 	Key     StatKey
 	Fail    bool
 	Latency time.Duration
-	Samples []float64 // Latency samples for EdgeEvents
 }
 
 type ApiStat struct {
-	Reqs           uint64
-	Errs           uint64
-	Latency        grpcstats.LatencyMetric
-	Rollinglatency *dme.Latency // Rolling statistics for EdgeEvents latency measurements
-	Mux            sync.Mutex
-	Changed        bool
+	reqs    uint64
+	errs    uint64
+	latency grpcstats.LatencyMetric
+	mux     sync.Mutex
+	changed bool
 }
 
 type MapShard struct {
@@ -85,24 +83,37 @@ func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.C
 func (s *DmeStats) Start() {
 	s.mux.Lock()
 	defer s.mux.Unlock()
+	if s.stop != nil {
+		return
+	}
 	s.stop = make(chan struct{})
 	s.waitGroup.Add(1)
 	go s.RunNotify()
 }
 
 func (s *DmeStats) Stop() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
 	close(s.stop)
 	s.waitGroup.Wait()
+	s.stop = nil
 }
 
-func (s *DmeStats) LookupApiStatCall(call *ApiStatCall) (*ApiStat, bool) {
-	idx := util.GetShardIndex(call.Key.Method+call.Key.AppKey.Organization+call.Key.AppKey.Name, s.numShards)
-
-	shard := &s.shards[idx]
-	shard.mux.Lock()
-	defer shard.mux.Unlock()
-	stat, found := shard.apiStatMap[call.Key]
-	return stat, found
+func (s *DmeStats) UpdateSettings(interval time.Duration) {
+	if s.interval == interval {
+		return
+	}
+	restart := false
+	if s.stop != nil {
+		s.Stop()
+		restart = true
+	}
+	s.mux.Lock()
+	s.interval = interval
+	s.mux.Unlock()
+	if restart {
+		s.Start()
+	}
 }
 
 func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
@@ -113,27 +124,15 @@ func (s *DmeStats) RecordApiStatCall(call *ApiStatCall) {
 	stat, found := shard.apiStatMap[call.Key]
 	if !found {
 		stat = &ApiStat{}
-		grpcstats.InitLatencyMetric(&stat.Latency, LatencyTimes)
+		grpcstats.InitLatencyMetric(&stat.latency, LatencyTimes)
 		shard.apiStatMap[call.Key] = stat
 	}
-	stat.Reqs++
+	stat.reqs++
 	if call.Fail {
-		stat.Errs++
+		stat.errs++
 	}
-	stat.Latency.AddLatency(call.Latency)
-	if call.Key.Method == EdgeEventLatencyMethod {
-		if stat.Rollinglatency == nil {
-			stat.Rollinglatency = new(dme.Latency)
-		} else {
-			// Reset rollinglatency every 10 minutes or something, so that latency values are current
-			t := cloudcommon.TimestampToTime(*stat.Rollinglatency.Timestamp)
-			if time.Since(t) > time.Minute*10 {
-				stat.Rollinglatency = new(dme.Latency)
-			}
-		}
-		dmeutil.UpdateRollingLatency(call.Samples, stat.Rollinglatency)
-	}
-	stat.Changed = true
+	stat.latency.AddLatency(call.Latency)
+	stat.changed = true
 	shard.mux.Unlock()
 }
 
@@ -150,13 +149,9 @@ func (s *DmeStats) RunNotify() {
 			for ii, _ := range s.shards {
 				s.shards[ii].mux.Lock()
 				for key, stat := range s.shards[ii].apiStatMap {
-					if stat.Changed {
-						if key.Method == EdgeEventLatencyMethod {
-							s.send(ctx, EdgeEventStatToMetric(ts, &key, stat))
-						} else {
-							s.send(ctx, ApiStatToMetric(ts, &key, stat))
-						}
-						stat.Changed = false
+					if stat.changed {
+						s.send(ctx, ApiStatToMetric(ts, &key, stat))
+						stat.changed = false
 					}
 				}
 				s.shards[ii].mux.Unlock()
@@ -179,38 +174,13 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("cloudlet", MyCloudletKey.Name)
 	metric.AddTag("id", *ScaleID)
 	metric.AddTag("method", key.Method)
-	metric.AddIntVal("reqs", stat.Reqs)
-	metric.AddIntVal("errs", stat.Errs)
+	metric.AddIntVal("reqs", stat.reqs)
+	metric.AddIntVal("errs", stat.errs)
 	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
 	metric.AddTag("foundOperator", key.CloudletFound.Organization)
 	// Cell ID is just a unique number - keep it as a string
 	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
-	stat.Latency.AddToMetric(&metric)
-	return &metric
-}
-
-func EdgeEventStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeproto.Metric {
-	metric := edgeproto.Metric{}
-	metric.Timestamp = *ts
-	metric.Name = EdgeEventLatencyMethod
-	metric.AddTag("app", key.AppKey.Name)
-	metric.AddTag("apporg", key.AppKey.Organization)
-	metric.AddTag("ver", key.AppKey.Version)
-	metric.AddTag("cloudlet", key.CloudletFound.Name)
-	metric.AddTag("cloudletorg", key.CloudletFound.Organization)
-	metric.AddTag("cluster", key.ClusterKey.Name)
-	metric.AddTag("clusterorg", key.ClusterInstOrg)
-
-	metric.AddIntVal("reqs", stat.Reqs)
-	metric.AddIntVal("errs", stat.Errs)
-
-	metric.AddIntVal("numsamples", stat.Rollinglatency.NumSamples)
-	metric.AddDoubleVal("avg", stat.Rollinglatency.Avg)
-	metric.AddDoubleVal("stddev", stat.Rollinglatency.StdDev)
-	metric.AddDoubleVal("min", stat.Rollinglatency.Min)
-	metric.AddDoubleVal("max", stat.Rollinglatency.Max)
-
-	stat.Latency.AddToMetric(&metric)
+	stat.latency.AddToMetric(&metric)
 	return &metric
 }
 
@@ -227,21 +197,17 @@ func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
 			key.AppKey.Version = tag.Val
 		case "method":
 			key.Method = tag.Val
-		case "clusterinstorg":
-			key.ClusterInstOrg = tag.Val
-		case "clustername":
-			key.ClusterKey.Name = tag.Val
 		}
 	}
 	for _, val := range metric.Vals {
 		switch val.Name {
 		case "reqs":
-			stat.Reqs = val.GetIval()
+			stat.reqs = val.GetIval()
 		case "errs":
-			stat.Errs = val.GetIval()
+			stat.errs = val.GetIval()
 		}
 	}
-	stat.Latency.FromMetric(metric)
+	stat.latency.FromMetric(metric)
 	return key, stat
 }
 
@@ -331,7 +297,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 			// We want to count app registrations, not MEL platform registers
 			if strings.Contains(strings.ToLower(typ.UniqueIdType), strings.ToLower(cloudcommon.OrganizationSamsung)) &&
 				!cloudcommon.IsPlatformApp(typ.OrgName, typ.AppName) {
-				go recordDevice(ctx, typ)
+				go RecordDevice(ctx, typ)
 			}
 		}
 
@@ -404,6 +370,16 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 				client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
 				// Update list of clients on the side and if there is a listener, send it
 				go UpdateClientsBuffer(ctx, client)
+				// Update persistent stats influx db with gps locations
+				fcreq, ok := req.(*dme.FindCloudletRequest)
+				if ok {
+					deviceInfo := dme.DeviceInfo{}
+					if fcreq.DeviceInfo != nil {
+						deviceInfo = *fcreq.DeviceInfo
+					}
+					RecordGpsLocationStatCall(&client.Location, &client.ClientKey.Key, ckey, fcreq.CarrierName, deviceInfo)
+				}
+
 			}
 		}
 	}
