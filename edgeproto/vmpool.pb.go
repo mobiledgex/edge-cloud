@@ -4133,18 +4133,6 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 func (m *VMPool) IsValidArgsForCreateVMPool() error {
-	if m.Status.MaxTasks != 0 {
-		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
-	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
-	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
-	}
-	if m.Status.MsgCount != 0 {
-		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
-	}
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
 	}
@@ -4156,11 +4144,32 @@ func (m *VMPool) IsValidArgsForCreateVMPool() error {
 	}
 	if m.Status.TaskNumber != 0 {
 		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *VMPool) IsValidArgsForDeleteVMPool() error {
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
 	}
@@ -4175,20 +4184,20 @@ func (m *VMPool) IsValidArgsForDeleteVMPool() error {
 	}
 	if m.Status.MaxTasks != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
-	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
-	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
-	}
-	if m.Status.MsgCount != 0 {
-		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *VMPool) IsValidArgsForUpdateVMPool() error {
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
 	if m.Status.StepName != "" {
 		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
 	}
@@ -4203,15 +4212,6 @@ func (m *VMPool) IsValidArgsForUpdateVMPool() error {
 	}
 	if m.Errors != nil {
 		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
-	}
-	if m.Status.TaskNumber != 0 {
-		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
-	}
-	if m.Status.MaxTasks != 0 {
-		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
-	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
 	}
 	return nil
 }
