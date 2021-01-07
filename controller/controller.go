@@ -87,7 +87,7 @@ type Services struct {
 	sync                *Sync
 	influxQ             *influxq.InfluxQ
 	events              *influxq.InfluxQ
-  persConnInfluxQ     *influxq.InfluxQ
+	persConnInfluxQ     *influxq.InfluxQ
 	notifyServerMgr     bool
 	grpcServer          *grpc.Server
 	httpServer          *http.Server

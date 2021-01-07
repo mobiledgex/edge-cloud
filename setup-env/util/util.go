@@ -23,7 +23,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	influxclient "github.com/influxdata/influxdb/client/v2"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -304,8 +303,8 @@ func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 			err = fmt.Errorf("CloudletInfo not found")
 			continue
 		}
-		if info.State != dme.CloudletState_CLOUDLET_STATE_READY && info.State != dme.CloudletState_CLOUDLET_STATE_ERRORS {
-			err = fmt.Errorf("CloudletInfo bad state %s", dme.CloudletState_name[int32(info.State)])
+		if info.State != dmeproto.CloudletState_CLOUDLET_STATE_READY && info.State != dmeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+			err = fmt.Errorf("CloudletInfo bad state %s", dmeproto.CloudletState_name[int32(info.State)])
 			continue
 		}
 		err = nil

@@ -245,6 +245,7 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	cl.uri = appInst.Uri
 	cl.location = appInst.CloudletLoc
 	cl.ports = appInst.MappedPorts
+	cl.TrackedState = appInst.State
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
 		EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
@@ -996,13 +997,6 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 }
 
 func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) (reterr error) {
-	// Catch any unexpected panics
-	defer func() {
-		if err := recover(); err != nil {
-			log.DebugLog(log.DebugLevelDmereq, "Unexpected panic.", "error", err)
-			reterr = fmt.Errorf("Unexpected panic")
-		}
-	}()
 	// Initialize vars used in persistent connection
 	var appInstKey *edgeproto.AppInstKey
 	var sessionCookie string
