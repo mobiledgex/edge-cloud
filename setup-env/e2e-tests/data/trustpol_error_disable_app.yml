@@ -1,4 +1,4 @@
 errors:
 - desc: AppApi[0]
-  msg: 'rpc error: code = Unknown desc = Non trusted app: organization:"AcmeAppCo"
-    name:"trustedapp" version:"1.0"  in use by trust policy: organization:"dmuus" name:"TrustPolicy1" '
+  msg: 'rpc error: code = Unknown desc = Cannot set app to untrusted which has an
+    instance on a trusted cloudlet'

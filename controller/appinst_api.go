@@ -467,7 +467,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
 		if cloudlet.TrustPolicy != "" && !app.Trusted {
-			return fmt.Errorf("Cannot start non Trusted App on Trusted cloudlet")
+			return fmt.Errorf("Cannot start non trusted App on trusted cloudlet")
 		}
 		if app.Deployment == cloudcommon.DeploymentTypeVM && in.AutoClusterIpAccess != edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			return fmt.Errorf("Cannot specify AutoClusterIpAccess if deployment type is VM")
