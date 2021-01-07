@@ -1029,6 +1029,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	// since default maintenance state is NORMAL_OPERATION, it is better to check
 	// if the field is set before handling maintenance state
 	if _, found := fmap[edgeproto.CloudletFieldMaintenanceState]; !found || !maintenanceChanged {
+		cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 		return nil
 	}
 	switch newMaintenanceState {
@@ -1145,7 +1146,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			Message: "Cloudlet is in maintenance",
 		})
 	}
-	cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 	return nil
 }
 
