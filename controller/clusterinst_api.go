@@ -190,7 +190,6 @@ func (s *StreamObjApi) StreamClusterInst(key *edgeproto.ClusterInstKey, cb edgep
 }
 
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
-	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	in.Auto = false
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
@@ -300,7 +299,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 		if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
-			in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
+			in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {

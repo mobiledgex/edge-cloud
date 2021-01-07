@@ -330,7 +330,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
@@ -352,7 +352,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090

@@ -265,7 +265,6 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 }
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
-	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	return s.createAppInstInternal(DefCallContext(), in, cb)
 }
 
@@ -410,7 +409,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
-		in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
+		in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	}
 	cctx.SetOverride(&in.CrmOverride)
 
@@ -603,6 +602,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			clusterInst.NumMasters = 1
 			clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
 		}
+		clusterInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err

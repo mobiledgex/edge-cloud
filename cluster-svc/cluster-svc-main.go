@@ -222,6 +222,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 }
 
 func appInstCreateApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, appInst edgeproto.AppInst) (*edgeproto.Result, error) {
+	appInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 	stream, err := apiClient.CreateAppInst(ctx, &appInst)
 	var res *edgeproto.Result
 	if err == nil {

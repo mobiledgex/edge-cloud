@@ -1875,6 +1875,14 @@ func IgnoreDeviceDataFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(DeviceData{}, names...)
 }
 
+func (m *Device) IsValidArgsForInjectDevice() error {
+	return nil
+}
+
+func (m *Device) IsValidArgsForEvictDevice() error {
+	return nil
+}
+
 func (m *DeviceReport) Size() (n int) {
 	if m == nil {
 		return 0

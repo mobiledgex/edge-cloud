@@ -1361,6 +1361,18 @@ func (m *AutoScalePolicy) ValidateEnums() error {
 	return nil
 }
 
+func (m *AutoScalePolicy) IsValidArgsForCreateAutoScalePolicy() error {
+	return nil
+}
+
+func (m *AutoScalePolicy) IsValidArgsForDeleteAutoScalePolicy() error {
+	return nil
+}
+
+func (m *AutoScalePolicy) IsValidArgsForUpdateAutoScalePolicy() error {
+	return nil
+}
+
 func (m *PolicyKey) Size() (n int) {
 	if m == nil {
 		return 0

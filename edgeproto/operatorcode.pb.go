@@ -891,6 +891,14 @@ func (m *OperatorCode) ValidateEnums() error {
 	return nil
 }
 
+func (m *OperatorCode) IsValidArgsForCreateOperatorCode() error {
+	return nil
+}
+
+func (m *OperatorCode) IsValidArgsForDeleteOperatorCode() error {
+	return nil
+}
+
 func (m *OperatorCode) Size() (n int) {
 	if m == nil {
 		return 0
