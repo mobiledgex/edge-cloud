@@ -741,6 +741,16 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				PropMap: map[string]string{"vmware": "vgpu=1"},
 			},
 		},
+		Resources: edgeproto.InfraResources{
+			HwInfo: map[string]string{
+				"totalRAMUsed":            "1024",
+				"maxTotalRAMSize":         "40960",
+				"totalCoresUsed":          "10",
+				"maxTotalCores":           "50",
+				"totalGigabytesUsed":      "20",
+				"maxTotalVolumeGigabytes": "5000",
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[1].Key,
@@ -766,6 +776,16 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Vcpus: uint64(2),
 				Ram:   uint64(4096),
 				Disk:  uint64(40),
+			},
+		},
+		Resources: edgeproto.InfraResources{
+			HwInfo: map[string]string{
+				"totalRAMUsed":            "1024",
+				"maxTotalRAMSize":         "40960",
+				"totalCoresUsed":          "10",
+				"maxTotalCores":           "50",
+				"totalGigabytesUsed":      "20",
+				"maxTotalVolumeGigabytes": "5000",
 			},
 		},
 	},
@@ -795,6 +815,16 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:  uint64(20),
 			},
 		},
+		Resources: edgeproto.InfraResources{
+			HwInfo: map[string]string{
+				"totalRAMUsed":            "1024",
+				"maxTotalRAMSize":         "40960",
+				"totalCoresUsed":          "10",
+				"maxTotalCores":           "50",
+				"totalGigabytesUsed":      "20",
+				"maxTotalVolumeGigabytes": "5000",
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[3].Key,
@@ -814,6 +844,16 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Vcpus: uint64(4),
 				Ram:   uint64(1),
 				Disk:  uint64(1),
+			},
+		},
+		Resources: edgeproto.InfraResources{
+			HwInfo: map[string]string{
+				"totalRAMUsed":            "1024",
+				"maxTotalRAMSize":         "1024000",
+				"totalCoresUsed":          "10",
+				"maxTotalCores":           "50",
+				"totalGigabytesUsed":      "20",
+				"maxTotalVolumeGigabytes": "5000",
 			},
 		},
 	},

@@ -81,6 +81,7 @@ var InfraResourcesOptionalArgs = []string{
 	"vms:#.containers:#.status",
 	"vms:#.containers:#.clusterip",
 	"vms:#.containers:#.restarts",
+	"hwinfo",
 }
 var InfraResourcesAliasArgs = []string{}
 var InfraResourcesComments = map[string]string{
@@ -93,5 +94,8 @@ var InfraResourcesComments = map[string]string{
 	"vms:#.containers:#.status":    "Runtime status of the container",
 	"vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
+	"hwinfo":                       "HW resource information",
 }
-var InfraResourcesSpecialArgs = map[string]string{}
+var InfraResourcesSpecialArgs = map[string]string{
+	"hwinfo": "StringToString",
+}

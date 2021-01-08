@@ -589,11 +589,13 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
+	"resources.hwinfo":                       "HW resource information",
 }
 var ClusterInstSpecialArgs = map[string]string{
-	"errors":      "StringArray",
-	"fields":      "StringArray",
-	"status.msgs": "StringArray",
+	"errors":           "StringArray",
+	"fields":           "StringArray",
+	"resources.hwinfo": "StringToString",
+	"status.msgs":      "StringArray",
 }
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
@@ -622,6 +624,7 @@ var ClusterInstInfoOptionalArgs = []string{
 	"resources.vms:#.containers:#.status",
 	"resources.vms:#.containers:#.clusterip",
 	"resources.vms:#.containers:#.restarts",
+	"resources.hwinfo",
 }
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
@@ -642,11 +645,13 @@ var ClusterInstInfoComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
+	"resources.hwinfo":                       "HW resource information",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
-	"errors":      "StringArray",
-	"fields":      "StringArray",
-	"status.msgs": "StringArray",
+	"errors":           "StringArray",
+	"fields":           "StringArray",
+	"resources.hwinfo": "StringToString",
+	"status.msgs":      "StringArray",
 }
 var UpdateClusterInstRequiredArgs = []string{
 	"cluster",

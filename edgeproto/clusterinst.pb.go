@@ -1490,6 +1490,9 @@ const ClusterInstFieldResourcesVmsContainersType = "28.1.6.2"
 const ClusterInstFieldResourcesVmsContainersStatus = "28.1.6.3"
 const ClusterInstFieldResourcesVmsContainersClusterip = "28.1.6.4"
 const ClusterInstFieldResourcesVmsContainersRestarts = "28.1.6.5"
+const ClusterInstFieldResourcesHwInfo = "28.2"
+const ClusterInstFieldResourcesHwInfoKey = "28.2.1"
+const ClusterInstFieldResourcesHwInfoValue = "28.2.2"
 const ClusterInstFieldCreatedAt = "29"
 const ClusterInstFieldCreatedAtSeconds = "29.1"
 const ClusterInstFieldCreatedAtNanos = "29.2"
@@ -1541,6 +1544,8 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldResourcesVmsContainersStatus,
 	ClusterInstFieldResourcesVmsContainersClusterip,
 	ClusterInstFieldResourcesVmsContainersRestarts,
+	ClusterInstFieldResourcesHwInfoKey,
+	ClusterInstFieldResourcesHwInfoValue,
 	ClusterInstFieldCreatedAtSeconds,
 	ClusterInstFieldCreatedAtNanos,
 	ClusterInstFieldUpdatedAtSeconds,
@@ -1591,6 +1596,8 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldResourcesVmsContainersStatus:      struct{}{},
 	ClusterInstFieldResourcesVmsContainersClusterip:   struct{}{},
 	ClusterInstFieldResourcesVmsContainersRestarts:    struct{}{},
+	ClusterInstFieldResourcesHwInfoKey:                struct{}{},
+	ClusterInstFieldResourcesHwInfoValue:              struct{}{},
 	ClusterInstFieldCreatedAtSeconds:                  struct{}{},
 	ClusterInstFieldCreatedAtNanos:                    struct{}{},
 	ClusterInstFieldUpdatedAtSeconds:                  struct{}{},
@@ -1641,6 +1648,8 @@ var ClusterInstAllFieldsStringMap = map[string]string{
 	ClusterInstFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
 	ClusterInstFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
 	ClusterInstFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
+	ClusterInstFieldResourcesHwInfoKey:                "Resources Hw Info Key",
+	ClusterInstFieldResourcesHwInfoValue:              "Resources Hw Info Value",
 	ClusterInstFieldCreatedAtSeconds:                  "Created At Seconds",
 	ClusterInstFieldCreatedAtNanos:                    "Created At Nanos",
 	ClusterInstFieldUpdatedAtSeconds:                  "Updated At Seconds",
@@ -1865,6 +1874,24 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 				fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
 				fields[ClusterInstFieldResourcesVms] = struct{}{}
 				fields[ClusterInstFieldResources] = struct{}{}
+			}
+		}
+	}
+	if len(m.Resources.HwInfo) != len(o.Resources.HwInfo) {
+		fields[ClusterInstFieldResourcesHwInfo] = struct{}{}
+		fields[ClusterInstFieldResources] = struct{}{}
+	} else {
+		for k1, _ := range m.Resources.HwInfo {
+			_, vok1 := o.Resources.HwInfo[k1]
+			if !vok1 {
+				fields[ClusterInstFieldResourcesHwInfo] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
+			} else {
+				if m.Resources.HwInfo[k1] != o.Resources.HwInfo[k1] {
+					fields[ClusterInstFieldResourcesHwInfo] = struct{}{}
+					fields[ClusterInstFieldResources] = struct{}{}
+					break
+				}
 			}
 		}
 	}
@@ -2134,6 +2161,17 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 				changed++
 			} else if m.Resources.Vms != nil {
 				m.Resources.Vms = nil
+				changed++
+			}
+		}
+		if _, set := fmap["28.2"]; set {
+			if src.Resources.HwInfo != nil {
+				m.Resources.HwInfo = make(map[string]string)
+				for k1, _ := range src.Resources.HwInfo {
+					m.Resources.HwInfo[k1] = src.Resources.HwInfo[k1]
+				}
+			} else if m.Resources.HwInfo != nil {
+				m.Resources.HwInfo = nil
 				changed++
 			}
 		}
@@ -2991,6 +3029,9 @@ const ClusterInstInfoFieldResourcesVmsContainersType = "7.1.6.2"
 const ClusterInstInfoFieldResourcesVmsContainersStatus = "7.1.6.3"
 const ClusterInstInfoFieldResourcesVmsContainersClusterip = "7.1.6.4"
 const ClusterInstInfoFieldResourcesVmsContainersRestarts = "7.1.6.5"
+const ClusterInstInfoFieldResourcesHwInfo = "7.2"
+const ClusterInstInfoFieldResourcesHwInfoKey = "7.2.1"
+const ClusterInstInfoFieldResourcesHwInfoValue = "7.2.2"
 
 var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldKeyClusterKeyName,
@@ -3017,6 +3058,8 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldResourcesVmsContainersStatus,
 	ClusterInstInfoFieldResourcesVmsContainersClusterip,
 	ClusterInstInfoFieldResourcesVmsContainersRestarts,
+	ClusterInstInfoFieldResourcesHwInfoKey,
+	ClusterInstInfoFieldResourcesHwInfoValue,
 }
 
 var ClusterInstInfoAllFieldsMap = map[string]struct{}{
@@ -3044,6 +3087,8 @@ var ClusterInstInfoAllFieldsMap = map[string]struct{}{
 	ClusterInstInfoFieldResourcesVmsContainersStatus:      struct{}{},
 	ClusterInstInfoFieldResourcesVmsContainersClusterip:   struct{}{},
 	ClusterInstInfoFieldResourcesVmsContainersRestarts:    struct{}{},
+	ClusterInstInfoFieldResourcesHwInfoKey:                struct{}{},
+	ClusterInstInfoFieldResourcesHwInfoValue:              struct{}{},
 }
 
 var ClusterInstInfoAllFieldsStringMap = map[string]string{
@@ -3071,6 +3116,8 @@ var ClusterInstInfoAllFieldsStringMap = map[string]string{
 	ClusterInstInfoFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
 	ClusterInstInfoFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
 	ClusterInstInfoFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
+	ClusterInstInfoFieldResourcesHwInfoKey:                "Resources Hw Info Key",
+	ClusterInstInfoFieldResourcesHwInfoValue:              "Resources Hw Info Value",
 }
 
 func (m *ClusterInstInfo) IsKeyField(s string) bool {
@@ -3236,6 +3283,24 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 			}
 		}
 	}
+	if len(m.Resources.HwInfo) != len(o.Resources.HwInfo) {
+		fields[ClusterInstInfoFieldResourcesHwInfo] = struct{}{}
+		fields[ClusterInstInfoFieldResources] = struct{}{}
+	} else {
+		for k1, _ := range m.Resources.HwInfo {
+			_, vok1 := o.Resources.HwInfo[k1]
+			if !vok1 {
+				fields[ClusterInstInfoFieldResourcesHwInfo] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
+			} else {
+				if m.Resources.HwInfo[k1] != o.Resources.HwInfo[k1] {
+					fields[ClusterInstInfoFieldResourcesHwInfo] = struct{}{}
+					fields[ClusterInstInfoFieldResources] = struct{}{}
+					break
+				}
+			}
+		}
+	}
 }
 
 func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
@@ -3340,6 +3405,17 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 				changed++
 			} else if m.Resources.Vms != nil {
 				m.Resources.Vms = nil
+				changed++
+			}
+		}
+		if _, set := fmap["7.2"]; set {
+			if src.Resources.HwInfo != nil {
+				m.Resources.HwInfo = make(map[string]string)
+				for k1, _ := range src.Resources.HwInfo {
+					m.Resources.HwInfo[k1] = src.Resources.HwInfo[k1]
+				}
+			} else if m.Resources.HwInfo != nil {
+				m.Resources.HwInfo = nil
 				changed++
 			}
 		}
@@ -3987,6 +4063,9 @@ func (m *ClusterInst) IsValidArgsForCreateClusterInst() error {
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
 	}
+	if m.Resources.HwInfo != nil {
+		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
+	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
 	}
@@ -4056,6 +4135,9 @@ func (m *ClusterInst) IsValidArgsForDeleteClusterInst() error {
 	}
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
+	}
+	if m.Resources.HwInfo != nil {
+		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
 	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
@@ -4144,6 +4226,9 @@ func (m *ClusterInst) IsValidArgsForUpdateClusterInst() error {
 	}
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
+	}
+	if m.Resources.HwInfo != nil {
+		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
 	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")

@@ -1443,6 +1443,25 @@ var FlavorInfoComments = map[string]string{
 var FlavorInfoSpecialArgs = map[string]string{
 	"propmap": "StringToString",
 }
+var VMResourceRequiredArgs = []string{}
+var VMResourceOptionalArgs = []string{
+	"vmflavor.name",
+	"vmflavor.vcpus",
+	"vmflavor.ram",
+	"vmflavor.disk",
+	"vmflavor.propmap",
+}
+var VMResourceAliasArgs = []string{}
+var VMResourceComments = map[string]string{
+	"vmflavor.name":    "Name of the flavor on the Cloudlet",
+	"vmflavor.vcpus":   "Number of VCPU cores on the Cloudlet",
+	"vmflavor.ram":     "Ram in MB on the Cloudlet",
+	"vmflavor.disk":    "Amount of disk in GB on the Cloudlet",
+	"vmflavor.propmap": "OS Flavor Properties, if any",
+}
+var VMResourceSpecialArgs = map[string]string{
+	"vmflavor.propmap": "StringToString",
+}
 var OSAZoneRequiredArgs = []string{}
 var OSAZoneOptionalArgs = []string{
 	"name",
@@ -1536,12 +1555,14 @@ var CloudletInfoComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
+	"resources.hwinfo":                       "HW resource information",
 	"trustpolicystate":                       "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
 	"fields":            "StringArray",
 	"flavors:#.propmap": "StringToString",
+	"resources.hwinfo":  "StringToString",
 	"status.msgs":       "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}

@@ -159,6 +159,14 @@ func TestClusterInstApi(t *testing.T) {
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "flavor not available")
 
+	// inavailability of cloudlet resources
+	obj = testutil.ClusterInstData[0]
+	obj.NumNodes = 10
+	obj.Flavor = testutil.FlavorData[3].Key
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "not enough resources available")
+	require.Contains(t, err.Error(), "Not enough RAM")
+
 	responder.SetSimulateClusterCreateFailure(false)
 	responder.SetSimulateClusterDeleteFailure(false)
 

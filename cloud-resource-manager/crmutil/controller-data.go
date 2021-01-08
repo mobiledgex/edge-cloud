@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -17,33 +18,34 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform                    platform.Platform
-	AppCache                    edgeproto.AppCache
-	AppInstCache                edgeproto.AppInstCache
-	CloudletCache               edgeproto.CloudletCache
-	VMPoolCache                 edgeproto.VMPoolCache
-	FlavorCache                 edgeproto.FlavorCache
-	ClusterInstCache            edgeproto.ClusterInstCache
-	AppInstInfoCache            edgeproto.AppInstInfoCache
-	CloudletInfoCache           edgeproto.CloudletInfoCache
-	VMPoolInfoCache             edgeproto.VMPoolInfoCache
-	ClusterInstInfoCache        edgeproto.ClusterInstInfoCache
-	TrustPolicyCache            edgeproto.TrustPolicyCache
-	AutoProvPolicyCache         edgeproto.AutoProvPolicyCache
-	AlertCache                  edgeproto.AlertCache
-	SettingsCache               edgeproto.SettingsCache
-	ResTagTableCache            edgeproto.ResTagTableCache
-	ExecReqHandler              *ExecReqHandler
-	ExecReqSend                 *notify.ExecRequestSend
-	ControllerWait              chan bool
-	ControllerSyncInProgress    bool
-	ControllerSyncDone          chan bool
-	settings                    edgeproto.Settings
-	NodeMgr                     *node.NodeMgr
-	VMPool                      edgeproto.VMPool
-	VMPoolMux                   sync.Mutex
-	updateVMWorkers             tasks.KeyWorkers
-	updateTrustPolicyKeyworkers tasks.KeyWorkers
+	platform                      platform.Platform
+	AppCache                      edgeproto.AppCache
+	AppInstCache                  edgeproto.AppInstCache
+	CloudletCache                 edgeproto.CloudletCache
+	VMPoolCache                   edgeproto.VMPoolCache
+	FlavorCache                   edgeproto.FlavorCache
+	ClusterInstCache              edgeproto.ClusterInstCache
+	AppInstInfoCache              edgeproto.AppInstInfoCache
+	CloudletInfoCache             edgeproto.CloudletInfoCache
+	VMPoolInfoCache               edgeproto.VMPoolInfoCache
+	ClusterInstInfoCache          edgeproto.ClusterInstInfoCache
+	TrustPolicyCache              edgeproto.TrustPolicyCache
+	AutoProvPolicyCache           edgeproto.AutoProvPolicyCache
+	AlertCache                    edgeproto.AlertCache
+	SettingsCache                 edgeproto.SettingsCache
+	ResTagTableCache              edgeproto.ResTagTableCache
+	ExecReqHandler                *ExecReqHandler
+	ExecReqSend                   *notify.ExecRequestSend
+	ControllerWait                chan bool
+	ControllerSyncInProgress      bool
+	ControllerSyncDone            chan bool
+	settings                      edgeproto.Settings
+	NodeMgr                       *node.NodeMgr
+	VMPool                        edgeproto.VMPool
+	VMPoolMux                     sync.Mutex
+	updateVMWorkers               tasks.KeyWorkers
+	updateTrustPolicyKeyworkers   tasks.KeyWorkers
+	reportCloudletResourceTrigger chan bool
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -88,6 +90,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
+	cd.reportCloudletResourceTrigger = make(chan bool, 1)
 
 	cd.NodeMgr = nodeMgr
 
@@ -1057,5 +1060,57 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 		}
 	}
 	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+}
 
+var cloudletResourceReportInterval = 5 * time.Minute
+
+func (cd *ControllerData) ReportCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) error {
+	resources, _, err := cd.platform.GetCloudletInfraResources(ctx)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", key, "err", err)
+		return err
+	}
+	cloudletInfo := edgeproto.CloudletInfo{}
+	found := cd.CloudletInfoCache.Get(key, &cloudletInfo)
+	if !found {
+		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", key)
+		return fmt.Errorf("Cloudlet info not found for cloudlet %v", key)
+	}
+	if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		log.SpanLog(ctx, log.DebugLevelInfra, "skip reporting cloudlet resources as cloudlet is not online", "key", key)
+		return fmt.Errorf("Cloudlet is not online %v", key)
+	}
+	cloudletInfo.Resources = *resources
+	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	return nil
+}
+
+func (cd *ControllerData) SetupCloudletResourcesReporter(key *edgeproto.CloudletKey) {
+	interval := cloudletResourceReportInterval
+	for {
+		select {
+		case <-time.After(interval):
+		case <-cd.reportCloudletResourceTrigger:
+		}
+		span := log.StartSpan(log.DebugLevelInfo, "report cloudlet infra resources")
+		ctx := log.ContextWithSpan(context.Background(), span)
+		err := cd.ReportCloudletInfraResources(ctx, key)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "report cloudlet infra resources failed", "err", err)
+			cd.NodeMgr.Event(ctx, "Cloudlet usage report error", key.Organization, key.GetTags(), err)
+			// retry again soon
+			interval = 2 * time.Minute
+		} else {
+			interval = cloudletResourceReportInterval
+		}
+		span.Finish()
+	}
+}
+
+func (cd *ControllerData) TriggerCloudletResourceReport(ctx context.Context, req *edgeproto.DebugRequest) string {
+	select {
+	case cd.reportCloudletResourceTrigger <- true:
+	default:
+	}
+	return "trigger cloudlet resource usage report"
 }

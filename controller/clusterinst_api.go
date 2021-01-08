@@ -9,6 +9,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -382,6 +383,32 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
 			}
 		}
+
+		cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+		if err != nil {
+			return err
+		}
+		rootlbFlavor, err := cloudletPlatform.GetRootLBFlavor(ctx)
+		if err != nil {
+			return err
+		}
+		lbFlavor := &edgeproto.FlavorInfo{}
+		if rootlbFlavor != nil {
+			vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, cloudlet, info)
+			if err != nil {
+				return err
+			}
+			lbFlavor = vmspec.FlavorInfo
+		}
+		res, err := cloudcommon.GetClusterInstVMResources(ctx, in, info.Flavors, lbFlavor)
+		if err != nil {
+			return err
+		}
+		err = cloudletPlatform.ValidateCloudletResources(ctx, &info.Resources, res)
+		if err != nil {
+			return err
+		}
+
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)

@@ -67,7 +67,9 @@ type Platform interface {
 	// Update the cluster
 	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get resources used by the cloudlet
-	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error)
+	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, []string, error)
+	// Validate resource requirements for the VMs on the cloudlet
+	ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource) error
 	// Get resources used by the cluster
 	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error)
 	// Create an AppInst on a Cluster
@@ -115,6 +117,8 @@ type Platform interface {
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get ssh clients of all root LBs
 	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
+	// Get RootLB Flavor
+	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
 }
 
 type ClusterSvc interface {

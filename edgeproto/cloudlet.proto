@@ -445,6 +445,14 @@ message FlavorInfo {
   // OS Flavor Properties, if any
   map<string,string> prop_map = 5 [(protogen.backend) = true];
 }
+
+// VMResource
+//
+// VMResource specifies the resource requirement of a VM
+message VMResource {
+  FlavorInfo vm_flavor = 1;
+}
+
 message OSAZone {
   string name   = 1;
   string status = 2;

@@ -56,7 +56,8 @@ message VmInfo{
 //
 // InfraResources is infomation about infrastructure resources. 
 message InfraResources{
+  // Virtual machine resources info
   repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
+  // HW resource information
+  map<string,string> hw_info = 2 [(gogoproto.nullable) = false];
 }
-
-

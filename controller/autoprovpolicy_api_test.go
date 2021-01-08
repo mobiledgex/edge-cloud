@@ -151,7 +151,7 @@ func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
 
 func testApiChecks(t *testing.T, ctx context.Context) {
 	var err error
-	flavor := testutil.FlavorData[0]
+	flavor := testutil.FlavorData[3]
 	app := edgeproto.App{}
 	app.Key.Name = "checkDemand"
 	app.Key.Organization = "org"
@@ -355,6 +355,16 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 				Vcpus: flavor.Vcpus,
 				Ram:   flavor.Ram,
 				Disk:  flavor.Disk,
+			},
+		}
+		s.cloudletInfos[ii].Resources = edgeproto.InfraResources{
+			HwInfo: map[string]string{
+				"totalRAMUsed":            "1024",
+				"maxTotalRAMSize":         "40960",
+				"totalCoresUsed":          "10",
+				"maxTotalCores":           "50",
+				"totalGigabytesUsed":      "20",
+				"maxTotalVolumeGigabytes": "5000",
 			},
 		}
 	}

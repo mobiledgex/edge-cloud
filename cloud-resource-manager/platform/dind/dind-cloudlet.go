@@ -78,3 +78,7 @@ func (s *Platform) VerifyVMs(ctx context.Context, vms []edgeproto.VM) error {
 func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	return nil
 }
+
+func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource) error {
+	return nil
+}

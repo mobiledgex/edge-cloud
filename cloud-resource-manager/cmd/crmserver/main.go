@@ -262,12 +262,13 @@ func main() {
 					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-				resources, err := platform.GetCloudletInfraResources(ctx)
+				resources, _, err := platform.GetCloudletInfraResources(ctx)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key, "err", err)
 				} else {
 					myCloudletInfo.Resources = *resources
 				}
+				go controllerData.SetupCloudletResourcesReporter(&myCloudletInfo.Key)
 			}
 		}
 
@@ -313,6 +314,8 @@ func main() {
 	initSrvNotify(&notifyServer)
 	notifyServer.Start(nodeMgr.Name(), *notifySrvAddr, notifyServerTls)
 	defer notifyServer.Stop()
+
+	nodeMgr.Debug.AddDebugFunc("crmreportresourceusage", controllerData.TriggerCloudletResourceReport)
 
 	span.Finish()
 	if mainStarted != nil {

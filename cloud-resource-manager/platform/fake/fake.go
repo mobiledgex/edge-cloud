@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -18,6 +19,31 @@ import (
 
 type Platform struct {
 	consoleServer *httptest.Server
+}
+
+const (
+	RamUsed   = "totalRAMUsed"
+	RamMax    = "maxTotalRAMSize"
+	VcpusUsed = "totalCoresUsed"
+	VcpusMax  = "maxTotalCores"
+	DiskUsed  = "totalGigabytesUsed"
+	DiskMax   = "maxTotalVolumeGigabytes"
+)
+
+var FakeFlavorList = []*edgeproto.FlavorInfo{
+	&edgeproto.FlavorInfo{
+		Name:  "x1.small",
+		Vcpus: uint64(2),
+		Ram:   uint64(4096),
+		Disk:  uint64(40),
+	},
+}
+
+var RootLBFlavor = edgeproto.Flavor{
+	Key:   edgeproto.FlavorKey{Name: "rootlb-flavor"},
+	Vcpus: uint64(2),
+	Ram:   uint64(4096),
+	Disk:  uint64(40),
 }
 
 func (s *Platform) GetType() string {
@@ -51,17 +77,10 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 }
 
 func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
-	info.OsMaxRam = 500
+	info.OsMaxRam = 40960
 	info.OsMaxVcores = 50
 	info.OsMaxVolGb = 5000
-	info.Flavors = []*edgeproto.FlavorInfo{
-		&edgeproto.FlavorInfo{
-			Name:  "x1.small",
-			Vcpus: uint64(10),
-			Ram:   uint64(101024),
-			Disk:  uint64(500),
-		},
-	}
+	info.Flavors = FakeFlavorList
 	return nil
 }
 
@@ -84,7 +103,7 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
+func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, []string, error) {
 	var resources edgeproto.InfraResources
 	platvm := edgeproto.VmInfo{
 		Name:        "fake-platform-vm",
@@ -106,8 +125,57 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 		},
 	}
 	resources.Vms = append(resources.Vms, rlbvm)
+	if len(resources.HwInfo) == 0 {
+		resources.HwInfo = make(map[string]string)
+	}
+	resources.HwInfo[RamUsed] = "1024"
+	resources.HwInfo[RamMax] = "40960"
 
-	return &resources, nil
+	resources.HwInfo[VcpusUsed] = "10"
+	resources.HwInfo[VcpusMax] = "50"
+
+	resources.HwInfo[DiskUsed] = "20"
+	resources.HwInfo[DiskMax] = "5000"
+
+	warnings := []string{}
+
+	return &resources, warnings, nil
+}
+
+func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Validate cloudlet resources", "vm resources", vmResources, "cloudlet resouurces", infraResources)
+	ramReqd := uint64(0)
+	vcpusReqd := uint64(0)
+	diskReqd := uint64(0)
+	for _, vmRes := range vmResources {
+		if vmRes.VmFlavor != nil {
+			ramReqd += vmRes.VmFlavor.Ram
+			vcpusReqd += vmRes.VmFlavor.Vcpus
+			diskReqd += vmRes.VmFlavor.Disk
+		}
+	}
+	maxRam, err := strconv.ParseUint(infraResources.HwInfo[RamMax], 0, 64)
+	if err != nil {
+		return err
+	}
+	if ramReqd > maxRam {
+		return fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, ramReqd-maxRam)
+	}
+	maxVcpus, err := strconv.ParseUint(infraResources.HwInfo[VcpusMax], 0, 64)
+	if err != nil {
+		return err
+	}
+	if vcpusReqd > maxVcpus {
+		return fmt.Errorf("Not enough Vcpus available, required %d but only %d is available", vcpusReqd, maxVcpus-vcpusReqd)
+	}
+	maxDisk, err := strconv.ParseUint(infraResources.HwInfo[DiskMax], 0, 64)
+	if err != nil {
+		return err
+	}
+	if diskReqd > maxDisk {
+		return fmt.Errorf("Not enough Disk available, required %dGB but only %dGB is available", diskReqd, maxDisk-diskReqd)
+	}
+	return nil
 }
 
 func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
@@ -295,4 +363,8 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 
 func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error) {
 	return nil, nil
+}
+
+func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
+	return &RootLBFlavor, nil
 }
