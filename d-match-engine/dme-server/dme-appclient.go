@@ -6,71 +6,54 @@ import (
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	log "github.com/mobiledgex/edge-cloud/log"
 	"golang.org/x/net/context"
 )
 
-type ClientUuid struct {
-	UniqueId     string
-	UniqueIdType string
-}
-
 type ClientsMap struct {
 	sync.RWMutex
-	clients          map[ClientUuid]*edgeproto.AppInstClient
-	clientsByAppInst map[edgeproto.AppInstKey][]edgeproto.AppInstClient
+	clientsByApp map[edgeproto.AppKey][]edgeproto.AppInstClient
 }
 
 var clientsMap *ClientsMap
 
 func InitAppInstClients() {
 	clientsMap = new(ClientsMap)
-	clientsMap.clients = make(map[ClientUuid]*edgeproto.AppInstClient)
-	clientsMap.clientsByAppInst = make(map[edgeproto.AppInstKey][]edgeproto.AppInstClient)
+	clientsMap.clientsByApp = make(map[edgeproto.AppKey][]edgeproto.AppInstClient)
 }
 
 // Add a new client to the list of clients
 func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	clientsMap.Lock()
 	defer clientsMap.Unlock()
-	clientKey := ClientUuid{
-		UniqueId:     msg.ClientKey.UniqueId,
-		UniqueIdType: msg.ClientKey.UniqueIdType,
-	}
-	// if it existed before, update the clientsByAppInst
-	if client, found := clientsMap.clients[clientKey]; found {
-		// remove from the list of clients in the old appInstance
-		list, found := clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey]
-		if !found {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Found an orphan client", "client", msg, "old pointer", client)
-		} else {
-			for ii, _ := range list {
-				if list[ii].ClientKey.UniqueId == client.ClientKey.UniqueId &&
-					list[ii].ClientKey.UniqueIdType == client.ClientKey.UniqueIdType {
-					// remove from the old appInst list
-					clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey] =
-						append(clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey][:ii],
-							clientsMap.clientsByAppInst[*client.ClientKey.AppInstKey][ii+1:]...)
-					break
+	mapKey := msg.ClientKey.AppInstKey.AppKey
+	list, found := clientsMap.clientsByApp[mapKey]
+	if !found {
+		clientsMap.clientsByApp[mapKey] = []edgeproto.AppInstClient{*msg}
+	} else {
+		// We need to either update, or add the client to the list
+		for ii, c := range clientsMap.clientsByApp[mapKey] {
+			// Found the same client from before
+			if c.ClientKey.UniqueId == msg.ClientKey.UniqueId &&
+				c.ClientKey.UniqueIdType == msg.ClientKey.UniqueIdType {
+				if len(clientsMap.clientsByApp[mapKey]) > ii+1 {
+					// remove this client the and append it at the end, since it's new
+					clientsMap.clientsByApp[mapKey] =
+						append(clientsMap.clientsByApp[mapKey][:ii],
+							clientsMap.clientsByApp[mapKey][ii+1:]...)
+				} else {
+					// if this is already the last element
+					clientsMap.clientsByApp[mapKey] =
+						clientsMap.clientsByApp[mapKey][:ii]
 				}
+				break
 			}
 		}
-	}
-	// update the value in the clients map
-	clientsMap.clients[clientKey] = msg
-
-	mapKey := *msg.ClientKey.AppInstKey
-	list, found := clientsMap.clientsByAppInst[mapKey]
-	if !found {
-		clientsMap.clientsByAppInst[mapKey] = []edgeproto.AppInstClient{*msg}
-	} else {
 		//  We reached the limit of clients - remove the first one
 		if len(list) == int(dmecommon.Settings.MaxTrackedDmeClients) {
 			list = list[1:]
 		}
-		clientsMap.clientsByAppInst[mapKey] = append(list, *msg)
+		clientsMap.clientsByApp[mapKey] = append(list, *msg)
 	}
-
 	// If there is an outstanding request for this appInstClientKey - send it out
 	appInstClientKeyCache.Show(&edgeproto.AppInstClientKey{}, func(obj *edgeproto.AppInstClientKey) error {
 		if msg.ClientKey.Matches(obj, edgeproto.MatchFilter()) {
@@ -85,18 +68,16 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 	clientsMap.Lock()
 	defer clientsMap.Unlock()
-	list, found := clientsMap.clientsByAppInst[*msg]
+	list, found := clientsMap.clientsByApp[msg.AppKey]
 	if found {
 		// walk the list and delete all individual clients
-		for _, c := range list {
-			key := ClientUuid{
-				UniqueId:     c.ClientKey.UniqueId,
-				UniqueIdType: c.ClientKey.UniqueIdType,
+		for ii, c := range list {
+			// Remove matching clients
+			if msg.Matches(c.ClientKey.AppInstKey) {
+				clientsMap.clientsByApp[msg.AppKey] = append(clientsMap.clientsByApp[msg.AppKey][:ii],
+					clientsMap.clientsByApp[msg.AppKey][ii+1:]...)
 			}
-			delete(clientsMap.clients, key)
 		}
-		delete(clientsMap.clientsByAppInst, *msg)
-
 	}
 }
 
@@ -113,18 +94,24 @@ func SendCachedClients(ctx context.Context, old *edgeproto.AppInstClientKey, new
 	}
 	clientsMap.RLock()
 	defer clientsMap.RUnlock()
-	list, found := clientsMap.clientsByAppInst[*new.AppInstKey]
-	// AppInst based request
+	list, found := clientsMap.clientsByApp[new.AppInstKey.AppKey]
+	// Possible exact match for the map
 	if found {
 		for ii := range list {
-			ClientSender.Update(ctx, &list[ii])
+			// Check if we match the complete filter
+			if list[ii].ClientKey.Matches(new, edgeproto.MatchFilter()) {
+				ClientSender.Update(ctx, &list[ii])
+			}
 		}
 		return
 	}
-	// Any partial match will be sent here
-	for _, client := range clientsMap.clients {
-		if client.ClientKey.Matches(new, edgeproto.MatchFilter()) {
-			ClientSender.Update(ctx, client)
+	// Walk the entire map to find all possible matches
+	for _, list := range clientsMap.clientsByApp {
+		for ii := range list {
+			// Check if we match the complete filter
+			if list[ii].ClientKey.Matches(new, edgeproto.MatchFilter()) {
+				ClientSender.Update(ctx, &list[ii])
+			}
 		}
 	}
 }
