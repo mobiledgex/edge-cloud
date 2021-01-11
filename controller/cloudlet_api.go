@@ -483,7 +483,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if in.TrustPolicy != "" {
 			if !supportsTrustPolicy(in.PlatformType) {
 				platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
-				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Trust Policy not supported on %s", platName)})
 				return fmt.Errorf("Trust Policy not supported on %s", platName)
 			}
 			policy := edgeproto.TrustPolicy{}
