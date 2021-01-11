@@ -200,7 +200,7 @@ func getCellIdFromDmeReq(req interface{}) uint32 {
 func getAppInstClient(appname, appver, apporg string, loc *dme.Loc) *edgeproto.AppInstClient {
 	return &edgeproto.AppInstClient{
 		ClientKey: edgeproto.AppInstClientKey{
-			AppInstKey: &edgeproto.AppInstKey{
+			AppInstKey: edgeproto.AppInstKey{
 				AppKey: edgeproto.AppKey{
 					Organization: apporg,
 					Name:         appname,

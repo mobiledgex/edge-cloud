@@ -125,6 +125,8 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		run.Mode = "show"
 		run.DeviceApi(nil, nil, &output.Devices)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
+	} else if api == "clientshow" {
+		runClientShow(ctx, client, apiFile, outputDir)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, outputDir)
 	} else {
@@ -376,4 +378,19 @@ func runOrg(run *testutil.Run, api, apiFile, outputDir string) {
 	output := testutil.OrganizationDataOut{}
 	testutil.RunOrganizationDataApis(run, &data, make(map[string]interface{}), &output)
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
+}
+
+func runClientShow(ctx context.Context, client testutil.Client, apiFile, outputDir string) {
+	filter := edgeproto.AppInstClientKey{}
+	err := util.ReadYamlFile(apiFile, &filter)
+	if err != nil {
+		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
+		os.Exit(1)
+	}
+	log.Printf("Found filter - %v\n", filter)
+	clients, err := client.ShowAppInstClient(ctx, &filter)
+	if err != nil {
+		log.Printf("Error: Cannot run ShowAppinstClient - %s\n", err.Error())
+	}
+	util.PrintToYamlFile("show-appinstclients.yml", outputDir, &clients, true)
 }

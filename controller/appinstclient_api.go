@@ -167,7 +167,7 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 	var ctrlConns []*grpc.ClientConn
 
 	// Check that the appinst org is specified
-	if in.AppInstKey == nil || in.AppInstKey.AppKey.Organization == "" {
+	if in.AppInstKey.AppKey.Organization == "" {
 		return fmt.Errorf("Organization must be specified")
 	}
 

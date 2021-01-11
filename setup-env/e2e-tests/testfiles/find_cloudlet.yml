@@ -30,6 +30,14 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
 
+- name: show AppInstClients stream for app1
+  apifile: "{{datadir}}/appinstclientkey_app1.yml"
+  actions: [ctrlapi-clientshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-appinstclients.yml"
+    yaml2: "{{datadir}}/appinstclient_stream_app1.yml"
+    filetype: clientdata
+
 - includefile: get_app_official_fqdn_app1.yml
 
 - includefile: register_samsung.yml

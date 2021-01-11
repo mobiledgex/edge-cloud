@@ -15,7 +15,7 @@ option (gogoproto.goproto_sizecache_all) = false;
 
 message AppInstClientKey {
   // AppInst Key
-  AppInstKey app_inst_key = 1 [(protogen.keytag) = "appinstkey"];
+  AppInstKey app_inst_key = 1 [(protogen.keytag) = "appinstkey", (gogoproto.nullable) = false];
   // AppInstClient Unique Id
   string unique_id = 2 [(protogen.keytag) = "uniqueid"];
   // AppInstClient Unique Id Type
@@ -29,7 +29,7 @@ message AppInstClientKey {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.not_required) = "AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization,UniqueId,UniqueIdType";
+  option (protogen.not_required) = "AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization,UniqueId,UniqueIdType";
   option (protogen.alias) = "uniqueid=UniqueId,uniqueidtype=UniqueIdType,appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization";
   option (protogen.uses_org) = "none";
   option (gogoproto.gostring) = true;

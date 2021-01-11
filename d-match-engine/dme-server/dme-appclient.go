@@ -73,7 +73,7 @@ func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 		// walk the list and delete all individual clients
 		for ii, c := range list {
 			// Remove matching clients
-			if msg.Matches(c.ClientKey.AppInstKey) {
+			if msg.Matches(&c.ClientKey.AppInstKey) {
 				clientsMap.clientsByApp[msg.AppKey] = append(clientsMap.clientsByApp[msg.AppKey][:ii],
 					clientsMap.clientsByApp[msg.AppKey][ii+1:]...)
 			}
@@ -84,6 +84,10 @@ func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 func SendCachedClients(ctx context.Context, old *edgeproto.AppInstClientKey, new *edgeproto.AppInstClientKey) {
 	// Check if we have an outstanding streaming request which would be a superset
 	err := appInstClientKeyCache.Show(&edgeproto.AppInstClientKey{}, func(obj *edgeproto.AppInstClientKey) error {
+		// if we found an exact match - it's this clients
+		if new.Matches(obj) {
+			return nil
+		}
 		if new.Matches(obj, edgeproto.MatchFilter()) {
 			return fmt.Errorf("Already streaming for this superset")
 		}

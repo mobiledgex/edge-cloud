@@ -70,7 +70,7 @@ func TestAppInstClientApi(t *testing.T) {
 	err = appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{UniqueId: "123"}, &showServer)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Organization must be specified")
-	err = appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{AppInstKey: &edgeproto.AppInstKey{}}, &showServer)
+	err = appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{AppInstKey: edgeproto.AppInstKey{}}, &showServer)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Organization must be specified")
 
