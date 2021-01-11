@@ -61,15 +61,15 @@ type Platform interface {
 	// Returns true if sync with controller is required
 	GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error
 	// Create a Kubernetes Cluster on the cloudlet.
-	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
+	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration, provDone chan bool) error
 	// Delete a Kuberentes Cluster on the cloudlet.
 	DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update the cluster
-	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, provDone chan bool) error
 	// Get resources used by the cloudlet
 	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, []string, error)
 	// Validate resource requirements for the VMs on the cloudlet
-	ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource) error
+	ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources, existingVmResources []edgeproto.VMResource) error
 	// Get resources used by the cluster
 	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error)
 	// Create an AppInst on a Cluster

@@ -1490,9 +1490,12 @@ const ClusterInstFieldResourcesVmsContainersType = "28.1.6.2"
 const ClusterInstFieldResourcesVmsContainersStatus = "28.1.6.3"
 const ClusterInstFieldResourcesVmsContainersClusterip = "28.1.6.4"
 const ClusterInstFieldResourcesVmsContainersRestarts = "28.1.6.5"
-const ClusterInstFieldResourcesHwInfo = "28.2"
-const ClusterInstFieldResourcesHwInfoKey = "28.2.1"
-const ClusterInstFieldResourcesHwInfoValue = "28.2.2"
+const ClusterInstFieldResourcesInfo = "28.2"
+const ClusterInstFieldResourcesInfoName = "28.2.1"
+const ClusterInstFieldResourcesInfoValue = "28.2.2"
+const ClusterInstFieldResourcesProvisionedClusters = "28.3"
+const ClusterInstFieldResourcesProvisionedClustersKey = "28.3.1"
+const ClusterInstFieldResourcesProvisionedClustersValue = "28.3.2"
 const ClusterInstFieldCreatedAt = "29"
 const ClusterInstFieldCreatedAtSeconds = "29.1"
 const ClusterInstFieldCreatedAtNanos = "29.2"
@@ -1544,8 +1547,10 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldResourcesVmsContainersStatus,
 	ClusterInstFieldResourcesVmsContainersClusterip,
 	ClusterInstFieldResourcesVmsContainersRestarts,
-	ClusterInstFieldResourcesHwInfoKey,
-	ClusterInstFieldResourcesHwInfoValue,
+	ClusterInstFieldResourcesInfoName,
+	ClusterInstFieldResourcesInfoValue,
+	ClusterInstFieldResourcesProvisionedClustersKey,
+	ClusterInstFieldResourcesProvisionedClustersValue,
 	ClusterInstFieldCreatedAtSeconds,
 	ClusterInstFieldCreatedAtNanos,
 	ClusterInstFieldUpdatedAtSeconds,
@@ -1596,8 +1601,10 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldResourcesVmsContainersStatus:      struct{}{},
 	ClusterInstFieldResourcesVmsContainersClusterip:   struct{}{},
 	ClusterInstFieldResourcesVmsContainersRestarts:    struct{}{},
-	ClusterInstFieldResourcesHwInfoKey:                struct{}{},
-	ClusterInstFieldResourcesHwInfoValue:              struct{}{},
+	ClusterInstFieldResourcesInfoName:                 struct{}{},
+	ClusterInstFieldResourcesInfoValue:                struct{}{},
+	ClusterInstFieldResourcesProvisionedClustersKey:   struct{}{},
+	ClusterInstFieldResourcesProvisionedClustersValue: struct{}{},
 	ClusterInstFieldCreatedAtSeconds:                  struct{}{},
 	ClusterInstFieldCreatedAtNanos:                    struct{}{},
 	ClusterInstFieldUpdatedAtSeconds:                  struct{}{},
@@ -1648,8 +1655,10 @@ var ClusterInstAllFieldsStringMap = map[string]string{
 	ClusterInstFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
 	ClusterInstFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
 	ClusterInstFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
-	ClusterInstFieldResourcesHwInfoKey:                "Resources Hw Info Key",
-	ClusterInstFieldResourcesHwInfoValue:              "Resources Hw Info Value",
+	ClusterInstFieldResourcesInfoName:                 "Resources Info Name",
+	ClusterInstFieldResourcesInfoValue:                "Resources Info Value",
+	ClusterInstFieldResourcesProvisionedClustersKey:   "Resources Provisioned Clusters Key",
+	ClusterInstFieldResourcesProvisionedClustersValue: "Resources Provisioned Clusters Value",
 	ClusterInstFieldCreatedAtSeconds:                  "Created At Seconds",
 	ClusterInstFieldCreatedAtNanos:                    "Created At Nanos",
 	ClusterInstFieldUpdatedAtSeconds:                  "Updated At Seconds",
@@ -1877,23 +1886,45 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 			}
 		}
 	}
-	if len(m.Resources.HwInfo) != len(o.Resources.HwInfo) {
-		fields[ClusterInstFieldResourcesHwInfo] = struct{}{}
+	if len(m.Resources.Info) != len(o.Resources.Info) {
+		fields[ClusterInstFieldResourcesInfo] = struct{}{}
 		fields[ClusterInstFieldResources] = struct{}{}
 	} else {
-		for k1, _ := range m.Resources.HwInfo {
-			_, vok1 := o.Resources.HwInfo[k1]
-			if !vok1 {
-				fields[ClusterInstFieldResourcesHwInfo] = struct{}{}
+		for i1 := 0; i1 < len(m.Resources.Info); i1++ {
+			if m.Resources.Info[i1].Name != o.Resources.Info[i1].Name {
+				fields[ClusterInstFieldResourcesInfoName] = struct{}{}
+				fields[ClusterInstFieldResourcesInfo] = struct{}{}
 				fields[ClusterInstFieldResources] = struct{}{}
-			} else {
-				if m.Resources.HwInfo[k1] != o.Resources.HwInfo[k1] {
-					fields[ClusterInstFieldResourcesHwInfo] = struct{}{}
+			}
+			if m.Resources.Info[i1].Value != o.Resources.Info[i1].Value {
+				fields[ClusterInstFieldResourcesInfoValue] = struct{}{}
+				fields[ClusterInstFieldResourcesInfo] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
+			}
+		}
+	}
+	if m.Resources.ProvisionedClusters != nil && o.Resources.ProvisionedClusters != nil {
+		if len(m.Resources.ProvisionedClusters) != len(o.Resources.ProvisionedClusters) {
+			fields[ClusterInstFieldResourcesProvisionedClusters] = struct{}{}
+			fields[ClusterInstFieldResources] = struct{}{}
+		} else {
+			for k1, _ := range m.Resources.ProvisionedClusters {
+				_, vok1 := o.Resources.ProvisionedClusters[k1]
+				if !vok1 {
+					fields[ClusterInstFieldResourcesProvisionedClusters] = struct{}{}
 					fields[ClusterInstFieldResources] = struct{}{}
-					break
+				} else {
+					if m.Resources.ProvisionedClusters[k1] != o.Resources.ProvisionedClusters[k1] {
+						fields[ClusterInstFieldResourcesProvisionedClusters] = struct{}{}
+						fields[ClusterInstFieldResources] = struct{}{}
+						break
+					}
 				}
 			}
 		}
+	} else if (m.Resources.ProvisionedClusters != nil && o.Resources.ProvisionedClusters == nil) || (m.Resources.ProvisionedClusters == nil && o.Resources.ProvisionedClusters != nil) {
+		fields[ClusterInstFieldResourcesProvisionedClusters] = struct{}{}
+		fields[ClusterInstFieldResources] = struct{}{}
 	}
 	if m.CreatedAt.Seconds != o.CreatedAt.Seconds {
 		fields[ClusterInstFieldCreatedAtSeconds] = struct{}{}
@@ -2165,13 +2196,22 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 			}
 		}
 		if _, set := fmap["28.2"]; set {
-			if src.Resources.HwInfo != nil {
-				m.Resources.HwInfo = make(map[string]string)
-				for k1, _ := range src.Resources.HwInfo {
-					m.Resources.HwInfo[k1] = src.Resources.HwInfo[k1]
+			if src.Resources.Info != nil {
+				m.Resources.Info = src.Resources.Info
+				changed++
+			} else if m.Resources.Info != nil {
+				m.Resources.Info = nil
+				changed++
+			}
+		}
+		if _, set := fmap["28.3"]; set {
+			if src.Resources.ProvisionedClusters != nil {
+				m.Resources.ProvisionedClusters = make(map[string]string)
+				for k1, _ := range src.Resources.ProvisionedClusters {
+					m.Resources.ProvisionedClusters[k1] = src.Resources.ProvisionedClusters[k1]
 				}
-			} else if m.Resources.HwInfo != nil {
-				m.Resources.HwInfo = nil
+			} else if m.Resources.ProvisionedClusters != nil {
+				m.Resources.ProvisionedClusters = nil
 				changed++
 			}
 		}
@@ -3029,9 +3069,12 @@ const ClusterInstInfoFieldResourcesVmsContainersType = "7.1.6.2"
 const ClusterInstInfoFieldResourcesVmsContainersStatus = "7.1.6.3"
 const ClusterInstInfoFieldResourcesVmsContainersClusterip = "7.1.6.4"
 const ClusterInstInfoFieldResourcesVmsContainersRestarts = "7.1.6.5"
-const ClusterInstInfoFieldResourcesHwInfo = "7.2"
-const ClusterInstInfoFieldResourcesHwInfoKey = "7.2.1"
-const ClusterInstInfoFieldResourcesHwInfoValue = "7.2.2"
+const ClusterInstInfoFieldResourcesInfo = "7.2"
+const ClusterInstInfoFieldResourcesInfoName = "7.2.1"
+const ClusterInstInfoFieldResourcesInfoValue = "7.2.2"
+const ClusterInstInfoFieldResourcesProvisionedClusters = "7.3"
+const ClusterInstInfoFieldResourcesProvisionedClustersKey = "7.3.1"
+const ClusterInstInfoFieldResourcesProvisionedClustersValue = "7.3.2"
 
 var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldKeyClusterKeyName,
@@ -3058,8 +3101,10 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldResourcesVmsContainersStatus,
 	ClusterInstInfoFieldResourcesVmsContainersClusterip,
 	ClusterInstInfoFieldResourcesVmsContainersRestarts,
-	ClusterInstInfoFieldResourcesHwInfoKey,
-	ClusterInstInfoFieldResourcesHwInfoValue,
+	ClusterInstInfoFieldResourcesInfoName,
+	ClusterInstInfoFieldResourcesInfoValue,
+	ClusterInstInfoFieldResourcesProvisionedClustersKey,
+	ClusterInstInfoFieldResourcesProvisionedClustersValue,
 }
 
 var ClusterInstInfoAllFieldsMap = map[string]struct{}{
@@ -3087,8 +3132,10 @@ var ClusterInstInfoAllFieldsMap = map[string]struct{}{
 	ClusterInstInfoFieldResourcesVmsContainersStatus:      struct{}{},
 	ClusterInstInfoFieldResourcesVmsContainersClusterip:   struct{}{},
 	ClusterInstInfoFieldResourcesVmsContainersRestarts:    struct{}{},
-	ClusterInstInfoFieldResourcesHwInfoKey:                struct{}{},
-	ClusterInstInfoFieldResourcesHwInfoValue:              struct{}{},
+	ClusterInstInfoFieldResourcesInfoName:                 struct{}{},
+	ClusterInstInfoFieldResourcesInfoValue:                struct{}{},
+	ClusterInstInfoFieldResourcesProvisionedClustersKey:   struct{}{},
+	ClusterInstInfoFieldResourcesProvisionedClustersValue: struct{}{},
 }
 
 var ClusterInstInfoAllFieldsStringMap = map[string]string{
@@ -3116,8 +3163,10 @@ var ClusterInstInfoAllFieldsStringMap = map[string]string{
 	ClusterInstInfoFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
 	ClusterInstInfoFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
 	ClusterInstInfoFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
-	ClusterInstInfoFieldResourcesHwInfoKey:                "Resources Hw Info Key",
-	ClusterInstInfoFieldResourcesHwInfoValue:              "Resources Hw Info Value",
+	ClusterInstInfoFieldResourcesInfoName:                 "Resources Info Name",
+	ClusterInstInfoFieldResourcesInfoValue:                "Resources Info Value",
+	ClusterInstInfoFieldResourcesProvisionedClustersKey:   "Resources Provisioned Clusters Key",
+	ClusterInstInfoFieldResourcesProvisionedClustersValue: "Resources Provisioned Clusters Value",
 }
 
 func (m *ClusterInstInfo) IsKeyField(s string) bool {
@@ -3283,23 +3332,45 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 			}
 		}
 	}
-	if len(m.Resources.HwInfo) != len(o.Resources.HwInfo) {
-		fields[ClusterInstInfoFieldResourcesHwInfo] = struct{}{}
+	if len(m.Resources.Info) != len(o.Resources.Info) {
+		fields[ClusterInstInfoFieldResourcesInfo] = struct{}{}
 		fields[ClusterInstInfoFieldResources] = struct{}{}
 	} else {
-		for k1, _ := range m.Resources.HwInfo {
-			_, vok1 := o.Resources.HwInfo[k1]
-			if !vok1 {
-				fields[ClusterInstInfoFieldResourcesHwInfo] = struct{}{}
+		for i1 := 0; i1 < len(m.Resources.Info); i1++ {
+			if m.Resources.Info[i1].Name != o.Resources.Info[i1].Name {
+				fields[ClusterInstInfoFieldResourcesInfoName] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesInfo] = struct{}{}
 				fields[ClusterInstInfoFieldResources] = struct{}{}
-			} else {
-				if m.Resources.HwInfo[k1] != o.Resources.HwInfo[k1] {
-					fields[ClusterInstInfoFieldResourcesHwInfo] = struct{}{}
+			}
+			if m.Resources.Info[i1].Value != o.Resources.Info[i1].Value {
+				fields[ClusterInstInfoFieldResourcesInfoValue] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesInfo] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
+			}
+		}
+	}
+	if m.Resources.ProvisionedClusters != nil && o.Resources.ProvisionedClusters != nil {
+		if len(m.Resources.ProvisionedClusters) != len(o.Resources.ProvisionedClusters) {
+			fields[ClusterInstInfoFieldResourcesProvisionedClusters] = struct{}{}
+			fields[ClusterInstInfoFieldResources] = struct{}{}
+		} else {
+			for k1, _ := range m.Resources.ProvisionedClusters {
+				_, vok1 := o.Resources.ProvisionedClusters[k1]
+				if !vok1 {
+					fields[ClusterInstInfoFieldResourcesProvisionedClusters] = struct{}{}
 					fields[ClusterInstInfoFieldResources] = struct{}{}
-					break
+				} else {
+					if m.Resources.ProvisionedClusters[k1] != o.Resources.ProvisionedClusters[k1] {
+						fields[ClusterInstInfoFieldResourcesProvisionedClusters] = struct{}{}
+						fields[ClusterInstInfoFieldResources] = struct{}{}
+						break
+					}
 				}
 			}
 		}
+	} else if (m.Resources.ProvisionedClusters != nil && o.Resources.ProvisionedClusters == nil) || (m.Resources.ProvisionedClusters == nil && o.Resources.ProvisionedClusters != nil) {
+		fields[ClusterInstInfoFieldResourcesProvisionedClusters] = struct{}{}
+		fields[ClusterInstInfoFieldResources] = struct{}{}
 	}
 }
 
@@ -3409,13 +3480,22 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 			}
 		}
 		if _, set := fmap["7.2"]; set {
-			if src.Resources.HwInfo != nil {
-				m.Resources.HwInfo = make(map[string]string)
-				for k1, _ := range src.Resources.HwInfo {
-					m.Resources.HwInfo[k1] = src.Resources.HwInfo[k1]
+			if src.Resources.Info != nil {
+				m.Resources.Info = src.Resources.Info
+				changed++
+			} else if m.Resources.Info != nil {
+				m.Resources.Info = nil
+				changed++
+			}
+		}
+		if _, set := fmap["7.3"]; set {
+			if src.Resources.ProvisionedClusters != nil {
+				m.Resources.ProvisionedClusters = make(map[string]string)
+				for k1, _ := range src.Resources.ProvisionedClusters {
+					m.Resources.ProvisionedClusters[k1] = src.Resources.ProvisionedClusters[k1]
 				}
-			} else if m.Resources.HwInfo != nil {
-				m.Resources.HwInfo = nil
+			} else if m.Resources.ProvisionedClusters != nil {
+				m.Resources.ProvisionedClusters = nil
 				changed++
 			}
 		}
@@ -4063,8 +4143,11 @@ func (m *ClusterInst) IsValidArgsForCreateClusterInst() error {
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
 	}
-	if m.Resources.HwInfo != nil {
-		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
+	if m.Resources.Info != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Info, this field is only for internal use")
+	}
+	if m.Resources.ProvisionedClusters != nil {
+		return fmt.Errorf("Invalid field specified: Resources.ProvisionedClusters, this field is only for internal use")
 	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
@@ -4136,8 +4219,11 @@ func (m *ClusterInst) IsValidArgsForDeleteClusterInst() error {
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
 	}
-	if m.Resources.HwInfo != nil {
-		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
+	if m.Resources.Info != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Info, this field is only for internal use")
+	}
+	if m.Resources.ProvisionedClusters != nil {
+		return fmt.Errorf("Invalid field specified: Resources.ProvisionedClusters, this field is only for internal use")
 	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
@@ -4227,8 +4313,11 @@ func (m *ClusterInst) IsValidArgsForUpdateClusterInst() error {
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
 	}
-	if m.Resources.HwInfo != nil {
-		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
+	if m.Resources.Info != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Info, this field is only for internal use")
+	}
+	if m.Resources.ProvisionedClusters != nil {
+		return fmt.Errorf("Invalid field specified: Resources.ProvisionedClusters, this field is only for internal use")
 	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")

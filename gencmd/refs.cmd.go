@@ -106,47 +106,47 @@ var CloudletRefsApiCmds = []*cobra.Command{
 	ShowCloudletRefsCmd.GenCmd(),
 }
 
-var ClusterRefsApiCmd edgeproto.ClusterRefsApiClient
+var ClusterInstRefsApiCmd edgeproto.ClusterInstRefsApiClient
 
-var ShowClusterRefsCmd = &cli.Command{
-	Use:          "ShowClusterRefs",
-	OptionalArgs: strings.Join(append(ClusterRefsRequiredArgs, ClusterRefsOptionalArgs...), " "),
-	AliasArgs:    strings.Join(ClusterRefsAliasArgs, " "),
-	SpecialArgs:  &ClusterRefsSpecialArgs,
-	Comments:     ClusterRefsComments,
-	ReqData:      &edgeproto.ClusterRefs{},
-	ReplyData:    &edgeproto.ClusterRefs{},
-	Run:          runShowClusterRefs,
+var ShowClusterInstRefsCmd = &cli.Command{
+	Use:          "ShowClusterInstRefs",
+	OptionalArgs: strings.Join(append(ClusterInstRefsRequiredArgs, ClusterInstRefsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(ClusterInstRefsAliasArgs, " "),
+	SpecialArgs:  &ClusterInstRefsSpecialArgs,
+	Comments:     ClusterInstRefsComments,
+	ReqData:      &edgeproto.ClusterInstRefs{},
+	ReplyData:    &edgeproto.ClusterInstRefs{},
+	Run:          runShowClusterInstRefs,
 }
 
-func runShowClusterRefs(c *cli.Command, args []string) error {
+func runShowClusterInstRefs(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.ClusterRefs)
+	obj := c.ReqData.(*edgeproto.ClusterInstRefs)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return ShowClusterRefs(c, obj)
+	return ShowClusterInstRefs(c, obj)
 }
 
-func ShowClusterRefs(c *cli.Command, in *edgeproto.ClusterRefs) error {
-	if ClusterRefsApiCmd == nil {
-		return fmt.Errorf("ClusterRefsApi client not initialized")
+func ShowClusterInstRefs(c *cli.Command, in *edgeproto.ClusterInstRefs) error {
+	if ClusterInstRefsApiCmd == nil {
+		return fmt.Errorf("ClusterInstRefsApi client not initialized")
 	}
 	ctx := context.Background()
-	stream, err := ClusterRefsApiCmd.ShowClusterRefs(ctx, in)
+	stream, err := ClusterInstRefsApiCmd.ShowClusterInstRefs(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("ShowClusterRefs failed: %s", errstr)
+		return fmt.Errorf("ShowClusterInstRefs failed: %s", errstr)
 	}
 
-	objs := make([]*edgeproto.ClusterRefs, 0)
+	objs := make([]*edgeproto.ClusterInstRefs, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -158,7 +158,7 @@ func ShowClusterRefs(c *cli.Command, in *edgeproto.ClusterRefs) error {
 			if ok {
 				errstr = st.Message()
 			}
-			return fmt.Errorf("ShowClusterRefs recv failed: %s", errstr)
+			return fmt.Errorf("ShowClusterInstRefs recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -170,13 +170,13 @@ func ShowClusterRefs(c *cli.Command, in *edgeproto.ClusterRefs) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func ShowClusterRefss(c *cli.Command, data []edgeproto.ClusterRefs, err *error) {
+func ShowClusterInstRefss(c *cli.Command, data []edgeproto.ClusterInstRefs, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("ShowClusterRefs %v\n", data[ii])
-		myerr := ShowClusterRefs(c, &data[ii])
+		fmt.Printf("ShowClusterInstRefs %v\n", data[ii])
+		myerr := ShowClusterInstRefs(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -184,8 +184,8 @@ func ShowClusterRefss(c *cli.Command, data []edgeproto.ClusterRefs, err *error) 
 	}
 }
 
-var ClusterRefsApiCmds = []*cobra.Command{
-	ShowClusterRefsCmd.GenCmd(),
+var ClusterInstRefsApiCmds = []*cobra.Command{
+	ShowClusterInstRefsCmd.GenCmd(),
 }
 
 var AppInstRefsApiCmd edgeproto.AppInstRefsApiClient
@@ -298,34 +298,46 @@ var CloudletRefsComments = map[string]string{
 	"usedstaticips":    "Used static IPs",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
-var ClusterRefsRequiredArgs = []string{
+var ClusterInstRefsRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.organization",
 	"key.cloudletkey.name",
 	"key.organization",
 }
-var ClusterRefsOptionalArgs = []string{
+var ClusterInstRefsOptionalArgs = []string{
 	"apps:#.organization",
 	"apps:#.name",
 	"apps:#.version",
 	"usedram",
 	"usedvcores",
 	"useddisk",
+	"reservedresources:#.vmflavor.name",
+	"reservedresources:#.vmflavor.vcpus",
+	"reservedresources:#.vmflavor.ram",
+	"reservedresources:#.vmflavor.disk",
+	"reservedresources:#.vmflavor.propmap",
 }
-var ClusterRefsAliasArgs = []string{}
-var ClusterRefsComments = map[string]string{
-	"key.clusterkey.name":          "Cluster name",
-	"key.cloudletkey.organization": "Organization of the cloudlet site",
-	"key.cloudletkey.name":         "Name of the cloudlet",
-	"key.organization":             "Name of Developer organization that this cluster belongs to",
-	"apps:#.organization":          "App developer organization",
-	"apps:#.name":                  "App name",
-	"apps:#.version":               "App version",
-	"usedram":                      "Used RAM in MB",
-	"usedvcores":                   "Used VCPU cores",
-	"useddisk":                     "Used disk in GB",
+var ClusterInstRefsAliasArgs = []string{}
+var ClusterInstRefsComments = map[string]string{
+	"key.clusterkey.name":                  "Cluster name",
+	"key.cloudletkey.organization":         "Organization of the cloudlet site",
+	"key.cloudletkey.name":                 "Name of the cloudlet",
+	"key.organization":                     "Name of Developer organization that this cluster belongs to",
+	"apps:#.organization":                  "App developer organization",
+	"apps:#.name":                          "App name",
+	"apps:#.version":                       "App version",
+	"usedram":                              "Used RAM in MB",
+	"usedvcores":                           "Used VCPU cores",
+	"useddisk":                             "Used disk in GB",
+	"reservedresources:#.vmflavor.name":    "Name of the flavor on the Cloudlet",
+	"reservedresources:#.vmflavor.vcpus":   "Number of VCPU cores on the Cloudlet",
+	"reservedresources:#.vmflavor.ram":     "Ram in MB on the Cloudlet",
+	"reservedresources:#.vmflavor.disk":    "Amount of disk in GB on the Cloudlet",
+	"reservedresources:#.vmflavor.propmap": "OS Flavor Properties, if any",
 }
-var ClusterRefsSpecialArgs = map[string]string{}
+var ClusterInstRefsSpecialArgs = map[string]string{
+	"reservedresources:#.vmflavor.propmap": "StringToString",
+}
 var AppInstRefsRequiredArgs = []string{
 	"key.organization",
 	"key.name",

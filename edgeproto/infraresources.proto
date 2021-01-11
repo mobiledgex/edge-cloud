@@ -52,12 +52,24 @@ message VmInfo{
   repeated ContainerInfo containers = 6;
 }
 
+// ResourceInfo
+//
+// ResourceInfo is information about cloudlet infra resources.
+message ResourceInfo {
+  // Resource name
+  string name = 1;
+  // Resource value
+  string value = 2;
+}
+
 // InfraResources
 //
 // InfraResources is infomation about infrastructure resources. 
 message InfraResources{
   // Virtual machine resources info
   repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
-  // HW resource information
-  map<string,string> hw_info = 2 [(gogoproto.nullable) = false];
+  // Resource information
+  repeated ResourceInfo info = 2 [(gogoproto.nullable) = false];
+  // Provisioned Clusters
+  map<string,string> provisioned_clusters = 3;
 }

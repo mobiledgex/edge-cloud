@@ -8,7 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func GetClusterInstVMResources(ctx context.Context, clusterInst *edgeproto.ClusterInst, pfFlavorList []*edgeproto.FlavorInfo, rootLBFlavor *edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
+func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, pfFlavorList []*edgeproto.FlavorInfo, rootLBFlavor *edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "GetClusterInstVMResources", "clusterinst key", clusterInst.Key, "platform flavors", pfFlavorList, "root lb flavor", rootLBFlavor)
 	vmResources := []edgeproto.VMResource{}
 	nodeFlavor := &edgeproto.FlavorInfo{}

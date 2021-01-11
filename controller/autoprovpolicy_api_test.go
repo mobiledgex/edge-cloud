@@ -358,13 +358,31 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 			},
 		}
 		s.cloudletInfos[ii].Resources = edgeproto.InfraResources{
-			HwInfo: map[string]string{
-				"totalRAMUsed":            "1024",
-				"maxTotalRAMSize":         "40960",
-				"totalCoresUsed":          "10",
-				"maxTotalCores":           "50",
-				"totalGigabytesUsed":      "20",
-				"maxTotalVolumeGigabytes": "5000",
+			Info: []edgeproto.ResourceInfo{
+				edgeproto.ResourceInfo{
+					Name:  "totalRAMUsed",
+					Value: "1024",
+				},
+				edgeproto.ResourceInfo{
+					Name:  "maxTotalRAMSize",
+					Value: "40960",
+				},
+				edgeproto.ResourceInfo{
+					Name:  "totalCoresUsed",
+					Value: "10",
+				},
+				edgeproto.ResourceInfo{
+					Name:  "maxTotalCores",
+					Value: "50",
+				},
+				edgeproto.ResourceInfo{
+					Name:  "totalGigabytesUsed",
+					Value: "20",
+				},
+				edgeproto.ResourceInfo{
+					Name:  "maxTotalVolumeGigabytes",
+					Value: "5000",
+				},
 			},
 		}
 	}

@@ -46,6 +46,8 @@ type ControllerData struct {
 	updateVMWorkers               tasks.KeyWorkers
 	updateTrustPolicyKeyworkers   tasks.KeyWorkers
 	reportCloudletResourceTrigger chan bool
+	provClusterMux                sync.Mutex
+	provisionedClusters           map[string]string
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -91,6 +93,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
 	cd.reportCloudletResourceTrigger = make(chan bool, 1)
+	cd.provisionedClusters = make(map[string]string)
 
 	cd.NodeMgr = nodeMgr
 
@@ -221,7 +224,23 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
 
-			err = cd.platform.CreateClusterInst(ctx, new, updateClusterCacheCallback, timeout)
+			provDone := make(chan bool)
+			go func() {
+				<-provDone
+				// add cluster to provisioned_clusters
+				// send it as part of cloudletinfo
+				cd.provClusterMux.Lock()
+				cd.provisionedClusters[new.Key.ClusterKey.String()] = ""
+				cd.provClusterMux.Unlock()
+				cd.TriggerCloudletResourceReport(ctx, nil)
+			}()
+			defer func() {
+				// Once done with clusterinst provisioning (success or failure), remove it from provisioned clusters list as it is of no use then
+				cd.provClusterMux.Lock()
+				defer cd.provClusterMux.Unlock()
+				delete(cd.provisionedClusters, new.Key.ClusterKey.String())
+			}()
+			err = cd.platform.CreateClusterInst(ctx, new, updateClusterCacheCallback, timeout, provDone)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err), updateClusterCacheCallback)
@@ -252,8 +271,24 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			return
 		}
 
+		provDone := make(chan bool)
+		go func() {
+			<-provDone
+			// add cluster to provisioned_clusters
+			// send it as part of cloudletinfo
+			cd.provClusterMux.Lock()
+			cd.provisionedClusters[new.Key.ClusterKey.String()] = ""
+			cd.provClusterMux.Unlock()
+			cd.TriggerCloudletResourceReport(ctx, nil)
+		}()
+		defer func() {
+			// Once done with clusterinst provisioning (success or failure), remove it from provisioned clusters list as it is of no use then
+			cd.provClusterMux.Lock()
+			defer cd.provClusterMux.Unlock()
+			delete(cd.provisionedClusters, new.Key.ClusterKey.String())
+		}()
 		log.SpanLog(ctx, log.DebugLevelInfra, "update cluster inst", "ClusterInst", *new)
-		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback)
+		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback, provDone)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
 			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateClusterCacheCallback)
@@ -316,6 +351,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SpanLog(ctx, log.DebugLevelInfra, "set cluster inst deleted", "ClusterInst", *new)
 
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateClusterCacheCallback)
+			// Trigger cloudlet resource update
+			cd.TriggerCloudletResourceReport(ctx, nil)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		cd.clusterInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_CREATING,
@@ -1065,10 +1102,13 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 var cloudletResourceReportInterval = 5 * time.Minute
 
 func (cd *ControllerData) ReportCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) error {
-	resources, _, err := cd.platform.GetCloudletInfraResources(ctx)
+	resources, warnings, err := cd.platform.GetCloudletInfraResources(ctx)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", key, "err", err)
 		return err
+	}
+	for _, warning := range warnings {
+		cd.NodeMgr.Event(ctx, warning, key.Organization, key.GetTags(), nil)
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(key, &cloudletInfo)
@@ -1081,6 +1121,12 @@ func (cd *ControllerData) ReportCloudletInfraResources(ctx context.Context, key 
 		return fmt.Errorf("Cloudlet is not online %v", key)
 	}
 	cloudletInfo.Resources = *resources
+	cd.provClusterMux.Lock()
+	defer cd.provClusterMux.Unlock()
+	if len(cloudletInfo.Resources.ProvisionedClusters) == 0 {
+		cloudletInfo.Resources.ProvisionedClusters = make(map[string]string)
+	}
+	cloudletInfo.Resources.ProvisionedClusters = cd.provisionedClusters
 	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	return nil
 }

@@ -6659,9 +6659,12 @@ const CloudletInfoFieldResourcesVmsContainersType = "17.1.6.2"
 const CloudletInfoFieldResourcesVmsContainersStatus = "17.1.6.3"
 const CloudletInfoFieldResourcesVmsContainersClusterip = "17.1.6.4"
 const CloudletInfoFieldResourcesVmsContainersRestarts = "17.1.6.5"
-const CloudletInfoFieldResourcesHwInfo = "17.2"
-const CloudletInfoFieldResourcesHwInfoKey = "17.2.1"
-const CloudletInfoFieldResourcesHwInfoValue = "17.2.2"
+const CloudletInfoFieldResourcesInfo = "17.2"
+const CloudletInfoFieldResourcesInfoName = "17.2.1"
+const CloudletInfoFieldResourcesInfoValue = "17.2.2"
+const CloudletInfoFieldResourcesProvisionedClusters = "17.3"
+const CloudletInfoFieldResourcesProvisionedClustersKey = "17.3.1"
+const CloudletInfoFieldResourcesProvisionedClustersValue = "17.3.2"
 const CloudletInfoFieldTrustPolicyState = "18"
 
 var CloudletInfoAllFields = []string{
@@ -6706,8 +6709,10 @@ var CloudletInfoAllFields = []string{
 	CloudletInfoFieldResourcesVmsContainersStatus,
 	CloudletInfoFieldResourcesVmsContainersClusterip,
 	CloudletInfoFieldResourcesVmsContainersRestarts,
-	CloudletInfoFieldResourcesHwInfoKey,
-	CloudletInfoFieldResourcesHwInfoValue,
+	CloudletInfoFieldResourcesInfoName,
+	CloudletInfoFieldResourcesInfoValue,
+	CloudletInfoFieldResourcesProvisionedClustersKey,
+	CloudletInfoFieldResourcesProvisionedClustersValue,
 	CloudletInfoFieldTrustPolicyState,
 }
 
@@ -6753,8 +6758,10 @@ var CloudletInfoAllFieldsMap = map[string]struct{}{
 	CloudletInfoFieldResourcesVmsContainersStatus:      struct{}{},
 	CloudletInfoFieldResourcesVmsContainersClusterip:   struct{}{},
 	CloudletInfoFieldResourcesVmsContainersRestarts:    struct{}{},
-	CloudletInfoFieldResourcesHwInfoKey:                struct{}{},
-	CloudletInfoFieldResourcesHwInfoValue:              struct{}{},
+	CloudletInfoFieldResourcesInfoName:                 struct{}{},
+	CloudletInfoFieldResourcesInfoValue:                struct{}{},
+	CloudletInfoFieldResourcesProvisionedClustersKey:   struct{}{},
+	CloudletInfoFieldResourcesProvisionedClustersValue: struct{}{},
 	CloudletInfoFieldTrustPolicyState:                  struct{}{},
 }
 
@@ -6800,8 +6807,10 @@ var CloudletInfoAllFieldsStringMap = map[string]string{
 	CloudletInfoFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
 	CloudletInfoFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
 	CloudletInfoFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
-	CloudletInfoFieldResourcesHwInfoKey:                "Resources Hw Info Key",
-	CloudletInfoFieldResourcesHwInfoValue:              "Resources Hw Info Value",
+	CloudletInfoFieldResourcesInfoName:                 "Resources Info Name",
+	CloudletInfoFieldResourcesInfoValue:                "Resources Info Value",
+	CloudletInfoFieldResourcesProvisionedClustersKey:   "Resources Provisioned Clusters Key",
+	CloudletInfoFieldResourcesProvisionedClustersValue: "Resources Provisioned Clusters Value",
 	CloudletInfoFieldTrustPolicyState:                  "Trust Policy State",
 }
 
@@ -7071,23 +7080,45 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 			}
 		}
 	}
-	if len(m.Resources.HwInfo) != len(o.Resources.HwInfo) {
-		fields[CloudletInfoFieldResourcesHwInfo] = struct{}{}
+	if len(m.Resources.Info) != len(o.Resources.Info) {
+		fields[CloudletInfoFieldResourcesInfo] = struct{}{}
 		fields[CloudletInfoFieldResources] = struct{}{}
 	} else {
-		for k1, _ := range m.Resources.HwInfo {
-			_, vok1 := o.Resources.HwInfo[k1]
-			if !vok1 {
-				fields[CloudletInfoFieldResourcesHwInfo] = struct{}{}
+		for i1 := 0; i1 < len(m.Resources.Info); i1++ {
+			if m.Resources.Info[i1].Name != o.Resources.Info[i1].Name {
+				fields[CloudletInfoFieldResourcesInfoName] = struct{}{}
+				fields[CloudletInfoFieldResourcesInfo] = struct{}{}
 				fields[CloudletInfoFieldResources] = struct{}{}
-			} else {
-				if m.Resources.HwInfo[k1] != o.Resources.HwInfo[k1] {
-					fields[CloudletInfoFieldResourcesHwInfo] = struct{}{}
+			}
+			if m.Resources.Info[i1].Value != o.Resources.Info[i1].Value {
+				fields[CloudletInfoFieldResourcesInfoValue] = struct{}{}
+				fields[CloudletInfoFieldResourcesInfo] = struct{}{}
+				fields[CloudletInfoFieldResources] = struct{}{}
+			}
+		}
+	}
+	if m.Resources.ProvisionedClusters != nil && o.Resources.ProvisionedClusters != nil {
+		if len(m.Resources.ProvisionedClusters) != len(o.Resources.ProvisionedClusters) {
+			fields[CloudletInfoFieldResourcesProvisionedClusters] = struct{}{}
+			fields[CloudletInfoFieldResources] = struct{}{}
+		} else {
+			for k1, _ := range m.Resources.ProvisionedClusters {
+				_, vok1 := o.Resources.ProvisionedClusters[k1]
+				if !vok1 {
+					fields[CloudletInfoFieldResourcesProvisionedClusters] = struct{}{}
 					fields[CloudletInfoFieldResources] = struct{}{}
-					break
+				} else {
+					if m.Resources.ProvisionedClusters[k1] != o.Resources.ProvisionedClusters[k1] {
+						fields[CloudletInfoFieldResourcesProvisionedClusters] = struct{}{}
+						fields[CloudletInfoFieldResources] = struct{}{}
+						break
+					}
 				}
 			}
 		}
+	} else if (m.Resources.ProvisionedClusters != nil && o.Resources.ProvisionedClusters == nil) || (m.Resources.ProvisionedClusters == nil && o.Resources.ProvisionedClusters != nil) {
+		fields[CloudletInfoFieldResourcesProvisionedClusters] = struct{}{}
+		fields[CloudletInfoFieldResources] = struct{}{}
 	}
 	if m.TrustPolicyState != o.TrustPolicyState {
 		fields[CloudletInfoFieldTrustPolicyState] = struct{}{}
@@ -7253,13 +7284,22 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 			}
 		}
 		if _, set := fmap["17.2"]; set {
-			if src.Resources.HwInfo != nil {
-				m.Resources.HwInfo = make(map[string]string)
-				for k1, _ := range src.Resources.HwInfo {
-					m.Resources.HwInfo[k1] = src.Resources.HwInfo[k1]
+			if src.Resources.Info != nil {
+				m.Resources.Info = src.Resources.Info
+				changed++
+			} else if m.Resources.Info != nil {
+				m.Resources.Info = nil
+				changed++
+			}
+		}
+		if _, set := fmap["17.3"]; set {
+			if src.Resources.ProvisionedClusters != nil {
+				m.Resources.ProvisionedClusters = make(map[string]string)
+				for k1, _ := range src.Resources.ProvisionedClusters {
+					m.Resources.ProvisionedClusters[k1] = src.Resources.ProvisionedClusters[k1]
 				}
-			} else if m.Resources.HwInfo != nil {
-				m.Resources.HwInfo = nil
+			} else if m.Resources.ProvisionedClusters != nil {
+				m.Resources.ProvisionedClusters = nil
 				changed++
 			}
 		}
@@ -8695,8 +8735,11 @@ func (m *CloudletKey) IsValidArgsForGenerateAccessKey() error {
 }
 
 func (m *CloudletInfo) IsValidArgsForInjectCloudletInfo() error {
-	if m.Resources.HwInfo != nil {
-		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
+	if m.Resources.Info != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Info, this field is only for internal use")
+	}
+	if m.Resources.ProvisionedClusters != nil {
+		return fmt.Errorf("Invalid field specified: Resources.ProvisionedClusters, this field is only for internal use")
 	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
@@ -8705,8 +8748,11 @@ func (m *CloudletInfo) IsValidArgsForInjectCloudletInfo() error {
 }
 
 func (m *CloudletInfo) IsValidArgsForEvictCloudletInfo() error {
-	if m.Resources.HwInfo != nil {
-		return fmt.Errorf("Invalid field specified: Resources.HwInfo, this field is only for internal use")
+	if m.Resources.Info != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Info, this field is only for internal use")
+	}
+	if m.Resources.ProvisionedClusters != nil {
+		return fmt.Errorf("Invalid field specified: Resources.ProvisionedClusters, this field is only for internal use")
 	}
 	if m.Resources.Vms != nil {
 		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")

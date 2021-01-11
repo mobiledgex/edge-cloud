@@ -209,29 +209,29 @@ func FindCloudletRefsData(key *edgeproto.CloudletKey, testData []edgeproto.Cloud
 	return nil, false
 }
 
-type ShowClusterRefs struct {
-	Data map[string]edgeproto.ClusterRefs
+type ShowClusterInstRefs struct {
+	Data map[string]edgeproto.ClusterInstRefs
 	grpc.ServerStream
 	Ctx context.Context
 }
 
-func (x *ShowClusterRefs) Init() {
-	x.Data = make(map[string]edgeproto.ClusterRefs)
+func (x *ShowClusterInstRefs) Init() {
+	x.Data = make(map[string]edgeproto.ClusterInstRefs)
 }
 
-func (x *ShowClusterRefs) Send(m *edgeproto.ClusterRefs) error {
+func (x *ShowClusterInstRefs) Send(m *edgeproto.ClusterInstRefs) error {
 	x.Data[m.GetKey().GetKeyString()] = *m
 	return nil
 }
 
-func (x *ShowClusterRefs) Context() context.Context {
+func (x *ShowClusterInstRefs) Context() context.Context {
 	return x.Ctx
 }
 
-var ClusterRefsShowExtraCount = 0
+var ClusterInstRefsShowExtraCount = 0
 
-func (x *ShowClusterRefs) ReadStream(stream edgeproto.ClusterRefsApi_ShowClusterRefsClient, err error) {
-	x.Data = make(map[string]edgeproto.ClusterRefs)
+func (x *ShowClusterInstRefs) ReadStream(stream edgeproto.ClusterInstRefsApi_ShowClusterInstRefsClient, err error) {
+	x.Data = make(map[string]edgeproto.ClusterInstRefs)
 	if err != nil {
 		return
 	}
@@ -247,16 +247,16 @@ func (x *ShowClusterRefs) ReadStream(stream edgeproto.ClusterRefsApi_ShowCluster
 	}
 }
 
-func (x *ShowClusterRefs) CheckFound(obj *edgeproto.ClusterRefs) bool {
+func (x *ShowClusterInstRefs) CheckFound(obj *edgeproto.ClusterInstRefs) bool {
 	_, found := x.Data[obj.GetKey().GetKeyString()]
 	return found
 }
 
-func (x *ShowClusterRefs) AssertFound(t *testing.T, obj *edgeproto.ClusterRefs) {
+func (x *ShowClusterInstRefs) AssertFound(t *testing.T, obj *edgeproto.ClusterInstRefs) {
 	check, found := x.Data[obj.GetKey().GetKeyString()]
-	require.True(t, found, "find ClusterRefs %s", obj.GetKey().GetKeyString())
+	require.True(t, found, "find ClusterInstRefs %s", obj.GetKey().GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		require.Equal(t, *obj, check, "ClusterRefs are equal")
+		require.Equal(t, *obj, check, "ClusterInstRefs are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -265,16 +265,16 @@ func (x *ShowClusterRefs) AssertFound(t *testing.T, obj *edgeproto.ClusterRefs) 
 	}
 }
 
-func (x *ShowClusterRefs) AssertNotFound(t *testing.T, obj *edgeproto.ClusterRefs) {
+func (x *ShowClusterInstRefs) AssertNotFound(t *testing.T, obj *edgeproto.ClusterInstRefs) {
 	_, found := x.Data[obj.GetKey().GetKeyString()]
-	require.False(t, found, "do not find ClusterRefs %s", obj.GetKey().GetKeyString())
+	require.False(t, found, "do not find ClusterInstRefs %s", obj.GetKey().GetKeyString())
 }
 
-func WaitAssertFoundClusterRefs(t *testing.T, api edgeproto.ClusterRefsApiClient, obj *edgeproto.ClusterRefs, count int, retry time.Duration) {
-	show := ShowClusterRefs{}
+func WaitAssertFoundClusterInstRefs(t *testing.T, api edgeproto.ClusterInstRefsApiClient, obj *edgeproto.ClusterInstRefs, count int, retry time.Duration) {
+	show := ShowClusterInstRefs{}
 	for ii := 0; ii < count; ii++ {
 		ctx, cancel := context.WithTimeout(context.Background(), retry)
-		stream, err := api.ShowClusterRefs(ctx, obj)
+		stream, err := api.ShowClusterInstRefs(ctx, obj)
 		show.ReadStream(stream, err)
 		cancel()
 		if show.CheckFound(obj) {
@@ -285,12 +285,12 @@ func WaitAssertFoundClusterRefs(t *testing.T, api edgeproto.ClusterRefsApiClient
 	show.AssertFound(t, obj)
 }
 
-func WaitAssertNotFoundClusterRefs(t *testing.T, api edgeproto.ClusterRefsApiClient, obj *edgeproto.ClusterRefs, count int, retry time.Duration) {
-	show := ShowClusterRefs{}
-	filterNone := edgeproto.ClusterRefs{}
+func WaitAssertNotFoundClusterInstRefs(t *testing.T, api edgeproto.ClusterInstRefsApiClient, obj *edgeproto.ClusterInstRefs, count int, retry time.Duration) {
+	show := ShowClusterInstRefs{}
+	filterNone := edgeproto.ClusterInstRefs{}
 	for ii := 0; ii < count; ii++ {
 		ctx, cancel := context.WithTimeout(context.Background(), retry)
-		stream, err := api.ShowClusterRefs(ctx, &filterNone)
+		stream, err := api.ShowClusterInstRefs(ctx, &filterNone)
 		show.ReadStream(stream, err)
 		cancel()
 		if !show.CheckFound(obj) {
@@ -302,78 +302,78 @@ func WaitAssertNotFoundClusterRefs(t *testing.T, api edgeproto.ClusterRefsApiCli
 }
 
 // Wrap the api with a common interface
-type ClusterRefsCommonApi struct {
-	internal_api edgeproto.ClusterRefsApiServer
-	client_api   edgeproto.ClusterRefsApiClient
+type ClusterInstRefsCommonApi struct {
+	internal_api edgeproto.ClusterInstRefsApiServer
+	client_api   edgeproto.ClusterInstRefsApiClient
 }
 
-func (x *ClusterRefsCommonApi) ShowClusterRefs(ctx context.Context, filter *edgeproto.ClusterRefs, showData *ShowClusterRefs) error {
+func (x *ClusterInstRefsCommonApi) ShowClusterInstRefs(ctx context.Context, filter *edgeproto.ClusterInstRefs, showData *ShowClusterInstRefs) error {
 	if x.internal_api != nil {
 		showData.Ctx = ctx
-		return x.internal_api.ShowClusterRefs(filter, showData)
+		return x.internal_api.ShowClusterInstRefs(filter, showData)
 	} else {
-		stream, err := x.client_api.ShowClusterRefs(ctx, filter)
+		stream, err := x.client_api.ShowClusterInstRefs(ctx, filter)
 		showData.ReadStream(stream, err)
 		return err
 	}
 }
 
-func NewInternalClusterRefsApi(api edgeproto.ClusterRefsApiServer) *ClusterRefsCommonApi {
-	apiWrap := ClusterRefsCommonApi{}
+func NewInternalClusterInstRefsApi(api edgeproto.ClusterInstRefsApiServer) *ClusterInstRefsCommonApi {
+	apiWrap := ClusterInstRefsCommonApi{}
 	apiWrap.internal_api = api
 	return &apiWrap
 }
 
-func NewClientClusterRefsApi(api edgeproto.ClusterRefsApiClient) *ClusterRefsCommonApi {
-	apiWrap := ClusterRefsCommonApi{}
+func NewClientClusterInstRefsApi(api edgeproto.ClusterInstRefsApiClient) *ClusterInstRefsCommonApi {
+	apiWrap := ClusterInstRefsCommonApi{}
 	apiWrap.client_api = api
 	return &apiWrap
 }
 
-func InternalClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiServer, testData []edgeproto.ClusterRefs) {
-	span := log.StartSpan(log.DebugLevelApi, "InternalClusterRefsTest")
+func InternalClusterInstRefsTest(t *testing.T, test string, api edgeproto.ClusterInstRefsApiServer, testData []edgeproto.ClusterInstRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalClusterInstRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "show":
-		basicClusterRefsShowTest(t, ctx, NewInternalClusterRefsApi(api), testData)
+		basicClusterInstRefsShowTest(t, ctx, NewInternalClusterInstRefsApi(api), testData)
 	}
 }
 
-func ClientClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiClient, testData []edgeproto.ClusterRefs) {
-	span := log.StartSpan(log.DebugLevelApi, "ClientClusterRefsTest")
+func ClientClusterInstRefsTest(t *testing.T, test string, api edgeproto.ClusterInstRefsApiClient, testData []edgeproto.ClusterInstRefs) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientClusterInstRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "show":
-		basicClusterRefsShowTest(t, ctx, NewClientClusterRefsApi(api), testData)
+		basicClusterInstRefsShowTest(t, ctx, NewClientClusterInstRefsApi(api), testData)
 	}
 }
 
-func basicClusterRefsShowTest(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi, testData []edgeproto.ClusterRefs) {
+func basicClusterInstRefsShowTest(t *testing.T, ctx context.Context, api *ClusterInstRefsCommonApi, testData []edgeproto.ClusterInstRefs) {
 	var err error
 
-	show := ShowClusterRefs{}
+	show := ShowClusterInstRefs{}
 	show.Init()
-	filterNone := edgeproto.ClusterRefs{}
-	err = api.ShowClusterRefs(ctx, &filterNone, &show)
+	filterNone := edgeproto.ClusterInstRefs{}
+	err = api.ShowClusterInstRefs(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)+ClusterRefsShowExtraCount, len(show.Data), "Show count")
+	require.Equal(t, len(testData)+ClusterInstRefsShowExtraCount, len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
 }
 
-func GetClusterRefs(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterRefs) bool {
+func GetClusterInstRefs(t *testing.T, ctx context.Context, api *ClusterInstRefsCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterInstRefs) bool {
 	var err error
 
-	show := ShowClusterRefs{}
+	show := ShowClusterInstRefs{}
 	show.Init()
-	filter := edgeproto.ClusterRefs{}
+	filter := edgeproto.ClusterInstRefs{}
 	filter.SetKey(key)
-	err = api.ShowClusterRefs(ctx, &filter, &show)
+	err = api.ShowClusterInstRefs(ctx, &filter, &show)
 	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
@@ -382,7 +382,7 @@ func GetClusterRefs(t *testing.T, ctx context.Context, api *ClusterRefsCommonApi
 	return found
 }
 
-func FindClusterRefsData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterRefs) (*edgeproto.ClusterRefs, bool) {
+func FindClusterInstRefsData(key *edgeproto.ClusterInstKey, testData []edgeproto.ClusterInstRefs) (*edgeproto.ClusterInstRefs, bool) {
 	for ii, _ := range testData {
 		if testData[ii].GetKey().Matches(key) {
 			return &testData[ii], true
@@ -622,17 +622,17 @@ func (s *DummyServer) ShowCloudletRefs(in *edgeproto.CloudletRefs, server edgepr
 	return err
 }
 
-func (r *Run) ClusterRefsApi(data *[]edgeproto.ClusterRefs, dataMap interface{}, dataOut interface{}) {
-	log.DebugLog(log.DebugLevelApi, "API for ClusterRefs", "mode", r.Mode)
+func (r *Run) ClusterInstRefsApi(data *[]edgeproto.ClusterInstRefs, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for ClusterInstRefs", "mode", r.Mode)
 	if r.Mode == "show" {
-		obj := &edgeproto.ClusterRefs{}
-		out, err := r.client.ShowClusterRefs(r.ctx, obj)
+		obj := &edgeproto.ClusterInstRefs{}
+		out, err := r.client.ShowClusterInstRefs(r.ctx, obj)
 		if err != nil {
-			r.logErr("ClusterRefsApi", err)
+			r.logErr("ClusterInstRefsApi", err)
 		} else {
-			outp, ok := dataOut.(*[]edgeproto.ClusterRefs)
+			outp, ok := dataOut.(*[]edgeproto.ClusterInstRefs)
 			if !ok {
-				panic(fmt.Sprintf("RunClusterRefsApi expected dataOut type *[]edgeproto.ClusterRefs, but was %T", dataOut))
+				panic(fmt.Sprintf("RunClusterInstRefsApi expected dataOut type *[]edgeproto.ClusterInstRefs, but was %T", dataOut))
 			}
 			*outp = append(*outp, out...)
 		}
@@ -642,13 +642,13 @@ func (r *Run) ClusterRefsApi(data *[]edgeproto.ClusterRefs, dataMap interface{},
 		obj := &objD
 		switch r.Mode {
 		case "showfiltered":
-			out, err := r.client.ShowClusterRefs(r.ctx, obj)
+			out, err := r.client.ShowClusterInstRefs(r.ctx, obj)
 			if err != nil {
-				r.logErr(fmt.Sprintf("ClusterRefsApi[%d]", ii), err)
+				r.logErr(fmt.Sprintf("ClusterInstRefsApi[%d]", ii), err)
 			} else {
-				outp, ok := dataOut.(*[]edgeproto.ClusterRefs)
+				outp, ok := dataOut.(*[]edgeproto.ClusterInstRefs)
 				if !ok {
-					panic(fmt.Sprintf("RunClusterRefsApi expected dataOut type *[]edgeproto.ClusterRefs, but was %T", dataOut))
+					panic(fmt.Sprintf("RunClusterInstRefsApi expected dataOut type *[]edgeproto.ClusterInstRefs, but was %T", dataOut))
 				}
 				*outp = append(*outp, out...)
 			}
@@ -656,15 +656,15 @@ func (r *Run) ClusterRefsApi(data *[]edgeproto.ClusterRefs, dataMap interface{},
 	}
 }
 
-func (s *DummyServer) ShowClusterRefs(in *edgeproto.ClusterRefs, server edgeproto.ClusterRefsApi_ShowClusterRefsServer) error {
+func (s *DummyServer) ShowClusterInstRefs(in *edgeproto.ClusterInstRefs, server edgeproto.ClusterInstRefsApi_ShowClusterInstRefsServer) error {
 	var err error
-	obj := &edgeproto.ClusterRefs{}
+	obj := &edgeproto.ClusterInstRefs{}
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.ClusterRefs{})
+			server.Send(&edgeproto.ClusterInstRefs{})
 		}
 	}
-	err = s.ClusterRefsCache.Show(in, func(obj *edgeproto.ClusterRefs) error {
+	err = s.ClusterInstRefsCache.Show(in, func(obj *edgeproto.ClusterInstRefs) error {
 		err := server.Send(obj)
 		return err
 	})
@@ -759,43 +759,43 @@ type CloudletRefsApiClient interface {
 	ShowCloudletRefs(ctx context.Context, in *edgeproto.CloudletRefs) ([]edgeproto.CloudletRefs, error)
 }
 
-type ClusterRefsStream interface {
-	Recv() (*edgeproto.ClusterRefs, error)
+type ClusterInstRefsStream interface {
+	Recv() (*edgeproto.ClusterInstRefs, error)
 }
 
-func ClusterRefsReadStream(stream ClusterRefsStream) ([]edgeproto.ClusterRefs, error) {
-	output := []edgeproto.ClusterRefs{}
+func ClusterInstRefsReadStream(stream ClusterInstRefsStream) ([]edgeproto.ClusterInstRefs, error) {
+	output := []edgeproto.ClusterInstRefs{}
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return output, fmt.Errorf("read ClusterRefs stream failed, %v", err)
+			return output, fmt.Errorf("read ClusterInstRefs stream failed, %v", err)
 		}
 		output = append(output, *obj)
 	}
 	return output, nil
 }
 
-func (s *ApiClient) ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRefs) ([]edgeproto.ClusterRefs, error) {
-	api := edgeproto.NewClusterRefsApiClient(s.Conn)
-	stream, err := api.ShowClusterRefs(ctx, in)
+func (s *ApiClient) ShowClusterInstRefs(ctx context.Context, in *edgeproto.ClusterInstRefs) ([]edgeproto.ClusterInstRefs, error) {
+	api := edgeproto.NewClusterInstRefsApiClient(s.Conn)
+	stream, err := api.ShowClusterInstRefs(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return ClusterRefsReadStream(stream)
+	return ClusterInstRefsReadStream(stream)
 }
 
-func (s *CliClient) ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRefs) ([]edgeproto.ClusterRefs, error) {
-	output := []edgeproto.ClusterRefs{}
-	args := append(s.BaseArgs, "controller", "ShowClusterRefs")
+func (s *CliClient) ShowClusterInstRefs(ctx context.Context, in *edgeproto.ClusterInstRefs) ([]edgeproto.ClusterInstRefs, error) {
+	output := []edgeproto.ClusterInstRefs{}
+	args := append(s.BaseArgs, "controller", "ShowClusterInstRefs")
 	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
 	return output, err
 }
 
-type ClusterRefsApiClient interface {
-	ShowClusterRefs(ctx context.Context, in *edgeproto.ClusterRefs) ([]edgeproto.ClusterRefs, error)
+type ClusterInstRefsApiClient interface {
+	ShowClusterInstRefs(ctx context.Context, in *edgeproto.ClusterInstRefs) ([]edgeproto.ClusterInstRefs, error)
 }
 
 type AppInstRefsStream interface {

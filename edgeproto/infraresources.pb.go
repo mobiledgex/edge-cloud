@@ -165,21 +165,66 @@ func (m *VmInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VmInfo proto.InternalMessageInfo
 
+// ResourceInfo
+//
+// ResourceInfo is information about cloudlet infra resources.
+type ResourceInfo struct {
+	// Resource name
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Resource value
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (m *ResourceInfo) Reset()         { *m = ResourceInfo{} }
+func (m *ResourceInfo) String() string { return proto.CompactTextString(m) }
+func (*ResourceInfo) ProtoMessage()    {}
+func (*ResourceInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1d4658e0b2956cb2, []int{3}
+}
+func (m *ResourceInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ResourceInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ResourceInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ResourceInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResourceInfo.Merge(m, src)
+}
+func (m *ResourceInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *ResourceInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResourceInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ResourceInfo proto.InternalMessageInfo
+
 // InfraResources
 //
 // InfraResources is infomation about infrastructure resources.
 type InfraResources struct {
 	// Virtual machine resources info
 	Vms []VmInfo `protobuf:"bytes,1,rep,name=vms,proto3" json:"vms"`
-	// HW resource information
-	HwInfo map[string]string `protobuf:"bytes,2,rep,name=hw_info,json=hwInfo,proto3" json:"hw_info" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// Resource information
+	Info []ResourceInfo `protobuf:"bytes,2,rep,name=info,proto3" json:"info"`
+	// Provisioned Clusters
+	ProvisionedClusters map[string]string `protobuf:"bytes,3,rep,name=provisioned_clusters,json=provisionedClusters,proto3" json:"provisioned_clusters,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *InfraResources) Reset()         { *m = InfraResources{} }
 func (m *InfraResources) String() string { return proto.CompactTextString(m) }
 func (*InfraResources) ProtoMessage()    {}
 func (*InfraResources) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d4658e0b2956cb2, []int{3}
+	return fileDescriptor_1d4658e0b2956cb2, []int{4}
 }
 func (m *InfraResources) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -212,40 +257,43 @@ func init() {
 	proto.RegisterType((*ContainerInfo)(nil), "edgeproto.ContainerInfo")
 	proto.RegisterType((*IpAddr)(nil), "edgeproto.IpAddr")
 	proto.RegisterType((*VmInfo)(nil), "edgeproto.VmInfo")
+	proto.RegisterType((*ResourceInfo)(nil), "edgeproto.ResourceInfo")
 	proto.RegisterType((*InfraResources)(nil), "edgeproto.InfraResources")
-	proto.RegisterMapType((map[string]string)(nil), "edgeproto.InfraResources.HwInfoEntry")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.InfraResources.ProvisionedClustersEntry")
 }
 
 func init() { proto.RegisterFile("infraresources.proto", fileDescriptor_1d4658e0b2956cb2) }
 
 var fileDescriptor_1d4658e0b2956cb2 = []byte{
-	// 406 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x51, 0x3d, 0xaf, 0xd3, 0x30,
-	0x14, 0x8d, 0x9b, 0xbe, 0x40, 0x6f, 0x04, 0x02, 0xab, 0x42, 0x56, 0xf5, 0x64, 0xaa, 0x48, 0x48,
-	0x65, 0x09, 0x12, 0x2c, 0xef, 0xb1, 0xf1, 0xf8, 0xd0, 0xcb, 0x9a, 0x81, 0x15, 0x99, 0xc6, 0x6d,
-	0x23, 0x52, 0x3b, 0xb2, 0x9d, 0x96, 0xfe, 0x04, 0x36, 0x7e, 0x10, 0x3f, 0xa0, 0x63, 0x47, 0x26,
-	0x3e, 0xda, 0x3f, 0x82, 0xec, 0xa4, 0xc5, 0x15, 0x2b, 0xdb, 0xb9, 0xe7, 0x9e, 0x6b, 0x9f, 0x7b,
-	0x2e, 0x0c, 0x4b, 0x31, 0x53, 0x4c, 0x71, 0x2d, 0x1b, 0x35, 0xe5, 0x3a, 0xad, 0x95, 0x34, 0x12,
-	0x0f, 0x78, 0x31, 0xe7, 0x0e, 0x8e, 0x86, 0x73, 0x39, 0x97, 0x0e, 0x3e, 0xb3, 0xa8, 0x15, 0x24,
-	0x5f, 0x10, 0xdc, 0x7b, 0x2d, 0x85, 0x61, 0xa5, 0xe0, 0x2a, 0x13, 0x33, 0x89, 0x31, 0xf4, 0x05,
-	0x5b, 0x72, 0x82, 0xc6, 0x68, 0x32, 0xc8, 0x1d, 0xb6, 0x9c, 0xd9, 0xd4, 0x9c, 0xf4, 0x5a, 0xce,
-	0x62, 0xfc, 0x08, 0x22, 0x6d, 0x98, 0x69, 0x34, 0x09, 0x1d, 0xdb, 0x55, 0xf8, 0x12, 0x06, 0xd3,
-	0xaa, 0xd1, 0x86, 0xab, 0xb2, 0x26, 0x7d, 0xd7, 0xfa, 0x4b, 0xe0, 0x11, 0xdc, 0x55, 0x5c, 0x1b,
-	0xa6, 0x8c, 0x26, 0x17, 0x63, 0x34, 0x09, 0xf3, 0x53, 0x9d, 0xdc, 0x42, 0x94, 0xd5, 0xaf, 0x8a,
-	0x42, 0x61, 0x0a, 0xc0, 0x3f, 0x1b, 0xae, 0x04, 0xab, 0xb2, 0xba, 0x73, 0xe2, 0x31, 0xb6, 0x5f,
-	0x8a, 0x53, 0xbf, 0x75, 0xe5, 0x31, 0xc9, 0x4f, 0x04, 0xd1, 0xfb, 0xe5, 0x7f, 0x59, 0x67, 0x0c,
-	0xb1, 0x4b, 0xf6, 0x5d, 0xc5, 0x56, 0x52, 0x75, 0x0b, 0xf9, 0x14, 0xbe, 0x86, 0xb8, 0xac, 0x59,
-	0x51, 0x28, 0xae, 0x35, 0xb7, 0x5b, 0x85, 0x93, 0xf8, 0xf9, 0xc3, 0xf4, 0x94, 0x7c, 0xda, 0x2e,
-	0x75, 0xd3, 0xdf, 0xfe, 0x78, 0x1c, 0xe4, 0xbe, 0x16, 0x5f, 0x01, 0x4c, 0x8f, 0xe1, 0x6b, 0x12,
-	0xb9, 0x49, 0xe2, 0x4d, 0x9e, 0x5d, 0x26, 0xf7, 0xb4, 0xc9, 0x37, 0x04, 0xf7, 0x33, 0x6b, 0x22,
-	0x3f, 0x5e, 0x1c, 0x3f, 0x85, 0x70, 0xb5, 0xd4, 0x04, 0xfd, 0xf3, 0x7f, 0x9b, 0x44, 0xf7, 0xbf,
-	0xd5, 0xe0, 0x37, 0x70, 0x67, 0xb1, 0xfe, 0x50, 0x8a, 0x99, 0x24, 0x3d, 0x27, 0x7f, 0xe2, 0xdb,
-	0x3d, 0x7b, 0x36, 0xbd, 0x5d, 0xdb, 0xe9, 0xb7, 0xc2, 0xa8, 0x4d, 0xf7, 0x44, 0xb4, 0x70, 0xd4,
-	0xe8, 0x1a, 0x62, 0xaf, 0x89, 0x1f, 0x40, 0xf8, 0x89, 0x6f, 0xba, 0xa0, 0x2d, 0xc4, 0x43, 0xb8,
-	0x58, 0xb1, 0xaa, 0x39, 0x06, 0xdd, 0x16, 0x2f, 0x7b, 0x57, 0xe8, 0xe6, 0x72, 0xfb, 0x9b, 0x06,
-	0xdb, 0x3d, 0x45, 0xbb, 0x3d, 0x45, 0xbf, 0xf6, 0x14, 0x7d, 0x3d, 0xd0, 0x60, 0x77, 0xa0, 0xc1,
-	0xf7, 0x03, 0x0d, 0x3e, 0x46, 0xce, 0xc8, 0x8b, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x7b, 0x99,
-	0x3f, 0x23, 0xd4, 0x02, 0x00, 0x00,
+	// 441 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0x3d, 0x8f, 0x13, 0x31,
+	0x14, 0x5c, 0x67, 0x73, 0x2b, 0xf2, 0x02, 0x08, 0x4c, 0x04, 0x56, 0x74, 0x5a, 0xa2, 0xad, 0x42,
+	0x13, 0xc4, 0xd1, 0x04, 0x3a, 0xee, 0xc4, 0x89, 0x74, 0x68, 0x0b, 0x5a, 0x64, 0xb2, 0x2f, 0xd1,
+	0x8a, 0xc4, 0x5e, 0xd9, 0xce, 0x8a, 0xfc, 0x04, 0x3a, 0xfe, 0x00, 0xff, 0x27, 0xe5, 0x95, 0x54,
+	0x7c, 0x24, 0x7f, 0x04, 0xd9, 0xeb, 0xe4, 0x7c, 0x3a, 0xd2, 0xd1, 0xbd, 0x37, 0x6f, 0x66, 0x35,
+	0x33, 0x5e, 0xe8, 0x95, 0x62, 0xa6, 0xb8, 0x42, 0x2d, 0x57, 0x6a, 0x8a, 0x7a, 0x54, 0x29, 0x69,
+	0x24, 0xed, 0x60, 0x31, 0x47, 0x37, 0xf6, 0x7b, 0x73, 0x39, 0x97, 0x6e, 0x7c, 0x6e, 0xa7, 0x86,
+	0x90, 0x7d, 0x25, 0x70, 0xef, 0x42, 0x0a, 0xc3, 0x4b, 0x81, 0x6a, 0x22, 0x66, 0x92, 0x52, 0x68,
+	0x0b, 0xbe, 0x44, 0x46, 0x06, 0x64, 0xd8, 0xc9, 0xdd, 0x6c, 0x31, 0xb3, 0xae, 0x90, 0xb5, 0x1a,
+	0xcc, 0xce, 0xf4, 0x31, 0x24, 0xda, 0x70, 0xb3, 0xd2, 0x2c, 0x76, 0xa8, 0xdf, 0xe8, 0x29, 0x74,
+	0xa6, 0x8b, 0x95, 0x36, 0xa8, 0xca, 0x8a, 0xb5, 0xdd, 0xe9, 0x1a, 0xa0, 0x7d, 0xb8, 0xa3, 0x50,
+	0x1b, 0xae, 0x8c, 0x66, 0x27, 0x03, 0x32, 0x8c, 0xf3, 0xc3, 0x9e, 0xbd, 0x83, 0x64, 0x52, 0xbd,
+	0x29, 0x0a, 0x45, 0x53, 0x00, 0xfc, 0x62, 0x50, 0x09, 0xbe, 0x98, 0x54, 0xde, 0x49, 0x80, 0xd8,
+	0x7b, 0x29, 0x0e, 0xf7, 0xc6, 0x55, 0x80, 0x64, 0xbf, 0x08, 0x24, 0x1f, 0x96, 0xff, 0x25, 0xce,
+	0x00, 0xba, 0xae, 0xd9, 0xcb, 0x05, 0xaf, 0xa5, 0xf2, 0x81, 0x42, 0x88, 0xbe, 0x82, 0x6e, 0x59,
+	0xf1, 0xa2, 0x50, 0xa8, 0x35, 0xda, 0x54, 0xf1, 0xb0, 0x7b, 0xf6, 0x70, 0x74, 0x68, 0x7e, 0xd4,
+	0x84, 0x3a, 0x6f, 0x6f, 0x7e, 0x3e, 0x8d, 0xf2, 0x90, 0x4b, 0xc7, 0x00, 0xd3, 0x7d, 0xf9, 0x9a,
+	0x25, 0x4e, 0xc9, 0x02, 0xe5, 0x8d, 0x97, 0xc9, 0x03, 0x6e, 0x36, 0x86, 0xbb, 0xb9, 0x7f, 0xeb,
+	0xa3, 0x31, 0x7b, 0x70, 0x52, 0xf3, 0xc5, 0x6a, 0x9f, 0xb3, 0x59, 0xb2, 0xef, 0x2d, 0xb8, 0x3f,
+	0xb1, 0xf6, 0xf7, 0x7a, 0x4d, 0x9f, 0x41, 0x5c, 0x2f, 0x35, 0x23, 0xb7, 0x9c, 0x37, 0x1d, 0x7a,
+	0xe7, 0x96, 0x43, 0x5f, 0x40, 0xbb, 0x14, 0x33, 0xc9, 0x5a, 0x8e, 0xfb, 0x24, 0xe0, 0x86, 0x76,
+	0xbc, 0xc2, 0x51, 0x29, 0x42, 0xaf, 0x52, 0xb2, 0x2e, 0x75, 0x29, 0x05, 0x16, 0x1f, 0xfd, 0xbf,
+	0x60, 0x7b, 0xb6, 0x9f, 0x38, 0x0b, 0x8b, 0xba, 0x61, 0x6b, 0xf4, 0xfe, 0x5a, 0x75, 0xe1, 0x45,
+	0x6f, 0x85, 0x51, 0xeb, 0xfc, 0x51, 0x75, 0xfb, 0xd2, 0xbf, 0x04, 0x76, 0x4c, 0x40, 0x1f, 0x40,
+	0xfc, 0x19, 0xd7, 0xbe, 0x1c, 0x3b, 0xfe, 0xbb, 0x9b, 0xd7, 0xad, 0x31, 0x39, 0x3f, 0xdd, 0xfc,
+	0x49, 0xa3, 0xcd, 0x36, 0x25, 0x57, 0xdb, 0x94, 0xfc, 0xde, 0xa6, 0xe4, 0xdb, 0x2e, 0x8d, 0xae,
+	0x76, 0x69, 0xf4, 0x63, 0x97, 0x46, 0x9f, 0x12, 0xe7, 0xf4, 0xe5, 0xdf, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x38, 0x92, 0xc8, 0xd7, 0x6f, 0x03, 0x00, 0x00,
 }
 
 func (m *ContainerInfo) Marshal() (dAtA []byte, err error) {
@@ -420,6 +468,43 @@ func (m *VmInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ResourceInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ResourceInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ResourceInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintInfraresources(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintInfraresources(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *InfraResources) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -440,9 +525,9 @@ func (m *InfraResources) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.HwInfo) > 0 {
-		for k := range m.HwInfo {
-			v := m.HwInfo[k]
+	if len(m.ProvisionedClusters) > 0 {
+		for k := range m.ProvisionedClusters {
+			v := m.ProvisionedClusters[k]
 			baseI := i
 			i -= len(v)
 			copy(dAtA[i:], v)
@@ -455,6 +540,20 @@ func (m *InfraResources) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 			i = encodeVarintInfraresources(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Info) > 0 {
+		for iNdEx := len(m.Info) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Info[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintInfraresources(dAtA, i, uint64(size))
+			}
 			i--
 			dAtA[i] = 0x12
 		}
@@ -623,6 +722,29 @@ func (m *VmInfo) ValidateEnums() error {
 	return nil
 }
 
+func (m *ResourceInfo) CopyInFields(src *ResourceInfo) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.Value != src.Value {
+		m.Value = src.Value
+		changed++
+	}
+	return changed
+}
+
+func (m *ResourceInfo) DeepCopyIn(src *ResourceInfo) {
+	m.Name = src.Name
+	m.Value = src.Value
+}
+
+// Helper method to check that enums have valid values
+func (m *ResourceInfo) ValidateEnums() error {
+	return nil
+}
+
 func (m *InfraResources) CopyInFields(src *InfraResources) int {
 	changed := 0
 	if src.Vms != nil {
@@ -632,13 +754,20 @@ func (m *InfraResources) CopyInFields(src *InfraResources) int {
 		m.Vms = nil
 		changed++
 	}
-	if src.HwInfo != nil {
-		m.HwInfo = make(map[string]string)
-		for k0, _ := range src.HwInfo {
-			m.HwInfo[k0] = src.HwInfo[k0]
+	if src.Info != nil {
+		m.Info = src.Info
+		changed++
+	} else if m.Info != nil {
+		m.Info = nil
+		changed++
+	}
+	if src.ProvisionedClusters != nil {
+		m.ProvisionedClusters = make(map[string]string)
+		for k0, _ := range src.ProvisionedClusters {
+			m.ProvisionedClusters[k0] = src.ProvisionedClusters[k0]
 		}
-	} else if m.HwInfo != nil {
-		m.HwInfo = nil
+	} else if m.ProvisionedClusters != nil {
+		m.ProvisionedClusters = nil
 		changed++
 	}
 	return changed
@@ -653,19 +782,32 @@ func (m *InfraResources) DeepCopyIn(src *InfraResources) {
 	} else {
 		m.Vms = nil
 	}
-	if src.HwInfo != nil {
-		m.HwInfo = make(map[string]string)
-		for k, v := range src.HwInfo {
-			m.HwInfo[k] = v
+	if src.Info != nil {
+		m.Info = make([]ResourceInfo, len(src.Info), len(src.Info))
+		for ii, s := range src.Info {
+			m.Info[ii].DeepCopyIn(&s)
 		}
 	} else {
-		m.HwInfo = nil
+		m.Info = nil
+	}
+	if src.ProvisionedClusters != nil {
+		m.ProvisionedClusters = make(map[string]string)
+		for k, v := range src.ProvisionedClusters {
+			m.ProvisionedClusters[k] = v
+		}
+	} else {
+		m.ProvisionedClusters = nil
 	}
 }
 
 // Helper method to check that enums have valid values
 func (m *InfraResources) ValidateEnums() error {
 	for _, e := range m.Vms {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	for _, e := range m.Info {
 		if err := e.ValidateEnums(); err != nil {
 			return err
 		}
@@ -755,6 +897,23 @@ func (m *VmInfo) Size() (n int) {
 	return n
 }
 
+func (m *ResourceInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovInfraresources(uint64(l))
+	}
+	l = len(m.Value)
+	if l > 0 {
+		n += 1 + l + sovInfraresources(uint64(l))
+	}
+	return n
+}
+
 func (m *InfraResources) Size() (n int) {
 	if m == nil {
 		return 0
@@ -767,8 +926,14 @@ func (m *InfraResources) Size() (n int) {
 			n += 1 + l + sovInfraresources(uint64(l))
 		}
 	}
-	if len(m.HwInfo) > 0 {
-		for k, v := range m.HwInfo {
+	if len(m.Info) > 0 {
+		for _, e := range m.Info {
+			l = e.Size()
+			n += 1 + l + sovInfraresources(uint64(l))
+		}
+	}
+	if len(m.ProvisionedClusters) > 0 {
+		for k, v := range m.ProvisionedClusters {
 			_ = k
 			_ = v
 			mapEntrySize := 1 + len(k) + sovInfraresources(uint64(len(k))) + 1 + len(v) + sovInfraresources(uint64(len(v)))
@@ -1350,6 +1515,123 @@ func (m *VmInfo) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *ResourceInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInfraresources
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ResourceInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ResourceInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInfraresources
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInfraresources
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Value = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInfraresources(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *InfraResources) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1415,7 +1697,7 @@ func (m *InfraResources) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HwInfo", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Info", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1442,8 +1724,42 @@ func (m *InfraResources) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.HwInfo == nil {
-				m.HwInfo = make(map[string]string)
+			m.Info = append(m.Info, ResourceInfo{})
+			if err := m.Info[len(m.Info)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProvisionedClusters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInfraresources
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ProvisionedClusters == nil {
+				m.ProvisionedClusters = make(map[string]string)
 			}
 			var mapkey string
 			var mapvalue string
@@ -1538,7 +1854,7 @@ func (m *InfraResources) Unmarshal(dAtA []byte) error {
 					iNdEx += skippy
 				}
 			}
-			m.HwInfo[mapkey] = mapvalue
+			m.ProvisionedClusters[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

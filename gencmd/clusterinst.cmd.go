@@ -96,6 +96,8 @@ func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
 		}
 	}
+	for i1 := 0; i1 < len(in.Resources.Info); i1++ {
+	}
 }
 
 var ClusterInstApiCmd edgeproto.ClusterInstApiClient
@@ -589,13 +591,15 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
-	"resources.hwinfo":                       "HW resource information",
+	"resources.info:#.name":                  "Resource name",
+	"resources.info:#.value":                 "Resource value",
+	"resources.provisionedclusters":          "Provisioned Clusters",
 }
 var ClusterInstSpecialArgs = map[string]string{
-	"errors":           "StringArray",
-	"fields":           "StringArray",
-	"resources.hwinfo": "StringToString",
-	"status.msgs":      "StringArray",
+	"errors":                        "StringArray",
+	"fields":                        "StringArray",
+	"resources.provisionedclusters": "StringToString",
+	"status.msgs":                   "StringArray",
 }
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
@@ -624,7 +628,9 @@ var ClusterInstInfoOptionalArgs = []string{
 	"resources.vms:#.containers:#.status",
 	"resources.vms:#.containers:#.clusterip",
 	"resources.vms:#.containers:#.restarts",
-	"resources.hwinfo",
+	"resources.info:#.name",
+	"resources.info:#.value",
+	"resources.provisionedclusters",
 }
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
@@ -645,13 +651,15 @@ var ClusterInstInfoComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
-	"resources.hwinfo":                       "HW resource information",
+	"resources.info:#.name":                  "Resource name",
+	"resources.info:#.value":                 "Resource value",
+	"resources.provisionedclusters":          "Provisioned Clusters",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
-	"errors":           "StringArray",
-	"fields":           "StringArray",
-	"resources.hwinfo": "StringToString",
-	"status.msgs":      "StringArray",
+	"errors":                        "StringArray",
+	"fields":                        "StringArray",
+	"resources.provisionedclusters": "StringToString",
+	"status.msgs":                   "StringArray",
 }
 var UpdateClusterInstRequiredArgs = []string{
 	"cluster",

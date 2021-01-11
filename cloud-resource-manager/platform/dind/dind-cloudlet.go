@@ -79,6 +79,6 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 	return nil
 }
 
-func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource) error {
+func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources, existingVmResources []edgeproto.VMResource) error {
 	return nil
 }

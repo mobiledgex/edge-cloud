@@ -458,7 +458,7 @@ func (s *CloudletRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
+func (s *ClusterInstRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 

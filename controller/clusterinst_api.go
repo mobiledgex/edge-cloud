@@ -195,6 +195,61 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
+func (s *ClusterInstApi) validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst) error {
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+		return errors.New("Specified Cloudlet not found")
+	}
+	info := edgeproto.CloudletInfo{}
+	if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
+		return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
+	}
+	clusterInstResources := make(map[edgeproto.ClusterInstKey]struct{})
+	s.cache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
+		clusterInstResources[*k] = struct{}{}
+	})
+	existingRes := []edgeproto.VMResource{}
+	clusterInstRefs := edgeproto.ClusterInstRefs{}
+	for k := range clusterInstResources {
+		if clusterInstRefsApi.store.STMGet(stm, &k, &clusterInstRefs) {
+			if _, ok := info.Resources.ProvisionedClusters[k.ClusterKey.String()]; ok {
+				continue
+			}
+			if clusterInstRefs.ReservedResources != nil {
+				existingRes = append(existingRes, clusterInstRefs.ReservedResources...)
+			}
+		}
+	}
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return err
+	}
+	rootlbFlavor, err := cloudletPlatform.GetRootLBFlavor(ctx)
+	if err != nil {
+		return err
+	}
+	lbFlavor := &edgeproto.FlavorInfo{}
+	if rootlbFlavor != nil {
+		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, cloudlet, info)
+		if err != nil {
+			return err
+		}
+		lbFlavor = vmspec.FlavorInfo
+	}
+	res, err := cloudcommon.GetClusterInstVMRequirements(ctx, in, info.Flavors, lbFlavor)
+	if err != nil {
+		return err
+	}
+	if len(res) > 0 {
+		err = cloudletPlatform.ValidateCloudletResources(ctx, &info.Resources, res, existingRes)
+		if err != nil {
+			return err
+		}
+		clusterInstRefsApi.CreateResourcesRef(stm, &in.Key, res)
+	}
+	return nil
+}
+
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
@@ -277,6 +332,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
 	}
 
+	resTracked := false
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
 			return err
@@ -384,30 +440,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+		err = s.validateAndTrackResources(ctx, stm, in)
 		if err != nil {
 			return err
 		}
-		rootlbFlavor, err := cloudletPlatform.GetRootLBFlavor(ctx)
-		if err != nil {
-			return err
-		}
-		lbFlavor := &edgeproto.FlavorInfo{}
-		if rootlbFlavor != nil {
-			vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, cloudlet, info)
-			if err != nil {
-				return err
-			}
-			lbFlavor = vmspec.FlavorInfo
-		}
-		res, err := cloudcommon.GetClusterInstVMResources(ctx, in, info.Flavors, lbFlavor)
-		if err != nil {
-			return err
-		}
-		err = cloudletPlatform.ValidateCloudletResources(ctx, &info.Resources, res)
-		if err != nil {
-			return err
-		}
+		resTracked = true
 
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
@@ -452,6 +489,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		s.store.STMPut(stm, in)
 		return nil
 	})
+	if resTracked {
+		// delete any refs to reserved resources
+		defer clusterInstRefsApi.DeleteResourcesRef(ctx, &in.Key)
+	}
 	if err != nil {
 		return err
 	}
@@ -512,6 +553,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
 	retry := false
+	resTracked := false
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
@@ -532,6 +574,29 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 				return errors.New("ClusterInst busy, cannot update")
 			}
 		}
+
+		// Get diff of nodes to validate and track cloudlet resources
+		resChanged := false
+		resClusterInst := &edgeproto.ClusterInst{}
+		resClusterInst.DeepCopyIn(&inbuf)
+		if resClusterInst.NumNodes > in.NumNodes {
+			// update diff
+			resClusterInst.NumNodes = in.NumNodes - resClusterInst.NumNodes
+			resChanged = true
+		}
+		if resClusterInst.NumMasters > in.NumMasters {
+			// update diff
+			resClusterInst.NumMasters = in.NumMasters - resClusterInst.NumMasters
+			resChanged = true
+		}
+		if resChanged {
+			err = s.validateAndTrackResources(ctx, stm, resClusterInst)
+			if err != nil {
+				return err
+			}
+			resTracked = true
+		}
+
 		changeCount = inbuf.CopyInFields(in)
 		if changeCount == 0 && !retry {
 			// nothing changed
@@ -540,6 +605,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if err := validateClusterInstUpdates(ctx, stm, &inbuf); err != nil {
 			return err
 		}
+
 		if !ignoreCRM(cctx) {
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
@@ -548,6 +614,10 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})
+	if resTracked {
+		// delete any refs to reserved resources
+		defer clusterInstRefsApi.DeleteResourcesRef(ctx, &in.Key)
+	}
 	if err != nil {
 		return err
 	}

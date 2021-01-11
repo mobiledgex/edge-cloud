@@ -102,6 +102,8 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
 		}
 	}
+	for i1 := 0; i1 < len(in.Resources.Info); i1++ {
+	}
 	if _, found := tags["nocmp"]; found {
 		in.TrustPolicyState = 0
 	}
@@ -1555,15 +1557,17 @@ var CloudletInfoComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
-	"resources.hwinfo":                       "HW resource information",
+	"resources.info:#.name":                  "Resource name",
+	"resources.info:#.value":                 "Resource value",
+	"resources.provisionedclusters":          "Provisioned Clusters",
 	"trustpolicystate":                       "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 }
 var CloudletInfoSpecialArgs = map[string]string{
-	"errors":            "StringArray",
-	"fields":            "StringArray",
-	"flavors:#.propmap": "StringToString",
-	"resources.hwinfo":  "StringToString",
-	"status.msgs":       "StringArray",
+	"errors":                        "StringArray",
+	"fields":                        "StringArray",
+	"flavors:#.propmap":             "StringToString",
+	"resources.provisionedclusters": "StringToString",
+	"status.msgs":                   "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}
 var CloudletMetricsOptionalArgs = []string{

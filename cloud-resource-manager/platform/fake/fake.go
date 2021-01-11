@@ -84,14 +84,16 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, provDone chan bool) error {
 	updateCallback(edgeproto.UpdateTask, "Updating Cluster Inst")
+	provDone <- true
 	return nil
 }
-func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
+func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration, provDone chan bool) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake CreateClusterInst", "clusterInst", clusterInst)
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
+	provDone <- true
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst ready")
 	return nil
 }
@@ -125,24 +127,39 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 		},
 	}
 	resources.Vms = append(resources.Vms, rlbvm)
-	if len(resources.HwInfo) == 0 {
-		resources.HwInfo = make(map[string]string)
-	}
-	resources.HwInfo[RamUsed] = "1024"
-	resources.HwInfo[RamMax] = "40960"
+	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
+		Name:  RamUsed,
+		Value: "1024",
+	})
+	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
+		Name:  RamMax,
+		Value: "40960",
+	})
 
-	resources.HwInfo[VcpusUsed] = "10"
-	resources.HwInfo[VcpusMax] = "50"
+	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
+		Name:  VcpusUsed,
+		Value: "10",
+	})
+	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
+		Name:  VcpusMax,
+		Value: "50",
+	})
 
-	resources.HwInfo[DiskUsed] = "20"
-	resources.HwInfo[DiskMax] = "5000"
+	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
+		Name:  DiskUsed,
+		Value: "20",
+	})
+	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
+		Name:  DiskMax,
+		Value: "5000",
+	})
 
 	warnings := []string{}
 
 	return &resources, warnings, nil
 }
 
-func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource) error {
+func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource, existingVmResources []edgeproto.VMResource) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "Validate cloudlet resources", "vm resources", vmResources, "cloudlet resouurces", infraResources)
 	ramReqd := uint64(0)
 	vcpusReqd := uint64(0)
@@ -154,26 +171,69 @@ func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources
 			diskReqd += vmRes.VmFlavor.Disk
 		}
 	}
-	maxRam, err := strconv.ParseUint(infraResources.HwInfo[RamMax], 0, 64)
-	if err != nil {
-		return err
+
+	var err error
+	maxRam := uint64(0)
+	ramUsed := uint64(0)
+	maxVcpus := uint64(0)
+	vcpusUsed := uint64(0)
+	maxDisk := uint64(0)
+	diskUsed := uint64(0)
+	for _, resInfo := range infraResources.Info {
+		switch resInfo.Name {
+		case RamMax:
+			maxRam, err = strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return err
+			}
+		case RamUsed:
+			ramUsed, err = strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return err
+			}
+		case VcpusMax:
+			maxVcpus, err = strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return err
+			}
+		case VcpusUsed:
+			vcpusUsed, err = strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return err
+			}
+		case DiskMax:
+			maxDisk, err = strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return err
+			}
+		case DiskUsed:
+			diskUsed, err = strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	if ramReqd > maxRam {
-		return fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, ramReqd-maxRam)
+
+	for _, vmRes := range existingVmResources {
+		if vmRes.VmFlavor != nil {
+			ramUsed += vmRes.VmFlavor.Ram
+			vcpusUsed += vmRes.VmFlavor.Vcpus
+			diskUsed += vmRes.VmFlavor.Disk
+		}
 	}
-	maxVcpus, err := strconv.ParseUint(infraResources.HwInfo[VcpusMax], 0, 64)
-	if err != nil {
-		return err
+
+	availableRam := maxRam - ramUsed
+	availableVcpus := maxVcpus - vcpusUsed
+	availableDisk := maxDisk - diskUsed
+
+	if ramReqd > availableRam {
+		return fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, availableRam)
 	}
-	if vcpusReqd > maxVcpus {
-		return fmt.Errorf("Not enough Vcpus available, required %d but only %d is available", vcpusReqd, maxVcpus-vcpusReqd)
+	if vcpusReqd > availableVcpus {
+		return fmt.Errorf("Not enough Vcpus available, required %d but only %d is available", vcpusReqd, availableVcpus)
 	}
-	maxDisk, err := strconv.ParseUint(infraResources.HwInfo[DiskMax], 0, 64)
-	if err != nil {
-		return err
-	}
-	if diskReqd > maxDisk {
-		return fmt.Errorf("Not enough Disk available, required %dGB but only %dGB is available", diskReqd, maxDisk-diskReqd)
+	if diskReqd > availableDisk {
+		return fmt.Errorf("Not enough Disk available, required %dGB but only %dGB is available", diskReqd, availableDisk)
 	}
 	return nil
 }
