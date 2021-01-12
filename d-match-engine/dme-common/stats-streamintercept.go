@@ -6,27 +6,14 @@ import (
 	log "github.com/mobiledgex/edge-cloud/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 // A wrapper for grpc.ServerStream to handle stats
 type StatsStreamWrapper struct {
+	grpc.ServerStream
 	stats *DmeStats
-	inner grpc.ServerStream
 	info  *grpc.StreamServerInfo
 	ctx   context.Context
-}
-
-func (w *StatsStreamWrapper) SetHeader(m metadata.MD) error {
-	return w.inner.SetHeader(m)
-}
-
-func (w *StatsStreamWrapper) SendHeader(m metadata.MD) error {
-	return w.inner.SendHeader(m)
-}
-
-func (w *StatsStreamWrapper) SetTrailer(m metadata.MD) {
-	w.inner.SetTrailer(m)
 }
 
 func (w *StatsStreamWrapper) Context() context.Context {
@@ -35,12 +22,12 @@ func (w *StatsStreamWrapper) Context() context.Context {
 
 func (w *StatsStreamWrapper) SendMsg(m interface{}) error {
 	log.SpanLog(w.Context(), log.DebugLevelDmereq, "SendMsg stats stream interceptor", "type", reflect.TypeOf(m).String())
-	return w.inner.SendMsg(m)
+	return w.ServerStream.SendMsg(m)
 }
 
 func (w *StatsStreamWrapper) RecvMsg(m interface{}) error {
 	log.SpanLog(w.Context(), log.DebugLevelDmereq, "RecvMsg stats stream interceptor", "type", reflect.TypeOf(m).String())
-	return w.inner.RecvMsg(m)
+	return w.ServerStream.RecvMsg(m)
 }
 
 func (s *DmeStats) GetStreamStatsInterceptor() grpc.StreamServerInterceptor {
@@ -50,7 +37,7 @@ func (s *DmeStats) GetStreamStatsInterceptor() grpc.StreamServerInterceptor {
 		defer span.Finish()
 		cctx := log.ContextWithSpan(ss.Context(), span)
 
-		wrapper := &StatsStreamWrapper{stats: s, inner: ss, info: info, ctx: cctx}
+		wrapper := &StatsStreamWrapper{ServerStream: ss, stats: s, info: info, ctx: cctx}
 		return handler(srv, wrapper)
 	}
 }

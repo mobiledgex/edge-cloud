@@ -213,19 +213,7 @@ func getCustomStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey, stat *E
 }
 
 func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, latencyStats *LatencyStats, metricName string, indVarMap map[string]string) *edgeproto.Metric {
-	metric := edgeproto.Metric{}
-	metric.Timestamp = *ts
-	metric.Name = metricName
-	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
-	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
-	// AppInst information
-	metric.AddTag("app", key.AppInstKey.AppKey.Name)
-	metric.AddTag("apporg", key.AppInstKey.AppKey.Organization)
-	metric.AddTag("ver", key.AppInstKey.AppKey.Version)
-	metric.AddTag("cloudlet", key.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	metric.AddTag("cloudletorg", key.AppInstKey.ClusterInstKey.CloudletKey.Organization)
-	metric.AddTag("cluster", key.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	metric.AddTag("clusterorg", key.AppInstKey.ClusterInstKey.Organization)
+	metric := initMetric(metricName, *ts, key.AppInstKey)
 	// Latency information
 	for indepVarName, indepVar := range indVarMap {
 		metric.AddTag(indepVarName, indepVar) // eg. "carrier" -> "TDG"
@@ -237,24 +225,12 @@ func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat
 	metric.AddDoubleVal("stddev", latencyStats.RollingStatistics.Statistics.StdDev)
 	metric.AddDoubleVal("min", latencyStats.RollingStatistics.Statistics.Min)
 	metric.AddDoubleVal("max", latencyStats.RollingStatistics.Statistics.Max)
-	latencyStats.LatencyCounts.AddToMetric(&metric)
-	return &metric
+	latencyStats.LatencyCounts.AddToMetric(metric)
+	return metric
 }
 
 func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, gpsInfo *GpsLocationInfo) *edgeproto.Metric {
-	metric := edgeproto.Metric{}
-	metric.Timestamp = types.Timestamp(gpsInfo.Timestamp)
-	metric.Name = cloudcommon.GpsLocationMetric
-	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
-	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
-	// AppInst information
-	metric.AddTag("app", key.AppInstKey.AppKey.Name)
-	metric.AddTag("apporg", key.AppInstKey.AppKey.Organization)
-	metric.AddTag("ver", key.AppInstKey.AppKey.Version)
-	metric.AddTag("cloudlet", key.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	metric.AddTag("cloudletorg", key.AppInstKey.ClusterInstKey.CloudletKey.Organization)
-	metric.AddTag("cluster", key.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	metric.AddTag("clusterorg", key.AppInstKey.ClusterInstKey.Organization)
+	metric := initMetric(cloudcommon.GpsLocationMetric, types.Timestamp(gpsInfo.Timestamp), key.AppInstKey)
 	// GpsLocation information
 	metric.AddTag("carrier", gpsInfo.Carrier)
 	metric.AddTag("deviceos", gpsInfo.DeviceOs)
@@ -262,23 +238,11 @@ func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *E
 	metric.AddDoubleVal("longitude", gpsInfo.GpsLocation.Longitude)
 	metric.AddDoubleVal("latitude", gpsInfo.GpsLocation.Latitude)
 	metric.AddTag("uniqueid", gpsInfo.SessionCookieKey.UniqueId)
-	return &metric
+	return metric
 }
 
 func CustomStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, customStats *CustomStats, statName string, customStat *CustomStat) *edgeproto.Metric {
-	metric := edgeproto.Metric{}
-	metric.Timestamp = *ts
-	metric.Name = cloudcommon.CustomMetric
-	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
-	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
-	// AppInst information
-	metric.AddTag("app", key.AppInstKey.AppKey.Name)
-	metric.AddTag("apporg", key.AppInstKey.AppKey.Organization)
-	metric.AddTag("ver", key.AppInstKey.AppKey.Version)
-	metric.AddTag("cloudlet", key.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	metric.AddTag("cloudletorg", key.AppInstKey.ClusterInstKey.CloudletKey.Organization)
-	metric.AddTag("cluster", key.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	metric.AddTag("clusterorg", key.AppInstKey.ClusterInstKey.Organization)
+	metric := initMetric(cloudcommon.CustomMetric, *ts, key.AppInstKey)
 	// Custom Stats info
 	metric.AddTag("statname", statName)
 	elapsed := ts.Seconds - int64(customStats.StartTime.Second())
@@ -289,5 +253,23 @@ func CustomStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, customStats 
 	metric.AddDoubleVal("stddev", customStat.RollingStatistics.Statistics.StdDev)
 	metric.AddDoubleVal("min", customStat.RollingStatistics.Statistics.Min)
 	metric.AddDoubleVal("max", customStat.RollingStatistics.Statistics.Max)
-	return &metric
+	return metric
+}
+
+// Helper function that adds in appinst info, metric name, metric timestamp, and dme cloudlet info
+func initMetric(metricName string, ts types.Timestamp, appInstKey edgeproto.AppInstKey) *edgeproto.Metric {
+	metric := &edgeproto.Metric{}
+	metric.Timestamp = ts
+	metric.Name = metricName
+	metric.AddTag("dmecloudlet", MyCloudletKey.Name)
+	metric.AddTag("dmecloudletorg", MyCloudletKey.Organization)
+	// AppInst information
+	metric.AddTag("app", appInstKey.AppKey.Name)
+	metric.AddTag("apporg", appInstKey.AppKey.Organization)
+	metric.AddTag("ver", appInstKey.AppKey.Version)
+	metric.AddTag("cloudlet", appInstKey.ClusterInstKey.CloudletKey.Name)
+	metric.AddTag("cloudletorg", appInstKey.ClusterInstKey.CloudletKey.Organization)
+	metric.AddTag("cluster", appInstKey.ClusterInstKey.ClusterKey.Name)
+	metric.AddTag("clusterorg", appInstKey.ClusterInstKey.Organization)
+	return metric
 }

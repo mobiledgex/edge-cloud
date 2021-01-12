@@ -9,25 +9,12 @@ import (
 	"google.golang.org/grpc"
 
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 )
 
 // A wrapper for the real grpc.ServerStream
 type ServerStreamWrapper struct {
-	inner grpc.ServerStream
-	ctx   context.Context
-}
-
-func (s *ServerStreamWrapper) SetHeader(m metadata.MD) error {
-	return s.inner.SetHeader(m)
-}
-
-func (s *ServerStreamWrapper) SendHeader(m metadata.MD) error {
-	return s.inner.SendHeader(m)
-}
-
-func (s *ServerStreamWrapper) SetTrailer(m metadata.MD) {
-	s.inner.SetTrailer(m)
+	grpc.ServerStream
+	ctx context.Context
 }
 
 func (s *ServerStreamWrapper) Context() context.Context {
@@ -36,14 +23,14 @@ func (s *ServerStreamWrapper) Context() context.Context {
 
 func (s *ServerStreamWrapper) SendMsg(m interface{}) error {
 	log.SpanLog(s.Context(), log.DebugLevelDmereq, "SendMsg auth stream message", "type", reflect.TypeOf(m).String())
-	return s.inner.SendMsg(m)
+	return s.ServerStream.SendMsg(m)
 }
 
 func (s *ServerStreamWrapper) RecvMsg(m interface{}) error {
 	log.SpanLog(s.Context(), log.DebugLevelDmereq, "RecvMsg auth stream message", "type", reflect.TypeOf(m).String())
 	var cookie string
 
-	err := s.inner.RecvMsg(m)
+	err := s.ServerStream.RecvMsg(m)
 	ctx := s.Context()
 	switch typ := m.(type) {
 	case *dme.QosPositionRequest:
@@ -72,7 +59,7 @@ func GetStreamAuthInterceptor() grpc.StreamServerInterceptor {
 		defer span.Finish()
 		cctx := log.ContextWithSpan(ss.Context(), span)
 
-		wrapper := &ServerStreamWrapper{inner: ss, ctx: cctx}
+		wrapper := &ServerStreamWrapper{ServerStream: ss, ctx: cctx}
 		return handler(srv, wrapper)
 	}
 }
