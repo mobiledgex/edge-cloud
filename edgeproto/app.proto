@@ -16,7 +16,7 @@ option (gogoproto.goproto_sizecache_all) = false;
 
 
 message RemoteConnection {
-  // tcp, udp
+  // tcp, udp or icmp
   string protocol = 1;
   // TCP or UDP port
   uint32 port = 2;  

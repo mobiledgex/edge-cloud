@@ -1,0 +1,35 @@
+flavors:
+- {}
+- {}
+- {}
+settings: {}
+trustpolicies:
+- []
+cloudlets:
+- - message: Setting physicalname to match cloudlet name
+  - message: Creating Cloudlet
+  - message: Starting CRMServer
+  - message: Initializing platform
+  - message: Done intializing fake platform
+  - message: Gathering Cloudlet Info
+  - message: Created Cloudlet successfully
+- - message: Setting physicalname to match cloudlet name
+  - message: Creating Cloudlet
+  - message: Starting CRMServer
+  - message: Initializing platform
+  - message: Done intializing fake platform
+  - message: Gathering Cloudlet Info
+  - message: Created Cloudlet successfully
+clusterinsts:
+- - message: Creating
+  - message: First Create Task
+  - message: Second Create Task
+  - message: Ready
+  - message: Created ClusterInst successfully
+apps:
+- {}
+errors:
+- desc: AppInstApi[0]
+  msg: 'read Result stream failed, rpc error: code = Unknown desc = App is not compatible
+    with cloudlet trust policy: No outbound rule in policy to match required connection
+    tcp:35.247.68.151:2222 for App {"organization":"AcmeAppCo","name":"trustedapp","version":"1.0"}'
