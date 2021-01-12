@@ -156,7 +156,7 @@ func (AccessType) EnumDescriptor() ([]byte, []int) {
 }
 
 type RemoteConnection struct {
-	// tcp, udp
+	// tcp, udp or icmp
 	Protocol string `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
 	// TCP or UDP port
 	Port uint32 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
