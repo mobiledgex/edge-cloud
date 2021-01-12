@@ -718,6 +718,9 @@ func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment
 		if invalid {
 			return fmt.Errorf("Invalid Config Kind(%s) for deployment type(%s)", cfg.Kind, deployment)
 		}
+		if cfg.Config == "" {
+			return fmt.Errorf("Empty config for config kind %s", cfg.Kind)
+		}
 	}
 	return nil
 }
