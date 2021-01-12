@@ -30,11 +30,15 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
 
-- name: show AppInstClients stream for app1
+- name: start AppInstClients stream for app1
   apifile: "{{datadir}}/appinstclientkey_app1.yml"
-  actions: [ctrlapi-clientshow]
+  actions: [clientshow-start=1]
+
+- name: stop and check AppInstClients stream for app1
+  apifile: "{{datadir}}/appinstclientkey_app1.yml"
+  actions: [clientshow-stop=1]
   compareyaml:
-    yaml1: "{{outputdir}}/show-appinstclients.yml"
+    yaml1: "{{outputdir}}/show-appinstclients-1.yml"
     yaml2: "{{datadir}}/appinstclient_stream_app1.yml"
     filetype: clientdata
 

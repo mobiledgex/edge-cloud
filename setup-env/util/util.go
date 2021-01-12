@@ -272,7 +272,7 @@ func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 		return fmt.Errorf("unable to parse CloudletKey")
 	}
 
-	conn := ConnectOnlineController(timeout)
+	conn := connectOnlineController(timeout)
 	if conn == nil {
 		return fmt.Errorf("unable to connect to online controller")
 	}
@@ -313,7 +313,7 @@ func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 	return err
 }
 
-func ConnectOnlineController(delay time.Duration) *grpc.ClientConn {
+func connectOnlineController(delay time.Duration) *grpc.ClientConn {
 	for _, ctrl := range Deployment.Controllers {
 		conn, err := ctrl.ConnectAPI(delay)
 		if err == nil {
