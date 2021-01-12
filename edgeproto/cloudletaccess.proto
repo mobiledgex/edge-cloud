@@ -59,6 +59,16 @@ message AccessDataReply {
   bytes data = 1;
 }
 
+message PublicCertRequest {
+  // Certificate common name
+  string common_name = 1;
+}
+
+message PublicCertReply {
+  // Marshalled vault.PublicCert
+  bytes public_cert = 1;
+}
+
 // Services that require an AccessKey to use.
 // Note that all APIs authenticate by including a signed cloudlet key,
 // so all APIs here already intrinsically have the cloudlet key parameter.
@@ -69,6 +79,8 @@ service CloudletAccessApi {
   rpc GetCas(GetCasRequest) returns (GetCasReply);
   // GetAccessData generically gets access/secrets data based on type
   rpc GetAccessData(AccessDataRequest) returns (AccessDataReply);
+  // GetPublicCert gets the public cert for public nodes (DME)
+  rpc GetPublicCert(PublicCertRequest) returns (PublicCertReply);
 }
 
 // Services to manage the access key

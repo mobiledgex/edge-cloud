@@ -68,6 +68,8 @@ type server struct{}
 
 var nodeMgr node.NodeMgr
 
+var publicCertManager *node.PublicCertManager
+
 var sigChan chan os.Signal
 
 func validateLocation(loc *dme.Loc) error {
@@ -538,12 +540,48 @@ func main() {
 		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
 
-	creds, err := tls.ServerAuthServerCreds(*tlsApiCertFile, *tlsApiKeyFile)
+	// Setup PublicCertManager for dme
+	if *cloudletDme {
+		// Setup connection to controller for access API
+		if !nodeMgr.AccessKeyClient.IsEnabled() {
+			span.Finish()
+			log.FatalLog("access key client is not enabled")
+		}
+		log.SpanLog(ctx, log.DebugLevelInfo, "Setup persistent access connection to Controller")
+		ctrlConn, err := nodeMgr.AccessKeyClient.ConnectController(ctx)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to connect to controller", "err", err)
+			span.Finish()
+			log.FatalLog("Failed to connect to controller for access API", "err", err)
+		}
+		defer ctrlConn.Close()
+		// Create CloudletAccessApiClient
+		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
+		nodePublicCertApi := node.NewNodePublicCertApi(accessClient)
+		// Setup public cert manager for cloudletdme
+		publicCertManager = node.NewPublicCertManager(*publicAddr, nodePublicCertApi)
+		publicCertManager.StartRefresh()
+	} else {
+		// DME has direct access to vault
+		var getPublicCertApi node.GetPublicCertApi
+		getPublicCertApi = &node.VaultPublicCertApi{
+			VaultConfig: nodeMgr.VaultConfig,
+		}
+		if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
+			getPublicCertApi = &node.TestPublicCertApi{}
+		}
+		// Setup PublicCertManager for non cloudletdme
+		publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
+		publicCertManager.StartRefresh()
+	}
+	// Get TLS Config for grpc Creds from PublicCertManager
+	dmeServerTlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	if err != nil {
 		span.Finish()
-		log.FatalLog("get TLS Credentials", "error", err)
+		log.FatalLog("get TLS config", "err", err)
 	}
-	grpcOpts = append(grpcOpts, grpc.Creds(creds))
+	grpcOpts = append(grpcOpts, cloudcommon.GrpcCreds(dmeServerTlsConfig))
+
 	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatchEngineApiServer(s, &server{})

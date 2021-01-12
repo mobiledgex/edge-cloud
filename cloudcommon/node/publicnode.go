@@ -3,11 +3,13 @@ package node
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	edgetls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -81,9 +83,14 @@ func NewPublicCertManager(commonName string, getPublicCertApi GetPublicCertApi) 
 	return mgr
 }
 
+// Utility function to call GetPublicCertApi.GetPublicCert function
+func (s *PublicCertManager) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
+	return s.getPublicCertApi.GetPublicCert(ctx, commonName)
+}
+
 func (s *PublicCertManager) updateCert(ctx context.Context) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "update public cert", "name", s.commonName)
-	pubCert, err := s.getPublicCertApi.GetPublicCert(ctx, s.commonName)
+	pubCert, err := s.GetPublicCert(ctx, s.commonName)
 	if err != nil {
 		return err
 	}
@@ -181,4 +188,35 @@ func (s *TestPublicCertApi) GetPublicCert(ctx context.Context, commonName string
 	cert.TTL = 24 * 3600
 	s.GetCount++
 	return cert, nil
+}
+
+// NodePublicCertApi implements GetPublicCertApi
+// Used for public nodes that don't have direct access to vault
+// Connects to controller and controller will pull cert from vault
+// See (cloudletaccess_api.go:GetPublicCert) for implementation in controller
+type NodePublicCertApi struct {
+	CloudletAccessApiClient edgeproto.CloudletAccessApiClient
+}
+
+func NewNodePublicCertApi(cloudletAccessApiClient edgeproto.CloudletAccessApiClient) *NodePublicCertApi {
+	s := &NodePublicCertApi{
+		CloudletAccessApiClient: cloudletAccessApiClient,
+	}
+	return s
+}
+
+func (s *NodePublicCertApi) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
+	publicCertRequest := &edgeproto.PublicCertRequest{
+		CommonName: commonName,
+	}
+	publicCertReply, err := s.CloudletAccessApiClient.GetPublicCert(ctx, publicCertRequest)
+	if err != nil {
+		return nil, err
+	}
+	var publicCert vault.PublicCert
+	err = json.Unmarshal(publicCertReply.PublicCert, &publicCert)
+	if err != nil {
+		return nil, err
+	}
+	return &publicCert, nil
 }
