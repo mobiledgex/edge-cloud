@@ -466,9 +466,24 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if app.DeletePrepare {
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
-		if cloudlet.TrustPolicy != "" && !app.Trusted {
-			return fmt.Errorf("Cannot start non trusted App on trusted cloudlet")
+		if cloudlet.TrustPolicy != "" {
+			if !app.Trusted {
+				return fmt.Errorf("Cannot start non trusted App on trusted cloudlet")
+			}
+			trustPolicy := edgeproto.TrustPolicy{}
+			tpKey := edgeproto.PolicyKey{
+				Name:         cloudlet.TrustPolicy,
+				Organization: cloudlet.Key.Organization,
+			}
+			if !trustPolicyApi.store.STMGet(stm, &tpKey, &trustPolicy) {
+				return errors.New("Trust Policy for cloudlet not found")
+			}
+			err = CheckAppCompatibleWithTrustPolicy(&app, &trustPolicy)
+			if err != nil {
+				return fmt.Errorf("App is not compatible with cloudlet trust policy: %v", err)
+			}
 		}
+
 		if app.Deployment == cloudcommon.DeploymentTypeVM && in.AutoClusterIpAccess != edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			return fmt.Errorf("Cannot specify AutoClusterIpAccess if deployment type is VM")
 		}

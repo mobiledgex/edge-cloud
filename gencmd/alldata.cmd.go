@@ -883,7 +883,7 @@ var AllDataComments = map[string]string{
 	"apps:#.templatedelimiter":                                   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"apps:#.skiphcports":                                         "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 	"apps:#.trusted":                                             "Indicates that an instance of this app can be started on a trusted cloudlet",
-	"apps:#.requiredoutboundconnections:#.protocol":              "tcp, udp",
+	"apps:#.requiredoutboundconnections:#.protocol":              "tcp, udp or icmp",
 	"apps:#.requiredoutboundconnections:#.port":                  "TCP or UDP port",
 	"apps:#.requiredoutboundconnections:#.remoteip":              "remote IP X.X.X.X",
 	"appinstances:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",

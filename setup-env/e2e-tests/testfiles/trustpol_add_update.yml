@@ -49,4 +49,17 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
+- name: create appinst with incompatible outbound rules (should fail)
+  apifile: "{{datadir}}/appdata_trustpol_incompat_rules.yml"
+  actions: [ctrlapi-create-expecterr,ctrlapi-show]
+  compareyaml:
+    yaml1: '{{outputdir}}/api-output.yml'
+    yaml2: '{{datadir}}/trustpol_incompat_fail.yml'
 
+- name: delete remaining policy test data, verify it is empty
+  apifile: "{{datadir}}/appdata_trustpol_incompat_rules.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
