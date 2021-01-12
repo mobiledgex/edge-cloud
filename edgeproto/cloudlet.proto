@@ -113,6 +113,7 @@ message PlatformConfig {
 // 8: `PLATFORM_TYPE_AWS_EKS`
 // 9: `PLATFORM_TYPE_VM_POOL`
 // 10: `PLATFORM_TYPE_AWS_EC2`
+// 11: `PLATFORM_TYPE_VCD`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -136,6 +137,8 @@ enum PlatformType {
   PLATFORM_TYPE_VM_POOL = 9;
     // AWS EC2 VM Cloudlet
   PLATFORM_TYPE_AWS_EC2 = 10;
+  // VMWare vCloud Director Cloudlet
+  PLATFORM_TYPE_VCD = 11;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
