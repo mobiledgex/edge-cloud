@@ -637,16 +637,6 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = a1
 		y2 = a2
-	} else if fileType == "clientdata" {
-		var a1 []edgeproto.AppInstClient
-		var a2 []edgeproto.AppInstClient
-		// TODO - sort by key and ignore timestamps
-		err1 = ReadYamlFile(firstYamlFile, &a1)
-		err2 = ReadYamlFile(secondYamlFile, &a2)
-
-		y1 = a1
-		y2 = a2
-
 	} else if fileType == "raw" {
 		var dat1, dat2 []byte
 		dat1, err1 = ioutil.ReadFile(firstYamlFile)

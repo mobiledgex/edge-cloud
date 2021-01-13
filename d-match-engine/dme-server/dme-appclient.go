@@ -26,7 +26,7 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 	clientsMap.Lock()
 	defer clientsMap.Unlock()
 	mapKey := msg.ClientKey.AppInstKey.AppKey
-	list, found := clientsMap.clientsByApp[mapKey]
+	_, found := clientsMap.clientsByApp[mapKey]
 	if !found {
 		clientsMap.clientsByApp[mapKey] = []edgeproto.AppInstClient{*msg}
 	} else {
@@ -49,10 +49,10 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 			}
 		}
 		//  We reached the limit of clients - remove the first one
-		if len(list) == int(dmecommon.Settings.MaxTrackedDmeClients) {
-			list = list[1:]
+		if len(clientsMap.clientsByApp[mapKey]) == int(dmecommon.Settings.MaxTrackedDmeClients) {
+			clientsMap.clientsByApp[mapKey] = clientsMap.clientsByApp[mapKey][1:]
 		}
-		clientsMap.clientsByApp[mapKey] = append(list, *msg)
+		clientsMap.clientsByApp[mapKey] = append(clientsMap.clientsByApp[mapKey], *msg)
 	}
 	// If there is an outstanding request for this appInstClientKey - send it out
 	appInstClientKeyCache.Show(&edgeproto.AppInstClientKey{}, func(obj *edgeproto.AppInstClientKey) error {
@@ -68,14 +68,20 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 	clientsMap.Lock()
 	defer clientsMap.Unlock()
-	list, found := clientsMap.clientsByApp[msg.AppKey]
+	_, found := clientsMap.clientsByApp[msg.AppKey]
 	if found {
 		// walk the list and delete all individual clients
-		for ii, c := range list {
+		for ii, c := range clientsMap.clientsByApp[msg.AppKey] {
 			// Remove matching clients
-			if msg.Matches(&c.ClientKey.AppInstKey) {
-				clientsMap.clientsByApp[msg.AppKey] = append(clientsMap.clientsByApp[msg.AppKey][:ii],
-					clientsMap.clientsByApp[msg.AppKey][ii+1:]...)
+			if msg.AppKey.Matches(&c.ClientKey.AppInstKey.AppKey) &&
+				msg.ClusterInstKey.CloudletKey.Matches(&c.ClientKey.AppInstKey.ClusterInstKey.CloudletKey) {
+				if len(clientsMap.clientsByApp[msg.AppKey]) > ii+1 {
+					clientsMap.clientsByApp[msg.AppKey] = append(clientsMap.clientsByApp[msg.AppKey][:ii],
+						clientsMap.clientsByApp[msg.AppKey][ii+1:]...)
+				} else {
+					clientsMap.clientsByApp[msg.AppKey] =
+						clientsMap.clientsByApp[msg.AppKey][:ii]
+				}
 			}
 		}
 	}

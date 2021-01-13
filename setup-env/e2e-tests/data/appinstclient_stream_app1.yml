@@ -1,6 +1,0 @@
-appinstclientkey:
-  appinstkey:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"

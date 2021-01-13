@@ -43,7 +43,7 @@ message AppInstClient {
   // Unique identifier key
   AppInstClientKey client_key = 2 [(gogoproto.nullable) = false];
   // Location of the Client
-  distributed_match_engine.Loc location = 3 [(gogoproto.nullable) = false];
+  distributed_match_engine.Loc location = 3 [(gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Id of client assigned by server (internal use only)
   int64 notify_id = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 

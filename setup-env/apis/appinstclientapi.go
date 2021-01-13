@@ -29,9 +29,12 @@ func RunAppInstClientAPI(api string, workerId string, apiFile string, outputDir 
 			args = append(args, "--addr", ctrl.ApiAddr)
 		}
 		args = append(args, "controller", "ShowAppInstClient", "--datafile", apiFile)
+		// hide Location, since timestamps are always changing
+		args = append(args, "--hidetags", "nocmp")
 		args = append(args, ">", outputFile)
 		cmdStr := strings.Join(args, " ")
 		cmd := exec.Command("sh", "-c", cmdStr)
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 		err := cmd.Start()
 		if err != nil || cmd.Process == nil {
 			log.Printf("Error - failed to start command: %v\n", cmd)
@@ -51,7 +54,7 @@ func RunAppInstClientAPI(api string, workerId string, apiFile string, outputDir 
 			log.Printf("Failed to parse pid in file %s: %s\n", pidFile, err.Error())
 			return false
 		}
-		err = syscall.Kill(pid, syscall.SIGKILL)
+		err = syscall.Kill(-pid, syscall.SIGKILL)
 		if err != nil {
 			log.Printf("Failed to kill process %d: %s\n", pid, err.Error())
 			return false
