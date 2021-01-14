@@ -74,7 +74,7 @@ var eventMapping = `
 `
 
 var (
-	esIndexDateFormat = "2006-01-02"
+	esIndexDateFormat = "2006-01"
 	esEventLog        = "events-log"
 	eventDebug        = false
 

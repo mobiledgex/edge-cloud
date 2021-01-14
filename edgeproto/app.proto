@@ -16,7 +16,7 @@ option (gogoproto.goproto_sizecache_all) = false;
 
 
 message RemoteConnection {
-  // tcp, udp
+  // tcp, udp or icmp
   string protocol = 1;
   // TCP or UDP port
   uint32 port = 2;  
@@ -183,7 +183,7 @@ message App {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,AutoProvPolicy";
+  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,DelOpt";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }

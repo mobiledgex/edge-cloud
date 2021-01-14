@@ -503,3 +503,18 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *AppInstKey) IsValidArgsForStreamAppInst() error {
+	return nil
+}
+
+func (m *ClusterInstKey) IsValidArgsForStreamClusterInst() error {
+	return nil
+}
+
+func (m *CloudletKey) IsValidArgsForStreamCloudlet() error {
+	return nil
+}
+
+func (m *AppInstKey) IsValidArgsForStreamLocalMsgs() error {
+	return nil
+}

@@ -265,7 +265,6 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 }
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
-	in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	return s.createAppInstInternal(DefCallContext(), in, cb)
 }
 
@@ -410,7 +409,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
-		in.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
+		in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	}
 	cctx.SetOverride(&in.CrmOverride)
 
@@ -467,9 +466,24 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if app.DeletePrepare {
 			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
-		if cloudlet.TrustPolicy != "" && !app.Trusted {
-			return fmt.Errorf("Cannot start non Trusted App on Trusted cloudlet")
+		if cloudlet.TrustPolicy != "" {
+			if !app.Trusted {
+				return fmt.Errorf("Cannot start non trusted App on trusted cloudlet")
+			}
+			trustPolicy := edgeproto.TrustPolicy{}
+			tpKey := edgeproto.PolicyKey{
+				Name:         cloudlet.TrustPolicy,
+				Organization: cloudlet.Key.Organization,
+			}
+			if !trustPolicyApi.store.STMGet(stm, &tpKey, &trustPolicy) {
+				return errors.New("Trust Policy for cloudlet not found")
+			}
+			err = CheckAppCompatibleWithTrustPolicy(&app, &trustPolicy)
+			if err != nil {
+				return fmt.Errorf("App is not compatible with cloudlet trust policy: %v", err)
+			}
 		}
+
 		if app.Deployment == cloudcommon.DeploymentTypeVM && in.AutoClusterIpAccess != edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			return fmt.Errorf("Cannot specify AutoClusterIpAccess if deployment type is VM")
 		}
@@ -603,6 +617,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			clusterInst.NumMasters = 1
 			clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
 		}
+		clusterInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err

@@ -864,7 +864,13 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 	if policyName == "" {
 		targetState = edgeproto.TrackedState_NOT_PRESENT
 	}
-	return s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
+	err = s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
+	if err == nil {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String())})
+	} else {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
+	}
+	return err
 }
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_UpdateCloudletServer) (reterr error) {
@@ -973,8 +979,8 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				}
 			}
 			if in.TrustPolicy != "" {
-				if !supportsTrustPolicy(in.PlatformType) {
-					platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+				if !supportsTrustPolicy(cur.PlatformType) {
+					platName := edgeproto.PlatformType_name[int32(cur.PlatformType)]
 					return fmt.Errorf("Trust Policy not supported on %s", platName)
 				}
 				policy := edgeproto.TrustPolicy{}
@@ -1029,6 +1035,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	// since default maintenance state is NORMAL_OPERATION, it is better to check
 	// if the field is set before handling maintenance state
 	if _, found := fmap[edgeproto.CloudletFieldMaintenanceState]; !found || !maintenanceChanged {
+		cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 		return nil
 	}
 	switch newMaintenanceState {
@@ -1145,7 +1152,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			Message: "Cloudlet is in maintenance",
 		})
 	}
-	cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 	return nil
 }
 
@@ -1706,10 +1712,8 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, Trust
 		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
 		if result.errString == "" {
 			numPassed++
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful update of %s", k.GetKeyString())})
 		} else {
 			numFailed++
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failure during update of %s - %s", k.String(), result.errString)})
 		}
 	}
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})

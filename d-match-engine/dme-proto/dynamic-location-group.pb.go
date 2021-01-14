@@ -538,6 +538,10 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *DlgMessage) IsValidArgsForSendToGroup() error {
+	return nil
+}
+
 func (m *DlgMessage) Size() (n int) {
 	if m == nil {
 		return 0

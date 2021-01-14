@@ -850,6 +850,49 @@ func IgnoreDebugDataFields(taglist string) cmp.Option {
 	return cmpopts.IgnoreFields(DebugData{}, names...)
 }
 
+func (m *DebugRequest) IsValidArgsForEnableDebugLevels() error {
+	if m.Cmd != "" {
+		return fmt.Errorf("Invalid field specified: Cmd, this field is only for internal use")
+	}
+	if m.Id != 0 {
+		return fmt.Errorf("Invalid field specified: Id, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *DebugRequest) IsValidArgsForDisableDebugLevels() error {
+	if m.Cmd != "" {
+		return fmt.Errorf("Invalid field specified: Cmd, this field is only for internal use")
+	}
+	if m.Id != 0 {
+		return fmt.Errorf("Invalid field specified: Id, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *DebugRequest) IsValidArgsForShowDebugLevels() error {
+	if m.Cmd != "" {
+		return fmt.Errorf("Invalid field specified: Cmd, this field is only for internal use")
+	}
+	if m.Id != 0 {
+		return fmt.Errorf("Invalid field specified: Id, this field is only for internal use")
+	}
+	if m.Levels != "" {
+		return fmt.Errorf("Invalid field specified: Levels, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *DebugRequest) IsValidArgsForRunDebug() error {
+	if m.Id != 0 {
+		return fmt.Errorf("Invalid field specified: Id, this field is only for internal use")
+	}
+	if m.Levels != "" {
+		return fmt.Errorf("Invalid field specified: Levels, this field is only for internal use")
+	}
+	return nil
+}
+
 func (m *DebugRequest) Size() (n int) {
 	if m == nil {
 		return 0
