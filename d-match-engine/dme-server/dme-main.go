@@ -559,7 +559,7 @@ func main() {
 		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
 		nodePublicCertApi := node.NewNodePublicCertApi(accessClient)
 		// Setup public cert manager for cloudletdme
-		publicCertManager = node.NewPublicCertManager(*publicAddr, nodePublicCertApi)
+		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), nodePublicCertApi)
 		publicCertManager.StartRefresh()
 	} else {
 		// DME has direct access to vault
@@ -571,7 +571,7 @@ func main() {
 			getPublicCertApi = &node.TestPublicCertApi{}
 		}
 		// Setup PublicCertManager for non cloudletdme
-		publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
+		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), getPublicCertApi)
 		publicCertManager.StartRefresh()
 	}
 	// Get TLS Config for grpc Creds from PublicCertManager

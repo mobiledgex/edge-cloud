@@ -397,6 +397,9 @@ func (p *Dme) getTlsConfig() *tls.Config {
 		config := &tls.Config{
 			RootCAs: certPool,
 		}
+		// skip verifying cert for local dme, because local dme certs will be self-signed
+		config.InsecureSkipVerify = true
+
 		return config
 	}
 	// no TLS
