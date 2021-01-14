@@ -71,16 +71,15 @@ func (s *AppInstClientApi) ClearRecvChan(ctx context.Context, in *edgeproto.AppI
 				delete(s.recvChans, *in)
 				appInstClientKeyApi.Delete(ctx, in, 0)
 				// We also need to clean up our local buffer - it will be out of sync since DME won't update it
-				for ii, client := range s.appInstClients {
+				jj := 0
+				for _, client := range s.appInstClients {
 					if client.ClientKey.Matches(in, edgeproto.MatchFilter()) {
-						if len(s.appInstClients) > ii+1 {
-							s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
-						} else {
-							// if this is already the last element
-							s.appInstClients = s.appInstClients[:ii]
-						}
+						continue
 					}
+					s.appInstClients[jj] = client
+					jj++
 				}
+				s.appInstClients = s.appInstClients[:jj]
 			}
 			return retLen
 		}
@@ -111,13 +110,7 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 		// Found the same client from before
 		if c.ClientKey.UniqueId == client.ClientKey.UniqueId &&
 			c.ClientKey.UniqueIdType == client.ClientKey.UniqueIdType {
-			if len(s.appInstClients) > ii+1 {
-				// remove this client the and append it at the end, since it's new
-				s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
-			} else {
-				// if this is already the last element
-				s.appInstClients = s.appInstClients[:ii]
-			}
+			s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
 			break
 		}
 	}

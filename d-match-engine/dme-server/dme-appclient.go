@@ -35,16 +35,8 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 			// Found the same client from before
 			if c.ClientKey.UniqueId == msg.ClientKey.UniqueId &&
 				c.ClientKey.UniqueIdType == msg.ClientKey.UniqueIdType {
-				if len(clientsMap.clientsByApp[mapKey]) > ii+1 {
-					// remove this client the and append it at the end, since it's new
-					clientsMap.clientsByApp[mapKey] =
-						append(clientsMap.clientsByApp[mapKey][:ii],
-							clientsMap.clientsByApp[mapKey][ii+1:]...)
-				} else {
-					// if this is already the last element
-					clientsMap.clientsByApp[mapKey] =
-						clientsMap.clientsByApp[mapKey][:ii]
-				}
+				clientsMap.clientsByApp[mapKey] = append(clientsMap.clientsByApp[mapKey][:ii],
+					clientsMap.clientsByApp[mapKey][ii+1:]...)
 				break
 			}
 		}
@@ -70,20 +62,19 @@ func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 	defer clientsMap.Unlock()
 	_, found := clientsMap.clientsByApp[msg.AppKey]
 	if found {
-		// walk the list and delete all individual clients
-		for ii, c := range clientsMap.clientsByApp[msg.AppKey] {
+		// walk the list and keep only the clients that don't match the filter
+		jj := 0
+		for _, c := range clientsMap.clientsByApp[msg.AppKey] {
 			// Remove matching clients
 			if msg.AppKey.Matches(&c.ClientKey.AppInstKey.AppKey) &&
 				msg.ClusterInstKey.CloudletKey.Matches(&c.ClientKey.AppInstKey.ClusterInstKey.CloudletKey) {
-				if len(clientsMap.clientsByApp[msg.AppKey]) > ii+1 {
-					clientsMap.clientsByApp[msg.AppKey] = append(clientsMap.clientsByApp[msg.AppKey][:ii],
-						clientsMap.clientsByApp[msg.AppKey][ii+1:]...)
-				} else {
-					clientsMap.clientsByApp[msg.AppKey] =
-						clientsMap.clientsByApp[msg.AppKey][:ii]
-				}
+				continue
 			}
+			clientsMap.clientsByApp[msg.AppKey][jj] = c
+			jj++
 		}
+		// truncate the list
+		clientsMap.clientsByApp[msg.AppKey] = clientsMap.clientsByApp[msg.AppKey][:jj]
 	}
 }
 

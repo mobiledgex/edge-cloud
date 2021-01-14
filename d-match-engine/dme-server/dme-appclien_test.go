@@ -51,5 +51,16 @@ func TestAddClients(t *testing.T) {
 		require.NotEqual(t, c, dmetest.AppInstClientData[2])
 	}
 
+	require.Equal(t, 2, len(clientsMap.clientsByApp))
+
 	// test deletion of AppInstances
+	PurgeAppInstClients(ctx, &dmetest.AppInstClientData[1].ClientKey.AppInstKey)
+	list, found = clientsMap.clientsByApp[dmetest.AppInstClientData[1].ClientKey.AppInstKey.AppKey]
+	require.True(t, found)
+	require.Equal(t, 0, len(list))
+
+	PurgeAppInstClients(ctx, &dmetest.AppInstClientData[0].ClientKey.AppInstKey)
+	list, found = clientsMap.clientsByApp[dmetest.AppInstClientData[0].ClientKey.AppInstKey.AppKey]
+	require.True(t, found)
+	require.Equal(t, 0, len(list))
 }
