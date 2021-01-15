@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync"
 
@@ -14,7 +15,7 @@ import (
 type AppInstClientApi struct {
 	queueMux       sync.Mutex
 	appInstClients []*edgeproto.AppInstClient
-	clientChan     map[edgeproto.AppInstKey][]chan edgeproto.AppInstClient
+	recvChans      map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient
 }
 
 var appInstClientApi = AppInstClientApi{}
@@ -23,100 +24,106 @@ var appInstClientSendMany *notify.AppInstClientSendMany
 func InitAppInstClientApi() {
 	appInstClientSendMany = notify.NewAppInstClientSendMany()
 	appInstClientApi.appInstClients = make([]*edgeproto.AppInstClient, 0)
-	appInstClientApi.clientChan = make(map[edgeproto.AppInstKey][]chan edgeproto.AppInstClient)
+	appInstClientApi.recvChans = make(map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient)
 }
 
 func (s *AppInstClientApi) SetRecvChan(ctx context.Context, in *edgeproto.AppInstClientKey, ch chan edgeproto.AppInstClient) {
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
-	_, found := s.clientChan[in.Key]
+	_, found := s.recvChans[*in]
 	if !found {
-		s.clientChan[in.Key] = []chan edgeproto.AppInstClient{ch}
+		s.recvChans[*in] = []chan edgeproto.AppInstClient{ch}
 	} else {
-		s.clientChan[in.Key] = append(s.clientChan[in.Key], ch)
+		s.recvChans[*in] = append(s.recvChans[*in], ch)
+	}
+
+	// Send cached clients out in a separate go routine
+	// this way reading and writing to this channel will happen simultaneously
+	go func() {
+		// use filter match option, since not all parts of the key may be set
 		for ii, client := range s.appInstClients {
-			if client.ClientKey.Key.Matches(&in.Key) {
+			if client.ClientKey.Matches(in, edgeproto.MatchFilter()) {
 				ch <- *s.appInstClients[ii]
 			}
 		}
-	}
-	if !appInstClientKeyApi.HasApp(&in.Key) {
-		appInstClientKeyApi.Update(ctx, in, 0)
-	}
+		// request new clients only after we sent out the cached ones
+		if !appInstClientKeyApi.HasKey(in) {
+			appInstClientKeyApi.Update(ctx, in, 0)
+		}
+	}()
 }
 
 // Returns number of channels in the list that are left
 func (s *AppInstClientApi) ClearRecvChan(ctx context.Context, in *edgeproto.AppInstClientKey, ch chan edgeproto.AppInstClient) int {
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
-	_, found := s.clientChan[in.Key]
+	_, found := s.recvChans[*in]
 	if !found {
-		log.SpanLog(ctx, log.DebugLevelApi, "No client channels found for appInst", "appInst", in.Key)
+		log.SpanLog(ctx, log.DebugLevelApi, "No client channels found for appInst", "appInst", in.AppInstKey)
 		return -1
 	}
-	for ii, c := range s.clientChan[in.Key] {
+	for ii, c := range s.recvChans[*in] {
 		if c == ch {
 			// Found channel - delete it
-			s.clientChan[in.Key] = append(s.clientChan[in.Key][:ii], s.clientChan[in.Key][ii+1:]...)
-			retLen := len(s.clientChan[in.Key])
+			s.recvChans[*in] = append(s.recvChans[*in][:ii], s.recvChans[*in][ii+1:]...)
+			retLen := len(s.recvChans[*in])
 			if retLen == 0 {
-				delete(s.clientChan, in.Key)
+				delete(s.recvChans, *in)
 				appInstClientKeyApi.Delete(ctx, in, 0)
 				// We also need to clean up our local buffer - it will be out of sync since DME won't update it
-				for ii, client := range s.appInstClients {
-					if client.ClientKey.Key.Matches(&in.Key) {
-						if len(s.appInstClients) > ii+1 {
-							s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
-						} else {
-							// if this is already the last element
-							s.appInstClients = s.appInstClients[:ii]
-						}
+				jj := 0
+				for _, client := range s.appInstClients {
+					if client.ClientKey.Matches(in, edgeproto.MatchFilter()) {
+						continue
 					}
+					s.appInstClients[jj] = client
+					jj++
 				}
+				s.appInstClients = s.appInstClients[:jj]
 			}
 			return retLen
 		}
 	}
 	// We didn't find a channel....log it and return -1
-	log.SpanLog(ctx, log.DebugLevelApi, "Channel not found", "key", in.Key, "chan", ch)
+	log.SpanLog(ctx, log.DebugLevelApi, "Channel not found", "key", in, "chan", ch)
 	return -1
 }
 
 func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgeproto.AppInstClient) {
 	s.queueMux.Lock()
 	defer s.queueMux.Unlock()
-	if client != nil {
-		cList, found := s.clientChan[client.ClientKey.Key]
-		if !found {
-			log.SpanLog(ctx, log.DebugLevelApi, "No receivers for this appInst")
-			return
+	if client == nil {
+		return
+	}
+	sendList := []chan edgeproto.AppInstClient{}
+	for k, cList := range s.recvChans {
+		if client.ClientKey.Matches(&k, edgeproto.MatchFilter()) {
+			sendList = append(sendList, cList...)
 		}
-		// We need to either update, or add the client to the list
-		for ii, c := range s.appInstClients {
-			// Found the same client from before
-			if c.ClientKey.UniqueId == client.ClientKey.UniqueId &&
-				c.ClientKey.UniqueIdType == client.ClientKey.UniqueIdType {
-				if len(s.appInstClients) > ii+1 {
-					// remove this client the and append it at the end, since it's new
-					s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
-				} else {
-					// if this is already the last element
-					s.appInstClients = s.appInstClients[:ii]
-				}
-				break
-			}
+	}
+	if len(sendList) == 0 {
+		log.SpanLog(ctx, log.DebugLevelApi, "No receivers for this key", "client", client)
+		return
+	}
+	// We need to either update, or add the client to the list
+	for ii, c := range s.appInstClients {
+		// Found the same client from before
+		if c.ClientKey.UniqueId == client.ClientKey.UniqueId &&
+			c.ClientKey.UniqueIdType == client.ClientKey.UniqueIdType {
+			s.appInstClients = append(s.appInstClients[:ii], s.appInstClients[ii+1:]...)
+			break
 		}
-		// Queue full - remove the oldest one(first) and append the new one
-		if len(s.appInstClients) == int(settingsApi.Get().MaxTrackedDmeClients) {
-			s.appInstClients = s.appInstClients[1:]
-		}
-		s.appInstClients = append(s.appInstClients, client)
-		for _, c := range cList {
-			if c != nil {
-				c <- *client
-			} else {
-				log.SpanLog(ctx, log.DebugLevelApi, "Nil Channel")
-			}
+	}
+	// Queue full - remove the oldest one(first) and append the new one
+	if len(s.appInstClients) == int(settingsApi.Get().MaxTrackedDmeClients) {
+		s.appInstClients = s.appInstClients[1:]
+	}
+	s.appInstClients = append(s.appInstClients, client)
+	for _, c := range sendList {
+		if c != nil {
+			c <- *client
+		} else {
+			log.SpanLog(ctx, log.DebugLevelApi, "Nil Channel")
 		}
 	}
 }
@@ -152,14 +159,14 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 	var connsMux sync.Mutex
 	var ctrlConns []*grpc.ClientConn
 
-	// Check if the AppInst exists
-	if !appInstApi.HasKey(&in.Key) {
-		return in.Key.NotFoundError()
+	// Check that the appinst org is specified
+	if in.AppInstKey.AppKey.Organization == "" {
+		return fmt.Errorf("Organization must be specified")
 	}
 
 	// Since we don't care about the cluster developer and name set them to ""
-	in.Key.ClusterInstKey.ClusterKey.Name = ""
-	in.Key.ClusterInstKey.Organization = ""
+	in.AppInstKey.ClusterInstKey.ClusterKey.Name = ""
+	in.AppInstKey.ClusterInstKey.Organization = ""
 
 	ctrlConns = make([]*grpc.ClientConn, 0)
 	done := false
@@ -228,7 +235,6 @@ func (s *AppInstClientApi) Flush(ctx context.Context, notifyId int64) {}
 
 type AppInstClientKeyApi struct {
 	sync  *Sync
-	store edgeproto.AppInstClientKeyStore
 	cache edgeproto.AppInstClientKeyCache
 }
 
@@ -236,7 +242,6 @@ var appInstClientKeyApi = AppInstClientKeyApi{}
 
 func InitAppInstClientKeyApi(sync *Sync) {
 	appInstClientKeyApi.sync = sync
-	appInstClientKeyApi.store = edgeproto.NewAppInstClientKeyStore(sync.store)
 	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyApi.cache)
 	sync.RegisterCache(&appInstClientKeyApi.cache)
 }
@@ -255,6 +260,6 @@ func (s *AppInstClientKeyApi) Flush(ctx context.Context, notifyId int64) {
 
 func (s *AppInstClientKeyApi) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {}
 
-func (s *AppInstClientKeyApi) HasApp(key *edgeproto.AppInstKey) bool {
+func (s *AppInstClientKeyApi) HasKey(key *edgeproto.AppInstClientKey) bool {
 	return s.cache.HasKey(key)
 }

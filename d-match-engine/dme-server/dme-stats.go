@@ -200,7 +200,7 @@ func getCellIdFromDmeReq(req interface{}) uint32 {
 func getAppInstClient(appname, appver, apporg string, loc *dme.Loc) *edgeproto.AppInstClient {
 	return &edgeproto.AppInstClient{
 		ClientKey: edgeproto.AppInstClientKey{
-			Key: edgeproto.AppInstKey{
+			AppInstKey: edgeproto.AppInstKey{
 				AppKey: edgeproto.AppKey{
 					Organization: apporg,
 					Name:         appname,
@@ -324,7 +324,7 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		if createClient {
 			client := getAppInstClient(call.key.AppKey.Name, call.key.AppKey.Version, call.key.AppKey.Organization, loc)
 			if client != nil {
-				client.ClientKey.Key.ClusterInstKey.CloudletKey = call.key.CloudletFound
+				client.ClientKey.AppInstKey.ClusterInstKey.CloudletKey = call.key.CloudletFound
 				client.ClientKey.UniqueId = ckey.UniqueId
 				client.ClientKey.UniqueIdType = ckey.UniqueIdType
 				// GpsLocation timestamp can carry an arbitrary system time instead of a timestamp

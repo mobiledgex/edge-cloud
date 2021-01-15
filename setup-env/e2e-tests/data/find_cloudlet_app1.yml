@@ -4,6 +4,8 @@ registerclientrequest:
   appvers: "1.0"
   authtoken: "GENTOKEN:authtoken_private.pem"
   cellid: 1234
+  uniqueidtype: E2E-test-uuid
+  uniqueid: "456"
 findcloudletrequest:
   carriername: 31026
   gpslocation:
