@@ -30,6 +30,21 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
 
+- name: start AppInstClients stream for app1
+  apifile: "{{datadir}}/appinstclientkey_app1_cloud1.yml"
+  actions: [clientshow-start=1]
+
+- name: Wait as sec for the client to be detected
+  actions: [sleep=1]
+
+- name: stop and check AppInstClients stream for app1
+  apifile: "{{datadir}}/appinstclientkey_app1_cloud1.yml"
+  actions: [clientshow-stop=1]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-appinstclients-1.yml"
+    yaml2: "{{datadir}}/show_appinstclient_app1_cloud1.yml"
+    filetype: raw
+
 - includefile: get_app_official_fqdn_app1.yml
 
 - includefile: register_platos.yml
@@ -57,6 +72,21 @@ tests:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
+
+- name: start AppInstClients stream for app1 on dmuus-cloud-2
+  apifile: "{{datadir}}/appinstclientkey_app1_cloud2.yml"
+  actions: [clientshow-start=1]
+
+- name: Wait as sec for the client to be detected
+  actions: [sleep=1]
+
+- name: stop and check AppInstClients stream for app1 on dmuus-cloud-2
+  apifile: "{{datadir}}/appinstclientkey_app1_cloud2.yml"
+  actions: [clientshow-stop=1]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-appinstclients-1.yml"
+    yaml2: "{{datadir}}/show_appinstclient_app1_cloud2.yml"
+    filetype: raw
 
 - name: find cloudlet app1 carrier any
   apifile: "{{datadir}}/find_cloudlet_app1any.yml"

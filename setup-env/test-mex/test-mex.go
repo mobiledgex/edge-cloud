@@ -54,6 +54,7 @@ var actionChoices = map[string]string{
 	"cleancerts": "",
 	"cmds":       "",
 	"sleep":      "seconds",
+	"clientshow": "workerId",
 }
 
 func printUsage() {
