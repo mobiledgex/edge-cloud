@@ -1,0 +1,12 @@
+clientkey:
+  appinstkey:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+  uniqueid: "456"
+  uniqueidtype: E2E-test-uuid

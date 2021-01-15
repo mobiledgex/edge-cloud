@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,6 +41,9 @@ func TestAppInstClientApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	cplookup := &node.CloudletPoolCache{}
+	cplookup.Init()
+	nodeMgr.CloudletPoolLookup = cplookup
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -60,14 +65,22 @@ func TestAppInstClientApi(t *testing.T) {
 	// Add a client for a non-existent AppInst
 	appInstClientApi.RecvAppInstClient(ctx, &testutil.AppInstClientData[0])
 	// Make sure that we didn't save it
-	err = appInstClientApi.ShowAppInstClient(&testutil.AppInstClientKeyData[0], &showServer)
-	require.NotNil(t, err, "Found an unexpected client")
-	require.Contains(t, err.Error(), testutil.AppInstClientKeyData[0].Key.NotFoundError().Error())
+	require.Empty(t, appInstClientApi.appInstClients)
+	// Try to do a show without an org in the ClientKey
+	err = appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{UniqueId: "123"}, &showServer)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Organization must be specified")
+	err = appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{AppInstKey: edgeproto.AppInstKey{}}, &showServer)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Organization must be specified")
 
 	// Tests to verify that queue is being handled correctly
 	// Add a channel for appInst1
 	ch1 := make(chan edgeproto.AppInstClient, qSize)
 	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch1)
+	// Wait for local cache since it's in a separate go routine
+	notify.WaitFor(&appInstClientKeyApi.cache, 1)
+
 	// Add Client for AppInst1
 	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[0])
 	// Check client is received in the channel
@@ -76,6 +89,9 @@ func TestAppInstClientApi(t *testing.T) {
 	// 3. Add a second channel for the different appInst
 	ch2 := make(chan edgeproto.AppInstClient, qSize)
 	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
+	// Wait for local cache since it's in a separate go routine
+	notify.WaitFor(&appInstClientKeyApi.cache, 2)
+
 	// Add a Client for AppInst2
 	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[3])
 	// Check client is received in the channel 2
@@ -92,9 +108,12 @@ func TestAppInstClientApi(t *testing.T) {
 	// Add a second Channel for AppInst1
 	ch12 := make(chan edgeproto.AppInstClient, qSize)
 	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch12)
+	// Wait for local cache since it's in a separate go routine
+	notify.WaitFor(&appInstClientKeyApi.cache, 2)
+
 	// Add a client 2 for AppInst1
 	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[1])
-	// Check that both of the channels recieve the AppInstClient
+	// Check that both of the channels receive the AppInstClient
 	appInstClient = <-ch1
 	assert.Equal(t, testutil.AppInstClientData[1], appInstClient)
 	appInstClient = <-ch12
