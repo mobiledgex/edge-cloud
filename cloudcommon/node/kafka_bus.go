@@ -36,7 +36,7 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 	}
 	cloudlet := edgeproto.Cloudlet{}
 	var producer *sarama.SyncProducer
-	if !s.CloudletLookup.Get(&cloudletKey, &cloudlet) {
+	if !s.CloudletLookup.GetCloudlet(event.Region, &cloudletKey, &cloudlet) {
 		if event.Name == "cloudlet deleted" { // TODO: figure out the actual cloudlet deleted event name
 			producer, ok = producers[cloudletKey]
 			if !ok { // the cloudlet didnt have a kafka endpoint specified in the first place
@@ -102,20 +102,22 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 	}
 	fmt.Printf("4\n")
 
-	// TODO: CHANGE THIS WHEN JON'S CHANGES FOR PRETAGGING EVENTS COME IN (EC-3465)
-	// make sure the operator has permission to view this event
-	// if event.Org != orgName {
-	// 	fmt.Printf("org names mismatch: event.Org: %s, orgName: %s\n", event.Org, orgName)
-	// 	return
-	// }
-
 	//split the events into two main topics, "operator events" and "developer events"
-	//TODO: turns this into a "contains"
 	// if there are other orgs tagged besides the operator org and "mobiledgex", its a dev event
 	// TODO: add a third prefix for events that we do?
+	allowed := false
 	topic := topic_prefix_operator + "-" + cloudletName
-	if event.Org != orgName && event.Org != cloudcommon.OrganizationMobiledgeX {
-		topic = topic_prefix_developer + "-" + cloudletName
+	for _, eventorg := range event.Org {
+		if eventorg == orgName {
+			allowed = true
+		}
+		if eventorg != orgName && eventorg != cloudcommon.OrganizationMobiledgeX {
+			topic = topic_prefix_developer + "-" + cloudletName
+		}
+	}
+	// make sure the operator has permission to view this event
+	if !allowed {
+		return
 	}
 
 	message := &sarama.ProducerMessage{

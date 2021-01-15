@@ -148,16 +148,15 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 
 	if s.CloudletPoolLookup == nil {
 		// single region lookup for events
-		lookup := &CloudletPoolCache{}
-		lookup.Init()
-		s.CloudletPoolLookup = lookup
+		cPoolLookup := &CloudletPoolCache{}
+		cPoolLookup.Init()
+		s.CloudletPoolLookup = cPoolLookup
 	}
 
 	if s.CloudletLookup == nil {
-		// single region lookup for events
-		lookup := &CloudletCache{}
-		lookup.Init()
-		s.CloudletLookup = lookup
+		cloudletLookup := &CloudletCache{}
+		cloudletLookup.Init()
+		s.CloudletLookup = cloudletLookup
 	}
 	err = s.initEvents(ctx, opts)
 	if err != nil {

@@ -45,7 +45,6 @@ var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from Le
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var chefServerPath = flag.String("chefServerPath", "", "Chef server path")
 var upgrade = flag.Bool("upgrade", false, "Flag to initiate upgrade run as part of crm bringup")
-var kafkaCluster = flag.String("kafkaCluster", "", "Address of kafka endpoint to push messages to")
 
 // myCloudletInfo is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudletInfo is provided as a configuration - either command line or
