@@ -1222,6 +1222,8 @@ var AllKeyTags = []string{
 	"policyorg",
 	"restagtable",
 	"restagtableorg",
+	"uniqueid",
+	"uniqueidtype",
 	"vmpool",
 	"vmpoolorg",
 }
@@ -1247,6 +1249,8 @@ var AllKeyTagsMap = map[string]struct{}{
 	"policyorg":       struct{}{},
 	"restagtable":     struct{}{},
 	"restagtableorg":  struct{}{},
+	"uniqueid":        struct{}{},
+	"uniqueidtype":    struct{}{},
 	"vmpool":          struct{}{},
 	"vmpoolorg":       struct{}{},
 }

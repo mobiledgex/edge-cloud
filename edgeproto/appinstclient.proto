@@ -13,22 +13,26 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
-// AppKey uniquely identifies an App
 message AppInstClientKey {
   // AppInst Key
-  AppInstKey key = 1 [(gogoproto.nullable) = false];
+  AppInstKey app_inst_key = 1 [(protogen.keytag) = "appinstkey", (gogoproto.nullable) = false];
   // AppInstClient Unique Id
-  string unique_id = 2;
+  string unique_id = 2 [(protogen.keytag) = "uniqueid"];
   // AppInstClient Unique Id Type
-  string unique_id_type = 3;
+  string unique_id_type = 3 [(protogen.keytag) = "uniqueidtype"];
 
+//  AppInstClientLookupKey key = 1 [(gogoproto.nullable) = false];
+
+  option (protogen.obj_and_key) = true;
   option (protogen.notify_message) = true;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization";
+  option (protogen.not_required) = "AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization,UniqueId,UniqueIdType";
+  option (protogen.alias) = "uniqueid=UniqueId,uniqueidtype=UniqueIdType,appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization";
   option (protogen.uses_org) = "none";
+  option (gogoproto.gostring) = true;
 }
 
 
@@ -39,7 +43,7 @@ message AppInstClient {
   // Unique identifier key
   AppInstClientKey client_key = 2 [(gogoproto.nullable) = false];
   // Location of the Client
-  distributed_match_engine.Loc location = 3 [(gogoproto.nullable) = false];
+  distributed_match_engine.Loc location = 3 [(gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Id of client assigned by server (internal use only)
   int64 notify_id = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
 
@@ -55,7 +59,7 @@ service AppInstClientApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,Key.AppKey.Organization";
+    option (protogen.mc2_api) = "ResourceAppAnalytics,ActionView,AppInstKey.AppKey.Organization";
     option (protogen.non_standard_show) = true;
   }
   // This is used unternally to forward AppInstClients to other Controllers
