@@ -56,8 +56,8 @@ func GetClientCertPool(tlsCertFile string, caCertFile string) (*x509.CertPool, e
 }
 
 // GetTLSClientDialOption gets GRPC options needed for TLS connection
-func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bool) (grpc.DialOption, error) {
-	config, err := GetTLSClientConfig(serverAddr, tlsCertFile, "", skipVerify)
+func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bool, getCertFunc func(*tls.ClientHelloInfo) (*tls.Certificate, error)) (grpc.DialOption, error) {
+	config, err := GetTLSClientConfig(serverAddr, tlsCertFile, "", skipVerify, getCertFunc)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +68,8 @@ func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bo
 // is blank, no validation is done on the cert.  CaCertFile is specified when communicating to
 // exernal servers with their own privately signed certs.  Leave this blank to use the mex-ca.crt.
 // Skipverify is only to be used for internal connections such as GRPCGW to GRPC.
-func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string, skipVerify bool) (*tls.Config, error) {
-	if tlsCertFile == "" {
+func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string, skipVerify bool, getCertFunc func(*tls.ClientHelloInfo) (*tls.Certificate, error)) (*tls.Config, error) {
+	if tlsCertFile == "" && getCertFunc == nil {
 		return nil, nil
 	}
 	certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
@@ -81,26 +81,31 @@ func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string
 		return nil, err
 	}
 
+	var tlscfg *tls.Config
 	if serverAddr != "" {
 		serverName := strings.Split(serverAddr, ":")[0]
-		return &tls.Config{
+		tlscfg = &tls.Config{
 			ServerName:         serverName,
 			InsecureSkipVerify: skipVerify,
-			Certificates:       []tls.Certificate{certificate},
 			RootCAs:            certPool,
-		}, nil
+		}
 	} else {
 		// do not validate the server address.
-		return &tls.Config{
+		tlscfg = &tls.Config{
 			InsecureSkipVerify: skipVerify,
-			Certificates:       []tls.Certificate{certificate},
 			RootCAs:            certPool,
-		}, nil
+		}
 	}
+
+	if tlsCertFile == "" && getCertFunc != nil {
+		tlscfg.GetCertificate = getCertFunc
+	} else {
+		tlscfg.Certificates = []tls.Certificate{certificate}
+	}
+	return tlscfg, nil
 }
 
 func GetGrpcDialOption(config *tls.Config) grpc.DialOption {
-
 	if config == nil {
 		// no TLS
 		return grpc.WithInsecure()

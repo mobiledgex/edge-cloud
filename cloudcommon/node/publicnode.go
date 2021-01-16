@@ -119,12 +119,12 @@ func (s *PublicCertManager) GetServerTlsConfig(ctx context.Context) (*tls.Config
 	config := &tls.Config{
 		MinVersion:     tls.VersionTLS12,
 		ClientAuth:     tls.NoClientCert,
-		GetCertificate: s.getCertificateFunc(),
+		GetCertificate: s.GetCertificateFunc(),
 	}
 	return config, nil
 }
 
-func (s *PublicCertManager) getCertificateFunc() func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (s *PublicCertManager) GetCertificateFunc() func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
 	return func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
 		s.mux.Lock()
 		defer s.mux.Unlock()
