@@ -563,7 +563,7 @@ var ClusterInstComments = map[string]string{
 	"flavor":                                 "Flavor name",
 	"liveness":                               "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"auto":                                   "Auto is set to true when automatically created by back-end (internal use only)",
-	"state":                                  "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"state":                                  "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 	"errors":                                 "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
 	"crmoverride":                            "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"ipaccess":                               "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
@@ -593,13 +593,11 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"resources.info:#.name":                  "Resource name",
 	"resources.info:#.value":                 "Resource value",
-	"resources.provisionedclusters":          "Provisioned Clusters",
 }
 var ClusterInstSpecialArgs = map[string]string{
-	"errors":                        "StringArray",
-	"fields":                        "StringArray",
-	"resources.provisionedclusters": "StringToString",
-	"status.msgs":                   "StringArray",
+	"errors":      "StringArray",
+	"fields":      "StringArray",
+	"status.msgs": "StringArray",
 }
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
@@ -630,7 +628,6 @@ var ClusterInstInfoOptionalArgs = []string{
 	"resources.vms:#.containers:#.restarts",
 	"resources.info:#.name",
 	"resources.info:#.value",
-	"resources.provisionedclusters",
 }
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
@@ -640,7 +637,7 @@ var ClusterInstInfoComments = map[string]string{
 	"key.cloudletkey.name":                   "Name of the cloudlet",
 	"key.organization":                       "Name of Developer organization that this cluster belongs to",
 	"notifyid":                               "Id of client assigned by server (internal use only)",
-	"state":                                  "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"state":                                  "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 	"errors":                                 "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
 	"resources.vms:#.name":                   "Virtual machine name",
 	"resources.vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
@@ -653,13 +650,11 @@ var ClusterInstInfoComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"resources.info:#.name":                  "Resource name",
 	"resources.info:#.value":                 "Resource value",
-	"resources.provisionedclusters":          "Provisioned Clusters",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
-	"errors":                        "StringArray",
-	"fields":                        "StringArray",
-	"resources.provisionedclusters": "StringToString",
-	"status.msgs":                   "StringArray",
+	"errors":      "StringArray",
+	"fields":      "StringArray",
+	"status.msgs": "StringArray",
 }
 var UpdateClusterInstRequiredArgs = []string{
 	"cluster",

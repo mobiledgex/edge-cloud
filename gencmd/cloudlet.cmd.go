@@ -546,6 +546,120 @@ func GetCloudletPropss(c *cli.Command, data []edgeproto.CloudletProps, err *erro
 	}
 }
 
+var GetCloudletInfraResourcesCmd = &cli.Command{
+	Use:          "GetCloudletInfraResources",
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.InfraResources{},
+	Run:          runGetCloudletInfraResources,
+}
+
+func runGetCloudletInfraResources(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletInfraResources(c, obj)
+}
+
+func GetCloudletInfraResources(c *cli.Command, in *edgeproto.CloudletKey) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletInfraResources(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletInfraResources failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletInfraResourcess(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletInfraResources %v\n", data[ii])
+		myerr := GetCloudletInfraResources(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RefreshCloudletInfraResourcesCmd = &cli.Command{
+	Use:          "RefreshCloudletInfraResources",
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRefreshCloudletInfraResources,
+}
+
+func runRefreshCloudletInfraResources(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RefreshCloudletInfraResources(c, obj)
+}
+
+func RefreshCloudletInfraResources(c *cli.Command, in *edgeproto.CloudletKey) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.RefreshCloudletInfraResources(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RefreshCloudletInfraResources failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RefreshCloudletInfraResourcess(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RefreshCloudletInfraResources %v\n", data[ii])
+		myerr := RefreshCloudletInfraResources(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AddCloudletResMappingCmd = &cli.Command{
 	Use:          "AddCloudletResMapping",
 	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
@@ -838,6 +952,8 @@ var CloudletApiCmds = []*cobra.Command{
 	ShowCloudletCmd.GenCmd(),
 	GetCloudletManifestCmd.GenCmd(),
 	GetCloudletPropsCmd.GenCmd(),
+	GetCloudletInfraResourcesCmd.GenCmd(),
+	RefreshCloudletInfraResourcesCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
@@ -1302,7 +1418,7 @@ var CloudletComments = map[string]string{
 	"timelimits.updateappinsttimeout":     "override default max time to update an app instance (duration)",
 	"timelimits.deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 	"errors":                              "Any errors trying to create, update, or delete the Cloudlet.",
-	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
 	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2",
@@ -1347,7 +1463,7 @@ var CloudletComments = map[string]string{
 	"crmaccesspublickey":                  "CRM access public key",
 	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
 	"trustpolicy":                         "Optional Trust Policy",
-	"trustpolicystate":                    "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"trustpolicystate":                    "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1445,25 +1561,6 @@ var FlavorInfoComments = map[string]string{
 var FlavorInfoSpecialArgs = map[string]string{
 	"propmap": "StringToString",
 }
-var VMResourceRequiredArgs = []string{}
-var VMResourceOptionalArgs = []string{
-	"vmflavor.name",
-	"vmflavor.vcpus",
-	"vmflavor.ram",
-	"vmflavor.disk",
-	"vmflavor.propmap",
-}
-var VMResourceAliasArgs = []string{}
-var VMResourceComments = map[string]string{
-	"vmflavor.name":    "Name of the flavor on the Cloudlet",
-	"vmflavor.vcpus":   "Number of VCPU cores on the Cloudlet",
-	"vmflavor.ram":     "Ram in MB on the Cloudlet",
-	"vmflavor.disk":    "Amount of disk in GB on the Cloudlet",
-	"vmflavor.propmap": "OS Flavor Properties, if any",
-}
-var VMResourceSpecialArgs = map[string]string{
-	"vmflavor.propmap": "StringToString",
-}
 var OSAZoneRequiredArgs = []string{}
 var OSAZoneOptionalArgs = []string{
 	"name",
@@ -1529,7 +1626,7 @@ var CloudletInfoComments = map[string]string{
 	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                           "Organization of the cloudlet site",
 	"cloudlet":                               "Name of the cloudlet",
-	"state":                                  "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
+	"state":                                  "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync, CloudletStateResourceUpdate",
 	"notifyid":                               "Id of client assigned by server (internal use only)",
 	"controller":                             "Connected controller unique id",
 	"osmaxram":                               "Maximum Ram in MB on the Cloudlet",
@@ -1559,15 +1656,13 @@ var CloudletInfoComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"resources.info:#.name":                  "Resource name",
 	"resources.info:#.value":                 "Resource value",
-	"resources.provisionedclusters":          "Provisioned Clusters",
-	"trustpolicystate":                       "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"trustpolicystate":                       "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 }
 var CloudletInfoSpecialArgs = map[string]string{
-	"errors":                        "StringArray",
-	"fields":                        "StringArray",
-	"flavors:#.propmap":             "StringToString",
-	"resources.provisionedclusters": "StringToString",
-	"status.msgs":                   "StringArray",
+	"errors":            "StringArray",
+	"fields":            "StringArray",
+	"flavors:#.propmap": "StringToString",
+	"status.msgs":       "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}
 var CloudletMetricsOptionalArgs = []string{

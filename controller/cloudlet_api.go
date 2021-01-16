@@ -19,13 +19,15 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vmspec"
+	"google.golang.org/grpc"
 )
 
 type CloudletApi struct {
-	sync            *Sync
-	store           edgeproto.CloudletStore
-	cache           edgeproto.CloudletCache
-	accessKeyServer *node.AccessKeyServer
+	sync                          *Sync
+	store                         edgeproto.CloudletStore
+	cache                         edgeproto.CloudletCache
+	accessKeyServer               *node.AccessKeyServer
+	reportCloudletResourceTrigger chan bool
 }
 
 // Vault roles for all services
@@ -51,7 +53,8 @@ var (
 )
 
 const (
-	PlatformInitTimeout = 20 * time.Minute
+	PlatformInitTimeout            = 20 * time.Minute
+	CloudletResourceReportInterval = 10 * time.Minute
 )
 
 type updateCloudletCallback struct {
@@ -95,6 +98,7 @@ func InitCloudletApi(sync *Sync) {
 	edgeproto.InitCloudletCache(&cloudletApi.cache)
 	sync.RegisterCache(&cloudletApi.cache)
 	cloudletApi.accessKeyServer = node.NewAccessKeyServer(&cloudletApi.cache, nodeMgr.VaultAddr)
+	cloudletApi.reportCloudletResourceTrigger = make(chan bool, 1)
 }
 
 func (s *CloudletApi) Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
@@ -583,7 +587,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			ctx, &in.Key,
 			edgeproto.TrackedState_CREATE_ERROR, // Set error state
 			"Created Cloudlet successfully",     // Set success message
-			PlatformInitTimeout, cb.Send,
+			PlatformInitTimeout, cb.Send, nil,
 		)
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
@@ -630,7 +634,7 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 	return err
 }
 
-func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, send func(*edgeproto.Result) error) error {
+func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, send func(*edgeproto.Result) error, readyCb func(stm concurrency.STM, key *edgeproto.CloudletKey) error) error {
 	lastMsgId := 0
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
@@ -683,17 +687,23 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY &&
-				(cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED) {
+				cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED &&
+				cloudlet.State != edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED {
 				done <- true
 				return
 			}
 		}
 
 		switch cloudlet.State {
+		case edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED:
+			fallthrough
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
 			// cloudletinfo starts out in "ready" state, so wait for crm to transition to
 			// upgrade before looking for ready state
 			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+				// transition cloudlet state to updating (next case below)
+				update <- true
+			} else if curState == edgeproto.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE {
 				// transition cloudlet state to updating (next case below)
 				update <- true
 			}
@@ -711,7 +721,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			return
 		}
 		for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
-			send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			if send != nil {
+				send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			}
 			lastMsgId++
 		}
 		checkState(key)
@@ -726,7 +738,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case <-done:
 			err = nil
 			if successMsg != "" {
-				send(&edgeproto.Result{Message: successMsg})
+				if send != nil {
+					send(&edgeproto.Result{Message: successMsg})
+				}
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {
@@ -736,7 +750,10 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 				err = fmt.Errorf("Unknown failure")
 			}
 		case <-update:
-			// transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
+			// * transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
+			//   or
+			// * transition from RESOURCE_UPDATE_REQUESTED -> UPDATING state, as crm is updating
+			//   controller's view of crm's resource info
 			err := updateCloudletState(edgeproto.TrackedState_UPDATING)
 			if err == nil {
 				// crm started upgrading, now wait for it to be Ready
@@ -751,11 +768,15 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			} else {
 				out = fmt.Sprintf("Failure: %s", out)
 			}
-			send(&edgeproto.Result{Message: out})
+			if send != nil {
+				send(&edgeproto.Result{Message: out})
+			}
 			err = errors.New(out)
 		case <-time.After(timeout):
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
-			send(&edgeproto.Result{Message: "platform bringup timed out"})
+			if send != nil {
+				send(&edgeproto.Result{Message: "platform bringup timed out"})
+			}
 		}
 
 		cancel()
@@ -773,6 +794,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			cloudlet.Errors = nil
 			cloudlet.State = edgeproto.TrackedState_READY
 			cloudlet.TrustPolicyState = privPolState
+			if readyCb != nil {
+				readyCb(stm, key)
+			}
 		} else {
 			cloudlet.Errors = []string{err.Error()}
 			cloudlet.State = errorState
@@ -1017,7 +1041,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			ctx, &in.Key,
 			edgeproto.TrackedState_UPDATE_ERROR, // Set error state
 			"Cloudlet updated successfully",     // Set success message
-			PlatformInitTimeout, cb.Send,
+			PlatformInitTimeout, cb.Send, nil,
 		)
 		return err
 	}
@@ -1749,4 +1773,170 @@ func (s *CloudletApi) WaitForTrustPolicyState(ctx context.Context, key *edgeprot
 	cancel()
 	log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState state done", "target", targetState, "curState", cloudlet.TrustPolicyState)
 	return err
+}
+
+func (s *CloudletApi) GetCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
+	infraResources := edgeproto.InfraResources{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cloudlet := &edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, key, cloudlet) {
+			return key.NotFoundError()
+		}
+		cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+		if err != nil {
+			return fmt.Errorf("Failed to get platform: %v", err)
+		}
+		cloudletInfo := &edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, key, cloudletInfo) {
+			return key.NotFoundError()
+		}
+		cloudletRefs := &edgeproto.CloudletRefs{}
+		if !cloudletRefsApi.store.STMGet(stm, key, cloudletRefs) {
+			return key.NotFoundError()
+		}
+		infraResources = cloudletInfo.Resources
+		updatedResInfo, err := cloudletPlatform.GetCloudletResourceInfo(ctx, infraResources.Info, cloudletRefs.ReservedResources)
+		if err != nil {
+			return err
+		}
+		infraResources.Info = updatedResInfo
+		return nil
+	})
+	return &infraResources, err
+}
+
+type showNode struct {
+	grpc.ServerStream
+	ctx   context.Context
+	Nodes []edgeproto.Node
+}
+
+func (s *showNode) Send(node *edgeproto.Node) error {
+	if node != nil {
+		s.Nodes = append(s.Nodes, *node)
+	}
+	return nil
+}
+
+func (s *showNode) Context() context.Context {
+	return s.ctx
+}
+
+func (s *CloudletApi) ReportCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cloudlet := &edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, key, cloudlet) {
+			return key.NotFoundError()
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
+			return fmt.Errorf("Cloudlet info not found for cloudlet: %v", key)
+		}
+		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			return fmt.Errorf("Cloudlet is not online %v", key)
+		}
+		refs := edgeproto.CloudletRefs{}
+		if !cloudletRefsApi.store.STMGet(stm, key, &refs) {
+			return fmt.Errorf("CloudletRefs not found for cloudlet: %v", key)
+		}
+		clusterInstKeys := []edgeproto.ClusterInstKey{}
+		clusterInstApi.cache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
+			clusterInstKeys = append(clusterInstKeys, *k)
+		})
+		for _, clusterInstKey := range clusterInstKeys {
+			clusterInst := edgeproto.ClusterInst{}
+			if clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
+				if edgeproto.IsTransientState(clusterInst.State) {
+					return fmt.Errorf("ClusterInst action is in progress for %v on cloudlet %v, retry after some time", clusterInstKey, key)
+				}
+			}
+		}
+		cloudlet.State = edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED
+		s.store.STMPut(stm, cloudlet)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	readyCb := func(stm concurrency.STM, key *edgeproto.CloudletKey) error {
+		refs := edgeproto.CloudletRefs{}
+		if !cloudletRefsApi.store.STMGet(stm, key, &refs) {
+			return fmt.Errorf("CloudletRefs not found for cloudlet: %v", key)
+		}
+		// clear reserved resources as we now have updated resource info from cloudlet
+		refs.ReservedResources = nil
+		cloudletRefsApi.store.STMPut(stm, &refs)
+		return nil
+	}
+	// Wait for cloudlet to finish resource sync
+	err = s.WaitForCloudlet(
+		ctx, key,
+		// Set error state as READY as this error doesn't affect functioning of cloudlet
+		edgeproto.TrackedState_READY,
+		// Set success message
+		"Cloudlet resource updated successfully",
+		PlatformInitTimeout, nil,
+		readyCb,
+	)
+	return err
+}
+
+func (s *CloudletApi) ReportAllCloudletResources(ctx context.Context) error {
+	show := showNode{}
+	filterCRMNodes := edgeproto.Node{
+		Key: edgeproto.NodeKey{
+			Type: "crm",
+		},
+	}
+	err := nodeApi.ShowNode(&filterCRMNodes, &show)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "failed to get crm nodes", "err", err)
+		return err
+	}
+	for _, crmNode := range show.Nodes {
+		key := &crmNode.Key.CloudletKey
+		err = s.ReportCloudletInfraResources(ctx, key)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "report cloudlet infra resources failed, ignore", "key", key, "err", err)
+			nodeMgr.Event(ctx, "Cloudlet usage report error", key.Organization, key.GetTags(), err)
+			continue
+		}
+	}
+	return nil
+}
+
+func (s *CloudletApi) SetupCloudletResourcesReporter() {
+	interval := CloudletResourceReportInterval
+	for {
+		select {
+		case <-time.After(interval):
+		case <-s.reportCloudletResourceTrigger:
+		}
+		span := log.StartSpan(log.DebugLevelInfo, "report cloudlet infra resources")
+		ctx := log.ContextWithSpan(context.Background(), span)
+		err := s.ReportAllCloudletResources(ctx)
+		if err != nil {
+			// retry again soon
+			interval = 5 * time.Minute
+		} else {
+			interval = CloudletResourceReportInterval
+		}
+		span.Finish()
+	}
+}
+
+func (s *CloudletApi) RefreshCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	if key == nil {
+		// Trigger refresh of all cloudlet resources
+		select {
+		case cloudletApi.reportCloudletResourceTrigger <- true:
+		default:
+		}
+		return &edgeproto.Result{Message: "Triggered refresh of all cloudlet resources"}, nil
+	}
+	err := s.ReportCloudletInfraResources(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	return &edgeproto.Result{Message: "Cloudlet resources refreshed successfully"}, nil
 }

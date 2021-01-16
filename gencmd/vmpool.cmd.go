@@ -567,7 +567,7 @@ var VMPoolComments = map[string]string{
 	"vms:#.flavor.ram":         "Ram in MB on the Cloudlet",
 	"vms:#.flavor.disk":        "Amount of disk in GB on the Cloudlet",
 	"vms:#.flavor.propmap":     "OS Flavor Properties, if any",
-	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 	"errors":                   "Any errors trying to add/remove VM to/from VM Pool",
 	"crmoverride":              "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 }
@@ -690,7 +690,7 @@ var VMPoolInfoComments = map[string]string{
 	"vms:#.flavor.ram":         "Ram in MB on the Cloudlet",
 	"vms:#.flavor.disk":        "Amount of disk in GB on the Cloudlet",
 	"vms:#.flavor.propmap":     "OS Flavor Properties, if any",
-	"state":                    "Current state of the VM pool on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"state":                    "Current state of the VM pool on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 	"errors":                   "Any errors trying to add/remove VM to/from VM Pool",
 }
 var VMPoolInfoSpecialArgs = map[string]string{

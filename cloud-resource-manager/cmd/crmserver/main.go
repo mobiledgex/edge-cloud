@@ -268,7 +268,6 @@ func main() {
 				} else {
 					myCloudletInfo.Resources = *resources
 				}
-				go controllerData.SetupCloudletResourcesReporter(&myCloudletInfo.Key)
 			}
 		}
 
@@ -314,8 +313,6 @@ func main() {
 	initSrvNotify(&notifyServer)
 	notifyServer.Start(nodeMgr.Name(), *notifySrvAddr, notifyServerTls)
 	defer notifyServer.Stop()
-
-	nodeMgr.Debug.AddDebugFunc("crmreportresourceusage", controllerData.TriggerCloudletResourceReport)
 
 	span.Finish()
 	if mainStarted != nil {

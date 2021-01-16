@@ -356,6 +356,22 @@ service CloudletApi {
     option (protogen.method_noconfig) = "Properties";
     option (protogen.method_also_required) = "PlatformType";
   }
+  // Get Cloudlet Infra resource information. Shows VMs part of the cloudlet and existing resource usage
+  rpc GetCloudletInfraResources(CloudletKey) returns (InfraResources) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/resources"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+  }
+  // Refresh Cloudlet Infra resources. Refreshes controller's view of cloudlet resources
+  rpc RefreshCloudletInfraResources(CloudletKey) returns (Result) {
+    option (google.api.http) = {
+      post: "/refresh/cloudlet/resources"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+  }
 
   // Add Optional Resource tag table
   rpc AddCloudletResMapping(CloudletResMap) returns (Result) {
@@ -413,6 +429,7 @@ service CloudletApi {
 //  5: `CLOUDLET_STATE_INIT`
 //  6: `CLOUDLET_STATE_UPGRADE`
 //  7: `CLOUDLET_STATE_NEED_SYNC`
+//  8: `CLOUDLET_STATE_RESOURCE_UPDATE`
 enum CloudletState {
   // Unknown
   CLOUDLET_STATE_UNKNOWN = 0;
@@ -430,6 +447,8 @@ enum CloudletState {
   CLOUDLET_STATE_UPGRADE = 6;
   // Cloudlet needs data to synchronize
   CLOUDLET_STATE_NEED_SYNC = 7;  
+  // Cloudlet synchronizes resource usage data with controller
+  CLOUDLET_STATE_RESOURCE_UPDATE = 8;  
 }
 
 // Flavor details from the Cloudlet
@@ -444,13 +463,6 @@ message FlavorInfo {
   uint64 disk = 4;
   // OS Flavor Properties, if any
   map<string,string> prop_map = 5 [(protogen.backend) = true];
-}
-
-// VMResource
-//
-// VMResource specifies the resource requirement of a VM
-message VMResource {
-  FlavorInfo vm_flavor = 1;
 }
 
 message OSAZone {

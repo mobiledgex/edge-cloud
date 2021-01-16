@@ -23,7 +23,7 @@ type DindCluster struct {
 	KContext    string
 }
 
-func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration, provDone chan bool) error {
+func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	var err error
 
 	switch clusterInst.Deployment {
@@ -43,12 +43,11 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	if err = s.CreateDINDCluster(ctx, clusterName, kconfName); err != nil {
 		return err
 	}
-	provDone <- true
 	log.SpanLog(ctx, log.DebugLevelInfra, "created dind", "name", clusterName)
 	return nil
 }
 
-func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, provDone chan bool) error {
+func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	return fmt.Errorf("update cluster not supported for DIND")
 }
 

@@ -195,31 +195,9 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func (s *ClusterInstApi) validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst) error {
-	cloudlet := edgeproto.Cloudlet{}
-	if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
-		return errors.New("Specified Cloudlet not found")
-	}
-	info := edgeproto.CloudletInfo{}
-	if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
-		return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
-	}
-	clusterInstResources := make(map[edgeproto.ClusterInstKey]struct{})
-	s.cache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
-		clusterInstResources[*k] = struct{}{}
-	})
-	existingRes := []edgeproto.VMResource{}
-	clusterInstRefs := edgeproto.ClusterInstRefs{}
-	for k := range clusterInstResources {
-		if clusterInstRefsApi.store.STMGet(stm, &k, &clusterInstRefs) {
-			if _, ok := info.Resources.ProvisionedClusters[k.ClusterKey.String()]; ok {
-				continue
-			}
-			if clusterInstRefs.ReservedResources != nil {
-				existingRes = append(existingRes, clusterInstRefs.ReservedResources...)
-			}
-		}
-	}
+func (s *ClusterInstApi) validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
+	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
+	existingRes := cloudletRefs.ReservedResources
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
 		return err
@@ -230,22 +208,24 @@ func (s *ClusterInstApi) validateAndTrackResources(ctx context.Context, stm conc
 	}
 	lbFlavor := &edgeproto.FlavorInfo{}
 	if rootlbFlavor != nil {
-		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, cloudlet, info)
+		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, *cloudlet, *cloudletInfo)
 		if err != nil {
 			return err
 		}
 		lbFlavor = vmspec.FlavorInfo
 	}
-	res, err := cloudcommon.GetClusterInstVMRequirements(ctx, in, info.Flavors, lbFlavor)
+	res, err := cloudcommon.GetClusterInstVMRequirements(ctx, in, cloudletInfo.Flavors, lbFlavor)
 	if err != nil {
 		return err
 	}
 	if len(res) > 0 {
-		err = cloudletPlatform.ValidateCloudletResources(ctx, &info.Resources, res, existingRes)
+		err = cloudletPlatform.ValidateCloudletResources(ctx, &cloudletInfo.Resources, res, existingRes)
 		if err != nil {
 			return err
 		}
-		clusterInstRefsApi.CreateResourcesRef(stm, &in.Key, res)
+		// reserve requested resources
+		cloudletRefs.ReservedResources = append(cloudletRefs.ReservedResources, res...)
+		cloudletRefsApi.store.STMPut(stm, cloudletRefs)
 	}
 	return nil
 }
@@ -332,7 +312,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
 	}
 
-	resTracked := false
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
 			return err
@@ -440,11 +419,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		err = s.validateAndTrackResources(ctx, stm, in)
+		err = s.validateAndTrackResources(ctx, stm, in, &cloudlet, &info, &refs)
 		if err != nil {
 			return err
 		}
-		resTracked = true
 
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
@@ -489,10 +467,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		s.store.STMPut(stm, in)
 		return nil
 	})
-	if resTracked {
-		// delete any refs to reserved resources
-		defer clusterInstRefsApi.DeleteResourcesRef(ctx, &in.Key)
-	}
 	if err != nil {
 		return err
 	}
@@ -553,7 +527,6 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
 	retry := false
-	resTracked := false
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		changeCount = 0
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
@@ -590,11 +563,20 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			resChanged = true
 		}
 		if resChanged {
-			err = s.validateAndTrackResources(ctx, stm, resClusterInst)
+			cloudlet := edgeproto.Cloudlet{}
+			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+				return errors.New("Specified Cloudlet not found")
+			}
+			info := edgeproto.CloudletInfo{}
+			if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
+				return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
+			}
+			cloudletRefs := edgeproto.CloudletRefs{}
+			cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs)
+			err = s.validateAndTrackResources(ctx, stm, resClusterInst, &cloudlet, &info, &cloudletRefs)
 			if err != nil {
 				return err
 			}
-			resTracked = true
 		}
 
 		changeCount = inbuf.CopyInFields(in)
@@ -614,10 +596,6 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})
-	if resTracked {
-		// delete any refs to reserved resources
-		defer clusterInstRefsApi.DeleteResourcesRef(ctx, &in.Key)
-	}
 	if err != nil {
 		return err
 	}
@@ -794,6 +772,24 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		cb.Send(&edgeproto.Result{Message: "Deleted ClusterInst successfully"})
 		err = nil
 	}
+	// Delete any reserved resources by this clusterinst
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return in.Key.NotFoundError()
+		}
+		refs := edgeproto.CloudletRefs{}
+		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
+			newRes := []edgeproto.VMResource{}
+			for _, res := range refs.ReservedResources {
+				if !res.Key.Matches(&in.Key) {
+					newRes = append(newRes, res)
+				}
+			}
+			refs.ReservedResources = newRes
+			cloudletRefsApi.store.STMPut(stm, &refs)
+		}
+		return nil
+	})
 	if err != nil {
 		// crm failed or some other err, undo
 		cb.Send(&edgeproto.Result{Message: "Recreating ClusterInst due to failure"})

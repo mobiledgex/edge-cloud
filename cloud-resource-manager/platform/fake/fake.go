@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -29,6 +30,23 @@ const (
 	DiskUsed  = "totalGigabytesUsed"
 	DiskMax   = "maxTotalVolumeGigabytes"
 )
+
+type FakeResource struct {
+	RamUsed   uint64
+	RamMax    uint64
+	VcpusUsed uint64
+	VcpusMax  uint64
+	DiskUsed  uint64
+	DiskMax   uint64
+}
+
+var FakeRamUsed = uint64(0)
+var FakeVcpusUsed = uint64(0)
+var FakeDiskUsed = uint64(0)
+
+var FakeAppDNSRoot = "fake.net"
+
+var FakeClusterVMs = []edgeproto.VmInfo{}
 
 var FakeFlavorList = []*edgeproto.FlavorInfo{
 	&edgeproto.FlavorInfo{
@@ -73,6 +91,10 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
 	}))
+	// Update resource info for platformVM and RootLBVM
+	FakeRamUsed += uint64(4096) + uint64(4096)
+	FakeVcpusUsed += uint64(2) + uint64(2)
+	FakeDiskUsed += uint64(40) + uint64(40)
 	return nil
 }
 
@@ -84,16 +106,49 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, provDone chan bool) error {
+func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Updating Cluster Inst")
-	provDone <- true
 	return nil
 }
-func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration, provDone chan bool) error {
+func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake CreateClusterInst", "clusterInst", clusterInst)
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
-	provDone <- true
+	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
+	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
+		FakeClusterVMs = append(FakeClusterVMs, edgeproto.VmInfo{
+			Name:        fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix),
+			Type:        "cluster-master",
+			InfraFlavor: "m4.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += uint64(4096)
+		FakeVcpusUsed += uint64(2)
+		FakeDiskUsed += uint64(40)
+	}
+	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
+		FakeClusterVMs = append(FakeClusterVMs, edgeproto.VmInfo{
+			Name:        fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix),
+			Type:        "cluster-node",
+			InfraFlavor: "m4.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += uint64(4096)
+		FakeVcpusUsed += uint64(2)
+		FakeDiskUsed += uint64(40)
+	}
+	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+		rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
+		FakeClusterVMs = append(FakeClusterVMs, edgeproto.VmInfo{
+			Name:        rootLBFQDN,
+			Type:        "rootlb",
+			InfraFlavor: "m4.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += uint64(4096)
+		FakeVcpusUsed += uint64(2)
+		FakeDiskUsed += uint64(40)
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst ready")
 	return nil
 }
@@ -103,6 +158,80 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst deleted")
 	return nil
+}
+
+func MarshalInfraResourceInfo(fakeRes *FakeResource) []edgeproto.ResourceInfo {
+	return []edgeproto.ResourceInfo{
+		edgeproto.ResourceInfo{
+			Name:  RamMax,
+			Value: fmt.Sprintf("%d", fakeRes.RamMax),
+		},
+		edgeproto.ResourceInfo{
+			Name:  RamUsed,
+			Value: fmt.Sprintf("%d", fakeRes.RamUsed),
+		},
+		edgeproto.ResourceInfo{
+			Name:  VcpusMax,
+			Value: fmt.Sprintf("%d", fakeRes.VcpusMax),
+		},
+		edgeproto.ResourceInfo{
+			Name:  VcpusUsed,
+			Value: fmt.Sprintf("%d", fakeRes.VcpusUsed),
+		},
+		edgeproto.ResourceInfo{
+			Name:  DiskMax,
+			Value: fmt.Sprintf("%d", fakeRes.DiskMax),
+		},
+		edgeproto.ResourceInfo{
+			Name:  DiskUsed,
+			Value: fmt.Sprintf("%d", fakeRes.DiskUsed),
+		},
+	}
+}
+
+func UnmarshalInfraResourceInfo(cloudletResInfo []edgeproto.ResourceInfo) (*FakeResource, error) {
+	fakeRes := FakeResource{}
+	for _, resInfo := range cloudletResInfo {
+		switch resInfo.Name {
+		case RamMax:
+			maxRam, err := strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return nil, err
+			}
+			fakeRes.RamMax = maxRam
+		case RamUsed:
+			ramUsed, err := strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return nil, err
+			}
+			fakeRes.RamUsed = ramUsed
+		case VcpusMax:
+			maxVcpus, err := strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return nil, err
+			}
+			fakeRes.VcpusMax = maxVcpus
+		case VcpusUsed:
+			vcpusUsed, err := strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return nil, err
+			}
+			fakeRes.VcpusUsed = vcpusUsed
+		case DiskMax:
+			maxDisk, err := strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return nil, err
+			}
+			fakeRes.DiskMax = maxDisk
+		case DiskUsed:
+			diskUsed, err := strconv.ParseUint(resInfo.Value, 0, 64)
+			if err != nil {
+				return nil, err
+			}
+			fakeRes.DiskUsed = diskUsed
+		}
+	}
+	return &fakeRes, nil
 }
 
 func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, []string, error) {
@@ -127,36 +256,36 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 		},
 	}
 	resources.Vms = append(resources.Vms, rlbvm)
-	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
-		Name:  RamUsed,
-		Value: "1024",
-	})
-	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
-		Name:  RamMax,
-		Value: "40960",
-	})
+	resources.Vms = append(resources.Vms, FakeClusterVMs...)
 
-	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
-		Name:  VcpusUsed,
-		Value: "10",
-	})
-	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
-		Name:  VcpusMax,
-		Value: "50",
-	})
-
-	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
-		Name:  DiskUsed,
-		Value: "20",
-	})
-	resources.Info = append(resources.Info, edgeproto.ResourceInfo{
-		Name:  DiskMax,
-		Value: "5000",
+	resources.Info = MarshalInfraResourceInfo(&FakeResource{
+		RamUsed:   FakeRamUsed,
+		RamMax:    uint64(40960),
+		VcpusUsed: FakeVcpusUsed,
+		VcpusMax:  uint64(50),
+		DiskUsed:  FakeDiskUsed,
+		DiskMax:   uint64(5000),
 	})
 
 	warnings := []string{}
 
 	return &resources, warnings, nil
+}
+
+func (s *Platform) GetCloudletResourceInfo(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error) {
+	fakeRes, err := UnmarshalInfraResourceInfo(resInfo)
+	if err != nil {
+		return nil, err
+	}
+	for _, vmRes := range existingVmResources {
+		if vmRes.VmFlavor != nil {
+			fakeRes.RamUsed += vmRes.VmFlavor.Ram
+			fakeRes.VcpusUsed += vmRes.VmFlavor.Vcpus
+			fakeRes.DiskUsed += vmRes.VmFlavor.Disk
+		}
+	}
+	resInfo = MarshalInfraResourceInfo(fakeRes)
+	return resInfo, nil
 }
 
 func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource, existingVmResources []edgeproto.VMResource) error {
@@ -172,59 +301,22 @@ func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources
 		}
 	}
 
-	var err error
-	maxRam := uint64(0)
-	ramUsed := uint64(0)
-	maxVcpus := uint64(0)
-	vcpusUsed := uint64(0)
-	maxDisk := uint64(0)
-	diskUsed := uint64(0)
-	for _, resInfo := range infraResources.Info {
-		switch resInfo.Name {
-		case RamMax:
-			maxRam, err = strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return err
-			}
-		case RamUsed:
-			ramUsed, err = strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return err
-			}
-		case VcpusMax:
-			maxVcpus, err = strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return err
-			}
-		case VcpusUsed:
-			vcpusUsed, err = strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return err
-			}
-		case DiskMax:
-			maxDisk, err = strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return err
-			}
-		case DiskUsed:
-			diskUsed, err = strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return err
-			}
-		}
+	fakeRes, err := UnmarshalInfraResourceInfo(infraResources.Info)
+	if err != nil {
+		return err
 	}
 
 	for _, vmRes := range existingVmResources {
 		if vmRes.VmFlavor != nil {
-			ramUsed += vmRes.VmFlavor.Ram
-			vcpusUsed += vmRes.VmFlavor.Vcpus
-			diskUsed += vmRes.VmFlavor.Disk
+			fakeRes.RamUsed += vmRes.VmFlavor.Ram
+			fakeRes.VcpusUsed += vmRes.VmFlavor.Vcpus
+			fakeRes.DiskUsed += vmRes.VmFlavor.Disk
 		}
 	}
 
-	availableRam := maxRam - ramUsed
-	availableVcpus := maxVcpus - vcpusUsed
-	availableDisk := maxDisk - diskUsed
+	availableRam := fakeRes.RamMax - fakeRes.RamUsed
+	availableVcpus := fakeRes.VcpusMax - fakeRes.VcpusUsed
+	availableDisk := fakeRes.DiskMax - fakeRes.DiskUsed
 
 	if ramReqd > availableRam {
 		return fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, availableRam)

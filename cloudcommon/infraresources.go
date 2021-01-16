@@ -34,22 +34,26 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 	}
 	if clusterInst.Deployment == DeploymentTypeDocker {
 		vmResources = append(vmResources, edgeproto.VMResource{
+			Key:      clusterInst.Key,
 			VmFlavor: nodeFlavor,
 		})
 	} else {
 		for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
 			if clusterInst.MasterNodeFlavor == "" {
 				vmResources = append(vmResources, edgeproto.VMResource{
+					Key:      clusterInst.Key,
 					VmFlavor: nodeFlavor,
 				})
 			} else {
 				vmResources = append(vmResources, edgeproto.VMResource{
+					Key:      clusterInst.Key,
 					VmFlavor: masterNodeFlavor,
 				})
 			}
 		}
 		for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
 			vmResources = append(vmResources, edgeproto.VMResource{
+				Key:      clusterInst.Key,
 				VmFlavor: nodeFlavor,
 			})
 		}
@@ -60,6 +64,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			return nil, fmt.Errorf("missing rootlb flavor")
 		}
 		vmResources = append(vmResources, edgeproto.VMResource{
+			Key:      clusterInst.Key,
 			VmFlavor: rootLBFlavor,
 		})
 	}

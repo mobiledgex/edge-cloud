@@ -94,7 +94,6 @@ var InfraResourcesOptionalArgs = []string{
 	"vms:#.containers:#.restarts",
 	"info:#.name",
 	"info:#.value",
-	"provisionedclusters",
 }
 var InfraResourcesAliasArgs = []string{}
 var InfraResourcesComments = map[string]string{
@@ -109,8 +108,5 @@ var InfraResourcesComments = map[string]string{
 	"vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"info:#.name":                  "Resource name",
 	"info:#.value":                 "Resource value",
-	"provisionedclusters":          "Provisioned Clusters",
 }
-var InfraResourcesSpecialArgs = map[string]string{
-	"provisionedclusters": "StringToString",
-}
+var InfraResourcesSpecialArgs = map[string]string{}

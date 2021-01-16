@@ -115,6 +115,8 @@ enum TrackedState {
   CREATING_DEPENDENCIES = 14;
   // Delete Done
   DELETE_DONE = 15;
+  // Update resource information
+  RESOURCE_UPDATE_REQUESTED = 16;
 }
 
 // Overrides default CRM behaviour

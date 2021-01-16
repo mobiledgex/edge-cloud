@@ -70,6 +70,4 @@ message InfraResources{
   repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
   // Resource information
   repeated ResourceInfo info = 2 [(gogoproto.nullable) = false];
-  // Provisioned Clusters
-  map<string,string> provisioned_clusters = 3;
 }

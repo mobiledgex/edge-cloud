@@ -316,3 +316,19 @@ func (mgr *ServerMgr) WaitServerCount(count int) {
 		time.Sleep(20 * time.Millisecond)
 	}
 }
+
+func (s *DummyHandler) WaitForClusterInstInfoState(key *edgeproto.ClusterInstKey, state edgeproto.TrackedState) error {
+	lastState := edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
+	for i := 0; i < 100; i++ {
+		clusterInstInfo := edgeproto.ClusterInstInfo{}
+		if s.ClusterInstInfoCache.Get(key, &clusterInstInfo) {
+			if clusterInstInfo.State == state {
+				return nil
+			}
+			lastState = clusterInstInfo.State
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return fmt.Errorf("Unable to get desired clusterInstInfo state, actual state %s, desired state %s", lastState, state)
+}

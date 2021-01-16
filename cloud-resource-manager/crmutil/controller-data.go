@@ -3,8 +3,8 @@ package crmutil
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
-	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -18,36 +18,33 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform                      platform.Platform
-	AppCache                      edgeproto.AppCache
-	AppInstCache                  edgeproto.AppInstCache
-	CloudletCache                 edgeproto.CloudletCache
-	VMPoolCache                   edgeproto.VMPoolCache
-	FlavorCache                   edgeproto.FlavorCache
-	ClusterInstCache              edgeproto.ClusterInstCache
-	AppInstInfoCache              edgeproto.AppInstInfoCache
-	CloudletInfoCache             edgeproto.CloudletInfoCache
-	VMPoolInfoCache               edgeproto.VMPoolInfoCache
-	ClusterInstInfoCache          edgeproto.ClusterInstInfoCache
-	TrustPolicyCache              edgeproto.TrustPolicyCache
-	AutoProvPolicyCache           edgeproto.AutoProvPolicyCache
-	AlertCache                    edgeproto.AlertCache
-	SettingsCache                 edgeproto.SettingsCache
-	ResTagTableCache              edgeproto.ResTagTableCache
-	ExecReqHandler                *ExecReqHandler
-	ExecReqSend                   *notify.ExecRequestSend
-	ControllerWait                chan bool
-	ControllerSyncInProgress      bool
-	ControllerSyncDone            chan bool
-	settings                      edgeproto.Settings
-	NodeMgr                       *node.NodeMgr
-	VMPool                        edgeproto.VMPool
-	VMPoolMux                     sync.Mutex
-	updateVMWorkers               tasks.KeyWorkers
-	updateTrustPolicyKeyworkers   tasks.KeyWorkers
-	reportCloudletResourceTrigger chan bool
-	provClusterMux                sync.Mutex
-	provisionedClusters           map[string]string
+	platform                    platform.Platform
+	AppCache                    edgeproto.AppCache
+	AppInstCache                edgeproto.AppInstCache
+	CloudletCache               edgeproto.CloudletCache
+	VMPoolCache                 edgeproto.VMPoolCache
+	FlavorCache                 edgeproto.FlavorCache
+	ClusterInstCache            edgeproto.ClusterInstCache
+	AppInstInfoCache            edgeproto.AppInstInfoCache
+	CloudletInfoCache           edgeproto.CloudletInfoCache
+	VMPoolInfoCache             edgeproto.VMPoolInfoCache
+	ClusterInstInfoCache        edgeproto.ClusterInstInfoCache
+	TrustPolicyCache            edgeproto.TrustPolicyCache
+	AutoProvPolicyCache         edgeproto.AutoProvPolicyCache
+	AlertCache                  edgeproto.AlertCache
+	SettingsCache               edgeproto.SettingsCache
+	ResTagTableCache            edgeproto.ResTagTableCache
+	ExecReqHandler              *ExecReqHandler
+	ExecReqSend                 *notify.ExecRequestSend
+	ControllerWait              chan bool
+	ControllerSyncInProgress    bool
+	ControllerSyncDone          chan bool
+	settings                    edgeproto.Settings
+	NodeMgr                     *node.NodeMgr
+	VMPool                      edgeproto.VMPool
+	VMPoolMux                   sync.Mutex
+	updateVMWorkers             tasks.KeyWorkers
+	updateTrustPolicyKeyworkers tasks.KeyWorkers
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -92,8 +89,6 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
-	cd.reportCloudletResourceTrigger = make(chan bool, 1)
-	cd.provisionedClusters = make(map[string]string)
 
 	cd.NodeMgr = nodeMgr
 
@@ -224,23 +219,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
 
-			provDone := make(chan bool)
-			go func() {
-				<-provDone
-				// add cluster to provisioned_clusters
-				// send it as part of cloudletinfo
-				cd.provClusterMux.Lock()
-				cd.provisionedClusters[new.Key.ClusterKey.String()] = ""
-				cd.provClusterMux.Unlock()
-				cd.TriggerCloudletResourceReport(ctx, nil)
-			}()
-			defer func() {
-				// Once done with clusterinst provisioning (success or failure), remove it from provisioned clusters list as it is of no use then
-				cd.provClusterMux.Lock()
-				defer cd.provClusterMux.Unlock()
-				delete(cd.provisionedClusters, new.Key.ClusterKey.String())
-			}()
-			err = cd.platform.CreateClusterInst(ctx, new, updateClusterCacheCallback, timeout, provDone)
+			err = cd.platform.CreateClusterInst(ctx, new, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err), updateClusterCacheCallback)
@@ -270,25 +249,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		if err != nil {
 			return
 		}
-
-		provDone := make(chan bool)
-		go func() {
-			<-provDone
-			// add cluster to provisioned_clusters
-			// send it as part of cloudletinfo
-			cd.provClusterMux.Lock()
-			cd.provisionedClusters[new.Key.ClusterKey.String()] = ""
-			cd.provClusterMux.Unlock()
-			cd.TriggerCloudletResourceReport(ctx, nil)
-		}()
-		defer func() {
-			// Once done with clusterinst provisioning (success or failure), remove it from provisioned clusters list as it is of no use then
-			cd.provClusterMux.Lock()
-			defer cd.provClusterMux.Unlock()
-			delete(cd.provisionedClusters, new.Key.ClusterKey.String())
-		}()
 		log.SpanLog(ctx, log.DebugLevelInfra, "update cluster inst", "ClusterInst", *new)
-		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback, provDone)
+		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
 			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateClusterCacheCallback)
@@ -351,8 +313,6 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SpanLog(ctx, log.DebugLevelInfra, "set cluster inst deleted", "ClusterInst", *new)
 
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateClusterCacheCallback)
-			// Trigger cloudlet resource update
-			cd.TriggerCloudletResourceReport(ctx, nil)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		cd.clusterInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_CREATING,
@@ -787,11 +747,67 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			return
 		}
+		resources, _, err := cd.platform.GetCloudletInfraResources(ctx)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", new.Key, "err", err)
+		}
 		// fetch cloudletInfo again, as status might have changed as part of UpdateCloudlet
 		found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 		if !found {
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
+		}
+		if resources != nil {
+			cloudletInfo.Resources = *resources
+		}
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+		cloudletInfo.Status.StatusReset()
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	} else if new.State == edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED {
+		cloudlet := edgeproto.Cloudlet{}
+		// Check current thread state
+		if cloudletFound := cd.CloudletCache.Get(&new.Key, &cloudlet); cloudletFound {
+			if cloudlet.State == edgeproto.TrackedState_UPDATING {
+				return
+			}
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE {
+			// Cloudlet is already reporting its resources
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resource update already in progress", "key", new.Key)
+			return
+		}
+		// Reset old Status
+		cloudletInfo.Status.StatusReset()
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+
+		resources, warnings, err := cd.platform.GetCloudletInfraResources(ctx)
+		if err != nil {
+			errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)
+			log.InfoLog("can't fetch cloudlet resources", "error", errstr, "key", new.Key)
+
+			cd.NodeMgr.Event(ctx, "Cloudlet infra resource update failure", new.Key.Organization, new.Key.GetTags(), err)
+			// set state as READY as this failure doesn't affect running of cloudlet
+			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			return
+		}
+		cd.NodeMgr.Event(ctx, "Cloudlet infra resource usage warning", new.Key.Organization, new.Key.GetTags(), nil,
+			"warnings", strings.Join(warnings, ","))
+		// fetch cloudletInfo again, as data might have changed by now
+		found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
+			return
+		}
+		if resources != nil {
+			cloudletInfo.Resources = *resources
 		}
 		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
@@ -1097,66 +1113,4 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 		}
 	}
 	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-}
-
-var cloudletResourceReportInterval = 5 * time.Minute
-
-func (cd *ControllerData) ReportCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) error {
-	resources, warnings, err := cd.platform.GetCloudletInfraResources(ctx)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", key, "err", err)
-		return err
-	}
-	for _, warning := range warnings {
-		cd.NodeMgr.Event(ctx, warning, key.Organization, key.GetTags(), nil)
-	}
-	cloudletInfo := edgeproto.CloudletInfo{}
-	found := cd.CloudletInfoCache.Get(key, &cloudletInfo)
-	if !found {
-		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", key)
-		return fmt.Errorf("Cloudlet info not found for cloudlet %v", key)
-	}
-	if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		log.SpanLog(ctx, log.DebugLevelInfra, "skip reporting cloudlet resources as cloudlet is not online", "key", key)
-		return fmt.Errorf("Cloudlet is not online %v", key)
-	}
-	cloudletInfo.Resources = *resources
-	cd.provClusterMux.Lock()
-	defer cd.provClusterMux.Unlock()
-	if len(cloudletInfo.Resources.ProvisionedClusters) == 0 {
-		cloudletInfo.Resources.ProvisionedClusters = make(map[string]string)
-	}
-	cloudletInfo.Resources.ProvisionedClusters = cd.provisionedClusters
-	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-	return nil
-}
-
-func (cd *ControllerData) SetupCloudletResourcesReporter(key *edgeproto.CloudletKey) {
-	interval := cloudletResourceReportInterval
-	for {
-		select {
-		case <-time.After(interval):
-		case <-cd.reportCloudletResourceTrigger:
-		}
-		span := log.StartSpan(log.DebugLevelInfo, "report cloudlet infra resources")
-		ctx := log.ContextWithSpan(context.Background(), span)
-		err := cd.ReportCloudletInfraResources(ctx, key)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "report cloudlet infra resources failed", "err", err)
-			cd.NodeMgr.Event(ctx, "Cloudlet usage report error", key.Organization, key.GetTags(), err)
-			// retry again soon
-			interval = 2 * time.Minute
-		} else {
-			interval = cloudletResourceReportInterval
-		}
-		span.Finish()
-	}
-}
-
-func (cd *ControllerData) TriggerCloudletResourceReport(ctx context.Context, req *edgeproto.DebugRequest) string {
-	select {
-	case cd.reportCloudletResourceTrigger <- true:
-	default:
-	}
-	return "trigger cloudlet resource usage report"
 }

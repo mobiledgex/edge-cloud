@@ -317,6 +317,43 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 
 	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
+
+	cloudletInfo := edgeproto.CloudletInfo{}
+	found := ctrlHandler.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo)
+	require.True(t, found, "cloudlet info exists")
+	require.Greater(t, len(cloudletInfo.Resources.Info), 0, "cloudlet resources info exists")
+
+	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
+
+	clusterInstObj := testutil.ClusterInstData[0]
+	clusterInstObj.Key.CloudletKey = cloudlet.Key
+	clusterInstObj.NumNodes = 10
+	err = clusterInstApi.CreateClusterInst(&clusterInstObj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "not enough resources available")
+	require.Contains(t, err.Error(), "Not enough RAM")
+
+	clusterInstObj.NumNodes = 1
+	done := make(chan bool)
+	go func() {
+		err = clusterInstApi.CreateClusterInst(&clusterInstObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.Nil(t, err, "clusterinst created")
+		done <- true
+	}()
+	clusterInstObj.State = edgeproto.TrackedState_CREATE_REQUESTED
+	ctrlHandler.ClusterInstCache.Update(ctx, &clusterInstObj, 0)
+
+	err = ctrlHandler.WaitForClusterInstInfoState(&clusterInstObj.Key, edgeproto.TrackedState_READY)
+	require.Nil(t, err, "clusterinst created successfully")
+
+	clusterInstInfo := edgeproto.ClusterInstInfo{}
+	ctrlHandler.ClusterInstInfoCache.Get(&clusterInstObj.Key, &clusterInstInfo)
+	clusterInstApi.UpdateFromInfo(ctx, &clusterInstInfo)
+	require.True(t, <-done, "cluster created successfully")
+
+	cloudletInfo = edgeproto.CloudletInfo{}
+	found = ctrlHandler.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo)
+	require.True(t, found, "cloudlet info exists")
+	require.Greater(t, len(cloudletInfo.Resources.Info), 0, "cloudlet resources info exists")
 }
 
 func testManualBringup(t *testing.T, ctx context.Context) {
