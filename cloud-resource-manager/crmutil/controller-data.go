@@ -798,8 +798,10 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			return
 		}
-		cd.NodeMgr.Event(ctx, "Cloudlet infra resource usage warning", new.Key.Organization, new.Key.GetTags(), nil,
-			"warnings", strings.Join(warnings, ","))
+		if len(warnings) > 0 {
+			cd.NodeMgr.Event(ctx, "Cloudlet infra resource usage warning", new.Key.Organization, new.Key.GetTags(), nil,
+				"warnings", strings.Join(warnings, ","))
+		}
 		// fetch cloudletInfo again, as data might have changed by now
 		found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 		if !found {
@@ -809,8 +811,8 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		if resources != nil {
 			cloudletInfo.Resources = *resources
 		}
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
+		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
 }

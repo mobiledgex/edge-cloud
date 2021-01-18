@@ -288,13 +288,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, "stop cloudlet")
 	}()
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_CRM_INITOK
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_READY
@@ -309,13 +309,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_UPDATING
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudletInfo := edgeproto.CloudletInfo{}
@@ -325,35 +325,88 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 
 	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
 
+	// Test Cloudlet Resource Usage Updates
 	clusterInstObj := testutil.ClusterInstData[0]
 	clusterInstObj.Key.CloudletKey = cloudlet.Key
+	clusterInstApi.cache.Objs = ctrlHandler.ClusterInstCache.Objs
+	clusterInstApi.cache.KeyWatchers = ctrlHandler.ClusterInstCache.KeyWatchers
+	cancel := ctrlHandler.ClusterInstInfoCache.WatchKey(&clusterInstObj.Key, func(ctx context.Context) {
+		clInfo := edgeproto.ClusterInstInfo{}
+		if !ctrlHandler.ClusterInstInfoCache.Get(&clusterInstObj.Key, &clInfo) {
+			return
+		}
+		if clInfo.State == edgeproto.TrackedState_CREATING {
+			cl := edgeproto.ClusterInst{}
+			if !ctrlHandler.ClusterInstCache.Get(&clusterInstObj.Key, &cl) {
+				return
+			}
+			cl.State = edgeproto.TrackedState_CREATING
+			ctrlHandler.ClusterInstCache.Update(ctx, &cl, 0)
+		}
+		clusterInstApi.UpdateFromInfo(ctx, &clInfo)
+	})
+
+	defer cancel()
+
+	// Create cluster should fail if not enough resources available
 	clusterInstObj.NumNodes = 10
 	err = clusterInstApi.CreateClusterInst(&clusterInstObj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "not enough resources available")
 	require.Contains(t, err.Error(), "Not enough RAM")
 
+	// Initiate create cluster
 	clusterInstObj.NumNodes = 1
-	done := make(chan bool)
+	clusterDone := make(chan bool)
 	go func() {
 		err = clusterInstApi.CreateClusterInst(&clusterInstObj, testutil.NewCudStreamoutClusterInst(ctx))
 		require.Nil(t, err, "clusterinst created")
-		done <- true
+		clusterDone <- true
 	}()
 	clusterInstObj.State = edgeproto.TrackedState_CREATE_REQUESTED
 	ctrlHandler.ClusterInstCache.Update(ctx, &clusterInstObj, 0)
 
 	err = ctrlHandler.WaitForClusterInstInfoState(&clusterInstObj.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, "clusterinst created successfully")
+	require.True(t, <-clusterDone, "cluster created successfully")
 
-	clusterInstInfo := edgeproto.ClusterInstInfo{}
-	ctrlHandler.ClusterInstInfoCache.Get(&clusterInstObj.Key, &clusterInstInfo)
-	clusterInstApi.UpdateFromInfo(ctx, &clusterInstInfo)
-	require.True(t, <-done, "cluster created successfully")
+	cloudletRefs := edgeproto.CloudletRefs{}
+	found = cloudletRefsApi.cache.Get(&cloudlet.Key, &cloudletRefs)
+	require.True(t, found, "cloudletrefs exists")
+	require.Greater(t, len(cloudletRefs.ReservedResources), 0, "reserved resources exists")
 
-	cloudletInfo = edgeproto.CloudletInfo{}
-	found = ctrlHandler.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo)
-	require.True(t, found, "cloudlet info exists")
-	require.Greater(t, len(cloudletInfo.Resources.Info), 0, "cloudlet resources info exists")
+	cloudletApi.cache.Objs = ctrlHandler.CloudletCache.Objs
+	cloudletApi.cache.KeyWatchers = ctrlHandler.CloudletCache.KeyWatchers
+	clCancel := ctrlHandler.CloudletInfoCache.WatchKey(&cloudlet.Key, func(ctx context.Context) {
+		clInfo := edgeproto.CloudletInfo{}
+		if !ctrlHandler.CloudletInfoCache.Get(&cloudlet.Key, &clInfo) {
+			return
+		}
+		if clInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE {
+			cl := edgeproto.Cloudlet{}
+			if !ctrlHandler.CloudletCache.Get(&cloudlet.Key, &cl) {
+				return
+			}
+			cl.State = edgeproto.TrackedState_UPDATING
+			ctrlHandler.CloudletCache.Update(ctx, &cl, 0)
+		}
+		cloudletInfoApi.Update(ctx, &clInfo, 0)
+	})
+
+	defer clCancel()
+	cloudletDone := make(chan bool)
+	// Cloudlet resource usage collection should succeed
+	go func() {
+		_, err = cloudletApi.RefreshCloudletInfraResources(ctx, &cloudlet.Key)
+		require.Nil(t, err, "cloudlet resource update")
+		cloudletDone <- true
+	}()
+
+	cloudlet.State = edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED
+	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
+
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY)
+	require.Nil(t, err, "cloudlet state transition")
+	require.True(t, <-cloudletDone, "refreshed cloudlet infra resources")
 }
 
 func testManualBringup(t *testing.T, ctx context.Context) {

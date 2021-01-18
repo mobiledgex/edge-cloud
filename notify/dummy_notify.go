@@ -257,18 +257,13 @@ func (s *DummyHandler) WaitForAlerts(count int) error {
 	return s.WaitFor(AlertType, count)
 }
 
-func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state edgeproto.CloudletState, version string) error {
+func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state edgeproto.CloudletState) error {
 	lastState := edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 	for i := 0; i < 100; i++ {
 		cloudletInfo := edgeproto.CloudletInfo{}
 		if s.CloudletInfoCache.Get(key, &cloudletInfo) {
 			if cloudletInfo.State == state {
-				if cloudletInfo.ContainerVersion == version {
-					return nil
-				}
-				return fmt.Errorf("invalid cloudletInfo version: %s, should be %s",
-					cloudletInfo.ContainerVersion,
-					version)
+				return nil
 			}
 			lastState = cloudletInfo.State
 		}

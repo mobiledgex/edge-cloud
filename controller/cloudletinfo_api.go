@@ -59,7 +59,9 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		info := edgeproto.CloudletInfo{}
 		if s.store.STMGet(stm, &in.Key, &info) {
-			if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY && info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			if in.State == edgeproto.CloudletState_CLOUDLET_STATE_READY &&
+				info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY &&
+				info.State != edgeproto.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE {
 				changedToOnline = true
 			}
 		}
@@ -83,6 +85,8 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		}
 	case edgeproto.CloudletState_CLOUDLET_STATE_READY:
 		newState = edgeproto.TrackedState_READY
+	case edgeproto.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE:
+		fallthrough
 	case edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE:
 		newState = edgeproto.TrackedState_UPDATING
 	default:
