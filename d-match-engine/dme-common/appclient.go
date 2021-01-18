@@ -44,13 +44,13 @@ func UpdateClientsBuffer(ctx context.Context, msg *edgeproto.AppInstClient) {
 			}
 		}
 		//  We reached the limit of clients - remove the first one
-		if len(clientsMap.clientsByApp[mapKey]) == int(dmecommon.Settings.MaxTrackedDmeClients) {
+		if len(clientsMap.clientsByApp[mapKey]) == int(Settings.MaxTrackedDmeClients) {
 			clientsMap.clientsByApp[mapKey] = clientsMap.clientsByApp[mapKey][1:]
 		}
 		clientsMap.clientsByApp[mapKey] = append(clientsMap.clientsByApp[mapKey], *msg)
 	}
 	// If there is an outstanding request for this appInstClientKey - send it out
-	appInstClientKeyCache.Show(&edgeproto.AppInstClientKey{}, func(obj *edgeproto.AppInstClientKey) error {
+	AppInstClientKeyCache.Show(&edgeproto.AppInstClientKey{}, func(obj *edgeproto.AppInstClientKey) error {
 		if msg.ClientKey.Matches(obj, edgeproto.MatchFilter()) {
 			ClientSender.Update(ctx, msg)
 			return fmt.Errorf("Found match - just send once")
@@ -83,7 +83,7 @@ func PurgeAppInstClients(ctx context.Context, msg *edgeproto.AppInstKey) {
 
 func SendCachedClients(ctx context.Context, old *edgeproto.AppInstClientKey, new *edgeproto.AppInstClientKey) {
 	// Check if we have an outstanding streaming request which would be a superset
-	err := appInstClientKeyCache.Show(&edgeproto.AppInstClientKey{}, func(obj *edgeproto.AppInstClientKey) error {
+	err := AppInstClientKeyCache.Show(&edgeproto.AppInstClientKey{}, func(obj *edgeproto.AppInstClientKey) error {
 		// if we found an exact match - it's this clients
 		if new.Matches(obj) {
 			return nil

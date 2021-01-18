@@ -1,9 +1,8 @@
-package main
+package dmecommon
 
 import (
 	"testing"
 
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/require"
@@ -15,7 +14,7 @@ func TestAddClients(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	dmecommon.Settings.MaxTrackedDmeClients = 2
+	Settings.MaxTrackedDmeClients = 2
 
 	InitAppInstClients()
 
