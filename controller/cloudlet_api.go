@@ -1673,15 +1673,22 @@ func (s *CloudletApi) UsesTrustPolicy(key *edgeproto.PolicyKey, stateMatch edgep
 
 func (s *CloudletApi) ValidateCloudletsUsingTrustPolicy(ctx context.Context, trustPolicy *edgeproto.TrustPolicy) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "ValidateCloudletsUsingTrustPolicy", "policy", trustPolicy)
-
+	cloudletKeys := make(map[*edgeproto.CloudletKey]struct{})
 	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for k, data := range s.cache.Objs {
+	for ck, data := range s.cache.Objs {
 		val := data.Obj
-		if k.Organization != trustPolicy.Key.Organization || val.TrustPolicy != trustPolicy.Key.Name {
+		if ck.Organization != trustPolicy.Key.Organization || val.TrustPolicy != trustPolicy.Key.Name {
 			continue
 		}
-		err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(&k, trustPolicy)
+		copyKey := edgeproto.CloudletKey{
+			Organization: ck.Organization,
+			Name:         ck.Name,
+		}
+		cloudletKeys[&copyKey] = struct{}{}
+	}
+	s.cache.Mux.Unlock()
+	for k := range cloudletKeys {
+		err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(k, trustPolicy)
 		if err != nil {
 			return fmt.Errorf("AppInst on cloudlet %s not compatible with trust policy - %s", strings.TrimSpace(k.String()), err.Error())
 		}
