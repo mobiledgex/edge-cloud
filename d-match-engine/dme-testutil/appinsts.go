@@ -122,7 +122,7 @@ func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	inst.CloudletLoc = c.Location
 	inst.Uri = c.Uri
 	inst.State = edgeproto.TrackedState_READY
-	inst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK // HEALTH_CHECK_OK is not default now
+	inst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_OK // HEALTH_CHECK_OK is not default now
 	return &inst
 }
 
@@ -130,7 +130,7 @@ func MakeCloudletInfo(c *Cloudlet) *edgeproto.CloudletInfo {
 	info := edgeproto.CloudletInfo{}
 	info.Key.Organization = c.CarrierName
 	info.Key.Name = c.Name
-	info.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	info.State = dme.CloudletState_CLOUDLET_STATE_READY
 	return &info
 }
 

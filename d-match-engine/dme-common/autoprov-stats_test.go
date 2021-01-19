@@ -257,7 +257,9 @@ type apStatsTestData struct {
 func (s *apStatsTestData) run(t *testing.T, ctx context.Context) {
 	// reset all data
 	actualSendCounts := make(map[edgeproto.CloudletKey]uint64)
-	SetupMatchEngine()
+
+	eehandler := &EmptyEdgeEventsHandler{}
+	SetupMatchEngine(eehandler)
 	InitAutoProvStats(500, 0, 1, &edgeproto.NodeKey{}, func(ctx context.Context, counts *edgeproto.AutoProvCounts) bool {
 		require.Equal(t, 1, len(counts.Counts))
 		apCount := counts.Counts[0]

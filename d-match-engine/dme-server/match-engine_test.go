@@ -20,8 +20,11 @@ func TestAddRemove(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 	span := log.SpanFromContext(ctx)
 
-	dmecommon.SetupMatchEngine()
-	InitAppInstClients()
+	eehandler, err := initEdgeEventsPlugin(ctx, "standalone")
+	require.Nil(t, err, "init edge events plugin")
+	dmecommon.SetupMatchEngine(eehandler)
+	dmecommon.InitAppInstClients()
+
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
@@ -87,8 +90,8 @@ func TestAddRemove(t *testing.T) {
 		}
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 		// Make sure we get the statsKey value filled in
-		call := ApiStatCall{}
-		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
+		call := dmecommon.ApiStatCall{}
+		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.Key)
 
 		reply, err := serv.FindCloudlet(ctx, &rr.Req)
 		assert.Nil(t, err, "find cloudlet")
@@ -98,9 +101,9 @@ func TestAddRemove(t *testing.T) {
 				"findCloudletData[%d]", ii)
 			// Check the filled in cloudlet details
 			assert.Equal(t, rr.ReplyCarrier,
-				call.key.CloudletFound.Organization, "findCloudletData[%d]", ii)
+				call.Key.CloudletFound.Organization, "findCloudletData[%d]", ii)
 			assert.Equal(t, rr.ReplyCloudlet,
-				call.key.CloudletFound.Name, "findCloudletData[%d]", ii)
+				call.Key.CloudletFound.Name, "findCloudletData[%d]", ii)
 		}
 	}
 
@@ -118,8 +121,8 @@ func TestAddRemove(t *testing.T) {
 		assert.Nil(t, err, "verify cookie")
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 		// Make sure we get the statsKey value filled in
-		call := ApiStatCall{}
-		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.key)
+		call := dmecommon.ApiStatCall{}
+		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.Key)
 
 		for attempt := 0; attempt < maxAttempts; attempt++ {
 
@@ -134,7 +137,7 @@ func TestAddRemove(t *testing.T) {
 				}
 				// carrier is the same either way
 				assert.Equal(t, rr.ReplyCarrier,
-					call.key.CloudletFound.Organization, "findCloudletHAData[%d]", ii)
+					call.Key.CloudletFound.Organization, "findCloudletHAData[%d]", ii)
 			}
 		}
 		// we expect at least 35% of all replies to be for each cloudlet, with confidence of 99.8%
@@ -173,7 +176,7 @@ func TestAddRemove(t *testing.T) {
 
 	// disable one cloudlet and check the newly found cloudlet
 	cloudletInfo := cloudlets[2]
-	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
 	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
 
@@ -188,7 +191,7 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// re-enable and check that the results is now what original findCloudlet[3] is
-	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 	dmecommon.SetInstStateFromCloudletInfo(ctx, cloudletInfo)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
@@ -197,14 +200,14 @@ func TestAddRemove(t *testing.T) {
 
 	// Change the health check status of the appInst and get check the results
 	appInst := dmetest.MakeAppInst(&dmetest.Apps[0], &dmetest.Cloudlets[2])
-	appInst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE
+	appInst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE
 	dmecommon.AddAppInst(ctx, appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Status, reply.Status)
 	assert.Equal(t, dmetest.DisabledCloudletRR.Reply.Fqdn, reply.Fqdn)
 	// reset and check the one that we get is returned
-	appInst.HealthCheck = edgeproto.HealthCheck_HEALTH_CHECK_OK
+	appInst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_OK
 	dmecommon.AddAppInst(ctx, appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")

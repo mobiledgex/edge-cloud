@@ -11,8 +11,8 @@ import "autoscalepolicy.proto";
 import "cloudlet.proto";
 import "app.proto";
 import "clusterinst.proto";
-import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 import "google/protobuf/timestamp.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
@@ -159,7 +159,7 @@ message AutoProvInfo {
   // Id of client assigned by server (internal use only)
   int64 notify_id = 3 [(protogen.hidetag) = "nocmp"];
   // failover result state
-  MaintenanceState maintenance_state = 4;
+  distributed_match_engine.MaintenanceState maintenance_state = 4;
   // Failover actions done if any
   repeated string completed = 5;
   // Errors if any

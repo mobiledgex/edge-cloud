@@ -73,6 +73,19 @@ func torads(deg float64) float64 {
 	return deg * math.Pi / 180
 }
 
+func todegs(rad float64) float64 {
+	return rad * 180 / math.Pi
+}
+
+// Return 0 - 360
+func todegsUnitCircle(rad float64) float64 {
+	deg := todegs(rad)
+	if deg < 0 {
+		return math.Mod(deg, 360.0) + 360
+	}
+	return math.Mod(deg, 360.0)
+}
+
 // Use the ‘haversine’ formula to calculate the great-circle distance between two points
 func DistanceBetween(loc1, loc2 dme.Loc) float64 {
 	radiusofearth := 6371

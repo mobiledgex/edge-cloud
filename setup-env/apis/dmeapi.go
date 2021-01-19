@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -33,6 +32,7 @@ type dmeApiRequest struct {
 	Fqreq            dmeproto.FqdnListRequest             `yaml:"fqdnlistrequest"`
 	Qosreq           dmeproto.QosPositionRequest          `yaml:"qospositionrequest"`
 	AppOFqreq        dmeproto.AppOfficialFqdnRequest      `yaml:"appofficialfqdnrequest"`
+	Eereq            dmeproto.ClientEdgeEvent             `yaml:"clientedgeevent"`
 	TokenServerPath  string                               `yaml:"token-server-path"`
 	ErrorExpected    string                               `yaml:"error-expected"`
 	Repeat           int                                  `yaml:"repeat"`
@@ -49,6 +49,12 @@ type registration struct {
 
 type RegisterReplyWithError struct {
 	dmeproto.RegisterClientReply
+}
+
+type findcloudlet struct {
+	Req   dmeproto.FindCloudletRequest `yaml:"findcloudletrequest"`
+	Reply dmeproto.FindCloudletReply   `yaml:"findcloudletreply"`
+	At    time.Time                    `yaml:"at"`
 }
 
 var apiRequests []*dmeApiRequest
@@ -166,6 +172,10 @@ func (c *dmeRestClient) GetAppOfficialFqdn(ctx context.Context, in *dmeproto.App
 	return out, nil
 }
 
+func (c *dmeRestClient) StreamEdgeEvent(ctx context.Context, opts ...grpc.CallOption) (dmeproto.MatchEngineApi_StreamEdgeEventClient, error) {
+	return nil, fmt.Errorf("StreamEdgeEvent not supported yet in E2E via REST")
+}
+
 func readDMEApiFile(apifile string) {
 	err := util.ReadYamlFile(apifile, &apiRequests, util.ValidateReplacedVars())
 	if err != nil && !util.IsYamlOk(err, "dmeapi") {
@@ -265,6 +275,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 	var dmeerror error
 
 	sessionCookie := ""
+	eeCookie := ""
 	var registerStatus registration
 	if api != "register" {
 		//read the results from the last register so we can get the cookie.
@@ -290,6 +301,32 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		}
 		sessionCookie = registerStatus.Reply.SessionCookie
 		log.Printf("Using session cookie: %s\n", sessionCookie)
+
+		// If StreamEdgeEvent, we need the edgeeventscookie from FindCloudletReply as well
+		if api == "edgeeventinit" || api == "edgeeventlatency" || api == "edgeeventnewcloudlet" {
+			var findCloudlet findcloudlet
+			err := util.ReadYamlFile(outputDir+"/edgeeventfindcloudlet.yml", &findCloudlet)
+			if err != nil || findCloudlet.Req.CarrierName != apiRequest.Fcreq.CarrierName ||
+				findCloudlet.Req.GpsLocation != apiRequest.Fcreq.GpsLocation ||
+				findCloudlet.Req.CellId != apiRequest.Fcreq.CellId ||
+				time.Since(findCloudlet.At) > time.Hour {
+				log.Printf("Redoing findcloudlet for StreamEdgeEvent - %+v\n", apiRequest.Fcreq)
+				ctx = context.WithValue(ctx, "edgeevents", true)
+				ok, reply := runDmeAPIiter(ctx, "findcloudlet", apiFile, outputDir, apiRequest, client)
+				if !ok {
+					return false, nil
+				}
+				out, ymlerror := yaml.Marshal(reply)
+				if ymlerror != nil {
+					fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
+					return false, nil
+				}
+				util.PrintToFile("edgeeventfindcloudlet.yml", outputDir, string(out), true)
+				util.ReadYamlFile(outputDir+"/edgeeventfindcloudlet.yml", &findCloudlet)
+			}
+			eeCookie = findCloudlet.Reply.EdgeEventsCookie
+			log.Printf("Using eeCookie: %s\n", eeCookie)
+		}
 	}
 
 	switch api {
@@ -335,15 +372,24 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				}
 				dmereply = reply
 				dmeerror = err
-				if err != nil {
-					break
+				if err == nil {
+					_, ok := ctx.Value("edgeevents").(bool)
+					if ok {
+						dmereply = &findcloudlet{
+							Req:   apiRequest.Fcreq,
+							Reply: *reply,
+							At:    time.Now(),
+						}
+					}
 				}
 			}
 		}
 	case "register":
 		var expirySeconds int64 = 600
 		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
-			privKeyFile := filepath.Dir(apiFile) + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
+			goPath := os.Getenv("GOPATH")
+			datadir := goPath + "/" + "src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data"
+			privKeyFile := datadir + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
 			expTime := time.Now().Add(time.Duration(expirySeconds) * time.Second).Unix()
 			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.OrgName,
 				apiRequest.Rcreq.AppName, apiRequest.Rcreq.AppVers, expTime)
@@ -438,6 +484,112 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		resp, err := client.GetQosPositionKpi(ctx, &apiRequest.Qosreq)
 		if err == nil {
 			dmereply, err = resp.Recv()
+		}
+		dmeerror = err
+	case "edgeeventinit":
+		apiRequest.Eereq.SessionCookie = sessionCookie
+		apiRequest.Eereq.EdgeEventsCookie = eeCookie
+		log.Printf("StreamEdgeEvent request: %+v\n", apiRequest.Eereq)
+		resp, err := client.StreamEdgeEvent(ctx)
+		if err == nil {
+			// Send init request
+			err = resp.Send(&apiRequest.Eereq)
+			// Receive init confirmation
+			dmereply, err = resp.Recv()
+			if err != nil {
+				break
+			}
+			// Terminate persistent connection
+			terminateEvent := new(dmeproto.ClientEdgeEvent)
+			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
+			err = resp.Send(terminateEvent)
+		}
+		dmeerror = err
+	case "edgeeventlatency":
+		apiRequest.Eereq.SessionCookie = sessionCookie
+		apiRequest.Eereq.EdgeEventsCookie = eeCookie
+		log.Printf("StreamEdgeEvent request: %+v\n", apiRequest.Eereq)
+		resp, err := client.StreamEdgeEvent(ctx)
+		if err == nil {
+			// Send init request
+			err = resp.Send(&apiRequest.Eereq)
+			// Receive init confirmation
+			_, err = resp.Recv()
+			if err != nil {
+				break
+			}
+			// Send dummy latency samples as Latency Event
+			latencyEvent := new(dmeproto.ClientEdgeEvent)
+			latencyEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_LATENCY_SAMPLES
+			latencyEvent.GpsLocation = &dmeproto.Loc{
+				Latitude:  31.00,
+				Longitude: -91.00,
+			}
+			latencyEvent.CarrierName = "dmuus"
+			latencyEvent.DeviceInfo = &dmeproto.DeviceInfo{
+				DataNetworkType: "LTE",
+			}
+			samples := make([]*dmeproto.Sample, 0)
+			// Create dummy samples
+			list := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
+			for i, val := range list {
+				s := &dmeproto.Sample{
+					Value: val,
+					Timestamp: &dmeproto.Timestamp{
+						Seconds: int64(i),
+						Nanos:   12345,
+					},
+				}
+				samples = append(samples, s)
+			}
+			latencyEvent.Samples = samples
+			err = resp.Send(latencyEvent)
+			// Receive processed latency samples
+			dmereply, err = resp.Recv()
+			if err != nil {
+				break
+			}
+			// Terminate persistent connection
+			terminateEvent := new(dmeproto.ClientEdgeEvent)
+			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
+			err = resp.Send(terminateEvent)
+		}
+		dmeerror = err
+	case "edgeeventnewcloudlet":
+		apiRequest.Eereq.SessionCookie = sessionCookie
+		apiRequest.Eereq.EdgeEventsCookie = eeCookie
+		log.Printf("StreamEdgeEvent request: %+v\n", apiRequest.Eereq)
+		resp, err := client.StreamEdgeEvent(ctx)
+		if err == nil {
+			// Send init request
+			err = resp.Send(&apiRequest.Eereq)
+			// Receive init confirmation
+			_, err = resp.Recv()
+			if err != nil {
+				break
+			}
+			// Send dummy latency samples as Latency Event
+			gpsUpdateEvent := new(dmeproto.ClientEdgeEvent)
+			gpsUpdateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_LOCATION_UPDATE
+			gpsUpdateEvent.GpsLocation = &dmeproto.Loc{
+				Latitude:  35.00,
+				Longitude: -95.00,
+			}
+			gpsUpdateEvent.CarrierName = "dmuus"
+			gpsUpdateEvent.DeviceInfo = &dmeproto.DeviceInfo{
+				DeviceOs:    "Android",
+				DeviceModel: "SM-G920F",
+			}
+			err = resp.Send(gpsUpdateEvent)
+			// Receive processed latency samples
+			dmereply, err = resp.Recv()
+			if err != nil {
+				break
+			}
+			// Terminate persistent connection
+			terminateEvent := new(dmeproto.ClientEdgeEvent)
+			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
+			err = resp.Send(terminateEvent)
 		}
 		dmeerror = err
 	default:

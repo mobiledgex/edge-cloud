@@ -33,25 +33,6 @@ message AppInstKey {
   option (gogoproto.gostring) = true;
 }
 
-// Health Check Status
-//
-// Health check status gets set by external, or rootLB health check.
-//
-// 0: `HEALTH_CHECK_UNKNOWN`
-// 1: `HEALTH_CHECK_FAIL_ROOTLB_OFFLINE`
-// 2: `HEALTH_CHECK_FAIL_SERVER_FAIL`
-// 3: `HEALTH_CHECK_OK`
-enum HealthCheck {
-  // Health Check is unknown
-  HEALTH_CHECK_UNKNOWN = 0;  
-  // Health Check failure due to RootLB being offline
-  HEALTH_CHECK_FAIL_ROOTLB_OFFLINE = 1;
-  // Health Check failure due to Backend server being unavailable
-  HEALTH_CHECK_FAIL_SERVER_FAIL = 2;
-  // Health Check is ok
-  HEALTH_CHECK_OK = 3;
-}
-
 // Power State
 //
 // Power State of the AppInst
@@ -69,27 +50,27 @@ enum HealthCheck {
 // 10: `POWER_STATE_ERROR`
 enum PowerState {
   // Unknown
-  POWER_STATE_UNKNOWN = 0 [(protogen.enum_backend) = true];
+  POWER_STATE_UNKNOWN = 0 [(distributed_match_engine.enum_backend) = true];
   // Power On Requested
-  POWER_ON_REQUESTED = 1 [(protogen.enum_backend) = true];
+  POWER_ON_REQUESTED = 1 [(distributed_match_engine.enum_backend) = true];
   // Powering On
-  POWERING_ON = 2 [(protogen.enum_backend) = true];
+  POWERING_ON = 2 [(distributed_match_engine.enum_backend) = true];
   // Power On
   POWER_ON = 3;
   // Power Off Requested
-  POWER_OFF_REQUESTED = 4 [(protogen.enum_backend) = true];
+  POWER_OFF_REQUESTED = 4 [(distributed_match_engine.enum_backend) = true];
   // Powering Off
-  POWERING_OFF = 5 [(protogen.enum_backend) = true];
+  POWERING_OFF = 5 [(distributed_match_engine.enum_backend) = true];
   // Power Off
   POWER_OFF = 6;
   // Reboot Requested
-  REBOOT_REQUESTED = 7 [(protogen.enum_backend) = true];
+  REBOOT_REQUESTED = 7 [(distributed_match_engine.enum_backend) = true];
   // Rebooting
-  REBOOTING = 8 [(protogen.enum_backend) = true];
+  REBOOTING = 8 [(distributed_match_engine.enum_backend) = true];
   // Reboot
   REBOOT = 9;
   // Error
-  POWER_STATE_ERROR = 10 [(protogen.enum_backend) = true];
+  POWER_STATE_ERROR = 10 [(distributed_match_engine.enum_backend) = true];
 }
 
 // Application Instance
@@ -139,7 +120,9 @@ message AppInst {
   // shared volume size when creating auto cluster
   uint64 shared_volume_size = 28;
   // Health Check status
-  HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
+  distributed_match_engine.HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
+  // Optional privacy policy name
+  string privacy_policy = 30;
   // Power State of the AppInst
   PowerState power_state = 31 [(protogen.hidetag) = "nocmp"];
   // Size of external volume to be attached to nodes.  This is for the root partition
@@ -305,4 +288,23 @@ message AppInstLookup2 {
   // lookup by AutoProvPolicy
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
   option (protogen.generate_lookup_by_subfield) = "CloudletKey";
+}
+
+message AppInstLatency {
+  // Unique identifier key
+  AppInstKey key = 1 [(gogoproto.nullable) = false];
+  string message = 2;
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
+}
+
+service AppInstLatencyApi {
+  // Request Latency measurements for clients connected to AppInst
+  rpc RequestAppInstLatency(AppInstLatency) returns (Result) {
+    option (google.api.http) = {
+      post: "/request/appinstlatency"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
+    option (protogen.mc2_api_notifyroot) = true;
+  }
 }
