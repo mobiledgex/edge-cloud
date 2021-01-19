@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 
+	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -98,17 +99,17 @@ func (s *CloudletInfoRecv) RecvHook(ctx context.Context, notice *edgeproto.Notic
 	s.sendrecv.updateCloudletKey(notice.Action, &buf.Key)
 
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
-		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
-			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE ||
-			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC ||
-			buf.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
+		if buf.State == dmeproto.CloudletState_CLOUDLET_STATE_READY ||
+			buf.State == dmeproto.CloudletState_CLOUDLET_STATE_UPGRADE ||
+			buf.State == dmeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC ||
+			buf.State == dmeproto.CloudletState_CLOUDLET_STATE_INIT {
 			// trigger send of cloudlet details to cloudlet
 			if s.sendrecv.cloudletSend != nil {
 				log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo recv hook, send Cloudlet", "key", buf.Key, "state", buf.State)
 				s.sendrecv.cloudletSend.Update(ctx, &buf.Key, nil, 0)
 			}
 		}
-		if buf.State == edgeproto.CloudletState_CLOUDLET_STATE_READY || buf.State == edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC && !buf.ControllerCacheReceived {
+		if buf.State == dmeproto.CloudletState_CLOUDLET_STATE_READY || buf.State == dmeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC && !buf.ControllerCacheReceived {
 			log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo recv hook read, send all filtered data", "key", buf.Key)
 			// allow all filtered objects to be sent
 			s.sendrecv.cloudletReady = true

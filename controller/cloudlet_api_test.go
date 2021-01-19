@@ -14,6 +14,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -23,7 +24,7 @@ import (
 )
 
 type stateTransition struct {
-	triggerState   edgeproto.CloudletState
+	triggerState   dme.CloudletState
 	triggerVersion string
 	expectedState  edgeproto.TrackedState
 	ignoreState    bool
@@ -203,7 +204,7 @@ func waitForState(key *edgeproto.CloudletKey, state edgeproto.TrackedState) erro
 	return fmt.Errorf("Unable to get desired cloudlet state, actual state %s, desired state %s", lastState, state)
 }
 
-func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.CloudletState, taskName, version string) {
+func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state dme.CloudletState, taskName, version string) {
 	info := edgeproto.CloudletInfo{}
 	info.Key = *key
 	info.State = state
@@ -212,7 +213,7 @@ func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, sta
 	cloudletInfoApi.Update(ctx, &info, 0)
 }
 
-func forceCloudletInfoMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.MaintenanceState) {
+func forceCloudletInfoMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state dme.MaintenanceState) {
 	info := edgeproto.CloudletInfo{}
 	if !cloudletInfoApi.cache.Get(key, &info) {
 		info.Key = *key
@@ -288,13 +289,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, "stop cloudlet")
 	}()
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_CRM_INITOK
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_READY
@@ -309,13 +310,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_UPDATING
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, crm_v1)
 	require.Nil(t, err, "cloudlet state transition")
 }
 
@@ -330,7 +331,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, "cloudlet obj created")
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 	eMock.verifyEvent(t, "upgrading cloudlet", []node.EventTag{
@@ -344,7 +345,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 	eMock.verifyEvent(t, "cloudlet online", []node.EventTag{
@@ -358,10 +359,10 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	stateTransitions := map[edgeproto.MaintenanceState]edgeproto.MaintenanceState{
-		edgeproto.MaintenanceState_FAILOVER_REQUESTED:    edgeproto.MaintenanceState_FAILOVER_DONE,
-		edgeproto.MaintenanceState_CRM_REQUESTED:         edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE,
-		edgeproto.MaintenanceState_NORMAL_OPERATION_INIT: edgeproto.MaintenanceState_NORMAL_OPERATION,
+	stateTransitions := map[dme.MaintenanceState]dme.MaintenanceState{
+		dme.MaintenanceState_FAILOVER_REQUESTED:    dme.MaintenanceState_FAILOVER_DONE,
+		dme.MaintenanceState_CRM_REQUESTED:         dme.MaintenanceState_CRM_UNDER_MAINTENANCE,
+		dme.MaintenanceState_NORMAL_OPERATION_INIT: dme.MaintenanceState_NORMAL_OPERATION,
 	}
 
 	cancel := cloudletApi.cache.WatchKey(&cloudlet.Key, func(ctx context.Context) {
@@ -370,16 +371,16 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 			return
 		}
 		switch cl.MaintenanceState {
-		case edgeproto.MaintenanceState_FAILOVER_REQUESTED:
+		case dme.MaintenanceState_FAILOVER_REQUESTED:
 			info := edgeproto.AutoProvInfo{}
 			if !autoProvInfoApi.cache.Get(&cloudlet.Key, &info) {
 				info.Key = cloudlet.Key
 			}
 			info.MaintenanceState = stateTransitions[cl.MaintenanceState]
 			autoProvInfoApi.cache.Update(ctx, &info, 0)
-		case edgeproto.MaintenanceState_CRM_REQUESTED:
+		case dme.MaintenanceState_CRM_REQUESTED:
 			fallthrough
-		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
+		case dme.MaintenanceState_NORMAL_OPERATION_INIT:
 			info := edgeproto.CloudletInfo{}
 			if !cloudletInfoApi.cache.Get(&cloudlet.Key, &info) {
 				info.Key = cloudlet.Key
@@ -391,7 +392,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 
 	defer cancel()
 
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_MAINTENANCE_START
+	cloudlet.MaintenanceState = dme.MaintenanceState_MAINTENANCE_START
 	cloudlet.Fields = append(cloudlet.Fields, edgeproto.CloudletFieldMaintenanceState)
 	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
@@ -403,7 +404,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	cloudlet.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
 	eMock.verifyEvent(t, "cloudlet maintenance done", []node.EventTag{
@@ -422,12 +423,12 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	})
 
 	// Cloudlet state is INITOK but from old CRM (crm_v1)
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v1)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v1)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
 	// Cloudlet should still be ready, ignoring the above stale entry
-	forceCloudletInfoState(ctx, &cloudlet.Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 

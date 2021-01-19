@@ -11,6 +11,7 @@ import "cloudlet.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -36,17 +37,17 @@ message VMNetInfo {
 // 6: `VM_FORCE_FREE`
 enum VMState {
 	// VM is free to use
-	VM_FREE = 0 [(protogen.enum_backend) = true];
+	VM_FREE = 0 [(distributed_match_engine.enum_backend) = true];
 	// VM is in progress
-	VM_IN_PROGRESS = 1 [(protogen.enum_backend) = true];
+	VM_IN_PROGRESS = 1 [(distributed_match_engine.enum_backend) = true];
 	// VM is in use
-	VM_IN_USE = 2 [(protogen.enum_backend) = true];
+	VM_IN_USE = 2 [(distributed_match_engine.enum_backend) = true];
 	// Add VM
-	VM_ADD = 3 [(protogen.enum_backend) = true];
+	VM_ADD = 3 [(distributed_match_engine.enum_backend) = true];
 	// Remove VM
-	VM_REMOVE = 4 [(protogen.enum_backend) = true];
+	VM_REMOVE = 4 [(distributed_match_engine.enum_backend) = true];
 	// Update VM
-	VM_UPDATE = 5 [(protogen.enum_backend) = true];
+	VM_UPDATE = 5 [(distributed_match_engine.enum_backend) = true];
 	// Forcefully free a VM, to be used at user's discretion
 	VM_FORCE_FREE = 6;
 }
