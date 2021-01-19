@@ -87,6 +87,7 @@ type Services struct {
 	sync                *Sync
 	influxQ             *influxq.InfluxQ
 	events              *influxq.InfluxQ
+	persConnInfluxQ     *influxq.InfluxQ
 	notifyServerMgr     bool
 	grpcServer          *grpc.Server
 	httpServer          *http.Server
@@ -270,8 +271,16 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.events = events
+	// persistent stats influx
+	persConnInfluxQ := influxq.NewInfluxQ(cloudcommon.PersistentConnDbName, influxAuth.User, influxAuth.Pass)
+	err = persConnInfluxQ.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	services.persConnInfluxQ = persConnInfluxQ
 
-	InitNotify(influxQ, &appInstClientApi)
+	InitNotify(influxQ, persConnInfluxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {
 		addrs := strings.Split(*notifyParentAddrs, ",")
 		tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
@@ -377,6 +386,7 @@ func startServices() error {
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
 	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
+	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -481,6 +491,9 @@ func stopServices() {
 	if services.events != nil {
 		services.events.Stop()
 	}
+	if services.persConnInfluxQ != nil {
+		services.events.Stop()
+	}
 	if services.sync != nil {
 		services.sync.Done()
 	}
@@ -548,9 +561,10 @@ func InitApis(sync *Sync) {
 	InitAppInstClientApi()
 	InitDeviceApi(sync)
 	InitOrganizationApi(sync)
+	InitAppInstLatencyApi(sync)
 }
 
-func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
+func InitNotify(metricsInflux *influxq.InfluxQ, persConnInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
@@ -575,12 +589,33 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(&vmPoolInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
-	autoProvPolicyApi.SetInfluxQ(influxQ)
+	autoProvPolicyApi.SetInfluxQ(metricsInflux)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(NewControllerMetricsReceiver(metricsInflux, persConnInflux)))
+}
+
+type ControllerMetricsReceiver struct {
+	metricsInflux  *influxq.InfluxQ
+	persConnInflux *influxq.InfluxQ
+}
+
+func NewControllerMetricsReceiver(metricsInflux *influxq.InfluxQ, persConnInflux *influxq.InfluxQ) *ControllerMetricsReceiver {
+	c := new(ControllerMetricsReceiver)
+	c.metricsInflux = metricsInflux
+	c.persConnInflux = persConnInflux
+	return c
+}
+
+// Send metric to correct influxdb
+func (c *ControllerMetricsReceiver) RecvMetric(ctx context.Context, metric *edgeproto.Metric) {
+	if _, ok := cloudcommon.PersistentMetrics[metric.Name]; ok {
+		c.persConnInflux.AddMetric(metric)
+	} else {
+		c.metricsInflux.AddMetric(metric)
+	}
 }

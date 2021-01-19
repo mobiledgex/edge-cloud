@@ -103,6 +103,10 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.UpdateVmPoolTimeout), 0)
 		case SettingsFieldUpdateTrustPolicyTimeout:
 			v.CheckGT(f, int64(s.UpdateTrustPolicyTimeout), 0)
+		case SettingsFieldDmeApiMetricsCollectionInterval:
+			v.CheckGT(f, int64(s.DmeApiMetricsCollectionInterval), 0)
+		case SettingsFieldPersistentConnectionMetricsCollectionInterval:
+			v.CheckGT(f, int64(s.PersistentConnectionMetricsCollectionInterval), 0)
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -138,6 +142,8 @@ func GetDefaultSettings() *Settings {
 	s.CloudletMaintenanceTimeout = Duration(5 * time.Minute)
 	s.UpdateVmPoolTimeout = Duration(20 * time.Minute)
 	s.UpdateTrustPolicyTimeout = Duration(10 * time.Minute)
+	s.DmeApiMetricsCollectionInterval = Duration(30 * time.Second)
+	s.PersistentConnectionMetricsCollectionInterval = Duration(60 * time.Minute)
 	return &s
 }
 

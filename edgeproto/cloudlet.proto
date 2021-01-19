@@ -12,6 +12,7 @@ import "common.proto";
 import "infraresources.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -230,7 +231,7 @@ message Cloudlet {
   // Chef client key
   map<string, string> chef_client_key = 29 [(protogen.backend) = true];
   // State for maintenance
-  MaintenanceState maintenance_state = 30;
+  distributed_match_engine.MaintenanceState maintenance_state = 30;
   // Override container version from policy file
   bool override_policy_container_version = 31;
   // VM Pool
@@ -404,37 +405,6 @@ service CloudletApi {
   }
 }
 
-// CloudletState
-//
-// CloudletState is the state of the Cloudlet.
-//
-//  0: `CLOUDLET_STATE_UNKNOWN`
-//  1: `CLOUDLET_STATE_ERRORS`
-//  2: `CLOUDLET_STATE_READY`
-//  3: `CLOUDLET_STATE_OFFLINE`
-//  4: `CLOUDLET_STATE_NOT_PRESENT`
-//  5: `CLOUDLET_STATE_INIT`
-//  6: `CLOUDLET_STATE_UPGRADE`
-//  7: `CLOUDLET_STATE_NEED_SYNC`
-enum CloudletState {
-  // Unknown
-  CLOUDLET_STATE_UNKNOWN = 0;
-  // Create/Delete/Update encountered errors (see Errors field of CloudletInfo)
-  CLOUDLET_STATE_ERRORS = 1;
-  // Cloudlet is created and ready
-  CLOUDLET_STATE_READY = 2;
-  // Cloudlet is offline (unreachable)
-  CLOUDLET_STATE_OFFLINE = 3;
-  // Cloudlet is not present
-  CLOUDLET_STATE_NOT_PRESENT = 4;
-  // Cloudlet is initializing
-  CLOUDLET_STATE_INIT = 5;
-  // Cloudlet is upgrading
-  CLOUDLET_STATE_UPGRADE = 6;
-  // Cloudlet needs data to synchronize
-  CLOUDLET_STATE_NEED_SYNC = 7;  
-}
-
 // Flavor details from the Cloudlet
 message FlavorInfo {
   // Name of the flavor on the Cloudlet
@@ -471,7 +441,7 @@ message CloudletInfo {
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
   // State of cloudlet
-  CloudletState state = 3;
+  distributed_match_engine.CloudletState state = 3;
   // Id of client assigned by server (internal use only)
   int64 notify_id = 4 [(protogen.hidetag) = "nocmp"];
   // Connected controller unique id
@@ -497,7 +467,7 @@ message CloudletInfo {
   // Indicates all controller data has been sent to CRM
   bool controller_cache_received = 15;
   // State for maintenance
-  MaintenanceState maintenance_state = 16;
+  distributed_match_engine.MaintenanceState maintenance_state = 16;
   // Resources used by cloudlet
   InfraResources resources = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Trust Policy State

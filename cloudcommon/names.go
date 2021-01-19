@@ -63,6 +63,25 @@ var AppInstEvent = "appinst"
 var AppInstCheckpoints = "appinst-checkpoints"
 var MonthlyInterval = "MONTH"
 
+// Persistent Influx variables
+var PersistentConnDbName = "persistent_metrics"
+var GpsLocationMetric = "gps-location"
+var AppInstLatencyMetric = "appinst-latency"
+var LatencyPerCarrierMetric = "latency-per-carrier"
+var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
+var LatencyPerLocationMetric = "latency-per-location"
+var CustomMetric = "custom-metrics"
+
+// Map used to identify which metrics should go to persistent_metrics db
+var PersistentMetrics = map[string]struct{}{
+	GpsLocationMetric:           struct{}{},
+	AppInstLatencyMetric:        struct{}{},
+	LatencyPerCarrierMetric:     struct{}{},
+	LatencyPerDataNetworkMetric: struct{}{},
+	LatencyPerLocationMetric:    struct{}{},
+	CustomMetric:                struct{}{},
+}
+
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
 var RemoteServerNone = ""

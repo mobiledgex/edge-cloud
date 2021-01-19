@@ -7,6 +7,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -83,7 +84,7 @@ func TestAppInstDownAlert(t *testing.T) {
 		appInstInfoApi.Update(ctx, in, 0)
 	}
 	for _, val := range appInstApi.cache.Objs {
-		require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_OK, val.Obj.HealthCheck)
+		require.Equal(t, dme.HealthCheck_HEALTH_CHECK_OK, val.Obj.HealthCheck)
 	}
 	// Trigger Alerts
 	for _, alert := range testutil.AlertData {
@@ -93,15 +94,15 @@ func TestAppInstDownAlert(t *testing.T) {
 
 	found := appInstApi.Get(&appinst.Key, &appinst)
 	require.True(t, found)
-	require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE, appinst.HealthCheck)
+	require.Equal(t, dme.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE, appinst.HealthCheck)
 	// check other appInstances
 	for ii, testData := range testutil.AppInstData {
 		found = appInstApi.Get(&testData.Key, &appinst)
 		require.True(t, found)
 		if ii == 0 {
-			require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL, appinst.HealthCheck)
+			require.Equal(t, dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL, appinst.HealthCheck)
 		} else {
-			require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_OK, appinst.HealthCheck)
+			require.Equal(t, dme.HealthCheck_HEALTH_CHECK_OK, appinst.HealthCheck)
 		}
 	}
 

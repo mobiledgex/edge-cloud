@@ -303,8 +303,8 @@ func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 			err = fmt.Errorf("CloudletInfo not found")
 			continue
 		}
-		if info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY && info.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
-			err = fmt.Errorf("CloudletInfo bad state %s", edgeproto.CloudletState_name[int32(info.State)])
+		if info.State != dmeproto.CloudletState_CLOUDLET_STATE_READY && info.State != dmeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+			err = fmt.Errorf("CloudletInfo bad state %s", dmeproto.CloudletState_name[int32(info.State)])
 			continue
 		}
 		err = nil
@@ -524,6 +524,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err1 = ReadYamlFile(firstYamlFile, &f1)
 		err2 = ReadYamlFile(secondYamlFile, &f2)
 
+		// Ignore EdgeEventsCookie
+		copts = []cmp.Option{
+			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
+		}
+
 		//publicport is variable so we nil it out for comparison purposes.
 		clearFindCloudletPorts(&f1)
 		clearFindCloudletPorts(&f2)
@@ -536,6 +541,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		err1 = ReadYamlFile(firstYamlFile, &f1)
 		err2 = ReadYamlFile(secondYamlFile, &f2)
+
+		// Ignore EdgeEventsCookie
+		copts = []cmp.Option{
+			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
+		}
 
 		//publicport is variable so we nil it out for comparison purposes.
 		for _, reply := range f1 {
@@ -643,6 +653,26 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		dat2, err2 = ioutil.ReadFile(secondYamlFile)
 		y1 = string(dat1)
 		y2 = string(dat2)
+	} else if fileType == "streamedgeevent" {
+		var s1 dmeproto.ServerEdgeEvent
+		var s2 dmeproto.ServerEdgeEvent
+
+		err1 = ReadYamlFile(firstYamlFile, &s1)
+		err2 = ReadYamlFile(secondYamlFile, &s2)
+
+		// Ignore dynamic fields (timestamp in statistics, and edgeeventscookie in newcloudlet)
+		ss := []dmeproto.ServerEdgeEvent{s1, s2}
+		for _, s := range ss {
+			if s.Statistics != nil {
+				s.Statistics.Timestamp.Seconds = 0
+				s.Statistics.Timestamp.Nanos = 0
+			}
+			if s.NewCloudlet != nil {
+				s.NewCloudlet.EdgeEventsCookie = ""
+			}
+		}
+		y1 = s1
+		y2 = s2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -44,7 +45,7 @@ func (s *AppInstHandler) Update(ctx context.Context, in *edgeproto.AppInst, rev 
 
 func (s *AppInstHandler) Delete(ctx context.Context, in *edgeproto.AppInst, rev int64) {
 	dmecommon.RemoveAppInst(ctx, in)
-	PurgeAppInstClients(ctx, &in.Key)
+	dmecommon.PurgeAppInstClients(ctx, &in.Key)
 }
 
 func (s *AppInstHandler) Prune(ctx context.Context, keys map[edgeproto.AppInstKey]struct{}) {
@@ -87,7 +88,7 @@ func (s *CloudletInfoHandler) Update(ctx context.Context, in *edgeproto.Cloudlet
 
 func (s *CloudletInfoHandler) Delete(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	// set cloudlet state for the instance accordingly
-	in.State = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+	in.State = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 	dmecommon.SetInstStateFromCloudletInfo(ctx, in)
 }
 
@@ -99,15 +100,12 @@ func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.Clou
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 
 var nodeCache edgeproto.NodeCache
-var ClientSender *notify.AppInstClientSend
-var appInstClientKeyCache edgeproto.AppInstClientKeyCache
-var platformClientsCache edgeproto.DeviceCache
 
 func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption, notifyOps ...notify.ClientOp) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
-	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyCache)
-	edgeproto.InitDeviceCache(&platformClientsCache)
-	appInstClientKeyCache.SetUpdatedCb(SendCachedClients)
+	edgeproto.InitAppInstClientKeyCache(&dmecommon.AppInstClientKeyCache)
+	edgeproto.InitDeviceCache(&dmecommon.PlatformClientsCache)
+	dmecommon.AppInstClientKeyCache.SetUpdatedCb(dmecommon.SendCachedClients)
 	notifyClient := notify.NewClient(nodeMgr.Name(), strings.Split(addrs, ","), tlsDialOption, notifyOps...)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
@@ -116,14 +114,14 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	notifyClient.RegisterRecv(notify.NewCloudletRecv(&CloudletHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&dmecommon.DmeAppTbl.FreeReservableClusterInsts))
-	notifyClient.RegisterRecvAppInstClientKeyCache(&appInstClientKeyCache)
+	notifyClient.RegisterRecvAppInstClientKeyCache(&dmecommon.AppInstClientKeyCache)
 
 	notifyClient.RegisterSendNodeCache(&nodeCache)
-	notifyClient.RegisterSendDeviceCache(&platformClientsCache)
-	platformClientsCache.SetFlushAll()
+	notifyClient.RegisterSendDeviceCache(&dmecommon.PlatformClientsCache)
+	dmecommon.PlatformClientsCache.SetFlushAll()
 	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
-	ClientSender = notify.NewAppInstClientSend()
-	notifyClient.RegisterSend(ClientSender)
+	dmecommon.ClientSender = notify.NewAppInstClientSend()
+	notifyClient.RegisterSend(dmecommon.ClientSender)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
