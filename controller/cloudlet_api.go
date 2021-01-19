@@ -54,9 +54,8 @@ var (
 )
 
 const (
-	PlatformInitTimeout = 20 * time.Minute
-	//CloudletResourceUpdateInterval = 5 * time.Minute
-	CloudletResourceUpdateInterval = 10 * time.Second
+	PlatformInitTimeout            = 20 * time.Minute
+	CloudletResourceUpdateInterval = 5 * time.Minute
 )
 
 type updateCloudletCallback struct {
@@ -1830,18 +1829,16 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, key, cloudlet) {
-			return key.NotFoundError()
+			log.SpanLog(ctx, log.DebugLevelApi, "failed to update cloudlet resource, cloudlet not found", "key", key)
+			return nil
 		}
 		cloudletInfo := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
-			return fmt.Errorf("Cloudlet info not found for cloudlet: %v", key)
+			log.SpanLog(ctx, log.DebugLevelApi, "failed to update cloudlet resource, cloudletinfo not found", "key", key)
+			return nil
 		}
 		if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
 			return fmt.Errorf("Cloudlet is not online %v", key)
-		}
-		refs := edgeproto.CloudletRefs{}
-		if !cloudletRefsApi.store.STMGet(stm, key, &refs) {
-			return fmt.Errorf("CloudletRefs not found for cloudlet: %v", key)
 		}
 		clusterInstKeys := []edgeproto.ClusterInstKey{}
 		clusterInstApi.cache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
@@ -1864,12 +1861,11 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 	}
 	readyCb := func(stm concurrency.STM, key *edgeproto.CloudletKey) error {
 		refs := edgeproto.CloudletRefs{}
-		if !cloudletRefsApi.store.STMGet(stm, key, &refs) {
-			return fmt.Errorf("CloudletRefs not found for cloudlet: %v", key)
+		if cloudletRefsApi.store.STMGet(stm, key, &refs) {
+			// clear reserved resources as we now have updated resource info from cloudlet
+			refs.ReservedResources = nil
+			cloudletRefsApi.store.STMPut(stm, &refs)
 		}
-		// clear reserved resources as we now have updated resource info from cloudlet
-		refs.ReservedResources = nil
-		cloudletRefsApi.store.STMPut(stm, &refs)
 		return nil
 	}
 	// Wait for cloudlet to finish resource sync

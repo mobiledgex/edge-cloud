@@ -788,7 +788,6 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 		go func() {
-
 			resources, warnings, err := cd.platform.GetCloudletInfraResources(ctx)
 			if err != nil {
 				errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)

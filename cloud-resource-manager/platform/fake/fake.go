@@ -292,6 +292,15 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 	})
 
 	warnings := []string{}
+	if (float64(FakeRamUsed) / 40960) > 0.8 {
+		warnings = append(warnings, "More than 80% of RAM is used")
+	}
+	if (float64(FakeVcpusUsed) / 50) > 0.8 {
+		warnings = append(warnings, "More than 80% of vCPUs are used")
+	}
+	if (float64(FakeDiskUsed) / 5000) > 0.8 {
+		warnings = append(warnings, "More than 80% of disk is used")
+	}
 
 	return &resources, warnings, nil
 }
