@@ -20,10 +20,13 @@ func (m *LatencyMetric) AddLatency(d time.Duration) {
 	ii := 0
 	for ii, _ = range m.times {
 		if d < m.times[ii] {
+			ii--
 			break
 		}
 	}
-	m.buckets[ii]++
+	if ii >= 0 {
+		m.buckets[ii]++
+	}
 }
 
 func (m *LatencyMetric) AddToMetric(metric *edgeproto.Metric) {
@@ -32,7 +35,6 @@ func (m *LatencyMetric) AddToMetric(metric *edgeproto.Metric) {
 	for ii, t = range m.times {
 		metric.AddIntVal(t.String(), m.buckets[ii])
 	}
-	metric.AddIntVal("inf", m.buckets[ii])
 }
 
 func (m *LatencyMetric) FromMetric(metric *edgeproto.Metric) {

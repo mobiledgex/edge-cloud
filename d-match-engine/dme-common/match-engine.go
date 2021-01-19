@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -35,11 +38,11 @@ type DmeAppInst struct {
 	// Ports and L7 Paths
 	ports []dme.AppPort
 	// State of the cloudlet - copy of the DmeCloudlet
-	cloudletState    edgeproto.CloudletState
-	maintenanceState edgeproto.MaintenanceState
+	CloudletState    dme.CloudletState
+	MaintenanceState dme.MaintenanceState
 	// Health state of the appInst
-	appInstHealth edgeproto.HealthCheck
-	trackedState  edgeproto.TrackedState
+	AppInstHealth dme.HealthCheck
+	TrackedState  edgeproto.TrackedState
 }
 
 type DmeAppInsts struct {
@@ -62,8 +65,9 @@ type DmeApp struct {
 type DmeCloudlet struct {
 	// No need for a mutex - protected under DmeApps mutex
 	CloudletKey      edgeproto.CloudletKey
-	State            edgeproto.CloudletState
-	MaintenanceState edgeproto.MaintenanceState
+	State            dme.CloudletState
+	MaintenanceState dme.MaintenanceState
+	GpsLocation      dme.Loc
 }
 
 type AutoProvPolicy struct {
@@ -96,6 +100,14 @@ type StatKey struct {
 	CloudletFound edgeproto.CloudletKey
 	CellId        uint32
 	Method        string
+	// Only for EdgeEvents (to identify AppInsts)
+	ClusterKey     edgeproto.ClusterKey
+	ClusterInstOrg string
+}
+
+type EdgeEventStatKey struct {
+	AppInstKey edgeproto.AppInstKey
+	Metric     string
 }
 
 // This is for passing the carrier/cloudlet in the context
@@ -103,13 +115,19 @@ type StatKeyContextType string
 
 var StatKeyContextKey = StatKeyContextType("statKey")
 
-func SetupMatchEngine() {
+var EdgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
+
+// EdgeEventsHandler implementation (loaded from Plugin)
+var EEHandler EdgeEventsHandler
+
+func SetupMatchEngine(eehandler EdgeEventsHandler) {
 	DmeAppTbl = new(DmeApps)
 	DmeAppTbl.Apps = make(map[edgeproto.AppKey]*DmeApp)
 	DmeAppTbl.Cloudlets = make(map[edgeproto.CloudletKey]*DmeCloudlet)
 	DmeAppTbl.AutoProvPolicies = make(map[edgeproto.PolicyKey]*AutoProvPolicy)
 	DmeAppTbl.FreeReservableClusterInsts.Init()
 	edgeproto.InitOperatorCodeCache(&DmeAppTbl.OperatorCodes)
+	EEHandler = eehandler
 }
 
 // AppInst state is a superset of the cloudlet state and appInst state
@@ -118,14 +136,14 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst == nil {
 		return false
 	}
-	if appInst.trackedState != edgeproto.TrackedState_READY {
+	if appInst.TrackedState != edgeproto.TrackedState_READY {
 		return false
 	}
-	if appInst.maintenanceState == edgeproto.MaintenanceState_UNDER_MAINTENANCE {
+	if appInst.MaintenanceState == dme.MaintenanceState_UNDER_MAINTENANCE {
 		return false
 	}
-	if appInst.cloudletState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
-		return appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_OK || appInst.appInstHealth == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN
+	if appInst.CloudletState == dme.CloudletState_CLOUDLET_STATE_READY {
+		return appInst.AppInstHealth == dme.HealthCheck_HEALTH_CHECK_OK || appInst.AppInstHealth == dme.HealthCheck_HEALTH_CHECK_UNKNOWN
 	}
 	return false
 }
@@ -227,15 +245,27 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	cl.uri = appInst.Uri
 	cl.location = appInst.CloudletLoc
 	cl.ports = appInst.MappedPorts
-	cl.appInstHealth = appInst.HealthCheck
-	cl.trackedState = appInst.State
-	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
-		cl.cloudletState = cloudlet.State
-		cl.maintenanceState = cloudlet.MaintenanceState
-	} else {
-		cl.cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
-		cl.maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	cl.TrackedState = appInst.State
+	// Check if AppInstHealth has changed
+	if cl.AppInstHealth != appInst.HealthCheck {
+		EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
+	cl.AppInstHealth = appInst.HealthCheck
+	// Check if Cloudlet states have changed
+	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+		if cl.CloudletState != cloudlet.State {
+			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+		}
+		if cl.MaintenanceState != cloudlet.MaintenanceState {
+			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_MAINTENANCE)
+		}
+		cl.CloudletState = cloudlet.State
+		cl.MaintenanceState = cloudlet.MaintenanceState
+	} else {
+		cl.CloudletState = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
+		cl.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
+	}
+
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
 		"appName", app.AppKey.Name,
 		"appVersion", app.AppKey.Version,
@@ -279,6 +309,11 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		app.Lock()
 		if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
 			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
+				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
+				// Remove AppInst from edgeevents plugin
+				EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+				EEHandler.RemoveAppInstKey(ctx, appInst.Key)
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
@@ -333,6 +368,9 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 				key.ClusterInstKey = inst.clusterInstKey
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
+					// Remove AppInst from edgeevents plugin
+					EEHandler.SendAppInstStateEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+					EEHandler.RemoveAppInstKey(ctx, key)
 					delete(carr.Insts, key.ClusterInstKey)
 				}
 			}
@@ -358,8 +396,8 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, cloudletKey) {
-					c.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
-					c.Insts[clusterInstKey].maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+					c.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					c.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}
@@ -383,8 +421,8 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 		for _, carr := range app.Carriers {
 			for clusterInstKey, _ := range carr.Insts {
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
-					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
-					carr.Insts[clusterInstKey].maintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+					carr.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					carr.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 				}
 			}
 		}
@@ -410,7 +448,7 @@ func PruneInstsCloudletState(ctx context.Context, cloudlets map[edgeproto.Cloudl
 		for _, carr := range app.Carriers {
 			for clusterInstKey, _ := range carr.Insts {
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
-					carr.Insts[clusterInstKey].cloudletState = edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
+					carr.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 				}
 			}
 		}
@@ -482,13 +520,14 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		tbl.Cloudlets[in.Key] = cloudlet
 	}
 	cloudlet.MaintenanceState = in.MaintenanceState
+	cloudlet.GpsLocation = in.Location
 
 	for _, app := range tbl.Apps {
 		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &in.Key) {
-					c.Insts[clusterInstKey].maintenanceState = in.MaintenanceState
+					c.Insts[clusterInstKey].MaintenanceState = in.MaintenanceState
 				}
 			}
 		}
@@ -517,12 +556,26 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 		if c, found := app.Carriers[carrier]; found {
 			for clusterInstKey, _ := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
-					c.Insts[clusterInstKey].cloudletState = info.State
+					c.Insts[clusterInstKey].CloudletState = info.State
+					c.Insts[clusterInstKey].MaintenanceState = info.MaintenanceState
 				}
 			}
 		}
 		app.Unlock()
 	}
+}
+
+// Given an AppInstKey, return the corresponding DmeCloudlet
+func findDmeCloudlet(appInstKey *edgeproto.AppInstKey) DmeCloudlet {
+	tbl := DmeAppTbl
+
+	tbl.RLock()
+	defer tbl.RUnlock()
+	dmecloudlet, ok := tbl.Cloudlets[appInstKey.ClusterInstKey.CloudletKey]
+	if !ok {
+		return DmeCloudlet{}
+	}
+	return *dmecloudlet
 }
 
 // translateCarrierName translates carrier name (mcc+mnc) to
@@ -792,7 +845,7 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
-func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply) error {
+func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration *time.Duration) error {
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
@@ -812,6 +865,15 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		*mreply.CloudletLocation = best.appInst.location
 		mreply.Ports = copyPorts(best.appInst.ports)
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
+
+		key := EdgeEventsCookieKey{
+			ClusterOrg:   best.appInst.clusterInstKey.Organization,
+			ClusterName:  best.appInst.clusterInstKey.ClusterKey.Name,
+			CloudletOrg:  best.appInst.clusterInstKey.CloudletKey.Organization,
+			CloudletName: best.appInst.clusterInstKey.CloudletKey.Name,
+		}
+		eecookie, _ := GenerateEdgeEventsCookie(&key, ctx, edgeEventsCookieExpiration)
+		mreply.EdgeEventsCookie = eecookie
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
@@ -934,6 +996,153 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
+func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) (reterr error) {
+	// Initialize vars used in persistent connection
+	var appInstKey *edgeproto.AppInstKey
+	var sessionCookie string
+	var sessionCookieKey *CookieKey
+	var edgeEventsCookieKey *EdgeEventsCookieKey
+	// Intialize send function to be passed to plugin functions
+	sendFunc := func(event *dme.ServerEdgeEvent) {
+		err := svr.Send(event)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "error sending event to client", "error", err, "eventType", event.EventType)
+		}
+	}
+	// Receive first msg from stream
+	initMsg, err := svr.Recv()
+	if err != nil && err != io.EOF {
+		return err
+	}
+	if initMsg == nil {
+		return fmt.Errorf("Initial message is nil")
+	}
+	// On first message:
+	// Verify Session Cookie and EdgeEvents Cookie
+	// Then add connection, client, and appinst to Plugin hashmap
+	if initMsg.EventType == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
+		// Verify session cookie
+		sessionCookie = initMsg.SessionCookie
+		sessionCookieKey, err = VerifyCookie(ctx, sessionCookie)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyCookie result", "ckey", sessionCookieKey, "err", err)
+		if err != nil {
+			return grpc.Errorf(codes.Unauthenticated, err.Error())
+		}
+		ctx = NewCookieContext(ctx, sessionCookieKey)
+		// Verify EdgeEventsCookieKey
+		edgeEventsCookieKey, err = VerifyEdgeEventsCookie(ctx, initMsg.EdgeEventsCookie)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyEdgeEventsCookie result", "key", edgeEventsCookieKey, "err", err)
+		if err != nil {
+			return grpc.Errorf(codes.Unauthenticated, err.Error())
+		}
+		// Create AppInstKey from SessionCookie and EdgeEventsCookie
+		appInstKey = &edgeproto.AppInstKey{
+			AppKey: edgeproto.AppKey{
+				Organization: sessionCookieKey.OrgName,
+				Name:         sessionCookieKey.AppName,
+				Version:      sessionCookieKey.AppVers,
+			},
+			ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterKey: edgeproto.ClusterKey{
+					Name: edgeEventsCookieKey.ClusterName,
+				},
+				CloudletKey: edgeproto.CloudletKey{
+					Organization: edgeEventsCookieKey.CloudletOrg,
+					Name:         edgeEventsCookieKey.CloudletName,
+				},
+				Organization: edgeEventsCookieKey.ClusterOrg,
+			},
+		}
+		// Add Client to edgeevents plugin
+		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, sendFunc)
+		// Send successful init response
+		initServerEdgeEvent := new(dme.ServerEdgeEvent)
+		initServerEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
+		EEHandler.SendEdgeEventToClient(ctx, initServerEdgeEvent, *appInstKey, *sessionCookieKey)
+	} else {
+		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
+	}
+
+	// Loop while persistent connection is up
+loop:
+	for {
+		// Receive data from stream
+		cupdate, err := svr.Recv()
+		ctx = svr.Context()
+		// Check receive errors
+		if err != nil && err != io.EOF {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)
+			if strings.Contains(err.Error(), "rpc error") {
+				reterr = err
+				break
+			}
+		}
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Received Edge Event from client", "ClientEdgeEvent", cupdate, "context", ctx)
+		if cupdate == nil {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent is nil. Ending connection")
+			reterr = fmt.Errorf("ClientEdgeEvent is nil. Ending connection")
+			break
+		}
+		// Handle Different Client events
+		switch cupdate.EventType {
+		case dme.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION:
+			// Client initiated termination
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Client initiated termination of persistent connection")
+			break loop
+		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
+			// Client sent latency samples to be processed
+			stats, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
+				reterr = err
+				break loop
+			}
+			deviceInfo := dme.DeviceInfo{}
+			if cupdate.DeviceInfo != nil {
+				deviceInfo = *cupdate.DeviceInfo
+			}
+			RecordAppInstLatencyStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, edgeEventsCookieKey, stats, cupdate.CarrierName, deviceInfo)
+		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
+			// Client updated gps location
+			// Gps location stats update
+			deviceInfo := dme.DeviceInfo{}
+			if cupdate.DeviceInfo != nil {
+				deviceInfo = *cupdate.DeviceInfo
+			}
+			RecordGpsLocationStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, cupdate.CarrierName, deviceInfo)
+			// Check if there is a better cloudlet based on location update
+			fcreply := new(dme.FindCloudletReply)
+			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, fcreply, EdgeEventsCookieExpiration)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
+				continue
+			}
+			newEECookieKey, err := VerifyEdgeEventsCookie(ctx, fcreply.EdgeEventsCookie)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying verify new cloudlet edgeeventscookie", "err", err)
+				continue
+			}
+			// Check if new appinst is different from current
+			if fcreply.Status == dme.FindCloudletReply_FIND_FOUND && !IsTheSameCluster(newEECookieKey, edgeEventsCookieKey) {
+				// Send successful init response
+				newCloudletEdgeEvent := new(dme.ServerEdgeEvent)
+				newCloudletEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_CLOUDLET_UPDATE
+				newCloudletEdgeEvent.NewCloudlet = fcreply
+				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
+			}
+		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
+			// Client sent custom stat to be stored
+			RecordCustomStatCall(appInstKey, sessionCookieKey, cupdate.CustomEvent, cupdate.Samples)
+		default:
+			// Unknown client event
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
+		}
+	}
+	// Remove Client from edgeevents plugin
+	EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
+	return reterr
+}
+
 func ListAppinstTbl(ctx context.Context) {
 	var app *DmeApp
 	var inst *DmeAppInst
@@ -1008,4 +1217,6 @@ func AppExists(orgname string, appname string, appvers string) bool {
 
 func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
 	autoProvStats.UpdateSettings(new.AutoDeployIntervalSec)
+	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
+	EEStats.UpdateSettings(time.Duration(new.PersistentConnectionMetricsCollectionInterval))
 }

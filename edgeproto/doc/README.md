@@ -33,7 +33,7 @@
     - [AppInstMetrics](#edgeproto.AppInstMetrics)
     - [AppInstRuntime](#edgeproto.AppInstRuntime)
   
-    - [HealthCheck](#edgeproto.HealthCheck)
+    - [HealthCheck](#dme.HealthCheck)
     - [PowerState](#edgeproto.PowerState)
   
     - [AppInstApi](#edgeproto.AppInstApi)
@@ -87,7 +87,7 @@
     - [PlatformConfig.EnvVarEntry](#edgeproto.PlatformConfig.EnvVarEntry)
     - [PropertyInfo](#edgeproto.PropertyInfo)
   
-    - [CloudletState](#edgeproto.CloudletState)
+    - [CloudletState](#dme.CloudletState)
     - [InfraApiAccess](#edgeproto.InfraApiAccess)
     - [PlatformType](#edgeproto.PlatformType)
   
@@ -120,7 +120,7 @@
     - [IpAccess](#edgeproto.IpAccess)
     - [IpSupport](#edgeproto.IpSupport)
     - [Liveness](#edgeproto.Liveness)
-    - [MaintenanceState](#edgeproto.MaintenanceState)
+    - [MaintenanceState](#dme.MaintenanceState)
     - [TrackedState](#edgeproto.TrackedState)
   
 - [controller.proto](#controller.proto)
@@ -582,7 +582,7 @@ Many of the fields here are inherited from the App definition.
 | update_multiple | [bool](#bool) |  | Allow multiple instances to be updated at once |
 | configs | [ConfigFile](#edgeproto.ConfigFile) | repeated | Customization files passed through to implementing services |
 | shared_volume_size | [uint64](#uint64) |  | shared volume size when creating auto cluster |
-| health_check | [HealthCheck](#edgeproto.HealthCheck) |  | Health Check status |
+| health_check | [HealthCheck](#dme.HealthCheck) |  | Health Check status |
 | privacy_policy | [string](#string) |  | Optional privacy policy name |
 | power_state | [PowerState](#edgeproto.PowerState) |  | Power State of the AppInst |
 | external_volume_size | [uint64](#uint64) |  | Size of external volume to be attached to nodes. This is for the root partition |
@@ -685,7 +685,7 @@ Runtime information of active AppInsts
  
 
 
-<a name="edgeproto.HealthCheck"></a>
+<a name="dme.HealthCheck"></a>
 
 ### HealthCheck
 Health check status
@@ -897,7 +897,7 @@ AutoProvCounts is used to send potential cloudlet and location counts from DME t
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [CloudletKey](#edgeproto.CloudletKey) |  | Cloudlet Key |
 | notify_id | [int64](#int64) |  | Id of client assigned by server (internal use only) |
-| maintenance_state | [MaintenanceState](#edgeproto.MaintenanceState) |  | failover result state |
+| maintenance_state | [MaintenanceState](#dme.MaintenanceState) |  | failover result state |
 | completed | [string](#string) | repeated | Failover actions done if any |
 | errors | [string](#string) | repeated | Errors if any |
 
@@ -1079,7 +1079,7 @@ A Cloudlet is a set of compute resources at a particular location, provided by a
 | infra_api_access | [InfraApiAccess](#edgeproto.InfraApiAccess) |  | Infra Access Type is the type of access available to Infra API Endpoint |
 | infra_config | [InfraConfig](#edgeproto.InfraConfig) |  | Infra specific config |
 | chef_client_key | [Cloudlet.ChefClientKeyEntry](#edgeproto.Cloudlet.ChefClientKeyEntry) | repeated | Chef client key |
-| maintenance_state | [MaintenanceState](#edgeproto.MaintenanceState) |  | State for maintenance |
+| maintenance_state | [MaintenanceState](#dme.MaintenanceState) |  | State for maintenance |
 | override_policy_container_version | [bool](#bool) |  | Override container version from policy file |
 | vm_pool | [string](#string) |  | VM Pool |
 
@@ -1162,7 +1162,7 @@ CloudletInfo provides information from the Cloudlet Resource Manager about the s
 | ----- | ---- | ----- | ----------- |
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [CloudletKey](#edgeproto.CloudletKey) |  | Unique identifier key |
-| state | [CloudletState](#edgeproto.CloudletState) |  | State of cloudlet |
+| state | [CloudletState](#dme.CloudletState) |  | State of cloudlet |
 | notify_id | [int64](#int64) |  | Id of client assigned by server (internal use only) |
 | controller | [string](#string) |  | Connected controller unique id |
 | os_max_ram | [uint64](#uint64) |  | Maximum Ram in MB on the Cloudlet |
@@ -1175,7 +1175,7 @@ CloudletInfo provides information from the Cloudlet Resource Manager about the s
 | availability_zones | [OSAZone](#edgeproto.OSAZone) | repeated | Availability Zones if any |
 | os_images | [OSImage](#edgeproto.OSImage) | repeated | Local Images availble to cloudlet |
 | controller_cache_received | [bool](#bool) |  | Indicates all controller data has been sent to CRM |
-| maintenance_state | [MaintenanceState](#edgeproto.MaintenanceState) |  | State for maintenance |
+| maintenance_state | [MaintenanceState](#dme.MaintenanceState) |  | State for maintenance |
 
 
 
@@ -1490,7 +1490,7 @@ Platform specific configuration required for Cloudlet management
  
 
 
-<a name="edgeproto.CloudletState"></a>
+<a name="dme.CloudletState"></a>
 
 ### CloudletState
 CloudletState is the state of the Cloudlet.
@@ -1924,7 +1924,7 @@ Liveness indicates if an object was created statically via an external API call,
 
 
 
-<a name="edgeproto.MaintenanceState"></a>
+<a name="dme.MaintenanceState"></a>
 
 ### MaintenanceState
 Cloudlet Maintenance States
