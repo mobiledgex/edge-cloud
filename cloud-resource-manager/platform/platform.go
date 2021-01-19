@@ -69,7 +69,7 @@ type Platform interface {
 	// Get resources used by the cloudlet
 	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, []string, error)
 	// Get actual resource info used by the cloudlet
-	GetCloudletResourceInfo(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error)
+	GetCloudletResourceUsage(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error)
 	// Validate resource requirements for the VMs on the cloudlet
 	ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources, existingVmResources []edgeproto.VMResource) error
 	// Get resources used by the cluster

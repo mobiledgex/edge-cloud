@@ -635,8 +635,8 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 				}
 				*outp = append(*outp, *out)
 			}
-		case "getcloudletinfraresources":
-			out, err := r.client.GetCloudletInfraResources(r.ctx, obj)
+		case "getcloudletresourceusage":
+			out, err := r.client.GetCloudletResourceUsage(r.ctx, obj)
 			if err != nil {
 				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
 			} else {
@@ -646,8 +646,8 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 				}
 				*outp = append(*outp, *out)
 			}
-		case "refreshcloudletinfraresources":
-			out, err := r.client.RefreshCloudletInfraResources(r.ctx, obj)
+		case "synccloudletresourceinfo":
+			out, err := r.client.SyncCloudletResourceInfo(r.ctx, obj)
 			if err != nil {
 				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
 			} else {
@@ -1052,26 +1052,26 @@ func (s *CliClient) GetCloudletProps(ctx context.Context, in *edgeproto.Cloudlet
 	return &out, err
 }
 
-func (s *ApiClient) GetCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
+func (s *ApiClient) GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
-	return api.GetCloudletInfraResources(ctx, in)
+	return api.GetCloudletResourceUsage(ctx, in)
 }
 
-func (s *CliClient) GetCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
+func (s *CliClient) GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
 	out := edgeproto.InfraResources{}
-	args := append(s.BaseArgs, "controller", "GetCloudletInfraResources")
+	args := append(s.BaseArgs, "controller", "GetCloudletResourceUsage")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
 }
 
-func (s *ApiClient) RefreshCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+func (s *ApiClient) SyncCloudletResourceInfo(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
-	return api.RefreshCloudletInfraResources(ctx, in)
+	return api.SyncCloudletResourceInfo(ctx, in)
 }
 
-func (s *CliClient) RefreshCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+func (s *CliClient) SyncCloudletResourceInfo(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "RefreshCloudletInfraResources")
+	args := append(s.BaseArgs, "controller", "SyncCloudletResourceInfo")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
 }
@@ -1143,8 +1143,8 @@ type CloudletApiClient interface {
 	ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error)
 	GetCloudletManifest(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error)
 	GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error)
-	GetCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error)
-	RefreshCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
+	GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error)
+	SyncCloudletResourceInfo(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)

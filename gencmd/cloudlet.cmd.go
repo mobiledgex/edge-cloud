@@ -546,8 +546,8 @@ func GetCloudletPropss(c *cli.Command, data []edgeproto.CloudletProps, err *erro
 	}
 }
 
-var GetCloudletInfraResourcesCmd = &cli.Command{
-	Use:          "GetCloudletInfraResources",
+var GetCloudletResourceUsageCmd = &cli.Command{
+	Use:          "GetCloudletResourceUsage",
 	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
 	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
@@ -555,10 +555,10 @@ var GetCloudletInfraResourcesCmd = &cli.Command{
 	Comments:     CloudletKeyComments,
 	ReqData:      &edgeproto.CloudletKey{},
 	ReplyData:    &edgeproto.InfraResources{},
-	Run:          runGetCloudletInfraResources,
+	Run:          runGetCloudletResourceUsage,
 }
 
-func runGetCloudletInfraResources(c *cli.Command, args []string) error {
+func runGetCloudletResourceUsage(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -567,35 +567,35 @@ func runGetCloudletInfraResources(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return GetCloudletInfraResources(c, obj)
+	return GetCloudletResourceUsage(c, obj)
 }
 
-func GetCloudletInfraResources(c *cli.Command, in *edgeproto.CloudletKey) error {
+func GetCloudletResourceUsage(c *cli.Command, in *edgeproto.CloudletKey) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := CloudletApiCmd.GetCloudletInfraResources(ctx, in)
+	obj, err := CloudletApiCmd.GetCloudletResourceUsage(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("GetCloudletInfraResources failed: %s", errstr)
+		return fmt.Errorf("GetCloudletResourceUsage failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func GetCloudletInfraResourcess(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+func GetCloudletResourceUsages(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("GetCloudletInfraResources %v\n", data[ii])
-		myerr := GetCloudletInfraResources(c, &data[ii])
+		fmt.Printf("GetCloudletResourceUsage %v\n", data[ii])
+		myerr := GetCloudletResourceUsage(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -603,8 +603,8 @@ func GetCloudletInfraResourcess(c *cli.Command, data []edgeproto.CloudletKey, er
 	}
 }
 
-var RefreshCloudletInfraResourcesCmd = &cli.Command{
-	Use:          "RefreshCloudletInfraResources",
+var SyncCloudletResourceInfoCmd = &cli.Command{
+	Use:          "SyncCloudletResourceInfo",
 	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
 	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
@@ -612,10 +612,10 @@ var RefreshCloudletInfraResourcesCmd = &cli.Command{
 	Comments:     CloudletKeyComments,
 	ReqData:      &edgeproto.CloudletKey{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runRefreshCloudletInfraResources,
+	Run:          runSyncCloudletResourceInfo,
 }
 
-func runRefreshCloudletInfraResources(c *cli.Command, args []string) error {
+func runSyncCloudletResourceInfo(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -624,35 +624,35 @@ func runRefreshCloudletInfraResources(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return RefreshCloudletInfraResources(c, obj)
+	return SyncCloudletResourceInfo(c, obj)
 }
 
-func RefreshCloudletInfraResources(c *cli.Command, in *edgeproto.CloudletKey) error {
+func SyncCloudletResourceInfo(c *cli.Command, in *edgeproto.CloudletKey) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := CloudletApiCmd.RefreshCloudletInfraResources(ctx, in)
+	obj, err := CloudletApiCmd.SyncCloudletResourceInfo(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("RefreshCloudletInfraResources failed: %s", errstr)
+		return fmt.Errorf("SyncCloudletResourceInfo failed: %s", errstr)
 	}
 	c.WriteOutput(obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func RefreshCloudletInfraResourcess(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+func SyncCloudletResourceInfos(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("RefreshCloudletInfraResources %v\n", data[ii])
-		myerr := RefreshCloudletInfraResources(c, &data[ii])
+		fmt.Printf("SyncCloudletResourceInfo %v\n", data[ii])
+		myerr := SyncCloudletResourceInfo(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -952,8 +952,8 @@ var CloudletApiCmds = []*cobra.Command{
 	ShowCloudletCmd.GenCmd(),
 	GetCloudletManifestCmd.GenCmd(),
 	GetCloudletPropsCmd.GenCmd(),
-	GetCloudletInfraResourcesCmd.GenCmd(),
-	RefreshCloudletInfraResourcesCmd.GenCmd(),
+	GetCloudletResourceUsageCmd.GenCmd(),
+	SyncCloudletResourceInfoCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),

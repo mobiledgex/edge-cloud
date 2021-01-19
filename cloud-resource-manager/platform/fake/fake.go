@@ -156,6 +156,30 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "First Delete Task")
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
+	rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
+	vms := make(map[string]struct{})
+	vms[rootLBFQDN] = struct{}{}
+	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
+	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
+		vmName := fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix)
+		vms[vmName] = struct{}{}
+	}
+	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
+		vmName := fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix)
+		vms[vmName] = struct{}{}
+	}
+	newVMs := []edgeproto.VmInfo{}
+	for _, vm := range FakeClusterVMs {
+		if _, ok := vms[vm.Name]; ok {
+			FakeRamUsed -= uint64(4096)
+			FakeVcpusUsed -= uint64(2)
+			FakeDiskUsed -= uint64(40)
+			continue
+		}
+		newVMs = append(newVMs, vm)
+	}
+	FakeClusterVMs = newVMs
+
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst deleted")
 	return nil
 }
@@ -272,16 +296,22 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 	return &resources, warnings, nil
 }
 
-func (s *Platform) GetCloudletResourceInfo(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error) {
+func (s *Platform) GetCloudletResourceUsage(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error) {
 	fakeRes, err := UnmarshalInfraResourceInfo(resInfo)
 	if err != nil {
 		return nil, err
 	}
 	for _, vmRes := range existingVmResources {
 		if vmRes.VmFlavor != nil {
-			fakeRes.RamUsed += vmRes.VmFlavor.Ram
-			fakeRes.VcpusUsed += vmRes.VmFlavor.Vcpus
-			fakeRes.DiskUsed += vmRes.VmFlavor.Disk
+			if vmRes.ProvState == edgeproto.VMProvState_PROV_STATE_REMOVE {
+				fakeRes.RamUsed -= vmRes.VmFlavor.Ram
+				fakeRes.VcpusUsed -= vmRes.VmFlavor.Vcpus
+				fakeRes.DiskUsed -= vmRes.VmFlavor.Disk
+			} else {
+				fakeRes.RamUsed += vmRes.VmFlavor.Ram
+				fakeRes.VcpusUsed += vmRes.VmFlavor.Vcpus
+				fakeRes.DiskUsed += vmRes.VmFlavor.Disk
+			}
 		}
 	}
 	resInfo = MarshalInfraResourceInfo(fakeRes)
@@ -308,9 +338,15 @@ func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources
 
 	for _, vmRes := range existingVmResources {
 		if vmRes.VmFlavor != nil {
-			fakeRes.RamUsed += vmRes.VmFlavor.Ram
-			fakeRes.VcpusUsed += vmRes.VmFlavor.Vcpus
-			fakeRes.DiskUsed += vmRes.VmFlavor.Disk
+			if vmRes.ProvState == edgeproto.VMProvState_PROV_STATE_REMOVE {
+				fakeRes.RamUsed -= vmRes.VmFlavor.Ram
+				fakeRes.VcpusUsed -= vmRes.VmFlavor.Vcpus
+				fakeRes.DiskUsed -= vmRes.VmFlavor.Disk
+			} else {
+				fakeRes.RamUsed += vmRes.VmFlavor.Ram
+				fakeRes.VcpusUsed += vmRes.VmFlavor.Vcpus
+				fakeRes.DiskUsed += vmRes.VmFlavor.Disk
+			}
 		}
 	}
 

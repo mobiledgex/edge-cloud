@@ -282,6 +282,7 @@ var VMResourceOptionalArgs = []string{
 	"vmflavor.ram",
 	"vmflavor.disk",
 	"vmflavor.propmap",
+	"provstate",
 }
 var VMResourceAliasArgs = []string{}
 var VMResourceComments = map[string]string{
@@ -294,6 +295,7 @@ var VMResourceComments = map[string]string{
 	"vmflavor.ram":                 "Ram in MB on the Cloudlet",
 	"vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
 	"vmflavor.propmap":             "OS Flavor Properties, if any",
+	"provstate":                    "Resource provision state, one of ProvStateNone, ProvStateAdd, ProvStateRemove",
 }
 var VMResourceSpecialArgs = map[string]string{
 	"vmflavor.propmap": "StringToString",
@@ -322,6 +324,7 @@ var CloudletRefsOptionalArgs = []string{
 	"reservedresources:#.vmflavor.ram",
 	"reservedresources:#.vmflavor.disk",
 	"reservedresources:#.vmflavor.propmap",
+	"reservedresources:#.provstate",
 }
 var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
@@ -342,6 +345,7 @@ var CloudletRefsComments = map[string]string{
 	"reservedresources:#.vmflavor.ram":                 "Ram in MB on the Cloudlet",
 	"reservedresources:#.vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
 	"reservedresources:#.vmflavor.propmap":             "OS Flavor Properties, if any",
+	"reservedresources:#.provstate":                    "Resource provision state, one of ProvStateNone, ProvStateAdd, ProvStateRemove",
 }
 var CloudletRefsSpecialArgs = map[string]string{
 	"reservedresources:#.vmflavor.propmap": "StringToString",

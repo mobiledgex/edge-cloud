@@ -787,33 +787,36 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
-		resources, warnings, err := cd.platform.GetCloudletInfraResources(ctx)
-		if err != nil {
-			errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)
-			log.InfoLog("can't fetch cloudlet resources", "error", errstr, "key", new.Key)
+		go func() {
 
-			cd.NodeMgr.Event(ctx, "Cloudlet infra resource update failure", new.Key.Organization, new.Key.GetTags(), err)
-			// set state as READY as this failure doesn't affect running of cloudlet
+			resources, warnings, err := cd.platform.GetCloudletInfraResources(ctx)
+			if err != nil {
+				errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)
+				log.InfoLog("can't fetch cloudlet resources", "error", errstr, "key", new.Key)
+
+				cd.NodeMgr.Event(ctx, "Cloudlet infra resource update failure", new.Key.Organization, new.Key.GetTags(), err)
+				// set state as READY as this failure doesn't affect running of cloudlet
+				cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+				return
+			}
+			if len(warnings) > 0 {
+				cd.NodeMgr.Event(ctx, "Cloudlet infra resource usage warning", new.Key.Organization, new.Key.GetTags(), nil,
+					"warnings", strings.Join(warnings, ","))
+			}
+			// fetch cloudletInfo again, as data might have changed by now
+			found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+			if !found {
+				log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
+				return
+			}
+			if resources != nil {
+				cloudletInfo.Resources = *resources
+			}
+			cloudletInfo.Status.StatusReset()
 			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-			return
-		}
-		if len(warnings) > 0 {
-			cd.NodeMgr.Event(ctx, "Cloudlet infra resource usage warning", new.Key.Organization, new.Key.GetTags(), nil,
-				"warnings", strings.Join(warnings, ","))
-		}
-		// fetch cloudletInfo again, as data might have changed by now
-		found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
-		if !found {
-			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
-			return
-		}
-		if resources != nil {
-			cloudletInfo.Resources = *resources
-		}
-		cloudletInfo.Status.StatusReset()
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		}()
 	}
 }
 

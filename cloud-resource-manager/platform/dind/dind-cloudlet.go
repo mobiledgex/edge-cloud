@@ -79,7 +79,7 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 	return nil
 }
 
-func (s *Platform) GetCloudletResourceInfo(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error) {
+func (s *Platform) GetCloudletResourceUsage(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error) {
 	return resInfo, nil
 }
 

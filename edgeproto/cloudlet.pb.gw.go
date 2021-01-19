@@ -199,7 +199,7 @@ func local_request_CloudletApi_GetCloudletProps_0(ctx context.Context, marshaler
 
 }
 
-func request_CloudletApi_GetCloudletInfraResources_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_GetCloudletResourceUsage_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletKey
 	var metadata runtime.ServerMetadata
 
@@ -211,12 +211,12 @@ func request_CloudletApi_GetCloudletInfraResources_0(ctx context.Context, marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetCloudletInfraResources(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetCloudletResourceUsage(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_CloudletApi_GetCloudletInfraResources_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_CloudletApi_GetCloudletResourceUsage_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletKey
 	var metadata runtime.ServerMetadata
 
@@ -228,12 +228,12 @@ func local_request_CloudletApi_GetCloudletInfraResources_0(ctx context.Context, 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.GetCloudletInfraResources(ctx, &protoReq)
+	msg, err := server.GetCloudletResourceUsage(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_CloudletApi_RefreshCloudletInfraResources_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_SyncCloudletResourceInfo_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletKey
 	var metadata runtime.ServerMetadata
 
@@ -245,12 +245,12 @@ func request_CloudletApi_RefreshCloudletInfraResources_0(ctx context.Context, ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.RefreshCloudletInfraResources(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.SyncCloudletResourceInfo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_CloudletApi_RefreshCloudletInfraResources_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_CloudletApi_SyncCloudletResourceInfo_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CloudletKey
 	var metadata runtime.ServerMetadata
 
@@ -262,7 +262,7 @@ func local_request_CloudletApi_RefreshCloudletInfraResources_0(ctx context.Conte
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.RefreshCloudletInfraResources(ctx, &protoReq)
+	msg, err := server.SyncCloudletResourceInfo(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -560,7 +560,7 @@ func RegisterCloudletApiHandlerServer(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_CloudletApi_GetCloudletInfraResources_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletApi_GetCloudletResourceUsage_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -569,18 +569,18 @@ func RegisterCloudletApiHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_CloudletApi_GetCloudletInfraResources_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_CloudletApi_GetCloudletResourceUsage_0(rctx, inboundMarshaler, server, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletApi_GetCloudletInfraResources_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_GetCloudletResourceUsage_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_CloudletApi_RefreshCloudletInfraResources_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletApi_SyncCloudletResourceInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -589,14 +589,14 @@ func RegisterCloudletApiHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_CloudletApi_RefreshCloudletInfraResources_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_CloudletApi_SyncCloudletResourceInfo_0(rctx, inboundMarshaler, server, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletApi_RefreshCloudletInfraResources_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_SyncCloudletResourceInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -891,7 +891,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("POST", pattern_CloudletApi_GetCloudletInfraResources_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletApi_GetCloudletResourceUsage_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -900,18 +900,18 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_CloudletApi_GetCloudletInfraResources_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CloudletApi_GetCloudletResourceUsage_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletApi_GetCloudletInfraResources_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_GetCloudletResourceUsage_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_CloudletApi_RefreshCloudletInfraResources_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CloudletApi_SyncCloudletResourceInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -920,14 +920,14 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_CloudletApi_RefreshCloudletInfraResources_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CloudletApi_SyncCloudletResourceInfo_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CloudletApi_RefreshCloudletInfraResources_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_SyncCloudletResourceInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1047,9 +1047,9 @@ var (
 
 	pattern_CloudletApi_GetCloudletProps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "props"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_GetCloudletInfraResources_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "resources"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_CloudletApi_GetCloudletResourceUsage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "resources"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_CloudletApi_RefreshCloudletInfraResources_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"refresh", "cloudlet", "resources"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_CloudletApi_SyncCloudletResourceInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"sync", "cloudlet", "resources"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_CloudletApi_AddCloudletResMapping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"addmapping", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -1075,9 +1075,9 @@ var (
 
 	forward_CloudletApi_GetCloudletProps_0 = runtime.ForwardResponseMessage
 
-	forward_CloudletApi_GetCloudletInfraResources_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_GetCloudletResourceUsage_0 = runtime.ForwardResponseMessage
 
-	forward_CloudletApi_RefreshCloudletInfraResources_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_SyncCloudletResourceInfo_0 = runtime.ForwardResponseMessage
 
 	forward_CloudletApi_AddCloudletResMapping_0 = runtime.ForwardResponseMessage
 

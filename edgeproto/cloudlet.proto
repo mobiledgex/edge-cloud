@@ -357,17 +357,17 @@ service CloudletApi {
     option (protogen.method_also_required) = "PlatformType";
   }
   // Get Cloudlet Infra resource information. Shows VMs part of the cloudlet and existing resource usage
-  rpc GetCloudletInfraResources(CloudletKey) returns (InfraResources) {
+  rpc GetCloudletResourceUsage(CloudletKey) returns (InfraResources) {
     option (google.api.http) = {
       post: "/get/cloudlet/resources"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
-  // Refresh Cloudlet Infra resources. Refreshes controller's view of cloudlet resources
-  rpc RefreshCloudletInfraResources(CloudletKey) returns (Result) {
+  // Sync Cloudlet Infra resources. Synchronizes controller's view of cloudlet resources
+  rpc SyncCloudletResourceInfo(CloudletKey) returns (Result) {
     option (google.api.http) = {
-      post: "/refresh/cloudlet/resources"
+      post: "/sync/cloudlet/resources"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";

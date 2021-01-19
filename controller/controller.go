@@ -454,6 +454,9 @@ func startServices() error {
 	// setup cleanup timer to remove expired stream messages
 	go streamObjs.SetupCleanupTimer()
 
+	// setup cloudlet resource collector
+	go cloudletApi.SetupCloudletResourceInfoCollector(ctx)
+
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
 }

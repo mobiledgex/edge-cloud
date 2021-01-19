@@ -14,6 +14,23 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+// VMResource provision state
+//
+// Provision state of the VM resource in cloudlet
+//
+//  0: `PROV_STATE_UNKNOWN`
+//  1: `PROV_STATE_ADD`
+//  2: `PROV_STATE_REMOVE`
+enum VMProvState {
+  // None
+  PROV_STATE_NONE = 0;
+  // VM resource to be provisioned
+  PROV_STATE_ADD = 1;
+  // VM resource to be unprovisioned
+  PROV_STATE_REMOVE = 2;
+}
+
+
 // VMResource
 //
 // VMResource specifies the resource requirement of a VM
@@ -22,6 +39,8 @@ message VMResource {
   ClusterInstKey key = 1 [(gogoproto.nullable) = false];
   // Flavor requirement of the VM required by the cluster
   FlavorInfo vm_flavor = 2;
+  // Resource provision state
+  VMProvState prov_state = 3;
 }
 
 // Refs track ref counts of used resources, ports, etc.
