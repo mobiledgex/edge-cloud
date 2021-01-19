@@ -10,6 +10,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -646,7 +647,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			log.WarnLog("Delete ClusterInst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
 		}
-		if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+		if cloudlet.MaintenanceState != dme.MaintenanceState_NORMAL_OPERATION {
 			return errors.New("Cloudlet under maintenance, please try again later")
 		}
 		refs := edgeproto.CloudletRefs{}

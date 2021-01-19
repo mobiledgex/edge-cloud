@@ -3,7 +3,6 @@
 syntax = "proto3";
 package edgeproto;
 
-import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
@@ -141,49 +140,6 @@ enum CRMOverride {
   IGNORE_TRANSIENT_STATE = 3;
   // Ignore CRM and Transient State
   IGNORE_CRM_AND_TRANSIENT_STATE = 4;
-}
-
-// Cloudlet Maintenance States
-//
-// Maintenance allows for planned downtimes of Cloudlets.
-// These states involve message exchanges between the Controller,
-// the AutoProv service, and the CRM. Certain states are only set
-// by certain actors.
-//
-// 0: `NORMAL_OPERATION`
-// 1: `MAINTENANCE_START`
-// 2: `FAILOVER_REQUESTED`
-// 3: `FAILOVER_DONE`
-// 4: `FAILOVER_ERROR`
-// 5: `MAINTENANCE_START_NO_FAILOVER`
-// 6: `CRM_REQUESTED`
-// 7: `CRM_UNDER_MAINTENANCE`
-// 8: `CRM_ERROR`
-// 9: `NORMAL_OPERATION_INIT`
-// 31: `UNDER_MAINTENANCE`
-enum MaintenanceState {
-  // Normal operational state
-  NORMAL_OPERATION = 0;
-  // Request start of maintenance
-  MAINTENANCE_START = 1;
-  // Trigger failover for any HA AppInsts
-  FAILOVER_REQUESTED = 2 [(protogen.enum_backend) = true];
-  // Failover done
-  FAILOVER_DONE = 3 [(protogen.enum_backend) = true];
-  // Some errors encountered during maintenance failover
-  FAILOVER_ERROR = 4 [(protogen.enum_backend) = true];
-  // Request start of maintenance without AutoProv failover
-  MAINTENANCE_START_NO_FAILOVER = 5;
-  // Request CRM to transition to maintenance
-  CRM_REQUESTED = 6 [(protogen.enum_backend) = true];
-  // CRM request done and under maintenance
-  CRM_UNDER_MAINTENANCE = 7 [(protogen.enum_backend) = true];
-  // CRM failed to go into maintenance
-  CRM_ERROR = 8 [(protogen.enum_backend) = true];
-  // Request CRM to transition to normal operation
-  NORMAL_OPERATION_INIT = 9 [(protogen.enum_backend) = true];
-  // Under maintenance
-  UNDER_MAINTENANCE = 31 [(protogen.enum_backend) = true];
 }
 
 // Status Information

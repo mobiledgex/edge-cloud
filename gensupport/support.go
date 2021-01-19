@@ -21,6 +21,7 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/gogo/protobuf/vanity"
 	"github.com/gogo/protobuf/vanity/command"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/protogen"
 )
 
@@ -583,7 +584,7 @@ func IsShow(method *descriptor.MethodDescriptorProto) bool {
 }
 
 func GetEnumBackend(enumVal *descriptor.EnumValueDescriptorProto) bool {
-	return proto.GetBoolExtension(enumVal.Options, protogen.E_EnumBackend, false)
+	return proto.GetBoolExtension(enumVal.Options, dme.E_EnumBackend, false)
 }
 
 func GetNonStandardShow(method *descriptor.MethodDescriptorProto) bool {
