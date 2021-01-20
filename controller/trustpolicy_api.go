@@ -63,6 +63,9 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}
+		if err := cloudletApi.ValidateCloudletsUsingTrustPolicy(ctx, &cur); err != nil {
+			return err
+		}
 		if changed == 0 {
 			return nil
 		}
