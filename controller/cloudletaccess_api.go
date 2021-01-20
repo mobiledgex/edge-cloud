@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -82,24 +81,4 @@ func (s *CloudletApi) GetAccessData(ctx context.Context, req *edgeproto.AccessDa
 	vaultClient := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
 	handler := accessapi.NewControllerHandler(vaultClient)
 	return handler.GetAccessData(ctx, req)
-}
-
-func (s *CloudletApi) GetPublicCert(ctx context.Context, req *edgeproto.PublicCertRequest) (*edgeproto.PublicCertReply, error) {
-	verified := node.ContextGetAccessKeyVerified(ctx)
-	if verified == nil {
-		// should never reach here if it wasn't verified
-		return nil, fmt.Errorf("Client authentication not verified")
-	}
-	publicCert, err := services.publicCertManager.GetPublicCert(ctx, req.CommonName)
-	if err != nil {
-		return nil, err
-	}
-	bytes, err := json.Marshal(*publicCert)
-	if err != nil {
-		return nil, err
-	}
-	publicCertReply := &edgeproto.PublicCertReply{
-		PublicCert: bytes,
-	}
-	return publicCertReply, nil
 }

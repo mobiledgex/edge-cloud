@@ -949,7 +949,3 @@ func (s *DummyController) GetCas(ctx context.Context, req *edgeproto.GetCasReque
 func (s *DummyController) GetAccessData(ctx context.Context, in *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
 	return &edgeproto.AccessDataReply{}, nil
 }
-
-func (s *DummyController) GetPublicCert(ctx context.Context, req *edgeproto.PublicCertRequest) (*edgeproto.PublicCertReply, error) {
-	return &edgeproto.PublicCertReply{}, nil
-}

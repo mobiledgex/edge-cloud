@@ -17,6 +17,8 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
@@ -65,8 +67,6 @@ var operatorApiGw op.OperatorApiGw
 type server struct{}
 
 var nodeMgr node.NodeMgr
-
-var publicCertManager *node.PublicCertManager
 
 var sigChan chan os.Signal
 
@@ -539,6 +539,7 @@ func main() {
 	}
 
 	// Setup PublicCertManager for dme
+	var accessApi platform.AccessApi
 	if *cloudletDme {
 		// Setup connection to controller for access API
 		if !nodeMgr.AccessKeyClient.IsEnabled() {
@@ -555,23 +556,20 @@ func main() {
 		defer ctrlConn.Close()
 		// Create CloudletAccessApiClient
 		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
-		nodePublicCertApi := node.NewNodePublicCertApi(accessClient)
-		// Setup public cert manager for cloudletdme
-		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), nodePublicCertApi)
-		publicCertManager.StartRefresh()
+		accessApi = accessapi.NewControllerClient(accessClient)
 	} else {
 		// DME has direct access to vault
-		var getPublicCertApi node.GetPublicCertApi
-		getPublicCertApi = &node.VaultPublicCertApi{
-			VaultConfig: nodeMgr.VaultConfig,
+		cloudlet := &edgeproto.Cloudlet{
+			Key: myCloudletKey,
 		}
-		if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-			getPublicCertApi = &node.TestPublicCertApi{}
-		}
-		// Setup PublicCertManager for non cloudletdme
-		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), getPublicCertApi)
-		publicCertManager.StartRefresh()
+		accessApi = accessapi.NewVaultClient(cloudlet, nodeMgr.VaultConfig, *region)
 	}
+	// Setup PublicCertManager for non cloudletdme
+	publicCertManager := node.NewPublicCertManager(nodeMgr.CommonName(), accessApi)
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
+		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), &cloudcommon.TestPublicCertApi{})
+	}
+	publicCertManager.StartRefresh()
 	// Get TLS Config for grpc Creds from PublicCertManager
 	dmeServerTlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	if err != nil {

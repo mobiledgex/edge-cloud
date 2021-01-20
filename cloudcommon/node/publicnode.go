@@ -3,16 +3,13 @@ package node
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
-	edgetls "github.com/mobiledgex/edge-cloud/tls"
-	"github.com/mobiledgex/edge-cloud/vault"
 )
 
 // Third party services that we deploy all have their own letsencrypt-public
@@ -41,26 +38,10 @@ func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, er
 		tlsOpts...)
 }
 
-// GetPublicCertApi abstracts the way the public cert is retrieved.
-// Certain services, like DME running on a Cloudlet, may need to connect
-// to the controller to get a public cert from Vault.
-type GetPublicCertApi interface {
-	GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error)
-}
-
-// VaultPublicCertApi implements GetPublicCertApi by connecting directly to Vault.
-type VaultPublicCertApi struct {
-	VaultConfig *vault.Config
-}
-
-func (s *VaultPublicCertApi) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
-	return vault.GetPublicCert(s.VaultConfig, commonName)
-}
-
 // PublicCertManager manages refreshing the public cert.
 type PublicCertManager struct {
 	commonName        string
-	getPublicCertApi  GetPublicCertApi
+	getPublicCertApi  cloudcommon.GetPublicCertApi
 	cert              *tls.Certificate
 	expiresAt         time.Time
 	done              bool
@@ -70,7 +51,7 @@ type PublicCertManager struct {
 	mux               sync.Mutex
 }
 
-func NewPublicCertManager(commonName string, getPublicCertApi GetPublicCertApi) *PublicCertManager {
+func NewPublicCertManager(commonName string, getPublicCertApi cloudcommon.GetPublicCertApi) *PublicCertManager {
 	// Nominally letsencrypt certs are valid for 90 days
 	// and they recommend refreshing at 30 days to expiration.
 	mgr := &PublicCertManager{
@@ -83,14 +64,9 @@ func NewPublicCertManager(commonName string, getPublicCertApi GetPublicCertApi) 
 	return mgr
 }
 
-// Utility function to call GetPublicCertApi.GetPublicCert function
-func (s *PublicCertManager) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
-	return s.getPublicCertApi.GetPublicCert(ctx, commonName)
-}
-
 func (s *PublicCertManager) updateCert(ctx context.Context) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "update public cert", "name", s.commonName)
-	pubCert, err := s.GetPublicCert(ctx, s.commonName)
+	pubCert, err := s.getPublicCertApi.GetPublicCert(ctx, s.commonName)
 	if err != nil {
 		return err
 	}
@@ -173,50 +149,4 @@ func (s *PublicCertManager) StopRefresh() {
 	case s.refreshTrigger <- true:
 	default:
 	}
-}
-
-// TestPublicCertApi implements GetPublicCertApi for unit/e2e testing
-type TestPublicCertApi struct {
-	GetCount int
-}
-
-func (s *TestPublicCertApi) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
-	cert := &vault.PublicCert{}
-	cert.Cert = edgetls.LocalTestCert
-	cert.Key = edgetls.LocalTestKey
-	// 24 hours in seconds
-	cert.TTL = 24 * 3600
-	s.GetCount++
-	return cert, nil
-}
-
-// NodePublicCertApi implements GetPublicCertApi
-// Used for public nodes that don't have direct access to vault
-// Connects to controller and controller will pull cert from vault
-// See (cloudletaccess_api.go:GetPublicCert) for implementation in controller
-type NodePublicCertApi struct {
-	CloudletAccessApiClient edgeproto.CloudletAccessApiClient
-}
-
-func NewNodePublicCertApi(cloudletAccessApiClient edgeproto.CloudletAccessApiClient) *NodePublicCertApi {
-	s := &NodePublicCertApi{
-		CloudletAccessApiClient: cloudletAccessApiClient,
-	}
-	return s
-}
-
-func (s *NodePublicCertApi) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
-	publicCertRequest := &edgeproto.PublicCertRequest{
-		CommonName: commonName,
-	}
-	publicCertReply, err := s.CloudletAccessApiClient.GetPublicCert(ctx, publicCertRequest)
-	if err != nil {
-		return nil, err
-	}
-	var publicCert vault.PublicCert
-	err = json.Unmarshal(publicCertReply.PublicCert, &publicCert)
-	if err != nil {
-		return nil, err
-	}
-	return &publicCert, nil
 }

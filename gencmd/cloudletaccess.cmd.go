@@ -195,68 +195,10 @@ func GetAccessDatas(c *cli.Command, data []edgeproto.AccessDataRequest, err *err
 	}
 }
 
-var GetPublicCertCmd = &cli.Command{
-	Use:          "GetPublicCert",
-	RequiredArgs: strings.Join(PublicCertRequestRequiredArgs, " "),
-	OptionalArgs: strings.Join(PublicCertRequestOptionalArgs, " "),
-	AliasArgs:    strings.Join(PublicCertRequestAliasArgs, " "),
-	SpecialArgs:  &PublicCertRequestSpecialArgs,
-	Comments:     PublicCertRequestComments,
-	ReqData:      &edgeproto.PublicCertRequest{},
-	ReplyData:    &edgeproto.PublicCertReply{},
-	Run:          runGetPublicCert,
-}
-
-func runGetPublicCert(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.PublicCertRequest)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return GetPublicCert(c, obj)
-}
-
-func GetPublicCert(c *cli.Command, in *edgeproto.PublicCertRequest) error {
-	if CloudletAccessApiCmd == nil {
-		return fmt.Errorf("CloudletAccessApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := CloudletAccessApiCmd.GetPublicCert(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("GetPublicCert failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func GetPublicCerts(c *cli.Command, data []edgeproto.PublicCertRequest, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("GetPublicCert %v\n", data[ii])
-		myerr := GetPublicCert(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var CloudletAccessApiCmds = []*cobra.Command{
 	IssueCertCmd.GenCmd(),
 	GetCasCmd.GenCmd(),
 	GetAccessDataCmd.GenCmd(),
-	GetPublicCertCmd.GenCmd(),
 }
 
 var CloudletAccessKeyApiCmd edgeproto.CloudletAccessKeyApiClient
@@ -340,21 +282,3 @@ var AccessDataReplyComments = map[string]string{
 	"data": "Reply data (type specific)",
 }
 var AccessDataReplySpecialArgs = map[string]string{}
-var PublicCertRequestRequiredArgs = []string{}
-var PublicCertRequestOptionalArgs = []string{
-	"commonname",
-}
-var PublicCertRequestAliasArgs = []string{}
-var PublicCertRequestComments = map[string]string{
-	"commonname": "Certificate common name",
-}
-var PublicCertRequestSpecialArgs = map[string]string{}
-var PublicCertReplyRequiredArgs = []string{}
-var PublicCertReplyOptionalArgs = []string{
-	"publiccert",
-}
-var PublicCertReplyAliasArgs = []string{}
-var PublicCertReplyComments = map[string]string{
-	"publiccert": "Marshalled vault.PublicCert",
-}
-var PublicCertReplySpecialArgs = map[string]string{}
