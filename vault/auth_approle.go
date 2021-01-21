@@ -28,6 +28,9 @@ func (s *AppRoleAuth) Login(client *api.Client) error {
 	if err != nil {
 		return err
 	}
+	if resp == nil {
+		return fmt.Errorf("Empty response from Vault for approle login, possible 404 not found")
+	}
 	if resp.Auth == nil {
 		return fmt.Errorf("no auth info returned")
 	}
