@@ -186,6 +186,9 @@ func (g *GenCmd) generateServiceCmd(file *descriptor.FileDescriptorProto, servic
 	}
 	count := 0
 	for _, method := range service.Method {
+		if gensupport.ClientStreaming(method) && gensupport.ServerStreaming(method) {
+			continue
+		}
 		if g.generateMethodCmd(file, service, method) {
 			count++
 		}
@@ -194,6 +197,9 @@ func (g *GenCmd) generateServiceCmd(file *descriptor.FileDescriptorProto, servic
 		g.P()
 		g.P("var ", service.Name, "Cmds = []*cobra.Command{")
 		for _, method := range service.Method {
+			if gensupport.ClientStreaming(method) && gensupport.ServerStreaming(method) {
+				continue
+			}
 			g.P(method.Name, "Cmd.GenCmd(),")
 		}
 		g.P("}")

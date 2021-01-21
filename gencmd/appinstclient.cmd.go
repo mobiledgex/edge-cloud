@@ -11,6 +11,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/mobiledgex/edge-cloud/cli"
 	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
@@ -33,6 +34,9 @@ func AppInstClientHideTags(in *edgeproto.AppInstClient) {
 	tags := make(map[string]struct{})
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Location = distributed_match_engine.Loc{}
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
@@ -208,25 +212,27 @@ var AppInstClientApiCmds = []*cobra.Command{
 
 var AppInstClientKeyRequiredArgs = []string{
 	"app-org",
+}
+var AppInstClientKeyOptionalArgs = []string{
 	"appname",
 	"appvers",
 	"cluster",
 	"cloudlet-org",
 	"cloudlet",
 	"cluster-org",
-}
-var AppInstClientKeyOptionalArgs = []string{
 	"uniqueid",
 	"uniqueidtype",
 }
 var AppInstClientKeyAliasArgs = []string{
-	"app-org=key.appkey.organization",
-	"appname=key.appkey.name",
-	"appvers=key.appkey.version",
-	"cluster=key.clusterinstkey.clusterkey.name",
-	"cloudlet-org=key.clusterinstkey.cloudletkey.organization",
-	"cloudlet=key.clusterinstkey.cloudletkey.name",
-	"cluster-org=key.clusterinstkey.organization",
+	"app-org=appinstkey.appkey.organization",
+	"appname=appinstkey.appkey.name",
+	"appvers=appinstkey.appkey.version",
+	"cluster=appinstkey.clusterinstkey.clusterkey.name",
+	"cloudlet-org=appinstkey.clusterinstkey.cloudletkey.organization",
+	"cloudlet=appinstkey.clusterinstkey.cloudletkey.name",
+	"cluster-org=appinstkey.clusterinstkey.organization",
+	"uniqueid=uniqueid",
+	"uniqueidtype=uniqueidtype",
 }
 var AppInstClientKeyComments = map[string]string{
 	"app-org":      "App developer organization",
@@ -242,13 +248,13 @@ var AppInstClientKeyComments = map[string]string{
 var AppInstClientKeySpecialArgs = map[string]string{}
 var AppInstClientRequiredArgs = []string{}
 var AppInstClientOptionalArgs = []string{
-	"clientkey.key.appkey.organization",
-	"clientkey.key.appkey.name",
-	"clientkey.key.appkey.version",
-	"clientkey.key.clusterinstkey.clusterkey.name",
-	"clientkey.key.clusterinstkey.cloudletkey.organization",
-	"clientkey.key.clusterinstkey.cloudletkey.name",
-	"clientkey.key.clusterinstkey.organization",
+	"clientkey.appinstkey.appkey.organization",
+	"clientkey.appinstkey.appkey.name",
+	"clientkey.appinstkey.appkey.version",
+	"clientkey.appinstkey.clusterinstkey.clusterkey.name",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.organization",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.name",
+	"clientkey.appinstkey.clusterinstkey.organization",
 	"clientkey.uniqueid",
 	"clientkey.uniqueidtype",
 	"location.latitude",
@@ -264,24 +270,24 @@ var AppInstClientOptionalArgs = []string{
 }
 var AppInstClientAliasArgs = []string{}
 var AppInstClientComments = map[string]string{
-	"fields":                                                "Fields are used for the Update API to specify which fields to apply",
-	"clientkey.key.appkey.organization":                     "App developer organization",
-	"clientkey.key.appkey.name":                             "App name",
-	"clientkey.key.appkey.version":                          "App version",
-	"clientkey.key.clusterinstkey.clusterkey.name":          "Cluster name",
-	"clientkey.key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
-	"clientkey.key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
-	"clientkey.key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
-	"clientkey.uniqueid":                                    "AppInstClient Unique Id",
-	"clientkey.uniqueidtype":                                "AppInstClient Unique Id Type",
-	"location.latitude":                                     "latitude in WGS 84 coordinates",
-	"location.longitude":                                    "longitude in WGS 84 coordinates",
-	"location.horizontalaccuracy":                           "horizontal accuracy (radius in meters)",
-	"location.verticalaccuracy":                             "vertical accuracy (meters)",
-	"location.altitude":                                     "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"location.course":                                       "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"location.speed":                                        "speed (IOS) / velocity (Android) (meters/sec)",
-	"notifyid":                                              "Id of client assigned by server (internal use only)",
+	"fields": "Fields are used for the Update API to specify which fields to apply",
+	"clientkey.appinstkey.appkey.organization":                     "App developer organization",
+	"clientkey.appinstkey.appkey.name":                             "App name",
+	"clientkey.appinstkey.appkey.version":                          "App version",
+	"clientkey.appinstkey.clusterinstkey.clusterkey.name":          "Cluster name",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"clientkey.appinstkey.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
+	"clientkey.appinstkey.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
+	"clientkey.uniqueid":                                           "AppInstClient Unique Id",
+	"clientkey.uniqueidtype":                                       "AppInstClient Unique Id Type",
+	"location.latitude":                                            "latitude in WGS 84 coordinates",
+	"location.longitude":                                           "longitude in WGS 84 coordinates",
+	"location.horizontalaccuracy":                                  "horizontal accuracy (radius in meters)",
+	"location.verticalaccuracy":                                    "vertical accuracy (meters)",
+	"location.altitude":                                            "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"location.course":                                              "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"location.speed":                                               "speed (IOS) / velocity (Android) (meters/sec)",
+	"notifyid":                                                     "Id of client assigned by server (internal use only)",
 }
 var AppInstClientSpecialArgs = map[string]string{
 	"fields": "StringArray",

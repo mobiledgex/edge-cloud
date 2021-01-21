@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -348,7 +349,7 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 	}
 	for ii, _ := range s.cloudletInfos {
 		s.cloudletInfos[ii].Key = s.cloudlets[ii].Key
-		s.cloudletInfos[ii].State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+		s.cloudletInfos[ii].State = dme.CloudletState_CLOUDLET_STATE_READY
 		s.cloudletInfos[ii].Flavors = []*edgeproto.FlavorInfo{
 			&edgeproto.FlavorInfo{
 				Name:  flavor.Key.Name,

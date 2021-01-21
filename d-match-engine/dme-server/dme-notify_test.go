@@ -6,11 +6,13 @@ import (
 	"time"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
 
@@ -24,8 +26,11 @@ func TestNotify(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	dmecommon.SetupMatchEngine()
-	InitAppInstClients()
+
+	eehandler, err := initEdgeEventsPlugin(ctx, "standalone")
+	require.Nil(t, err, "init edge events plugin")
+	dmecommon.SetupMatchEngine(eehandler)
+	dmecommon.InitAppInstClients()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 
@@ -74,7 +79,7 @@ func TestNotify(t *testing.T) {
 			Organization: dmetest.Cloudlets[2].CarrierName,
 			Name:         dmetest.Cloudlets[2].Name,
 		},
-		State: edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE,
+		State: dme.CloudletState_CLOUDLET_STATE_OFFLINE,
 	}
 	cloudlet := edgeproto.Cloudlet{
 		Key: cloudletInfo.Key,
@@ -85,24 +90,24 @@ func TestNotify(t *testing.T) {
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstNotUsable)
 
 	// update cloudletInfo for a single cloudlet and make sure it gets propagated to appInsts
-	cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 	serverHandler.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	// check that the appInsts on that cloudlet are available
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
 
 	// mark cloudlet under maintenance state just for cloudlet object
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_UNDER_MAINTENANCE
+	cloudlet.MaintenanceState = dme.MaintenanceState_UNDER_MAINTENANCE
 	serverHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstNotUsable)
 
 	// mark cloudlet operational just for cloudlet object
-	cloudlet.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+	cloudlet.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 	serverHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
 
 	// set cloudletInfo maintenance state in maintenance mode,
 	// should not affect appInst
-	cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
+	cloudletInfo.MaintenanceState = dme.MaintenanceState_CRM_UNDER_MAINTENANCE
 	serverHandler.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	waitAndCheckCloudletforApps(t, &cloudletInfo.Key, appInstUsable)
 
@@ -121,30 +126,30 @@ func TestNotify(t *testing.T) {
 
 	// add a new device - see that it makes it to the server
 	for _, reg := range dmetest.DeviceData {
-		recordDevice(ctx, &reg)
+		dmecommon.RecordDevice(ctx, &reg)
 	}
 	// verify the devices were added to the server
 	count := len(dmetest.DeviceData) - 1 // Since one is a duplicate
 	// verify that devices are in local cache
-	assert.Equal(t, count, len(platformClientsCache.Objs))
+	assert.Equal(t, count, len(dmecommon.PlatformClientsCache.Objs))
 	serverHandler.WaitForDevices(count)
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 	// Delete all elements from local cache directly
-	for _, data := range platformClientsCache.Objs {
+	for _, data := range dmecommon.PlatformClientsCache.Objs {
 		obj := data.Obj
-		delete(platformClientsCache.Objs, obj.GetKeyVal())
-		delete(platformClientsCache.List, obj.GetKeyVal())
+		delete(dmecommon.PlatformClientsCache.Objs, obj.GetKeyVal())
+		delete(dmecommon.PlatformClientsCache.List, obj.GetKeyVal())
 	}
-	assert.Equal(t, 0, len(platformClientsCache.Objs))
+	assert.Equal(t, 0, len(dmecommon.PlatformClientsCache.Objs))
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 	// Add a single device - make sure count in local cache is updated
-	recordDevice(ctx, &dmetest.DeviceData[0])
-	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	dmecommon.RecordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(dmecommon.PlatformClientsCache.Objs))
 	// Make sure that count in the server cache is the same
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 	// Add the same device, check that nothing is updated
-	recordDevice(ctx, &dmetest.DeviceData[0])
-	assert.Equal(t, 1, len(platformClientsCache.Objs))
+	dmecommon.RecordDevice(ctx, &dmetest.DeviceData[0])
+	assert.Equal(t, 1, len(dmecommon.PlatformClientsCache.Objs))
 	assert.Equal(t, count, len(serverHandler.DeviceCache.Objs))
 
 	serverMgr.Stop()
