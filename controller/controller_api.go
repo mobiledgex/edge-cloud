@@ -113,7 +113,7 @@ func ControllerConnect(ctx context.Context, addr string) (*grpc.ClientConn, erro
 		// controllers will need to connect to each other via
 		// IP address, which will not be a SAN defined on the cert.
 		// So set the hostname(SNI) on the TLS query to a valid SAN.
-		host = "ctrl.mobiledgex.net"
+		host = nodeMgr.CommonName()
 	}
 	tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
 		nodeMgr.CommonName(),
