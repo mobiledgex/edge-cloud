@@ -22,9 +22,6 @@ func TestAlertApi(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	testinit()
-	cplookup := &node.CloudletPoolCache{}
-	cplookup.Init()
-	nodeMgr.CloudletPoolLookup = cplookup
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -119,4 +116,8 @@ func testinit() {
 	services.events = influxq.NewInfluxQ("events", "user", "pass")
 	cleanupCloudletInfoTimeout = 100 * time.Millisecond
 	RequireAppInstPortConsistency = true
+	cplookup := &node.CloudletPoolCache{}
+	cplookup.Init()
+	nodeMgr.CloudletPoolLookup = cplookup
+
 }
