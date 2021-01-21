@@ -8,6 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -659,7 +660,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 
 	if new.State == edgeproto.TrackedState_CRM_INITOK {
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
+		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_INIT {
 			cd.notifyControllerConnect()
 		}
 	}
@@ -667,7 +668,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	updateInfo := false
 	if old != nil && old.MaintenanceState != new.MaintenanceState {
 		switch new.MaintenanceState {
-		case edgeproto.MaintenanceState_CRM_REQUESTED:
+		case dme.MaintenanceState_CRM_REQUESTED:
 			// TODO: perhaps trigger LBs to reset tcp connections
 			// to gracefully force clients to move to another
 			// cloudlets - but we may need to add another phase
@@ -676,12 +677,12 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			// will just redirected back here.
 
 			// Acknowledge controller that CRM is in maintenance
-			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
+			cloudletInfo.MaintenanceState = dme.MaintenanceState_CRM_UNDER_MAINTENANCE
 			updateInfo = true
-		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
+		case dme.MaintenanceState_NORMAL_OPERATION_INIT:
 			// Set state back to normal so DME will allow clients
 			// for this Cloudlet.
-			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+			cloudletInfo.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 			updateInfo = true
 		}
 	}
@@ -727,14 +728,14 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_UPGRADE {
 			// Cloudlet is already upgrading
 			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet update already in progress", "key", new.Key)
 			return
 		}
 		// Reset old Status
 		cloudletInfo.Status.StatusReset()
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
+		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 		err := cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
@@ -743,7 +744,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.InfoLog("can't update cloudlet", "error", errstr, "key", new.Key)
 
 			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
-			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+			cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			return
 		}
@@ -753,7 +754,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}

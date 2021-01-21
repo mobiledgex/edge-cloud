@@ -8,6 +8,7 @@ import (
 	"errors"
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
+	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/mobiledgex/edge-cloud/util"
 	io "io"
 	math "math"
@@ -62,6 +63,165 @@ func (x LProto) String() string {
 
 func (LProto) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_fdc58d2114e550de, []int{0}
+}
+
+// Health check status
+//
+// Health check status gets set by external, or rootLB health check
+type HealthCheck int32
+
+const (
+	// Health Check is unknown
+	HealthCheck_HEALTH_CHECK_UNKNOWN HealthCheck = 0
+	// Health Check failure due to RootLB being offline
+	HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE HealthCheck = 1
+	// Health Check failure due to Backend server being unavailable
+	HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL HealthCheck = 2
+	// Health Check is ok
+	HealthCheck_HEALTH_CHECK_OK HealthCheck = 3
+)
+
+var HealthCheck_name = map[int32]string{
+	0: "HEALTH_CHECK_UNKNOWN",
+	1: "HEALTH_CHECK_FAIL_ROOTLB_OFFLINE",
+	2: "HEALTH_CHECK_FAIL_SERVER_FAIL",
+	3: "HEALTH_CHECK_OK",
+}
+
+var HealthCheck_value = map[string]int32{
+	"HEALTH_CHECK_UNKNOWN":             0,
+	"HEALTH_CHECK_FAIL_ROOTLB_OFFLINE": 1,
+	"HEALTH_CHECK_FAIL_SERVER_FAIL":    2,
+	"HEALTH_CHECK_OK":                  3,
+}
+
+func (x HealthCheck) String() string {
+	return proto.EnumName(HealthCheck_name, int32(x))
+}
+
+func (HealthCheck) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{1}
+}
+
+// CloudletState is the state of the Cloudlet.
+type CloudletState int32
+
+const (
+	// Unknown
+	CloudletState_CLOUDLET_STATE_UNKNOWN CloudletState = 0
+	// Create/Delete/Update encountered errors (see Errors field of CloudletInfo)
+	CloudletState_CLOUDLET_STATE_ERRORS CloudletState = 1
+	// Cloudlet is created and ready
+	CloudletState_CLOUDLET_STATE_READY CloudletState = 2
+	// Cloudlet is offline (unreachable)
+	CloudletState_CLOUDLET_STATE_OFFLINE CloudletState = 3
+	// Cloudlet is not present
+	CloudletState_CLOUDLET_STATE_NOT_PRESENT CloudletState = 4
+	// Cloudlet is initializing
+	CloudletState_CLOUDLET_STATE_INIT CloudletState = 5
+	// Cloudlet is upgrading
+	CloudletState_CLOUDLET_STATE_UPGRADE CloudletState = 6
+	// Cloudlet needs data to synchronize
+	CloudletState_CLOUDLET_STATE_NEED_SYNC CloudletState = 7
+)
+
+var CloudletState_name = map[int32]string{
+	0: "CLOUDLET_STATE_UNKNOWN",
+	1: "CLOUDLET_STATE_ERRORS",
+	2: "CLOUDLET_STATE_READY",
+	3: "CLOUDLET_STATE_OFFLINE",
+	4: "CLOUDLET_STATE_NOT_PRESENT",
+	5: "CLOUDLET_STATE_INIT",
+	6: "CLOUDLET_STATE_UPGRADE",
+	7: "CLOUDLET_STATE_NEED_SYNC",
+}
+
+var CloudletState_value = map[string]int32{
+	"CLOUDLET_STATE_UNKNOWN":     0,
+	"CLOUDLET_STATE_ERRORS":      1,
+	"CLOUDLET_STATE_READY":       2,
+	"CLOUDLET_STATE_OFFLINE":     3,
+	"CLOUDLET_STATE_NOT_PRESENT": 4,
+	"CLOUDLET_STATE_INIT":        5,
+	"CLOUDLET_STATE_UPGRADE":     6,
+	"CLOUDLET_STATE_NEED_SYNC":   7,
+}
+
+func (x CloudletState) String() string {
+	return proto.EnumName(CloudletState_name, int32(x))
+}
+
+func (CloudletState) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{2}
+}
+
+// Cloudlet Maintenance States
+//
+// Maintenance allows for planned downtimes of Cloudlets.
+// These states involve message exchanges between the Controller,
+// the AutoProv service, and the CRM. Certain states are only set
+// by certain actors.
+type MaintenanceState int32
+
+const (
+	// Normal operational state
+	MaintenanceState_NORMAL_OPERATION MaintenanceState = 0
+	// Request start of maintenance
+	MaintenanceState_MAINTENANCE_START MaintenanceState = 1
+	// Trigger failover for any HA AppInsts
+	MaintenanceState_FAILOVER_REQUESTED MaintenanceState = 2
+	// Failover done
+	MaintenanceState_FAILOVER_DONE MaintenanceState = 3
+	// Some errors encountered during maintenance failover
+	MaintenanceState_FAILOVER_ERROR MaintenanceState = 4
+	// Request start of maintenance without AutoProv failover
+	MaintenanceState_MAINTENANCE_START_NO_FAILOVER MaintenanceState = 5
+	// Request CRM to transition to maintenance
+	MaintenanceState_CRM_REQUESTED MaintenanceState = 6
+	// CRM request done and under maintenance
+	MaintenanceState_CRM_UNDER_MAINTENANCE MaintenanceState = 7
+	// CRM failed to go into maintenance
+	MaintenanceState_CRM_ERROR MaintenanceState = 8
+	// Request CRM to transition to normal operation
+	MaintenanceState_NORMAL_OPERATION_INIT MaintenanceState = 9
+	// Under maintenance
+	MaintenanceState_UNDER_MAINTENANCE MaintenanceState = 31
+)
+
+var MaintenanceState_name = map[int32]string{
+	0:  "NORMAL_OPERATION",
+	1:  "MAINTENANCE_START",
+	2:  "FAILOVER_REQUESTED",
+	3:  "FAILOVER_DONE",
+	4:  "FAILOVER_ERROR",
+	5:  "MAINTENANCE_START_NO_FAILOVER",
+	6:  "CRM_REQUESTED",
+	7:  "CRM_UNDER_MAINTENANCE",
+	8:  "CRM_ERROR",
+	9:  "NORMAL_OPERATION_INIT",
+	31: "UNDER_MAINTENANCE",
+}
+
+var MaintenanceState_value = map[string]int32{
+	"NORMAL_OPERATION":              0,
+	"MAINTENANCE_START":             1,
+	"FAILOVER_REQUESTED":            2,
+	"FAILOVER_DONE":                 3,
+	"FAILOVER_ERROR":                4,
+	"MAINTENANCE_START_NO_FAILOVER": 5,
+	"CRM_REQUESTED":                 6,
+	"CRM_UNDER_MAINTENANCE":         7,
+	"CRM_ERROR":                     8,
+	"NORMAL_OPERATION_INIT":         9,
+	"UNDER_MAINTENANCE":             31,
+}
+
+func (x MaintenanceState) String() string {
+	return proto.EnumName(MaintenanceState_name, int32(x))
+}
+
+func (MaintenanceState) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{3}
 }
 
 // Application Port
@@ -121,33 +281,128 @@ func (m *AppPort) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AppPort proto.InternalMessageInfo
 
+//
+// DeviceInfo
+type DeviceInfo struct {
+	// LTE, 5G, etc.
+	DataNetworkType string `protobuf:"bytes,1,opt,name=data_network_type,json=dataNetworkType,proto3" json:"data_network_type,omitempty"`
+	// Android or iOS
+	DeviceOs string `protobuf:"bytes,2,opt,name=device_os,json=deviceOs,proto3" json:"device_os,omitempty"`
+	// Device model
+	DeviceModel string `protobuf:"bytes,3,opt,name=device_model,json=deviceModel,proto3" json:"device_model,omitempty"`
+	// Device signal strength (0-5)
+	SignalStrength       uint32   `protobuf:"varint,4,opt,name=signal_strength,json=signalStrength,proto3" json:"signal_strength,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeviceInfo) Reset()         { *m = DeviceInfo{} }
+func (m *DeviceInfo) String() string { return proto.CompactTextString(m) }
+func (*DeviceInfo) ProtoMessage()    {}
+func (*DeviceInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fdc58d2114e550de, []int{1}
+}
+func (m *DeviceInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeviceInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeviceInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeviceInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeviceInfo.Merge(m, src)
+}
+func (m *DeviceInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeviceInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeviceInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeviceInfo proto.InternalMessageInfo
+
+var E_EnumBackend = &proto.ExtensionDesc{
+	ExtendedType:  (*descriptor.EnumValueOptions)(nil),
+	ExtensionType: (*bool)(nil),
+	Field:         51042,
+	Name:          "distributed_match_engine.enum_backend",
+	Tag:           "varint,51042,opt,name=enum_backend",
+	Filename:      "appcommon.proto",
+}
+
 func init() {
 	proto.RegisterEnum("distributed_match_engine.LProto", LProto_name, LProto_value)
+	proto.RegisterEnum("distributed_match_engine.HealthCheck", HealthCheck_name, HealthCheck_value)
+	proto.RegisterEnum("distributed_match_engine.CloudletState", CloudletState_name, CloudletState_value)
+	proto.RegisterEnum("distributed_match_engine.MaintenanceState", MaintenanceState_name, MaintenanceState_value)
 	proto.RegisterType((*AppPort)(nil), "distributed_match_engine.AppPort")
+	proto.RegisterType((*DeviceInfo)(nil), "distributed_match_engine.DeviceInfo")
+	proto.RegisterExtension(E_EnumBackend)
 }
 
 func init() { proto.RegisterFile("appcommon.proto", fileDescriptor_fdc58d2114e550de) }
 
 var fileDescriptor_fdc58d2114e550de = []byte{
-	// 285 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0xbb, 0x4e, 0xf3, 0x30,
-	0x1c, 0x47, 0xeb, 0x56, 0x69, 0xfb, 0xfd, 0xfb, 0x41, 0x23, 0xc3, 0x60, 0x96, 0x10, 0xc1, 0x12,
-	0x31, 0x74, 0x00, 0x89, 0x15, 0x71, 0xd9, 0xa8, 0x5a, 0x2b, 0x6a, 0xc5, 0x68, 0xe5, 0xe2, 0x82,
-	0xa5, 0xc4, 0x36, 0xae, 0x2b, 0xf5, 0x11, 0x3b, 0xf2, 0x08, 0x90, 0x95, 0x97, 0x40, 0xb1, 0x15,
-	0x89, 0x85, 0xcd, 0x3e, 0x3a, 0xc7, 0xfa, 0xc9, 0x30, 0xcd, 0xb4, 0x2e, 0x54, 0x5d, 0x2b, 0x39,
-	0xd3, 0x46, 0x59, 0x85, 0x49, 0x29, 0xb6, 0xd6, 0x88, 0x7c, 0x67, 0x79, 0xc9, 0xea, 0xcc, 0x16,
-	0x6f, 0x8c, 0xcb, 0x57, 0x21, 0xf9, 0xc5, 0x37, 0x82, 0xd1, 0xbd, 0xd6, 0x54, 0x19, 0x8b, 0x6f,
-	0x21, 0x70, 0x3a, 0x41, 0x31, 0x4a, 0x8e, 0xaf, 0xe3, 0xd9, 0x5f, 0xd5, 0x6c, 0x4e, 0x5b, 0x2f,
-	0xf5, 0x3a, 0xbe, 0x84, 0x23, 0x21, 0x2d, 0x37, 0x32, 0xab, 0x98, 0x56, 0xc6, 0x92, 0x7e, 0x8c,
-	0x92, 0x20, 0xfd, 0xdf, 0x41, 0xf7, 0xf8, 0x39, 0x4c, 0xf4, 0x2e, 0xaf, 0x44, 0xe1, 0x95, 0x81,
-	0x53, 0xc0, 0xa3, 0x4e, 0xd8, 0xbc, 0x97, 0x92, 0x69, 0xc3, 0x37, 0x62, 0x4f, 0x82, 0x18, 0x25,
-	0xff, 0x52, 0x68, 0x11, 0x75, 0x04, 0x9f, 0xc1, 0x98, 0xcb, 0xd2, 0xe7, 0x43, 0x97, 0x8f, 0xb8,
-	0x2c, 0x5d, 0x1b, 0xc2, 0xc0, 0x56, 0x5b, 0x32, 0x8a, 0x51, 0x32, 0x4e, 0xdb, 0x23, 0x3e, 0x85,
-	0xa0, 0x9d, 0xba, 0x27, 0x63, 0xc7, 0xfc, 0xe5, 0xea, 0x0e, 0x86, 0x7e, 0x3a, 0x3e, 0x81, 0xe9,
-	0x9c, 0xd1, 0x74, 0xb9, 0x5a, 0xb2, 0xf5, 0xe2, 0x79, 0xb1, 0x7c, 0x59, 0x84, 0x3d, 0x3c, 0x85,
-	0x49, 0x07, 0x57, 0x8f, 0x34, 0x44, 0xbf, 0xc1, 0xfa, 0x89, 0x86, 0xfd, 0x87, 0xf0, 0xf0, 0x15,
-	0xf5, 0x0e, 0x4d, 0x84, 0x3e, 0x9a, 0x08, 0x7d, 0x36, 0x11, 0xca, 0x87, 0xee, 0x0f, 0x6e, 0x7e,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0x43, 0x15, 0x16, 0x53, 0x74, 0x01, 0x00, 0x00,
+	// 792 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x54, 0xcf, 0x72, 0xdb, 0x44,
+	0x18, 0xef, 0xda, 0xf1, 0xbf, 0xcf, 0x49, 0xbc, 0xd9, 0x24, 0x54, 0x4d, 0x5b, 0xc7, 0x29, 0xcc,
+	0xe0, 0xf1, 0xc1, 0x9d, 0x81, 0x19, 0x0e, 0x5c, 0x18, 0xc5, 0xde, 0x10, 0x4f, 0x64, 0xad, 0x58,
+	0xcb, 0x65, 0x7a, 0xda, 0x91, 0xad, 0x8d, 0xa3, 0x89, 0x2c, 0x09, 0x79, 0x0d, 0xed, 0x03, 0x70,
+	0x65, 0x78, 0x05, 0xde, 0x84, 0x63, 0x8f, 0x3c, 0x02, 0xe4, 0xca, 0x81, 0x1b, 0x67, 0x66, 0x25,
+	0xbb, 0xb8, 0x4e, 0x7a, 0x5b, 0xff, 0xfe, 0xed, 0xf7, 0xfb, 0xc6, 0x5a, 0x68, 0x78, 0x49, 0x32,
+	0x8d, 0xe7, 0xf3, 0x38, 0xea, 0x26, 0x69, 0xac, 0x62, 0x62, 0xf8, 0xc1, 0x42, 0xa5, 0xc1, 0x64,
+	0xa9, 0xa4, 0x2f, 0xe6, 0x9e, 0x9a, 0xde, 0x08, 0x19, 0xcd, 0x82, 0x48, 0x9e, 0xb4, 0x66, 0x71,
+	0x3c, 0x0b, 0xe5, 0xcb, 0x4c, 0x37, 0x59, 0x5e, 0xbf, 0xf4, 0xe5, 0x62, 0x9a, 0x06, 0x89, 0x8a,
+	0xd3, 0xdc, 0xfb, 0xe2, 0x6f, 0x04, 0x15, 0x33, 0x49, 0x9c, 0x38, 0x55, 0xe4, 0x2b, 0x28, 0x65,
+	0xa0, 0x81, 0x5a, 0xa8, 0xbd, 0xff, 0x45, 0xab, 0xfb, 0xb1, 0xdc, 0xae, 0xe5, 0x68, 0x1d, 0xcf,
+	0xe5, 0xe4, 0x53, 0xd8, 0x0b, 0x22, 0x25, 0xd3, 0xc8, 0x0b, 0x45, 0x12, 0xa7, 0xca, 0x28, 0xb4,
+	0x50, 0xbb, 0xc4, 0x77, 0xd7, 0x60, 0x16, 0x7e, 0x0a, 0xf5, 0x64, 0x39, 0x09, 0x83, 0x69, 0x2e,
+	0x29, 0x66, 0x12, 0xc8, 0xa1, 0xb5, 0xe0, 0xfa, 0x07, 0x3f, 0x12, 0x49, 0x2a, 0xaf, 0x83, 0x37,
+	0x46, 0xa9, 0x85, 0xda, 0x35, 0x0e, 0x1a, 0x72, 0x32, 0x84, 0x3c, 0x81, 0xaa, 0x8c, 0xfc, 0xdc,
+	0x5e, 0xce, 0xec, 0x15, 0x19, 0xf9, 0x99, 0x17, 0x43, 0x51, 0x85, 0x0b, 0xa3, 0xd2, 0x42, 0xed,
+	0x2a, 0xd7, 0x47, 0x72, 0x04, 0x25, 0x3d, 0xea, 0x1b, 0xa3, 0x9a, 0x61, 0xf9, 0x8f, 0x17, 0xbf,
+	0x21, 0x80, 0xbe, 0xfc, 0x31, 0x98, 0xca, 0x41, 0x74, 0x1d, 0x93, 0x0e, 0x1c, 0xf8, 0x9e, 0xf2,
+	0x44, 0x24, 0xd5, 0x4f, 0x71, 0x7a, 0x2b, 0xd4, 0xdb, 0x44, 0x66, 0xe5, 0x6b, 0xbc, 0xa1, 0x09,
+	0x3b, 0xc7, 0xdd, 0xb7, 0x89, 0x24, 0x4f, 0xa1, 0xe6, 0x67, 0x4e, 0x11, 0x2f, 0xb2, 0x82, 0x35,
+	0x5e, 0xcd, 0x01, 0xb6, 0x20, 0x67, 0xb0, 0xbb, 0x22, 0xe7, 0xb1, 0x2f, 0xc3, 0xac, 0x5d, 0x8d,
+	0xd7, 0x73, 0x6c, 0xa8, 0x21, 0xf2, 0x39, 0x34, 0x16, 0xc1, 0x4c, 0xaf, 0x68, 0xa1, 0x52, 0x19,
+	0xcd, 0xd4, 0x8d, 0xb1, 0xd3, 0x42, 0xed, 0x3d, 0xbe, 0x9f, 0xc3, 0xa3, 0x15, 0xda, 0xf9, 0x06,
+	0xca, 0xf9, 0x7a, 0xc9, 0x21, 0x34, 0x2c, 0xe1, 0x70, 0xe6, 0x32, 0x31, 0xb6, 0xaf, 0x6c, 0xf6,
+	0xbd, 0x8d, 0x1f, 0x91, 0x06, 0xd4, 0xd7, 0xa0, 0xdb, 0x73, 0x30, 0xda, 0x04, 0xc6, 0x7d, 0x07,
+	0x17, 0x3a, 0x3f, 0x23, 0xa8, 0x5f, 0x4a, 0x2f, 0x54, 0x37, 0xbd, 0x1b, 0x39, 0xbd, 0x25, 0x06,
+	0x1c, 0x5d, 0x52, 0xd3, 0x72, 0x2f, 0x45, 0xef, 0x92, 0xf6, 0xae, 0x36, 0xb2, 0x3e, 0x83, 0xd6,
+	0x07, 0xcc, 0x85, 0x39, 0xb0, 0x04, 0x67, 0xcc, 0xb5, 0xce, 0x05, 0xbb, 0xb8, 0xb0, 0x06, 0x36,
+	0xc5, 0x88, 0x9c, 0xc1, 0xf3, 0xfb, 0xaa, 0x11, 0xe5, 0xaf, 0x28, 0xcf, 0xce, 0xb8, 0xa0, 0x27,
+	0xfd, 0x40, 0xc2, 0xae, 0x70, 0xb1, 0xf3, 0x0f, 0x82, 0xbd, 0x5e, 0x18, 0x2f, 0xfd, 0x50, 0xaa,
+	0x91, 0xf2, 0x94, 0x24, 0x27, 0xf0, 0x49, 0xcf, 0x62, 0xe3, 0xbe, 0x45, 0x5d, 0x31, 0x72, 0x4d,
+	0x97, 0x6e, 0xcc, 0xf2, 0x04, 0x8e, 0xb7, 0x38, 0xca, 0x39, 0xe3, 0x23, 0x8c, 0x74, 0x81, 0x2d,
+	0x8a, 0x53, 0xb3, 0xff, 0x1a, 0x17, 0x1e, 0x08, 0x5c, 0x8f, 0x5d, 0x24, 0x4d, 0x38, 0xd9, 0xe2,
+	0x6c, 0xe6, 0x0a, 0x87, 0xd3, 0x11, 0xb5, 0x5d, 0xbc, 0x43, 0x1e, 0xc3, 0xe1, 0x16, 0x3f, 0xb0,
+	0x07, 0x2e, 0x2e, 0x3d, 0x34, 0xa5, 0xf3, 0x2d, 0x37, 0xfb, 0x14, 0x97, 0xc9, 0x33, 0x30, 0xb6,
+	0x43, 0x29, 0xed, 0x8b, 0xd1, 0x6b, 0xbb, 0x87, 0x2b, 0x9d, 0xdf, 0x0b, 0x80, 0x87, 0x9e, 0xfe,
+	0xdb, 0x47, 0x5e, 0x34, 0x95, 0x79, 0xe9, 0x23, 0xc0, 0x36, 0xe3, 0x43, 0xd3, 0x12, 0xcc, 0xa1,
+	0xdc, 0x74, 0x07, 0x4c, 0xd7, 0x3d, 0x86, 0x83, 0xa1, 0x39, 0xb0, 0x5d, 0x6a, 0x9b, 0x76, 0x8f,
+	0xea, 0x2c, 0xee, 0x62, 0x44, 0x9e, 0x01, 0xd1, 0x2b, 0x65, 0x7a, 0xb7, 0x9c, 0x7e, 0x37, 0xa6,
+	0x23, 0x97, 0xf6, 0x71, 0xe1, 0x64, 0xe7, 0xd7, 0x7f, 0x0d, 0x44, 0x1e, 0xc3, 0xde, 0x7b, 0xb6,
+	0xcf, 0x74, 0xcb, 0x15, 0x61, 0xc0, 0xfe, 0x7b, 0x22, 0x5b, 0x1b, 0xde, 0x59, 0x31, 0x67, 0xf0,
+	0xfc, 0xde, 0x3d, 0xc2, 0x66, 0x62, 0x2d, 0xc7, 0x25, 0x9d, 0xda, 0xe3, 0xc3, 0x8d, 0xeb, 0xca,
+	0x2b, 0xef, 0x29, 0x1c, 0x6b, 0x62, 0x6c, 0xf7, 0x29, 0x17, 0x1b, 0x29, 0xb8, 0xb2, 0x12, 0x1c,
+	0x42, 0x4d, 0x0b, 0xf2, 0x1b, 0xab, 0xff, 0xbb, 0xb6, 0xfb, 0xe6, 0x9b, 0xad, 0xad, 0x04, 0x4f,
+	0xe1, 0xe0, 0x7e, 0xe4, 0x69, 0x4e, 0x7e, 0x7d, 0x01, 0xbb, 0x32, 0x5a, 0xce, 0xc5, 0xc4, 0x9b,
+	0xde, 0xca, 0xc8, 0x27, 0x67, 0xdd, 0xfc, 0x09, 0xeb, 0xae, 0x9f, 0xb0, 0x2e, 0x8d, 0x96, 0xf3,
+	0x57, 0x5e, 0xb8, 0x94, 0x2c, 0x51, 0x41, 0x1c, 0x2d, 0x8c, 0xbb, 0x5f, 0x8a, 0xd9, 0x37, 0x5e,
+	0xd7, 0xc6, 0xf3, 0xdc, 0x77, 0x8e, 0xdf, 0xfd, 0xd5, 0x7c, 0xf4, 0xee, 0xae, 0x89, 0xfe, 0xb8,
+	0x6b, 0xa2, 0x3f, 0xef, 0x9a, 0x68, 0x52, 0xce, 0x12, 0xbe, 0xfc, 0x2f, 0x00, 0x00, 0xff, 0xff,
+	0xce, 0x45, 0x0f, 0x12, 0x3f, 0x05, 0x00, 0x00,
 }
 
 func (m *AppPort) Marshal() (dAtA []byte, err error) {
@@ -224,6 +479,59 @@ func (m *AppPort) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *DeviceInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeviceInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeviceInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.SignalStrength != 0 {
+		i = encodeVarintAppcommon(dAtA, i, uint64(m.SignalStrength))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.DeviceModel) > 0 {
+		i -= len(m.DeviceModel)
+		copy(dAtA[i:], m.DeviceModel)
+		i = encodeVarintAppcommon(dAtA, i, uint64(len(m.DeviceModel)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.DeviceOs) > 0 {
+		i -= len(m.DeviceOs)
+		copy(dAtA[i:], m.DeviceOs)
+		i = encodeVarintAppcommon(dAtA, i, uint64(len(m.DeviceOs)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.DataNetworkType) > 0 {
+		i -= len(m.DataNetworkType)
+		copy(dAtA[i:], m.DataNetworkType)
+		i = encodeVarintAppcommon(dAtA, i, uint64(len(m.DataNetworkType)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintAppcommon(dAtA []byte, offset int, v uint64) int {
 	offset -= sovAppcommon(v)
 	base := offset
@@ -283,6 +591,39 @@ func (m *AppPort) ValidateEnums() error {
 	if _, ok := LProto_name[int32(m.Proto)]; !ok {
 		return errors.New("invalid Proto")
 	}
+	return nil
+}
+
+func (m *DeviceInfo) CopyInFields(src *DeviceInfo) int {
+	changed := 0
+	if m.DataNetworkType != src.DataNetworkType {
+		m.DataNetworkType = src.DataNetworkType
+		changed++
+	}
+	if m.DeviceOs != src.DeviceOs {
+		m.DeviceOs = src.DeviceOs
+		changed++
+	}
+	if m.DeviceModel != src.DeviceModel {
+		m.DeviceModel = src.DeviceModel
+		changed++
+	}
+	if m.SignalStrength != src.SignalStrength {
+		m.SignalStrength = src.SignalStrength
+		changed++
+	}
+	return changed
+}
+
+func (m *DeviceInfo) DeepCopyIn(src *DeviceInfo) {
+	m.DataNetworkType = src.DataNetworkType
+	m.DeviceOs = src.DeviceOs
+	m.DeviceModel = src.DeviceModel
+	m.SignalStrength = src.SignalStrength
+}
+
+// Helper method to check that enums have valid values
+func (m *DeviceInfo) ValidateEnums() error {
 	return nil
 }
 
@@ -366,6 +707,319 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+
+var HealthCheckStrings = []string{
+	"HEALTH_CHECK_UNKNOWN",
+	"HEALTH_CHECK_FAIL_ROOTLB_OFFLINE",
+	"HEALTH_CHECK_FAIL_SERVER_FAIL",
+	"HEALTH_CHECK_OK",
+}
+
+const (
+	HealthCheckHEALTH_CHECK_UNKNOWN             uint64 = 1 << 0
+	HealthCheckHEALTH_CHECK_FAIL_ROOTLB_OFFLINE uint64 = 1 << 1
+	HealthCheckHEALTH_CHECK_FAIL_SERVER_FAIL    uint64 = 1 << 2
+	HealthCheckHEALTH_CHECK_OK                  uint64 = 1 << 3
+)
+
+var HealthCheck_CamelName = map[int32]string{
+	// HEALTH_CHECK_UNKNOWN -> HealthCheckUnknown
+	0: "HealthCheckUnknown",
+	// HEALTH_CHECK_FAIL_ROOTLB_OFFLINE -> HealthCheckFailRootlbOffline
+	1: "HealthCheckFailRootlbOffline",
+	// HEALTH_CHECK_FAIL_SERVER_FAIL -> HealthCheckFailServerFail
+	2: "HealthCheckFailServerFail",
+	// HEALTH_CHECK_OK -> HealthCheckOk
+	3: "HealthCheckOk",
+}
+var HealthCheck_CamelValue = map[string]int32{
+	"HealthCheckUnknown":           0,
+	"HealthCheckFailRootlbOffline": 1,
+	"HealthCheckFailServerFail":    2,
+	"HealthCheckOk":                3,
+}
+
+func (e *HealthCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = HealthCheck_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = HealthCheck(val)
+	return nil
+}
+
+func (e HealthCheck) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(HealthCheck_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *HealthCheck) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = HealthCheck_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = HealthCheck(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = HealthCheck(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+var CloudletStateStrings = []string{
+	"CLOUDLET_STATE_UNKNOWN",
+	"CLOUDLET_STATE_ERRORS",
+	"CLOUDLET_STATE_READY",
+	"CLOUDLET_STATE_OFFLINE",
+	"CLOUDLET_STATE_NOT_PRESENT",
+	"CLOUDLET_STATE_INIT",
+	"CLOUDLET_STATE_UPGRADE",
+	"CLOUDLET_STATE_NEED_SYNC",
+}
+
+const (
+	CloudletStateCLOUDLET_STATE_UNKNOWN     uint64 = 1 << 0
+	CloudletStateCLOUDLET_STATE_ERRORS      uint64 = 1 << 1
+	CloudletStateCLOUDLET_STATE_READY       uint64 = 1 << 2
+	CloudletStateCLOUDLET_STATE_OFFLINE     uint64 = 1 << 3
+	CloudletStateCLOUDLET_STATE_NOT_PRESENT uint64 = 1 << 4
+	CloudletStateCLOUDLET_STATE_INIT        uint64 = 1 << 5
+	CloudletStateCLOUDLET_STATE_UPGRADE     uint64 = 1 << 6
+	CloudletStateCLOUDLET_STATE_NEED_SYNC   uint64 = 1 << 7
+)
+
+var CloudletState_CamelName = map[int32]string{
+	// CLOUDLET_STATE_UNKNOWN -> CloudletStateUnknown
+	0: "CloudletStateUnknown",
+	// CLOUDLET_STATE_ERRORS -> CloudletStateErrors
+	1: "CloudletStateErrors",
+	// CLOUDLET_STATE_READY -> CloudletStateReady
+	2: "CloudletStateReady",
+	// CLOUDLET_STATE_OFFLINE -> CloudletStateOffline
+	3: "CloudletStateOffline",
+	// CLOUDLET_STATE_NOT_PRESENT -> CloudletStateNotPresent
+	4: "CloudletStateNotPresent",
+	// CLOUDLET_STATE_INIT -> CloudletStateInit
+	5: "CloudletStateInit",
+	// CLOUDLET_STATE_UPGRADE -> CloudletStateUpgrade
+	6: "CloudletStateUpgrade",
+	// CLOUDLET_STATE_NEED_SYNC -> CloudletStateNeedSync
+	7: "CloudletStateNeedSync",
+}
+var CloudletState_CamelValue = map[string]int32{
+	"CloudletStateUnknown":    0,
+	"CloudletStateErrors":     1,
+	"CloudletStateReady":      2,
+	"CloudletStateOffline":    3,
+	"CloudletStateNotPresent": 4,
+	"CloudletStateInit":       5,
+	"CloudletStateUpgrade":    6,
+	"CloudletStateNeedSync":   7,
+}
+
+func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := CloudletState_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = CloudletState_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = CloudletState(val)
+	return nil
+}
+
+func (e CloudletState) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(CloudletState_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *CloudletState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := CloudletState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = CloudletState_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = CloudletState(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = CloudletState(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+var MaintenanceStateStrings = []string{
+	"NORMAL_OPERATION",
+	"MAINTENANCE_START",
+	"FAILOVER_REQUESTED",
+	"FAILOVER_DONE",
+	"FAILOVER_ERROR",
+	"MAINTENANCE_START_NO_FAILOVER",
+	"CRM_REQUESTED",
+	"CRM_UNDER_MAINTENANCE",
+	"CRM_ERROR",
+	"NORMAL_OPERATION_INIT",
+	"UNDER_MAINTENANCE",
+}
+
+const (
+	MaintenanceStateNORMAL_OPERATION              uint64 = 1 << 0
+	MaintenanceStateMAINTENANCE_START             uint64 = 1 << 1
+	MaintenanceStateFAILOVER_REQUESTED            uint64 = 1 << 2
+	MaintenanceStateFAILOVER_DONE                 uint64 = 1 << 3
+	MaintenanceStateFAILOVER_ERROR                uint64 = 1 << 4
+	MaintenanceStateMAINTENANCE_START_NO_FAILOVER uint64 = 1 << 5
+	MaintenanceStateCRM_REQUESTED                 uint64 = 1 << 6
+	MaintenanceStateCRM_UNDER_MAINTENANCE         uint64 = 1 << 7
+	MaintenanceStateCRM_ERROR                     uint64 = 1 << 8
+	MaintenanceStateNORMAL_OPERATION_INIT         uint64 = 1 << 9
+	MaintenanceStateUNDER_MAINTENANCE             uint64 = 1 << 10
+)
+
+var MaintenanceState_CamelName = map[int32]string{
+	// NORMAL_OPERATION -> NormalOperation
+	0: "NormalOperation",
+	// MAINTENANCE_START -> MaintenanceStart
+	1: "MaintenanceStart",
+	// FAILOVER_REQUESTED -> FailoverRequested
+	2: "FailoverRequested",
+	// FAILOVER_DONE -> FailoverDone
+	3: "FailoverDone",
+	// FAILOVER_ERROR -> FailoverError
+	4: "FailoverError",
+	// MAINTENANCE_START_NO_FAILOVER -> MaintenanceStartNoFailover
+	5: "MaintenanceStartNoFailover",
+	// CRM_REQUESTED -> CrmRequested
+	6: "CrmRequested",
+	// CRM_UNDER_MAINTENANCE -> CrmUnderMaintenance
+	7: "CrmUnderMaintenance",
+	// CRM_ERROR -> CrmError
+	8: "CrmError",
+	// NORMAL_OPERATION_INIT -> NormalOperationInit
+	9: "NormalOperationInit",
+	// UNDER_MAINTENANCE -> UnderMaintenance
+	31: "UnderMaintenance",
+}
+var MaintenanceState_CamelValue = map[string]int32{
+	"NormalOperation":            0,
+	"MaintenanceStart":           1,
+	"FailoverRequested":          2,
+	"FailoverDone":               3,
+	"FailoverError":              4,
+	"MaintenanceStartNoFailover": 5,
+	"CrmRequested":               6,
+	"CrmUnderMaintenance":        7,
+	"CrmError":                   8,
+	"NormalOperationInit":        9,
+	"UnderMaintenance":           31,
+}
+
+func (e *MaintenanceState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := MaintenanceState_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = MaintenanceState_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = MaintenanceState(val)
+	return nil
+}
+
+func (e MaintenanceState) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(MaintenanceState_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *MaintenanceState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := MaintenanceState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = MaintenanceState_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = MaintenanceState(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = MaintenanceState(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
 func (m *AppPort) Size() (n int) {
 	if m == nil {
 		return 0
@@ -393,6 +1047,33 @@ func (m *AppPort) Size() (n int) {
 	}
 	if m.Nginx {
 		n += 2
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *DeviceInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DataNetworkType)
+	if l > 0 {
+		n += 1 + l + sovAppcommon(uint64(l))
+	}
+	l = len(m.DeviceOs)
+	if l > 0 {
+		n += 1 + l + sovAppcommon(uint64(l))
+	}
+	l = len(m.DeviceModel)
+	if l > 0 {
+		n += 1 + l + sovAppcommon(uint64(l))
+	}
+	if m.SignalStrength != 0 {
+		n += 1 + sovAppcommon(uint64(m.SignalStrength))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -583,6 +1264,175 @@ func (m *AppPort) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Nginx = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppcommon(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeviceInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppcommon
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeviceInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeviceInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DataNetworkType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppcommon
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DataNetworkType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeviceOs", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppcommon
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeviceOs = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeviceModel", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppcommon
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppcommon
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeviceModel = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SignalStrength", wireType)
+			}
+			m.SignalStrength = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppcommon
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SignalStrength |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAppcommon(dAtA[iNdEx:])

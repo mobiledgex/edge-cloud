@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -40,7 +41,7 @@ func (s *AutoProvInfoApi) Prune(ctx context.Context, keys map[edgeproto.Cloudlet
 	// no-op
 }
 
-func (s *AutoProvInfoApi) waitForMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, targetState, errorState edgeproto.MaintenanceState, timeout time.Duration, result *edgeproto.AutoProvInfo) error {
+func (s *AutoProvInfoApi) waitForMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, targetState, errorState dme.MaintenanceState, timeout time.Duration, result *edgeproto.AutoProvInfo) error {
 	done := make(chan bool, 1)
 	check := func(ctx context.Context) {
 		if !s.cache.Get(key, result) {

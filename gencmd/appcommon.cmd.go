@@ -6,6 +6,7 @@ package gencmd
 import (
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	math "math"
 )
 
@@ -36,3 +37,18 @@ var AppPortComments = map[string]string{
 	"nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 }
 var AppPortSpecialArgs = map[string]string{}
+var DeviceInfoRequiredArgs = []string{}
+var DeviceInfoOptionalArgs = []string{
+	"datanetworktype",
+	"deviceos",
+	"devicemodel",
+	"signalstrength",
+}
+var DeviceInfoAliasArgs = []string{}
+var DeviceInfoComments = map[string]string{
+	"datanetworktype": "LTE, 5G, etc.",
+	"deviceos":        "Android or iOS",
+	"devicemodel":     "Device model",
+	"signalstrength":  "Device signal strength (0-5)",
+}
+var DeviceInfoSpecialArgs = map[string]string{}

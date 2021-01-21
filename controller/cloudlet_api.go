@@ -16,6 +16,7 @@ import (
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vmspec"
@@ -209,9 +210,9 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &cloudletInfo) {
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
-			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
-			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY ||
+			cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_ERRORS ||
+			cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_OFFLINE {
 			return nil
 		}
 	}
@@ -251,13 +252,13 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 
 		curState := cloudletInfo.State
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
-			curState == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+		if curState == dme.CloudletState_CLOUDLET_STATE_ERRORS ||
+			curState == dme.CloudletState_CLOUDLET_STATE_OFFLINE {
 			failed <- true
 			return
 		}
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		if curState == dme.CloudletState_CLOUDLET_STATE_READY {
 			done <- true
 			return
 		}
@@ -676,13 +677,13 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		remoteVersion := cloudletInfo.ContainerVersion
 		privPolState = cloudletInfo.TrustPolicyState
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+		if curState == dme.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
 			return
 		}
 
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY &&
+			if curState == dme.CloudletState_CLOUDLET_STATE_READY &&
 				(cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED) {
 				done <- true
 				return
@@ -693,12 +694,12 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
 			// cloudletinfo starts out in "ready" state, so wait for crm to transition to
 			// upgrade before looking for ready state
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			if curState == dme.CloudletState_CLOUDLET_STATE_UPGRADE {
 				// transition cloudlet state to updating (next case below)
 				update <- true
 			}
 		case edgeproto.TrackedState_UPDATING:
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			if curState == dme.CloudletState_CLOUDLET_STATE_READY {
 				done <- true
 			}
 		}
@@ -841,7 +842,7 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 		if !cloudletInfoApi.cache.Get(ckey, &cloudletInfo) {
 			updateErr = fmt.Errorf("CloudletInfo not found for %s", ckey.String())
 		} else {
-			if cloudletInfo.State != edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
 				updateErr = fmt.Errorf("Cannot modify trust policy for cloudlet in state: %s", cloudletInfo.State)
 			}
 		}
@@ -864,7 +865,13 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 	if policyName == "" {
 		targetState = edgeproto.TrackedState_NOT_PRESENT
 	}
-	return s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
+	err = s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
+	if err == nil {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String())})
+	} else {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
+	}
+	return err
 }
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_UpdateCloudletServer) (reterr error) {
@@ -946,7 +953,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 	}
 
-	var newMaintenanceState edgeproto.MaintenanceState
+	var newMaintenanceState dme.MaintenanceState
 	maintenanceChanged := false
 	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldTrustPolicy]
 
@@ -973,8 +980,8 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				}
 			}
 			if in.TrustPolicy != "" {
-				if !supportsTrustPolicy(in.PlatformType) {
-					platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+				if !supportsTrustPolicy(cur.PlatformType) {
+					platName := edgeproto.PlatformType_name[int32(cur.PlatformType)]
 					return fmt.Errorf("Trust Policy not supported on %s", platName)
 				}
 				policy := edgeproto.TrustPolicy{}
@@ -1029,31 +1036,32 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	// since default maintenance state is NORMAL_OPERATION, it is better to check
 	// if the field is set before handling maintenance state
 	if _, found := fmap[edgeproto.CloudletFieldMaintenanceState]; !found || !maintenanceChanged {
+		cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 		return nil
 	}
 	switch newMaintenanceState {
-	case edgeproto.MaintenanceState_NORMAL_OPERATION:
+	case dme.MaintenanceState_NORMAL_OPERATION:
 		log.SpanLog(ctx, log.DebugLevelApi, "Stop CRM maintenance")
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
-			err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION_INIT)
+			err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION_INIT)
 			if err != nil {
 				return err
 			}
 			cloudletInfo := edgeproto.CloudletInfo{}
-			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION, edgeproto.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
+			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION, dme.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
 			if err != nil {
 				return err
 			}
-			if cloudletInfo.MaintenanceState == edgeproto.MaintenanceState_CRM_ERROR {
+			if cloudletInfo.MaintenanceState == dme.MaintenanceState_CRM_ERROR {
 				return fmt.Errorf("CRM encountered some errors, aborting")
 			}
 		}
-		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
+		err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION)
 		if err != nil {
 			return err
 		}
-	case edgeproto.MaintenanceState_MAINTENANCE_START:
+	case dme.MaintenanceState_MAINTENANCE_START:
 		// This is a state machine to transition into cloudlet
 		// maintenance. Start by triggering AutoProv failovers.
 		log.SpanLog(ctx, log.DebugLevelApi, "Start AutoProv failover")
@@ -1068,15 +1076,15 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		// first reset any old AutoProvInfo
 		autoProvInfo = edgeproto.AutoProvInfo{
 			Key:              in.Key,
-			MaintenanceState: edgeproto.MaintenanceState_NORMAL_OPERATION,
+			MaintenanceState: dme.MaintenanceState_NORMAL_OPERATION,
 		}
 		autoProvInfoApi.Update(ctx, &autoProvInfo, 0)
 
-		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_FAILOVER_REQUESTED)
+		err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_FAILOVER_REQUESTED)
 		if err != nil {
 			return err
 		}
-		err = autoProvInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_FAILOVER_DONE, edgeproto.MaintenanceState_FAILOVER_ERROR, timeout, &autoProvInfo)
+		err = autoProvInfoApi.waitForMaintenanceState(ctx, &in.Key, dme.MaintenanceState_FAILOVER_DONE, dme.MaintenanceState_FAILOVER_ERROR, timeout, &autoProvInfo)
 		if err != nil {
 			return err
 		}
@@ -1097,7 +1105,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			}
 		}
 		if len(autoProvInfo.Errors) > 0 {
-			undoErr := s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
+			undoErr := s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION)
 			log.SpanLog(ctx, log.DebugLevelApi, "AutoProv maintenance failures", "err", err, "undoErr", undoErr)
 			return fmt.Errorf("AutoProv failover encountered some errors, aborting maintenance")
 		}
@@ -1109,7 +1117,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 		// proceed to next state
 		fallthrough
-	case edgeproto.MaintenanceState_MAINTENANCE_START_NO_FAILOVER:
+	case dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER:
 		log.SpanLog(ctx, log.DebugLevelApi, "Start CRM maintenance")
 		cb.Send(&edgeproto.Result{
 			Message: "Starting CRM maintenance",
@@ -1117,17 +1125,17 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
 			// Tell CRM to go into maintenance mode
-			err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_CRM_REQUESTED)
+			err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_CRM_REQUESTED)
 			if err != nil {
 				return err
 			}
 			cloudletInfo := edgeproto.CloudletInfo{}
-			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE, edgeproto.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
+			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, dme.MaintenanceState_CRM_UNDER_MAINTENANCE, dme.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
 			if err != nil {
 				return err
 			}
-			if cloudletInfo.MaintenanceState == edgeproto.MaintenanceState_CRM_ERROR {
-				undoErr := s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
+			if cloudletInfo.MaintenanceState == dme.MaintenanceState_CRM_ERROR {
+				undoErr := s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION)
 				log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance failures", "err", err, "undoErr", undoErr)
 				return fmt.Errorf("CRM encountered some errors, aborting maintenance")
 			}
@@ -1137,7 +1145,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		})
 		log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance started")
 		// transition to maintenance
-		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_UNDER_MAINTENANCE)
+		err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_UNDER_MAINTENANCE)
 		if err != nil {
 			return err
 		}
@@ -1145,11 +1153,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			Message: "Cloudlet is in maintenance",
 		})
 	}
-	cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 	return nil
 }
 
-func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.MaintenanceState) error {
+func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state dme.MaintenanceState) error {
 	changedState := false
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := &edgeproto.Cloudlet{}
@@ -1167,9 +1174,9 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 
 	msg := ""
 	switch state {
-	case edgeproto.MaintenanceState_UNDER_MAINTENANCE:
+	case dme.MaintenanceState_UNDER_MAINTENANCE:
 		msg = "Cloudlet maintenance start"
-	case edgeproto.MaintenanceState_NORMAL_OPERATION:
+	case dme.MaintenanceState_NORMAL_OPERATION:
 		msg = "Cloudlet maintenance done"
 	}
 	if msg != "" && changedState {
@@ -1664,25 +1671,48 @@ func (s *CloudletApi) UsesTrustPolicy(key *edgeproto.PolicyKey, stateMatch edgep
 	return false
 }
 
-func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
+func (s *CloudletApi) ValidateCloudletsUsingTrustPolicy(ctx context.Context, trustPolicy *edgeproto.TrustPolicy) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "ValidateCloudletsUsingTrustPolicy", "policy", trustPolicy)
+	cloudletKeys := make(map[*edgeproto.CloudletKey]struct{})
+	s.cache.Mux.Lock()
+	for ck, data := range s.cache.Objs {
+		val := data.Obj
+		if ck.Organization != trustPolicy.Key.Organization || val.TrustPolicy != trustPolicy.Key.Name {
+			continue
+		}
+		copyKey := edgeproto.CloudletKey{
+			Organization: ck.Organization,
+			Name:         ck.Name,
+		}
+		cloudletKeys[&copyKey] = struct{}{}
+	}
+	s.cache.Mux.Unlock()
+	for k := range cloudletKeys {
+		err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(k, trustPolicy)
+		if err != nil {
+			return fmt.Errorf("AppInst on cloudlet %s not compatible with trust policy - %s", strings.TrimSpace(k.String()), err.Error())
+		}
+	}
+	return nil
+}
+
+func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trustPolicy *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
 	s.cache.Mux.Lock()
 	type updateResult struct {
 		errString string
 	}
-	updateResults := make(map[edgeproto.CloudletKey]chan updateResult)
 
+	updateResults := make(map[edgeproto.CloudletKey]chan updateResult)
 	for k, data := range s.cache.Objs {
 		val := data.Obj
-		if k.Organization != TrustPolicy.Key.Organization || val.TrustPolicy != TrustPolicy.Key.Name {
+		if k.Organization != trustPolicy.Key.Organization || val.TrustPolicy != trustPolicy.Key.Name {
 			continue
 		}
+
 		updateResults[k] = make(chan updateResult)
 		go func(k edgeproto.CloudletKey) {
 			log.SpanLog(ctx, log.DebugLevelApi, "updating trust policy for cloudlet", "key", k)
-			err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(&k, TrustPolicy)
-			if err == nil {
-				err = s.updateTrustPolicyInternal(ctx, &k, TrustPolicy.Key.Name, cb)
-			}
+			err := s.updateTrustPolicyInternal(ctx, &k, trustPolicy.Key.Name, cb)
 			if err == nil {
 				updateResults[k] <- updateResult{errString: ""}
 			} else {
@@ -1692,8 +1722,8 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, Trust
 	}
 	s.cache.Mux.Unlock()
 	if len(updateResults) == 0 {
-		log.SpanLog(ctx, log.DebugLevelApi, "no cloudlets matched", "key", TrustPolicy.Key)
-		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("No cloudlets using trust policy to update")})
+		log.SpanLog(ctx, log.DebugLevelApi, "no cloudlets matched", "key", trustPolicy.Key)
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Trust policy updated, no cloudlets affected")})
 		return nil
 	}
 
@@ -1706,10 +1736,8 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, Trust
 		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
 		if result.errString == "" {
 			numPassed++
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful update of %s", k.GetKeyString())})
 		} else {
 			numFailed++
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failure during update of %s - %s", k.String(), result.errString)})
 		}
 	}
 	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})

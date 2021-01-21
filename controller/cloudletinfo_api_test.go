@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -36,7 +37,7 @@ func TestCloudletInfo(t *testing.T) {
 func insertCloudletInfo(ctx context.Context, data []edgeproto.CloudletInfo) {
 	for ii, _ := range data {
 		in := &data[ii]
-		in.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+		in.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfoApi.Update(ctx, in, 0)
 	}
 }

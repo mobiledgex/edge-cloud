@@ -247,7 +247,7 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 		}
 	}
 	if _, found := fields[CloudletFieldMaintenanceState]; found {
-		if s.MaintenanceState != MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != MaintenanceState_MAINTENANCE_START && s.MaintenanceState != MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
+		if s.MaintenanceState != dme.MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != dme.MaintenanceState_MAINTENANCE_START && s.MaintenanceState != dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
 			return errors.New("Invalid maintenance state, only normal operation and maintenance start states are allowed")
 		}
 	}
@@ -479,8 +479,15 @@ func (key *PolicyKey) ValidateKey() error {
 	return nil
 }
 
+func (s *AppInstClientKey) ValidateKey() error {
+	if s.AppInstKey.Matches(&AppInstKey{}) && s.UniqueId == "" && s.UniqueIdType == "" {
+		return fmt.Errorf("At least one of the key fields must be non-empty %v", s)
+	}
+	return nil
+}
+
 func (s *AppInstClientKey) Validate(fields map[string]struct{}) error {
-	return s.Key.ValidateKey()
+	return s.ValidateKey()
 }
 
 // Validate fields. Note that specified fields is ignored, so this function
@@ -811,8 +818,8 @@ func (c *ClusterInstCache) UsesOrg(org string) bool {
 	return false
 }
 
-func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState CloudletState, timeout time.Duration) error {
-	curState := CloudletState_CLOUDLET_STATE_UNKNOWN
+func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState dme.CloudletState, timeout time.Duration) error {
+	curState := dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 	done := make(chan bool, 1)
 
 	checkState := func(key *CloudletKey) {
@@ -838,8 +845,8 @@ func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, 
 	case <-done:
 	case <-time.After(timeout):
 		return fmt.Errorf("Timed out; expected state %s buf is %s",
-			CloudletState_CamelName[int32(targetState)],
-			CloudletState_CamelName[int32(curState)])
+			dme.CloudletState_CamelName[int32(targetState)],
+			dme.CloudletState_CamelName[int32(curState)])
 	}
 	return nil
 }
