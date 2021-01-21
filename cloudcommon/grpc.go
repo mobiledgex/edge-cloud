@@ -11,7 +11,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -38,10 +37,7 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	ctx := context.Background()
 	// GRPC GW does not validate the GRPC server cert because it may be public signed and therefore
 	// may not work with internal addressing
-	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, "", true, cfg.GetCertificate)
-	if err != nil {
-		return nil, err
-	}
+	dialOption := grpc.WithInsecure()
 	conn, err := grpc.DialContext(ctx, cfg.ApiAddr, dialOption)
 	if err != nil {
 		log.FatalLog("Failed to start REST gateway", "error", err)

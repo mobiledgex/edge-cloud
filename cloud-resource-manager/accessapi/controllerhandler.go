@@ -98,7 +98,6 @@ func (s *ControllerHandler) GetAccessData(ctx context.Context, req *edgeproto.Ac
 		}
 		out, merr = json.Marshal(tokens)
 	case GetPublicCert:
-		// TODO: BETTER CONVERSION FROM BYTE SLICE TO STRING
 		publicCert, err := s.vaultClient.GetPublicCert(ctx, string(req.Data))
 		if err != nil {
 			return nil, err

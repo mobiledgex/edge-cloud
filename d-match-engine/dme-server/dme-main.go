@@ -538,7 +538,7 @@ func main() {
 		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
 
-	// Setup PublicCertManager for dme
+	// Setup AccessApi for dme
 	var accessApi platform.AccessApi
 	if *cloudletDme {
 		// Setup connection to controller for access API
@@ -560,11 +560,11 @@ func main() {
 	} else {
 		// DME has direct access to vault
 		cloudlet := &edgeproto.Cloudlet{
-			Key: myCloudletKey,
+			Key: dmecommon.MyCloudletKey,
 		}
 		accessApi = accessapi.NewVaultClient(cloudlet, nodeMgr.VaultConfig, *region)
 	}
-	// Setup PublicCertManager for non cloudletdme
+	// Setup PublicCertManager for dme
 	publicCertManager := node.NewPublicCertManager(nodeMgr.CommonName(), accessApi)
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
 		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), &cloudcommon.TestPublicCertApi{})

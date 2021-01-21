@@ -118,7 +118,6 @@ func (s *ControllerClient) GetChefAuthKey(ctx context.Context) (*chefmgmt.ChefAu
 	return auth, err
 }
 
-// TODO: STRING -> BYTE SLICE MORE EFFICIENT
 func (s *ControllerClient) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
 	req := &edgeproto.AccessDataRequest{
 		Type: GetPublicCert,

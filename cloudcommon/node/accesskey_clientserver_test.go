@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/require"
@@ -298,7 +299,7 @@ func (s *DummyController) Init(vaultAddr string) {
 // DummyController. The optional registerCb func allows the caller to register
 // more grpc handlers.
 func (s *DummyController) Start(ctx context.Context, addr string) {
-	api := &TestPublicCertApi{}
+	api := &cloudcommon.TestPublicCertApi{}
 	mgr := NewPublicCertManager("localhost", api)
 	tlsConfig, err := mgr.GetServerTlsConfig(ctx)
 	if err != nil {

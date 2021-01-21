@@ -56,8 +56,8 @@ func GetClientCertPool(tlsCertFile string, caCertFile string) (*x509.CertPool, e
 }
 
 // GetTLSClientDialOption gets GRPC options needed for TLS connection
-func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bool, getCertFunc func(*tls.ClientHelloInfo) (*tls.Certificate, error)) (grpc.DialOption, error) {
-	config, err := GetTLSClientConfig(serverAddr, tlsCertFile, "", skipVerify, getCertFunc)
+func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bool) (grpc.DialOption, error) {
+	config, err := GetTLSClientConfig(serverAddr, tlsCertFile, "", skipVerify, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -68,39 +68,39 @@ func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bo
 // is blank, no validation is done on the cert.  CaCertFile is specified when communicating to
 // exernal servers with their own privately signed certs.  Leave this blank to use the mex-ca.crt.
 // Skipverify is only to be used for internal connections such as GRPCGW to GRPC.
+// Requires either a tlsCertFile or a getCertFunc
 func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string, skipVerify bool, getCertFunc func(*tls.ClientHelloInfo) (*tls.Certificate, error)) (*tls.Config, error) {
+	// If neither a certFile or a getCertFunc is provided, return nothing
 	if tlsCertFile == "" && getCertFunc == nil {
 		return nil, nil
 	}
-	certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
-	if err != nil {
-		return nil, err
-	}
-	certificate, err := getClientCertificate(tlsCertFile)
-	if err != nil {
-		return nil, err
-	}
-
 	var tlscfg *tls.Config
 	if serverAddr != "" {
 		serverName := strings.Split(serverAddr, ":")[0]
 		tlscfg = &tls.Config{
 			ServerName:         serverName,
 			InsecureSkipVerify: skipVerify,
-			RootCAs:            certPool,
 		}
 	} else {
 		// do not validate the server address.
 		tlscfg = &tls.Config{
 			InsecureSkipVerify: skipVerify,
-			RootCAs:            certPool,
 		}
 	}
-
-	if tlsCertFile == "" && getCertFunc != nil {
-		tlscfg.GetCertificate = getCertFunc
-	} else {
+	// tlsConfig requires either Certificates or GetCertificate to be set
+	if tlsCertFile != "" {
+		certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
+		if err != nil {
+			return nil, err
+		}
+		certificate, err := getClientCertificate(tlsCertFile)
+		if err != nil {
+			return nil, err
+		}
+		tlscfg.RootCAs = certPool
 		tlscfg.Certificates = []tls.Certificate{certificate}
+	} else {
+		tlscfg.GetCertificate = getCertFunc
 	}
 	return tlscfg, nil
 }
