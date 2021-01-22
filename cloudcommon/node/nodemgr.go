@@ -84,6 +84,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.MyNode.BuildMaster = version.BuildMaster
 	s.MyNode.BuildHead = version.BuildHead
 	s.MyNode.BuildAuthor = version.BuildAuthor
+	s.MyNode.BuildDate = version.BuildDate
 	s.MyNode.Hostname = cloudcommon.Hostname()
 	s.MyNode.ContainerVersion = opts.containerVersion
 	s.Region = opts.region
