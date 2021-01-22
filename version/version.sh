@@ -5,6 +5,7 @@ OUT=version.go
 BUILD_MASTER=`git describe --tags master`
 BUILD_HEAD=`git describe --tags --dirty=+`
 BUILD_AUTHOR=`git config user.name`
+DATE=`date`
 
 cat <<EOF > $OUT.tmp
 package version
@@ -12,6 +13,7 @@ package version
 var BuildMaster = "$BUILD_MASTER"
 var BuildHead = "$BUILD_HEAD"
 var BuildAuthor = "$BUILD_AUTHOR"
+var BuildDate = "$DATE"
 EOF
 
 gofmt $OUT.tmp > $OUT
