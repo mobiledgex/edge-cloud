@@ -95,3 +95,7 @@ func (s *Platform) GetCloudletResourceProps(ctx context.Context) (*edgeproto.Clo
 func (s *Platform) ValidateCloudletResourceQuotas(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota) error {
 	return nil
 }
+
+func (s *Platform) GetCloudletResourceMetric(ctx context.Context, key *edgeproto.CloudletKey, resources []edgeproto.VMResource) (*edgeproto.Metric, error) {
+	return nil, nil
+}

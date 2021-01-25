@@ -263,21 +263,21 @@ func validateCloudletResources(ctx context.Context, stm concurrency.STM, cloudle
 }
 
 func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
-	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
+	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, error) {
 	allClusterResources := []edgeproto.VMResource{}
 	reqdVmResources, err := getClusterInstVMRequirements(ctx, stm, in, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_ADD)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	existingVmResources := cloudletRefs.ReservedResources
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
 	cloudletRes, err := GetCloudletResources(ctx, cloudletInfo)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	allClusterResources = append(allClusterResources, cloudletRes...)
 	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
@@ -292,18 +292,18 @@ func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edg
 		}
 		allRes, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_NONE)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		allClusterResources = append(allClusterResources, allRes...)
 	}
 	if len(reqdVmResources) > 0 {
 		warnings, err := validateCloudletResources(ctx, stm, cloudlet, allClusterResources, reqdVmResources)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		infraWarnings, err := cloudletPlatform.ValidateCloudletResources(ctx, cloudlet.ResourceQuotas, &cloudletInfo.Resources, allClusterResources, reqdVmResources, existingVmResources)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// generate alerts for these warnings
@@ -315,6 +315,72 @@ func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edg
 		cloudletRefs.ReservedResources = append(cloudletRefs.ReservedResources, reqdVmResources...)
 		cloudletRefsApi.store.STMPut(stm, cloudletRefs)
 	}
+	return reqdVmResources, nil
+}
+
+func addCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey) error {
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
+		return fmt.Errorf("Cloudlet not found: %v", key)
+	}
+	cloudletInfo := edgeproto.CloudletInfo{}
+	if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
+		return fmt.Errorf("CloudletInfo not found: %v", key)
+	}
+	cloudletRefs := edgeproto.CloudletRefs{}
+	if !cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs) {
+		return fmt.Errorf("CloudletRefs not found: %v", key)
+	}
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return err
+	}
+
+	allResources := []edgeproto.VMResource{}
+	// get all cloudlet resources (platformVM, sharedRootLB, etc)
+	cloudletRes, err := GetCloudletResources(ctx, &cloudletInfo)
+	if err != nil {
+		return err
+	}
+	allResources = append(allResources, cloudletRes...)
+	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
+	clusterInstKeys := cloudletRefs.ClusterInsts
+	for _, clusterInstKey := range clusterInstKeys {
+		clusterInst := edgeproto.ClusterInst{}
+		clusterInstKey.CloudletKey = cloudletRefs.Key
+		if clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
+			if clusterInst.State != edgeproto.TrackedState_READY {
+				continue
+			}
+		}
+		allRes, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, &cloudlet, &cloudletInfo, &cloudletRefs, edgeproto.VMProvState_PROV_STATE_NONE)
+		if err != nil {
+			return err
+		}
+		allResources = append(allResources, allRes...)
+	}
+
+	// get cloudlet infra metric
+	resMetric, err := cloudletPlatform.GetCloudletResourceMetric(ctx, &cloudlet.Key, allResources)
+	if err != nil {
+		return err
+	}
+
+	if resMetric == nil {
+		return nil
+	}
+
+	// get cloudlet metric
+	gpusUsed := uint64(0)
+	for _, vmRes := range allResources {
+		if vmRes.VmFlavor != nil {
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, cloudlet) {
+				gpusUsed += 1
+			}
+		}
+	}
+	resMetric.AddIntVal("gpusUsed", gpusUsed)
+	services.cloudletResourcesInfluxQ.AddMetric(resMetric)
 	return nil
 }
 
@@ -507,7 +573,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		err = validateAndTrackResources(ctx, stm, in, &cloudlet, &info, &refs)
+		_, err = validateAndTrackResources(ctx, stm, in, &cloudlet, &info, &refs)
 		if err != nil {
 			return err
 		}
@@ -580,6 +646,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst creation: %v", undoErr)})
 			log.InfoLog("Undo create ClusterInst", "undoErr", undoErr)
 		}
+	}
+	if err == nil {
+		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			return addCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+		})
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
 	}
 	return err
 }
@@ -663,7 +735,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 			cloudletRefs := edgeproto.CloudletRefs{}
 			cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs)
-			err = validateAndTrackResources(ctx, stm, resClusterInst, &cloudlet, &info, &cloudletRefs)
+			_, err = validateAndTrackResources(ctx, stm, resClusterInst, &cloudlet, &info, &cloudletRefs)
 			if err != nil {
 				return err
 			}
@@ -706,6 +778,12 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		return nil
 	}
 	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(), "Updated ClusterInst successfully", cb.Send)
+	if err == nil {
+		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			return addCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+		})
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+	}
 	return err
 }
 
@@ -898,6 +976,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
 			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETE_ERROR, cloudcommon.InstanceDown)
 		}
+	}
+	if err == nil {
+		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			return addCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+		})
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
 	}
 	return err
 }

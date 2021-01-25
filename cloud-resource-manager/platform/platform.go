@@ -77,6 +77,8 @@ type Platform interface {
 	ValidateCloudletResources(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota, infraResources *edgeproto.InfraResources, allClusterResources, reqdVmResources, existingVmResources []edgeproto.VMResource) ([]string, error)
 	// Get Cloudlet Resource Properties
 	GetCloudletResourceProps(ctx context.Context) (*edgeproto.CloudletResourceProps, error)
+	// Get Cloudlet Resource Metric
+	GetCloudletResourceMetric(ctx context.Context, key *edgeproto.CloudletKey, resources []edgeproto.VMResource) (*edgeproto.Metric, error)
 	// Get resources used by the cluster
 	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error)
 	// Create an AppInst on a Cluster

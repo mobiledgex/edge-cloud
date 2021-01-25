@@ -72,6 +72,9 @@ var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
 var LatencyPerLocationMetric = "latency-per-location"
 var CustomMetric = "custom-metrics"
 
+// Cloudlet resource usage
+var CloudletResourceUsageDbName = "cloudlet_resource_usage"
+
 // Map used to identify which metrics should go to persistent_metrics db
 var PersistentMetrics = map[string]struct{}{
 	GpsLocationMetric:           struct{}{},

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -56,7 +57,7 @@ var (
 
 var FakeAppDNSRoot = "fake.net"
 
-var FakeClusterVMs = []edgeproto.VmInfo{}
+var FakeClusterVMs = map[edgeproto.ClusterInstKey][]edgeproto.VmInfo{}
 
 var FakeFlavorList = []*edgeproto.FlavorInfo{
 	&edgeproto.FlavorInfo{
@@ -125,8 +126,12 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
 	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
+	if len(FakeClusterVMs) == 0 {
+		FakeClusterVMs = make(map[edgeproto.ClusterInstKey][]edgeproto.VmInfo)
+	}
+	FakeClusterVMs[clusterInst.Key] = []edgeproto.VmInfo{}
 	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
-		FakeClusterVMs = append(FakeClusterVMs, edgeproto.VmInfo{
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix),
 			Type:        "cluster-master",
 			InfraFlavor: "m4.small",
@@ -137,7 +142,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeDiskUsed += uint64(40)
 	}
 	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
-		FakeClusterVMs = append(FakeClusterVMs, edgeproto.VmInfo{
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix),
 			Type:        "cluster-node",
 			InfraFlavor: "m4.small",
@@ -149,7 +154,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	}
 	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 		rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
-		FakeClusterVMs = append(FakeClusterVMs, edgeproto.VmInfo{
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        rootLBFQDN,
 			Type:        "rootlb",
 			InfraFlavor: "m4.small",
@@ -179,16 +184,18 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 		vms[vmName] = struct{}{}
 	}
 	newVMs := []edgeproto.VmInfo{}
-	for _, vm := range FakeClusterVMs {
-		if _, ok := vms[vm.Name]; ok {
-			FakeRamUsed -= uint64(4096)
-			FakeVcpusUsed -= uint64(2)
-			FakeDiskUsed -= uint64(40)
-			continue
+	if clusterVMs, ok := FakeClusterVMs[clusterInst.Key]; ok {
+		for _, vm := range clusterVMs {
+			if _, ok := vms[vm.Name]; ok {
+				FakeRamUsed -= uint64(4096)
+				FakeVcpusUsed -= uint64(2)
+				FakeDiskUsed -= uint64(40)
+				continue
+			}
+			newVMs = append(newVMs, vm)
 		}
-		newVMs = append(newVMs, vm)
+		delete(FakeClusterVMs, clusterInst.Key)
 	}
-	FakeClusterVMs = newVMs
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst deleted")
 	return nil
@@ -362,39 +369,39 @@ func (s *Platform) ValidateCloudletResources(ctx context.Context, resourceQuotas
 	}
 
 	// Theoretical validation
-	ctrlRamUsed := uint64(0)
-	ctrlVcpusUsed := uint64(0)
-	ctrlDiskUsed := uint64(0)
+	thRamUsed := uint64(0)
+	thVcpusUsed := uint64(0)
+	thDiskUsed := uint64(0)
 	for _, vmRes := range allClusterResources {
 		if vmRes.VmFlavor != nil {
-			ctrlRamUsed += vmRes.VmFlavor.Ram
-			ctrlVcpusUsed += vmRes.VmFlavor.Vcpus
-			ctrlDiskUsed += vmRes.VmFlavor.Disk
+			thRamUsed += vmRes.VmFlavor.Ram
+			thVcpusUsed += vmRes.VmFlavor.Vcpus
+			thDiskUsed += vmRes.VmFlavor.Disk
 		}
 	}
-	availableRam := updatedFakeRes.RamMax - ctrlRamUsed
-	availableVcpus := updatedFakeRes.VcpusMax - ctrlVcpusUsed
-	availableDisk := updatedFakeRes.DiskMax - ctrlDiskUsed
+	thAvailableRam := updatedFakeRes.RamMax - thRamUsed
+	thAvailableVcpus := updatedFakeRes.VcpusMax - thVcpusUsed
+	thAvailableDisk := updatedFakeRes.DiskMax - thDiskUsed
 
 	warnings := []string{}
-	if float64(ctrlRamUsed*100)/float64(updatedFakeRes.RamMax) > float64(fakeRes.RamThresh) {
+	if float64(thRamUsed*100)/float64(updatedFakeRes.RamMax) > float64(fakeRes.RamThresh) {
 		warnings = append(warnings, fmt.Sprintf("More than %d%% of RAM is used", fakeRes.RamThresh))
 	}
-	if float64(ctrlVcpusUsed*100)/float64(updatedFakeRes.VcpusMax) > float64(fakeRes.VcpusThresh) {
+	if float64(thVcpusUsed*100)/float64(updatedFakeRes.VcpusMax) > float64(fakeRes.VcpusThresh) {
 		warnings = append(warnings, fmt.Sprintf("More than %d%% of vCPUs is used", fakeRes.VcpusThresh))
 	}
-	if float64(ctrlDiskUsed*100)/float64(updatedFakeRes.DiskMax) > float64(fakeRes.DiskThresh) {
+	if float64(thDiskUsed*100)/float64(updatedFakeRes.DiskMax) > float64(fakeRes.DiskThresh) {
 		warnings = append(warnings, fmt.Sprintf("More than %d%% of disk is used", fakeRes.DiskThresh))
 	}
 
-	if ramReqd > availableRam {
-		return warnings, fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, availableRam)
+	if ramReqd > thAvailableRam {
+		return warnings, fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, thAvailableRam)
 	}
-	if vcpusReqd > availableVcpus {
-		return warnings, fmt.Errorf("Not enough Vcpus available, required %d but only %d is available", vcpusReqd, availableVcpus)
+	if vcpusReqd > thAvailableVcpus {
+		return warnings, fmt.Errorf("Not enough Vcpus available, required %d but only %d is available", vcpusReqd, thAvailableVcpus)
 	}
-	if diskReqd > availableDisk {
-		return warnings, fmt.Errorf("Not enough Disk available, required %dGB but only %dGB is available", diskReqd, availableDisk)
+	if diskReqd > thAvailableDisk {
+		return warnings, fmt.Errorf("Not enough Disk available, required %dGB but only %dGB is available", diskReqd, thAvailableDisk)
 	}
 
 	// Infra based validation
@@ -422,9 +429,20 @@ func (s *Platform) ValidateCloudletResources(ctx context.Context, resourceQuotas
 		warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of disk is used", fakeRes.DiskThresh))
 	}
 
-	availableRam = fakeRes.RamMax - fakeRes.RamUsed
-	availableVcpus = fakeRes.VcpusMax - fakeRes.VcpusUsed
-	availableDisk = fakeRes.DiskMax - fakeRes.DiskUsed
+	availableRam := fakeRes.RamMax - fakeRes.RamUsed
+	availableVcpus := fakeRes.VcpusMax - fakeRes.VcpusUsed
+	availableDisk := fakeRes.DiskMax - fakeRes.DiskUsed
+
+	// generate alert if expected resource quota is not available
+	if availableRam < thAvailableRam {
+		warnings = append(warnings, fmt.Sprintf("[Quota] Expected RAM available to be %dMB, but only %dMB is available", thAvailableRam, availableRam))
+	}
+	if availableVcpus < thAvailableVcpus {
+		warnings = append(warnings, fmt.Sprintf("[Quota] Expected vCPUs available to be %d, but only %d is available", thAvailableVcpus, availableVcpus))
+	}
+	if availableDisk < thAvailableDisk {
+		warnings = append(warnings, fmt.Sprintf("[Quota] Expected disk available to be %dGB, but only %dGB is available", thAvailableDisk, availableDisk))
+	}
 
 	if ramReqd > availableRam {
 		return warnings, fmt.Errorf("[Infra] Not enough RAM available, required %dMB but only %dMB is available", ramReqd, availableRam)
@@ -463,7 +481,9 @@ func (s *Platform) ValidateCloudletResourceQuotas(ctx context.Context, resourceQ
 
 func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
 	var resources edgeproto.InfraResources
-	resources.Vms = append(resources.Vms, FakeClusterVMs...)
+	if vms, ok := FakeClusterVMs[*clusterKey]; ok {
+		resources.Vms = append(resources.Vms, vms...)
+	}
 	return &resources, nil
 }
 
@@ -657,4 +677,31 @@ func (s *Platform) GetCloudletResourceProps(ctx context.Context) (*edgeproto.Clo
 			},
 		},
 	}, nil
+}
+
+func (s *Platform) GetCloudletResourceMetric(ctx context.Context, key *edgeproto.CloudletKey, resources []edgeproto.VMResource) (*edgeproto.Metric, error) {
+	resMetric := edgeproto.Metric{}
+	if len(resources) == 0 {
+		return nil, fmt.Errorf("missing resources")
+	}
+
+	ramUsed := uint64(0)
+	vcpusUsed := uint64(0)
+	diskUsed := uint64(0)
+	for _, vmRes := range resources {
+		if vmRes.VmFlavor != nil {
+			ramUsed += vmRes.VmFlavor.Ram
+			vcpusUsed += vmRes.VmFlavor.Vcpus
+			diskUsed += vmRes.VmFlavor.Disk
+		}
+	}
+	resMetric.Name = "fake-resource-usage"
+	ts, _ := types.TimestampProto(time.Now())
+	resMetric.Timestamp = *ts
+	resMetric.AddTag("cloudletorg", key.Organization)
+	resMetric.AddTag("cloudlet", key.Name)
+	resMetric.AddIntVal("ramUsed", ramUsed)
+	resMetric.AddIntVal("vcpusUsed", vcpusUsed)
+	resMetric.AddIntVal("diskUsed", diskUsed)
+	return &resMetric, nil
 }
