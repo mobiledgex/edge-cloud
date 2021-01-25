@@ -263,7 +263,7 @@ func main() {
 					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-				resources, _, err := platform.GetCloudletInfraResources(ctx)
+				resources, err := platform.GetCloudletInfraResources(ctx)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key, "err", err)
 				} else {

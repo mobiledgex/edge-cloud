@@ -55,7 +55,7 @@ message VMResource {
 message CloudletRefs {
   // Cloudlet key
   CloudletKey key = 1 [(gogoproto.nullable) = false];
-  // Clusters instantiated on the Cloudlet
+  // Clusters instantiated on the Cloudlet (deprecated)
   repeated ClusterKey clusters = 2 [(gogoproto.nullable) = false];
   // Used RAM in MB
   uint64 used_ram = 4;
@@ -74,6 +74,8 @@ message CloudletRefs {
   map<string, uint32> opt_res_used_map = 11;
     // Reserved VM resources on Cloudlet
   repeated VMResource reserved_resources = 12 [(gogoproto.nullable) = false];
+  // Clusters instantiated on the Cloudlet
+  repeated ClusterInstKey cluster_insts = 13 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

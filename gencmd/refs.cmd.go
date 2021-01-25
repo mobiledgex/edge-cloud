@@ -325,6 +325,10 @@ var CloudletRefsOptionalArgs = []string{
 	"reservedresources:#.vmflavor.disk",
 	"reservedresources:#.vmflavor.propmap",
 	"reservedresources:#.provstate",
+	"clusterinsts:#.clusterkey.name",
+	"clusterinsts:#.cloudletkey.organization",
+	"clusterinsts:#.cloudletkey.name",
+	"clusterinsts:#.organization",
 }
 var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
@@ -346,6 +350,10 @@ var CloudletRefsComments = map[string]string{
 	"reservedresources:#.vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
 	"reservedresources:#.vmflavor.propmap":             "OS Flavor Properties, if any",
 	"reservedresources:#.provstate":                    "Resource provision state, one of ProvStateNone, ProvStateAdd, ProvStateRemove",
+	"clusterinsts:#.clusterkey.name":                   "Cluster name",
+	"clusterinsts:#.cloudletkey.organization":          "Organization of the cloudlet site",
+	"clusterinsts:#.cloudletkey.name":                  "Name of the cloudlet",
+	"clusterinsts:#.organization":                      "Name of Developer organization that this cluster belongs to",
 }
 var CloudletRefsSpecialArgs = map[string]string{
 	"reservedresources:#.vmflavor.propmap": "StringToString",

@@ -593,6 +593,8 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"resources.info:#.name":                  "Resource name",
 	"resources.info:#.value":                 "Resource value",
+	"resources.info:#.maxvalue":              "Resource max value",
+	"resources.info:#.description":           "Resource description",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors":      "StringArray",
@@ -628,6 +630,8 @@ var ClusterInstInfoOptionalArgs = []string{
 	"resources.vms:#.containers:#.restarts",
 	"resources.info:#.name",
 	"resources.info:#.value",
+	"resources.info:#.maxvalue",
+	"resources.info:#.description",
 }
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
@@ -650,6 +654,8 @@ var ClusterInstInfoComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"resources.info:#.name":                  "Resource name",
 	"resources.info:#.value":                 "Resource value",
+	"resources.info:#.maxvalue":              "Resource max value",
+	"resources.info:#.description":           "Resource description",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
 	"errors":      "StringArray",

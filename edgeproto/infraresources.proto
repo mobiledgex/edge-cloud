@@ -59,7 +59,11 @@ message ResourceInfo {
   // Resource name
   string name = 1;
   // Resource value
-  string value = 2;
+  uint64 value = 2;
+  // Resource max value
+  uint64 max_value = 3;
+  // Resource description
+  string description = 4;
 }
 
 // InfraResources

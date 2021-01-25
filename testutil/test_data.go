@@ -745,27 +745,27 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			Info: []edgeproto.ResourceInfo{
 				edgeproto.ResourceInfo{
 					Name:  "totalRAMUsed",
-					Value: "1024",
+					Value: uint64(1024),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalRAMSize",
-					Value: "40960",
+					Value: uint64(40960),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalCoresUsed",
-					Value: "10",
+					Value: uint64(10),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalCores",
-					Value: "50",
+					Value: uint64(50),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalGigabytesUsed",
-					Value: "20",
+					Value: uint64(20),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalVolumeGigabytes",
-					Value: "5000",
+					Value: uint64(5000),
 				},
 			},
 		},
@@ -800,27 +800,27 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			Info: []edgeproto.ResourceInfo{
 				edgeproto.ResourceInfo{
 					Name:  "totalRAMUsed",
-					Value: "1024",
+					Value: uint64(1024),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalRAMSize",
-					Value: "40960",
+					Value: uint64(40960),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalCoresUsed",
-					Value: "10",
+					Value: uint64(10),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalCores",
-					Value: "50",
+					Value: uint64(50),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalGigabytesUsed",
-					Value: "20",
+					Value: uint64(20),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalVolumeGigabytes",
-					Value: "5000",
+					Value: uint64(5000),
 				},
 			},
 		},
@@ -855,27 +855,27 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			Info: []edgeproto.ResourceInfo{
 				edgeproto.ResourceInfo{
 					Name:  "totalRAMUsed",
-					Value: "1024",
+					Value: uint64(1024),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalRAMSize",
-					Value: "40960",
+					Value: uint64(40960),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalCoresUsed",
-					Value: "10",
+					Value: uint64(10),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalCores",
-					Value: "50",
+					Value: uint64(50),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalGigabytesUsed",
-					Value: "20",
+					Value: uint64(20),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalVolumeGigabytes",
-					Value: "5000",
+					Value: uint64(5000),
 				},
 			},
 		},
@@ -904,27 +904,27 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			Info: []edgeproto.ResourceInfo{
 				edgeproto.ResourceInfo{
 					Name:  "totalRAMUsed",
-					Value: "1024",
+					Value: uint64(1024),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalRAMSize",
-					Value: "1024000",
+					Value: uint64(1024000),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalCoresUsed",
-					Value: "10",
+					Value: uint64(10),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalCores",
-					Value: "50",
+					Value: uint64(50),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "totalGigabytesUsed",
-					Value: "20",
+					Value: uint64(20),
 				},
 				edgeproto.ResourceInfo{
 					Name:  "maxTotalVolumeGigabytes",
-					Value: "5000",
+					Value: uint64(5000),
 				},
 			},
 		},

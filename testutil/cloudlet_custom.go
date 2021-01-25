@@ -44,6 +44,14 @@ func (s *DummyServer) GetCloudletResourceUsage(ctx context.Context, key *edgepro
 	return &edgeproto.InfraResources{}, nil
 }
 
+func (s *DummyServer) GetCloudletInfraResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
+	return &edgeproto.InfraResources{}, nil
+}
+
 func (s *DummyServer) SyncCloudletResourceInfo(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) GetCloudletResourceProps(ctx context.Context, in *edgeproto.CloudletResourceProps) (*edgeproto.CloudletResourceProps, error) {
+	return &edgeproto.CloudletResourceProps{}, nil
 }

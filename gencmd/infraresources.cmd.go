@@ -72,11 +72,15 @@ var ResourceInfoRequiredArgs = []string{}
 var ResourceInfoOptionalArgs = []string{
 	"name",
 	"value",
+	"maxvalue",
+	"description",
 }
 var ResourceInfoAliasArgs = []string{}
 var ResourceInfoComments = map[string]string{
-	"name":  "Resource name",
-	"value": "Resource value",
+	"name":        "Resource name",
+	"value":       "Resource value",
+	"maxvalue":    "Resource max value",
+	"description": "Resource description",
 }
 var ResourceInfoSpecialArgs = map[string]string{}
 var InfraResourcesRequiredArgs = []string{}
@@ -94,6 +98,8 @@ var InfraResourcesOptionalArgs = []string{
 	"vms:#.containers:#.restarts",
 	"info:#.name",
 	"info:#.value",
+	"info:#.maxvalue",
+	"info:#.description",
 }
 var InfraResourcesAliasArgs = []string{}
 var InfraResourcesComments = map[string]string{
@@ -108,5 +114,7 @@ var InfraResourcesComments = map[string]string{
 	"vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"info:#.name":                  "Resource name",
 	"info:#.value":                 "Resource value",
+	"info:#.maxvalue":              "Resource max value",
+	"info:#.description":           "Resource description",
 }
 var InfraResourcesSpecialArgs = map[string]string{}

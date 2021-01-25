@@ -8,6 +8,7 @@ const (
 	AlertAutoUndeploy            = "AutoProvUndeploy"
 	AlertCloudletDown            = "CloudletDown"
 	AlertCloudletDownDescription = "Cloudlet resource manager is offline"
+	AlertCloudletResourceUsage   = "CloudletResourceUsage"
 )
 
 // Alert types
@@ -47,7 +48,8 @@ func IsMonitoredAlert(alertName string) bool {
 		alertName == AlertAutoScaleDown ||
 		alertName == AlertAppInstDown ||
 		alertName == AlertCloudletDown ||
-		alertName == AlertAutoUndeploy {
+		alertName == AlertAutoUndeploy ||
+		alertName == AlertCloudletResourceUsage {
 		return true
 	}
 	return false

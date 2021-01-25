@@ -173,6 +173,16 @@ message InfraConfig {
   string flavor_name = 2;
 }
 
+// Resource Quota
+message ResourceQuota {
+  // Resource name on which to set quota
+  string name = 1;
+  // Quota value of the resource
+  uint64 value = 2;
+  // Generate alert when more than threshold percentage of resource is used
+  uint64 alert_threshold = 3;
+}
+
 // Cloudlet
 //
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
@@ -248,6 +258,8 @@ message Cloudlet {
   string trust_policy = 37;
   // State of trust policy
   TrackedState trust_policy_state = 38 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Resource quotas
+  repeated ResourceQuota resource_quotas = 39 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -294,6 +306,13 @@ message CloudletProps {
   PlatformType platform_type = 1;
   // Single Key-Value pair of env var to be passed to CRM
   map<string, PropertyInfo> properties = 2;
+}
+
+message CloudletResourceProps {
+  // Platform type
+  PlatformType platform_type = 1;
+  // Cloudlet resource properties
+  repeated ResourceInfo resource_props = 2 [(gogoproto.nullable) = false];
 }
 
 service CloudletApi {
@@ -360,10 +379,28 @@ service CloudletApi {
     option (protogen.method_noconfig) = "Properties";
     option (protogen.method_also_required) = "PlatformType";
   }
-  // Get Cloudlet Infra resource information. Shows VMs part of the cloudlet and existing resource usage
+  // Get Cloudlet Resource Properties. Shows all the resource properties of the cloudlet
+  rpc GetCloudletResourceProps(CloudletResourceProps) returns (CloudletResourceProps) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/resource/props"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.method_noconfig) = "Properties";
+    option (protogen.method_also_required) = "PlatformType";
+  }
+  // Get Cloudlet resource information. Shows cloudlet resources used and their limits
   rpc GetCloudletResourceUsage(CloudletKey) returns (InfraResources) {
     option (google.api.http) = {
-      post: "/get/cloudlet/resources"
+      post: "/get/cloudlet/resource/usage"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+  }
+  // Get Cloudlet Infra resource information. Shows cloudlet infra resources used and their limits
+  rpc GetCloudletInfraResourceUsage(CloudletKey) returns (InfraResources) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/resource/infrausage"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";

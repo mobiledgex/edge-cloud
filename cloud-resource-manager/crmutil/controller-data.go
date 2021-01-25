@@ -3,7 +3,6 @@ package crmutil
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -738,7 +737,10 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
-		err := cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
+		err := cd.platform.ValidateCloudletResourceQuotas(ctx, new.ResourceQuotas)
+		if err == nil {
+			err = cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
+		}
 		if err != nil {
 			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
 			log.InfoLog("can't update cloudlet", "error", errstr, "key", new.Key)
@@ -748,7 +750,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			return
 		}
-		resources, _, err := cd.platform.GetCloudletInfraResources(ctx)
+		resources, err := cd.platform.GetCloudletInfraResources(ctx)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", new.Key, "err", err)
 		}
@@ -758,6 +760,8 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
+		// Ignore info as it is updated as part of separate thread when no clusterInst actions are in progress
+		resources.Info = cloudletInfo.Resources.Info
 		if resources != nil {
 			cloudletInfo.Resources = *resources
 		}
@@ -789,7 +793,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 		go func() {
-			resources, warnings, err := cd.platform.GetCloudletInfraResources(ctx)
+			resources, err := cd.platform.GetCloudletInfraResources(ctx)
 			if err != nil {
 				errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)
 				log.InfoLog("can't fetch cloudlet resources", "error", errstr, "key", new.Key)
@@ -799,10 +803,6 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 				cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 				return
-			}
-			if len(warnings) > 0 {
-				cd.NodeMgr.Event(ctx, "Cloudlet infra resource usage warning", new.Key.Organization, new.Key.GetTags(), nil,
-					"warnings", strings.Join(warnings, ","))
 			}
 			// fetch cloudletInfo again, as data might have changed by now
 			found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)

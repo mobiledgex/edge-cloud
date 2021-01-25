@@ -77,6 +77,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].TrustPolicyState = 0
 		}
+		for i1 := 0; i1 < len(in.Cloudlets[i0].ResourceQuotas); i1++ {
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -299,6 +301,7 @@ var AllDataOptionalArgs = []string{
 	"settings.updatetrustpolicytimeout",
 	"settings.dmeapimetricscollectioninterval",
 	"settings.persistentconnectionmetricscollectioninterval",
+	"settings.cloudletresourcesyncinterval",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -392,6 +395,9 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.updatedat.nanos",
 	"cloudlets:#.trustpolicy",
 	"cloudlets:#.trustpolicystate",
+	"cloudlets:#.resourcequotas:#.name",
+	"cloudlets:#.resourcequotas:#.value",
+	"cloudlets:#.resourcequotas:#.alertthreshold",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -435,6 +441,8 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts",
 	"cloudletinfos:#.resources.info:#.name",
 	"cloudletinfos:#.resources.info:#.value",
+	"cloudletinfos:#.resources.info:#.maxvalue",
+	"cloudletinfos:#.resources.info:#.description",
 	"cloudletinfos:#.trustpolicystate",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
@@ -522,6 +530,8 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.resources.vms:#.containers:#.restarts",
 	"clusterinsts:#.resources.info:#.name",
 	"clusterinsts:#.resources.info:#.value",
+	"clusterinsts:#.resources.info:#.maxvalue",
+	"clusterinsts:#.resources.info:#.description",
 	"clusterinsts:#.createdat.seconds",
 	"clusterinsts:#.createdat.nanos",
 	"clusterinsts:#.updatedat.seconds",
@@ -682,6 +692,7 @@ var AllDataComments = map[string]string{
 	"settings.updatetrustpolicytimeout":                          "Update Trust Policy timeout (duration)",
 	"settings.dmeapimetricscollectioninterval":                   "Metrics collection interval for DME API counts (duration)",
 	"settings.persistentconnectionmetricscollectioninterval":     "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
+	"settings.cloudletresourcesyncinterval":                      "Cloudlet resource info sync interval",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -761,6 +772,9 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.crmaccesskeyupgraderequired":                    "CRM access key upgrade required",
 	"cloudlets:#.trustpolicy":                                    "Optional Trust Policy",
 	"cloudlets:#.trustpolicystate":                               "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
+	"cloudlets:#.resourcequotas:#.name":                          "Resource name on which to set quota",
+	"cloudlets:#.resourcequotas:#.value":                         "Quota value of the resource",
+	"cloudlets:#.resourcequotas:#.alertthreshold":                "Generate alert when more than threshold percentage of resource is used",
 	"cloudletinfos:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                           "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                   "Name of the cloudlet",
@@ -794,6 +808,8 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.resources.vms:#.containers:#.restarts":      "Restart count, applicable to kubernetes only",
 	"cloudletinfos:#.resources.info:#.name":                      "Resource name",
 	"cloudletinfos:#.resources.info:#.value":                     "Resource value",
+	"cloudletinfos:#.resources.info:#.maxvalue":                  "Resource max value",
+	"cloudletinfos:#.resources.info:#.description":               "Resource description",
 	"cloudletinfos:#.trustpolicystate":                           "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 	"cloudletpools:#.fields":                                     "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                           "Name of the organization this pool belongs to",
@@ -867,6 +883,8 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.resources.vms:#.containers:#.restarts":       "Restart count, applicable to kubernetes only",
 	"clusterinsts:#.resources.info:#.name":                       "Resource name",
 	"clusterinsts:#.resources.info:#.value":                      "Resource value",
+	"clusterinsts:#.resources.info:#.maxvalue":                   "Resource max value",
+	"clusterinsts:#.resources.info:#.description":                "Resource description",
 	"apps:#.fields":                                              "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                    "App developer organization",
 	"apps:#.key.name":                                            "App name",

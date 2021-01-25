@@ -3,7 +3,9 @@ package cloudcommon
 import (
 	"context"
 	"fmt"
+	"time"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -78,4 +80,33 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 		})
 	}
 	return vmResources, nil
+}
+
+func usageAlertWarningLabels(ctx context.Context, key *edgeproto.CloudletKey, alertname, warning string) map[string]string {
+	labels := make(map[string]string)
+	labels["alertname"] = alertname
+	labels[AlertScopeTypeTag] = AlertScopeCloudlet
+	labels[edgeproto.CloudletKeyTagName] = key.Name
+	labels[edgeproto.CloudletKeyTagOrganization] = key.Organization
+	labels["warning"] = warning
+	return labels
+}
+
+// Raise the alarm when there are cloudlet resource usage warnings
+func CloudletResourceUsageAlerts(ctx context.Context, key *edgeproto.CloudletKey, warnings []string) []edgeproto.Alert {
+	alerts := []edgeproto.Alert{}
+	for _, warning := range warnings {
+		alert := edgeproto.Alert{}
+		alert.State = "firing"
+		alert.ActiveAt = dme.Timestamp{}
+		ts := time.Now()
+		alert.ActiveAt.Seconds = ts.Unix()
+		alert.ActiveAt.Nanos = int32(ts.Nanosecond())
+		alert.Labels = usageAlertWarningLabels(ctx, key, AlertCloudletResourceUsage, warning)
+		alert.Annotations = make(map[string]string)
+		alert.Annotations[AlertAnnotationTitle] = AlertCloudletResourceUsage
+		alert.Annotations[AlertAnnotationDescription] = warning
+		alerts = append(alerts, alert)
+	}
+	return alerts
 }

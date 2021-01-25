@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
@@ -33,17 +33,26 @@ const (
 )
 
 type FakeResource struct {
-	RamUsed   uint64
-	RamMax    uint64
-	VcpusUsed uint64
-	VcpusMax  uint64
-	DiskUsed  uint64
-	DiskMax   uint64
+	RamUsed     uint64
+	RamMax      uint64
+	RamThresh   uint64
+	VcpusUsed   uint64
+	VcpusMax    uint64
+	VcpusThresh uint64
+	DiskUsed    uint64
+	DiskMax     uint64
+	DiskThresh  uint64
 }
 
-var FakeRamUsed = uint64(0)
-var FakeVcpusUsed = uint64(0)
-var FakeDiskUsed = uint64(0)
+var (
+	FakeRamUsed   = uint64(0)
+	FakeVcpusUsed = uint64(0)
+	FakeDiskUsed  = uint64(0)
+
+	FakeRamMax   = uint64(40960)
+	FakeVcpusMax = uint64(50)
+	FakeDiskMax  = uint64(5000)
+)
 
 var FakeAppDNSRoot = "fake.net"
 
@@ -100,9 +109,9 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 }
 
 func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
-	info.OsMaxRam = 40960
-	info.OsMaxVcores = 50
-	info.OsMaxVolGb = 5000
+	info.OsMaxRam = FakeRamMax
+	info.OsMaxVcores = FakeVcpusMax
+	info.OsMaxVolGb = FakeDiskMax
 	info.Flavors = FakeFlavorList
 	return nil
 }
@@ -189,27 +198,27 @@ func MarshalInfraResourceInfo(fakeRes *FakeResource) []edgeproto.ResourceInfo {
 	return []edgeproto.ResourceInfo{
 		edgeproto.ResourceInfo{
 			Name:  RamMax,
-			Value: fmt.Sprintf("%d", fakeRes.RamMax),
+			Value: fakeRes.RamMax,
 		},
 		edgeproto.ResourceInfo{
 			Name:  RamUsed,
-			Value: fmt.Sprintf("%d", fakeRes.RamUsed),
+			Value: fakeRes.RamUsed,
 		},
 		edgeproto.ResourceInfo{
 			Name:  VcpusMax,
-			Value: fmt.Sprintf("%d", fakeRes.VcpusMax),
+			Value: fakeRes.VcpusMax,
 		},
 		edgeproto.ResourceInfo{
 			Name:  VcpusUsed,
-			Value: fmt.Sprintf("%d", fakeRes.VcpusUsed),
+			Value: fakeRes.VcpusUsed,
 		},
 		edgeproto.ResourceInfo{
 			Name:  DiskMax,
-			Value: fmt.Sprintf("%d", fakeRes.DiskMax),
+			Value: fakeRes.DiskMax,
 		},
 		edgeproto.ResourceInfo{
 			Name:  DiskUsed,
-			Value: fmt.Sprintf("%d", fakeRes.DiskUsed),
+			Value: fakeRes.DiskUsed,
 		},
 	}
 }
@@ -219,52 +228,31 @@ func UnmarshalInfraResourceInfo(cloudletResInfo []edgeproto.ResourceInfo) (*Fake
 	for _, resInfo := range cloudletResInfo {
 		switch resInfo.Name {
 		case RamMax:
-			maxRam, err := strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return nil, err
-			}
-			fakeRes.RamMax = maxRam
+			fakeRes.RamMax = resInfo.Value
 		case RamUsed:
-			ramUsed, err := strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return nil, err
-			}
-			fakeRes.RamUsed = ramUsed
+			fakeRes.RamUsed = resInfo.Value
 		case VcpusMax:
-			maxVcpus, err := strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return nil, err
-			}
-			fakeRes.VcpusMax = maxVcpus
+			fakeRes.VcpusMax = resInfo.Value
 		case VcpusUsed:
-			vcpusUsed, err := strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return nil, err
-			}
-			fakeRes.VcpusUsed = vcpusUsed
+			fakeRes.VcpusUsed = resInfo.Value
 		case DiskMax:
-			maxDisk, err := strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return nil, err
-			}
-			fakeRes.DiskMax = maxDisk
+			fakeRes.DiskMax = resInfo.Value
 		case DiskUsed:
-			diskUsed, err := strconv.ParseUint(resInfo.Value, 0, 64)
-			if err != nil {
-				return nil, err
-			}
-			fakeRes.DiskUsed = diskUsed
+			fakeRes.DiskUsed = resInfo.Value
 		}
 	}
+	fakeRes.RamThresh = 80
+	fakeRes.VcpusThresh = 80
+	fakeRes.DiskThresh = 80
 	return &fakeRes, nil
 }
 
-func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, []string, error) {
+func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
 	var resources edgeproto.InfraResources
 	platvm := edgeproto.VmInfo{
 		Name:        "fake-platform-vm",
 		Type:        "platform",
-		InfraFlavor: "m4.small",
+		InfraFlavor: "x1.small",
 		Status:      "ACTIVE",
 		Ipaddresses: []edgeproto.IpAddr{
 			{ExternalIp: "10.101.100.10"},
@@ -274,42 +262,58 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 	rlbvm := edgeproto.VmInfo{
 		Name:        "fake-rootlb-vm",
 		Type:        "rootlb",
-		InfraFlavor: "m4.small",
+		InfraFlavor: "x1.small",
 		Status:      "ACTIVE",
 		Ipaddresses: []edgeproto.IpAddr{
 			{ExternalIp: "10.101.100.11"},
 		},
 	}
 	resources.Vms = append(resources.Vms, rlbvm)
-	resources.Vms = append(resources.Vms, FakeClusterVMs...)
 
 	resources.Info = MarshalInfraResourceInfo(&FakeResource{
 		RamUsed:   FakeRamUsed,
-		RamMax:    uint64(40960),
+		RamMax:    FakeRamMax,
 		VcpusUsed: FakeVcpusUsed,
-		VcpusMax:  uint64(50),
+		VcpusMax:  FakeVcpusMax,
 		DiskUsed:  FakeDiskUsed,
-		DiskMax:   uint64(5000),
+		DiskMax:   FakeDiskMax,
 	})
 
-	warnings := []string{}
-	if (float64(FakeRamUsed) / 40960) > 0.8 {
-		warnings = append(warnings, "More than 80% of RAM is used")
-	}
-	if (float64(FakeVcpusUsed) / 50) > 0.8 {
-		warnings = append(warnings, "More than 80% of vCPUs are used")
-	}
-	if (float64(FakeDiskUsed) / 5000) > 0.8 {
-		warnings = append(warnings, "More than 80% of disk is used")
-	}
-
-	return &resources, warnings, nil
+	return &resources, nil
 }
 
-func (s *Platform) GetCloudletResourceUsage(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error) {
+func setResourceQuotas(fakeRes *FakeResource, resourceQuotas []edgeproto.ResourceQuota) {
+	ramMax := fakeRes.RamMax
+	vcpusMax := fakeRes.VcpusMax
+	diskMax := fakeRes.DiskMax
+	for _, resQuota := range resourceQuotas {
+		switch resQuota.Name {
+		case RamMax:
+			ramMax = resQuota.Value
+			fakeRes.RamThresh = resQuota.AlertThreshold
+		case VcpusMax:
+			vcpusMax = resQuota.Value
+			fakeRes.VcpusThresh = resQuota.AlertThreshold
+		case DiskMax:
+			diskMax = resQuota.Value
+			fakeRes.DiskThresh = resQuota.AlertThreshold
+		}
+	}
+	fakeRes.RamMax = ramMax
+	fakeRes.VcpusMax = vcpusMax
+	fakeRes.DiskMax = diskMax
+}
+
+func (s *Platform) GetCloudletResourceUsage(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource, ignoreInfraUsage bool) ([]edgeproto.ResourceInfo, error) {
 	fakeRes, err := UnmarshalInfraResourceInfo(resInfo)
 	if err != nil {
 		return nil, err
+	}
+	if ignoreInfraUsage {
+		fakeRes.RamUsed = 0
+		fakeRes.VcpusUsed = 0
+		fakeRes.DiskUsed = 0
+		setResourceQuotas(fakeRes, resourceQuotas)
 	}
 	for _, vmRes := range existingVmResources {
 		if vmRes.VmFlavor != nil {
@@ -328,12 +332,12 @@ func (s *Platform) GetCloudletResourceUsage(ctx context.Context, resInfo []edgep
 	return resInfo, nil
 }
 
-func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources []edgeproto.VMResource, existingVmResources []edgeproto.VMResource) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "Validate cloudlet resources", "vm resources", vmResources, "cloudlet resouurces", infraResources)
+func (s *Platform) ValidateCloudletResources(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota, infraResources *edgeproto.InfraResources, allClusterResources, reqdVmResources, existingVmResources []edgeproto.VMResource) ([]string, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
 	ramReqd := uint64(0)
 	vcpusReqd := uint64(0)
 	diskReqd := uint64(0)
-	for _, vmRes := range vmResources {
+	for _, vmRes := range reqdVmResources {
 		if vmRes.VmFlavor != nil {
 			ramReqd += vmRes.VmFlavor.Ram
 			vcpusReqd += vmRes.VmFlavor.Vcpus
@@ -343,9 +347,57 @@ func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources
 
 	fakeRes, err := UnmarshalInfraResourceInfo(infraResources.Info)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	updatedFakeRes := *fakeRes
+	setResourceQuotas(&updatedFakeRes, resourceQuotas)
+	if updatedFakeRes.RamThresh > 0 {
+		fakeRes.RamThresh = updatedFakeRes.RamThresh
+	}
+	if updatedFakeRes.VcpusThresh > 0 {
+		fakeRes.VcpusThresh = updatedFakeRes.VcpusThresh
+	}
+	if updatedFakeRes.DiskThresh > 0 {
+		fakeRes.DiskThresh = updatedFakeRes.DiskThresh
 	}
 
+	// Theoretical validation
+	ctrlRamUsed := uint64(0)
+	ctrlVcpusUsed := uint64(0)
+	ctrlDiskUsed := uint64(0)
+	for _, vmRes := range allClusterResources {
+		if vmRes.VmFlavor != nil {
+			ctrlRamUsed += vmRes.VmFlavor.Ram
+			ctrlVcpusUsed += vmRes.VmFlavor.Vcpus
+			ctrlDiskUsed += vmRes.VmFlavor.Disk
+		}
+	}
+	availableRam := updatedFakeRes.RamMax - ctrlRamUsed
+	availableVcpus := updatedFakeRes.VcpusMax - ctrlVcpusUsed
+	availableDisk := updatedFakeRes.DiskMax - ctrlDiskUsed
+
+	warnings := []string{}
+	if float64(ctrlRamUsed*100)/float64(updatedFakeRes.RamMax) > float64(fakeRes.RamThresh) {
+		warnings = append(warnings, fmt.Sprintf("More than %d%% of RAM is used", fakeRes.RamThresh))
+	}
+	if float64(ctrlVcpusUsed*100)/float64(updatedFakeRes.VcpusMax) > float64(fakeRes.VcpusThresh) {
+		warnings = append(warnings, fmt.Sprintf("More than %d%% of vCPUs is used", fakeRes.VcpusThresh))
+	}
+	if float64(ctrlDiskUsed*100)/float64(updatedFakeRes.DiskMax) > float64(fakeRes.DiskThresh) {
+		warnings = append(warnings, fmt.Sprintf("More than %d%% of disk is used", fakeRes.DiskThresh))
+	}
+
+	if ramReqd > availableRam {
+		return warnings, fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, availableRam)
+	}
+	if vcpusReqd > availableVcpus {
+		return warnings, fmt.Errorf("Not enough Vcpus available, required %d but only %d is available", vcpusReqd, availableVcpus)
+	}
+	if diskReqd > availableDisk {
+		return warnings, fmt.Errorf("Not enough Disk available, required %dGB but only %dGB is available", diskReqd, availableDisk)
+	}
+
+	// Infra based validation
 	for _, vmRes := range existingVmResources {
 		if vmRes.VmFlavor != nil {
 			if vmRes.ProvState == edgeproto.VMProvState_PROV_STATE_REMOVE {
@@ -360,41 +412,58 @@ func (s *Platform) ValidateCloudletResources(ctx context.Context, infraResources
 		}
 	}
 
-	availableRam := fakeRes.RamMax - fakeRes.RamUsed
-	availableVcpus := fakeRes.VcpusMax - fakeRes.VcpusUsed
-	availableDisk := fakeRes.DiskMax - fakeRes.DiskUsed
+	if float64(fakeRes.RamUsed*100)/float64(fakeRes.RamMax) > float64(fakeRes.RamThresh) {
+		warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of RAM is used", fakeRes.RamThresh))
+	}
+	if float64(fakeRes.VcpusUsed*100)/float64(fakeRes.VcpusMax) > float64(fakeRes.VcpusThresh) {
+		warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of vCPUs is used", fakeRes.VcpusThresh))
+	}
+	if float64(fakeRes.DiskUsed*100)/float64(fakeRes.DiskMax) > float64(fakeRes.DiskThresh) {
+		warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of disk is used", fakeRes.DiskThresh))
+	}
+
+	availableRam = fakeRes.RamMax - fakeRes.RamUsed
+	availableVcpus = fakeRes.VcpusMax - fakeRes.VcpusUsed
+	availableDisk = fakeRes.DiskMax - fakeRes.DiskUsed
 
 	if ramReqd > availableRam {
-		return fmt.Errorf("Not enough RAM available, required %dMB but only %dMB is available", ramReqd, availableRam)
+		return warnings, fmt.Errorf("[Infra] Not enough RAM available, required %dMB but only %dMB is available", ramReqd, availableRam)
 	}
 	if vcpusReqd > availableVcpus {
-		return fmt.Errorf("Not enough Vcpus available, required %d but only %d is available", vcpusReqd, availableVcpus)
+		return warnings, fmt.Errorf("[Infra] Not enough Vcpus available, required %d but only %d is available", vcpusReqd, availableVcpus)
 	}
 	if diskReqd > availableDisk {
-		return fmt.Errorf("Not enough Disk available, required %dGB but only %dGB is available", diskReqd, availableDisk)
+		return warnings, fmt.Errorf("[Infra] Not enough Disk available, required %dGB but only %dGB is available", diskReqd, availableDisk)
+	}
+	return warnings, nil
+}
+
+func (s *Platform) ValidateCloudletResourceQuotas(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota) error {
+	validQuotas := []string{RamMax, VcpusMax, DiskMax}
+	for _, resQuota := range resourceQuotas {
+		switch resQuota.Name {
+		case RamMax:
+			if resQuota.Value > FakeRamMax {
+				return fmt.Errorf("Resource quota %s exceeded max supported value: %d", resQuota.Name, FakeRamMax)
+			}
+		case VcpusMax:
+			if resQuota.Value > FakeVcpusMax {
+				return fmt.Errorf("Resource quota %s exceeded max supported value: %d", resQuota.Name, FakeVcpusMax)
+			}
+		case DiskMax:
+			if resQuota.Value > FakeDiskMax {
+				return fmt.Errorf("Resource quota %s exceeded max supported value: %d", resQuota.Name, FakeDiskMax)
+			}
+		default:
+			return fmt.Errorf("Invalid resource quota name: %s, valid names are %s", resQuota.Name, strings.Join(validQuotas, ","))
+		}
 	}
 	return nil
 }
 
 func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
 	var resources edgeproto.InfraResources
-	vmtype := "cluster-master"
-	for i := 0; i < 3; i++ {
-		if i > 1 {
-			vmtype = "cluster-node"
-		}
-		ipstr := fmt.Sprintf("10.100.100.1%d", i)
-		vm := edgeproto.VmInfo{
-			Name:        fmt.Sprintf("fake-cluster-vm-%d", i),
-			Type:        vmtype,
-			InfraFlavor: "m4.small",
-			Status:      "ACTIVE",
-			Ipaddresses: []edgeproto.IpAddr{
-				{ExternalIp: ipstr},
-			},
-		}
-		resources.Vms = append(resources.Vms, vm)
-	}
+	resources.Vms = append(resources.Vms, FakeClusterVMs...)
 	return &resources, nil
 }
 
@@ -466,9 +535,13 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	if cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {
 		return nil
 	}
+	err := s.ValidateCloudletResourceQuotas(ctx, cloudlet.ResourceQuotas)
+	if err != nil {
+		return err
+	}
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
+	err = cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
 		return err
@@ -565,4 +638,23 @@ func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client,
 
 func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
 	return &RootLBFlavor, nil
+}
+
+func (s *Platform) GetCloudletResourceProps(ctx context.Context) (*edgeproto.CloudletResourceProps, error) {
+	return &edgeproto.CloudletResourceProps{
+		ResourceProps: []edgeproto.ResourceInfo{
+			edgeproto.ResourceInfo{
+				Name:        RamMax,
+				Description: "Maximum RAM available (MB)",
+			},
+			edgeproto.ResourceInfo{
+				Name:        VcpusMax,
+				Description: "Maximum vCPUs available",
+			},
+			edgeproto.ResourceInfo{
+				Name:        DiskMax,
+				Description: "Maximum disk available (GB)",
+			},
+		},
+	}, nil
 }

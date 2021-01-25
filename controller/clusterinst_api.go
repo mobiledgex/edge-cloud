@@ -222,24 +222,97 @@ func getClusterInstVMRequirements(ctx context.Context, stm concurrency.STM, in *
 	return res, nil
 }
 
-func (s *ClusterInstApi) validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
+func validateCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, allClusterResources, reqdVmResources []edgeproto.VMResource) ([]string, error) {
+	gpusReqd := uint64(0)
+	gpusUsed := uint64(0)
+	gpusMax := uint64(0)
+	gpuThreshPercent := uint64(80)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		switch resQuota.Name {
+		case GpusMax:
+			gpusMax = resQuota.Value
+			gpuThreshPercent = resQuota.AlertThreshold
+		}
+	}
+	for _, vmRes := range allClusterResources {
+		if vmRes.VmFlavor != nil {
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
+				gpusUsed += 1
+			}
+		}
+	}
+	for _, vmRes := range reqdVmResources {
+		if vmRes.VmFlavor != nil {
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
+				gpusReqd += 1
+			}
+		}
+	}
+	var err error
+	warnings := []string{}
+	if gpusMax > 0 {
+		if float64(gpusUsed*100)/float64(gpusMax) > float64(gpuThreshPercent) {
+			warnings = append(warnings, fmt.Sprintf("More than %d%% of GPUs are used", gpuThreshPercent))
+		}
+		gpusAvailable := gpusMax - gpusUsed
+		if gpusReqd > gpusAvailable {
+			err = fmt.Errorf("Not enough GPUs available, required %d but only %d is available", gpusReqd, gpusAvailable)
+		}
+	}
+	return warnings, err
+}
+
+func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
 	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
-	res, err := getClusterInstVMRequirements(ctx, stm, in, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_ADD)
+	allClusterResources := []edgeproto.VMResource{}
+	reqdVmResources, err := getClusterInstVMRequirements(ctx, stm, in, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_ADD)
 	if err != nil {
 		return err
 	}
-	existingRes := cloudletRefs.ReservedResources
+	existingVmResources := cloudletRefs.ReservedResources
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
 		return err
 	}
-	if len(res) > 0 {
-		err = cloudletPlatform.ValidateCloudletResources(ctx, &cloudletInfo.Resources, res, existingRes)
+	// get all cloudlet resources (platformVM, sharedRootLB, etc)
+	cloudletRes, err := GetCloudletResources(ctx, cloudletInfo)
+	if err != nil {
+		return err
+	}
+	allClusterResources = append(allClusterResources, cloudletRes...)
+	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
+	clusterInstKeys := cloudletRefs.ClusterInsts
+	for _, clusterInstKey := range clusterInstKeys {
+		clusterInst := edgeproto.ClusterInst{}
+		clusterInstKey.CloudletKey = cloudletRefs.Key
+		if clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
+			if edgeproto.IsDeleteState(clusterInst.State) {
+				continue
+			}
+		}
+		allRes, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_NONE)
 		if err != nil {
 			return err
 		}
+		allClusterResources = append(allClusterResources, allRes...)
+	}
+	if len(reqdVmResources) > 0 {
+		warnings, err := validateCloudletResources(ctx, stm, cloudlet, allClusterResources, reqdVmResources)
+		if err != nil {
+			return err
+		}
+		infraWarnings, err := cloudletPlatform.ValidateCloudletResources(ctx, cloudlet.ResourceQuotas, &cloudletInfo.Resources, allClusterResources, reqdVmResources, existingVmResources)
+		if err != nil {
+			return err
+		}
+
+		// generate alerts for these warnings
+		// clear off those alerts which are no longer firing
+		warnings = append(warnings, infraWarnings...)
+		handleResourceUsageAlerts(ctx, stm, &cloudlet.Key, warnings)
+
 		// reserve requested resources
-		cloudletRefs.ReservedResources = append(cloudletRefs.ReservedResources, res...)
+		cloudletRefs.ReservedResources = append(cloudletRefs.ReservedResources, reqdVmResources...)
 		cloudletRefsApi.store.STMPut(stm, cloudletRefs)
 	}
 	return nil
@@ -434,7 +507,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		err = s.validateAndTrackResources(ctx, stm, in, &cloudlet, &info, &refs)
+		err = validateAndTrackResources(ctx, stm, in, &cloudlet, &info, &refs)
 		if err != nil {
 			return err
 		}
@@ -468,7 +541,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
-		refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
+		cKey := in.Key
+		cKey.CloudletKey = edgeproto.CloudletKey{}
+		refs.ClusterInsts = append(refs.ClusterInsts, cKey)
 		cloudletRefsApi.store.STMPut(stm, &refs)
 
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
@@ -588,7 +663,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 			cloudletRefs := edgeproto.CloudletRefs{}
 			cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs)
-			err = s.validateAndTrackResources(ctx, stm, resClusterInst, &cloudlet, &info, &cloudletRefs)
+			err = validateAndTrackResources(ctx, stm, resClusterInst, &cloudlet, &info, &cloudletRefs)
 			if err != nil {
 				return err
 			}
@@ -742,18 +817,20 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
 			ii := 0
-			for ; ii < len(refs.Clusters); ii++ {
-				if refs.Clusters[ii].Matches(&in.Key.ClusterKey) {
+			for ; ii < len(refs.ClusterInsts); ii++ {
+				cKey := refs.ClusterInsts[ii]
+				cKey.CloudletKey = in.Key.CloudletKey
+				if cKey.Matches(&in.Key) {
 					break
 				}
 			}
-			if ii < len(refs.Clusters) {
+			if ii < len(refs.ClusterInsts) {
 				// explicity zero out deleted item to
 				// prevent memory leak
-				a := refs.Clusters
+				a := refs.ClusterInsts
 				copy(a[ii:], a[ii+1:])
-				a[len(a)-1] = edgeproto.ClusterKey{}
-				refs.Clusters = a[:len(a)-1]
+				a[len(a)-1] = edgeproto.ClusterInstKey{}
+				refs.ClusterInsts = a[:len(a)-1]
 			}
 			// remove used resources
 			refs.UsedRam -= nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)

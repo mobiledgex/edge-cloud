@@ -100,3 +100,52 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 	})
 	return err
 }
+
+// AddCloudletRefsClusterInstKeys adds ClusterInst keys to cloudlet refs
+// the assumption that Internal-only apps are trusted
+func AddCloudletRefsClusterInstKeys(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "AddCloudletRefsClusterInstKeys")
+
+	clusterMap := make(map[CloudletKey][]ClusterInstKey)
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var clusterInst ClusterInst
+		err2 := json.Unmarshal(val, &clusterInst)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "clusterinst", clusterInst)
+			return err2
+		}
+		clKey := clusterInst.Key
+		clKey.CloudletKey = CloudletKey{}
+		clusterMap[clusterInst.Key.CloudletKey] = append(clusterMap[clusterInst.Key.CloudletKey], clKey)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletRefs"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var refs CloudletRefs
+		err2 := json.Unmarshal(val, &refs)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletrefs", refs)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "AddCloudletRefsClusterInstKeys found obj", "cloudletKey", refs.Key.String())
+		clusterKeys, ok := clusterMap[refs.Key]
+		if !ok {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "No clusters found for cloudlet", "cloudlet key", refs.Key)
+			return nil
+		}
+		refs.ClusterInsts = clusterKeys
+		val, err2 = json.Marshal(refs)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudletrefs", refs)
+			return err2
+		}
+		objStore.Put(ctx, string(key), string(val))
+		return nil
+	})
+	return err
+}

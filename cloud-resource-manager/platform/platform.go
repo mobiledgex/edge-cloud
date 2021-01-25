@@ -68,11 +68,15 @@ type Platform interface {
 	// Update the cluster
 	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get resources used by the cloudlet
-	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, []string, error)
+	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error)
 	// Get actual resource info used by the cloudlet
-	GetCloudletResourceUsage(ctx context.Context, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource) ([]edgeproto.ResourceInfo, error)
+	GetCloudletResourceUsage(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource, ignoreInfraUsage bool) ([]edgeproto.ResourceInfo, error)
+	// Validate Cloudlet Resource Quotas
+	ValidateCloudletResourceQuotas(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota) error
 	// Validate resource requirements for the VMs on the cloudlet
-	ValidateCloudletResources(ctx context.Context, infraResources *edgeproto.InfraResources, vmResources, existingVmResources []edgeproto.VMResource) error
+	ValidateCloudletResources(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota, infraResources *edgeproto.InfraResources, allClusterResources, reqdVmResources, existingVmResources []edgeproto.VMResource) ([]string, error)
+	// Get Cloudlet Resource Properties
+	GetCloudletResourceProps(ctx context.Context) (*edgeproto.CloudletResourceProps, error)
 	// Get resources used by the cluster
 	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error)
 	// Create an AppInst on a Cluster
