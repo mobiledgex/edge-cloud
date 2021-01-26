@@ -80,16 +80,12 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 	return nil
 }
 
-func (s *Platform) GetCloudletResourceUsage(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota, resInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource, ignoreInfraUsage bool) ([]edgeproto.ResourceInfo, error) {
-	return resInfo, nil
+func (s *Platform) GetCloudletResourceInfo(ctx context.Context, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.ResourceInfo) map[string]*edgeproto.ResourceInfo {
+	return nil
 }
 
-func (s *Platform) ValidateCloudletResources(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota, infraResources *edgeproto.InfraResources, allClusterResources, reqdVmResources, existingVmResources []edgeproto.VMResource) ([]string, error) {
-	return nil, nil
-}
-
-func (s *Platform) GetCloudletResourceProps(ctx context.Context) (*edgeproto.CloudletResourceProps, error) {
-	return &edgeproto.CloudletResourceProps{}, nil
+func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeproto.CloudletResourceQuotaProps, error) {
+	return &edgeproto.CloudletResourceQuotaProps{}, nil
 }
 
 func (s *Platform) ValidateCloudletResourceQuotas(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota) error {

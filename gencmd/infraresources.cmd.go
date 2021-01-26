@@ -74,13 +74,17 @@ var ResourceInfoOptionalArgs = []string{
 	"value",
 	"maxvalue",
 	"description",
+	"units",
+	"alertthreshold",
 }
 var ResourceInfoAliasArgs = []string{}
 var ResourceInfoComments = map[string]string{
-	"name":        "Resource name",
-	"value":       "Resource value",
-	"maxvalue":    "Resource max value",
-	"description": "Resource description",
+	"name":           "Resource name",
+	"value":          "Resource value",
+	"maxvalue":       "Resource max value",
+	"description":    "Resource description",
+	"units":          "Resource units",
+	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var ResourceInfoSpecialArgs = map[string]string{}
 var InfraResourcesRequiredArgs = []string{}
@@ -100,6 +104,8 @@ var InfraResourcesOptionalArgs = []string{
 	"info:#.value",
 	"info:#.maxvalue",
 	"info:#.description",
+	"info:#.units",
+	"info:#.alertthreshold",
 }
 var InfraResourcesAliasArgs = []string{}
 var InfraResourcesComments = map[string]string{
@@ -116,5 +122,7 @@ var InfraResourcesComments = map[string]string{
 	"info:#.value":                 "Resource value",
 	"info:#.maxvalue":              "Resource max value",
 	"info:#.description":           "Resource description",
+	"info:#.units":                 "Resource units",
+	"info:#.alertthreshold":        "Generate alert when more than threshold percentage of resource is used",
 }
 var InfraResourcesSpecialArgs = map[string]string{}

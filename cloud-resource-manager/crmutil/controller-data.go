@@ -249,6 +249,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		if err != nil {
 			return
 		}
+
 		log.SpanLog(ctx, log.DebugLevelInfra, "update cluster inst", "ClusterInst", *new)
 		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback)
 		if err != nil {
@@ -1118,4 +1119,5 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 		}
 	}
 	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+
 }

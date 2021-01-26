@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -57,14 +58,14 @@ var (
 const (
 	PlatformInitTimeout = 20 * time.Minute
 
-	GpusMax = "gpusMax"
+	ResourceGpus = "GPUs"
 )
 
 // Platform independent resources
 var CloudletResources = []edgeproto.ResourceInfo{
 	edgeproto.ResourceInfo{
-		Name:        GpusMax,
-		Description: "Maximum GPUs available",
+		Name:        ResourceGpus,
+		Description: "Limit on GPUs available",
 	},
 }
 
@@ -541,12 +542,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if len(accessVars) > 0 {
 				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
 			}
-			resProps, err := cloudletPlatform.GetCloudletResourceProps(ctx)
+			resProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
 			if err != nil {
 				return err
 			}
 			resPropsMap := make(map[string]struct{})
-			for _, prop := range resProps.ResourceProps {
+			for _, prop := range resProps.Props {
 				resPropsMap[prop.Name] = struct{}{}
 			}
 			for _, clRes := range CloudletResources {
@@ -996,12 +997,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			return err
 		}
 		if _, found := fmap[edgeproto.CloudletFieldResourceQuotas]; found {
-			resProps, err := cloudletPlatform.GetCloudletResourceProps(ctx)
+			resProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
 			if err != nil {
 				return err
 			}
 			resPropsMap := make(map[string]struct{})
-			for _, prop := range resProps.ResourceProps {
+			for _, prop := range resProps.Props {
 				resPropsMap[prop.Name] = struct{}{}
 			}
 			for _, clRes := range CloudletResources {
@@ -1850,6 +1851,63 @@ func (s *CloudletApi) WaitForTrustPolicyState(ctx context.Context, key *edgeprot
 	return err
 }
 
+// Get actual resource info used by the cloudlet
+func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResInfo []edgeproto.ResourceInfo, existingVmResources []edgeproto.VMResource, ignoreInfraUsage bool) ([]edgeproto.ResourceInfo, error) {
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return nil, err
+	}
+	resQuotasInfo := make(map[string]edgeproto.ResourceInfo)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		resQuotasInfo[resQuota.Name] = edgeproto.ResourceInfo{
+			Name:           resQuota.Name,
+			Value:          resQuota.Value,
+			AlertThreshold: resQuota.AlertThreshold,
+		}
+	}
+	defaultAlertThresh := settingsApi.Get().CloudletResourceAlertThresholdPercentage
+	infraResInfoMap := make(map[string]*edgeproto.ResourceInfo)
+	for _, resInfo := range infraResInfo {
+		thresh := defaultAlertThresh
+		resInfo.AlertThreshold = thresh
+		if ignoreInfraUsage {
+			resInfo.Value = 0
+			max := resInfo.MaxValue
+			// look up quota if any
+			if quota, found := resQuotasInfo[resInfo.Name]; found {
+				if quota.Value != 0 {
+					// Set max values from Resource quotas
+					max = quota.Value
+				}
+				if quota.AlertThreshold > 0 {
+					// Set threshold values from Resource quotas
+					thresh = quota.AlertThreshold
+				}
+			}
+			resInfo.MaxValue = max
+		}
+		newResInfo := &edgeproto.ResourceInfo{}
+		newResInfo.DeepCopyIn(&resInfo)
+		infraResInfoMap[newResInfo.Name] = newResInfo
+	}
+	existingResInfo := cloudletPlatform.GetCloudletResourceInfo(ctx, existingVmResources, infraResInfoMap)
+	for resName, _ := range infraResInfoMap {
+		if existingResInfo, ok := existingResInfo[resName]; ok {
+			infraResInfoMap[resName].Value += existingResInfo.Value
+		}
+	}
+	out := []edgeproto.ResourceInfo{}
+	for _, val := range infraResInfoMap {
+		out = append(out, *val)
+	}
+	// sort keys for stable output order
+	sort.Slice(out[:], func(i, j int) bool {
+		return out[i].Name < out[j].Name
+	})
+
+	return out, nil
+}
+
 func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
 	allClusterResources := []edgeproto.VMResource{}
 	infraResources := edgeproto.InfraResources{}
@@ -1888,14 +1946,10 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, key *edgepro
 			}
 			allClusterResources = append(allClusterResources, allRes...)
 		}
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
-		if err != nil {
-			return err
-		}
 		infraResources = cloudletInfo.Resources
 		infraResources.Vms = []edgeproto.VmInfo{}
 		ignoreInfraUsage := true
-		resInfo, err := cloudletPlatform.GetCloudletResourceUsage(ctx, cloudlet.ResourceQuotas, infraResources.Info, allClusterResources, ignoreInfraUsage)
+		resInfo, err := getResourceUsage(ctx, &cloudlet, infraResources.Info, allClusterResources, ignoreInfraUsage)
 		if err != nil {
 			return err
 		}
@@ -1912,10 +1966,6 @@ func (s *CloudletApi) GetCloudletInfraResourceUsage(ctx context.Context, key *ed
 		if !s.store.STMGet(stm, key, cloudlet) {
 			return key.NotFoundError()
 		}
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
-		if err != nil {
-			return fmt.Errorf("Failed to get platform: %v", err)
-		}
 		cloudletInfo := &edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, key, cloudletInfo) {
 			return key.NotFoundError()
@@ -1927,7 +1977,7 @@ func (s *CloudletApi) GetCloudletInfraResourceUsage(ctx context.Context, key *ed
 		infraResources = cloudletInfo.Resources
 		infraResources.Vms = []edgeproto.VmInfo{}
 		ignoreInfraUsage := false
-		updatedResInfo, err := cloudletPlatform.GetCloudletResourceUsage(ctx, cloudlet.ResourceQuotas, infraResources.Info, cloudletRefs.ReservedResources, ignoreInfraUsage)
+		updatedResInfo, err := getResourceUsage(ctx, cloudlet, infraResources.Info, cloudletRefs.ReservedResources, ignoreInfraUsage)
 		if err != nil {
 			return err
 		}
@@ -2036,10 +2086,6 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 		if !s.store.STMGet(stm, key, cloudlet) {
 			return key.NotFoundError()
 		}
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
-		if err != nil {
-			return err
-		}
 		cloudletInfo := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
 			return fmt.Errorf("cloudletinfo not found: %v", key)
@@ -2073,11 +2119,11 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 			}
 			allClusterResources = append(allClusterResources, allRes...)
 		}
-		warnings, err := validateCloudletResources(ctx, stm, cloudlet, allClusterResources, nil)
+		warnings, err := validateCloudletCommonResources(ctx, stm, cloudlet, allClusterResources, nil)
 		if err != nil {
 			return fmt.Errorf("failed to validate resources for cloudlet %v: %v", key, err)
 		}
-		infraWarnings, err := cloudletPlatform.ValidateCloudletResources(ctx, cloudlet.ResourceQuotas, &cloudletInfo.Resources, allClusterResources, nil, cloudletRefs.ReservedResources)
+		infraWarnings, err := validateCloudletInfraResources(ctx, cloudlet, &cloudletInfo.Resources, allClusterResources, nil, cloudletRefs.ReservedResources)
 		if err != nil {
 			return fmt.Errorf("failed to validate infra resources for cloudlet %v: %v", key, err)
 		}
@@ -2173,12 +2219,16 @@ func (s *CloudletApi) SyncCloudletResourceInfo(ctx context.Context, key *edgepro
 	return &edgeproto.Result{Message: "Cloudlet resources synced successfully"}, nil
 }
 
-func (s *CloudletApi) GetCloudletResourceProps(ctx context.Context, in *edgeproto.CloudletResourceProps) (*edgeproto.CloudletResourceProps, error) {
-
+func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error) {
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
 	if err != nil {
 		return nil, err
 	}
 
-	return cloudletPlatform.GetCloudletResourceProps(ctx)
+	quotaProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
+	if err != nil {
+		return nil, err
+	}
+	quotaProps.Props = append(quotaProps.Props, CloudletResources...)
+	return quotaProps, nil
 }

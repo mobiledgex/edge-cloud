@@ -56,6 +56,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.CloudletResourceSyncInterval = edgeproto.GetDefaultSettings().CloudletResourceSyncInterval
 			modified = true
 		}
+		if cur.CloudletResourceAlertThresholdPercentage == 0 {
+			cur.CloudletResourceAlertThresholdPercentage = edgeproto.GetDefaultSettings().CloudletResourceAlertThresholdPercentage
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

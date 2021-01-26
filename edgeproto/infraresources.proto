@@ -64,6 +64,10 @@ message ResourceInfo {
   uint64 max_value = 3;
   // Resource description
   string description = 4;
+  // Resource units
+  string units = 5;
+  // Generate alert when more than threshold percentage of resource is used
+  int32 alert_threshold = 6;
 }
 
 // InfraResources

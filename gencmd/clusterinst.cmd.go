@@ -595,6 +595,8 @@ var ClusterInstComments = map[string]string{
 	"resources.info:#.value":                 "Resource value",
 	"resources.info:#.maxvalue":              "Resource max value",
 	"resources.info:#.description":           "Resource description",
+	"resources.info:#.units":                 "Resource units",
+	"resources.info:#.alertthreshold":        "Generate alert when more than threshold percentage of resource is used",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors":      "StringArray",
@@ -632,6 +634,8 @@ var ClusterInstInfoOptionalArgs = []string{
 	"resources.info:#.value",
 	"resources.info:#.maxvalue",
 	"resources.info:#.description",
+	"resources.info:#.units",
+	"resources.info:#.alertthreshold",
 }
 var ClusterInstInfoAliasArgs = []string{}
 var ClusterInstInfoComments = map[string]string{
@@ -656,6 +660,8 @@ var ClusterInstInfoComments = map[string]string{
 	"resources.info:#.value":                 "Resource value",
 	"resources.info:#.maxvalue":              "Resource max value",
 	"resources.info:#.description":           "Resource description",
+	"resources.info:#.units":                 "Resource units",
+	"resources.info:#.alertthreshold":        "Generate alert when more than threshold percentage of resource is used",
 }
 var ClusterInstInfoSpecialArgs = map[string]string{
 	"errors":      "StringArray",

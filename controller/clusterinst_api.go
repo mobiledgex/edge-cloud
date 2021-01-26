@@ -222,14 +222,14 @@ func getClusterInstVMRequirements(ctx context.Context, stm concurrency.STM, in *
 	return res, nil
 }
 
-func validateCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, allClusterResources, reqdVmResources []edgeproto.VMResource) ([]string, error) {
+func validateCloudletCommonResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, allClusterResources, reqdVmResources []edgeproto.VMResource) ([]string, error) {
 	gpusReqd := uint64(0)
 	gpusUsed := uint64(0)
 	gpusMax := uint64(0)
-	gpuThreshPercent := uint64(80)
+	gpuThreshPercent := settingsApi.Get().CloudletResourceAlertThresholdPercentage
 	for _, resQuota := range cloudlet.ResourceQuotas {
 		switch resQuota.Name {
-		case GpusMax:
+		case ResourceGpus:
 			gpusMax = resQuota.Value
 			gpuThreshPercent = resQuota.AlertThreshold
 		}
@@ -262,6 +262,102 @@ func validateCloudletResources(ctx context.Context, stm concurrency.STM, cloudle
 	return warnings, err
 }
 
+// Validate resource requirements for the VMs on the cloudlet
+func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResources, allClusterResources, reqdVmResources, existingVmResources []edgeproto.VMResource) ([]string, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return nil, err
+	}
+	defaultAlertThresh := settingsApi.Get().CloudletResourceAlertThresholdPercentage
+	infraResInfo := make(map[string]*edgeproto.ResourceInfo)
+	for _, resInfo := range infraResources.Info {
+		newResInfo := &edgeproto.ResourceInfo{}
+		newResInfo.DeepCopyIn(&resInfo)
+		infraResInfo[newResInfo.Name] = newResInfo
+	}
+
+	reqdResInfo := cloudletPlatform.GetCloudletResourceInfo(ctx, reqdVmResources, infraResInfo)
+	allResInfo := cloudletPlatform.GetCloudletResourceInfo(ctx, allClusterResources, infraResInfo)
+	existingResInfo := cloudletPlatform.GetCloudletResourceInfo(ctx, existingVmResources, infraResInfo)
+	resQuotasInfo := make(map[string]edgeproto.ResourceInfo)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		resQuotasInfo[resQuota.Name] = edgeproto.ResourceInfo{
+			Name:           resQuota.Name,
+			Value:          resQuota.Value,
+			AlertThreshold: resQuota.AlertThreshold,
+		}
+	}
+
+	warnings := []string{}
+	quotaResReqd := make(map[string]uint64)
+
+	// Theoretical Validation
+	for resName, resInfo := range allResInfo {
+		max := resInfo.MaxValue
+		thresh := defaultAlertThresh
+		// look up quota if any
+		if quota, found := resQuotasInfo[resName]; found {
+			if quota.Value > 0 {
+				// Set max value from resource quota
+				max = quota.Value
+			}
+			if quota.AlertThreshold > 0 {
+				// Set threshold value from resource quota
+				thresh = quota.AlertThreshold
+			}
+		}
+		resReqd, ok := reqdResInfo[resName]
+		if !ok {
+			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+		}
+		thAvailableResVal := max - resInfo.Value
+		if float64(resInfo.Value*100)/float64(max) > float64(thresh) {
+			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", thresh, resName))
+		}
+		if resReqd.Value > thAvailableResVal {
+			return warnings, fmt.Errorf("Not enough %s available, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units)
+		}
+		quotaResReqd[resName] = thAvailableResVal
+	}
+
+	// Infra based validation
+	for resName, _ := range infraResInfo {
+		if resInfo, ok := existingResInfo[resName]; ok {
+			infraResInfo[resName].Value += resInfo.Value
+		}
+	}
+	for resName, resInfo := range infraResInfo {
+		thresh := defaultAlertThresh
+		// look up quota if any
+		if quota, found := resQuotasInfo[resName]; found {
+			if quota.AlertThreshold > 0 {
+				// Set threshold value from resource quota
+				thresh = quota.AlertThreshold
+			}
+		}
+		resReqd, ok := reqdResInfo[resName]
+		if !ok {
+			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+		}
+		infraAvailableResVal := resInfo.MaxValue - resInfo.Value
+		if float64(resInfo.Value*100)/float64(resInfo.MaxValue) > float64(thresh) {
+			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", thresh, resName))
+		}
+		if resReqd.Value > infraAvailableResVal {
+			return warnings, fmt.Errorf("[Infra] Not enough %s available, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units)
+		}
+		if resVal, ok := quotaResReqd[resName]; ok {
+			// generate alert if expected resource quota is not available
+			if infraAvailableResVal < resVal {
+				warnings = append(warnings, fmt.Sprintf("[Quota] Expected %s available to be %d%s, but only %d%s is available", resName, resVal, resInfo.Units, infraAvailableResVal, resInfo.Units))
+			}
+		}
+	}
+
+	return warnings, nil
+}
+
 func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
 	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, error) {
 	allClusterResources := []edgeproto.VMResource{}
@@ -270,10 +366,6 @@ func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edg
 		return nil, err
 	}
 	existingVmResources := cloudletRefs.ReservedResources
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
-	if err != nil {
-		return nil, err
-	}
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
 	cloudletRes, err := GetCloudletResources(ctx, cloudletInfo)
 	if err != nil {
@@ -297,11 +389,11 @@ func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edg
 		allClusterResources = append(allClusterResources, allRes...)
 	}
 	if len(reqdVmResources) > 0 {
-		warnings, err := validateCloudletResources(ctx, stm, cloudlet, allClusterResources, reqdVmResources)
+		warnings, err := validateCloudletCommonResources(ctx, stm, cloudlet, allClusterResources, reqdVmResources)
 		if err != nil {
 			return nil, err
 		}
-		infraWarnings, err := cloudletPlatform.ValidateCloudletResources(ctx, cloudlet.ResourceQuotas, &cloudletInfo.Resources, allClusterResources, reqdVmResources, existingVmResources)
+		infraWarnings, err := validateCloudletInfraResources(ctx, cloudlet, &cloudletInfo.Resources, allClusterResources, reqdVmResources, existingVmResources)
 		if err != nil {
 			return nil, err
 		}

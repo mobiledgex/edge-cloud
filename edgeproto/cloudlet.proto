@@ -180,7 +180,7 @@ message ResourceQuota {
   // Quota value of the resource
   uint64 value = 2;
   // Generate alert when more than threshold percentage of resource is used
-  uint64 alert_threshold = 3;
+  int32 alert_threshold = 3;
 }
 
 // Cloudlet
@@ -308,11 +308,11 @@ message CloudletProps {
   map<string, PropertyInfo> properties = 2;
 }
 
-message CloudletResourceProps {
+message CloudletResourceQuotaProps {
   // Platform type
   PlatformType platform_type = 1;
   // Cloudlet resource properties
-  repeated ResourceInfo resource_props = 2 [(gogoproto.nullable) = false];
+  repeated ResourceInfo props = 2 [(gogoproto.nullable) = false];
 }
 
 service CloudletApi {
@@ -379,8 +379,8 @@ service CloudletApi {
     option (protogen.method_noconfig) = "Properties";
     option (protogen.method_also_required) = "PlatformType";
   }
-  // Get Cloudlet Resource Properties. Shows all the resource properties of the cloudlet
-  rpc GetCloudletResourceProps(CloudletResourceProps) returns (CloudletResourceProps) {
+  // Get Cloudlet Resource Quota Properties. Shows all the resource quota properties of the cloudlet
+  rpc GetCloudletResourceQuotaProps(CloudletResourceQuotaProps) returns (CloudletResourceQuotaProps) {
     option (google.api.http) = {
       post: "/get/cloudlet/resource/props"
       body: "*"

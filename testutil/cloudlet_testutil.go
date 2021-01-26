@@ -747,19 +747,19 @@ func (r *Run) CloudletApi_CloudletResMap(data *[]edgeproto.CloudletResMap, dataM
 	}
 }
 
-func (r *Run) CloudletApi_CloudletResourceProps(data *[]edgeproto.CloudletResourceProps, dataMap interface{}, dataOut interface{}) {
-	log.DebugLog(log.DebugLevelApi, "API for CloudletResourceProps", "mode", r.Mode)
+func (r *Run) CloudletApi_CloudletResourceQuotaProps(data *[]edgeproto.CloudletResourceQuotaProps, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for CloudletResourceQuotaProps", "mode", r.Mode)
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
 		case "get":
-			out, err := r.client.GetCloudletResourceProps(r.ctx, obj)
+			out, err := r.client.GetCloudletResourceQuotaProps(r.ctx, obj)
 			if err != nil {
-				r.logErr(fmt.Sprintf("CloudletApi_CloudletResourceProps[%d]", ii), err)
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletResourceQuotaProps[%d]", ii), err)
 			} else {
-				outp, ok := dataOut.(*[]edgeproto.CloudletResourceProps)
+				outp, ok := dataOut.(*[]edgeproto.CloudletResourceQuotaProps)
 				if !ok {
-					panic(fmt.Sprintf("RunCloudletApi_CloudletResourceProps expected dataOut type *[]edgeproto.CloudletResourceProps, but was %T", dataOut))
+					panic(fmt.Sprintf("RunCloudletApi_CloudletResourceQuotaProps expected dataOut type *[]edgeproto.CloudletResourceQuotaProps, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
 			}
@@ -1083,14 +1083,14 @@ func (s *CliClient) GetCloudletProps(ctx context.Context, in *edgeproto.Cloudlet
 	return &out, err
 }
 
-func (s *ApiClient) GetCloudletResourceProps(ctx context.Context, in *edgeproto.CloudletResourceProps) (*edgeproto.CloudletResourceProps, error) {
+func (s *ApiClient) GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
-	return api.GetCloudletResourceProps(ctx, in)
+	return api.GetCloudletResourceQuotaProps(ctx, in)
 }
 
-func (s *CliClient) GetCloudletResourceProps(ctx context.Context, in *edgeproto.CloudletResourceProps) (*edgeproto.CloudletResourceProps, error) {
-	out := edgeproto.CloudletResourceProps{}
-	args := append(s.BaseArgs, "controller", "GetCloudletResourceProps")
+func (s *CliClient) GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error) {
+	out := edgeproto.CloudletResourceQuotaProps{}
+	args := append(s.BaseArgs, "controller", "GetCloudletResourceQuotaProps")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
 }
@@ -1198,7 +1198,7 @@ type CloudletApiClient interface {
 	ShowCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Cloudlet, error)
 	GetCloudletManifest(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error)
 	GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error)
-	GetCloudletResourceProps(ctx context.Context, in *edgeproto.CloudletResourceProps) (*edgeproto.CloudletResourceProps, error)
+	GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error)
 	GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error)
 	GetCloudletInfraResourceUsage(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error)
 	SyncCloudletResourceInfo(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)

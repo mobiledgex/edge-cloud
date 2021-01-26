@@ -1495,6 +1495,8 @@ const ClusterInstFieldResourcesInfoName = "28.2.1"
 const ClusterInstFieldResourcesInfoValue = "28.2.2"
 const ClusterInstFieldResourcesInfoMaxValue = "28.2.3"
 const ClusterInstFieldResourcesInfoDescription = "28.2.4"
+const ClusterInstFieldResourcesInfoUnits = "28.2.5"
+const ClusterInstFieldResourcesInfoAlertThreshold = "28.2.6"
 const ClusterInstFieldCreatedAt = "29"
 const ClusterInstFieldCreatedAtSeconds = "29.1"
 const ClusterInstFieldCreatedAtNanos = "29.2"
@@ -1550,6 +1552,8 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldResourcesInfoValue,
 	ClusterInstFieldResourcesInfoMaxValue,
 	ClusterInstFieldResourcesInfoDescription,
+	ClusterInstFieldResourcesInfoUnits,
+	ClusterInstFieldResourcesInfoAlertThreshold,
 	ClusterInstFieldCreatedAtSeconds,
 	ClusterInstFieldCreatedAtNanos,
 	ClusterInstFieldUpdatedAtSeconds,
@@ -1604,6 +1608,8 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldResourcesInfoValue:                struct{}{},
 	ClusterInstFieldResourcesInfoMaxValue:             struct{}{},
 	ClusterInstFieldResourcesInfoDescription:          struct{}{},
+	ClusterInstFieldResourcesInfoUnits:                struct{}{},
+	ClusterInstFieldResourcesInfoAlertThreshold:       struct{}{},
 	ClusterInstFieldCreatedAtSeconds:                  struct{}{},
 	ClusterInstFieldCreatedAtNanos:                    struct{}{},
 	ClusterInstFieldUpdatedAtSeconds:                  struct{}{},
@@ -1658,6 +1664,8 @@ var ClusterInstAllFieldsStringMap = map[string]string{
 	ClusterInstFieldResourcesInfoValue:                "Resources Info Value",
 	ClusterInstFieldResourcesInfoMaxValue:             "Resources Info Max Value",
 	ClusterInstFieldResourcesInfoDescription:          "Resources Info Description",
+	ClusterInstFieldResourcesInfoUnits:                "Resources Info Units",
+	ClusterInstFieldResourcesInfoAlertThreshold:       "Resources Info Alert Threshold",
 	ClusterInstFieldCreatedAtSeconds:                  "Created At Seconds",
 	ClusterInstFieldCreatedAtNanos:                    "Created At Nanos",
 	ClusterInstFieldUpdatedAtSeconds:                  "Updated At Seconds",
@@ -1907,6 +1915,16 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 			}
 			if m.Resources.Info[i1].Description != o.Resources.Info[i1].Description {
 				fields[ClusterInstFieldResourcesInfoDescription] = struct{}{}
+				fields[ClusterInstFieldResourcesInfo] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
+			}
+			if m.Resources.Info[i1].Units != o.Resources.Info[i1].Units {
+				fields[ClusterInstFieldResourcesInfoUnits] = struct{}{}
+				fields[ClusterInstFieldResourcesInfo] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
+			}
+			if m.Resources.Info[i1].AlertThreshold != o.Resources.Info[i1].AlertThreshold {
+				fields[ClusterInstFieldResourcesInfoAlertThreshold] = struct{}{}
 				fields[ClusterInstFieldResourcesInfo] = struct{}{}
 				fields[ClusterInstFieldResources] = struct{}{}
 			}
@@ -3049,6 +3067,8 @@ const ClusterInstInfoFieldResourcesInfoName = "7.2.1"
 const ClusterInstInfoFieldResourcesInfoValue = "7.2.2"
 const ClusterInstInfoFieldResourcesInfoMaxValue = "7.2.3"
 const ClusterInstInfoFieldResourcesInfoDescription = "7.2.4"
+const ClusterInstInfoFieldResourcesInfoUnits = "7.2.5"
+const ClusterInstInfoFieldResourcesInfoAlertThreshold = "7.2.6"
 
 var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldKeyClusterKeyName,
@@ -3079,6 +3099,8 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldResourcesInfoValue,
 	ClusterInstInfoFieldResourcesInfoMaxValue,
 	ClusterInstInfoFieldResourcesInfoDescription,
+	ClusterInstInfoFieldResourcesInfoUnits,
+	ClusterInstInfoFieldResourcesInfoAlertThreshold,
 }
 
 var ClusterInstInfoAllFieldsMap = map[string]struct{}{
@@ -3110,6 +3132,8 @@ var ClusterInstInfoAllFieldsMap = map[string]struct{}{
 	ClusterInstInfoFieldResourcesInfoValue:                struct{}{},
 	ClusterInstInfoFieldResourcesInfoMaxValue:             struct{}{},
 	ClusterInstInfoFieldResourcesInfoDescription:          struct{}{},
+	ClusterInstInfoFieldResourcesInfoUnits:                struct{}{},
+	ClusterInstInfoFieldResourcesInfoAlertThreshold:       struct{}{},
 }
 
 var ClusterInstInfoAllFieldsStringMap = map[string]string{
@@ -3141,6 +3165,8 @@ var ClusterInstInfoAllFieldsStringMap = map[string]string{
 	ClusterInstInfoFieldResourcesInfoValue:                "Resources Info Value",
 	ClusterInstInfoFieldResourcesInfoMaxValue:             "Resources Info Max Value",
 	ClusterInstInfoFieldResourcesInfoDescription:          "Resources Info Description",
+	ClusterInstInfoFieldResourcesInfoUnits:                "Resources Info Units",
+	ClusterInstInfoFieldResourcesInfoAlertThreshold:       "Resources Info Alert Threshold",
 }
 
 func (m *ClusterInstInfo) IsKeyField(s string) bool {
@@ -3328,6 +3354,16 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 			}
 			if m.Resources.Info[i1].Description != o.Resources.Info[i1].Description {
 				fields[ClusterInstInfoFieldResourcesInfoDescription] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesInfo] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
+			}
+			if m.Resources.Info[i1].Units != o.Resources.Info[i1].Units {
+				fields[ClusterInstInfoFieldResourcesInfoUnits] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesInfo] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
+			}
+			if m.Resources.Info[i1].AlertThreshold != o.Resources.Info[i1].AlertThreshold {
+				fields[ClusterInstInfoFieldResourcesInfoAlertThreshold] = struct{}{}
 				fields[ClusterInstInfoFieldResourcesInfo] = struct{}{}
 				fields[ClusterInstInfoFieldResources] = struct{}{}
 			}
