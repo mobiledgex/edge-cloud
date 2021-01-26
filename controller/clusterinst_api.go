@@ -318,29 +318,29 @@ func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edg
 	return reqdVmResources, nil
 }
 
-func addCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey) error {
+func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey) ([]edgeproto.Metric, error) {
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
-		return fmt.Errorf("Cloudlet not found: %v", key)
+		return nil, fmt.Errorf("Cloudlet not found: %v", key)
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
-		return fmt.Errorf("CloudletInfo not found: %v", key)
+		return nil, fmt.Errorf("CloudletInfo not found: %v", key)
 	}
 	cloudletRefs := edgeproto.CloudletRefs{}
 	if !cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs) {
-		return fmt.Errorf("CloudletRefs not found: %v", key)
+		return nil, fmt.Errorf("CloudletRefs not found: %v", key)
 	}
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	allResources := []edgeproto.VMResource{}
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
 	cloudletRes, err := GetCloudletResources(ctx, &cloudletInfo)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	allResources = append(allResources, cloudletRes...)
 	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
@@ -355,7 +355,7 @@ func addCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		}
 		allRes, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, &cloudlet, &cloudletInfo, &cloudletRefs, edgeproto.VMProvState_PROV_STATE_NONE)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		allResources = append(allResources, allRes...)
 	}
@@ -363,25 +363,43 @@ func addCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	// get cloudlet infra metric
 	resMetric, err := cloudletPlatform.GetCloudletResourceMetric(ctx, &cloudlet.Key, allResources)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
 	if resMetric == nil {
-		return nil
+		return []edgeproto.Metric{}, nil
 	}
 
 	// get cloudlet metric
 	gpusUsed := uint64(0)
+	flavorCount := make(map[string]uint64)
 	for _, vmRes := range allResources {
 		if vmRes.VmFlavor != nil {
 			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, cloudlet) {
 				gpusUsed += 1
 			}
+			if _, ok := flavorCount[vmRes.VmFlavor.Name]; ok {
+				flavorCount[vmRes.VmFlavor.Name] += 1
+			} else {
+				flavorCount[vmRes.VmFlavor.Name] = 1
+			}
 		}
 	}
 	resMetric.AddIntVal("gpusUsed", gpusUsed)
-	services.cloudletResourcesInfluxQ.AddMetric(resMetric)
-	return nil
+	metrics := []edgeproto.Metric{}
+	metrics = append(metrics, *resMetric)
+
+	ts, _ := types.TimestampProto(time.Now())
+	for fName, fCount := range flavorCount {
+		flavorMetric := edgeproto.Metric{}
+		flavorMetric.Name = "cloudlet-flavor-usage"
+		flavorMetric.Timestamp = *ts
+		flavorMetric.AddTag("cloudletorg", cloudlet.Key.Organization)
+		flavorMetric.AddTag("cloudlet", cloudlet.Key.Name)
+		flavorMetric.AddTag("flavor", fName)
+		flavorMetric.AddIntVal("count", fCount)
+		metrics = append(metrics, flavorMetric)
+	}
+	return metrics, nil
 }
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
@@ -648,10 +666,18 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
+		metrics := []edgeproto.Metric{}
 		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			return addCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+			return err
 		})
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		if resErr == nil {
+			for _, metric := range metrics {
+				services.cloudletResourcesInfluxQ.AddMetric(&metric)
+			}
+		} else {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		}
 	}
 	return err
 }
@@ -779,9 +805,18 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(), "Updated ClusterInst successfully", cb.Send)
 	if err == nil {
+		metrics := []edgeproto.Metric{}
 		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			return addCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+			return err
 		})
+		if resErr == nil {
+			for _, metric := range metrics {
+				services.cloudletResourcesInfluxQ.AddMetric(&metric)
+			}
+		} else {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		}
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
 	}
 	return err
@@ -978,9 +1013,18 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
+		metrics := []edgeproto.Metric{}
 		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			return addCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+			return err
 		})
+		if resErr == nil {
+			for _, metric := range metrics {
+				services.cloudletResourcesInfluxQ.AddMetric(&metric)
+			}
+		} else {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		}
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
 	}
 	return err

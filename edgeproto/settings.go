@@ -146,7 +146,7 @@ func GetDefaultSettings() *Settings {
 	s.UpdateTrustPolicyTimeout = Duration(10 * time.Minute)
 	s.DmeApiMetricsCollectionInterval = Duration(30 * time.Second)
 	s.PersistentConnectionMetricsCollectionInterval = Duration(60 * time.Minute)
-	s.ChefClientInterval = Duration(10 * time.Minute)
+	s.CloudletResourceSyncInterval = Duration(10 * time.Minute)
 	return &s
 }
 
