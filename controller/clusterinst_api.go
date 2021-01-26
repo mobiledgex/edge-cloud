@@ -318,7 +318,7 @@ func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edg
 	return reqdVmResources, nil
 }
 
-func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey) ([]edgeproto.Metric, error) {
+func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey) ([]*edgeproto.Metric, error) {
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
 		return nil, fmt.Errorf("Cloudlet not found: %v", key)
@@ -366,7 +366,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		return nil, err
 	}
 	if resMetric == nil {
-		return []edgeproto.Metric{}, nil
+		return []*edgeproto.Metric{}, nil
 	}
 
 	// get cloudlet metric
@@ -385,19 +385,18 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		}
 	}
 	resMetric.AddIntVal("gpusUsed", gpusUsed)
-	metrics := []edgeproto.Metric{}
-	metrics = append(metrics, *resMetric)
+	metrics := []*edgeproto.Metric{}
+	metrics = append(metrics, resMetric)
 
-	ts, _ := types.TimestampProto(time.Now())
 	for fName, fCount := range flavorCount {
 		flavorMetric := edgeproto.Metric{}
 		flavorMetric.Name = "cloudlet-flavor-usage"
-		flavorMetric.Timestamp = *ts
+		flavorMetric.Timestamp = resMetric.Timestamp
 		flavorMetric.AddTag("cloudletorg", cloudlet.Key.Organization)
 		flavorMetric.AddTag("cloudlet", cloudlet.Key.Name)
 		flavorMetric.AddTag("flavor", fName)
 		flavorMetric.AddIntVal("count", fCount)
-		metrics = append(metrics, flavorMetric)
+		metrics = append(metrics, &flavorMetric)
 	}
 	return metrics, nil
 }
@@ -666,15 +665,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
-		metrics := []edgeproto.Metric{}
+		metrics := []*edgeproto.Metric{}
 		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
 			return err
 		})
 		if resErr == nil {
-			for _, metric := range metrics {
-				services.cloudletResourcesInfluxQ.AddMetric(&metric)
-			}
+			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
 		} else {
 			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
 		}
@@ -805,15 +802,13 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(), "Updated ClusterInst successfully", cb.Send)
 	if err == nil {
-		metrics := []edgeproto.Metric{}
+		metrics := []*edgeproto.Metric{}
 		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
 			return err
 		})
 		if resErr == nil {
-			for _, metric := range metrics {
-				services.cloudletResourcesInfluxQ.AddMetric(&metric)
-			}
+			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
 		} else {
 			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
 		}
@@ -1013,15 +1008,13 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
-		metrics := []edgeproto.Metric{}
+		metrics := []*edgeproto.Metric{}
 		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
 			return err
 		})
 		if resErr == nil {
-			for _, metric := range metrics {
-				services.cloudletResourcesInfluxQ.AddMetric(&metric)
-			}
+			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
 		} else {
 			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
 		}
