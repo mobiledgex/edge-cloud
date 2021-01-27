@@ -311,6 +311,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK &&
 			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE &&
 			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE &&
+			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VCD &&
 			in.SharedVolumeSize != 0 {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
