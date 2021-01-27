@@ -38,6 +38,15 @@ var CloudletKindFake = "fake"
 var OperatingSystemMac = "mac"
 var OperatingSystemLinux = "linux"
 
+// cloudlet vm types
+var VMTypeAppVM = "appvm"
+var VMTypeRootLB = "rootlb"
+var VMTypePlatform = "platform"
+var VMTypePlatformClusterMaster = "platform-cluster-master"
+var VMTypePlatformClusterNode = "platform-cluster-node"
+var VMTypeClusterMaster = "cluster-master"
+var VMTypeClusterNode = "cluster-node"
+
 // network schemes for use by standalone deployments (e.g. DIND)
 var NetworkSchemePublicIP = "publicip"
 var NetworkSchemePrivateIP = "privateip"

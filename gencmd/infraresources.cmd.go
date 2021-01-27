@@ -68,8 +68,8 @@ var VmInfoComments = map[string]string{
 	"containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var VmInfoSpecialArgs = map[string]string{}
-var ResourceInfoRequiredArgs = []string{}
-var ResourceInfoOptionalArgs = []string{
+var InfraResourceRequiredArgs = []string{}
+var InfraResourceOptionalArgs = []string{
 	"name",
 	"value",
 	"maxvalue",
@@ -77,8 +77,8 @@ var ResourceInfoOptionalArgs = []string{
 	"units",
 	"alertthreshold",
 }
-var ResourceInfoAliasArgs = []string{}
-var ResourceInfoComments = map[string]string{
+var InfraResourceAliasArgs = []string{}
+var InfraResourceComments = map[string]string{
 	"name":           "Resource name",
 	"value":          "Resource value",
 	"maxvalue":       "Resource max value",
@@ -86,7 +86,7 @@ var ResourceInfoComments = map[string]string{
 	"units":          "Resource units",
 	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
-var ResourceInfoSpecialArgs = map[string]string{}
+var InfraResourceSpecialArgs = map[string]string{}
 var InfraResourcesRequiredArgs = []string{}
 var InfraResourcesOptionalArgs = []string{
 	"vms:#.name",

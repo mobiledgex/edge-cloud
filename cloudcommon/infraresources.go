@@ -3,11 +3,42 @@ package cloudcommon
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+)
+
+var (
+	// Common platform resources
+	ResourceRamMb  = "RAM"
+	ResourceVcpus  = "vCPUs"
+	ResourceDiskGb = "disk"
+	ResourceGpus   = "GPUs"
+
+	ResourceRamUnits  = "MB"
+	ResourceDiskUnits = "GB"
+
+	CloudletResources = []edgeproto.InfraResource{
+		edgeproto.InfraResource{
+			Name:        ResourceRamMb,
+			Description: "Limit on RAM available (MB)",
+		},
+		edgeproto.InfraResource{
+			Name:        ResourceVcpus,
+			Description: "Limit on vCPUs available",
+		},
+		edgeproto.InfraResource{
+			Name:        ResourceDiskGb,
+			Description: "Limit on disk available (GB)",
+		},
+		edgeproto.InfraResource{
+			Name:        ResourceGpus,
+			Description: "Limit on GPUs available",
+		},
+	}
 )
 
 func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, pfFlavorList []*edgeproto.FlavorInfo, rootLBFlavor *edgeproto.FlavorInfo, provState edgeproto.VMProvState) ([]edgeproto.VMResource, error) {
@@ -51,12 +82,14 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 					Key:       clusterInst.Key,
 					VmFlavor:  nodeFlavor,
 					ProvState: vmResState,
+					Type:      VMTypeClusterMaster,
 				})
 			} else {
 				vmResources = append(vmResources, edgeproto.VMResource{
 					Key:       clusterInst.Key,
 					VmFlavor:  masterNodeFlavor,
 					ProvState: vmResState,
+					Type:      VMTypeClusterMaster,
 				})
 			}
 		}
@@ -65,6 +98,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 				Key:       clusterInst.Key,
 				VmFlavor:  nodeFlavor,
 				ProvState: vmResState,
+				Type:      VMTypeClusterNode,
 			})
 		}
 	}
@@ -77,6 +111,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			Key:       clusterInst.Key,
 			VmFlavor:  rootLBFlavor,
 			ProvState: vmResState,
+			Type:      VMTypeRootLB,
 		})
 	}
 	return vmResources, nil
@@ -109,4 +144,34 @@ func CloudletResourceUsageAlerts(ctx context.Context, key *edgeproto.CloudletKey
 		alerts = append(alerts, alert)
 	}
 	return alerts
+}
+
+func ValidateCloudletResourceQuotas(ctx context.Context, infraResources *edgeproto.InfraResources, resourceQuotas []edgeproto.ResourceQuota) error {
+	if infraResources == nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to validate cloudlet resource quotas, missing infra resources info")
+		return nil
+	}
+	validQuotas := make(map[string]uint64)
+	for _, info := range infraResources.Info {
+		validQuotas[info.Name] = info.MaxValue
+	}
+	for _, commonRes := range CloudletResources {
+		validQuotas[commonRes.Name] = 0
+	}
+	quotaNames := []string{}
+	for name, _ := range validQuotas {
+		quotaNames = append(quotaNames, name)
+	}
+	for _, resQuota := range resourceQuotas {
+		qMaxVal, ok := validQuotas[resQuota.Name]
+		if !ok {
+			return fmt.Errorf("Invalid resource quota name: %s, valid names are %s", resQuota.Name, strings.Join(quotaNames, ","))
+		}
+		if qMaxVal > 0 {
+			if resQuota.Value > qMaxVal {
+				return fmt.Errorf("Resource quota %s exceeded max supported value: %d", resQuota.Name, qMaxVal)
+			}
+		}
+	}
+	return nil
 }

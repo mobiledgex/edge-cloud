@@ -738,10 +738,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
-		err := cd.platform.ValidateCloudletResourceQuotas(ctx, new.ResourceQuotas)
-		if err == nil {
-			err = cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
-		}
+		err := cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update Cloudlet failed: %v", err)
 			log.InfoLog("can't update cloudlet", "error", errstr, "key", new.Key)

@@ -41,6 +41,8 @@ message VMResource {
   FlavorInfo vm_flavor = 2;
   // Resource provision state
   VMProvState prov_state = 3;
+  // Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+  string type = 4;
 }
 
 // Refs track ref counts of used resources, ports, etc.

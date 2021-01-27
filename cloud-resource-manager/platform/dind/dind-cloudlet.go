@@ -80,16 +80,12 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 	return nil
 }
 
-func (s *Platform) GetCloudletResourceInfo(ctx context.Context, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.ResourceInfo) map[string]*edgeproto.ResourceInfo {
+func (s *Platform) GetClusterAdditionalResources(ctx context.Context, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource {
 	return nil
 }
 
 func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeproto.CloudletResourceQuotaProps, error) {
 	return &edgeproto.CloudletResourceQuotaProps{}, nil
-}
-
-func (s *Platform) ValidateCloudletResourceQuotas(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota) error {
-	return nil
 }
 
 func (s *Platform) GetCloudletResourceMetric(ctx context.Context, key *edgeproto.CloudletKey, resources []edgeproto.VMResource) (*edgeproto.Metric, error) {

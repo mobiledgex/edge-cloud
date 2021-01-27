@@ -54,8 +54,8 @@ message VmInfo{
 
 // ResourceInfo
 //
-// ResourceInfo is information about cloudlet infra resources.
-message ResourceInfo {
+// ResourceInfo is information about cloudlet infra resource.
+message InfraResource {
   // Resource name
   string name = 1;
   // Resource value
@@ -76,6 +76,6 @@ message ResourceInfo {
 message InfraResources{
   // Virtual machine resources info
   repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
-  // Resource information
-  repeated ResourceInfo info = 2 [(gogoproto.nullable) = false];
+  // Infra Resource information
+  repeated InfraResource info = 2 [(gogoproto.nullable) = false];
 }

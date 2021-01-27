@@ -362,3 +362,18 @@ func ServerUnaryInterceptor(unaryInterceptor grpc.ServerOption) ServerOp {
 func ServerStreamInterceptor(streamInterceptor grpc.ServerOption) ServerOp {
 	return func(opts *ServerOptions) { opts.streamInterceptor = streamInterceptor }
 }
+
+func (s *ServerMgr) GetConnectedCloudletKeys() map[edgeproto.CloudletKey]struct{} {
+	keys := make(map[edgeproto.CloudletKey]struct{})
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	for _, server := range s.table {
+		sr := &server.sendrecv
+		sr.mux.Lock()
+		for key, _ := range sr.cloudletKeys {
+			keys[key] = struct{}{}
+		}
+		sr.mux.Unlock()
+	}
+	return keys
+}

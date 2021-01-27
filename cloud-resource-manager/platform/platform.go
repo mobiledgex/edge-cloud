@@ -69,10 +69,8 @@ type Platform interface {
 	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get resources used by the cloudlet
 	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error)
-	// Get cloudlet specific resource info for the list of vm resources
-	GetCloudletResourceInfo(ctx context.Context, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.ResourceInfo) map[string]*edgeproto.ResourceInfo
-	// Validate Cloudlet Resource Quotas
-	ValidateCloudletResourceQuotas(ctx context.Context, resourceQuotas []edgeproto.ResourceQuota) error
+	// Get cluster additional resources used by the vms specific to the platform
+	GetClusterAdditionalResources(ctx context.Context, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource
 	// Get Cloudlet Resource Properties
 	GetCloudletResourceQuotaProps(ctx context.Context) (*edgeproto.CloudletResourceQuotaProps, error)
 	// Get Cloudlet Resource Metric

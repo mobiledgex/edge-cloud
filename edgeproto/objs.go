@@ -262,7 +262,8 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 
 	for _, resQuota := range s.ResourceQuotas {
 		if resQuota.AlertThreshold < 0 || resQuota.AlertThreshold > 100 {
-			return fmt.Errorf("Invalid resource quota alert threshold specified %d, valid threshold is in the range of 0 to 100", resQuota.AlertThreshold)
+			return fmt.Errorf("Invalid resource quota alert threshold %d specified for %s, valid threshold is in the range of 0 to 100", resQuota.AlertThreshold, resQuota.Name)
+
 		}
 	}
 

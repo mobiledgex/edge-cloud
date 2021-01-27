@@ -657,8 +657,8 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 				}
 				*outp = append(*outp, *out)
 			}
-		case "synccloudletresourceinfo":
-			out, err := r.client.SyncCloudletResourceInfo(r.ctx, obj)
+		case "synccloudletinfraresources":
+			out, err := r.client.SyncCloudletInfraResources(r.ctx, obj)
 			if err != nil {
 				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
 			} else {
@@ -1119,14 +1119,14 @@ func (s *CliClient) GetCloudletInfraResourceUsage(ctx context.Context, in *edgep
 	return &out, err
 }
 
-func (s *ApiClient) SyncCloudletResourceInfo(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+func (s *ApiClient) SyncCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
-	return api.SyncCloudletResourceInfo(ctx, in)
+	return api.SyncCloudletInfraResources(ctx, in)
 }
 
-func (s *CliClient) SyncCloudletResourceInfo(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+func (s *CliClient) SyncCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "SyncCloudletResourceInfo")
+	args := append(s.BaseArgs, "controller", "SyncCloudletInfraResources")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
 }
@@ -1201,7 +1201,7 @@ type CloudletApiClient interface {
 	GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error)
 	GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error)
 	GetCloudletInfraResourceUsage(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.InfraResources, error)
-	SyncCloudletResourceInfo(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
+	SyncCloudletInfraResources(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)

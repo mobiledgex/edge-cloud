@@ -397,7 +397,7 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudletDone := make(chan bool)
 	// Cloudlet resource usage collection should succeed
 	go func() {
-		_, err = cloudletApi.SyncCloudletResourceInfo(ctx, &cloudlet.Key)
+		_, err = cloudletApi.SyncCloudletInfraResources(ctx, &cloudlet.Key)
 		require.Nil(t, err, "cloudlet resource update")
 		cloudletDone <- true
 	}()

@@ -229,7 +229,7 @@ func validateCloudletCommonResources(ctx context.Context, stm concurrency.STM, c
 	gpuThreshPercent := settingsApi.Get().CloudletResourceAlertThresholdPercentage
 	for _, resQuota := range cloudlet.ResourceQuotas {
 		switch resQuota.Name {
-		case ResourceGpus:
+		case cloudcommon.ResourceGpus:
 			gpusMax = resQuota.Value
 			gpuThreshPercent = resQuota.AlertThreshold
 		}
@@ -265,24 +265,32 @@ func validateCloudletCommonResources(ctx context.Context, stm concurrency.STM, c
 // Validate resource requirements for the VMs on the cloudlet
 func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResources, allClusterResources, reqdVmResources, existingVmResources []edgeproto.VMResource) ([]string, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
-	if err != nil {
-		return nil, err
-	}
+
 	defaultAlertThresh := settingsApi.Get().CloudletResourceAlertThresholdPercentage
-	infraResInfo := make(map[string]*edgeproto.ResourceInfo)
+
+	infraResInfo := make(map[string]*edgeproto.InfraResource)
 	for _, resInfo := range infraResources.Info {
-		newResInfo := &edgeproto.ResourceInfo{}
+		newResInfo := &edgeproto.InfraResource{}
 		newResInfo.DeepCopyIn(&resInfo)
 		infraResInfo[newResInfo.Name] = newResInfo
 	}
 
-	reqdResInfo := cloudletPlatform.GetCloudletResourceInfo(ctx, reqdVmResources, infraResInfo)
-	allResInfo := cloudletPlatform.GetCloudletResourceInfo(ctx, allClusterResources, infraResInfo)
-	existingResInfo := cloudletPlatform.GetCloudletResourceInfo(ctx, existingVmResources, infraResInfo)
-	resQuotasInfo := make(map[string]edgeproto.ResourceInfo)
+	pfType := cloudlet.PlatformType.String()
+	reqdResInfo, err := GetCloudletResourceInfo(ctx, pfType, reqdVmResources, infraResInfo)
+	if err != nil {
+		return nil, err
+	}
+	allResInfo, err := GetCloudletResourceInfo(ctx, pfType, allClusterResources, infraResInfo)
+	if err != nil {
+		return nil, err
+	}
+	existingResInfo, err := GetCloudletResourceInfo(ctx, pfType, existingVmResources, infraResInfo)
+	if err != nil {
+		return nil, err
+	}
+	resQuotasInfo := make(map[string]edgeproto.InfraResource)
 	for _, resQuota := range cloudlet.ResourceQuotas {
-		resQuotasInfo[resQuota.Name] = edgeproto.ResourceInfo{
+		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
 			Name:           resQuota.Name,
 			Value:          resQuota.Value,
 			AlertThreshold: resQuota.AlertThreshold,

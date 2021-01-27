@@ -283,6 +283,7 @@ var VMResourceOptionalArgs = []string{
 	"vmflavor.disk",
 	"vmflavor.propmap",
 	"provstate",
+	"type",
 }
 var VMResourceAliasArgs = []string{}
 var VMResourceComments = map[string]string{
@@ -296,6 +297,7 @@ var VMResourceComments = map[string]string{
 	"vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
 	"vmflavor.propmap":             "OS Flavor Properties, if any",
 	"provstate":                    "Resource provision state, one of ProvStateNone, ProvStateAdd, ProvStateRemove",
+	"type":                         "Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
 }
 var VMResourceSpecialArgs = map[string]string{
 	"vmflavor.propmap": "StringToString",
@@ -325,6 +327,7 @@ var CloudletRefsOptionalArgs = []string{
 	"reservedresources:#.vmflavor.disk",
 	"reservedresources:#.vmflavor.propmap",
 	"reservedresources:#.provstate",
+	"reservedresources:#.type",
 	"clusterinsts:#.clusterkey.name",
 	"clusterinsts:#.cloudletkey.organization",
 	"clusterinsts:#.cloudletkey.name",
@@ -350,6 +353,7 @@ var CloudletRefsComments = map[string]string{
 	"reservedresources:#.vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
 	"reservedresources:#.vmflavor.propmap":             "OS Flavor Properties, if any",
 	"reservedresources:#.provstate":                    "Resource provision state, one of ProvStateNone, ProvStateAdd, ProvStateRemove",
+	"reservedresources:#.type":                         "Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
 	"clusterinsts:#.clusterkey.name":                   "Cluster name",
 	"clusterinsts:#.cloudletkey.organization":          "Organization of the cloudlet site",
 	"clusterinsts:#.cloudletkey.name":                  "Name of the cloudlet",
