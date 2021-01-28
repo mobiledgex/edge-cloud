@@ -32,7 +32,7 @@ func RunAllDataStreamApis(run *Run, in *edgeproto.AllData, out *AllDataStreamOut
 		outMsgs := [][]edgeproto.Result{}
 		run.StreamObjApi_ClusterInstKey(&clusterInstKeys, nil, &outMsgs)
 		streamKey := edgeproto.AppInstKey{
-			ClusterInstKey: clusterInst.Key,
+			ClusterInstKey: *clusterInst.Key.Virtual(""),
 		}
 		outObj := StreamObj{Key: streamKey}
 		for _, objsMsgs := range outMsgs {
@@ -47,7 +47,7 @@ func RunAllDataStreamApis(run *Run, in *edgeproto.AllData, out *AllDataStreamOut
 		outMsgs := [][]edgeproto.Result{}
 		run.StreamObjApi_CloudletKey(&cloudletKeys, nil, &outMsgs)
 		streamKey := edgeproto.AppInstKey{
-			ClusterInstKey: edgeproto.ClusterInstKey{
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
 				CloudletKey: cloudlet.Key,
 			},
 		}

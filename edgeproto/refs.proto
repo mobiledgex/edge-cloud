@@ -43,6 +43,8 @@ message CloudletRefs {
   string used_static_ips = 10;
   // Used Optional Resources
   map<string, uint32> opt_res_used_map = 11;
+  // Track reservable autoclusterinsts ids in use. This is a bitmap.
+  fixed64 reserved_auto_cluster_ids = 12;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

@@ -52,3 +52,9 @@ func AppInstBeingDeleted(inst *edgeproto.AppInst) bool {
 	}
 	return false
 }
+
+// Cluster name to trigger using an existing free reservable ClusterInst
+// or creating a new one automatically.
+func AutoProvClusterName(key *edgeproto.AppKey) string {
+	return AutoClusterPrefix + key.Name + key.Version + key.Organization
+}

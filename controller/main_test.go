@@ -131,6 +131,9 @@ func TestController(t *testing.T) {
 		err = testutil.ClusterInstReadResultStream(stream, err)
 		require.Nil(t, err)
 	}
+	// cleanup unused reservable auto clusters
+	_, err = clusterInstClient.DeleteIdleReservableClusterInsts(ctx, &edgeproto.IdleReservableClusterInsts{})
+	require.Nil(t, err)
 	for _, obj := range testutil.AppData {
 		_, err = appClient.DeleteApp(ctx, &obj)
 		require.Nil(t, err)
