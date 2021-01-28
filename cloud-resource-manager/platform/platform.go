@@ -68,15 +68,15 @@ type Platform interface {
 	// Update the cluster
 	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get resources used by the cloudlet
-	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error)
+	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResourcesSnapshot, error)
 	// Get cluster additional resources used by the vms specific to the platform
 	GetClusterAdditionalResources(ctx context.Context, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource
 	// Get Cloudlet Resource Properties
 	GetCloudletResourceQuotaProps(ctx context.Context) (*edgeproto.CloudletResourceQuotaProps, error)
-	// Get Cloudlet Resource Metric
-	GetCloudletResourceMetric(ctx context.Context, key *edgeproto.CloudletKey, resources []edgeproto.VMResource) (*edgeproto.Metric, error)
+	// Get cluster additional resource metric
+	GetClusterAdditionalResourceMetric(ctx context.Context, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error
 	// Get resources used by the cluster
-	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error)
+	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResourcesSnapshot, error)
 	// Create an AppInst on a Cluster
 	CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete an AppInst on a Cluster

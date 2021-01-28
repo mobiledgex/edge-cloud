@@ -219,8 +219,6 @@ var SettingsOptionalArgs = []string{
 	"updatetrustpolicytimeout",
 	"dmeapimetricscollectioninterval",
 	"persistentconnectionmetricscollectioninterval",
-	"cloudletresourcesyncinterval",
-	"cloudletresourcealertthresholdpercentage",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -248,8 +246,6 @@ var SettingsComments = map[string]string{
 	"updatetrustpolicytimeout":                      "Update Trust Policy timeout (duration)",
 	"dmeapimetricscollectioninterval":               "Metrics collection interval for DME API counts (duration)",
 	"persistentconnectionmetricscollectioninterval": "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
-	"cloudletresourcesyncinterval":                  "Cloudlet resource info sync interval",
-	"cloudletresourcealertthresholdpercentage":      "Cloudlet resource alert threshold percentage",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

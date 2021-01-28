@@ -4,6 +4,7 @@ syntax = "proto3";
 package edgeproto;
 
 import "gogoproto/gogo.proto";
+import "cluster.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -70,12 +71,25 @@ message InfraResource {
   int32 alert_threshold = 6;
 }
 
-// InfraResources
+// Cluster Ref Key
 //
-// InfraResources is infomation about infrastructure resources. 
-message InfraResources{
+// ClusterRefKey is cluster instance key without cloudlet key.
+message ClusterRefKey {
+  // Name of Cluster
+  ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
+  // Name of Developer organization that this cluster belongs to
+  string organization = 2;
+}
+
+
+// InfraResourcesSnapshot
+//
+// InfraResourcesSnapshot is snapshot of information about infrastructure resources.
+message InfraResourcesSnapshot {
   // Virtual machine resources info
   repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
   // Infra Resource information
   repeated InfraResource info = 2 [(gogoproto.nullable) = false];
+  // List of clusterinsts this resources snapshot represent
+  repeated ClusterRefKey cluster_insts = 3 [(gogoproto.nullable) = false];
 }

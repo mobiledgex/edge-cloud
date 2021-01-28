@@ -88,6 +88,6 @@ func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeprot
 	return &edgeproto.CloudletResourceQuotaProps{}, nil
 }
 
-func (s *Platform) GetCloudletResourceMetric(ctx context.Context, key *edgeproto.CloudletKey, resources []edgeproto.VMResource) (*edgeproto.Metric, error) {
-	return nil, nil
+func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error {
+	return nil
 }

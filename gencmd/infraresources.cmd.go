@@ -87,8 +87,19 @@ var InfraResourceComments = map[string]string{
 	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var InfraResourceSpecialArgs = map[string]string{}
-var InfraResourcesRequiredArgs = []string{}
-var InfraResourcesOptionalArgs = []string{
+var ClusterRefKeyRequiredArgs = []string{}
+var ClusterRefKeyOptionalArgs = []string{
+	"clusterkey.name",
+	"organization",
+}
+var ClusterRefKeyAliasArgs = []string{}
+var ClusterRefKeyComments = map[string]string{
+	"clusterkey.name": "Cluster name",
+	"organization":    "Name of Developer organization that this cluster belongs to",
+}
+var ClusterRefKeySpecialArgs = map[string]string{}
+var InfraResourcesSnapshotRequiredArgs = []string{}
+var InfraResourcesSnapshotOptionalArgs = []string{
 	"vms:#.name",
 	"vms:#.type",
 	"vms:#.status",
@@ -106,23 +117,27 @@ var InfraResourcesOptionalArgs = []string{
 	"info:#.description",
 	"info:#.units",
 	"info:#.alertthreshold",
+	"clusterinsts:#.clusterkey.name",
+	"clusterinsts:#.organization",
 }
-var InfraResourcesAliasArgs = []string{}
-var InfraResourcesComments = map[string]string{
-	"vms:#.name":                   "Virtual machine name",
-	"vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"vms:#.status":                 "Runtime status of the VM",
-	"vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
-	"vms:#.containers:#.name":      "Name of the container",
-	"vms:#.containers:#.type":      "Type can be docker or kubernetes",
-	"vms:#.containers:#.status":    "Runtime status of the container",
-	"vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
-	"vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
-	"info:#.name":                  "Resource name",
-	"info:#.value":                 "Resource value",
-	"info:#.maxvalue":              "Resource max value",
-	"info:#.description":           "Resource description",
-	"info:#.units":                 "Resource units",
-	"info:#.alertthreshold":        "Generate alert when more than threshold percentage of resource is used",
+var InfraResourcesSnapshotAliasArgs = []string{}
+var InfraResourcesSnapshotComments = map[string]string{
+	"vms:#.name":                     "Virtual machine name",
+	"vms:#.type":                     "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"vms:#.status":                   "Runtime status of the VM",
+	"vms:#.infraflavor":              "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"vms:#.containers:#.name":        "Name of the container",
+	"vms:#.containers:#.type":        "Type can be docker or kubernetes",
+	"vms:#.containers:#.status":      "Runtime status of the container",
+	"vms:#.containers:#.clusterip":   "IP within the CNI and is applicable to kubernetes only",
+	"vms:#.containers:#.restarts":    "Restart count, applicable to kubernetes only",
+	"info:#.name":                    "Resource name",
+	"info:#.value":                   "Resource value",
+	"info:#.maxvalue":                "Resource max value",
+	"info:#.description":             "Resource description",
+	"info:#.units":                   "Resource units",
+	"info:#.alertthreshold":          "Generate alert when more than threshold percentage of resource is used",
+	"clusterinsts:#.clusterkey.name": "Cluster name",
+	"clusterinsts:#.organization":    "Name of Developer organization that this cluster belongs to",
 }
-var InfraResourcesSpecialArgs = map[string]string{}
+var InfraResourcesSnapshotSpecialArgs = map[string]string{}

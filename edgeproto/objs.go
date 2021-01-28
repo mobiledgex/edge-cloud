@@ -260,9 +260,16 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 		return err
 	}
 
+	if _, found := fields[CloudletFieldDefaultResourceAlertThreshold]; found {
+		if s.DefaultResourceAlertThreshold <= 0 || s.DefaultResourceAlertThreshold > 100 {
+			return fmt.Errorf("Invalid resource alert threshold %d specified, valid threshold is in the range of 1 to 100", s.DefaultResourceAlertThreshold)
+
+		}
+	}
+
 	for _, resQuota := range s.ResourceQuotas {
-		if resQuota.AlertThreshold < 0 || resQuota.AlertThreshold > 100 {
-			return fmt.Errorf("Invalid resource quota alert threshold %d specified for %s, valid threshold is in the range of 0 to 100", resQuota.AlertThreshold, resQuota.Name)
+		if resQuota.AlertThreshold <= 0 || resQuota.AlertThreshold > 100 {
+			return fmt.Errorf("Invalid resource quota alert threshold %d specified for %s, valid threshold is in the range of 1 to 100", resQuota.AlertThreshold, resQuota.Name)
 
 		}
 	}
@@ -922,4 +929,9 @@ func UpdateStatusDiff(infoStatus *StatusInfo, diffStatus *StatusInfo) {
 	} else {
 		diffStatus.Msgs = []string{}
 	}
+}
+
+func (s *ClusterRefKey) FromClusterInstKey(key *ClusterInstKey) {
+	s.ClusterKey = key.ClusterKey
+	s.Organization = key.Organization
 }

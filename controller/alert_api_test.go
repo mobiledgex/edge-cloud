@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -115,6 +116,7 @@ func testinit() {
 	registryFQDN = &dockerRegistry
 	vaultConfig, _ = vault.BestConfig("")
 	services.events = influxq.NewInfluxQ("events", "user", "pass")
+	services.cloudletResourcesInfluxQ = influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, "user", "pass")
 	cleanupCloudletInfoTimeout = 100 * time.Millisecond
 	RequireAppInstPortConsistency = true
 	cplookup := &node.CloudletPoolCache{}

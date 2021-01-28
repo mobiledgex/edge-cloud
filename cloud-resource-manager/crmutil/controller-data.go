@@ -45,6 +45,8 @@ type ControllerData struct {
 	VMPoolMux                   sync.Mutex
 	updateVMWorkers             tasks.KeyWorkers
 	updateTrustPolicyKeyworkers tasks.KeyWorkers
+	clusterInstRefMux           sync.Mutex
+	clusterInstRefCount         int
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -176,6 +178,77 @@ func GetCloudletTrustPolicy(ctx context.Context, name string, cloudletOrg string
 	}
 }
 
+func (cd *ControllerData) clusterInstChangeBegin() {
+	cd.clusterInstRefMux.Lock()
+	defer cd.clusterInstRefMux.Unlock()
+	cd.clusterInstRefCount++
+}
+
+func (cd *ControllerData) clusterInstChangeEnd(ctx context.Context, cloudletKey *edgeproto.CloudletKey) {
+	cd.clusterInstRefMux.Lock()
+	defer cd.clusterInstRefMux.Unlock()
+	cd.clusterInstRefCount--
+	if cd.clusterInstRefCount == 0 {
+		log.SpanLog(ctx, log.DebugLevelInfra, "update cloudlet resources snapshot", "key", cloudletKey)
+		clusterInstKeys := []edgeproto.ClusterInstKey{}
+		cd.ClusterInstCache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
+			clusterInstKeys = append(clusterInstKeys, *k)
+		})
+		deployedClusters := make(map[edgeproto.ClusterRefKey]struct{})
+		for _, k := range clusterInstKeys {
+			var clusterInst edgeproto.ClusterInst
+			if cd.ClusterInstCache.Get(&k, &clusterInst) {
+				if clusterInst.State == edgeproto.TrackedState_READY {
+					refKey := &edgeproto.ClusterRefKey{}
+					refKey.FromClusterInstKey(&k)
+					deployedClusters[*refKey] = struct{}{}
+				}
+			}
+			var clusterInstInfo edgeproto.ClusterInstInfo
+			if cd.ClusterInstInfoCache.Get(&k, &clusterInstInfo) {
+				if clusterInstInfo.State == edgeproto.TrackedState_READY {
+					refKey := &edgeproto.ClusterRefKey{}
+					refKey.FromClusterInstKey(&k)
+					deployedClusters[*refKey] = struct{}{}
+				}
+			}
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found := cd.CloudletInfoCache.Get(cloudletKey, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", cloudletKey)
+			return
+		}
+		if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
+			// Cloudlet is not in READY state
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet is not online", "key", cloudletKey)
+			return
+		}
+		resources, err := cd.platform.GetCloudletInfraResources(ctx)
+		if err != nil {
+			errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "can't fetch cloudlet resources", "error", errstr, "key", cloudletKey)
+			cd.NodeMgr.Event(ctx, "Cloudlet infra resource update failure", cloudletKey.Organization, cloudletKey.GetTags(), err)
+			return
+		}
+		// fetch cloudletInfo again, as data might have changed by now
+		found = cd.CloudletInfoCache.Get(cloudletKey, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", cloudletKey)
+			return
+		}
+		if resources != nil {
+			cloudletInfo.ResourcesSnapshot = *resources
+		}
+		deployedKeys := []edgeproto.ClusterRefKey{}
+		for k, _ := range deployedClusters {
+			deployedKeys = append(deployedKeys, k)
+		}
+		cloudletInfo.ResourcesSnapshot.ClusterInsts = deployedKeys
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+}
+
 func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
 
@@ -194,6 +267,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
+		// Marks start of clusterinst change and hence increases ref count
+		cd.clusterInstChangeBegin()
 		// create
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
 		// reset status messages
@@ -204,6 +279,9 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			return
 		}
 		go func() {
+			// Marks end of clusterinst change and hence reduces ref count
+			defer cd.clusterInstChangeEnd(ctx, &new.Key.CloudletKey)
+
 			var cloudlet edgeproto.Cloudlet
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm create ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
@@ -242,6 +320,10 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		// Marks start of clusterinst change and hence increases ref count
+		cd.clusterInstChangeBegin()
+		// Marks end of clusterinst change and hence reduces ref count
+		defer cd.clusterInstChangeEnd(ctx, &new.Key.CloudletKey)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
@@ -292,6 +374,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
+		// Marks start of clusterinst change and hence increases ref count
+		cd.clusterInstChangeBegin()
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
@@ -301,6 +385,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			return
 		}
 		go func() {
+			// Marks end of clusterinst change and hence reduces ref count
+			defer cd.clusterInstChangeEnd(ctx, &new.Key.CloudletKey)
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
@@ -548,7 +634,7 @@ func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgepro
 	return nil
 }
 
-func (cd *ControllerData) clusterInstInfoResources(ctx context.Context, key *edgeproto.ClusterInstKey, resources *edgeproto.InfraResources) error {
+func (cd *ControllerData) clusterInstInfoResources(ctx context.Context, key *edgeproto.ClusterInstKey, resources *edgeproto.InfraResourcesSnapshot) error {
 	return cd.ClusterInstInfoCache.SetResources(ctx, key, resources)
 }
 
@@ -758,11 +844,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		// Ignore info as it is updated as part of separate thread when no clusterInst actions are in progress
-		resources.Info = cloudletInfo.Resources.Info
-		if resources != nil {
-			cloudletInfo.Resources = *resources
-		}
+		cloudletInfo.ResourcesSnapshot.Vms = resources.Vms
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
@@ -809,7 +891,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 				return
 			}
 			if resources != nil {
-				cloudletInfo.Resources = *resources
+				cloudletInfo.ResourcesSnapshot = *resources
 			}
 			cloudletInfo.Status.StatusReset()
 			cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY

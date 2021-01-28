@@ -263,7 +263,7 @@ func main() {
 				if err != nil {
 					log.FatalLog("Failed to validate cloudlet resource quota", "err", err)
 				}
-				myCloudletInfo.Resources = *resources
+				myCloudletInfo.ResourcesSnapshot = *resources
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 				if cloudlet.TrustPolicy == "" {

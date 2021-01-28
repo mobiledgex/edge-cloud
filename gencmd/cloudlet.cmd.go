@@ -73,6 +73,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 	for i0 := 0; i0 < len(in.ResourceQuotas); i0++ {
 	}
+	if _, found := tags["nocmp"]; found {
+		in.DefaultResourceAlertThreshold = 0
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -98,13 +101,15 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 	for i0 := 0; i0 < len(in.OsImages); i0++ {
 	}
-	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
-		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.Vms); i1++ {
+		for i2 := 0; i2 < len(in.ResourcesSnapshot.Vms[i1].Ipaddresses); i2++ {
 		}
-		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
+		for i2 := 0; i2 < len(in.ResourcesSnapshot.Vms[i1].Containers); i2++ {
 		}
 	}
-	for i1 := 0; i1 < len(in.Resources.Info); i1++ {
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.Info); i1++ {
+	}
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.ClusterInsts); i1++ {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.TrustPolicyState = 0
@@ -613,7 +618,7 @@ var GetCloudletResourceUsageCmd = &cli.Command{
 	SpecialArgs:  &CloudletKeySpecialArgs,
 	Comments:     CloudletKeyComments,
 	ReqData:      &edgeproto.CloudletKey{},
-	ReplyData:    &edgeproto.InfraResources{},
+	ReplyData:    &edgeproto.InfraResourcesSnapshot{},
 	Run:          runGetCloudletResourceUsage,
 }
 
@@ -670,7 +675,7 @@ var GetCloudletInfraResourceUsageCmd = &cli.Command{
 	SpecialArgs:  &CloudletKeySpecialArgs,
 	Comments:     CloudletKeyComments,
 	ReqData:      &edgeproto.CloudletKey{},
-	ReplyData:    &edgeproto.InfraResources{},
+	ReplyData:    &edgeproto.InfraResourcesSnapshot{},
 	Run:          runGetCloudletInfraResourceUsage,
 }
 
@@ -1526,6 +1531,7 @@ var CloudletOptionalArgs = []string{
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1601,6 +1607,7 @@ var CloudletComments = map[string]string{
 	"resourcequotas:#.name":               "Resource name on which to set quota",
 	"resourcequotas:#.value":              "Quota value of the resource",
 	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
+	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1774,6 +1781,25 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages:#.diskformat",
 	"controllercachereceived",
 	"maintenancestate",
+	"resourcessnapshot.vms:#.name",
+	"resourcessnapshot.vms:#.type",
+	"resourcessnapshot.vms:#.status",
+	"resourcessnapshot.vms:#.infraflavor",
+	"resourcessnapshot.vms:#.ipaddresses:#.externalip",
+	"resourcessnapshot.vms:#.ipaddresses:#.internalip",
+	"resourcessnapshot.vms:#.containers:#.name",
+	"resourcessnapshot.vms:#.containers:#.type",
+	"resourcessnapshot.vms:#.containers:#.status",
+	"resourcessnapshot.vms:#.containers:#.clusterip",
+	"resourcessnapshot.vms:#.containers:#.restarts",
+	"resourcessnapshot.info:#.name",
+	"resourcessnapshot.info:#.value",
+	"resourcessnapshot.info:#.maxvalue",
+	"resourcessnapshot.info:#.description",
+	"resourcessnapshot.info:#.units",
+	"resourcessnapshot.info:#.alertthreshold",
+	"resourcessnapshot.clusterinsts:#.clusterkey.name",
+	"resourcessnapshot.clusterinsts:#.organization",
 	"trustpolicystate",
 }
 var CloudletInfoAliasArgs = []string{
@@ -1781,44 +1807,46 @@ var CloudletInfoAliasArgs = []string{
 	"cloudlet=key.name",
 }
 var CloudletInfoComments = map[string]string{
-	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":                           "Organization of the cloudlet site",
-	"cloudlet":                               "Name of the cloudlet",
-	"state":                                  "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync, CloudletStateResourceUpdate",
-	"notifyid":                               "Id of client assigned by server (internal use only)",
-	"controller":                             "Connected controller unique id",
-	"osmaxram":                               "Maximum Ram in MB on the Cloudlet",
-	"osmaxvcores":                            "Maximum number of VCPU cores on the Cloudlet",
-	"osmaxvolgb":                             "Maximum amount of disk in GB on the Cloudlet",
-	"errors":                                 "Any errors encountered while making changes to the Cloudlet",
-	"flavors:#.name":                         "Name of the flavor on the Cloudlet",
-	"flavors:#.vcpus":                        "Number of VCPU cores on the Cloudlet",
-	"flavors:#.ram":                          "Ram in MB on the Cloudlet",
-	"flavors:#.disk":                         "Amount of disk in GB on the Cloudlet",
-	"flavors:#.propmap":                      "OS Flavor Properties, if any",
-	"containerversion":                       "Cloudlet container version",
-	"osimages:#.name":                        "image name",
-	"osimages:#.tags":                        "optional tags present on image",
-	"osimages:#.properties":                  "image properties/metadata",
-	"osimages:#.diskformat":                  "format qcow2, img, etc",
-	"controllercachereceived":                "Indicates all controller data has been sent to CRM",
-	"maintenancestate":                       "State for maintenance, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
-	"resources.vms:#.name":                   "Virtual machine name",
-	"resources.vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"resources.vms:#.status":                 "Runtime status of the VM",
-	"resources.vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
-	"resources.vms:#.containers:#.name":      "Name of the container",
-	"resources.vms:#.containers:#.type":      "Type can be docker or kubernetes",
-	"resources.vms:#.containers:#.status":    "Runtime status of the container",
-	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
-	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
-	"resources.info:#.name":                  "Resource name",
-	"resources.info:#.value":                 "Resource value",
-	"resources.info:#.maxvalue":              "Resource max value",
-	"resources.info:#.description":           "Resource description",
-	"resources.info:#.units":                 "Resource units",
-	"resources.info:#.alertthreshold":        "Generate alert when more than threshold percentage of resource is used",
-	"trustpolicystate":                       "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
+	"fields":                              "Fields are used for the Update API to specify which fields to apply",
+	"cloudlet-org":                        "Organization of the cloudlet site",
+	"cloudlet":                            "Name of the cloudlet",
+	"state":                               "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync, CloudletStateResourceUpdate",
+	"notifyid":                            "Id of client assigned by server (internal use only)",
+	"controller":                          "Connected controller unique id",
+	"osmaxram":                            "Maximum Ram in MB on the Cloudlet",
+	"osmaxvcores":                         "Maximum number of VCPU cores on the Cloudlet",
+	"osmaxvolgb":                          "Maximum amount of disk in GB on the Cloudlet",
+	"errors":                              "Any errors encountered while making changes to the Cloudlet",
+	"flavors:#.name":                      "Name of the flavor on the Cloudlet",
+	"flavors:#.vcpus":                     "Number of VCPU cores on the Cloudlet",
+	"flavors:#.ram":                       "Ram in MB on the Cloudlet",
+	"flavors:#.disk":                      "Amount of disk in GB on the Cloudlet",
+	"flavors:#.propmap":                   "OS Flavor Properties, if any",
+	"containerversion":                    "Cloudlet container version",
+	"osimages:#.name":                     "image name",
+	"osimages:#.tags":                     "optional tags present on image",
+	"osimages:#.properties":               "image properties/metadata",
+	"osimages:#.diskformat":               "format qcow2, img, etc",
+	"controllercachereceived":             "Indicates all controller data has been sent to CRM",
+	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
+	"resourcessnapshot.vms:#.name":        "Virtual machine name",
+	"resourcessnapshot.vms:#.type":        "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"resourcessnapshot.vms:#.status":      "Runtime status of the VM",
+	"resourcessnapshot.vms:#.infraflavor": "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"resourcessnapshot.vms:#.containers:#.name":        "Name of the container",
+	"resourcessnapshot.vms:#.containers:#.type":        "Type can be docker or kubernetes",
+	"resourcessnapshot.vms:#.containers:#.status":      "Runtime status of the container",
+	"resourcessnapshot.vms:#.containers:#.clusterip":   "IP within the CNI and is applicable to kubernetes only",
+	"resourcessnapshot.vms:#.containers:#.restarts":    "Restart count, applicable to kubernetes only",
+	"resourcessnapshot.info:#.name":                    "Resource name",
+	"resourcessnapshot.info:#.value":                   "Resource value",
+	"resourcessnapshot.info:#.maxvalue":                "Resource max value",
+	"resourcessnapshot.info:#.description":             "Resource description",
+	"resourcessnapshot.info:#.units":                   "Resource units",
+	"resourcessnapshot.info:#.alertthreshold":          "Generate alert when more than threshold percentage of resource is used",
+	"resourcessnapshot.clusterinsts:#.clusterkey.name": "Cluster name",
+	"resourcessnapshot.clusterinsts:#.organization":    "Name of Developer organization that this cluster belongs to",
+	"trustpolicystate":                                 "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
@@ -1872,6 +1900,7 @@ var CreateCloudletOptionalArgs = []string{
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1910,6 +1939,7 @@ var DeleteCloudletOptionalArgs = []string{
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1936,6 +1966,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1974,6 +2005,7 @@ var ShowCloudletOptionalArgs = []string{
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

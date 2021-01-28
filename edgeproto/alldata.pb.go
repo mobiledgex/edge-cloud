@@ -656,6 +656,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Cloudlets.TrustPolicyState")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.DefaultResourceAlertThreshold")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.NotifyId")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -707,7 +710,7 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "ClusterInsts.OptRes")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.Resources")
+		names = append(names, "ClusterInsts.ResourcesSnapshot")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "ClusterInsts.CreatedAt")

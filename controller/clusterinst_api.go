@@ -226,7 +226,7 @@ func validateCloudletCommonResources(ctx context.Context, stm concurrency.STM, c
 	gpusReqd := uint64(0)
 	gpusUsed := uint64(0)
 	gpusMax := uint64(0)
-	gpuThreshPercent := settingsApi.Get().CloudletResourceAlertThresholdPercentage
+	gpuThreshPercent := cloudlet.DefaultResourceAlertThreshold
 	for _, resQuota := range cloudlet.ResourceQuotas {
 		switch resQuota.Name {
 		case cloudcommon.ResourceGpus:
@@ -263,10 +263,10 @@ func validateCloudletCommonResources(ctx context.Context, stm concurrency.STM, c
 }
 
 // Validate resource requirements for the VMs on the cloudlet
-func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResources, allClusterResources, reqdVmResources, existingVmResources []edgeproto.VMResource) ([]string, error) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
+func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource) ([]string, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
 
-	defaultAlertThresh := settingsApi.Get().CloudletResourceAlertThresholdPercentage
+	defaultAlertThresh := cloudlet.DefaultResourceAlertThreshold
 
 	infraResInfo := make(map[string]*edgeproto.InfraResource)
 	for _, resInfo := range infraResources.Info {
@@ -284,7 +284,7 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 	if err != nil {
 		return nil, err
 	}
-	existingResInfo, err := GetCloudletResourceInfo(ctx, pfType, existingVmResources, infraResInfo)
+	diffResInfo, err := GetCloudletResourceInfo(ctx, pfType, diffVmResources, infraResInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +331,7 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 
 	// Infra based validation
 	for resName, _ := range infraResInfo {
-		if resInfo, ok := existingResInfo[resName]; ok {
+		if resInfo, ok := diffResInfo[resName]; ok {
 			infraResInfo[resName].Value += resInfo.Value
 		}
 	}
@@ -366,56 +366,69 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 	return warnings, nil
 }
 
-func validateAndTrackResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
-	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, error) {
+func validateResources(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
 	allClusterResources := []edgeproto.VMResource{}
+	diffVmResources := []edgeproto.VMResource{}
+
 	reqdVmResources, err := getClusterInstVMRequirements(ctx, stm, in, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_ADD)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	existingVmResources := cloudletRefs.ReservedResources
+
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
 	cloudletRes, err := GetCloudletResources(ctx, cloudletInfo)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	allClusterResources = append(allClusterResources, cloudletRes...)
+
+	snapshotClusters := make(map[edgeproto.ClusterRefKey]struct{})
+	for _, clKey := range cloudletInfo.ResourcesSnapshot.ClusterInsts {
+		snapshotClusters[clKey] = struct{}{}
+	}
+
 	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
 	clusterInstKeys := cloudletRefs.ClusterInsts
 	for _, clusterInstKey := range clusterInstKeys {
 		clusterInst := edgeproto.ClusterInst{}
 		clusterInstKey.CloudletKey = cloudletRefs.Key
-		if clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
-			if edgeproto.IsDeleteState(clusterInst.State) {
-				continue
-			}
+		if !clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
+			continue
+		}
+		if edgeproto.IsDeleteState(clusterInst.State) {
+			continue
 		}
 		allRes, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_NONE)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		allClusterResources = append(allClusterResources, allRes...)
+
+		// maintain a diff of clusterinsts reported by CRM and what is present in controller,
+		// this is done to get accurate resource information
+		clRefKey := &edgeproto.ClusterRefKey{}
+		clRefKey.FromClusterInstKey(&clusterInstKey)
+		if _, ok := snapshotClusters[*clRefKey]; ok {
+			continue
+		}
+		diffVmResources = append(diffVmResources, allRes...)
 	}
 	if len(reqdVmResources) > 0 {
 		warnings, err := validateCloudletCommonResources(ctx, stm, cloudlet, allClusterResources, reqdVmResources)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		infraWarnings, err := validateCloudletInfraResources(ctx, cloudlet, &cloudletInfo.Resources, allClusterResources, reqdVmResources, existingVmResources)
+		infraWarnings, err := validateCloudletInfraResources(ctx, cloudlet, &cloudletInfo.ResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// generate alerts for these warnings
 		// clear off those alerts which are no longer firing
 		warnings = append(warnings, infraWarnings...)
 		handleResourceUsageAlerts(ctx, stm, &cloudlet.Key, warnings)
-
-		// reserve requested resources
-		cloudletRefs.ReservedResources = append(cloudletRefs.ReservedResources, reqdVmResources...)
-		cloudletRefsApi.store.STMPut(stm, cloudletRefs)
 	}
-	return reqdVmResources, nil
+	return nil
 }
 
 func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey) ([]*edgeproto.Metric, error) {
@@ -435,6 +448,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	if err != nil {
 		return nil, err
 	}
+	pfType := cloudletPlatform.GetType()
 
 	allResources := []edgeproto.VMResource{}
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
@@ -448,10 +462,11 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	for _, clusterInstKey := range clusterInstKeys {
 		clusterInst := edgeproto.ClusterInst{}
 		clusterInstKey.CloudletKey = cloudletRefs.Key
-		if clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
-			if clusterInst.State != edgeproto.TrackedState_READY {
-				continue
-			}
+		if !clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
+			continue
+		}
+		if clusterInst.State != edgeproto.TrackedState_READY {
+			continue
 		}
 		allRes, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, &cloudlet, &cloudletInfo, &cloudletRefs, edgeproto.VMProvState_PROV_STATE_NONE)
 		if err != nil {
@@ -460,13 +475,31 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		allResources = append(allResources, allRes...)
 	}
 
-	// get cloudlet infra metric
-	resMetric, err := cloudletPlatform.GetCloudletResourceMetric(ctx, &cloudlet.Key, allResources)
+	ramUsed := uint64(0)
+	vcpusUsed := uint64(0)
+	diskUsed := uint64(0)
+	for _, vmRes := range allResources {
+		if vmRes.VmFlavor != nil {
+			ramUsed += vmRes.VmFlavor.Ram
+			vcpusUsed += vmRes.VmFlavor.Vcpus
+			diskUsed += vmRes.VmFlavor.Disk
+		}
+	}
+
+	resMetric := edgeproto.Metric{}
+	ts, _ := types.TimestampProto(time.Now())
+	resMetric.Timestamp = *ts
+	resMetric.Name = fmt.Sprintf("%s-resource-usage", pfType)
+	resMetric.AddTag("cloudletorg", key.Organization)
+	resMetric.AddTag("cloudlet", key.Name)
+	resMetric.AddIntVal("ramUsed", ramUsed)
+	resMetric.AddIntVal("vcpusUsed", vcpusUsed)
+	resMetric.AddIntVal("diskUsed", diskUsed)
+
+	// get additional infra specific metric
+	err = cloudletPlatform.GetClusterAdditionalResourceMetric(ctx, &resMetric, allResources)
 	if err != nil {
 		return nil, err
-	}
-	if resMetric == nil {
-		return []*edgeproto.Metric{}, nil
 	}
 
 	// get cloudlet metric
@@ -486,12 +519,12 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	}
 	resMetric.AddIntVal("gpusUsed", gpusUsed)
 	metrics := []*edgeproto.Metric{}
-	metrics = append(metrics, resMetric)
+	metrics = append(metrics, &resMetric)
 
 	for fName, fCount := range flavorCount {
 		flavorMetric := edgeproto.Metric{}
 		flavorMetric.Name = "cloudlet-flavor-usage"
-		flavorMetric.Timestamp = resMetric.Timestamp
+		flavorMetric.Timestamp = *ts
 		flavorMetric.AddTag("cloudletorg", cloudlet.Key.Organization)
 		flavorMetric.AddTag("cloudlet", cloudlet.Key.Name)
 		flavorMetric.AddTag("flavor", fName)
@@ -690,7 +723,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		_, err = validateAndTrackResources(ctx, stm, in, &cloudlet, &info, &refs)
+		err = validateResources(ctx, stm, in, &cloudlet, &info, &refs)
 		if err != nil {
 			return err
 		}
@@ -858,7 +891,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 			cloudletRefs := edgeproto.CloudletRefs{}
 			cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs)
-			_, err = validateAndTrackResources(ctx, stm, resClusterInst, &cloudlet, &info, &cloudletRefs)
+			err = validateResources(ctx, stm, resClusterInst, &cloudlet, &info, &cloudletRefs)
 			if err != nil {
 				return err
 			}
@@ -1072,31 +1105,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		cb.Send(&edgeproto.Result{Message: "Deleted ClusterInst successfully"})
 		err = nil
 	}
-	// Delete any reserved resources by this clusterinst
-	resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cloudlet := edgeproto.Cloudlet{}
-		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
-			return errors.New("Specified Cloudlet not found")
-		}
-		cloudletInfo := edgeproto.CloudletInfo{}
-		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletInfo) {
-			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
-		}
-		cloudletRefs := edgeproto.CloudletRefs{}
-		if !cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs) {
-			return fmt.Errorf("No refs found for cloudlet %s", in.Key.CloudletKey)
-		}
-		res, err := getClusterInstVMRequirements(ctx, stm, in, &cloudlet, &cloudletInfo, &cloudletRefs, edgeproto.VMProvState_PROV_STATE_REMOVE)
-		if err != nil {
-			return err
-		}
-		cloudletRefs.ReservedResources = append(cloudletRefs.ReservedResources, res...)
-		cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
-		return nil
-	})
-	if resErr != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to remove reserved resources", "key", in.Key, "err", resErr)
-	}
 	if err != nil {
 		// crm failed or some other err, undo
 		cb.Send(&edgeproto.Result{Message: "Recreating ClusterInst due to failure"})
@@ -1182,14 +1190,14 @@ func ignoreCRM(cctx *CallContext) bool {
 }
 
 func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) {
-	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "state", in.State, "status", in.Status, "resources", in.Resources)
+	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "state", in.State, "status", in.Status, "resources", in.ResourcesSnapshot)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
-		inst.Resources = in.Resources
+		inst.ResourcesSnapshot = in.ResourcesSnapshot
 		// update only diff of status msgs
 		edgeproto.UpdateStatusDiff(&in.Status, &inst.Status)
 		if inst.State == in.State {

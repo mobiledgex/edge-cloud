@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -188,8 +187,8 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
-	var resources edgeproto.InfraResources
+func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResourcesSnapshot, error) {
+	var resources edgeproto.InfraResourcesSnapshot
 	platvm := edgeproto.VmInfo{
 		Name:        "fake-platform-vm",
 		Type:        "platform",
@@ -281,35 +280,20 @@ func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeprot
 	}, nil
 }
 
-func (s *Platform) GetCloudletResourceMetric(ctx context.Context, key *edgeproto.CloudletKey, resources []edgeproto.VMResource) (*edgeproto.Metric, error) {
-	resMetric := edgeproto.Metric{}
-	if len(resources) == 0 {
-		return nil, fmt.Errorf("missing resources")
-	}
-
-	ramUsed := uint64(0)
-	vcpusUsed := uint64(0)
-	diskUsed := uint64(0)
+func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error {
+	externalIpsUsed := uint64(0)
 	for _, vmRes := range resources {
-		if vmRes.VmFlavor != nil {
-			ramUsed += vmRes.VmFlavor.Ram
-			vcpusUsed += vmRes.VmFlavor.Vcpus
-			diskUsed += vmRes.VmFlavor.Disk
+		if vmRes.Type == cloudcommon.VMTypeRootLB {
+			externalIpsUsed += 1
 		}
 	}
-	resMetric.Name = "fake-resource-usage"
-	ts, _ := types.TimestampProto(time.Now())
-	resMetric.Timestamp = *ts
-	resMetric.AddTag("cloudletorg", key.Organization)
-	resMetric.AddTag("cloudlet", key.Name)
-	resMetric.AddIntVal("ramUsed", ramUsed)
-	resMetric.AddIntVal("vcpusUsed", vcpusUsed)
-	resMetric.AddIntVal("diskUsed", diskUsed)
-	return &resMetric, nil
+
+	resMetric.AddIntVal("externalIpsUsed", externalIpsUsed)
+	return nil
 }
 
-func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
-	var resources edgeproto.InfraResources
+func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResourcesSnapshot, error) {
+	var resources edgeproto.InfraResourcesSnapshot
 	if vms, ok := FakeClusterVMs[*clusterKey]; ok {
 		resources.Vms = append(resources.Vms, vms...)
 	}

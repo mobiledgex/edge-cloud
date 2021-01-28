@@ -20,9 +20,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/vmspec"
-	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -56,7 +54,8 @@ var (
 )
 
 const (
-	PlatformInitTimeout = 20 * time.Minute
+	PlatformInitTimeout           = 20 * time.Minute
+	DefaultResourceAlertThreshold = 80 // percentage
 )
 
 type updateCloudletCallback struct {
@@ -337,6 +336,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.ContainerVersion = *versionTag
 	}
 
+	if in.DefaultResourceAlertThreshold == 0 {
+		in.DefaultResourceAlertThreshold = DefaultResourceAlertThreshold
+	}
+
 	if in.DeploymentLocal {
 		if in.AccessVars != nil {
 			return errors.New("Access vars is not supported for local deployment")
@@ -604,7 +607,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			ctx, &in.Key,
 			edgeproto.TrackedState_CREATE_ERROR, // Set error state
 			"Created Cloudlet successfully",     // Set success message
-			PlatformInitTimeout, cb.Send, nil,
+			PlatformInitTimeout, cb.Send,
 		)
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
@@ -651,7 +654,7 @@ func (s *CloudletApi) UpdateCloudletState(ctx context.Context, key *edgeproto.Cl
 	return err
 }
 
-func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, send func(*edgeproto.Result) error, readyCb func(stm concurrency.STM, key *edgeproto.CloudletKey) error) error {
+func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.CloudletKey, errorState edgeproto.TrackedState, successMsg string, timeout time.Duration, send func(*edgeproto.Result) error) error {
 	lastMsgId := 0
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
@@ -811,9 +814,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			cloudlet.Errors = nil
 			cloudlet.State = edgeproto.TrackedState_READY
 			cloudlet.TrustPolicyState = privPolState
-			if readyCb != nil {
-				readyCb(stm, key)
-			}
 		} else {
 			cloudlet.Errors = []string{err.Error()}
 			cloudlet.State = errorState
@@ -1027,7 +1027,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			return fmt.Errorf("Missing cloudlet info: %v", in.Key)
 		}
 		if _, found := fmap[edgeproto.CloudletFieldResourceQuotas]; found {
-			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, &cloudletInfo.Resources, in.ResourceQuotas)
+			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, &cloudletInfo.ResourcesSnapshot, in.ResourceQuotas)
 			if err != nil {
 				return err
 			}
@@ -1095,7 +1095,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			ctx, &in.Key,
 			edgeproto.TrackedState_UPDATE_ERROR, // Set error state
 			"Cloudlet updated successfully",     // Set success message
-			PlatformInitTimeout, cb.Send, nil,
+			PlatformInitTimeout, cb.Send,
 		)
 		return err
 	}
@@ -1895,7 +1895,7 @@ func GetCloudletResourceInfo(ctx context.Context, pfType string, vmResources []e
 }
 
 // Get actual resource info used by the cloudlet
-func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResInfo []edgeproto.InfraResource, existingVmResources []edgeproto.VMResource, ignoreInfraUsage bool) ([]edgeproto.InfraResource, error) {
+func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResInfo []edgeproto.InfraResource, diffVmResources []edgeproto.VMResource, ignoreInfraUsage bool) ([]edgeproto.InfraResource, error) {
 	resQuotasInfo := make(map[string]edgeproto.InfraResource)
 	for _, resQuota := range cloudlet.ResourceQuotas {
 		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
@@ -1904,38 +1904,38 @@ func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraRe
 			AlertThreshold: resQuota.AlertThreshold,
 		}
 	}
-	defaultAlertThresh := settingsApi.Get().CloudletResourceAlertThresholdPercentage
+	defaultAlertThresh := cloudlet.DefaultResourceAlertThreshold
 	infraResInfoMap := make(map[string]*edgeproto.InfraResource)
 	for _, resInfo := range infraResInfo {
 		thresh := defaultAlertThresh
+		max := resInfo.MaxValue
 		// look up quota if any
 		if quota, found := resQuotasInfo[resInfo.Name]; found {
-			if ignoreInfraUsage {
-				resInfo.Value = 0
-				max := resInfo.MaxValue
-				if quota.Value != 0 {
-					// Set max values from Resource quotas
-					max = quota.Value
-				}
-				resInfo.MaxValue = max
+			if quota.Value != 0 {
+				// Set max values from Resource quotas
+				max = quota.Value
 			}
 			if quota.AlertThreshold > 0 {
 				// Set threshold values from Resource quotas
 				thresh = quota.AlertThreshold
 			}
-			resInfo.AlertThreshold = thresh
 		}
+		if ignoreInfraUsage {
+			resInfo.Value = 0
+			resInfo.MaxValue = max
+		}
+		resInfo.AlertThreshold = thresh
 		newResInfo := &edgeproto.InfraResource{}
 		newResInfo.DeepCopyIn(&resInfo)
 		infraResInfoMap[newResInfo.Name] = newResInfo
 	}
-	existingResInfo, err := GetCloudletResourceInfo(ctx, cloudlet.PlatformType.String(), existingVmResources, infraResInfoMap)
+	diffResInfo, err := GetCloudletResourceInfo(ctx, cloudlet.PlatformType.String(), diffVmResources, infraResInfoMap)
 	if err != nil {
 		return nil, err
 	}
 	for resName, _ := range infraResInfoMap {
-		if existingResInfo, ok := existingResInfo[resName]; ok {
-			infraResInfoMap[resName].Value += existingResInfo.Value
+		if diffResInfo, ok := diffResInfo[resName]; ok {
+			infraResInfoMap[resName].Value += diffResInfo.Value
 		}
 	}
 	out := []edgeproto.InfraResource{}
@@ -1950,9 +1950,9 @@ func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraRe
 	return out, nil
 }
 
-func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
+func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResourcesSnapshot, error) {
 	allClusterResources := []edgeproto.VMResource{}
-	infraResources := edgeproto.InfraResources{}
+	infraResources := edgeproto.InfraResourcesSnapshot{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
@@ -1988,8 +1988,9 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, key *edgepro
 			}
 			allClusterResources = append(allClusterResources, allRes...)
 		}
-		infraResources = cloudletInfo.Resources
+		infraResources = cloudletInfo.ResourcesSnapshot
 		infraResources.Vms = []edgeproto.VmInfo{}
+		infraResources.ClusterInsts = []edgeproto.ClusterRefKey{}
 		ignoreInfraUsage := true
 		resInfo, err := getResourceUsage(ctx, &cloudlet, infraResources.Info, allClusterResources, ignoreInfraUsage)
 		if err != nil {
@@ -2001,8 +2002,8 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, key *edgepro
 	return &infraResources, err
 }
 
-func (s *CloudletApi) GetCloudletInfraResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
-	infraResources := edgeproto.InfraResources{}
+func (s *CloudletApi) GetCloudletInfraResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResourcesSnapshot, error) {
+	infraResources := edgeproto.InfraResourcesSnapshot{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, key, cloudlet) {
@@ -2016,10 +2017,31 @@ func (s *CloudletApi) GetCloudletInfraResourceUsage(ctx context.Context, key *ed
 		if !cloudletRefsApi.store.STMGet(stm, key, cloudletRefs) {
 			return key.NotFoundError()
 		}
-		infraResources = cloudletInfo.Resources
+		infraResources = cloudletInfo.ResourcesSnapshot
 		infraResources.Vms = []edgeproto.VmInfo{}
 		ignoreInfraUsage := false
-		updatedResInfo, err := getResourceUsage(ctx, cloudlet, infraResources.Info, cloudletRefs.ReservedResources, ignoreInfraUsage)
+		snapshotClusters := make(map[edgeproto.ClusterRefKey]struct{})
+		for _, clKey := range cloudletInfo.ResourcesSnapshot.ClusterInsts {
+			snapshotClusters[clKey] = struct{}{}
+		}
+		diffVmResources := []edgeproto.VMResource{}
+		for _, clKey := range cloudletRefs.ClusterInsts {
+			clRefKey := &edgeproto.ClusterRefKey{}
+			clRefKey.FromClusterInstKey(&clKey)
+			if _, ok := snapshotClusters[*clRefKey]; ok {
+				continue
+			}
+			clusterInst := edgeproto.ClusterInst{}
+			clKey.CloudletKey = cloudletRefs.Key
+			if clusterInstApi.store.STMGet(stm, &clKey, &clusterInst) {
+				clResources, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, cloudlet, cloudletInfo, cloudletRefs, edgeproto.VMProvState_PROV_STATE_NONE)
+				if err != nil {
+					return err
+				}
+				diffVmResources = append(diffVmResources, clResources...)
+			}
+		}
+		updatedResInfo, err := getResourceUsage(ctx, cloudlet, infraResources.Info, diffVmResources, ignoreInfraUsage)
 		if err != nil {
 			return err
 		}
@@ -2048,7 +2070,7 @@ func (s *showNode) Context() context.Context {
 
 func GetCloudletResources(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) ([]edgeproto.VMResource, error) {
 	resources := []edgeproto.VMResource{}
-	for _, vm := range cloudletInfo.Resources.Vms {
+	for _, vm := range cloudletInfo.ResourcesSnapshot.Vms {
 		if vm.InfraFlavor == "" {
 			continue
 		}
@@ -2101,15 +2123,6 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 	if err != nil {
 		return err
 	}
-	readyCb := func(stm concurrency.STM, key *edgeproto.CloudletKey) error {
-		refs := edgeproto.CloudletRefs{}
-		if cloudletRefsApi.store.STMGet(stm, key, &refs) {
-			// clear reserved resources as we now have updated resource info from cloudlet
-			refs.ReservedResources = nil
-			cloudletRefsApi.store.STMPut(stm, &refs)
-		}
-		return nil
-	}
 	// Wait for cloudlet to finish resource sync
 	syncErr := s.WaitForCloudlet(
 		ctx, key,
@@ -2118,7 +2131,6 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 		// Set success message
 		"Cloudlet resource updated successfully",
 		PlatformInitTimeout, nil,
-		readyCb,
 	)
 
 	// Post resource sync look for any resource usage warnings and generate alerts for the same
@@ -2138,6 +2150,8 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 		cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
 
 		allClusterResources := []edgeproto.VMResource{}
+		diffVmResources := []edgeproto.VMResource{}
+
 		clusterInstKeys := cloudletRefs.ClusterInsts
 		// get all cloudlet resources (platformVM, sharedRootLB, etc)
 		cloudletRes, err := GetCloudletResources(ctx, &cloudletInfo)
@@ -2145,6 +2159,12 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 			return err
 		}
 		allClusterResources = append(allClusterResources, cloudletRes...)
+
+		snapshotClusters := make(map[edgeproto.ClusterRefKey]struct{})
+		for _, clKey := range cloudletInfo.ResourcesSnapshot.ClusterInsts {
+			snapshotClusters[clKey] = struct{}{}
+		}
+
 		// get all cluster resources (clusterVM, dedicatedRootLB, etc)
 		for _, clusterInstKey := range clusterInstKeys {
 			clusterInst := edgeproto.ClusterInst{}
@@ -2159,12 +2179,21 @@ func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edg
 				return fmt.Errorf("failed to get cluster inst vm requirements for cloudlet %v: %v", key, err)
 			}
 			allClusterResources = append(allClusterResources, allRes...)
+
+			// maintain a diff of clusterinsts reported by CRM and what is present in controller,
+			// this is done to get accurate resource information
+			clRefKey := &edgeproto.ClusterRefKey{}
+			clRefKey.FromClusterInstKey(&clusterInstKey)
+			if _, ok := snapshotClusters[*clRefKey]; !ok {
+				continue
+			}
+			diffVmResources = append(diffVmResources, allRes...)
 		}
 		warnings, err := validateCloudletCommonResources(ctx, stm, cloudlet, allClusterResources, nil)
 		if err != nil {
 			return fmt.Errorf("failed to validate resources for cloudlet %v: %v", key, err)
 		}
-		infraWarnings, err := validateCloudletInfraResources(ctx, cloudlet, &cloudletInfo.Resources, allClusterResources, nil, cloudletRefs.ReservedResources)
+		infraWarnings, err := validateCloudletInfraResources(ctx, cloudlet, &cloudletInfo.ResourcesSnapshot, allClusterResources, nil, diffVmResources)
 		if err != nil {
 			return fmt.Errorf("failed to validate infra resources for cloudlet %v: %v", key, err)
 		}
@@ -2199,42 +2228,6 @@ func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *ed
 			continue
 		}
 		alertApi.store.STMDel(stm, &alertKey)
-	}
-}
-
-func (s *CloudletApi) UpdateAllCloudletResources(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "Update resource info of all the cloudlets")
-	if !services.notifyServerMgr {
-		return fmt.Errorf("failed to fetch cloudlet keys from notify server")
-	}
-	crmKeys := notify.ServerMgrOne.GetConnectedCloudletKeys()
-	for key, _ := range crmKeys {
-		go func(key *edgeproto.CloudletKey) {
-			err := s.UpdateCloudletInfraResources(ctx, key)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "update cloudlet infra resources failed, ignore", "key", key, "err", err)
-				nodeMgr.Event(ctx, "Cloudlet resource usage update error", key.Organization, key.GetTags(), err)
-			}
-		}(&key)
-	}
-	return nil
-}
-
-func (s *CloudletApi) SetupCloudletResourceInfoCollector(ctx context.Context) {
-	interval := settingsApi.Get().CloudletResourceSyncInterval.TimeDuration()
-	for {
-		select {
-		case <-time.After(interval):
-		}
-		span := log.StartSpan(log.DebugLevelInfo, "cloudlet resource info collector thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-		err := s.UpdateAllCloudletResources(ctx)
-		if err != nil {
-			// retry again soon
-			interval = 2 * time.Minute
-		} else {
-			interval = settingsApi.Get().CloudletResourceSyncInterval.TimeDuration()
-		}
-		span.Finish()
 	}
 }
 

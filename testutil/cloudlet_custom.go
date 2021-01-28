@@ -40,12 +40,12 @@ func (s *DummyServer) GetCloudletManifest(ctx context.Context, key *edgeproto.Cl
 	return &edgeproto.CloudletManifest{}, nil
 }
 
-func (s *DummyServer) GetCloudletResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
-	return &edgeproto.InfraResources{}, nil
+func (s *DummyServer) GetCloudletResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResourcesSnapshot, error) {
+	return &edgeproto.InfraResourcesSnapshot{}, nil
 }
 
-func (s *DummyServer) GetCloudletInfraResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResources, error) {
-	return &edgeproto.InfraResources{}, nil
+func (s *DummyServer) GetCloudletInfraResourceUsage(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.InfraResourcesSnapshot, error) {
+	return &edgeproto.InfraResourcesSnapshot{}, nil
 }
 
 func (s *DummyServer) SyncCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {

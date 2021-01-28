@@ -358,17 +358,17 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 				Disk:  flavor.Disk,
 			},
 		}
-		s.cloudletInfos[ii].Resources = edgeproto.InfraResources{
+		s.cloudletInfos[ii].ResourcesSnapshot = edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
 					Name:     "RAM",
 					Value:    uint64(1024),
-					MaxValue: uint64(40960),
+					MaxValue: uint64(409600),
 				},
 				edgeproto.InfraResource{
 					Name:     "vCPUs",
 					Value:    uint64(10),
-					MaxValue: uint64(50),
+					MaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
 					Name:     "Disk",

@@ -261,12 +261,13 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  37.338207,
 			Longitude: -121.886330,
 		},
-		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:        FlavorData[0].Key,
-		NotifySrvAddr: "127.0.0.1:51001",
-		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
-		PhysicalName:  "SanJoseSite",
-		Deployment:    "docker",
+		PlatformType:                  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		Flavor:                        FlavorData[0].Key,
+		NotifySrvAddr:                 "127.0.0.1:51001",
+		CrmOverride:                   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:                  "SanJoseSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -279,12 +280,13 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  40.712776,
 			Longitude: -74.005974,
 		},
-		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:        FlavorData[0].Key,
-		NotifySrvAddr: "127.0.0.1:51002",
-		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
-		PhysicalName:  "NewYorkSite",
-		Deployment:    "docker",
+		PlatformType:                  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		Flavor:                        FlavorData[0].Key,
+		NotifySrvAddr:                 "127.0.0.1:51002",
+		CrmOverride:                   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:                  "NewYorkSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -305,8 +307,9 @@ var CloudletData = []edgeproto.Cloudlet{
 			FlavorName:          FlavorData[0].Key.Name,
 			ExternalNetworkName: "testnet",
 		},
-		PhysicalName: "SanFranciscoSite",
-		Deployment:   "docker",
+		PhysicalName:                  "SanFranciscoSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -319,12 +322,13 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  21.306944,
 			Longitude: -157.858337,
 		},
-		Flavor:        FlavorData[0].Key,
-		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		NotifySrvAddr: "127.0.0.1:51004",
-		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
-		PhysicalName:  "HawaiiSite",
-		Deployment:    "docker",
+		Flavor:                        FlavorData[0].Key,
+		PlatformType:                  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		NotifySrvAddr:                 "127.0.0.1:51004",
+		CrmOverride:                   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:                  "HawaiiSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
 	},
 }
 var ClusterInstData = []edgeproto.ClusterInst{
@@ -741,22 +745,27 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				PropMap: map[string]string{"vmware": "vgpu=1"},
 			},
 		},
-		Resources: edgeproto.InfraResources{
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
 					Name:     "RAM",
 					Value:    uint64(1024),
-					MaxValue: uint64(40960),
+					MaxValue: uint64(61440),
 				},
 				edgeproto.InfraResource{
 					Name:     "vCPUs",
 					Value:    uint64(10),
-					MaxValue: uint64(50),
+					MaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
 					Name:     "Disk",
 					Value:    uint64(20),
 					MaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:     "External IPs",
+					Value:    uint64(2),
+					MaxValue: uint64(10),
 				},
 			},
 		},
@@ -787,22 +796,27 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:  uint64(40),
 			},
 		},
-		Resources: edgeproto.InfraResources{
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
 					Name:     "RAM",
 					Value:    uint64(1024),
-					MaxValue: uint64(40960),
+					MaxValue: uint64(61440),
 				},
 				edgeproto.InfraResource{
 					Name:     "vCPUs",
 					Value:    uint64(10),
-					MaxValue: uint64(50),
+					MaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
 					Name:     "Disk",
 					Value:    uint64(20),
 					MaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:     "External IPs",
+					Value:    uint64(2),
+					MaxValue: uint64(10),
 				},
 			},
 		},
@@ -833,22 +847,27 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:  uint64(20),
 			},
 		},
-		Resources: edgeproto.InfraResources{
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
 					Name:     "RAM",
 					Value:    uint64(1024),
-					MaxValue: uint64(40960),
+					MaxValue: uint64(61440),
 				},
 				edgeproto.InfraResource{
 					Name:     "vCPUs",
 					Value:    uint64(10),
-					MaxValue: uint64(50),
+					MaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
 					Name:     "Disk",
 					Value:    uint64(20),
 					MaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:     "External IPs",
+					Value:    uint64(2),
+					MaxValue: uint64(10),
 				},
 			},
 		},
@@ -873,7 +892,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:  uint64(1),
 			},
 		},
-		Resources: edgeproto.InfraResources{
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
 					Name:     "RAM",
@@ -883,12 +902,17 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				edgeproto.InfraResource{
 					Name:     "vCPUs",
 					Value:    uint64(10),
-					MaxValue: uint64(50),
+					MaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
 					Name:     "Disk",
 					Value:    uint64(20),
 					MaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:     "External IPs",
+					Value:    uint64(2),
+					MaxValue: uint64(10),
 				},
 			},
 		},
@@ -901,10 +925,19 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[0,3,7]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
-			ClusterKeys[4],
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[0].Key.ClusterKey,
+				Organization: ClusterInstData[0].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[3].Key.ClusterKey,
+				Organization: ClusterInstData[3].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[7].Key.ClusterKey,
+				Organization: ClusterInstData[7].Key.Organization,
+			},
 		},
 		UsedRam:        GetCloudletUsedRam(0, 3, 7),
 		UsedVcores:     GetCloudletUsedVcores(0, 3, 7),
@@ -914,9 +947,15 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[1,4]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[1].Key.ClusterKey,
+				Organization: ClusterInstData[1].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[4].Key.ClusterKey,
+				Organization: ClusterInstData[4].Key.Organization,
+			},
 		},
 		UsedRam:    GetCloudletUsedRam(1, 4),
 		UsedVcores: GetCloudletUsedVcores(1, 4),
@@ -925,9 +964,15 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[2,5]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[2],
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[2].Key.ClusterKey,
+				Organization: ClusterInstData[2].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[5].Key.ClusterKey,
+				Organization: ClusterInstData[5].Key.Organization,
+			},
 		},
 		UsedRam:        GetCloudletUsedRam(2, 5),
 		UsedVcores:     GetCloudletUsedVcores(2, 5),
@@ -937,8 +982,11 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[6]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[3],
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[6].Key.ClusterKey,
+				Organization: ClusterInstData[6].Key.Organization,
+			},
 		},
 		UsedRam:    GetCloudletUsedRam(6),
 		UsedVcores: GetCloudletUsedVcores(6),
@@ -954,10 +1002,19 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// AppInstData[0,1] -> ports[tcp:443;tcp:443]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
-			ClusterKeys[4],
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[0].Key.ClusterKey,
+				Organization: ClusterInstData[0].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[3].Key.ClusterKey,
+				Organization: ClusterInstData[3].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[7].Key.ClusterKey,
+				Organization: ClusterInstData[7].Key.Organization,
+			},
 		},
 		UsedRam:        GetCloudletUsedRam(0, 3, 7),
 		UsedVcores:     GetCloudletUsedVcores(0, 3, 7),
@@ -968,10 +1025,19 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// AppInstData[2,3] -> ports[tcp:443;tcp:80,tcp:443,tcp:81,udp:10002]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
-			ClusterInstAutoData[0].Key.ClusterKey,
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[1].Key.ClusterKey,
+				Organization: ClusterInstData[1].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[4].Key.ClusterKey,
+				Organization: ClusterInstData[4].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstAutoData[0].Key.ClusterKey,
+				Organization: ClusterInstAutoData[0].Key.Organization,
+			},
 		},
 		UsedRam:     GetCloudletUsedRam(1, 4, -1, 0),
 		UsedVcores:  GetCloudletUsedVcores(1, 4, -1, 0),
@@ -982,11 +1048,23 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[2],
-			ClusterInstAutoData[1].Key.ClusterKey,
-			ClusterInstAutoData[2].Key.ClusterKey,
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[2].Key.ClusterKey,
+				Organization: ClusterInstData[2].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[5].Key.ClusterKey,
+				Organization: ClusterInstData[5].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstAutoData[1].Key.ClusterKey,
+				Organization: ClusterInstAutoData[1].Key.Organization,
+			},
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstAutoData[2].Key.ClusterKey,
+				Organization: ClusterInstAutoData[2].Key.Organization,
+			},
 		},
 		UsedRam:        GetCloudletUsedRam(2, 5, -1, 1, 2),
 		UsedVcores:     GetCloudletUsedVcores(2, 5, -1, 1, 2),
@@ -997,8 +1075,11 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[3],
+		ClusterInsts: []edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstKey{
+				ClusterKey:   ClusterInstData[6].Key.ClusterKey,
+				Organization: ClusterInstData[6].Key.Organization,
+			},
 		},
 		UsedRam:    GetCloudletUsedRam(6),
 		UsedVcores: GetCloudletUsedVcores(6),
