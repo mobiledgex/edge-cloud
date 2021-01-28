@@ -1371,7 +1371,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		}
-		clusterInstKey = in.Key.ClusterInstKey
+		clusterInstKey = *in.ClusterInstKey()
 		if cloudletRefsChanged {
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
