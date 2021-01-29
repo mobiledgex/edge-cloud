@@ -637,9 +637,6 @@ func main() {
 		ErrorLog:  &nullLogger,
 	}
 
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		gwcfg.TestMode = true
-	}
 	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
 	defer httpServer.Shutdown(context.Background())
 

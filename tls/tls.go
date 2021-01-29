@@ -68,11 +68,11 @@ func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bo
 // is blank, no validation is done on the cert.  CaCertFile is specified when communicating to
 // exernal servers with their own privately signed certs.  Leave this blank to use the mex-ca.crt.
 // Skipverify is only to be used for internal connections such as GRPCGW to GRPC.
-// Requires either a tlsCertFile or a getCertFunc
+// Requires either a tlsCertFile or a getCertFunc if not skipVerify
 func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string, skipVerify bool, getCertFunc func(*tls.ClientHelloInfo) (*tls.Certificate, error)) (*tls.Config, error) {
-	// If neither a certFile or a getCertFunc is provided, return nothing
-	if tlsCertFile == "" && getCertFunc == nil {
-		return nil, nil
+	// If we are verifying the server and neither a certFile nor a getCertFunc is provided, return an err
+	if tlsCertFile == "" && getCertFunc == nil && !skipVerify {
+		return nil, fmt.Errorf("when verifying server, a certFile or getCertFunc is required")
 	}
 	var tlscfg *tls.Config
 	if serverAddr != "" {
@@ -99,7 +99,7 @@ func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string
 		}
 		tlscfg.RootCAs = certPool
 		tlscfg.Certificates = []tls.Certificate{certificate}
-	} else {
+	} else if getCertFunc != nil {
 		tlscfg.GetCertificate = getCertFunc
 	}
 	return tlscfg, nil

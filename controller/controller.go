@@ -18,7 +18,6 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
@@ -325,16 +324,13 @@ func startServices() error {
 	)
 	services.notifyServerMgr = true
 
-	// Get TLS config for access server
-	cloudlet := &edgeproto.Cloudlet{
-		Key: nodeMgr.MyNode.Key.CloudletKey,
+	// VaultPublicCertClient implements GetPublicCertApi
+	// Allows controller to get public certs from vault
+	var getPublicCertApi cloudcommon.GetPublicCertApi
+	getPublicCertApi = &cloudcommon.VaultPublicCertApi{
+		VaultConfig: vaultConfig,
 	}
-	// vaultClient implements AccessApi which embeds GetPublicCertApi.
-	// When vaultClient is passed into NewPublicCertManager, it is boxed into a GetPublicCertApi interface.
-	// Only the GetPublicCertApi.GetPublicCert (which is equivalent to the vaultClient.GetPublicCert) function is used.
-	// And because the vaultClient.GetPublicCert function does not use the cloudlet struct, it can be empty.
-	vaultClient := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
-	services.publicCertManager = node.NewPublicCertManager(*publicAddr, vaultClient)
+	services.publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
 		services.publicCertManager = node.NewPublicCertManager(*publicAddr, &cloudcommon.TestPublicCertApi{})
 	}

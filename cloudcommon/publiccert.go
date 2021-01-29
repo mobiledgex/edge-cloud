@@ -14,6 +14,15 @@ type GetPublicCertApi interface {
 	GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error)
 }
 
+// VaultPublicCertApi implements GetPublicCertApi by connecting directly to Vault.
+type VaultPublicCertApi struct {
+	VaultConfig *vault.Config
+}
+
+func (s *VaultPublicCertApi) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
+	return vault.GetPublicCert(s.VaultConfig, commonName)
+}
+
 // TestPublicCertApi implements GetPublicCertApi for unit/e2e testing
 type TestPublicCertApi struct {
 	GetCount int

@@ -11,6 +11,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -30,14 +31,16 @@ type GrpcGWConfig struct {
 	ApiAddr        string
 	GetCertificate func(*ctls.ClientHelloInfo) (*ctls.Certificate, error)
 	ApiHandles     []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error
-	TestMode       bool
 }
 
 func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	ctx := context.Background()
 	// GRPC GW does not validate the GRPC server cert because it may be public signed and therefore
 	// may not work with internal addressing
-	dialOption := grpc.WithInsecure()
+	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, "", true)
+	if err != nil {
+		log.FatalLog("Unable to get TLSClient Dial Option")
+	}
 	conn, err := grpc.DialContext(ctx, cfg.ApiAddr, dialOption)
 	if err != nil {
 		log.FatalLog("Failed to start REST gateway", "error", err)
@@ -66,16 +69,8 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 
 func GrpcGatewayServe(cfg *GrpcGWConfig, server *http.Server) {
 	// Serve REST gateway
-	if cfg.TestMode {
-		// Use HTTP for tests
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.FatalLog("Failed to serve HTTP", "error", err)
-		}
-	} else {
-		// Server should have TLSConfig.GetCertificate already set
-		if err := server.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
-			log.FatalLog("Failed to serve HTTP TLS", "error", err)
-		}
+	if err := server.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
+		log.FatalLog("Failed to serve HTTP TLS", "error", err)
 	}
 }
 
