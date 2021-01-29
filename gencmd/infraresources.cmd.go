@@ -87,17 +87,34 @@ var InfraResourceComments = map[string]string{
 	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var InfraResourceSpecialArgs = map[string]string{}
-var ClusterRefKeyRequiredArgs = []string{}
-var ClusterRefKeyOptionalArgs = []string{
+var ClusterInstRefKeyRequiredArgs = []string{}
+var ClusterInstRefKeyOptionalArgs = []string{
 	"clusterkey.name",
 	"organization",
 }
-var ClusterRefKeyAliasArgs = []string{}
-var ClusterRefKeyComments = map[string]string{
+var ClusterInstRefKeyAliasArgs = []string{}
+var ClusterInstRefKeyComments = map[string]string{
 	"clusterkey.name": "Cluster name",
 	"organization":    "Name of Developer organization that this cluster belongs to",
 }
-var ClusterRefKeySpecialArgs = map[string]string{}
+var ClusterInstRefKeySpecialArgs = map[string]string{}
+var AppInstRefKeyRequiredArgs = []string{}
+var AppInstRefKeyOptionalArgs = []string{
+	"appkey.organization",
+	"appkey.name",
+	"appkey.version",
+	"clusterinstkey.clusterkey.name",
+	"clusterinstkey.organization",
+}
+var AppInstRefKeyAliasArgs = []string{}
+var AppInstRefKeyComments = map[string]string{
+	"appkey.organization":            "App developer organization",
+	"appkey.name":                    "App name",
+	"appkey.version":                 "App version",
+	"clusterinstkey.clusterkey.name": "Cluster name",
+	"clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
+}
+var AppInstRefKeySpecialArgs = map[string]string{}
 var InfraResourcesSnapshotRequiredArgs = []string{}
 var InfraResourcesSnapshotOptionalArgs = []string{
 	"vms:#.name",
@@ -119,25 +136,35 @@ var InfraResourcesSnapshotOptionalArgs = []string{
 	"info:#.alertthreshold",
 	"clusterinsts:#.clusterkey.name",
 	"clusterinsts:#.organization",
+	"vmappinsts:#.appkey.organization",
+	"vmappinsts:#.appkey.name",
+	"vmappinsts:#.appkey.version",
+	"vmappinsts:#.clusterinstkey.clusterkey.name",
+	"vmappinsts:#.clusterinstkey.organization",
 }
 var InfraResourcesSnapshotAliasArgs = []string{}
 var InfraResourcesSnapshotComments = map[string]string{
-	"vms:#.name":                     "Virtual machine name",
-	"vms:#.type":                     "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"vms:#.status":                   "Runtime status of the VM",
-	"vms:#.infraflavor":              "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
-	"vms:#.containers:#.name":        "Name of the container",
-	"vms:#.containers:#.type":        "Type can be docker or kubernetes",
-	"vms:#.containers:#.status":      "Runtime status of the container",
-	"vms:#.containers:#.clusterip":   "IP within the CNI and is applicable to kubernetes only",
-	"vms:#.containers:#.restarts":    "Restart count, applicable to kubernetes only",
-	"info:#.name":                    "Resource name",
-	"info:#.value":                   "Resource value",
-	"info:#.maxvalue":                "Resource max value",
-	"info:#.description":             "Resource description",
-	"info:#.units":                   "Resource units",
-	"info:#.alertthreshold":          "Generate alert when more than threshold percentage of resource is used",
-	"clusterinsts:#.clusterkey.name": "Cluster name",
-	"clusterinsts:#.organization":    "Name of Developer organization that this cluster belongs to",
+	"vms:#.name":                                  "Virtual machine name",
+	"vms:#.type":                                  "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"vms:#.status":                                "Runtime status of the VM",
+	"vms:#.infraflavor":                           "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"vms:#.containers:#.name":                     "Name of the container",
+	"vms:#.containers:#.type":                     "Type can be docker or kubernetes",
+	"vms:#.containers:#.status":                   "Runtime status of the container",
+	"vms:#.containers:#.clusterip":                "IP within the CNI and is applicable to kubernetes only",
+	"vms:#.containers:#.restarts":                 "Restart count, applicable to kubernetes only",
+	"info:#.name":                                 "Resource name",
+	"info:#.value":                                "Resource value",
+	"info:#.maxvalue":                             "Resource max value",
+	"info:#.description":                          "Resource description",
+	"info:#.units":                                "Resource units",
+	"info:#.alertthreshold":                       "Generate alert when more than threshold percentage of resource is used",
+	"clusterinsts:#.clusterkey.name":              "Cluster name",
+	"clusterinsts:#.organization":                 "Name of Developer organization that this cluster belongs to",
+	"vmappinsts:#.appkey.organization":            "App developer organization",
+	"vmappinsts:#.appkey.name":                    "App name",
+	"vmappinsts:#.appkey.version":                 "App version",
+	"vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
+	"vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 }
 var InfraResourcesSnapshotSpecialArgs = map[string]string{}

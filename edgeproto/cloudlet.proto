@@ -317,6 +317,13 @@ message CloudletResourceQuotaProps {
   repeated InfraResource props = 2 [(gogoproto.nullable) = false];
 }
 
+message CloudletResourceUsage {
+  // Cloudlet Key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Show Infra based usage
+  bool infra_usage = 2;
+}
+
 service CloudletApi {
   // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
   // and integrated as part of MobiledgeX edge resource portfolio.
@@ -392,20 +399,12 @@ service CloudletApi {
     option (protogen.method_also_required) = "PlatformType";
   }
   // Get Cloudlet resource information. Shows cloudlet resources used and their limits
-  rpc GetCloudletResourceUsage(CloudletKey) returns (InfraResourcesSnapshot) {
+  rpc GetCloudletResourceUsage(CloudletResourceUsage) returns (InfraResourcesSnapshot) {
     option (google.api.http) = {
       post: "/get/cloudlet/resource/usage"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
-  }
-  // Get Cloudlet Infra resource information. Shows cloudlet infra resources used and their limits
-  rpc GetCloudletInfraResourceUsage(CloudletKey) returns (InfraResourcesSnapshot) {
-    option (google.api.http) = {
-      post: "/get/cloudlet/resource/infrausage"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
   // Sync Cloudlet Infra resources. Synchronizes controller's view of cloudlet resources
   rpc SyncCloudletInfraResources(CloudletKey) returns (Result) {

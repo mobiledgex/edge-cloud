@@ -41,7 +41,7 @@ var (
 	}
 )
 
-func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, pfFlavorList []*edgeproto.FlavorInfo, rootLBFlavor *edgeproto.FlavorInfo, provState edgeproto.VMProvState) ([]edgeproto.VMResource, error) {
+func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, pfFlavorList []*edgeproto.FlavorInfo, rootLBFlavor *edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources", "clusterinst key", clusterInst.Key, "platform flavors", pfFlavorList, "root lb flavor", rootLBFlavor)
 	vmResources := []edgeproto.VMResource{}
 	nodeFlavor := &edgeproto.FlavorInfo{}
@@ -65,40 +65,33 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 	if clusterInst.MasterNodeFlavor != "" && !masterNodeFlavorFound {
 		return nil, fmt.Errorf("Master node flavor %s does not exist", clusterInst.MasterNodeFlavor)
 	}
-	vmResState := edgeproto.VMProvState_PROV_STATE_ADD
-	if provState == edgeproto.VMProvState_PROV_STATE_REMOVE {
-		vmResState = provState
-	}
 	if clusterInst.Deployment == DeploymentTypeDocker {
 		vmResources = append(vmResources, edgeproto.VMResource{
-			Key:       clusterInst.Key,
-			VmFlavor:  nodeFlavor,
-			ProvState: vmResState,
+			Key:      clusterInst.Key,
+			VmFlavor: nodeFlavor,
+			Type:     VMTypeClusterNode,
 		})
 	} else {
 		for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
 			if clusterInst.MasterNodeFlavor == "" {
 				vmResources = append(vmResources, edgeproto.VMResource{
-					Key:       clusterInst.Key,
-					VmFlavor:  nodeFlavor,
-					ProvState: vmResState,
-					Type:      VMTypeClusterMaster,
+					Key:      clusterInst.Key,
+					VmFlavor: nodeFlavor,
+					Type:     VMTypeClusterMaster,
 				})
 			} else {
 				vmResources = append(vmResources, edgeproto.VMResource{
-					Key:       clusterInst.Key,
-					VmFlavor:  masterNodeFlavor,
-					ProvState: vmResState,
-					Type:      VMTypeClusterMaster,
+					Key:      clusterInst.Key,
+					VmFlavor: masterNodeFlavor,
+					Type:     VMTypeClusterMaster,
 				})
 			}
 		}
 		for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
 			vmResources = append(vmResources, edgeproto.VMResource{
-				Key:       clusterInst.Key,
-				VmFlavor:  nodeFlavor,
-				ProvState: vmResState,
-				Type:      VMTypeClusterNode,
+				Key:      clusterInst.Key,
+				VmFlavor: nodeFlavor,
+				Type:     VMTypeClusterNode,
 			})
 		}
 	}
@@ -108,12 +101,36 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			return nil, fmt.Errorf("missing rootlb flavor")
 		}
 		vmResources = append(vmResources, edgeproto.VMResource{
-			Key:       clusterInst.Key,
-			VmFlavor:  rootLBFlavor,
-			ProvState: vmResState,
-			Type:      VMTypeRootLB,
+			Key:      clusterInst.Key,
+			VmFlavor: rootLBFlavor,
+			Type:     VMTypeRootLB,
 		})
 	}
+	return vmResources, nil
+}
+
+func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, pfFlavorList []*edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetVMAppRequirements", "appinst key", appInst.Key, "platform flavors", pfFlavorList)
+	vmResources := []edgeproto.VMResource{}
+	vmFlavor := &edgeproto.FlavorInfo{}
+	vmFlavorFound := false
+	for _, flavor := range pfFlavorList {
+		if flavor.Name == appInst.VmFlavor {
+			vmFlavor = flavor
+			vmFlavorFound = true
+			break
+		}
+	}
+
+	if !vmFlavorFound {
+		return nil, fmt.Errorf("VM flavor %s does not exist", appInst.VmFlavor)
+	}
+	vmResources = append(vmResources, edgeproto.VMResource{
+		Key:           appInst.Key.ClusterInstKey,
+		VmFlavor:      vmFlavor,
+		Type:          VMTypeAppVM,
+		AppAccessType: edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+	})
 	return vmResources, nil
 }
 

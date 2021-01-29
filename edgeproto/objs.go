@@ -472,7 +472,7 @@ func (s *CloudletRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *ClusterInstRefs) Validate(fields map[string]struct{}) error {
+func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
@@ -931,7 +931,26 @@ func UpdateStatusDiff(infoStatus *StatusInfo, diffStatus *StatusInfo) {
 	}
 }
 
-func (s *ClusterRefKey) FromClusterInstKey(key *ClusterInstKey) {
+func (s *ClusterInstRefKey) FromClusterInstKey(key *ClusterInstKey) {
 	s.ClusterKey = key.ClusterKey
 	s.Organization = key.Organization
+}
+
+func (s *ClusterInstKey) FromClusterInstRefKey(key *ClusterInstRefKey, clKey *CloudletKey) {
+	s.ClusterKey = key.ClusterKey
+	s.Organization = key.Organization
+	s.CloudletKey = *clKey
+}
+
+func (s *AppInstRefKey) FromAppInstKey(key *AppInstKey) {
+	s.AppKey = key.AppKey
+	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
+	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
+}
+
+func (s *AppInstKey) FromAppInstRefKey(key *AppInstRefKey, clKey *CloudletKey) {
+	s.AppKey = key.AppKey
+	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
+	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
+	s.ClusterInstKey.CloudletKey = *clKey
 }

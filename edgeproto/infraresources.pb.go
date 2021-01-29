@@ -216,28 +216,28 @@ func (m *InfraResource) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_InfraResource proto.InternalMessageInfo
 
-// Cluster Ref Key
+// ClusterInst Ref Key
 //
-// ClusterRefKey is cluster instance key without cloudlet key.
-type ClusterRefKey struct {
+// ClusterInstRefKey is cluster instance key without cloudlet key.
+type ClusterInstRefKey struct {
 	// Name of Cluster
 	ClusterKey ClusterKey `protobuf:"bytes,1,opt,name=cluster_key,json=clusterKey,proto3" json:"cluster_key"`
 	// Name of Developer organization that this cluster belongs to
 	Organization string `protobuf:"bytes,2,opt,name=organization,proto3" json:"organization,omitempty"`
 }
 
-func (m *ClusterRefKey) Reset()         { *m = ClusterRefKey{} }
-func (m *ClusterRefKey) String() string { return proto.CompactTextString(m) }
-func (*ClusterRefKey) ProtoMessage()    {}
-func (*ClusterRefKey) Descriptor() ([]byte, []int) {
+func (m *ClusterInstRefKey) Reset()         { *m = ClusterInstRefKey{} }
+func (m *ClusterInstRefKey) String() string { return proto.CompactTextString(m) }
+func (*ClusterInstRefKey) ProtoMessage()    {}
+func (*ClusterInstRefKey) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1d4658e0b2956cb2, []int{4}
 }
-func (m *ClusterRefKey) XXX_Unmarshal(b []byte) error {
+func (m *ClusterInstRefKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ClusterRefKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ClusterInstRefKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ClusterRefKey.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ClusterInstRefKey.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -247,17 +247,60 @@ func (m *ClusterRefKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
-func (m *ClusterRefKey) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClusterRefKey.Merge(m, src)
+func (m *ClusterInstRefKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClusterInstRefKey.Merge(m, src)
 }
-func (m *ClusterRefKey) XXX_Size() int {
+func (m *ClusterInstRefKey) XXX_Size() int {
 	return m.Size()
 }
-func (m *ClusterRefKey) XXX_DiscardUnknown() {
-	xxx_messageInfo_ClusterRefKey.DiscardUnknown(m)
+func (m *ClusterInstRefKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClusterInstRefKey.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ClusterRefKey proto.InternalMessageInfo
+var xxx_messageInfo_ClusterInstRefKey proto.InternalMessageInfo
+
+// AppInst Ref Key
+//
+// AppInstRefKey is app instance key without cloudlet key.
+type AppInstRefKey struct {
+	// App key
+	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey,proto3" json:"app_key"`
+	// Cluster instance on which this is instantiated
+	ClusterInstKey ClusterInstRefKey `protobuf:"bytes,2,opt,name=cluster_inst_key,json=clusterInstKey,proto3" json:"cluster_inst_key"`
+}
+
+func (m *AppInstRefKey) Reset()         { *m = AppInstRefKey{} }
+func (m *AppInstRefKey) String() string { return proto.CompactTextString(m) }
+func (*AppInstRefKey) ProtoMessage()    {}
+func (*AppInstRefKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1d4658e0b2956cb2, []int{5}
+}
+func (m *AppInstRefKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppInstRefKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppInstRefKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppInstRefKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppInstRefKey.Merge(m, src)
+}
+func (m *AppInstRefKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppInstRefKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppInstRefKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppInstRefKey proto.InternalMessageInfo
 
 // InfraResourcesSnapshot
 //
@@ -268,14 +311,16 @@ type InfraResourcesSnapshot struct {
 	// Infra Resource information
 	Info []InfraResource `protobuf:"bytes,2,rep,name=info,proto3" json:"info"`
 	// List of clusterinsts this resources snapshot represent
-	ClusterInsts []ClusterRefKey `protobuf:"bytes,3,rep,name=cluster_insts,json=clusterInsts,proto3" json:"cluster_insts"`
+	ClusterInsts []ClusterInstRefKey `protobuf:"bytes,3,rep,name=cluster_insts,json=clusterInsts,proto3" json:"cluster_insts"`
+	// List of vm appinsts this resources snapshot represent
+	VmAppInsts []AppInstRefKey `protobuf:"bytes,4,rep,name=vm_app_insts,json=vmAppInsts,proto3" json:"vm_app_insts"`
 }
 
 func (m *InfraResourcesSnapshot) Reset()         { *m = InfraResourcesSnapshot{} }
 func (m *InfraResourcesSnapshot) String() string { return proto.CompactTextString(m) }
 func (*InfraResourcesSnapshot) ProtoMessage()    {}
 func (*InfraResourcesSnapshot) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d4658e0b2956cb2, []int{5}
+	return fileDescriptor_1d4658e0b2956cb2, []int{6}
 }
 func (m *InfraResourcesSnapshot) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -309,48 +354,53 @@ func init() {
 	proto.RegisterType((*IpAddr)(nil), "edgeproto.IpAddr")
 	proto.RegisterType((*VmInfo)(nil), "edgeproto.VmInfo")
 	proto.RegisterType((*InfraResource)(nil), "edgeproto.InfraResource")
-	proto.RegisterType((*ClusterRefKey)(nil), "edgeproto.ClusterRefKey")
+	proto.RegisterType((*ClusterInstRefKey)(nil), "edgeproto.ClusterInstRefKey")
+	proto.RegisterType((*AppInstRefKey)(nil), "edgeproto.AppInstRefKey")
 	proto.RegisterType((*InfraResourcesSnapshot)(nil), "edgeproto.InfraResourcesSnapshot")
 }
 
 func init() { proto.RegisterFile("infraresources.proto", fileDescriptor_1d4658e0b2956cb2) }
 
 var fileDescriptor_1d4658e0b2956cb2 = []byte{
-	// 536 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x53, 0xcf, 0x8e, 0x12, 0x4f,
-	0x10, 0xa6, 0x17, 0x98, 0x2c, 0x35, 0xcb, 0xef, 0x17, 0x3b, 0xb8, 0x99, 0xe0, 0x66, 0x24, 0x73,
-	0x11, 0x2f, 0x98, 0xe0, 0x45, 0x13, 0x2f, 0x2e, 0x89, 0x91, 0xec, 0x6d, 0x34, 0x7b, 0x25, 0x2d,
-	0xd3, 0x40, 0xc7, 0xa1, 0x7b, 0xec, 0x6e, 0x08, 0xf8, 0x06, 0xde, 0x7c, 0x1b, 0x2f, 0x3e, 0x00,
-	0xc7, 0x3d, 0x7a, 0xf2, 0x0f, 0xbc, 0x88, 0xe9, 0x3f, 0xe0, 0x10, 0x3c, 0x7a, 0xab, 0xfa, 0xbe,
-	0xaa, 0x9e, 0xfa, 0xea, 0xab, 0x81, 0x16, 0xe3, 0x13, 0x49, 0x24, 0x55, 0x62, 0x21, 0xc7, 0x54,
-	0xf5, 0x0a, 0x29, 0xb4, 0xc0, 0x0d, 0x9a, 0x4d, 0xa9, 0x0d, 0xdb, 0xad, 0xa9, 0x98, 0x0a, 0x1b,
-	0x3e, 0x31, 0x91, 0x2b, 0x68, 0x37, 0xc7, 0xf9, 0x42, 0x69, 0x2a, 0x5d, 0x9a, 0x7c, 0x42, 0xd0,
-	0x1c, 0x08, 0xae, 0x09, 0xe3, 0x54, 0x0e, 0xf9, 0x44, 0x60, 0x0c, 0x35, 0x4e, 0xe6, 0x34, 0x42,
-	0x1d, 0xd4, 0x6d, 0xa4, 0x36, 0x36, 0x98, 0x5e, 0x17, 0x34, 0x3a, 0x73, 0x98, 0x89, 0xf1, 0x25,
-	0x04, 0x4a, 0x13, 0xbd, 0x50, 0x51, 0xd5, 0xa2, 0x3e, 0xc3, 0x57, 0xd0, 0xf0, 0x9f, 0x60, 0x45,
-	0x54, 0xb3, 0xd4, 0x1f, 0x00, 0xb7, 0xe1, 0x5c, 0x52, 0xa5, 0x89, 0xd4, 0x2a, 0xaa, 0x77, 0x50,
-	0xb7, 0x9a, 0x1e, 0xf2, 0xe4, 0x35, 0x04, 0xc3, 0xe2, 0x65, 0x96, 0x49, 0x1c, 0x03, 0xd0, 0x95,
-	0xa6, 0x92, 0x93, 0x7c, 0x58, 0xf8, 0x49, 0x4a, 0x88, 0xe1, 0x19, 0x3f, 0xf0, 0x6e, 0xaa, 0x12,
-	0x92, 0xfc, 0x40, 0x10, 0xdc, 0xce, 0xff, 0x89, 0x9c, 0x0e, 0x84, 0x76, 0xd1, 0xaf, 0x72, 0xb2,
-	0x14, 0xd2, 0x0b, 0x2a, 0x43, 0xf8, 0x39, 0x84, 0xac, 0x20, 0x59, 0x26, 0xa9, 0x52, 0xd4, 0xa8,
-	0xaa, 0x76, 0xc3, 0xfe, 0xbd, 0xde, 0xc1, 0x88, 0x9e, 0x13, 0x75, 0x5d, 0xdb, 0x7c, 0x7f, 0x58,
-	0x49, 0xcb, 0xb5, 0xf8, 0x19, 0xc0, 0x78, 0xbf, 0x7c, 0x15, 0x05, 0xb6, 0x33, 0x2a, 0x75, 0x1e,
-	0x39, 0x93, 0x96, 0x6a, 0x93, 0x2f, 0x08, 0x9a, 0x43, 0x33, 0x44, 0xea, 0x0f, 0xe0, 0xaf, 0x42,
-	0x5b, 0x50, 0x5f, 0x92, 0x7c, 0xe1, 0x94, 0xd6, 0x52, 0x97, 0xe0, 0x07, 0xd0, 0x98, 0x93, 0xd5,
-	0xc8, 0x31, 0x55, 0xcb, 0x9c, 0xcf, 0xc9, 0xea, 0xd6, 0x92, 0x1d, 0x08, 0x33, 0xaa, 0xc6, 0x92,
-	0x15, 0x9a, 0x09, 0xbe, 0xd7, 0x5b, 0x82, 0xcc, 0xa3, 0x0b, 0xce, 0xbc, 0x7f, 0x8d, 0xd4, 0x25,
-	0xf8, 0x11, 0xfc, 0x4f, 0x72, 0x2a, 0xf5, 0x48, 0xcf, 0x24, 0x55, 0x33, 0x91, 0x67, 0x51, 0xd0,
-	0x41, 0xdd, 0x7a, 0xfa, 0x9f, 0x85, 0xdf, 0xee, 0xd1, 0xe4, 0x03, 0x34, 0x07, 0xee, 0x1c, 0x52,
-	0x3a, 0xb9, 0xa1, 0x6b, 0xfc, 0x02, 0x42, 0x7f, 0x1f, 0xa3, 0xf7, 0x74, 0x6d, 0xe7, 0x0f, 0xfb,
-	0xf7, 0xcb, 0x5b, 0x70, 0xec, 0x0d, 0x5d, 0xfb, 0x1d, 0xc2, 0xf8, 0x80, 0xe0, 0x04, 0x2e, 0x84,
-	0x9c, 0x12, 0xce, 0x3e, 0x12, 0x3b, 0xb0, 0xf3, 0xf4, 0x08, 0x4b, 0xbe, 0x22, 0xb8, 0x3c, 0x5a,
-	0x96, 0x7a, 0xc3, 0x49, 0xa1, 0x66, 0x42, 0xe3, 0xc7, 0x50, 0x5d, 0xce, 0x55, 0x84, 0x4e, 0x4c,
-	0x73, 0xe7, 0xe3, 0x3f, 0x68, 0x6a, 0x70, 0x1f, 0x6a, 0x8c, 0x4f, 0x44, 0x74, 0x76, 0x62, 0xd3,
-	0xd1, 0xdb, 0xbe, 0xc5, 0xd6, 0xe2, 0x01, 0xec, 0xff, 0xb7, 0x11, 0xe3, 0x4a, 0x9b, 0xe3, 0x3a,
-	0xf1, 0xb8, 0xbc, 0x0c, 0xdf, 0x7c, 0xe1, 0x9b, 0x86, 0xa6, 0xe7, 0xfa, 0x6a, 0xf3, 0x2b, 0xae,
-	0x6c, 0xb6, 0x31, 0xba, 0xdb, 0xc6, 0xe8, 0xe7, 0x36, 0x46, 0x9f, 0x77, 0x71, 0xe5, 0x6e, 0x17,
-	0x57, 0xbe, 0xed, 0xe2, 0xca, 0xbb, 0xc0, 0x3e, 0xf3, 0xf4, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x3f, 0x29, 0x4d, 0x77, 0x10, 0x04, 0x00, 0x00,
+	// 607 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0xbd, 0x6e, 0x13, 0x41,
+	0x10, 0xf6, 0xda, 0xce, 0x11, 0x8f, 0xe3, 0x40, 0x56, 0x21, 0x3a, 0x85, 0xe8, 0xb0, 0xae, 0xc1,
+	0x34, 0x01, 0x85, 0x06, 0x24, 0x0a, 0x92, 0x48, 0x80, 0x15, 0xaa, 0x03, 0xa5, 0xb5, 0x16, 0xdf,
+	0xda, 0x39, 0x71, 0xb7, 0xbb, 0xda, 0xdd, 0xb3, 0x62, 0x4a, 0x3a, 0x2a, 0x78, 0x1b, 0x5e, 0x21,
+	0x65, 0x4a, 0x2a, 0x7e, 0xe2, 0x17, 0x41, 0xb7, 0xbb, 0xb6, 0xd7, 0x32, 0x05, 0x05, 0xdd, 0xcc,
+	0xf7, 0xcd, 0xdf, 0x37, 0x33, 0xb0, 0x9b, 0xb1, 0x91, 0x24, 0x92, 0x2a, 0x5e, 0xca, 0x21, 0x55,
+	0x87, 0x42, 0x72, 0xcd, 0x71, 0x8b, 0xa6, 0x63, 0x6a, 0xcc, 0xfd, 0xdd, 0x31, 0x1f, 0x73, 0x63,
+	0x3e, 0xaa, 0x2c, 0x1b, 0xb0, 0xdf, 0x19, 0xe6, 0xa5, 0xd2, 0x54, 0x3a, 0xb7, 0x45, 0x84, 0xb0,
+	0x66, 0xfc, 0x19, 0x41, 0xe7, 0x94, 0x33, 0x4d, 0x32, 0x46, 0x65, 0x9f, 0x8d, 0x38, 0xc6, 0xd0,
+	0x64, 0xa4, 0xa0, 0x21, 0xea, 0xa2, 0x5e, 0x2b, 0x31, 0x76, 0x85, 0xe9, 0xa9, 0xa0, 0x61, 0xdd,
+	0x62, 0x95, 0x8d, 0xf7, 0x20, 0x50, 0x9a, 0xe8, 0x52, 0x85, 0x0d, 0x83, 0x3a, 0x0f, 0x1f, 0x40,
+	0xcb, 0x75, 0xcb, 0x44, 0xd8, 0x34, 0xd4, 0x12, 0xc0, 0xfb, 0xb0, 0x29, 0xa9, 0xd2, 0x44, 0x6a,
+	0x15, 0x6e, 0x74, 0x51, 0xaf, 0x91, 0x2c, 0xfc, 0xf8, 0x35, 0x04, 0x7d, 0x71, 0x9c, 0xa6, 0x12,
+	0x47, 0x00, 0xf4, 0x52, 0x53, 0xc9, 0x48, 0xde, 0x17, 0x6e, 0x12, 0x0f, 0xa9, 0xf8, 0x8c, 0x2d,
+	0x78, 0x3b, 0x95, 0x87, 0xc4, 0x3f, 0x11, 0x04, 0xe7, 0xc5, 0x7f, 0x91, 0xd3, 0x85, 0xb6, 0xd9,
+	0xf9, 0xcb, 0x9c, 0x4c, 0xb8, 0x74, 0x82, 0x7c, 0x08, 0x3f, 0x83, 0x76, 0x26, 0x48, 0x9a, 0x4a,
+	0xaa, 0x14, 0xad, 0x54, 0x35, 0x7a, 0xed, 0xa3, 0x9d, 0xc3, 0xc5, 0x4d, 0x0e, 0xad, 0xa8, 0x93,
+	0xe6, 0xd5, 0x8f, 0xfb, 0xb5, 0xc4, 0x8f, 0xc5, 0x4f, 0x01, 0x86, 0xf3, 0xe5, 0xab, 0x30, 0x30,
+	0x99, 0xa1, 0x97, 0xb9, 0x72, 0x99, 0xc4, 0x8b, 0x8d, 0xbf, 0x21, 0xe8, 0xf4, 0xab, 0x21, 0x12,
+	0xf7, 0x0b, 0x7f, 0x15, 0xba, 0x0b, 0x1b, 0x13, 0x92, 0x97, 0x56, 0x69, 0x33, 0xb1, 0x0e, 0xbe,
+	0x07, 0xad, 0x82, 0x5c, 0x0e, 0x2c, 0xd3, 0x30, 0xcc, 0x66, 0x41, 0x2e, 0xcf, 0x0d, 0xd9, 0x85,
+	0x76, 0x4a, 0xd5, 0x50, 0x66, 0x42, 0x67, 0x9c, 0xcd, 0xf5, 0x7a, 0x50, 0x55, 0xb4, 0x64, 0x99,
+	0xbb, 0x5f, 0x2b, 0xb1, 0x0e, 0x7e, 0x00, 0xb7, 0x49, 0x4e, 0xa5, 0x1e, 0xe8, 0x0b, 0x49, 0xd5,
+	0x05, 0xcf, 0xd3, 0x30, 0xe8, 0xa2, 0xde, 0x46, 0xb2, 0x6d, 0xe0, 0x77, 0x73, 0x34, 0x2e, 0x61,
+	0xe7, 0xd4, 0xbe, 0x43, 0x9f, 0x29, 0x9d, 0xd0, 0xd1, 0x19, 0x9d, 0xe2, 0xe7, 0xd0, 0x76, 0x3f,
+	0x32, 0xf8, 0x40, 0xa7, 0x46, 0x43, 0xfb, 0xe8, 0xae, 0xbf, 0x09, 0xcb, 0x9e, 0xd1, 0xa9, 0xdb,
+	0x23, 0x0c, 0x17, 0x08, 0x8e, 0x61, 0x8b, 0xcb, 0x31, 0x61, 0xd9, 0x47, 0x62, 0x86, 0xb6, 0x77,
+	0x5d, 0xc1, 0xe2, 0x2f, 0x08, 0x3a, 0xc7, 0x42, 0x78, 0x3d, 0x1f, 0xc3, 0x2d, 0x22, 0x84, 0xd7,
+	0xcf, 0xbf, 0xd9, 0xb1, 0x10, 0xcb, 0x5e, 0x01, 0x31, 0x1e, 0x7e, 0x03, 0x77, 0xe6, 0x53, 0x66,
+	0x4c, 0x69, 0x93, 0x5a, 0x37, 0xa9, 0x07, 0xeb, 0xa3, 0x2e, 0x3b, 0xb9, 0x2a, 0xdb, 0xc3, 0x25,
+	0x71, 0x46, 0xa7, 0xf1, 0xa7, 0x3a, 0xec, 0xad, 0x9c, 0x50, 0xbd, 0x65, 0x44, 0xa8, 0x0b, 0xae,
+	0xf1, 0x43, 0x68, 0x4c, 0x0a, 0x15, 0xa2, 0xb5, 0x57, 0xb2, 0x4f, 0xed, 0x0a, 0x56, 0x31, 0xf8,
+	0x08, 0x9a, 0x19, 0x1b, 0xf1, 0xb0, 0xbe, 0xf6, 0x3c, 0x2b, 0xb5, 0x5d, 0x8a, 0x89, 0xc5, 0xaf,
+	0xa0, 0xe3, 0xeb, 0xa8, 0x5e, 0xbe, 0xf1, 0x8f, 0x22, 0xb6, 0x3c, 0x11, 0x0a, 0xbf, 0x80, 0xad,
+	0x49, 0x31, 0xa8, 0xb6, 0x68, 0xeb, 0x34, 0xd7, 0x86, 0x58, 0x59, 0xf9, 0xfc, 0x74, 0x93, 0xc2,
+	0xc1, 0xea, 0xe4, 0xe0, 0xea, 0x77, 0x54, 0xbb, 0xba, 0x89, 0xd0, 0xf5, 0x4d, 0x84, 0x7e, 0xdd,
+	0x44, 0xe8, 0xeb, 0x2c, 0xaa, 0x5d, 0xcf, 0xa2, 0xda, 0xf7, 0x59, 0x54, 0x7b, 0x1f, 0x98, 0x22,
+	0x4f, 0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0xda, 0x9c, 0x50, 0xc3, 0xf7, 0x04, 0x00, 0x00,
 }
 
 func (m *ContainerInfo) Marshal() (dAtA []byte, err error) {
@@ -584,7 +634,7 @@ func (m *InfraResource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ClusterRefKey) Marshal() (dAtA []byte, err error) {
+func (m *ClusterInstRefKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -594,12 +644,12 @@ func (m *ClusterRefKey) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ClusterRefKey) MarshalTo(dAtA []byte) (int, error) {
+func (m *ClusterInstRefKey) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ClusterRefKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ClusterInstRefKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -613,6 +663,49 @@ func (m *ClusterRefKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	{
 		size, err := m.ClusterKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintInfraresources(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *AppInstRefKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppInstRefKey) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppInstRefKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ClusterInstKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintInfraresources(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.AppKey.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -644,6 +737,20 @@ func (m *InfraResourcesSnapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
+	if len(m.VmAppInsts) > 0 {
+		for iNdEx := len(m.VmAppInsts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VmAppInsts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintInfraresources(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
 	if len(m.ClusterInsts) > 0 {
 		for iNdEx := len(m.ClusterInsts) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -879,7 +986,7 @@ func (m *InfraResource) ValidateEnums() error {
 	return nil
 }
 
-func (m *ClusterRefKey) CopyInFields(src *ClusterRefKey) int {
+func (m *ClusterInstRefKey) CopyInFields(src *ClusterInstRefKey) int {
 	changed := 0
 	if m.ClusterKey.Name != src.ClusterKey.Name {
 		m.ClusterKey.Name = src.ClusterKey.Name
@@ -892,14 +999,55 @@ func (m *ClusterRefKey) CopyInFields(src *ClusterRefKey) int {
 	return changed
 }
 
-func (m *ClusterRefKey) DeepCopyIn(src *ClusterRefKey) {
+func (m *ClusterInstRefKey) DeepCopyIn(src *ClusterInstRefKey) {
 	m.ClusterKey.DeepCopyIn(&src.ClusterKey)
 	m.Organization = src.Organization
 }
 
 // Helper method to check that enums have valid values
-func (m *ClusterRefKey) ValidateEnums() error {
+func (m *ClusterInstRefKey) ValidateEnums() error {
 	if err := m.ClusterKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AppInstRefKey) CopyInFields(src *AppInstRefKey) int {
+	changed := 0
+	if m.AppKey.Organization != src.AppKey.Organization {
+		m.AppKey.Organization = src.AppKey.Organization
+		changed++
+	}
+	if m.AppKey.Name != src.AppKey.Name {
+		m.AppKey.Name = src.AppKey.Name
+		changed++
+	}
+	if m.AppKey.Version != src.AppKey.Version {
+		m.AppKey.Version = src.AppKey.Version
+		changed++
+	}
+	if m.ClusterInstKey.ClusterKey.Name != src.ClusterInstKey.ClusterKey.Name {
+		m.ClusterInstKey.ClusterKey.Name = src.ClusterInstKey.ClusterKey.Name
+		changed++
+	}
+	if m.ClusterInstKey.Organization != src.ClusterInstKey.Organization {
+		m.ClusterInstKey.Organization = src.ClusterInstKey.Organization
+		changed++
+	}
+	return changed
+}
+
+func (m *AppInstRefKey) DeepCopyIn(src *AppInstRefKey) {
+	m.AppKey.DeepCopyIn(&src.AppKey)
+	m.ClusterInstKey.DeepCopyIn(&src.ClusterInstKey)
+}
+
+// Helper method to check that enums have valid values
+func (m *AppInstRefKey) ValidateEnums() error {
+	if err := m.AppKey.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.ClusterInstKey.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -928,6 +1076,13 @@ func (m *InfraResourcesSnapshot) CopyInFields(src *InfraResourcesSnapshot) int {
 		m.ClusterInsts = nil
 		changed++
 	}
+	if src.VmAppInsts != nil {
+		m.VmAppInsts = src.VmAppInsts
+		changed++
+	} else if m.VmAppInsts != nil {
+		m.VmAppInsts = nil
+		changed++
+	}
 	return changed
 }
 
@@ -949,12 +1104,20 @@ func (m *InfraResourcesSnapshot) DeepCopyIn(src *InfraResourcesSnapshot) {
 		m.Info = nil
 	}
 	if src.ClusterInsts != nil {
-		m.ClusterInsts = make([]ClusterRefKey, len(src.ClusterInsts), len(src.ClusterInsts))
+		m.ClusterInsts = make([]ClusterInstRefKey, len(src.ClusterInsts), len(src.ClusterInsts))
 		for ii, s := range src.ClusterInsts {
 			m.ClusterInsts[ii].DeepCopyIn(&s)
 		}
 	} else {
 		m.ClusterInsts = nil
+	}
+	if src.VmAppInsts != nil {
+		m.VmAppInsts = make([]AppInstRefKey, len(src.VmAppInsts), len(src.VmAppInsts))
+		for ii, s := range src.VmAppInsts {
+			m.VmAppInsts[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.VmAppInsts = nil
 	}
 }
 
@@ -971,6 +1134,11 @@ func (m *InfraResourcesSnapshot) ValidateEnums() error {
 		}
 	}
 	for _, e := range m.ClusterInsts {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	for _, e := range m.VmAppInsts {
 		if err := e.ValidateEnums(); err != nil {
 			return err
 		}
@@ -1090,7 +1258,7 @@ func (m *InfraResource) Size() (n int) {
 	return n
 }
 
-func (m *ClusterRefKey) Size() (n int) {
+func (m *ClusterInstRefKey) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1102,6 +1270,19 @@ func (m *ClusterRefKey) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovInfraresources(uint64(l))
 	}
+	return n
+}
+
+func (m *AppInstRefKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.AppKey.Size()
+	n += 1 + l + sovInfraresources(uint64(l))
+	l = m.ClusterInstKey.Size()
+	n += 1 + l + sovInfraresources(uint64(l))
 	return n
 }
 
@@ -1125,6 +1306,12 @@ func (m *InfraResourcesSnapshot) Size() (n int) {
 	}
 	if len(m.ClusterInsts) > 0 {
 		for _, e := range m.ClusterInsts {
+			l = e.Size()
+			n += 1 + l + sovInfraresources(uint64(l))
+		}
+	}
+	if len(m.VmAppInsts) > 0 {
+		for _, e := range m.VmAppInsts {
 			l = e.Size()
 			n += 1 + l + sovInfraresources(uint64(l))
 		}
@@ -1910,7 +2097,7 @@ func (m *InfraResource) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ClusterRefKey) Unmarshal(dAtA []byte) error {
+func (m *ClusterInstRefKey) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1933,10 +2120,10 @@ func (m *ClusterRefKey) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ClusterRefKey: wiretype end group for non-group")
+			return fmt.Errorf("proto: ClusterInstRefKey: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ClusterRefKey: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ClusterInstRefKey: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2003,6 +2190,125 @@ func (m *ClusterRefKey) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Organization = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInfraresources(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppInstRefKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInfraresources
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppInstRefKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppInstRefKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInfraresources
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AppKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterInstKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInfraresources
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ClusterInstKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2154,8 +2460,42 @@ func (m *InfraResourcesSnapshot) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClusterInsts = append(m.ClusterInsts, ClusterRefKey{})
+			m.ClusterInsts = append(m.ClusterInsts, ClusterInstRefKey{})
 			if err := m.ClusterInsts[len(m.ClusterInsts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VmAppInsts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInfraresources
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthInfraresources
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VmAppInsts = append(m.VmAppInsts, AppInstRefKey{})
+			if err := m.VmAppInsts[len(m.VmAppInsts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

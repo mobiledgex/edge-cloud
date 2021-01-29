@@ -1107,6 +1107,18 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(ImageType(0)):
+		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(DeleteType(0)):
+		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(AccessType(0)):
+		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PlatformType(0)):
 		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1123,24 +1135,8 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(ImageType(0)):
-		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(DeleteType(0)):
-		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(AccessType(0)):
-		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
 	case reflect.TypeOf(PowerState(0)):
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(VMProvState(0)):
-		if en, ok := VMProvState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(NoticeAction(0)):
@@ -1165,13 +1161,13 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowFlavor":          struct{}{},
 	"ShowOperatorCode":    struct{}{},
 	"ShowResTagTable":     struct{}{},
+	"ShowApp":             struct{}{},
 	"ShowCloudlet":        struct{}{},
 	"ShowCloudletInfo":    struct{}{},
 	"ShowCloudletMetrics": struct{}{},
 	"ShowCloudletPool":    struct{}{},
 	"ShowVMPool":          struct{}{},
 	"ShowAutoScalePolicy": struct{}{},
-	"ShowApp":             struct{}{},
 	"ShowClusterInst":     struct{}{},
 	"ShowClusterInstInfo": struct{}{},
 	"ShowAutoProvPolicy":  struct{}{},
@@ -1180,7 +1176,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowAppInstInfo":     struct{}{},
 	"ShowAppInstMetrics":  struct{}{},
 	"ShowCloudletRefs":    struct{}{},
-	"ShowClusterInstRefs": struct{}{},
+	"ShowClusterRefs":     struct{}{},
 	"ShowAppInstRefs":     struct{}{},
 	"ShowController":      struct{}{},
 	"ShowNode":            struct{}{},

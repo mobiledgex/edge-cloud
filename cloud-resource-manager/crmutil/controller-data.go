@@ -45,8 +45,8 @@ type ControllerData struct {
 	VMPoolMux                   sync.Mutex
 	updateVMWorkers             tasks.KeyWorkers
 	updateTrustPolicyKeyworkers tasks.KeyWorkers
-	clusterInstRefMux           sync.Mutex
-	clusterInstRefCount         int
+	vmActionRefMux              sync.Mutex
+	vmActionRefAction           int
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -178,28 +178,29 @@ func GetCloudletTrustPolicy(ctx context.Context, name string, cloudletOrg string
 	}
 }
 
-func (cd *ControllerData) clusterInstChangeBegin() {
-	cd.clusterInstRefMux.Lock()
-	defer cd.clusterInstRefMux.Unlock()
-	cd.clusterInstRefCount++
+func (cd *ControllerData) vmResourceActionBegin() {
+	cd.vmActionRefMux.Lock()
+	defer cd.vmActionRefMux.Unlock()
+	cd.vmActionRefAction++
 }
 
-func (cd *ControllerData) clusterInstChangeEnd(ctx context.Context, cloudletKey *edgeproto.CloudletKey) {
-	cd.clusterInstRefMux.Lock()
-	defer cd.clusterInstRefMux.Unlock()
-	cd.clusterInstRefCount--
-	if cd.clusterInstRefCount == 0 {
+func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *edgeproto.CloudletKey) {
+	cd.vmActionRefMux.Lock()
+	defer cd.vmActionRefMux.Unlock()
+	cd.vmActionRefAction--
+	if cd.vmActionRefAction == 0 {
 		log.SpanLog(ctx, log.DebugLevelInfra, "update cloudlet resources snapshot", "key", cloudletKey)
+		// get all the cluster instances deployed on this cloudlet
 		clusterInstKeys := []edgeproto.ClusterInstKey{}
 		cd.ClusterInstCache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
 			clusterInstKeys = append(clusterInstKeys, *k)
 		})
-		deployedClusters := make(map[edgeproto.ClusterRefKey]struct{})
+		deployedClusters := make(map[edgeproto.ClusterInstRefKey]struct{})
 		for _, k := range clusterInstKeys {
 			var clusterInst edgeproto.ClusterInst
 			if cd.ClusterInstCache.Get(&k, &clusterInst) {
 				if clusterInst.State == edgeproto.TrackedState_READY {
-					refKey := &edgeproto.ClusterRefKey{}
+					refKey := &edgeproto.ClusterInstRefKey{}
 					refKey.FromClusterInstKey(&k)
 					deployedClusters[*refKey] = struct{}{}
 				}
@@ -207,12 +208,44 @@ func (cd *ControllerData) clusterInstChangeEnd(ctx context.Context, cloudletKey 
 			var clusterInstInfo edgeproto.ClusterInstInfo
 			if cd.ClusterInstInfoCache.Get(&k, &clusterInstInfo) {
 				if clusterInstInfo.State == edgeproto.TrackedState_READY {
-					refKey := &edgeproto.ClusterRefKey{}
+					refKey := &edgeproto.ClusterInstRefKey{}
 					refKey.FromClusterInstKey(&k)
 					deployedClusters[*refKey] = struct{}{}
 				}
 			}
 		}
+		// get all the vm app instances deployed on this cloudlet
+		appInstKeys := []edgeproto.AppInstKey{}
+		cd.AppInstCache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
+			appInstKeys = append(appInstKeys, *k)
+		})
+		deployedVMAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
+		for _, k := range appInstKeys {
+			var app edgeproto.App
+			if !cd.AppCache.Get(&k.AppKey, &app) {
+				continue
+			}
+			if app.Deployment != cloudcommon.DeploymentTypeVM {
+				continue
+			}
+			var appInst edgeproto.AppInst
+			if cd.AppInstCache.Get(&k, &appInst) {
+				if appInst.State == edgeproto.TrackedState_READY {
+					refKey := &edgeproto.AppInstRefKey{}
+					refKey.FromAppInstKey(&k)
+					deployedVMAppInsts[*refKey] = struct{}{}
+				}
+			}
+			var AppInstInfo edgeproto.AppInstInfo
+			if cd.AppInstInfoCache.Get(&k, &AppInstInfo) {
+				if AppInstInfo.State == edgeproto.TrackedState_READY {
+					refKey := &edgeproto.AppInstRefKey{}
+					refKey.FromAppInstKey(&k)
+					deployedVMAppInsts[*refKey] = struct{}{}
+				}
+			}
+		}
+
 		cloudletInfo := edgeproto.CloudletInfo{}
 		found := cd.CloudletInfoCache.Get(cloudletKey, &cloudletInfo)
 		if !found {
@@ -240,11 +273,16 @@ func (cd *ControllerData) clusterInstChangeEnd(ctx context.Context, cloudletKey 
 		if resources != nil {
 			cloudletInfo.ResourcesSnapshot = *resources
 		}
-		deployedKeys := []edgeproto.ClusterRefKey{}
+		deployedClusterKeys := []edgeproto.ClusterInstRefKey{}
 		for k, _ := range deployedClusters {
-			deployedKeys = append(deployedKeys, k)
+			deployedClusterKeys = append(deployedClusterKeys, k)
 		}
-		cloudletInfo.ResourcesSnapshot.ClusterInsts = deployedKeys
+		deployedVMAppKeys := []edgeproto.AppInstRefKey{}
+		for k, _ := range deployedVMAppInsts {
+			deployedVMAppKeys = append(deployedVMAppKeys, k)
+		}
+		cloudletInfo.ResourcesSnapshot.ClusterInsts = deployedClusterKeys
+		cloudletInfo.ResourcesSnapshot.VmAppInsts = deployedVMAppKeys
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
 }
@@ -268,7 +306,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
-		cd.clusterInstChangeBegin()
+		cd.vmResourceActionBegin()
 		// create
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
 		// reset status messages
@@ -280,7 +318,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 		go func() {
 			// Marks end of clusterinst change and hence reduces ref count
-			defer cd.clusterInstChangeEnd(ctx, &new.Key.CloudletKey)
+			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 
 			var cloudlet edgeproto.Cloudlet
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm create ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
@@ -321,9 +359,9 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
-		cd.clusterInstChangeBegin()
+		cd.vmResourceActionBegin()
 		// Marks end of clusterinst change and hence reduces ref count
-		defer cd.clusterInstChangeEnd(ctx, &new.Key.CloudletKey)
+		defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
@@ -375,7 +413,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
-		cd.clusterInstChangeBegin()
+		cd.vmResourceActionBegin()
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
@@ -386,7 +424,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 		go func() {
 			// Marks end of clusterinst change and hence reduces ref count
-			defer cd.clusterInstChangeEnd(ctx, &new.Key.CloudletKey)
+			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
@@ -447,6 +485,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	}
 
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			// Marks start of appinst change and hence increases ref count
+			cd.vmResourceActionBegin()
+		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		// create
@@ -479,6 +521,11 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
+			if app.Deployment == cloudcommon.DeploymentTypeVM {
+				// Marks end of appinst change and hence reduces ref count
+				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+			}
+
 			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
@@ -502,6 +549,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			// Marks start of appinst change and hence increases ref count
+			cd.vmResourceActionBegin()
+			// Marks end of appinst change and hence reduces ref count
+			defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
@@ -551,6 +604,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			// Marks start of appinst change and hence increases ref count
+			cd.vmResourceActionBegin()
+		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		clusterInst := edgeproto.ClusterInst{}
@@ -573,6 +630,11 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
+
+			if app.Deployment == cloudcommon.DeploymentTypeVM {
+				// Marks end of appinst change and hence reduces ref count
+				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+			}
 
 			err = cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
 			if err != nil {

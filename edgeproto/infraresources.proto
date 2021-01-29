@@ -5,6 +5,7 @@ package edgeproto;
 
 import "gogoproto/gogo.proto";
 import "cluster.proto";
+import "app.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -71,14 +72,24 @@ message InfraResource {
   int32 alert_threshold = 6;
 }
 
-// Cluster Ref Key
+// ClusterInst Ref Key
 //
-// ClusterRefKey is cluster instance key without cloudlet key.
-message ClusterRefKey {
+// ClusterInstRefKey is cluster instance key without cloudlet key.
+message ClusterInstRefKey {
   // Name of Cluster
   ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
   // Name of Developer organization that this cluster belongs to
   string organization = 2;
+}
+
+// AppInst Ref Key
+//
+// AppInstRefKey is app instance key without cloudlet key.
+message AppInstRefKey {
+  // App key
+  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  // Cluster instance on which this is instantiated
+  ClusterInstRefKey cluster_inst_key = 2 [(gogoproto.nullable) = false];
 }
 
 
@@ -91,5 +102,7 @@ message InfraResourcesSnapshot {
   // Infra Resource information
   repeated InfraResource info = 2 [(gogoproto.nullable) = false];
   // List of clusterinsts this resources snapshot represent
-  repeated ClusterRefKey cluster_insts = 3 [(gogoproto.nullable) = false];
+  repeated ClusterInstRefKey cluster_insts = 3 [(gogoproto.nullable) = false];
+  // List of vm appinsts this resources snapshot represent
+  repeated AppInstRefKey vm_app_insts = 4 [(gogoproto.nullable) = false];
 }

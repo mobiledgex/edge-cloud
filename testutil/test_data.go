@@ -925,16 +925,16 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[0,3,7]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[0].Key.ClusterKey,
 				Organization: ClusterInstData[0].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[3].Key.ClusterKey,
 				Organization: ClusterInstData[3].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[7].Key.ClusterKey,
 				Organization: ClusterInstData[7].Key.Organization,
 			},
@@ -947,12 +947,12 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[1,4]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[1].Key.ClusterKey,
 				Organization: ClusterInstData[1].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[4].Key.ClusterKey,
 				Organization: ClusterInstData[4].Key.Organization,
 			},
@@ -964,12 +964,12 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[2,5]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[2].Key.ClusterKey,
 				Organization: ClusterInstData[2].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[5].Key.ClusterKey,
 				Organization: ClusterInstData[5].Key.Organization,
 			},
@@ -982,8 +982,8 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[6]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[6].Key.ClusterKey,
 				Organization: ClusterInstData[6].Key.Organization,
 			},
@@ -1002,18 +1002,27 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// AppInstData[0,1] -> ports[tcp:443;tcp:443]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[0].Key.ClusterKey,
 				Organization: ClusterInstData[0].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[3].Key.ClusterKey,
 				Organization: ClusterInstData[3].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[7].Key.ClusterKey,
 				Organization: ClusterInstData[7].Key.Organization,
+			},
+		},
+		VmAppInsts: []edgeproto.AppInstRefKey{
+			edgeproto.AppInstRefKey{
+				AppKey: AppInstData[11].Key.AppKey,
+				ClusterInstKey: edgeproto.ClusterInstRefKey{
+					ClusterKey:   AppInstData[11].Key.ClusterInstKey.ClusterKey,
+					Organization: AppInstData[11].Key.ClusterInstKey.Organization,
+				},
 			},
 		},
 		UsedRam:        GetCloudletUsedRam(0, 3, 7),
@@ -1025,16 +1034,16 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// AppInstData[2,3] -> ports[tcp:443;tcp:80,tcp:443,tcp:81,udp:10002]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[1].Key.ClusterKey,
 				Organization: ClusterInstData[1].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[4].Key.ClusterKey,
 				Organization: ClusterInstData[4].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstAutoData[0].Key.ClusterKey,
 				Organization: ClusterInstAutoData[0].Key.Organization,
 			},
@@ -1048,20 +1057,20 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[2].Key.ClusterKey,
 				Organization: ClusterInstData[2].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[5].Key.ClusterKey,
 				Organization: ClusterInstData[5].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstAutoData[1].Key.ClusterKey,
 				Organization: ClusterInstAutoData[1].Key.Organization,
 			},
-			edgeproto.ClusterInstKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstAutoData[2].Key.ClusterKey,
 				Organization: ClusterInstAutoData[2].Key.Organization,
 			},
@@ -1075,8 +1084,8 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
-		ClusterInsts: []edgeproto.ClusterInstKey{
-			edgeproto.ClusterInstKey{
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
 				ClusterKey:   ClusterInstData[6].Key.ClusterKey,
 				Organization: ClusterInstData[6].Key.Organization,
 			},

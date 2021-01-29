@@ -239,7 +239,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 }
 
 // called by controller, make sure it doesn't make any calls to infra API
-func (s *Platform) GetClusterAdditionalResources(ctx context.Context, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource {
+func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource {
 	// resource name -> resource units
 	cloudletRes := map[string]string{
 		ResourceExternalIps: "",
@@ -259,11 +259,7 @@ func (s *Platform) GetClusterAdditionalResources(ctx context.Context, vmResource
 
 	for _, vmRes := range vmResources {
 		if vmRes.Type == cloudcommon.VMTypeRootLB {
-			if vmRes.ProvState == edgeproto.VMProvState_PROV_STATE_REMOVE {
-				resInfo[ResourceExternalIps].Value -= 1
-			} else {
-				resInfo[ResourceExternalIps].Value += 1
-			}
+			resInfo[ResourceExternalIps].Value += 1
 		}
 	}
 	return resInfo
@@ -280,7 +276,7 @@ func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeprot
 	}, nil
 }
 
-func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error {
+func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, cloudlet *edgeproto.Cloudlet, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error {
 	externalIpsUsed := uint64(0)
 	for _, vmRes := range resources {
 		if vmRes.Type == cloudcommon.VMTypeRootLB {

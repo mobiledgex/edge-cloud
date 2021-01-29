@@ -111,6 +111,8 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 	for i1 := 0; i1 < len(in.ResourcesSnapshot.ClusterInsts); i1++ {
 	}
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.VmAppInsts); i1++ {
+	}
 	if _, found := tags["nocmp"]; found {
 		in.TrustPolicyState = 0
 	}
@@ -612,12 +614,12 @@ func GetCloudletResourceQuotaPropss(c *cli.Command, data []edgeproto.CloudletRes
 
 var GetCloudletResourceUsageCmd = &cli.Command{
 	Use:          "GetCloudletResourceUsage",
-	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
-	SpecialArgs:  &CloudletKeySpecialArgs,
-	Comments:     CloudletKeyComments,
-	ReqData:      &edgeproto.CloudletKey{},
+	RequiredArgs: strings.Join(CloudletResourceUsageRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletResourceUsageOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletResourceUsageAliasArgs, " "),
+	SpecialArgs:  &CloudletResourceUsageSpecialArgs,
+	Comments:     CloudletResourceUsageComments,
+	ReqData:      &edgeproto.CloudletResourceUsage{},
 	ReplyData:    &edgeproto.InfraResourcesSnapshot{},
 	Run:          runGetCloudletResourceUsage,
 }
@@ -626,7 +628,7 @@ func runGetCloudletResourceUsage(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.CloudletKey)
+	obj := c.ReqData.(*edgeproto.CloudletResourceUsage)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
@@ -634,7 +636,7 @@ func runGetCloudletResourceUsage(c *cli.Command, args []string) error {
 	return GetCloudletResourceUsage(c, obj)
 }
 
-func GetCloudletResourceUsage(c *cli.Command, in *edgeproto.CloudletKey) error {
+func GetCloudletResourceUsage(c *cli.Command, in *edgeproto.CloudletResourceUsage) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
@@ -653,70 +655,13 @@ func GetCloudletResourceUsage(c *cli.Command, in *edgeproto.CloudletKey) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func GetCloudletResourceUsages(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+func GetCloudletResourceUsages(c *cli.Command, data []edgeproto.CloudletResourceUsage, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
 		fmt.Printf("GetCloudletResourceUsage %v\n", data[ii])
 		myerr := GetCloudletResourceUsage(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var GetCloudletInfraResourceUsageCmd = &cli.Command{
-	Use:          "GetCloudletInfraResourceUsage",
-	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
-	SpecialArgs:  &CloudletKeySpecialArgs,
-	Comments:     CloudletKeyComments,
-	ReqData:      &edgeproto.CloudletKey{},
-	ReplyData:    &edgeproto.InfraResourcesSnapshot{},
-	Run:          runGetCloudletInfraResourceUsage,
-}
-
-func runGetCloudletInfraResourceUsage(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.CloudletKey)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return GetCloudletInfraResourceUsage(c, obj)
-}
-
-func GetCloudletInfraResourceUsage(c *cli.Command, in *edgeproto.CloudletKey) error {
-	if CloudletApiCmd == nil {
-		return fmt.Errorf("CloudletApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := CloudletApiCmd.GetCloudletInfraResourceUsage(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("GetCloudletInfraResourceUsage failed: %s", errstr)
-	}
-	c.WriteOutput(obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func GetCloudletInfraResourceUsages(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("GetCloudletInfraResourceUsage %v\n", data[ii])
-		myerr := GetCloudletInfraResourceUsage(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -1075,7 +1020,6 @@ var CloudletApiCmds = []*cobra.Command{
 	GetCloudletPropsCmd.GenCmd(),
 	GetCloudletResourceQuotaPropsCmd.GenCmd(),
 	GetCloudletResourceUsageCmd.GenCmd(),
-	GetCloudletInfraResourceUsageCmd.GenCmd(),
 	SyncCloudletInfraResourcesCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
@@ -1707,6 +1651,20 @@ var CloudletResourceQuotaPropsComments = map[string]string{
 	"props:#.alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var CloudletResourceQuotaPropsSpecialArgs = map[string]string{}
+var CloudletResourceUsageRequiredArgs = []string{
+	"key.organization",
+	"key.name",
+}
+var CloudletResourceUsageOptionalArgs = []string{
+	"infrausage",
+}
+var CloudletResourceUsageAliasArgs = []string{}
+var CloudletResourceUsageComments = map[string]string{
+	"key.organization": "Organization of the cloudlet site",
+	"key.name":         "Name of the cloudlet",
+	"infrausage":       "Show Infra based usage",
+}
+var CloudletResourceUsageSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -1800,6 +1758,11 @@ var CloudletInfoOptionalArgs = []string{
 	"resourcessnapshot.info:#.alertthreshold",
 	"resourcessnapshot.clusterinsts:#.clusterkey.name",
 	"resourcessnapshot.clusterinsts:#.organization",
+	"resourcessnapshot.vmappinsts:#.appkey.organization",
+	"resourcessnapshot.vmappinsts:#.appkey.name",
+	"resourcessnapshot.vmappinsts:#.appkey.version",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization",
 	"trustpolicystate",
 }
 var CloudletInfoAliasArgs = []string{
@@ -1833,20 +1796,25 @@ var CloudletInfoComments = map[string]string{
 	"resourcessnapshot.vms:#.type":        "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
 	"resourcessnapshot.vms:#.status":      "Runtime status of the VM",
 	"resourcessnapshot.vms:#.infraflavor": "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
-	"resourcessnapshot.vms:#.containers:#.name":        "Name of the container",
-	"resourcessnapshot.vms:#.containers:#.type":        "Type can be docker or kubernetes",
-	"resourcessnapshot.vms:#.containers:#.status":      "Runtime status of the container",
-	"resourcessnapshot.vms:#.containers:#.clusterip":   "IP within the CNI and is applicable to kubernetes only",
-	"resourcessnapshot.vms:#.containers:#.restarts":    "Restart count, applicable to kubernetes only",
-	"resourcessnapshot.info:#.name":                    "Resource name",
-	"resourcessnapshot.info:#.value":                   "Resource value",
-	"resourcessnapshot.info:#.maxvalue":                "Resource max value",
-	"resourcessnapshot.info:#.description":             "Resource description",
-	"resourcessnapshot.info:#.units":                   "Resource units",
-	"resourcessnapshot.info:#.alertthreshold":          "Generate alert when more than threshold percentage of resource is used",
-	"resourcessnapshot.clusterinsts:#.clusterkey.name": "Cluster name",
-	"resourcessnapshot.clusterinsts:#.organization":    "Name of Developer organization that this cluster belongs to",
-	"trustpolicystate":                                 "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
+	"resourcessnapshot.vms:#.containers:#.name":                     "Name of the container",
+	"resourcessnapshot.vms:#.containers:#.type":                     "Type can be docker or kubernetes",
+	"resourcessnapshot.vms:#.containers:#.status":                   "Runtime status of the container",
+	"resourcessnapshot.vms:#.containers:#.clusterip":                "IP within the CNI and is applicable to kubernetes only",
+	"resourcessnapshot.vms:#.containers:#.restarts":                 "Restart count, applicable to kubernetes only",
+	"resourcessnapshot.info:#.name":                                 "Resource name",
+	"resourcessnapshot.info:#.value":                                "Resource value",
+	"resourcessnapshot.info:#.maxvalue":                             "Resource max value",
+	"resourcessnapshot.info:#.description":                          "Resource description",
+	"resourcessnapshot.info:#.units":                                "Resource units",
+	"resourcessnapshot.info:#.alertthreshold":                       "Generate alert when more than threshold percentage of resource is used",
+	"resourcessnapshot.clusterinsts:#.clusterkey.name":              "Cluster name",
+	"resourcessnapshot.clusterinsts:#.organization":                 "Name of Developer organization that this cluster belongs to",
+	"resourcessnapshot.vmappinsts:#.appkey.organization":            "App developer organization",
+	"resourcessnapshot.vmappinsts:#.appkey.name":                    "App name",
+	"resourcessnapshot.vmappinsts:#.appkey.version":                 "App version",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
+	"trustpolicystate":                                              "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, ResourceUpdateRequested",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
