@@ -62,6 +62,9 @@ func NodeHideTags(in *edgeproto.Node) {
 		in.BuildAuthor = ""
 	}
 	if _, found := tags["nocmp"]; found {
+		in.BuildDate = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.Hostname = ""
 	}
 }
@@ -89,6 +92,9 @@ func NodeDataHideTags(in *edgeproto.NodeData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Nodes[i0].BuildAuthor = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildDate = ""
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Nodes[i0].Hostname = ""
@@ -208,6 +214,7 @@ var NodeOptionalArgs = []string{
 	"buildmaster",
 	"buildhead",
 	"buildauthor",
+	"builddate",
 	"hostname",
 	"containerversion",
 	"internalpki",
@@ -230,6 +237,7 @@ var NodeComments = map[string]string{
 	"buildmaster":      "Build Master Version",
 	"buildhead":        "Build Head Version",
 	"buildauthor":      "Build Author",
+	"builddate":        "Build Date",
 	"hostname":         "Hostname",
 	"containerversion": "Docker edge-cloud container version which node instance use",
 	"internalpki":      "Internal PKI Config",
@@ -249,6 +257,7 @@ var NodeDataOptionalArgs = []string{
 	"nodes:#.buildmaster",
 	"nodes:#.buildhead",
 	"nodes:#.buildauthor",
+	"nodes:#.builddate",
 	"nodes:#.hostname",
 	"nodes:#.containerversion",
 	"nodes:#.internalpki",
@@ -265,6 +274,7 @@ var NodeDataComments = map[string]string{
 	"nodes:#.buildmaster":                  "Build Master Version",
 	"nodes:#.buildhead":                    "Build Head Version",
 	"nodes:#.buildauthor":                  "Build Author",
+	"nodes:#.builddate":                    "Build Date",
 	"nodes:#.hostname":                     "Hostname",
 	"nodes:#.containerversion":             "Docker edge-cloud container version which node instance use",
 	"nodes:#.internalpki":                  "Internal PKI Config",

@@ -41,6 +41,8 @@ message Node {
   string build_head = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Build Author
   string build_author = 6 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Build Date
+  string build_date = 10 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Hostname
   string hostname = 7 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Docker edge-cloud container version which node instance use
