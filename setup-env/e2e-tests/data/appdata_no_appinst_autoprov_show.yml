@@ -553,7 +553,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclusterautoprovapp1.0AcmeAppCo
+        name: autocluster-autoprov
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
@@ -612,7 +612,7 @@ appinstrefs:
     name: autoprovapp
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"autoprovapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclusterautoprovapp1.0AcmeAppCo"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"autoprovapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autocluster-autoprov"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
 - key:
     organization: AcmeAppCo

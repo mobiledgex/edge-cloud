@@ -495,9 +495,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return fmt.Errorf("No AppInst or App flavor specified")
 			}
 		}
-		if in.SharedVolumeSize == 0 {
-			in.SharedVolumeSize = app.DefaultSharedVolumeSize
-		}
 
 		// make sure cloudlet exists so we don't create refs for missing cloudlet
 		cloudlet := edgeproto.Cloudlet{}
@@ -765,7 +762,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// support dedicated.
 		clusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
 		clusterInst.Deployment = appDeploymentType
-		clusterInst.SharedVolumeSize = 0
 		if appDeploymentType == cloudcommon.DeploymentTypeKubernetes ||
 			appDeploymentType == cloudcommon.DeploymentTypeHelm {
 			clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes

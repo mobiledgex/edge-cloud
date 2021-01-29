@@ -774,9 +774,6 @@ func validateAutoDeployApp(stm concurrency.STM, app *edgeproto.App) error {
 	// to reduce the number of permutations of reservable autocluster
 	// configurations, we only support a subset of all features
 	// for autoclusters and auto-provisioning.
-	if app.DefaultSharedVolumeSize != 0 {
-		return fmt.Errorf("For auto-provisioning or auto-clusters, App must have 0 default shared volume size")
-	}
 	if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
 		return fmt.Errorf("For auto-provisioning or auto-clusters, App access type direct is not supported")
 	}

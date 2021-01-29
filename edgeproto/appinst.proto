@@ -130,8 +130,9 @@ message AppInst {
   bool update_multiple = 26 [(protogen.hidetag) = "nocmp"];
   // Customization files passed through to implementing services
   repeated ConfigFile configs = 27;
-  // (Deprecated) shared volume size when creating auto cluster
-  uint64 shared_volume_size = 28;
+  // (removed) shared volume size when creating auto cluster
+  reserved "shared_volume_size";
+  reserved 28;
   // Health Check status
   distributed_match_engine.HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
   // Optional privacy policy name

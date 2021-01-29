@@ -55,6 +55,11 @@ func AppInstBeingDeleted(inst *edgeproto.AppInst) bool {
 
 // Cluster name to trigger using an existing free reservable ClusterInst
 // or creating a new one automatically.
-func AutoProvClusterName(key *edgeproto.AppKey) string {
-	return AutoClusterPrefix + key.Name + key.Version + key.Organization
-}
+// Because this name is always part of the AppInstKey in etcd,
+// and because AutoProv will only ever instantiate once instance
+// of an App per cloudlet, there are really no uniqueness requirements
+// on this name.
+// Additionally any objects instantiated at the infra level that
+// are independent of the AppInst key should be using the
+// real cluster name from the ClusterInst object.
+var AutoProvClusterName = AutoClusterPrefix + "-autoprov"

@@ -840,7 +840,7 @@ func (s *searchAppInst) searchPolicy(ctx context.Context, key *edgeproto.AppKey,
 		cinstKey := &edgeproto.ClusterInstKey{
 			CloudletKey: cl.Key,
 			ClusterKey: edgeproto.ClusterKey{
-				Name: cloudcommon.AutoProvClusterName(key),
+				Name: cloudcommon.AutoProvClusterName,
 			},
 			Organization: cloudcommon.OrganizationMobiledgeX,
 		}

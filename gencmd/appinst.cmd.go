@@ -845,7 +845,6 @@ var AppInstComments = map[string]string{
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
 	"configs:#.kind":                 "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"configs:#.config":               "config file contents or URI reference",
-	"sharedvolumesize":               "(Deprecated) shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
