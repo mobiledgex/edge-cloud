@@ -313,6 +313,10 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 				thresh = quota.AlertThreshold
 			}
 		}
+		if max == 0 {
+			// no validation can be done
+			continue
+		}
 		resReqd, ok := reqdResInfo[resName]
 		if !ok {
 			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
@@ -341,6 +345,10 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 				// Set threshold value from resource quota
 				thresh = quota.AlertThreshold
 			}
+		}
+		if resInfo.MaxValue == 0 {
+			// no validation can be done
+			continue
 		}
 		resReqd, ok := reqdResInfo[resName]
 		if !ok {
