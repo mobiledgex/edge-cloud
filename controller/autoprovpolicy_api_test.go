@@ -332,7 +332,6 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 	s.policy.Key.Organization = org
 	s.cloudlets = make([]edgeproto.Cloudlet, count, count)
 	s.cloudletInfos = make([]edgeproto.CloudletInfo, count, count)
-	//s.clusterInsts = make([]edgeproto.ClusterInst, count, count)
 	for ii, _ := range s.cloudlets {
 		s.cloudlets[ii].Key.Name = fmt.Sprintf("%s-%d", name, ii)
 		s.cloudlets[ii].Key.Organization = "op"
