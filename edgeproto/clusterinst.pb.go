@@ -1494,10 +1494,11 @@ const ClusterInstFieldResourcesSnapshotVmsContainersRestarts = "28.1.6.5"
 const ClusterInstFieldResourcesSnapshotInfo = "28.2"
 const ClusterInstFieldResourcesSnapshotInfoName = "28.2.1"
 const ClusterInstFieldResourcesSnapshotInfoValue = "28.2.2"
-const ClusterInstFieldResourcesSnapshotInfoMaxValue = "28.2.3"
-const ClusterInstFieldResourcesSnapshotInfoDescription = "28.2.4"
-const ClusterInstFieldResourcesSnapshotInfoUnits = "28.2.5"
-const ClusterInstFieldResourcesSnapshotInfoAlertThreshold = "28.2.6"
+const ClusterInstFieldResourcesSnapshotInfoInfraMaxValue = "28.2.3"
+const ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue = "28.2.4"
+const ClusterInstFieldResourcesSnapshotInfoDescription = "28.2.5"
+const ClusterInstFieldResourcesSnapshotInfoUnits = "28.2.6"
+const ClusterInstFieldResourcesSnapshotInfoAlertThreshold = "28.2.7"
 const ClusterInstFieldResourcesSnapshotClusterInsts = "28.3"
 const ClusterInstFieldResourcesSnapshotClusterInstsClusterKey = "28.3.1"
 const ClusterInstFieldResourcesSnapshotClusterInstsClusterKeyName = "28.3.1.1"
@@ -1564,7 +1565,8 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldResourcesSnapshotVmsContainersRestarts,
 	ClusterInstFieldResourcesSnapshotInfoName,
 	ClusterInstFieldResourcesSnapshotInfoValue,
-	ClusterInstFieldResourcesSnapshotInfoMaxValue,
+	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue,
+	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue,
 	ClusterInstFieldResourcesSnapshotInfoDescription,
 	ClusterInstFieldResourcesSnapshotInfoUnits,
 	ClusterInstFieldResourcesSnapshotInfoAlertThreshold,
@@ -1627,7 +1629,8 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldResourcesSnapshotVmsContainersRestarts:                  struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoName:                               struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoValue:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoMaxValue:                           struct{}{},
+	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
+	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoDescription:                        struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoUnits:                              struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
@@ -1690,7 +1693,8 @@ var ClusterInstAllFieldsStringMap = map[string]string{
 	ClusterInstFieldResourcesSnapshotVmsContainersRestarts:                  "Resources Snapshot Vms Containers Restarts",
 	ClusterInstFieldResourcesSnapshotInfoName:                               "Resources Snapshot Info Name",
 	ClusterInstFieldResourcesSnapshotInfoValue:                              "Resources Snapshot Info Value",
-	ClusterInstFieldResourcesSnapshotInfoMaxValue:                           "Resources Snapshot Info Max Value",
+	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue:                      "Resources Snapshot Info Infra Max Value",
+	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue:                      "Resources Snapshot Info Quota Max Value",
 	ClusterInstFieldResourcesSnapshotInfoDescription:                        "Resources Snapshot Info Description",
 	ClusterInstFieldResourcesSnapshotInfoUnits:                              "Resources Snapshot Info Units",
 	ClusterInstFieldResourcesSnapshotInfoAlertThreshold:                     "Resources Snapshot Info Alert Threshold",
@@ -1943,8 +1947,13 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
 				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Info[i1].MaxValue != o.ResourcesSnapshot.Info[i1].MaxValue {
-				fields[ClusterInstFieldResourcesSnapshotInfoMaxValue] = struct{}{}
+			if m.ResourcesSnapshot.Info[i1].InfraMaxValue != o.ResourcesSnapshot.Info[i1].InfraMaxValue {
+				fields[ClusterInstFieldResourcesSnapshotInfoInfraMaxValue] = struct{}{}
+				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
+				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].QuotaMaxValue != o.ResourcesSnapshot.Info[i1].QuotaMaxValue {
+				fields[ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue] = struct{}{}
 				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
 				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
 			}
@@ -2062,7 +2071,8 @@ var UpdateClusterInstFieldsMap = map[string]struct{}{
 	ClusterInstFieldResourcesSnapshotInfo:                                   struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoName:                               struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoValue:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoMaxValue:                           struct{}{},
+	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
+	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoDescription:                        struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoUnits:                              struct{}{},
 	ClusterInstFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
@@ -3209,10 +3219,11 @@ const ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts = "7.1.6.5"
 const ClusterInstInfoFieldResourcesSnapshotInfo = "7.2"
 const ClusterInstInfoFieldResourcesSnapshotInfoName = "7.2.1"
 const ClusterInstInfoFieldResourcesSnapshotInfoValue = "7.2.2"
-const ClusterInstInfoFieldResourcesSnapshotInfoMaxValue = "7.2.3"
-const ClusterInstInfoFieldResourcesSnapshotInfoDescription = "7.2.4"
-const ClusterInstInfoFieldResourcesSnapshotInfoUnits = "7.2.5"
-const ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold = "7.2.6"
+const ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue = "7.2.3"
+const ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue = "7.2.4"
+const ClusterInstInfoFieldResourcesSnapshotInfoDescription = "7.2.5"
+const ClusterInstInfoFieldResourcesSnapshotInfoUnits = "7.2.6"
+const ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold = "7.2.7"
 const ClusterInstInfoFieldResourcesSnapshotClusterInsts = "7.3"
 const ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKey = "7.3.1"
 const ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKeyName = "7.3.1.1"
@@ -3254,7 +3265,8 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts,
 	ClusterInstInfoFieldResourcesSnapshotInfoName,
 	ClusterInstInfoFieldResourcesSnapshotInfoValue,
-	ClusterInstInfoFieldResourcesSnapshotInfoMaxValue,
+	ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue,
+	ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue,
 	ClusterInstInfoFieldResourcesSnapshotInfoDescription,
 	ClusterInstInfoFieldResourcesSnapshotInfoUnits,
 	ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold,
@@ -3294,7 +3306,8 @@ var ClusterInstInfoAllFieldsMap = map[string]struct{}{
 	ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts:                  struct{}{},
 	ClusterInstInfoFieldResourcesSnapshotInfoName:                               struct{}{},
 	ClusterInstInfoFieldResourcesSnapshotInfoValue:                              struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoMaxValue:                           struct{}{},
+	ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
+	ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
 	ClusterInstInfoFieldResourcesSnapshotInfoDescription:                        struct{}{},
 	ClusterInstInfoFieldResourcesSnapshotInfoUnits:                              struct{}{},
 	ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
@@ -3334,7 +3347,8 @@ var ClusterInstInfoAllFieldsStringMap = map[string]string{
 	ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts:                  "Resources Snapshot Vms Containers Restarts",
 	ClusterInstInfoFieldResourcesSnapshotInfoName:                               "Resources Snapshot Info Name",
 	ClusterInstInfoFieldResourcesSnapshotInfoValue:                              "Resources Snapshot Info Value",
-	ClusterInstInfoFieldResourcesSnapshotInfoMaxValue:                           "Resources Snapshot Info Max Value",
+	ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue:                      "Resources Snapshot Info Infra Max Value",
+	ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      "Resources Snapshot Info Quota Max Value",
 	ClusterInstInfoFieldResourcesSnapshotInfoDescription:                        "Resources Snapshot Info Description",
 	ClusterInstInfoFieldResourcesSnapshotInfoUnits:                              "Resources Snapshot Info Units",
 	ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold:                     "Resources Snapshot Info Alert Threshold",
@@ -3525,8 +3539,13 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
 				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Info[i1].MaxValue != o.ResourcesSnapshot.Info[i1].MaxValue {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoMaxValue] = struct{}{}
+			if m.ResourcesSnapshot.Info[i1].InfraMaxValue != o.ResourcesSnapshot.Info[i1].InfraMaxValue {
+				fields[ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].QuotaMaxValue != o.ResourcesSnapshot.Info[i1].QuotaMaxValue {
+				fields[ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue] = struct{}{}
 				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
 				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
 			}

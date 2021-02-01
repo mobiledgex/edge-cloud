@@ -221,51 +221,9 @@ func getClusterInstVMRequirements(ctx context.Context, stm concurrency.STM, in *
 	return res, nil
 }
 
-func validateCloudletCommonResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, allClusterResources, reqdVmResources []edgeproto.VMResource) ([]string, error) {
-	gpusReqd := uint64(0)
-	gpusUsed := uint64(0)
-	gpusMax := uint64(0)
-	gpuThreshPercent := cloudlet.DefaultResourceAlertThreshold
-	for _, resQuota := range cloudlet.ResourceQuotas {
-		switch resQuota.Name {
-		case cloudcommon.ResourceGpus:
-			gpusMax = resQuota.Value
-			gpuThreshPercent = resQuota.AlertThreshold
-		}
-	}
-	for _, vmRes := range allClusterResources {
-		if vmRes.VmFlavor != nil {
-			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
-				gpusUsed += 1
-			}
-		}
-	}
-	for _, vmRes := range reqdVmResources {
-		if vmRes.VmFlavor != nil {
-			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
-				gpusReqd += 1
-			}
-		}
-	}
-	var err error
-	warnings := []string{}
-	if gpusMax > 0 {
-		if float64(gpusUsed*100)/float64(gpusMax) > float64(gpuThreshPercent) {
-			warnings = append(warnings, fmt.Sprintf("More than %d%% of GPUs are used", gpuThreshPercent))
-		}
-		gpusAvailable := gpusMax - gpusUsed
-		if gpusReqd > gpusAvailable {
-			err = fmt.Errorf("Not enough GPUs available, required %d but only %d is available", gpusReqd, gpusAvailable)
-		}
-	}
-	return warnings, err
-}
-
 // Validate resource requirements for the VMs on the cloudlet
-func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource) ([]string, error) {
+func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource) ([]string, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
-
-	defaultAlertThresh := cloudlet.DefaultResourceAlertThreshold
 
 	infraResInfo := make(map[string]*edgeproto.InfraResource)
 	for _, resInfo := range infraResources.Info {
@@ -274,44 +232,28 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 		infraResInfo[newResInfo.Name] = newResInfo
 	}
 
-	reqdResInfo, err := GetCloudletResourceInfo(ctx, cloudlet, reqdVmResources, infraResInfo)
+	reqdResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, reqdVmResources, infraResInfo)
 	if err != nil {
 		return nil, err
 	}
-	allResInfo, err := GetCloudletResourceInfo(ctx, cloudlet, allClusterResources, infraResInfo)
+	allResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, allClusterResources, infraResInfo)
 	if err != nil {
 		return nil, err
 	}
-	diffResInfo, err := GetCloudletResourceInfo(ctx, cloudlet, diffVmResources, infraResInfo)
+	diffResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, diffVmResources, infraResInfo)
 	if err != nil {
 		return nil, err
-	}
-	resQuotasInfo := make(map[string]edgeproto.InfraResource)
-	for _, resQuota := range cloudlet.ResourceQuotas {
-		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
-			Name:           resQuota.Name,
-			Value:          resQuota.Value,
-			AlertThreshold: resQuota.AlertThreshold,
-		}
 	}
 
 	warnings := []string{}
 	quotaResReqd := make(map[string]uint64)
 
 	// Theoretical Validation
+	errsStr := []string{}
 	for resName, resInfo := range allResInfo {
-		max := resInfo.MaxValue
-		thresh := defaultAlertThresh
-		// look up quota if any
-		if quota, found := resQuotasInfo[resName]; found {
-			if quota.Value > 0 {
-				// Set max value from resource quota
-				max = quota.Value
-			}
-			if quota.AlertThreshold > 0 {
-				// Set threshold value from resource quota
-				thresh = quota.AlertThreshold
-			}
+		max := resInfo.QuotaMaxValue
+		if max == 0 {
+			max = resInfo.InfraMaxValue
 		}
 		if max == 0 {
 			// no validation can be done
@@ -322,13 +264,31 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
 		}
 		thAvailableResVal := max - resInfo.Value
-		if float64(resInfo.Value*100)/float64(max) > float64(thresh) {
-			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", thresh, resName))
+		if float64(resInfo.Value*100)/float64(max) > float64(resInfo.AlertThreshold) {
+			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > thAvailableResVal {
-			return warnings, fmt.Errorf("Not enough %s available, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units)
+			errsStr = append(errsStr, fmt.Sprintf("%s, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units))
 		}
 		quotaResReqd[resName] = thAvailableResVal
+	}
+
+	err = nil
+	if len(errsStr) > 0 {
+		errsOut := strings.Join(errsStr, "\n")
+		err = fmt.Errorf("Not enough resources available:\n%s", errsOut)
+	}
+	if err != nil {
+		return warnings, err
+	}
+
+	resQuotasInfo := make(map[string]edgeproto.InfraResource)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
+			Name:           resQuota.Name,
+			Value:          resQuota.Value,
+			AlertThreshold: resQuota.AlertThreshold,
+		}
 	}
 
 	// Infra based validation
@@ -337,29 +297,28 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 			infraResInfo[resName].Value += resInfo.Value
 		}
 	}
+	errsStr = []string{}
 	for resName, resInfo := range infraResInfo {
-		thresh := defaultAlertThresh
-		// look up quota if any
-		if quota, found := resQuotasInfo[resName]; found {
-			if quota.AlertThreshold > 0 {
-				// Set threshold value from resource quota
-				thresh = quota.AlertThreshold
-			}
-		}
-		if resInfo.MaxValue == 0 {
+		if resInfo.InfraMaxValue == 0 {
 			// no validation can be done
 			continue
+		}
+		resInfo.AlertThreshold = cloudlet.DefaultResourceAlertThreshold
+		if quota, ok := resQuotasInfo[resInfo.Name]; ok {
+			if quota.AlertThreshold > 0 {
+				resInfo.AlertThreshold = quota.AlertThreshold
+			}
 		}
 		resReqd, ok := reqdResInfo[resName]
 		if !ok {
 			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
 		}
-		infraAvailableResVal := resInfo.MaxValue - resInfo.Value
-		if float64(resInfo.Value*100)/float64(resInfo.MaxValue) > float64(thresh) {
-			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", thresh, resName))
+		infraAvailableResVal := resInfo.InfraMaxValue - resInfo.Value
+		if float64(resInfo.Value*100)/float64(resInfo.InfraMaxValue) > float64(resInfo.AlertThreshold) {
+			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > infraAvailableResVal {
-			return warnings, fmt.Errorf("[Infra] Not enough %s available, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units)
+			errsStr = append(errsStr, fmt.Sprintf("%s, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units))
 		}
 		if resVal, ok := quotaResReqd[resName]; ok {
 			// generate alert if expected resource quota is not available
@@ -368,8 +327,13 @@ func validateCloudletInfraResources(ctx context.Context, cloudlet *edgeproto.Clo
 			}
 		}
 	}
+	err = nil
+	if len(errsStr) > 0 {
+		errsOut := strings.Join(errsStr, "\n")
+		err = fmt.Errorf("[Infra] Not enough resources available:\n%s", errsOut)
+	}
 
-	return warnings, nil
+	return warnings, err
 }
 
 // getAllCloudletResources
@@ -446,7 +410,7 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		// this is done to get accurate resource information
 		aiRefKey := &edgeproto.AppInstRefKey{}
 		aiRefKey.FromAppInstKey(&appInstKey)
-		if _, ok := snapshotVmAppInsts[*aiRefKey]; !ok {
+		if _, ok := snapshotVmAppInsts[*aiRefKey]; ok {
 			continue
 		}
 		diffVmResources = append(diffVmResources, vmRes...)
@@ -481,18 +445,13 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 		return err
 	}
 
-	warnings, err := validateCloudletCommonResources(ctx, stm, cloudlet, allVmResources, reqdVmResources)
-	if err != nil {
-		return err
-	}
-	infraWarnings, err := validateCloudletInfraResources(ctx, cloudlet, &cloudletInfo.ResourcesSnapshot, allVmResources, reqdVmResources, diffVmResources)
+	warnings, err := validateCloudletInfraResources(ctx, stm, cloudlet, &cloudletInfo.ResourcesSnapshot, allVmResources, reqdVmResources, diffVmResources)
 	if err != nil {
 		return err
 	}
 
 	// generate alerts for these warnings
 	// clear off those alerts which are no longer firing
-	warnings = append(warnings, infraWarnings...)
 	handleResourceUsageAlerts(ctx, stm, &cloudlet.Key, warnings)
 	return nil
 }
@@ -846,16 +805,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
-		metrics := []*edgeproto.Metric{}
-		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
-			return err
-		})
-		if resErr == nil {
-			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
-		} else {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
-		}
+		s.updateCloudletResourcesMetric(ctx, in)
 	}
 	return err
 }
@@ -983,19 +933,23 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(), "Updated ClusterInst successfully", cb.Send)
 	if err == nil {
-		metrics := []*edgeproto.Metric{}
-		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
-			return err
-		})
-		if resErr == nil {
-			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
-		} else {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
-		}
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		s.updateCloudletResourcesMetric(ctx, in)
 	}
 	return err
+}
+
+func (s *ClusterInstApi) updateCloudletResourcesMetric(ctx context.Context, in *edgeproto.ClusterInst) {
+	var err error
+	metrics := []*edgeproto.Metric{}
+	resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+		return err
+	})
+	if resErr == nil {
+		services.cloudletResourcesInfluxQ.AddMetric(metrics...)
+	} else {
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+	}
 }
 
 func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst) error {
@@ -1164,17 +1118,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
-		metrics := []*edgeproto.Metric{}
-		resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
-			return err
-		})
-		if resErr == nil {
-			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
-		} else {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
-		}
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		s.updateCloudletResourcesMetric(ctx, in)
 	}
 	return err
 }

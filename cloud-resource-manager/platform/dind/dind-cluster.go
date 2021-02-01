@@ -151,18 +151,18 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 		},
 		Info: []edgeproto.InfraResource{
 			edgeproto.InfraResource{
-				Name:     cloudcommon.ResourceRamMb,
-				MaxValue: uint64(info.OsMaxRam),
-				Units:    cloudcommon.ResourceRamUnits,
+				Name:          cloudcommon.ResourceRamMb,
+				InfraMaxValue: uint64(info.OsMaxRam),
+				Units:         cloudcommon.ResourceRamUnits,
 			},
 			edgeproto.InfraResource{
-				Name:     cloudcommon.ResourceVcpus,
-				MaxValue: uint64(info.OsMaxVcores),
+				Name:          cloudcommon.ResourceVcpus,
+				InfraMaxValue: uint64(info.OsMaxVcores),
 			},
 			edgeproto.InfraResource{
-				Name:     cloudcommon.ResourceDiskGb,
-				MaxValue: uint64(500),
-				Units:    cloudcommon.ResourceDiskUnits,
+				Name:          cloudcommon.ResourceDiskGb,
+				InfraMaxValue: uint64(500),
+				Units:         cloudcommon.ResourceDiskUnits,
 			},
 		},
 	}

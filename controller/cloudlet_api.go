@@ -1851,26 +1851,51 @@ func (s *CloudletApi) WaitForTrustPolicyState(ctx context.Context, key *edgeprot
 	return err
 }
 
-func GetCloudletResourceInfo(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) (map[string]*edgeproto.InfraResource, error) {
+func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) (map[string]*edgeproto.InfraResource, error) {
+	resQuotasInfo := make(map[string]edgeproto.InfraResource)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
+			Name:           resQuota.Name,
+			Value:          resQuota.Value,
+			AlertThreshold: resQuota.AlertThreshold,
+		}
+	}
+
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
 	if err != nil {
 		return nil, err
 	}
 	cloudletRes := map[string]string{
+		// Common Cloudlet Resources
 		cloudcommon.ResourceRamMb:  cloudcommon.ResourceRamUnits,
 		cloudcommon.ResourceVcpus:  "",
 		cloudcommon.ResourceDiskGb: cloudcommon.ResourceDiskUnits,
+		cloudcommon.ResourceGpus:   "",
 	}
 	resInfo := make(map[string]*edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
-		resMax := uint64(0)
+		infraResMax := uint64(0)
 		if infraRes, ok := infraResMap[resName]; ok {
-			resMax = infraRes.MaxValue
+			infraResMax = infraRes.InfraMaxValue
+		}
+		thresh := cloudlet.DefaultResourceAlertThreshold
+		quotaMax := uint64(0)
+		// look up quota if any
+		if quota, found := resQuotasInfo[resName]; found {
+			if quota.Value != 0 {
+				quotaMax = quota.Value
+			}
+			if quota.AlertThreshold > 0 {
+				// Set threshold values from Resource quotas
+				thresh = quota.AlertThreshold
+			}
 		}
 		resInfo[resName] = &edgeproto.InfraResource{
-			Name:     resName,
-			MaxValue: resMax,
-			Units:    resUnits,
+			Name:           resName,
+			Units:          resUnits,
+			InfraMaxValue:  infraResMax,
+			QuotaMaxValue:  quotaMax,
+			AlertThreshold: thresh,
 		}
 	}
 
@@ -1879,17 +1904,34 @@ func GetCloudletResourceInfo(ctx context.Context, cloudlet *edgeproto.Cloudlet, 
 			resInfo[cloudcommon.ResourceRamMb].Value += vmRes.VmFlavor.Ram
 			resInfo[cloudcommon.ResourceVcpus].Value += vmRes.VmFlavor.Vcpus
 			resInfo[cloudcommon.ResourceDiskGb].Value += vmRes.VmFlavor.Disk
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
+				resInfo[cloudcommon.ResourceGpus].Value += 1
+			}
 		}
 	}
 	addResInfo := cloudletPlatform.GetClusterAdditionalResources(ctx, cloudlet, vmResources, infraResMap)
 	for k, v := range addResInfo {
+		thresh := cloudlet.DefaultResourceAlertThreshold
+		quotaMax := uint64(0)
+		// look up quota if any
+		if quota, found := resQuotasInfo[k]; found {
+			if quota.Value != 0 {
+				quotaMax = quota.Value
+			}
+			if quota.AlertThreshold > 0 {
+				// Set threshold values from Resource quotas
+				thresh = quota.AlertThreshold
+			}
+		}
+		v.AlertThreshold = thresh
+		v.QuotaMaxValue = quotaMax
 		resInfo[k] = v
 	}
 	return resInfo, nil
 }
 
 // Get actual resource info used by the cloudlet
-func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraResInfo []edgeproto.InfraResource, diffVmResources []edgeproto.VMResource, infraUsage bool) ([]edgeproto.InfraResource, error) {
+func getResourceUsage(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResInfo []edgeproto.InfraResource, diffVmResources []edgeproto.VMResource, infraUsage bool) ([]edgeproto.InfraResource, error) {
 	resQuotasInfo := make(map[string]edgeproto.InfraResource)
 	for _, resQuota := range cloudlet.ResourceQuotas {
 		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
@@ -1902,12 +1944,11 @@ func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraRe
 	infraResInfoMap := make(map[string]*edgeproto.InfraResource)
 	for _, resInfo := range infraResInfo {
 		thresh := defaultAlertThresh
-		max := resInfo.MaxValue
 		// look up quota if any
 		if quota, found := resQuotasInfo[resInfo.Name]; found {
-			if quota.Value != 0 {
+			if quota.Value > 0 {
 				// Set max values from Resource quotas
-				max = quota.Value
+				resInfo.QuotaMaxValue = quota.Value
 			}
 			if quota.AlertThreshold > 0 {
 				// Set threshold values from Resource quotas
@@ -1916,14 +1957,13 @@ func getResourceUsage(ctx context.Context, cloudlet *edgeproto.Cloudlet, infraRe
 		}
 		if !infraUsage {
 			resInfo.Value = 0
-			resInfo.MaxValue = max
 		}
 		resInfo.AlertThreshold = thresh
 		newResInfo := &edgeproto.InfraResource{}
 		newResInfo.DeepCopyIn(&resInfo)
 		infraResInfoMap[newResInfo.Name] = newResInfo
 	}
-	diffResInfo, err := GetCloudletResourceInfo(ctx, cloudlet, diffVmResources, infraResInfoMap)
+	diffResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, diffVmResources, infraResInfoMap)
 	if err != nil {
 		return nil, err
 	}
@@ -1969,9 +2009,9 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 		if !usage.InfraUsage {
 			infraResources.ClusterInsts = []edgeproto.ClusterInstRefKey{}
 			infraResources.VmAppInsts = []edgeproto.AppInstRefKey{}
-			resInfo, err = getResourceUsage(ctx, &cloudlet, infraResources.Info, allVmResources, usage.InfraUsage)
+			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, allVmResources, usage.InfraUsage)
 		} else {
-			resInfo, err = getResourceUsage(ctx, &cloudlet, infraResources.Info, diffVmResources, usage.InfraUsage)
+			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, diffVmResources, usage.InfraUsage)
 		}
 		if err != nil {
 			return err

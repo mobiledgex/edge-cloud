@@ -1635,7 +1635,8 @@ var CloudletResourceQuotaPropsOptionalArgs = []string{
 	"platformtype",
 	"props:#.name",
 	"props:#.value",
-	"props:#.maxvalue",
+	"props:#.inframaxvalue",
+	"props:#.quotamaxvalue",
 	"props:#.description",
 	"props:#.units",
 	"props:#.alertthreshold",
@@ -1645,24 +1646,28 @@ var CloudletResourceQuotaPropsComments = map[string]string{
 	"platformtype":           "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd",
 	"props:#.name":           "Resource name",
 	"props:#.value":          "Resource value",
-	"props:#.maxvalue":       "Resource max value",
+	"props:#.inframaxvalue":  "Resource infra max value",
+	"props:#.quotamaxvalue":  "Resource quota max value",
 	"props:#.description":    "Resource description",
 	"props:#.units":          "Resource units",
 	"props:#.alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var CloudletResourceQuotaPropsSpecialArgs = map[string]string{}
 var CloudletResourceUsageRequiredArgs = []string{
-	"key.organization",
-	"key.name",
+	"cloudlet-org",
+	"cloudlet",
 }
 var CloudletResourceUsageOptionalArgs = []string{
 	"infrausage",
 }
-var CloudletResourceUsageAliasArgs = []string{}
+var CloudletResourceUsageAliasArgs = []string{
+	"cloudlet-org=key.organization",
+	"cloudlet=key.name",
+}
 var CloudletResourceUsageComments = map[string]string{
-	"key.organization": "Organization of the cloudlet site",
-	"key.name":         "Name of the cloudlet",
-	"infrausage":       "Show Infra based usage",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"infrausage":   "Show Infra based usage",
 }
 var CloudletResourceUsageSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
@@ -1752,7 +1757,8 @@ var CloudletInfoOptionalArgs = []string{
 	"resourcessnapshot.vms:#.containers:#.restarts",
 	"resourcessnapshot.info:#.name",
 	"resourcessnapshot.info:#.value",
-	"resourcessnapshot.info:#.maxvalue",
+	"resourcessnapshot.info:#.inframaxvalue",
+	"resourcessnapshot.info:#.quotamaxvalue",
 	"resourcessnapshot.info:#.description",
 	"resourcessnapshot.info:#.units",
 	"resourcessnapshot.info:#.alertthreshold",
@@ -1803,7 +1809,8 @@ var CloudletInfoComments = map[string]string{
 	"resourcessnapshot.vms:#.containers:#.restarts":                 "Restart count, applicable to kubernetes only",
 	"resourcessnapshot.info:#.name":                                 "Resource name",
 	"resourcessnapshot.info:#.value":                                "Resource value",
-	"resourcessnapshot.info:#.maxvalue":                             "Resource max value",
+	"resourcessnapshot.info:#.inframaxvalue":                        "Resource infra max value",
+	"resourcessnapshot.info:#.quotamaxvalue":                        "Resource quota max value",
 	"resourcessnapshot.info:#.description":                          "Resource description",
 	"resourcessnapshot.info:#.units":                                "Resource units",
 	"resourcessnapshot.info:#.alertthreshold":                       "Generate alert when more than threshold percentage of resource is used",
@@ -1985,7 +1992,8 @@ var GetCloudletResourceQuotaPropsRequiredArgs = []string{
 var GetCloudletResourceQuotaPropsOptionalArgs = []string{
 	"props:#.name",
 	"props:#.value",
-	"props:#.maxvalue",
+	"props:#.inframaxvalue",
+	"props:#.quotamaxvalue",
 	"props:#.description",
 	"props:#.units",
 	"props:#.alertthreshold",

@@ -170,7 +170,7 @@ func ValidateCloudletResourceQuotas(ctx context.Context, infraResources *edgepro
 	}
 	validQuotas := make(map[string]uint64)
 	for _, info := range infraResources.Info {
-		validQuotas[info.Name] = info.MaxValue
+		validQuotas[info.Name] = info.InfraMaxValue
 	}
 	for _, commonRes := range CloudletResources {
 		validQuotas[commonRes.Name] = 0

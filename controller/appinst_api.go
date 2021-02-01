@@ -835,7 +835,37 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			log.InfoLog("Undo create AppInst", "undoErr", undoErr)
 		}
 	}
+	if err == nil {
+		s.updateCloudletResourcesMetric(ctx, in)
+	}
 	return err
+}
+
+func (s *AppInstApi) updateCloudletResourcesMetric(ctx context.Context, in *edgeproto.AppInst) {
+	var err error
+	metrics := []*edgeproto.Metric{}
+	skipMetric := true
+	resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		var app edgeproto.App
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return in.Key.AppKey.NotFoundError()
+		}
+		skipMetric = true
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.ClusterInstKey.CloudletKey)
+			skipMetric = false
+			return err
+		}
+		return nil
+	})
+	if !skipMetric {
+		if resErr == nil {
+			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
+		} else {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		}
+	}
+	return
 }
 
 func (s *AppInstApi) updateAppInstStore(ctx context.Context, in *edgeproto.AppInst) error {
@@ -1293,6 +1323,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				log.InfoLog("Undo delete AppInst", "undoErr", undoErr)
 			}
 			return err
+		}
+		if err == nil {
+			s.updateCloudletResourcesMetric(ctx, in)
 		}
 	}
 	// delete clusterinst afterwards if it was auto-created and nobody is left using it

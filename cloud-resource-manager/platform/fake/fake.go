@@ -212,26 +212,26 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 
 	resources.Info = []edgeproto.InfraResource{
 		edgeproto.InfraResource{
-			Name:     cloudcommon.ResourceRamMb,
-			Value:    FakeRamUsed,
-			MaxValue: FakeRamMax,
-			Units:    cloudcommon.ResourceRamUnits,
+			Name:          cloudcommon.ResourceRamMb,
+			Value:         FakeRamUsed,
+			InfraMaxValue: FakeRamMax,
+			Units:         cloudcommon.ResourceRamUnits,
 		},
 		edgeproto.InfraResource{
-			Name:     cloudcommon.ResourceVcpus,
-			Value:    FakeVcpusUsed,
-			MaxValue: FakeVcpusMax,
+			Name:          cloudcommon.ResourceVcpus,
+			Value:         FakeVcpusUsed,
+			InfraMaxValue: FakeVcpusMax,
 		},
 		edgeproto.InfraResource{
-			Name:     cloudcommon.ResourceDiskGb,
-			Value:    FakeDiskUsed,
-			MaxValue: FakeDiskMax,
-			Units:    cloudcommon.ResourceDiskUnits,
+			Name:          cloudcommon.ResourceDiskGb,
+			Value:         FakeDiskUsed,
+			InfraMaxValue: FakeDiskMax,
+			Units:         cloudcommon.ResourceDiskUnits,
 		},
 		edgeproto.InfraResource{
-			Name:     ResourceExternalIps,
-			Value:    FakeExternalIpsUsed,
-			MaxValue: FakeExternalIpsMax,
+			Name:          ResourceExternalIps,
+			Value:         FakeExternalIpsUsed,
+			InfraMaxValue: FakeExternalIpsMax,
 		},
 	}
 
@@ -248,12 +248,12 @@ func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *
 	for resName, resUnits := range cloudletRes {
 		resMax := uint64(0)
 		if infraRes, ok := infraResMap[resName]; ok {
-			resMax = infraRes.MaxValue
+			resMax = infraRes.InfraMaxValue
 		}
 		resInfo[resName] = &edgeproto.InfraResource{
-			Name:     resName,
-			MaxValue: resMax,
-			Units:    resUnits,
+			Name:          resName,
+			InfraMaxValue: resMax,
+			Units:         resUnits,
 		}
 	}
 

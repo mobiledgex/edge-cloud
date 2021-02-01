@@ -62,14 +62,16 @@ message InfraResource {
   string name = 1;
   // Resource value
   uint64 value = 2;
-  // Resource max value
-  uint64 max_value = 3;
+  // Resource infra max value
+  uint64 infra_max_value = 3;
+  // Resource quota max value
+  uint64 quota_max_value = 4;
   // Resource description
-  string description = 4;
+  string description = 5;
   // Resource units
-  string units = 5;
+  string units = 6;
   // Generate alert when more than threshold percentage of resource is used
-  int32 alert_threshold = 6;
+  int32 alert_threshold = 7;
 }
 
 // ClusterInst Ref Key

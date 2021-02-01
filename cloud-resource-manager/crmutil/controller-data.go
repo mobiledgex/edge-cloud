@@ -314,16 +314,19 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		// create or update k8s cluster on this cloudlet
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateClusterCacheCallback)
 		if err != nil {
+			// Marks end of clusterinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 			return
 		}
 		go func() {
-			// Marks end of clusterinst change and hence reduces ref count
-			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
-
 			var cloudlet edgeproto.Cloudlet
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm create ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
+
+			// Marks end of clusterinst change and hence reduces ref count
+			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
+
 			if !cd.CloudletCache.Get(&new.Key.CloudletKey, &cloudlet) {
 				log.WarnLog("Could not find cloudlet in cache", "key", new.Key.CloudletKey)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey), updateClusterCacheCallback)
@@ -420,14 +423,18 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		// clusterInst was deleted
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback)
 		if err != nil {
+			// Marks end of clusterinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 			return
 		}
 		go func() {
-			// Marks end of clusterinst change and hence reduces ref count
-			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
+
+			// Marks end of clusterinst change and hence reduces ref count
+			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
+
 			log.SpanLog(ctx, log.DebugLevelInfra, "delete cluster inst", "ClusterInst", *new)
 			err = cd.platform.DeleteClusterInst(ctx, new, updateClusterCacheCallback)
 			if err != nil {
@@ -498,6 +505,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			str := fmt.Sprintf("Flavor %s not found",
 				new.Flavor.Name)
 			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
+			// Marks end of appinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
@@ -507,12 +516,16 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.Key.ClusterInstKey.ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
+				// Marks end of appinst change and hence reduces ref count
+				cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 				return
 			}
 		}
 
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateAppCacheCallback)
 		if err != nil {
+			// Marks end of appinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		go func() {
@@ -617,12 +630,16 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.Key.ClusterInstKey.ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateAppCacheCallback)
+				// Marks end of appinst change and hence reduces ref count
+				cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 				return
 			}
 		}
 		// appInst was deleted
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateAppCacheCallback)
 		if err != nil {
+			// Marks end of appinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		go func() {

@@ -44,6 +44,17 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 10,
 		Disk:  40,
 	},
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.tiny.gpu",
+		},
+		Ram:   1024,
+		Vcpus: 1,
+		Disk:  1,
+		OptResMap: map[string]string{
+			"gpu": "gpu:1",
+		},
+	},
 }
 
 var DevData = []string{
@@ -268,6 +279,25 @@ var CloudletData = []edgeproto.Cloudlet{
 		PhysicalName:                  "SanJoseSite",
 		Deployment:                    "docker",
 		DefaultResourceAlertThreshold: 80,
+		ResourceQuotas: []edgeproto.ResourceQuota{
+			edgeproto.ResourceQuota{
+				Name:           "GPUs",
+				Value:          10,
+				AlertThreshold: 10,
+			},
+			edgeproto.ResourceQuota{
+				Name:           "RAM",
+				AlertThreshold: 30,
+			},
+			edgeproto.ResourceQuota{
+				Name:           "vCPUs",
+				Value:          90,
+				AlertThreshold: 20,
+			},
+		},
+		ResTagMap: map[string]*edgeproto.ResTagTableKey{
+			"gpu": &Restblkeys[3],
+		},
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -748,24 +778,29 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
-					Name:     "RAM",
-					Value:    uint64(1024),
-					MaxValue: uint64(61440),
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(102400),
 				},
 				edgeproto.InfraResource{
-					Name:     "vCPUs",
-					Value:    uint64(10),
-					MaxValue: uint64(100),
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
-					Name:     "Disk",
-					Value:    uint64(20),
-					MaxValue: uint64(5000),
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
 				},
 				edgeproto.InfraResource{
-					Name:     "External IPs",
-					Value:    uint64(2),
-					MaxValue: uint64(10),
+					Name:          "GPUs",
+					Value:         uint64(6),
+					InfraMaxValue: uint64(20),
+				},
+				edgeproto.InfraResource{
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
 				},
 			},
 		},
@@ -799,24 +834,24 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
-					Name:     "RAM",
-					Value:    uint64(1024),
-					MaxValue: uint64(61440),
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(61440),
 				},
 				edgeproto.InfraResource{
-					Name:     "vCPUs",
-					Value:    uint64(10),
-					MaxValue: uint64(100),
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
-					Name:     "Disk",
-					Value:    uint64(20),
-					MaxValue: uint64(5000),
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
 				},
 				edgeproto.InfraResource{
-					Name:     "External IPs",
-					Value:    uint64(2),
-					MaxValue: uint64(10),
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
 				},
 			},
 		},
@@ -850,24 +885,24 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
-					Name:     "RAM",
-					Value:    uint64(1024),
-					MaxValue: uint64(61440),
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(61440),
 				},
 				edgeproto.InfraResource{
-					Name:     "vCPUs",
-					Value:    uint64(10),
-					MaxValue: uint64(100),
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
-					Name:     "Disk",
-					Value:    uint64(20),
-					MaxValue: uint64(5000),
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
 				},
 				edgeproto.InfraResource{
-					Name:     "External IPs",
-					Value:    uint64(2),
-					MaxValue: uint64(10),
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
 				},
 			},
 		},
@@ -895,24 +930,24 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
 				edgeproto.InfraResource{
-					Name:     "RAM",
-					Value:    uint64(1024),
-					MaxValue: uint64(1024000),
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(1024000),
 				},
 				edgeproto.InfraResource{
-					Name:     "vCPUs",
-					Value:    uint64(10),
-					MaxValue: uint64(100),
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
 				},
 				edgeproto.InfraResource{
-					Name:     "Disk",
-					Value:    uint64(20),
-					MaxValue: uint64(5000),
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
 				},
 				edgeproto.InfraResource{
-					Name:     "External IPs",
-					Value:    uint64(2),
-					MaxValue: uint64(10),
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
 				},
 			},
 		},
@@ -1139,6 +1174,10 @@ var Restblkeys = []edgeproto.ResTagTableKey{
 		Name:         "nic",
 		Organization: "AT&T Inc.",
 	},
+	edgeproto.ResTagTableKey{
+		Name:         "gput4",
+		Organization: "AT&T Inc.",
+	},
 }
 
 var ResTagTableData = []edgeproto.ResTagTable{
@@ -1156,6 +1195,10 @@ var ResTagTableData = []edgeproto.ResTagTable{
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[2],
 		Tags: map[string]string{"vcpu": "nvidia-63", "pci-passthru": "T4:1"},
+	},
+	edgeproto.ResTagTable{
+		Key:  Restblkeys[3],
+		Tags: map[string]string{"pci": "t4:1"},
 	},
 }
 

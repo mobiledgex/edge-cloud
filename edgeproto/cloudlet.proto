@@ -322,6 +322,7 @@ message CloudletResourceUsage {
   CloudletKey key = 1 [(gogoproto.nullable) = false];
   // Show Infra based usage
   bool infra_usage = 2;
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
 }
 
 service CloudletApi {
