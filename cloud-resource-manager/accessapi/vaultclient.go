@@ -139,3 +139,11 @@ func (s *VaultClient) GetSessionTokens(ctx context.Context, arg []byte) (map[str
 	}
 	return cloudletPlatform.GetAccessData(ctx, s.cloudlet, s.region, s.vaultConfig, GetSessionTokens, arg)
 }
+
+func (s *VaultClient) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
+	publicCert, err := vault.GetPublicCert(s.vaultConfig, commonName)
+	if err != nil {
+		return nil, err
+	}
+	return publicCert, nil
+}

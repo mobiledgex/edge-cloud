@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -170,7 +171,7 @@ func TestCRM(t *testing.T) {
 	basicUpgradeHandler := node.BasicUpgradeHandler{
 		KeyServer: keyServer,
 	}
-	getPublicCertApi := &node.TestPublicCertApi{}
+	getPublicCertApi := &cloudcommon.TestPublicCertApi{}
 	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
 	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	require.Nil(t, err)

@@ -17,6 +17,8 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
@@ -45,8 +47,6 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
-var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
-var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"DMUUS\"},\"name\":\"tmocloud1\"}'")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
@@ -538,12 +538,46 @@ func main() {
 		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
 
-	creds, err := tls.ServerAuthServerCreds(*tlsApiCertFile, *tlsApiKeyFile)
+	// Setup AccessApi for dme
+	var accessApi platform.AccessApi
+	if *cloudletDme {
+		// Setup connection to controller for access API
+		if !nodeMgr.AccessKeyClient.IsEnabled() {
+			span.Finish()
+			log.FatalLog("access key client is not enabled")
+		}
+		log.SpanLog(ctx, log.DebugLevelInfo, "Setup persistent access connection to Controller")
+		ctrlConn, err := nodeMgr.AccessKeyClient.ConnectController(ctx)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to connect to controller", "err", err)
+			span.Finish()
+			log.FatalLog("Failed to connect to controller for access API", "err", err)
+		}
+		defer ctrlConn.Close()
+		// Create CloudletAccessApiClient
+		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
+		accessApi = accessapi.NewControllerClient(accessClient)
+	} else {
+		// DME has direct access to vault
+		cloudlet := &edgeproto.Cloudlet{
+			Key: dmecommon.MyCloudletKey,
+		}
+		accessApi = accessapi.NewVaultClient(cloudlet, nodeMgr.VaultConfig, *region)
+	}
+	// Setup PublicCertManager for dme
+	publicCertManager := node.NewPublicCertManager(nodeMgr.CommonName(), accessApi)
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
+		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), &cloudcommon.TestPublicCertApi{})
+	}
+	publicCertManager.StartRefresh()
+	// Get TLS Config for grpc Creds from PublicCertManager
+	dmeServerTlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	if err != nil {
 		span.Finish()
-		log.FatalLog("get TLS Credentials", "error", err)
+		log.FatalLog("get TLS config for grpc server failed", "err", err)
 	}
-	grpcOpts = append(grpcOpts, grpc.Creds(creds))
+	grpcOpts = append(grpcOpts, cloudcommon.GrpcCreds(dmeServerTlsConfig))
+
 	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
@@ -563,8 +597,8 @@ func main() {
 	// REST service
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
-		ApiAddr:     *apiAddr,
-		TlsCertFile: *tlsApiCertFile,
+		ApiAddr:        *apiAddr,
+		GetCertificate: publicCertManager.GetCertificateFunc(),
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},
@@ -575,17 +609,19 @@ func main() {
 		log.FatalLog("Failed to start grpc Gateway", "err", err)
 	}
 	mux.Handle("/", gw)
-	tlscfg := &ctls.Config{
-		MinVersion:               ctls.VersionTLS12,
-		CurvePreferences:         []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256},
-		PreferServerCipherSuites: true,
-		CipherSuites: []uint16{
-			ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-			ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-			ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		},
+	tlscfg, err := publicCertManager.GetServerTlsConfig(ctx)
+	if err != nil {
+		span.Finish()
+		log.FatalLog("get TLS config for http server failed", "err", err)
+	}
+	tlscfg.CurvePreferences = []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256}
+	tlscfg.PreferServerCipherSuites = true
+	tlscfg.CipherSuites = []uint16{
+		ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+		ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
 	}
 
 	// Suppress contant stream of TLS error logs due to LB health check. There is discussion in the community

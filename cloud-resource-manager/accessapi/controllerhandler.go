@@ -97,6 +97,12 @@ func (s *ControllerHandler) GetAccessData(ctx context.Context, req *edgeproto.Ac
 			return nil, err
 		}
 		out, merr = json.Marshal(tokens)
+	case GetPublicCert:
+		publicCert, err := s.vaultClient.GetPublicCert(ctx, string(req.Data))
+		if err != nil {
+			return nil, err
+		}
+		out, merr = json.Marshal(*publicCert)
 	default:
 		return nil, fmt.Errorf("Unexpected request data type %s", req.Type)
 	}
