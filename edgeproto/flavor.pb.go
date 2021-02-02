@@ -92,7 +92,7 @@ type Flavor struct {
 	// Amount of disk space in gigabytes
 	Disk uint64 `protobuf:"varint,5,opt,name=disk,proto3" json:"disk,omitempty"`
 	// Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci]
-	// form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1
+	// form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1
 	OptResMap map[string]string `protobuf:"bytes,6,rep,name=opt_res_map,json=optResMap,proto3" json:"opt_res_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
