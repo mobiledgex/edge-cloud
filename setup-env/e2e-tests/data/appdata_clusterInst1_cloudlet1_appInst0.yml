@@ -20,6 +20,7 @@ settings:
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 30s
   persistentconnectionmetricscollectioninterval: 1h0m0s
+  influxdbmetricsretention: 672h0m0s 
   cleanupreservableautoclusteridletime: 30m0s
 flavors:
 - key:
