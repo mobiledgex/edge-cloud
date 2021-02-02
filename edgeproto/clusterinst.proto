@@ -90,7 +90,7 @@ message ClusterInst {
   // Optional Resources required by OS flavor if any
   string opt_res = 27 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   // Resources used by cluster
-  InfraResourcesSnapshot resources_snapshot = 28 [(protogen.hidetag) = "nocmp", (protogen.backend) = true, (gogoproto.nullable) = false];
+  InfraResources resources = 28 [(protogen.hidetag) = "nocmp", (protogen.backend) = true, (gogoproto.nullable) = false];
   // Created at time
   distributed_match_engine.Timestamp created_at = 29 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Updated at time
@@ -185,7 +185,7 @@ message ClusterInstInfo {
   // status is used to reflect progress of creation or other events
   StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Resources allocated to this cluster
-  InfraResourcesSnapshot resources_snapshot = 7 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  InfraResources resources = 7 [(protogen.backend) = true, (gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

@@ -118,8 +118,8 @@ var AppInstRefKeyComments = map[string]string{
 	"clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 }
 var AppInstRefKeySpecialArgs = map[string]string{}
-var InfraResourcesSnapshotRequiredArgs = []string{}
-var InfraResourcesSnapshotOptionalArgs = []string{
+var InfraResourcesRequiredArgs = []string{}
+var InfraResourcesOptionalArgs = []string{
 	"vms:#.name",
 	"vms:#.type",
 	"vms:#.status",
@@ -131,6 +131,33 @@ var InfraResourcesSnapshotOptionalArgs = []string{
 	"vms:#.containers:#.status",
 	"vms:#.containers:#.clusterip",
 	"vms:#.containers:#.restarts",
+}
+var InfraResourcesAliasArgs = []string{}
+var InfraResourcesComments = map[string]string{
+	"vms:#.name":                   "Virtual machine name",
+	"vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"vms:#.status":                 "Runtime status of the VM",
+	"vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"vms:#.containers:#.name":      "Name of the container",
+	"vms:#.containers:#.type":      "Type can be docker or kubernetes",
+	"vms:#.containers:#.status":    "Runtime status of the container",
+	"vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
+	"vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
+}
+var InfraResourcesSpecialArgs = map[string]string{}
+var InfraResourcesSnapshotRequiredArgs = []string{}
+var InfraResourcesSnapshotOptionalArgs = []string{
+	"platformvms:#.name",
+	"platformvms:#.type",
+	"platformvms:#.status",
+	"platformvms:#.infraflavor",
+	"platformvms:#.ipaddresses:#.externalip",
+	"platformvms:#.ipaddresses:#.internalip",
+	"platformvms:#.containers:#.name",
+	"platformvms:#.containers:#.type",
+	"platformvms:#.containers:#.status",
+	"platformvms:#.containers:#.clusterip",
+	"platformvms:#.containers:#.restarts",
 	"info:#.name",
 	"info:#.value",
 	"info:#.inframaxvalue",
@@ -148,15 +175,15 @@ var InfraResourcesSnapshotOptionalArgs = []string{
 }
 var InfraResourcesSnapshotAliasArgs = []string{}
 var InfraResourcesSnapshotComments = map[string]string{
-	"vms:#.name":                                  "Virtual machine name",
-	"vms:#.type":                                  "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"vms:#.status":                                "Runtime status of the VM",
-	"vms:#.infraflavor":                           "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
-	"vms:#.containers:#.name":                     "Name of the container",
-	"vms:#.containers:#.type":                     "Type can be docker or kubernetes",
-	"vms:#.containers:#.status":                   "Runtime status of the container",
-	"vms:#.containers:#.clusterip":                "IP within the CNI and is applicable to kubernetes only",
-	"vms:#.containers:#.restarts":                 "Restart count, applicable to kubernetes only",
+	"platformvms:#.name":                          "Virtual machine name",
+	"platformvms:#.type":                          "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"platformvms:#.status":                        "Runtime status of the VM",
+	"platformvms:#.infraflavor":                   "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"platformvms:#.containers:#.name":             "Name of the container",
+	"platformvms:#.containers:#.type":             "Type can be docker or kubernetes",
+	"platformvms:#.containers:#.status":           "Runtime status of the container",
+	"platformvms:#.containers:#.clusterip":        "IP within the CNI and is applicable to kubernetes only",
+	"platformvms:#.containers:#.restarts":         "Restart count, applicable to kubernetes only",
 	"info:#.name":                                 "Resource name",
 	"info:#.value":                                "Resource value",
 	"info:#.inframaxvalue":                        "Resource infra max value",

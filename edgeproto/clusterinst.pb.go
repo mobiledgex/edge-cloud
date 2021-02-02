@@ -143,7 +143,7 @@ type ClusterInst struct {
 	// Optional Resources required by OS flavor if any
 	OptRes string `protobuf:"bytes,27,opt,name=opt_res,json=optRes,proto3" json:"opt_res,omitempty"`
 	// Resources used by cluster
-	ResourcesSnapshot InfraResourcesSnapshot `protobuf:"bytes,28,opt,name=resources_snapshot,json=resourcesSnapshot,proto3" json:"resources_snapshot"`
+	Resources InfraResources `protobuf:"bytes,28,opt,name=resources,proto3" json:"resources"`
 	// Created at time
 	CreatedAt dme_proto.Timestamp `protobuf:"bytes,29,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
 	// Updated at time
@@ -239,7 +239,7 @@ type ClusterInstInfo struct {
 	// status is used to reflect progress of creation or other events
 	Status StatusInfo `protobuf:"bytes,6,opt,name=status,proto3" json:"status"`
 	// Resources allocated to this cluster
-	ResourcesSnapshot InfraResourcesSnapshot `protobuf:"bytes,7,opt,name=resources_snapshot,json=resourcesSnapshot,proto3" json:"resources_snapshot"`
+	Resources InfraResources `protobuf:"bytes,7,opt,name=resources,proto3" json:"resources"`
 }
 
 func (m *ClusterInstInfo) Reset()         { *m = ClusterInstInfo{} }
@@ -285,110 +285,109 @@ func init() {
 func init() { proto.RegisterFile("clusterinst.proto", fileDescriptor_2d2ba73d39f00460) }
 
 var fileDescriptor_2d2ba73d39f00460 = []byte{
-	// 1644 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xcb, 0x6f, 0x1b, 0xc7,
-	0x19, 0xd7, 0x44, 0x32, 0x45, 0x0e, 0xa9, 0x07, 0x47, 0x0f, 0x8f, 0x69, 0x97, 0x62, 0xd9, 0x3a,
-	0x55, 0xdd, 0x15, 0xe9, 0xaa, 0x68, 0x5a, 0xa8, 0x09, 0x52, 0x52, 0x72, 0x0a, 0xc1, 0x95, 0x15,
-	0x2c, 0x93, 0xa0, 0x0d, 0x02, 0x2c, 0x56, 0xbb, 0x23, 0x6a, 0xe0, 0xdd, 0x99, 0xed, 0x3e, 0xe4,
-	0x50, 0xa7, 0x22, 0x97, 0x5c, 0x83, 0x1a, 0x05, 0x0c, 0x03, 0x2d, 0x7c, 0xf4, 0xd1, 0xf5, 0xa9,
-	0xf0, 0x5f, 0x20, 0xf4, 0xe4, 0xa2, 0x17, 0xc3, 0x07, 0xc3, 0xb5, 0x7b, 0x28, 0x7c, 0x2a, 0x60,
-	0xca, 0x30, 0xda, 0x4b, 0x31, 0xb3, 0x0f, 0x2e, 0x1f, 0x96, 0x0d, 0x39, 0x17, 0x62, 0xe7, 0xfb,
-	0x7e, 0xdf, 0x37, 0xdf, 0xfb, 0x1b, 0xc2, 0xa2, 0x61, 0x05, 0x9e, 0x4f, 0x5c, 0xca, 0x3c, 0xbf,
-	0xe6, 0xb8, 0xdc, 0xe7, 0x28, 0x47, 0xcc, 0x36, 0x91, 0x9f, 0xa5, 0x73, 0x6d, 0xce, 0xdb, 0x16,
-	0xa9, 0xeb, 0x0e, 0xad, 0xeb, 0x8c, 0x71, 0x5f, 0xf7, 0x29, 0x67, 0x5e, 0x08, 0x2c, 0xfd, 0xbc,
-	0x4d, 0xfd, 0xbd, 0x60, 0xa7, 0x66, 0x70, 0xbb, 0x6e, 0xf3, 0x1d, 0x6a, 0x09, 0xc1, 0x2f, 0xeb,
-	0xe2, 0x77, 0xc5, 0xb0, 0x78, 0x60, 0xd6, 0x25, 0xae, 0x4d, 0x58, 0xf2, 0x11, 0x49, 0x16, 0x5c,
-	0xe2, 0x05, 0x96, 0x1f, 0x9f, 0x76, 0x2d, 0x7d, 0x9f, 0xbb, 0xd1, 0x69, 0x2a, 0xb2, 0x28, 0x3a,
-	0x4e, 0x4b, 0x4d, 0x16, 0x49, 0xc0, 0x06, 0xb7, 0x6d, 0x1e, 0x2b, 0x9a, 0xa7, 0x6c, 0xd7, 0xd5,
-	0x5d, 0xe2, 0xf1, 0xc0, 0x35, 0x48, 0x6c, 0xd8, 0x7c, 0x9b, 0xb7, 0xb9, 0xfc, 0xac, 0x8b, 0xaf,
-	0x88, 0xba, 0xfe, 0x5a, 0x73, 0xcd, 0x15, 0x5b, 0xf7, 0x8d, 0xbd, 0x15, 0xc2, 0xda, 0x94, 0x91,
-	0xba, 0x69, 0x93, 0x95, 0x50, 0x8b, 0xc5, 0x8d, 0x50, 0x49, 0xf5, 0xef, 0x00, 0x4e, 0xaf, 0x87,
-	0x06, 0x6e, 0x32, 0xcf, 0xbf, 0x4c, 0x3a, 0xe8, 0x7d, 0x98, 0x8f, 0x4c, 0xd6, 0xae, 0x92, 0x0e,
-	0x06, 0x15, 0xb0, 0x9c, 0x5f, 0x5d, 0xa8, 0x25, 0x51, 0xac, 0x45, 0xf8, 0xcb, 0xa4, 0xd3, 0x9c,
-	0x38, 0x7c, 0xb4, 0x34, 0xa6, 0x42, 0x23, 0xa1, 0xa0, 0x0f, 0x61, 0x21, 0xf6, 0x50, 0x8a, 0xbf,
-	0x23, 0xc5, 0x17, 0xfb, 0xc4, 0x43, 0x76, 0x4f, 0x3e, 0x6f, 0xf4, 0x48, 0x68, 0x15, 0x16, 0xb8,
-	0xdb, 0xd6, 0x19, 0x3d, 0x90, 0xc9, 0xc1, 0xe3, 0x15, 0xb0, 0x9c, 0x6b, 0x4e, 0xdf, 0x7b, 0x81,
-	0xe3, 0x6b, 0xb8, 0xdb, 0x56, 0xfb, 0x30, 0x6b, 0x85, 0x7f, 0x3f, 0xc7, 0xe0, 0xe5, 0x73, 0x0c,
-	0xee, 0xdc, 0x5a, 0x02, 0xd5, 0xbf, 0xcd, 0xc0, 0x7c, 0xca, 0x27, 0xb4, 0x08, 0x33, 0xbb, 0x94,
-	0x58, 0xa6, 0x87, 0x41, 0x65, 0x7c, 0x39, 0xa7, 0x46, 0x27, 0xf4, 0x63, 0x38, 0xde, 0xb3, 0xf0,
-	0xcc, 0xb0, 0x83, 0x51, 0x40, 0x22, 0x23, 0x05, 0x16, 0xbd, 0x07, 0x33, 0x61, 0x72, 0xa5, 0x59,
-	0xf9, 0xd5, 0xf9, 0x94, 0xd4, 0x47, 0x92, 0x21, 0x04, 0xb2, 0xb7, 0xbb, 0x18, 0x48, 0xa1, 0x08,
-	0x8d, 0x7e, 0x0a, 0xb3, 0x16, 0xdd, 0x27, 0x8c, 0x78, 0x1e, 0xce, 0x55, 0xc0, 0xf2, 0xf4, 0xea,
-	0x5c, 0x4a, 0xf2, 0xd7, 0x11, 0xab, 0x39, 0x21, 0x04, 0xd5, 0x04, 0x8a, 0x30, 0x9c, 0xd0, 0x03,
-	0x9f, 0x63, 0x58, 0x01, 0xcb, 0xd9, 0x88, 0x2b, 0x29, 0xe8, 0x7d, 0x78, 0xca, 0xf3, 0x75, 0x9f,
-	0xe0, 0x09, 0xa9, 0xed, 0x74, 0x4a, 0xdb, 0x27, 0xae, 0x6e, 0x5c, 0x25, 0x66, 0x4b, 0xb0, 0x9b,
-	0x53, 0x42, 0xe6, 0x0f, 0x77, 0xcf, 0x9c, 0x62, 0xdc, 0xb0, 0x1d, 0x35, 0x14, 0x42, 0xe7, 0x61,
-	0x86, 0xb8, 0x2e, 0x77, 0x3d, 0x7c, 0x4a, 0x44, 0x64, 0x10, 0x15, 0x31, 0xd1, 0x06, 0x2c, 0x18,
-	0xae, 0xad, 0xf1, 0x7d, 0xe2, 0xba, 0xd4, 0x24, 0x38, 0x23, 0xef, 0xea, 0xcb, 0xa5, 0xba, 0xb5,
-	0x1d, 0x71, 0x9b, 0xb9, 0x9e, 0x82, 0xbc, 0xe1, 0xda, 0x31, 0x1d, 0xbd, 0x07, 0x73, 0xd4, 0xd1,
-	0x74, 0xc3, 0x10, 0xce, 0x4f, 0x0e, 0x39, 0xbf, 0xe9, 0x34, 0x24, 0x2b, 0x76, 0x9e, 0x46, 0x67,
-	0x74, 0x11, 0x16, 0x74, 0xcb, 0xe2, 0x86, 0xee, 0x13, 0x53, 0xa3, 0x0e, 0xce, 0xca, 0x42, 0x18,
-	0x30, 0x35, 0x9f, 0x40, 0x36, 0x1d, 0x54, 0x83, 0x79, 0xc6, 0x4d, 0xa2, 0x45, 0x29, 0xca, 0x8f,
-	0x12, 0x80, 0x02, 0x11, 0xa6, 0x0a, 0x7d, 0x1f, 0x42, 0x93, 0x38, 0x16, 0xef, 0xd8, 0x84, 0xf9,
-	0x78, 0x46, 0xc2, 0x43, 0x2b, 0x52, 0x74, 0xb4, 0x04, 0xf3, 0x2c, 0xb0, 0x35, 0x5b, 0x17, 0x35,
-	0xe1, 0xe1, 0xa9, 0x0a, 0x58, 0x9e, 0x52, 0x21, 0x0b, 0xec, 0xad, 0x90, 0x82, 0xce, 0xc2, 0x9c,
-	0x00, 0x08, 0xc5, 0x1e, 0x9e, 0x96, 0xec, 0x2c, 0x0b, 0xec, 0x2b, 0xe2, 0x8c, 0x7e, 0x09, 0x33,
-	0x22, 0xe6, 0x81, 0x87, 0x67, 0x87, 0x1a, 0xa9, 0x25, 0x19, 0x9b, 0x6c, 0x97, 0x37, 0x8b, 0x7d,
-	0x56, 0x86, 0xb5, 0x13, 0xca, 0xa1, 0x0f, 0xe1, 0x3c, 0xf9, 0xd2, 0x27, 0x2e, 0xd3, 0x2d, 0x6d,
-	0x9f, 0x5b, 0x81, 0x4d, 0x34, 0x8f, 0x1e, 0x10, 0x5c, 0xac, 0x80, 0xe5, 0x89, 0x41, 0xf7, 0x50,
-	0x0c, 0xfd, 0x4c, 0x22, 0x5b, 0xf4, 0x80, 0xa0, 0x0b, 0xb0, 0x28, 0x6a, 0x46, 0xf3, 0x0c, 0xdd,
-	0x22, 0x9a, 0xc3, 0x2d, 0x6a, 0x74, 0x30, 0x12, 0xde, 0xaa, 0x33, 0x82, 0xd1, 0x12, 0xf4, 0x8f,
-	0x25, 0x19, 0xfd, 0x08, 0x16, 0xf5, 0x7d, 0x9d, 0x5a, 0xfa, 0x0e, 0xb5, 0xa8, 0xdf, 0xd1, 0x0e,
-	0x38, 0x23, 0x78, 0x4e, 0x62, 0x67, 0xd3, 0x8c, 0xcf, 0x39, 0x23, 0x48, 0x81, 0x90, 0xda, 0x7a,
-	0x9b, 0x68, 0x4c, 0xb7, 0x09, 0x9e, 0x1f, 0x15, 0xee, 0x9c, 0x04, 0x5c, 0xd1, 0x6d, 0x82, 0xca,
-	0x10, 0xba, 0xc4, 0x23, 0xee, 0xbe, 0xbe, 0x63, 0x11, 0xbc, 0x20, 0x4a, 0x5a, 0x4d, 0x51, 0xd0,
-	0x79, 0x98, 0x0f, 0x4f, 0xc4, 0xd4, 0x76, 0x3a, 0x78, 0x31, 0x9d, 0x8e, 0x98, 0xd1, 0xec, 0x20,
-	0x05, 0x22, 0x6f, 0x4f, 0x77, 0x89, 0xd9, 0x17, 0x8c, 0xd3, 0x22, 0x18, 0xea, 0x6c, 0xc8, 0x49,
-	0xf9, 0xfe, 0x0b, 0x88, 0xc2, 0xc4, 0x69, 0xe9, 0xca, 0x38, 0x33, 0xca, 0xd4, 0xd9, 0x10, 0x78,
-	0xa5, 0x57, 0x1f, 0xbf, 0x82, 0x67, 0xbd, 0xab, 0xd4, 0xd1, 0x44, 0x13, 0x18, 0x16, 0xd1, 0x59,
-	0xe0, 0x68, 0x9c, 0x69, 0xbb, 0x3a, 0xb5, 0x02, 0x97, 0xe0, 0x92, 0xec, 0xca, 0x54, 0xd9, 0x9f,
-	0x16, 0xe8, 0x75, 0xd7, 0x5e, 0x0f, 0xb1, 0xdb, 0xec, 0xa3, 0x10, 0x89, 0xde, 0x85, 0x93, 0xdc,
-	0xf1, 0x35, 0x97, 0x78, 0xf8, 0xec, 0xa8, 0xab, 0x33, 0xdc, 0xf1, 0x55, 0xe2, 0x21, 0x03, 0xa2,
-	0x64, 0xf6, 0x6b, 0x1e, 0xd3, 0x1d, 0x6f, 0x8f, 0xfb, 0xf8, 0x9c, 0x2c, 0x9c, 0xef, 0xa6, 0x7b,
-	0x46, 0x6c, 0x09, 0x35, 0x46, 0xb6, 0x22, 0xe0, 0xa8, 0x22, 0x2a, 0xba, 0x83, 0x28, 0xf4, 0x5b,
-	0x08, 0x0d, 0x97, 0xc8, 0xae, 0xd2, 0x7d, 0xfc, 0x1d, 0xa9, 0xfc, 0x7b, 0x35, 0x93, 0x7a, 0xbe,
-	0x4b, 0x77, 0x02, 0x41, 0x96, 0x5b, 0x43, 0x0b, 0xb7, 0x46, 0xed, 0x13, 0x6a, 0x13, 0xcf, 0xd7,
-	0x6d, 0xa7, 0xb9, 0x10, 0xa9, 0xcf, 0xf9, 0x31, 0x49, 0x5e, 0x91, 0x8b, 0xb4, 0x35, 0xa4, 0xea,
-	0xc0, 0x31, 0x63, 0xd5, 0xe5, 0xb7, 0x57, 0x1d, 0x69, 0x6b, 0xf8, 0xc8, 0x82, 0xf3, 0x51, 0xad,
-	0x88, 0x89, 0xaf, 0x11, 0x66, 0x86, 0x97, 0x2c, 0xbd, 0xf5, 0x25, 0x28, 0xa5, 0xf7, 0x92, 0x50,
-	0xdb, 0xf0, 0xd7, 0xbe, 0x1e, 0x17, 0x1b, 0xe5, 0x3f, 0xcf, 0x31, 0xf8, 0x7d, 0x17, 0x83, 0x6f,
-	0xba, 0x18, 0xdc, 0xe8, 0x62, 0x70, 0xa7, 0x8b, 0xc1, 0xbd, 0x2e, 0x2e, 0xa4, 0x27, 0xec, 0x61,
-	0x17, 0x83, 0x07, 0x42, 0xef, 0x11, 0xfe, 0x13, 0x88, 0x07, 0xb9, 0xd2, 0x08, 0x7c, 0xae, 0x6c,
-	0x0d, 0xd4, 0x93, 0x92, 0xfa, 0xbc, 0x34, 0xd4, 0xa6, 0x4a, 0xa3, 0x37, 0xc9, 0x94, 0x70, 0x32,
-	0x28, 0x6a, 0x52, 0xf6, 0x92, 0x42, 0x94, 0x4b, 0x72, 0x30, 0x2b, 0x49, 0xea, 0x95, 0xc6, 0x40,
-	0x4f, 0x2a, 0xeb, 0x71, 0x32, 0x94, 0x4f, 0xe3, 0xd8, 0x29, 0xdb, 0xb2, 0xba, 0x6e, 0x1e, 0xe1,
-	0xeb, 0x20, 0x5a, 0xa1, 0x1f, 0x5c, 0x26, 0x9d, 0xd4, 0x1e, 0xaf, 0x89, 0x06, 0x55, 0xe2, 0x2d,
-	0x1c, 0x31, 0x93, 0x95, 0xdc, 0xcf, 0x5d, 0xe1, 0x6e, 0x7b, 0x08, 0xb1, 0x9d, 0xda, 0xc6, 0x4a,
-	0x74, 0x47, 0x02, 0xec, 0x63, 0x86, 0x1d, 0xf8, 0x41, 0x18, 0x06, 0xa9, 0xf9, 0xe1, 0x11, 0x9e,
-	0x19, 0xd0, 0x77, 0xf7, 0x05, 0xce, 0x18, 0x81, 0xe7, 0x73, 0xbb, 0xfa, 0x29, 0x2c, 0x6d, 0x9a,
-	0x16, 0x51, 0x93, 0x39, 0x91, 0x5a, 0xce, 0x1e, 0xfa, 0x21, 0xcc, 0x51, 0xd3, 0x22, 0x9a, 0xc8,
-	0xa8, 0x7c, 0xa9, 0x8c, 0x37, 0x0b, 0xff, 0x7d, 0xb4, 0x94, 0xdd, 0x08, 0x5c, 0x79, 0x9d, 0x9a,
-	0x15, 0x6c, 0x51, 0x02, 0x6b, 0x85, 0x97, 0x47, 0x18, 0xdc, 0x7d, 0x81, 0x27, 0x18, 0x67, 0xa4,
-	0xfa, 0xd5, 0x38, 0x9c, 0x49, 0x69, 0x12, 0x33, 0xf8, 0xdb, 0x7c, 0x27, 0xbc, 0x0b, 0x73, 0x8c,
-	0xfb, 0x74, 0xb7, 0xa3, 0x51, 0x53, 0x3e, 0x15, 0xc6, 0xd3, 0x73, 0x22, 0x1b, 0xf2, 0x36, 0x4d,
-	0xb4, 0xf2, 0x66, 0x6b, 0x3c, 0xde, 0xdb, 0x8b, 0xfd, 0x7b, 0x3b, 0x59, 0xd4, 0x3f, 0x4b, 0x96,
-	0x4c, 0xe6, 0xb8, 0x25, 0x93, 0x7a, 0x97, 0x44, 0xbb, 0xe5, 0xf3, 0x91, 0x03, 0x67, 0xf2, 0x4d,
-	0x07, 0x4e, 0x4f, 0xe1, 0xf0, 0x9c, 0x59, 0xab, 0x0c, 0xb6, 0xd0, 0xad, 0x2e, 0x06, 0x8f, 0xbb,
-	0xbd, 0x24, 0xac, 0xde, 0x98, 0xec, 0x7b, 0x7c, 0x36, 0x1c, 0x8a, 0xfe, 0x0c, 0x60, 0x31, 0x2c,
-	0xe1, 0xbe, 0x17, 0xdc, 0xe8, 0xa0, 0x97, 0x8a, 0x29, 0xba, 0x2a, 0x9f, 0xe0, 0xd5, 0x2f, 0x9e,
-	0x75, 0xf1, 0x6a, 0x6c, 0x69, 0xba, 0x56, 0x94, 0x86, 0x21, 0x2a, 0x62, 0x4b, 0x67, 0x7a, 0x9b,
-	0x28, 0x83, 0x75, 0x79, 0xfb, 0x08, 0x83, 0xfb, 0x47, 0x18, 0x7c, 0xf5, 0x8f, 0x7f, 0x5d, 0x7f,
-	0x07, 0x57, 0xe7, 0xea, 0xe1, 0x50, 0xab, 0xa7, 0xfe, 0x4e, 0xac, 0x81, 0x0b, 0x17, 0x01, 0xba,
-	0x09, 0x60, 0x71, 0x83, 0x58, 0xe4, 0xc4, 0x06, 0xfe, 0xe6, 0xe4, 0x06, 0x26, 0xc6, 0x99, 0xd2,
-	0x80, 0x61, 0xe3, 0xfe, 0x07, 0x60, 0x31, 0x6c, 0xfb, 0x13, 0x1a, 0xf7, 0x57, 0x70, 0x72, 0xeb,
-	0x1e, 0x1e, 0xe1, 0x2f, 0xe2, 0x41, 0x97, 0x3c, 0x8e, 0x86, 0x07, 0x54, 0xaf, 0x93, 0x95, 0xd6,
-	0xc0, 0xb6, 0x56, 0xe2, 0xb7, 0xa0, 0xb2, 0x91, 0x3c, 0xbf, 0x94, 0xcd, 0xf8, 0x01, 0x91, 0x78,
-	0x1f, 0x2e, 0x85, 0x61, 0xef, 0xff, 0x08, 0xe0, 0x4c, 0x6b, 0x8f, 0x5f, 0x7b, 0x13, 0xdf, 0x5f,
-	0x41, 0xaf, 0x7e, 0xfc, 0xac, 0x8b, 0x2f, 0x1e, 0xe3, 0xff, 0x67, 0x94, 0x5c, 0x1b, 0xf2, 0x5e,
-	0x5a, 0xb6, 0x58, 0x2d, 0xd6, 0xbd, 0x3d, 0x7e, 0x6d, 0xd8, 0xae, 0xbf, 0x00, 0x58, 0x09, 0x4b,
-	0xe6, 0x98, 0x49, 0x76, 0x3e, 0xdd, 0x6d, 0xaf, 0x84, 0x8d, 0xca, 0x59, 0xeb, 0x59, 0x17, 0x57,
-	0x5f, 0x9f, 0x32, 0x69, 0xe4, 0x0f, 0xaa, 0xd5, 0xb8, 0x78, 0xc4, 0x60, 0xec, 0xbd, 0xbe, 0x52,
-	0x46, 0x7b, 0x6b, 0xe0, 0xc2, 0xea, 0xd7, 0x00, 0xa2, 0x81, 0xf9, 0x28, 0xda, 0xf3, 0x77, 0x70,
-	0x6e, 0x20, 0xc2, 0x72, 0x72, 0x96, 0x46, 0x47, 0x53, 0xf0, 0x4a, 0xc7, 0xf0, 0xaa, 0x15, 0x69,
-	0x54, 0xa9, 0xba, 0x30, 0x14, 0x39, 0xca, 0x76, 0xb9, 0x8c, 0x5e, 0xf3, 0xdc, 0xe1, 0x3f, 0xcb,
-	0x63, 0x87, 0x4f, 0xca, 0xe0, 0xfe, 0x93, 0x32, 0x78, 0xfc, 0xa4, 0x0c, 0xbe, 0x79, 0x5a, 0x1e,
-	0xbb, 0xff, 0xb4, 0x3c, 0xf6, 0xe0, 0x69, 0x79, 0x6c, 0x27, 0x23, 0x15, 0xff, 0xe4, 0xff, 0x01,
-	0x00, 0x00, 0xff, 0xff, 0xc0, 0xba, 0x9b, 0x24, 0xf8, 0x0f, 0x00, 0x00,
+	// 1621 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xcb, 0x6f, 0x13, 0xcf,
+	0x1d, 0xcf, 0x90, 0xe0, 0xd8, 0x63, 0xe7, 0xe1, 0xc9, 0x83, 0xc1, 0x50, 0xc7, 0x72, 0x0b, 0x4d,
+	0xe9, 0xc6, 0xa6, 0xa9, 0x4a, 0xab, 0x14, 0x44, 0xed, 0x04, 0x2a, 0x97, 0x86, 0xa0, 0x0d, 0xa0,
+	0xb6, 0x42, 0x5a, 0x6d, 0x76, 0x27, 0xce, 0x88, 0xdd, 0x9d, 0xed, 0x3e, 0x02, 0xce, 0xa9, 0xea,
+	0x85, 0x2b, 0x2a, 0xaa, 0x84, 0x90, 0x5a, 0x71, 0xe4, 0x08, 0x9c, 0x2a, 0xfe, 0x82, 0x1c, 0xa9,
+	0x7a, 0x41, 0x1c, 0x10, 0x85, 0x1e, 0x5a, 0x4e, 0x95, 0x70, 0x10, 0x6a, 0x2f, 0x3f, 0xcd, 0xec,
+	0xc3, 0xeb, 0x07, 0x01, 0x85, 0xdf, 0xc5, 0xda, 0xf9, 0xbe, 0xe6, 0xf3, 0x7d, 0x8f, 0x61, 0x5e,
+	0x33, 0x7c, 0xd7, 0x23, 0x0e, 0xb5, 0x5c, 0xaf, 0x62, 0x3b, 0xcc, 0x63, 0x28, 0x43, 0xf4, 0x26,
+	0x11, 0x9f, 0x85, 0xe3, 0x4d, 0xc6, 0x9a, 0x06, 0xa9, 0xaa, 0x36, 0xad, 0xaa, 0x96, 0xc5, 0x3c,
+	0xd5, 0xa3, 0xcc, 0x72, 0x03, 0xc1, 0xc2, 0xcf, 0x9a, 0xd4, 0xdb, 0xf2, 0x37, 0x2a, 0x1a, 0x33,
+	0xab, 0x26, 0xdb, 0xa0, 0x06, 0x57, 0xbc, 0x5d, 0xe5, 0xbf, 0x0b, 0x9a, 0xc1, 0x7c, 0xbd, 0x2a,
+	0xe4, 0x9a, 0xc4, 0x8a, 0x3f, 0x42, 0xcd, 0x9c, 0x43, 0x5c, 0xdf, 0xf0, 0xa2, 0xd3, 0xa6, 0xa1,
+	0x6e, 0x33, 0x27, 0x3c, 0x8d, 0x85, 0x88, 0xc2, 0xe3, 0xb8, 0xb0, 0x64, 0x90, 0x58, 0x58, 0x63,
+	0xa6, 0xc9, 0x22, 0x43, 0xd3, 0xd4, 0xda, 0x74, 0x54, 0x87, 0xb8, 0xcc, 0x77, 0x34, 0x12, 0x01,
+	0x9b, 0x6e, 0xb2, 0x26, 0x13, 0x9f, 0x55, 0xfe, 0x15, 0x52, 0x97, 0x3f, 0x0b, 0x57, 0x5f, 0x30,
+	0x55, 0x4f, 0xdb, 0x5a, 0x20, 0x56, 0x93, 0x5a, 0xa4, 0xaa, 0x9b, 0x64, 0x21, 0xb0, 0x62, 0x30,
+	0x2d, 0x30, 0x52, 0xfe, 0x3b, 0x80, 0xe3, 0xcb, 0x01, 0xc0, 0x86, 0xe5, 0x7a, 0x97, 0x48, 0x0b,
+	0x9d, 0x85, 0xd9, 0x10, 0xb2, 0x72, 0x93, 0xb4, 0x30, 0x28, 0x81, 0xf9, 0xec, 0xe2, 0x4c, 0x25,
+	0x8e, 0x62, 0x25, 0x94, 0xbf, 0x44, 0x5a, 0xf5, 0x91, 0xdd, 0x57, 0x73, 0x43, 0x32, 0xd4, 0x62,
+	0x0a, 0x3a, 0x0f, 0x73, 0x91, 0x87, 0x42, 0xfd, 0x90, 0x50, 0x9f, 0xed, 0x52, 0x0f, 0xd8, 0x1d,
+	0xfd, 0xac, 0xd6, 0x21, 0xa1, 0x45, 0x98, 0x63, 0x4e, 0x53, 0xb5, 0xe8, 0x8e, 0x48, 0x0e, 0x1e,
+	0x2e, 0x81, 0xf9, 0x4c, 0x7d, 0xfc, 0xd9, 0x07, 0x1c, 0x5d, 0xc3, 0x9c, 0xa6, 0xdc, 0x25, 0xb3,
+	0x94, 0xfb, 0xf7, 0x7b, 0x0c, 0x3e, 0xbe, 0xc7, 0xe0, 0xf1, 0xc3, 0x39, 0x50, 0x7e, 0x32, 0x01,
+	0xb3, 0x09, 0x9f, 0xd0, 0x2c, 0x4c, 0x6d, 0x52, 0x62, 0xe8, 0x2e, 0x06, 0xa5, 0xe1, 0xf9, 0x8c,
+	0x1c, 0x9e, 0xd0, 0x8f, 0xe0, 0x70, 0x07, 0xe1, 0xd1, 0x7e, 0x07, 0xc3, 0x80, 0x84, 0x20, 0xb9,
+	0x2c, 0x3a, 0x03, 0x53, 0x41, 0x72, 0x05, 0xac, 0xec, 0xe2, 0x74, 0x42, 0xeb, 0xa2, 0x60, 0x70,
+	0x85, 0xf4, 0xa3, 0x36, 0x06, 0x42, 0x29, 0x94, 0x46, 0x3f, 0x81, 0x69, 0x83, 0x6e, 0x13, 0x8b,
+	0xb8, 0x2e, 0xce, 0x94, 0xc0, 0xfc, 0xf8, 0xe2, 0x54, 0x42, 0xf3, 0xd7, 0x21, 0xab, 0x3e, 0xc2,
+	0x15, 0xe5, 0x58, 0x14, 0x61, 0x38, 0xa2, 0xfa, 0x1e, 0xc3, 0xb0, 0x04, 0xe6, 0xd3, 0x21, 0x57,
+	0x50, 0xd0, 0x59, 0x78, 0xd8, 0xf5, 0x54, 0x8f, 0xe0, 0x11, 0x61, 0xed, 0x48, 0xc2, 0xda, 0x55,
+	0x47, 0xd5, 0x6e, 0x12, 0x7d, 0x9d, 0xb3, 0xeb, 0x63, 0x5c, 0xe7, 0x4f, 0x4f, 0x8f, 0x1e, 0xb6,
+	0x98, 0x66, 0xda, 0x72, 0xa0, 0x84, 0x4e, 0xc0, 0x14, 0x71, 0x1c, 0xe6, 0xb8, 0xf8, 0x30, 0x8f,
+	0x48, 0xaf, 0x54, 0xc8, 0x44, 0x2b, 0x30, 0xa7, 0x39, 0xa6, 0xc2, 0xb6, 0x89, 0xe3, 0x50, 0x9d,
+	0xe0, 0x94, 0xb8, 0xab, 0x2b, 0x97, 0xf2, 0xea, 0x5a, 0xc8, 0xad, 0x67, 0x3a, 0x06, 0xb2, 0x9a,
+	0x63, 0x46, 0x74, 0x74, 0x06, 0x66, 0xa8, 0xad, 0xa8, 0x9a, 0xc6, 0x9d, 0x1f, 0xed, 0x73, 0xbe,
+	0x61, 0xd7, 0x04, 0x2b, 0x72, 0x9e, 0x86, 0x67, 0x74, 0x1a, 0xe6, 0x54, 0xc3, 0x60, 0x9a, 0xea,
+	0x11, 0x5d, 0xa1, 0x36, 0x4e, 0x8b, 0x42, 0xe8, 0x81, 0x9a, 0x8d, 0x45, 0x1a, 0x36, 0xaa, 0xc0,
+	0xac, 0xc5, 0x74, 0xa2, 0x84, 0x29, 0xca, 0x0e, 0x52, 0x80, 0x5c, 0x22, 0x48, 0x15, 0xfa, 0x1e,
+	0x84, 0x3a, 0xb1, 0x0d, 0xd6, 0x32, 0x89, 0xe5, 0xe1, 0x09, 0x21, 0x1e, 0xa0, 0x48, 0xd0, 0xd1,
+	0x1c, 0xcc, 0x5a, 0xbe, 0xa9, 0x98, 0x2a, 0xaf, 0x09, 0x17, 0x8f, 0x95, 0xc0, 0xfc, 0x98, 0x0c,
+	0x2d, 0xdf, 0x5c, 0x0d, 0x28, 0xe8, 0x18, 0xcc, 0x70, 0x01, 0x6e, 0xd8, 0xc5, 0xe3, 0x82, 0x9d,
+	0xb6, 0x7c, 0xf3, 0x32, 0x3f, 0xa3, 0x5f, 0xc0, 0x14, 0x8f, 0xb9, 0xef, 0xe2, 0xc9, 0xbe, 0x46,
+	0x5a, 0x17, 0x8c, 0x86, 0xb5, 0xc9, 0xea, 0xf9, 0x2e, 0x94, 0x41, 0xed, 0x04, 0x7a, 0xe8, 0x3c,
+	0x9c, 0x26, 0xb7, 0x3d, 0xe2, 0x58, 0xaa, 0xa1, 0x6c, 0x33, 0xc3, 0x37, 0x89, 0xe2, 0xd2, 0x1d,
+	0x82, 0xf3, 0x25, 0x30, 0x3f, 0xd2, 0xeb, 0x1e, 0x8a, 0x44, 0xaf, 0x0b, 0xc9, 0x75, 0xba, 0x43,
+	0xd0, 0x29, 0x98, 0xe7, 0x35, 0xa3, 0xb8, 0x9a, 0x6a, 0x10, 0xc5, 0x66, 0x06, 0xd5, 0x5a, 0x18,
+	0x71, 0x6f, 0xe5, 0x09, 0xce, 0x58, 0xe7, 0xf4, 0x2b, 0x82, 0x8c, 0x7e, 0x08, 0xf3, 0xea, 0xb6,
+	0x4a, 0x0d, 0x75, 0x83, 0x1a, 0xd4, 0x6b, 0x29, 0x3b, 0xcc, 0x22, 0x78, 0x4a, 0xc8, 0x4e, 0x26,
+	0x19, 0xbf, 0x63, 0x16, 0x41, 0x12, 0x84, 0xd4, 0x54, 0x9b, 0x44, 0xb1, 0x54, 0x93, 0xe0, 0xe9,
+	0x41, 0xe1, 0xce, 0x08, 0x81, 0xcb, 0xaa, 0x49, 0x50, 0x11, 0x42, 0x87, 0xb8, 0xc4, 0xd9, 0x56,
+	0x37, 0x0c, 0x82, 0x67, 0x78, 0x49, 0xcb, 0x09, 0x0a, 0x3a, 0x01, 0xb3, 0xc1, 0x89, 0xe8, 0xca,
+	0x46, 0x0b, 0xcf, 0x26, 0xd3, 0x11, 0x31, 0xea, 0x2d, 0x24, 0x41, 0xe4, 0x6e, 0xa9, 0x0e, 0xd1,
+	0xbb, 0x82, 0x71, 0x84, 0x07, 0x43, 0x9e, 0x0c, 0x38, 0x09, 0xdf, 0x7f, 0x0e, 0x51, 0x90, 0x38,
+	0x25, 0x59, 0x19, 0x47, 0x07, 0x41, 0x9d, 0x0c, 0x04, 0x2f, 0x77, 0xea, 0xe3, 0x97, 0xf0, 0x98,
+	0x7b, 0x93, 0xda, 0x0a, 0x6f, 0x02, 0xcd, 0x20, 0xaa, 0xe5, 0xdb, 0x0a, 0xb3, 0x94, 0x4d, 0x95,
+	0x1a, 0xbe, 0x43, 0x70, 0x41, 0x74, 0x65, 0xa2, 0xec, 0x8f, 0x70, 0xe9, 0x65, 0xc7, 0x5c, 0x0e,
+	0x64, 0xd7, 0xac, 0x8b, 0x81, 0x24, 0x3a, 0x09, 0x47, 0x99, 0xed, 0x29, 0x0e, 0x71, 0xf1, 0xb1,
+	0x41, 0x57, 0xa7, 0x98, 0xed, 0xc9, 0xc4, 0x45, 0xbf, 0x82, 0x99, 0x78, 0xf6, 0xe3, 0xe3, 0x7d,
+	0x73, 0xa9, 0xc1, 0x97, 0x83, 0x1c, 0x09, 0x0c, 0xaa, 0x99, 0x8e, 0x3a, 0xfa, 0x2d, 0x84, 0x9a,
+	0x43, 0x44, 0xf3, 0xa8, 0x1e, 0xfe, 0x8e, 0x30, 0xf6, 0xdd, 0x8a, 0x4e, 0x5d, 0xcf, 0xa1, 0x1b,
+	0x3e, 0x27, 0x8b, 0xe5, 0xa0, 0x04, 0xcb, 0xa1, 0x72, 0x95, 0x9a, 0xc4, 0xf5, 0x54, 0xd3, 0xae,
+	0xcf, 0x84, 0x66, 0x33, 0x5e, 0x44, 0x0a, 0x4c, 0x87, 0xd6, 0x6a, 0x1e, 0x37, 0xed, 0xdb, 0x7a,
+	0x64, 0xba, 0xf8, 0xf5, 0xa6, 0x43, 0x6b, 0x35, 0x0f, 0x19, 0x70, 0x3a, 0x2c, 0x09, 0x3e, 0xd8,
+	0x15, 0x62, 0xe9, 0xc1, 0x25, 0x73, 0x5f, 0x7d, 0x09, 0x4a, 0xd8, 0xbd, 0xc0, 0xcd, 0xd6, 0xbc,
+	0xa5, 0x3b, 0xc3, 0x7c, 0x71, 0xfc, 0xf7, 0x3d, 0x06, 0x7f, 0x68, 0x63, 0x70, 0xb7, 0x8d, 0xc1,
+	0xfd, 0x36, 0x06, 0x8f, 0xdb, 0x18, 0x3c, 0x6b, 0xe3, 0x5c, 0x72, 0x90, 0xee, 0xb6, 0x31, 0x78,
+	0xc1, 0xed, 0xee, 0xe1, 0xbf, 0x80, 0x68, 0x5e, 0x4b, 0x35, 0xdf, 0x63, 0xd2, 0x6a, 0x4f, 0xd9,
+	0x48, 0x89, 0xcf, 0x0b, 0x7d, 0xdd, 0x28, 0xd5, 0x3a, 0x03, 0x4b, 0x0a, 0x06, 0x80, 0x24, 0xc7,
+	0xd5, 0x2d, 0x28, 0x44, 0xba, 0x20, 0xe6, 0xaf, 0x14, 0xa7, 0x5a, 0xaa, 0xf5, 0xb4, 0x9e, 0xb4,
+	0x1c, 0x25, 0x43, 0xba, 0x16, 0xc5, 0x4e, 0x5a, 0x13, 0x45, 0xf4, 0x60, 0x0f, 0xdf, 0x03, 0xe1,
+	0xa6, 0x3c, 0x77, 0x89, 0xb4, 0x12, 0xeb, 0xba, 0xc2, 0xfb, 0x50, 0x8a, 0x96, 0x6d, 0xc8, 0x8c,
+	0x37, 0x6f, 0x37, 0x77, 0x81, 0x39, 0xcd, 0x3e, 0x89, 0xb5, 0xc4, 0xd2, 0x95, 0xc2, 0x3b, 0x62,
+	0xc1, 0x2e, 0x66, 0xd0, 0x68, 0xe7, 0x82, 0x30, 0x08, 0xcb, 0x2f, 0xf7, 0xf0, 0x44, 0x8f, 0xbd,
+	0xa7, 0x1f, 0x70, 0x4a, 0xf3, 0x5d, 0x8f, 0x99, 0xe5, 0x6b, 0xb0, 0xd0, 0xd0, 0x0d, 0x22, 0xc7,
+	0xe3, 0x20, 0xb1, 0x83, 0x5d, 0xf4, 0x03, 0x98, 0xa1, 0xba, 0x41, 0x14, 0x9e, 0x51, 0xf1, 0x20,
+	0x19, 0xae, 0xe7, 0xfe, 0xf7, 0x6a, 0x2e, 0xbd, 0xe2, 0x3b, 0xe2, 0x3a, 0x39, 0xcd, 0xd9, 0xbc,
+	0x04, 0x96, 0x72, 0x1f, 0xf7, 0x30, 0x78, 0xfa, 0x01, 0x8f, 0x58, 0xcc, 0x22, 0xe5, 0xff, 0x1c,
+	0x82, 0x13, 0x09, 0x4b, 0x7c, 0xd4, 0x7e, 0x9b, 0xcf, 0x81, 0x93, 0x30, 0x63, 0x31, 0x8f, 0x6e,
+	0xb6, 0x14, 0xaa, 0x8b, 0x17, 0xc1, 0x70, 0x72, 0x1c, 0xa4, 0x03, 0x5e, 0x43, 0x47, 0x0b, 0x5f,
+	0xb6, 0xad, 0xa3, 0xf5, 0x3c, 0xdb, 0xbd, 0x9e, 0xe3, 0x7d, 0xfc, 0xd3, 0x78, 0x97, 0xa4, 0xf6,
+	0xdb, 0x25, 0x89, 0xe7, 0x47, 0xb8, 0x42, 0x6a, 0xc9, 0xb9, 0x32, 0xfa, 0xb9, 0xb9, 0xd2, 0xd1,
+	0xef, 0x68, 0x2d, 0x95, 0x7a, 0x3b, 0xe5, 0x61, 0x1b, 0x83, 0xd7, 0xed, 0x4e, 0xac, 0x17, 0xef,
+	0x8f, 0x76, 0x3d, 0x25, 0x6b, 0x36, 0x45, 0x7f, 0x05, 0x30, 0x1f, 0x54, 0x6a, 0xd7, 0x7b, 0x6c,
+	0x70, 0x6c, 0x0b, 0xf9, 0x04, 0x5d, 0x16, 0x0f, 0xea, 0xf2, 0x8d, 0x77, 0x6d, 0xbc, 0x18, 0x21,
+	0x4b, 0x96, 0x84, 0x54, 0xd3, 0x78, 0xe2, 0x57, 0x55, 0x4b, 0x6d, 0x12, 0xa9, 0xb7, 0xfc, 0x1e,
+	0xed, 0x61, 0xf0, 0x7c, 0x0f, 0x83, 0x3f, 0xfe, 0xe3, 0x5f, 0xf7, 0x0e, 0xe1, 0xf2, 0x54, 0x35,
+	0x98, 0x5d, 0xd5, 0xc4, 0x9f, 0x83, 0x25, 0x70, 0xea, 0x34, 0x40, 0x0f, 0x00, 0xcc, 0xaf, 0x10,
+	0x83, 0x1c, 0x18, 0xe0, 0x6f, 0x0e, 0x0e, 0x30, 0x06, 0xa7, 0x0b, 0x00, 0xfd, 0xe0, 0xfe, 0x0f,
+	0x60, 0x3e, 0xe8, 0xee, 0x03, 0x82, 0xfb, 0x1b, 0x38, 0x38, 0xba, 0x97, 0x7b, 0xf8, 0x46, 0x34,
+	0xcf, 0xe2, 0xa7, 0x4e, 0xff, 0x1c, 0xea, 0x34, 0xac, 0xb4, 0xde, 0xb3, 0x7b, 0xa5, 0xe8, 0x65,
+	0x27, 0xad, 0xc4, 0x8f, 0x29, 0xa9, 0x11, 0x3d, 0x07, 0x62, 0xef, 0x83, 0xd9, 0xdf, 0xef, 0xfd,
+	0x9f, 0x01, 0x9c, 0x58, 0xdf, 0x62, 0xb7, 0xbe, 0xc4, 0xf7, 0x4f, 0xd0, 0xcb, 0x57, 0xde, 0xb5,
+	0xf1, 0xe9, 0x7d, 0xfc, 0xbf, 0x4e, 0xc9, 0xad, 0x3e, 0xef, 0x05, 0xb2, 0xd9, 0x72, 0xbe, 0xea,
+	0x6e, 0xb1, 0x5b, 0xfd, 0xb8, 0x9e, 0x00, 0x58, 0x0a, 0x4a, 0x66, 0x9f, 0x81, 0x75, 0x22, 0xd9,
+	0x5d, 0x9f, 0x14, 0x1b, 0x94, 0xb3, 0xf5, 0x77, 0x6d, 0x5c, 0xfe, 0x7c, 0xca, 0x04, 0xc8, 0xef,
+	0x97, 0xcb, 0x51, 0xf1, 0xf0, 0xf9, 0xd7, 0x79, 0x4b, 0x25, 0x40, 0xbb, 0x4b, 0xe0, 0xd4, 0xe2,
+	0x1d, 0x00, 0x51, 0xcf, 0x18, 0xe4, 0xed, 0xf9, 0x7b, 0x38, 0xd5, 0x13, 0x61, 0x31, 0x20, 0x0b,
+	0x83, 0xa3, 0xc9, 0x79, 0x85, 0x7d, 0x78, 0xe5, 0x92, 0x00, 0x55, 0x28, 0xcf, 0xf4, 0x45, 0x8e,
+	0x5a, 0x9b, 0x4c, 0x44, 0xaf, 0x7e, 0x7c, 0xf7, 0x9f, 0xc5, 0xa1, 0xdd, 0x37, 0x45, 0xf0, 0xfc,
+	0x4d, 0x11, 0xbc, 0x7e, 0x53, 0x04, 0x77, 0xdf, 0x16, 0x87, 0x9e, 0xbf, 0x2d, 0x0e, 0xbd, 0x78,
+	0x5b, 0x1c, 0xda, 0x48, 0x09, 0xc3, 0x3f, 0xfe, 0x26, 0x00, 0x00, 0xff, 0xff, 0x63, 0xa1, 0x45,
+	0xd2, 0xc6, 0x0f, 0x00, 0x00,
 }
 
 func (this *ClusterInstKey) GoString() string {
@@ -967,7 +966,7 @@ func (m *ClusterInst) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0xea
 	{
-		size, err := m.ResourcesSnapshot.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Resources.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1233,7 +1232,7 @@ func (m *ClusterInstInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size, err := m.ResourcesSnapshot.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Resources.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1606,42 +1605,21 @@ const ClusterInstFieldSharedVolumeSize = "23"
 const ClusterInstFieldMasterNodeFlavor = "25"
 const ClusterInstFieldSkipCrmCleanupOnFailure = "26"
 const ClusterInstFieldOptRes = "27"
-const ClusterInstFieldResourcesSnapshot = "28"
-const ClusterInstFieldResourcesSnapshotVms = "28.1"
-const ClusterInstFieldResourcesSnapshotVmsName = "28.1.1"
-const ClusterInstFieldResourcesSnapshotVmsType = "28.1.2"
-const ClusterInstFieldResourcesSnapshotVmsStatus = "28.1.3"
-const ClusterInstFieldResourcesSnapshotVmsInfraFlavor = "28.1.4"
-const ClusterInstFieldResourcesSnapshotVmsIpaddresses = "28.1.5"
-const ClusterInstFieldResourcesSnapshotVmsIpaddressesExternalIp = "28.1.5.1"
-const ClusterInstFieldResourcesSnapshotVmsIpaddressesInternalIp = "28.1.5.2"
-const ClusterInstFieldResourcesSnapshotVmsContainers = "28.1.6"
-const ClusterInstFieldResourcesSnapshotVmsContainersName = "28.1.6.1"
-const ClusterInstFieldResourcesSnapshotVmsContainersType = "28.1.6.2"
-const ClusterInstFieldResourcesSnapshotVmsContainersStatus = "28.1.6.3"
-const ClusterInstFieldResourcesSnapshotVmsContainersClusterip = "28.1.6.4"
-const ClusterInstFieldResourcesSnapshotVmsContainersRestarts = "28.1.6.5"
-const ClusterInstFieldResourcesSnapshotInfo = "28.2"
-const ClusterInstFieldResourcesSnapshotInfoName = "28.2.1"
-const ClusterInstFieldResourcesSnapshotInfoValue = "28.2.2"
-const ClusterInstFieldResourcesSnapshotInfoInfraMaxValue = "28.2.3"
-const ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue = "28.2.4"
-const ClusterInstFieldResourcesSnapshotInfoDescription = "28.2.5"
-const ClusterInstFieldResourcesSnapshotInfoUnits = "28.2.6"
-const ClusterInstFieldResourcesSnapshotInfoAlertThreshold = "28.2.7"
-const ClusterInstFieldResourcesSnapshotClusterInsts = "28.3"
-const ClusterInstFieldResourcesSnapshotClusterInstsClusterKey = "28.3.1"
-const ClusterInstFieldResourcesSnapshotClusterInstsClusterKeyName = "28.3.1.1"
-const ClusterInstFieldResourcesSnapshotClusterInstsOrganization = "28.3.2"
-const ClusterInstFieldResourcesSnapshotVmAppInsts = "28.4"
-const ClusterInstFieldResourcesSnapshotVmAppInstsAppKey = "28.4.1"
-const ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyOrganization = "28.4.1.1"
-const ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyName = "28.4.1.2"
-const ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyVersion = "28.4.1.3"
-const ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKey = "28.4.2"
-const ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey = "28.4.2.1"
-const ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName = "28.4.2.1.1"
-const ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization = "28.4.2.2"
+const ClusterInstFieldResources = "28"
+const ClusterInstFieldResourcesVms = "28.1"
+const ClusterInstFieldResourcesVmsName = "28.1.1"
+const ClusterInstFieldResourcesVmsType = "28.1.2"
+const ClusterInstFieldResourcesVmsStatus = "28.1.3"
+const ClusterInstFieldResourcesVmsInfraFlavor = "28.1.4"
+const ClusterInstFieldResourcesVmsIpaddresses = "28.1.5"
+const ClusterInstFieldResourcesVmsIpaddressesExternalIp = "28.1.5.1"
+const ClusterInstFieldResourcesVmsIpaddressesInternalIp = "28.1.5.2"
+const ClusterInstFieldResourcesVmsContainers = "28.1.6"
+const ClusterInstFieldResourcesVmsContainersName = "28.1.6.1"
+const ClusterInstFieldResourcesVmsContainersType = "28.1.6.2"
+const ClusterInstFieldResourcesVmsContainersStatus = "28.1.6.3"
+const ClusterInstFieldResourcesVmsContainersClusterip = "28.1.6.4"
+const ClusterInstFieldResourcesVmsContainersRestarts = "28.1.6.5"
 const ClusterInstFieldCreatedAt = "29"
 const ClusterInstFieldCreatedAtSeconds = "29.1"
 const ClusterInstFieldCreatedAtNanos = "29.2"
@@ -1685,31 +1663,17 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldMasterNodeFlavor,
 	ClusterInstFieldSkipCrmCleanupOnFailure,
 	ClusterInstFieldOptRes,
-	ClusterInstFieldResourcesSnapshotVmsName,
-	ClusterInstFieldResourcesSnapshotVmsType,
-	ClusterInstFieldResourcesSnapshotVmsStatus,
-	ClusterInstFieldResourcesSnapshotVmsInfraFlavor,
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesExternalIp,
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesInternalIp,
-	ClusterInstFieldResourcesSnapshotVmsContainersName,
-	ClusterInstFieldResourcesSnapshotVmsContainersType,
-	ClusterInstFieldResourcesSnapshotVmsContainersStatus,
-	ClusterInstFieldResourcesSnapshotVmsContainersClusterip,
-	ClusterInstFieldResourcesSnapshotVmsContainersRestarts,
-	ClusterInstFieldResourcesSnapshotInfoName,
-	ClusterInstFieldResourcesSnapshotInfoValue,
-	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue,
-	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue,
-	ClusterInstFieldResourcesSnapshotInfoDescription,
-	ClusterInstFieldResourcesSnapshotInfoUnits,
-	ClusterInstFieldResourcesSnapshotInfoAlertThreshold,
-	ClusterInstFieldResourcesSnapshotClusterInstsClusterKeyName,
-	ClusterInstFieldResourcesSnapshotClusterInstsOrganization,
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyOrganization,
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyName,
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyVersion,
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName,
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization,
+	ClusterInstFieldResourcesVmsName,
+	ClusterInstFieldResourcesVmsType,
+	ClusterInstFieldResourcesVmsStatus,
+	ClusterInstFieldResourcesVmsInfraFlavor,
+	ClusterInstFieldResourcesVmsIpaddressesExternalIp,
+	ClusterInstFieldResourcesVmsIpaddressesInternalIp,
+	ClusterInstFieldResourcesVmsContainersName,
+	ClusterInstFieldResourcesVmsContainersType,
+	ClusterInstFieldResourcesVmsContainersStatus,
+	ClusterInstFieldResourcesVmsContainersClusterip,
+	ClusterInstFieldResourcesVmsContainersRestarts,
 	ClusterInstFieldCreatedAtSeconds,
 	ClusterInstFieldCreatedAtNanos,
 	ClusterInstFieldUpdatedAtSeconds,
@@ -1719,135 +1683,107 @@ var ClusterInstAllFields = []string{
 }
 
 var ClusterInstAllFieldsMap = map[string]struct{}{
-	ClusterInstFieldKeyClusterKeyName:                                       struct{}{},
-	ClusterInstFieldKeyCloudletKeyOrganization:                              struct{}{},
-	ClusterInstFieldKeyCloudletKeyName:                                      struct{}{},
-	ClusterInstFieldKeyOrganization:                                         struct{}{},
-	ClusterInstFieldFlavorName:                                              struct{}{},
-	ClusterInstFieldState:                                                   struct{}{},
-	ClusterInstFieldErrors:                                                  struct{}{},
-	ClusterInstFieldCrmOverride:                                             struct{}{},
-	ClusterInstFieldIpAccess:                                                struct{}{},
-	ClusterInstFieldAllocatedIp:                                             struct{}{},
-	ClusterInstFieldLiveness:                                                struct{}{},
-	ClusterInstFieldAuto:                                                    struct{}{},
-	ClusterInstFieldNodeFlavor:                                              struct{}{},
-	ClusterInstFieldNumMasters:                                              struct{}{},
-	ClusterInstFieldNumNodes:                                                struct{}{},
-	ClusterInstFieldDeployment:                                              struct{}{},
-	ClusterInstFieldStatusTaskNumber:                                        struct{}{},
-	ClusterInstFieldStatusMaxTasks:                                          struct{}{},
-	ClusterInstFieldStatusTaskName:                                          struct{}{},
-	ClusterInstFieldStatusStepName:                                          struct{}{},
-	ClusterInstFieldStatusMsgCount:                                          struct{}{},
-	ClusterInstFieldStatusMsgs:                                              struct{}{},
-	ClusterInstFieldExternalVolumeSize:                                      struct{}{},
-	ClusterInstFieldAutoScalePolicy:                                         struct{}{},
-	ClusterInstFieldAvailabilityZone:                                        struct{}{},
-	ClusterInstFieldImageName:                                               struct{}{},
-	ClusterInstFieldReservable:                                              struct{}{},
-	ClusterInstFieldReservedBy:                                              struct{}{},
-	ClusterInstFieldSharedVolumeSize:                                        struct{}{},
-	ClusterInstFieldMasterNodeFlavor:                                        struct{}{},
-	ClusterInstFieldSkipCrmCleanupOnFailure:                                 struct{}{},
-	ClusterInstFieldOptRes:                                                  struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsName:                                struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsType:                                struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsStatus:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsInfraFlavor:                         struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesExternalIp:               struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesInternalIp:               struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersName:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersType:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersStatus:                    struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersClusterip:                 struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersRestarts:                  struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoName:                               struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoValue:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoDescription:                        struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoUnits:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
-	ClusterInstFieldResourcesSnapshotClusterInstsClusterKeyName:             struct{}{},
-	ClusterInstFieldResourcesSnapshotClusterInstsOrganization:               struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyName:                   struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyVersion:                struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   struct{}{},
-	ClusterInstFieldCreatedAtSeconds:                                        struct{}{},
-	ClusterInstFieldCreatedAtNanos:                                          struct{}{},
-	ClusterInstFieldUpdatedAtSeconds:                                        struct{}{},
-	ClusterInstFieldUpdatedAtNanos:                                          struct{}{},
-	ClusterInstFieldReservationEndedAtSeconds:                               struct{}{},
-	ClusterInstFieldReservationEndedAtNanos:                                 struct{}{},
+	ClusterInstFieldKeyClusterKeyName:                 struct{}{},
+	ClusterInstFieldKeyCloudletKeyOrganization:        struct{}{},
+	ClusterInstFieldKeyCloudletKeyName:                struct{}{},
+	ClusterInstFieldKeyOrganization:                   struct{}{},
+	ClusterInstFieldFlavorName:                        struct{}{},
+	ClusterInstFieldState:                             struct{}{},
+	ClusterInstFieldErrors:                            struct{}{},
+	ClusterInstFieldCrmOverride:                       struct{}{},
+	ClusterInstFieldIpAccess:                          struct{}{},
+	ClusterInstFieldAllocatedIp:                       struct{}{},
+	ClusterInstFieldLiveness:                          struct{}{},
+	ClusterInstFieldAuto:                              struct{}{},
+	ClusterInstFieldNodeFlavor:                        struct{}{},
+	ClusterInstFieldNumMasters:                        struct{}{},
+	ClusterInstFieldNumNodes:                          struct{}{},
+	ClusterInstFieldDeployment:                        struct{}{},
+	ClusterInstFieldStatusTaskNumber:                  struct{}{},
+	ClusterInstFieldStatusMaxTasks:                    struct{}{},
+	ClusterInstFieldStatusTaskName:                    struct{}{},
+	ClusterInstFieldStatusStepName:                    struct{}{},
+	ClusterInstFieldStatusMsgCount:                    struct{}{},
+	ClusterInstFieldStatusMsgs:                        struct{}{},
+	ClusterInstFieldExternalVolumeSize:                struct{}{},
+	ClusterInstFieldAutoScalePolicy:                   struct{}{},
+	ClusterInstFieldAvailabilityZone:                  struct{}{},
+	ClusterInstFieldImageName:                         struct{}{},
+	ClusterInstFieldReservable:                        struct{}{},
+	ClusterInstFieldReservedBy:                        struct{}{},
+	ClusterInstFieldSharedVolumeSize:                  struct{}{},
+	ClusterInstFieldMasterNodeFlavor:                  struct{}{},
+	ClusterInstFieldSkipCrmCleanupOnFailure:           struct{}{},
+	ClusterInstFieldOptRes:                            struct{}{},
+	ClusterInstFieldResourcesVmsName:                  struct{}{},
+	ClusterInstFieldResourcesVmsType:                  struct{}{},
+	ClusterInstFieldResourcesVmsStatus:                struct{}{},
+	ClusterInstFieldResourcesVmsInfraFlavor:           struct{}{},
+	ClusterInstFieldResourcesVmsIpaddressesExternalIp: struct{}{},
+	ClusterInstFieldResourcesVmsIpaddressesInternalIp: struct{}{},
+	ClusterInstFieldResourcesVmsContainersName:        struct{}{},
+	ClusterInstFieldResourcesVmsContainersType:        struct{}{},
+	ClusterInstFieldResourcesVmsContainersStatus:      struct{}{},
+	ClusterInstFieldResourcesVmsContainersClusterip:   struct{}{},
+	ClusterInstFieldResourcesVmsContainersRestarts:    struct{}{},
+	ClusterInstFieldCreatedAtSeconds:                  struct{}{},
+	ClusterInstFieldCreatedAtNanos:                    struct{}{},
+	ClusterInstFieldUpdatedAtSeconds:                  struct{}{},
+	ClusterInstFieldUpdatedAtNanos:                    struct{}{},
+	ClusterInstFieldReservationEndedAtSeconds:         struct{}{},
+	ClusterInstFieldReservationEndedAtNanos:           struct{}{},
 }
 
 var ClusterInstAllFieldsStringMap = map[string]string{
-	ClusterInstFieldKeyClusterKeyName:                                       "Key Cluster Key Name",
-	ClusterInstFieldKeyCloudletKeyOrganization:                              "Key Cloudlet Key Organization",
-	ClusterInstFieldKeyCloudletKeyName:                                      "Key Cloudlet Key Name",
-	ClusterInstFieldKeyOrganization:                                         "Key Organization",
-	ClusterInstFieldFlavorName:                                              "Flavor Name",
-	ClusterInstFieldState:                                                   "State",
-	ClusterInstFieldErrors:                                                  "Errors",
-	ClusterInstFieldCrmOverride:                                             "Crm Override",
-	ClusterInstFieldIpAccess:                                                "Ip Access",
-	ClusterInstFieldAllocatedIp:                                             "Allocated Ip",
-	ClusterInstFieldLiveness:                                                "Liveness",
-	ClusterInstFieldAuto:                                                    "Auto",
-	ClusterInstFieldNodeFlavor:                                              "Node Flavor",
-	ClusterInstFieldNumMasters:                                              "Num Masters",
-	ClusterInstFieldNumNodes:                                                "Num Nodes",
-	ClusterInstFieldDeployment:                                              "Deployment",
-	ClusterInstFieldStatusTaskNumber:                                        "Status Task Number",
-	ClusterInstFieldStatusMaxTasks:                                          "Status Max Tasks",
-	ClusterInstFieldStatusTaskName:                                          "Status Task Name",
-	ClusterInstFieldStatusStepName:                                          "Status Step Name",
-	ClusterInstFieldStatusMsgCount:                                          "Status Msg Count",
-	ClusterInstFieldStatusMsgs:                                              "Status Msgs",
-	ClusterInstFieldExternalVolumeSize:                                      "External Volume Size",
-	ClusterInstFieldAutoScalePolicy:                                         "Auto Scale Policy",
-	ClusterInstFieldAvailabilityZone:                                        "Availability Zone",
-	ClusterInstFieldImageName:                                               "Image Name",
-	ClusterInstFieldReservable:                                              "Reservable",
-	ClusterInstFieldReservedBy:                                              "Reserved By",
-	ClusterInstFieldSharedVolumeSize:                                        "Shared Volume Size",
-	ClusterInstFieldMasterNodeFlavor:                                        "Master Node Flavor",
-	ClusterInstFieldSkipCrmCleanupOnFailure:                                 "Skip Crm Cleanup On Failure",
-	ClusterInstFieldOptRes:                                                  "Opt Res",
-	ClusterInstFieldResourcesSnapshotVmsName:                                "Resources Snapshot Vms Name",
-	ClusterInstFieldResourcesSnapshotVmsType:                                "Resources Snapshot Vms Type",
-	ClusterInstFieldResourcesSnapshotVmsStatus:                              "Resources Snapshot Vms Status",
-	ClusterInstFieldResourcesSnapshotVmsInfraFlavor:                         "Resources Snapshot Vms Infra Flavor",
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesExternalIp:               "Resources Snapshot Vms Ipaddresses External Ip",
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesInternalIp:               "Resources Snapshot Vms Ipaddresses Internal Ip",
-	ClusterInstFieldResourcesSnapshotVmsContainersName:                      "Resources Snapshot Vms Containers Name",
-	ClusterInstFieldResourcesSnapshotVmsContainersType:                      "Resources Snapshot Vms Containers Type",
-	ClusterInstFieldResourcesSnapshotVmsContainersStatus:                    "Resources Snapshot Vms Containers Status",
-	ClusterInstFieldResourcesSnapshotVmsContainersClusterip:                 "Resources Snapshot Vms Containers Clusterip",
-	ClusterInstFieldResourcesSnapshotVmsContainersRestarts:                  "Resources Snapshot Vms Containers Restarts",
-	ClusterInstFieldResourcesSnapshotInfoName:                               "Resources Snapshot Info Name",
-	ClusterInstFieldResourcesSnapshotInfoValue:                              "Resources Snapshot Info Value",
-	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue:                      "Resources Snapshot Info Infra Max Value",
-	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue:                      "Resources Snapshot Info Quota Max Value",
-	ClusterInstFieldResourcesSnapshotInfoDescription:                        "Resources Snapshot Info Description",
-	ClusterInstFieldResourcesSnapshotInfoUnits:                              "Resources Snapshot Info Units",
-	ClusterInstFieldResourcesSnapshotInfoAlertThreshold:                     "Resources Snapshot Info Alert Threshold",
-	ClusterInstFieldResourcesSnapshotClusterInstsClusterKeyName:             "Resources Snapshot Cluster Insts Cluster Key Name",
-	ClusterInstFieldResourcesSnapshotClusterInstsOrganization:               "Resources Snapshot Cluster Insts Organization",
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           "Resources Snapshot Vm App Insts App Key Organization",
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyName:                   "Resources Snapshot Vm App Insts App Key Name",
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyVersion:                "Resources Snapshot Vm App Insts App Key Version",
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: "Resources Snapshot Vm App Insts Cluster Inst Key Cluster Key Name",
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   "Resources Snapshot Vm App Insts Cluster Inst Key Organization",
-	ClusterInstFieldCreatedAtSeconds:                                        "Created At Seconds",
-	ClusterInstFieldCreatedAtNanos:                                          "Created At Nanos",
-	ClusterInstFieldUpdatedAtSeconds:                                        "Updated At Seconds",
-	ClusterInstFieldUpdatedAtNanos:                                          "Updated At Nanos",
-	ClusterInstFieldReservationEndedAtSeconds:                               "Reservation Ended At Seconds",
-	ClusterInstFieldReservationEndedAtNanos:                                 "Reservation Ended At Nanos",
+	ClusterInstFieldKeyClusterKeyName:                 "Key Cluster Key Name",
+	ClusterInstFieldKeyCloudletKeyOrganization:        "Key Cloudlet Key Organization",
+	ClusterInstFieldKeyCloudletKeyName:                "Key Cloudlet Key Name",
+	ClusterInstFieldKeyOrganization:                   "Key Organization",
+	ClusterInstFieldFlavorName:                        "Flavor Name",
+	ClusterInstFieldState:                             "State",
+	ClusterInstFieldErrors:                            "Errors",
+	ClusterInstFieldCrmOverride:                       "Crm Override",
+	ClusterInstFieldIpAccess:                          "Ip Access",
+	ClusterInstFieldAllocatedIp:                       "Allocated Ip",
+	ClusterInstFieldLiveness:                          "Liveness",
+	ClusterInstFieldAuto:                              "Auto",
+	ClusterInstFieldNodeFlavor:                        "Node Flavor",
+	ClusterInstFieldNumMasters:                        "Num Masters",
+	ClusterInstFieldNumNodes:                          "Num Nodes",
+	ClusterInstFieldDeployment:                        "Deployment",
+	ClusterInstFieldStatusTaskNumber:                  "Status Task Number",
+	ClusterInstFieldStatusMaxTasks:                    "Status Max Tasks",
+	ClusterInstFieldStatusTaskName:                    "Status Task Name",
+	ClusterInstFieldStatusStepName:                    "Status Step Name",
+	ClusterInstFieldStatusMsgCount:                    "Status Msg Count",
+	ClusterInstFieldStatusMsgs:                        "Status Msgs",
+	ClusterInstFieldExternalVolumeSize:                "External Volume Size",
+	ClusterInstFieldAutoScalePolicy:                   "Auto Scale Policy",
+	ClusterInstFieldAvailabilityZone:                  "Availability Zone",
+	ClusterInstFieldImageName:                         "Image Name",
+	ClusterInstFieldReservable:                        "Reservable",
+	ClusterInstFieldReservedBy:                        "Reserved By",
+	ClusterInstFieldSharedVolumeSize:                  "Shared Volume Size",
+	ClusterInstFieldMasterNodeFlavor:                  "Master Node Flavor",
+	ClusterInstFieldSkipCrmCleanupOnFailure:           "Skip Crm Cleanup On Failure",
+	ClusterInstFieldOptRes:                            "Opt Res",
+	ClusterInstFieldResourcesVmsName:                  "Resources Vms Name",
+	ClusterInstFieldResourcesVmsType:                  "Resources Vms Type",
+	ClusterInstFieldResourcesVmsStatus:                "Resources Vms Status",
+	ClusterInstFieldResourcesVmsInfraFlavor:           "Resources Vms Infra Flavor",
+	ClusterInstFieldResourcesVmsIpaddressesExternalIp: "Resources Vms Ipaddresses External Ip",
+	ClusterInstFieldResourcesVmsIpaddressesInternalIp: "Resources Vms Ipaddresses Internal Ip",
+	ClusterInstFieldResourcesVmsContainersName:        "Resources Vms Containers Name",
+	ClusterInstFieldResourcesVmsContainersType:        "Resources Vms Containers Type",
+	ClusterInstFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
+	ClusterInstFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
+	ClusterInstFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
+	ClusterInstFieldCreatedAtSeconds:                  "Created At Seconds",
+	ClusterInstFieldCreatedAtNanos:                    "Created At Nanos",
+	ClusterInstFieldUpdatedAtSeconds:                  "Updated At Seconds",
+	ClusterInstFieldUpdatedAtNanos:                    "Updated At Nanos",
+	ClusterInstFieldReservationEndedAtSeconds:         "Reservation Ended At Seconds",
+	ClusterInstFieldReservationEndedAtNanos:           "Reservation Ended At Nanos",
 }
 
 func (m *ClusterInst) IsKeyField(s string) bool {
@@ -1980,192 +1916,94 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 	if m.OptRes != o.OptRes {
 		fields[ClusterInstFieldOptRes] = struct{}{}
 	}
-	if len(m.ResourcesSnapshot.Vms) != len(o.ResourcesSnapshot.Vms) {
-		fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-		fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+	if len(m.Resources.Vms) != len(o.Resources.Vms) {
+		fields[ClusterInstFieldResourcesVms] = struct{}{}
+		fields[ClusterInstFieldResources] = struct{}{}
 	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.Vms); i1++ {
-			if m.ResourcesSnapshot.Vms[i1].Name != o.ResourcesSnapshot.Vms[i1].Name {
-				fields[ClusterInstFieldResourcesSnapshotVmsName] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+		for i1 := 0; i1 < len(m.Resources.Vms); i1++ {
+			if m.Resources.Vms[i1].Name != o.Resources.Vms[i1].Name {
+				fields[ClusterInstFieldResourcesVmsName] = struct{}{}
+				fields[ClusterInstFieldResourcesVms] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Type != o.ResourcesSnapshot.Vms[i1].Type {
-				fields[ClusterInstFieldResourcesSnapshotVmsType] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].Type != o.Resources.Vms[i1].Type {
+				fields[ClusterInstFieldResourcesVmsType] = struct{}{}
+				fields[ClusterInstFieldResourcesVms] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Status != o.ResourcesSnapshot.Vms[i1].Status {
-				fields[ClusterInstFieldResourcesSnapshotVmsStatus] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].Status != o.Resources.Vms[i1].Status {
+				fields[ClusterInstFieldResourcesVmsStatus] = struct{}{}
+				fields[ClusterInstFieldResourcesVms] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].InfraFlavor != o.ResourcesSnapshot.Vms[i1].InfraFlavor {
-				fields[ClusterInstFieldResourcesSnapshotVmsInfraFlavor] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].InfraFlavor != o.Resources.Vms[i1].InfraFlavor {
+				fields[ClusterInstFieldResourcesVmsInfraFlavor] = struct{}{}
+				fields[ClusterInstFieldResourcesVms] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
 			}
-			if len(m.ResourcesSnapshot.Vms[i1].Ipaddresses) != len(o.ResourcesSnapshot.Vms[i1].Ipaddresses) {
-				fields[ClusterInstFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+			if len(m.Resources.Vms[i1].Ipaddresses) != len(o.Resources.Vms[i1].Ipaddresses) {
+				fields[ClusterInstFieldResourcesVmsIpaddresses] = struct{}{}
+				fields[ClusterInstFieldResourcesVms] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
 			} else {
-				for i2 := 0; i2 < len(m.ResourcesSnapshot.Vms[i1].Ipaddresses); i2++ {
-					if m.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].ExternalIp != o.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].ExternalIp {
-						fields[ClusterInstFieldResourcesSnapshotVmsIpaddressesExternalIp] = struct{}{}
-						fields[ClusterInstFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-						fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-						fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+				for i2 := 0; i2 < len(m.Resources.Vms[i1].Ipaddresses); i2++ {
+					if m.Resources.Vms[i1].Ipaddresses[i2].ExternalIp != o.Resources.Vms[i1].Ipaddresses[i2].ExternalIp {
+						fields[ClusterInstFieldResourcesVmsIpaddressesExternalIp] = struct{}{}
+						fields[ClusterInstFieldResourcesVmsIpaddresses] = struct{}{}
+						fields[ClusterInstFieldResourcesVms] = struct{}{}
+						fields[ClusterInstFieldResources] = struct{}{}
 					}
-					if m.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].InternalIp != o.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].InternalIp {
-						fields[ClusterInstFieldResourcesSnapshotVmsIpaddressesInternalIp] = struct{}{}
-						fields[ClusterInstFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-						fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-						fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+					if m.Resources.Vms[i1].Ipaddresses[i2].InternalIp != o.Resources.Vms[i1].Ipaddresses[i2].InternalIp {
+						fields[ClusterInstFieldResourcesVmsIpaddressesInternalIp] = struct{}{}
+						fields[ClusterInstFieldResourcesVmsIpaddresses] = struct{}{}
+						fields[ClusterInstFieldResourcesVms] = struct{}{}
+						fields[ClusterInstFieldResources] = struct{}{}
 					}
 				}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Containers != nil && o.ResourcesSnapshot.Vms[i1].Containers != nil {
-				if len(m.ResourcesSnapshot.Vms[i1].Containers) != len(o.ResourcesSnapshot.Vms[i1].Containers) {
-					fields[ClusterInstFieldResourcesSnapshotVmsContainers] = struct{}{}
-					fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-					fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].Containers != nil && o.Resources.Vms[i1].Containers != nil {
+				if len(m.Resources.Vms[i1].Containers) != len(o.Resources.Vms[i1].Containers) {
+					fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
+					fields[ClusterInstFieldResourcesVms] = struct{}{}
+					fields[ClusterInstFieldResources] = struct{}{}
 				} else {
-					for i2 := 0; i2 < len(m.ResourcesSnapshot.Vms[i1].Containers); i2++ {
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Name != o.ResourcesSnapshot.Vms[i1].Containers[i2].Name {
-							fields[ClusterInstFieldResourcesSnapshotVmsContainersName] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+					for i2 := 0; i2 < len(m.Resources.Vms[i1].Containers); i2++ {
+						if m.Resources.Vms[i1].Containers[i2].Name != o.Resources.Vms[i1].Containers[i2].Name {
+							fields[ClusterInstFieldResourcesVmsContainersName] = struct{}{}
+							fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstFieldResourcesVms] = struct{}{}
+							fields[ClusterInstFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Type != o.ResourcesSnapshot.Vms[i1].Containers[i2].Type {
-							fields[ClusterInstFieldResourcesSnapshotVmsContainersType] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Type != o.Resources.Vms[i1].Containers[i2].Type {
+							fields[ClusterInstFieldResourcesVmsContainersType] = struct{}{}
+							fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstFieldResourcesVms] = struct{}{}
+							fields[ClusterInstFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Status != o.ResourcesSnapshot.Vms[i1].Containers[i2].Status {
-							fields[ClusterInstFieldResourcesSnapshotVmsContainersStatus] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Status != o.Resources.Vms[i1].Containers[i2].Status {
+							fields[ClusterInstFieldResourcesVmsContainersStatus] = struct{}{}
+							fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstFieldResourcesVms] = struct{}{}
+							fields[ClusterInstFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Clusterip != o.ResourcesSnapshot.Vms[i1].Containers[i2].Clusterip {
-							fields[ClusterInstFieldResourcesSnapshotVmsContainersClusterip] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Clusterip != o.Resources.Vms[i1].Containers[i2].Clusterip {
+							fields[ClusterInstFieldResourcesVmsContainersClusterip] = struct{}{}
+							fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstFieldResourcesVms] = struct{}{}
+							fields[ClusterInstFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Restarts != o.ResourcesSnapshot.Vms[i1].Containers[i2].Restarts {
-							fields[ClusterInstFieldResourcesSnapshotVmsContainersRestarts] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Restarts != o.Resources.Vms[i1].Containers[i2].Restarts {
+							fields[ClusterInstFieldResourcesVmsContainersRestarts] = struct{}{}
+							fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstFieldResourcesVms] = struct{}{}
+							fields[ClusterInstFieldResources] = struct{}{}
 						}
 					}
 				}
-			} else if (m.ResourcesSnapshot.Vms[i1].Containers != nil && o.ResourcesSnapshot.Vms[i1].Containers == nil) || (m.ResourcesSnapshot.Vms[i1].Containers == nil && o.ResourcesSnapshot.Vms[i1].Containers != nil) {
-				fields[ClusterInstFieldResourcesSnapshotVmsContainers] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-		}
-	}
-	if len(m.ResourcesSnapshot.Info) != len(o.ResourcesSnapshot.Info) {
-		fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-		fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.Info); i1++ {
-			if m.ResourcesSnapshot.Info[i1].Name != o.ResourcesSnapshot.Info[i1].Name {
-				fields[ClusterInstFieldResourcesSnapshotInfoName] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].Value != o.ResourcesSnapshot.Info[i1].Value {
-				fields[ClusterInstFieldResourcesSnapshotInfoValue] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].InfraMaxValue != o.ResourcesSnapshot.Info[i1].InfraMaxValue {
-				fields[ClusterInstFieldResourcesSnapshotInfoInfraMaxValue] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].QuotaMaxValue != o.ResourcesSnapshot.Info[i1].QuotaMaxValue {
-				fields[ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].Description != o.ResourcesSnapshot.Info[i1].Description {
-				fields[ClusterInstFieldResourcesSnapshotInfoDescription] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].Units != o.ResourcesSnapshot.Info[i1].Units {
-				fields[ClusterInstFieldResourcesSnapshotInfoUnits] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].AlertThreshold != o.ResourcesSnapshot.Info[i1].AlertThreshold {
-				fields[ClusterInstFieldResourcesSnapshotInfoAlertThreshold] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-		}
-	}
-	if len(m.ResourcesSnapshot.ClusterInsts) != len(o.ResourcesSnapshot.ClusterInsts) {
-		fields[ClusterInstFieldResourcesSnapshotClusterInsts] = struct{}{}
-		fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.ClusterInsts); i1++ {
-			if m.ResourcesSnapshot.ClusterInsts[i1].ClusterKey.Name != o.ResourcesSnapshot.ClusterInsts[i1].ClusterKey.Name {
-				fields[ClusterInstFieldResourcesSnapshotClusterInstsClusterKeyName] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotClusterInstsClusterKey] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotClusterInsts] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.ClusterInsts[i1].Organization != o.ResourcesSnapshot.ClusterInsts[i1].Organization {
-				fields[ClusterInstFieldResourcesSnapshotClusterInstsOrganization] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotClusterInsts] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-		}
-	}
-	if len(m.ResourcesSnapshot.VmAppInsts) != len(o.ResourcesSnapshot.VmAppInsts) {
-		fields[ClusterInstFieldResourcesSnapshotVmAppInsts] = struct{}{}
-		fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.VmAppInsts); i1++ {
-			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Organization != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Organization {
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyOrganization] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Name != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Name {
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyName] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Version != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Version {
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyVersion] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.ClusterKey.Name != o.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.ClusterKey.Name {
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKey] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.Organization != o.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.Organization {
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKey] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstFieldResourcesSnapshot] = struct{}{}
+			} else if (m.Resources.Vms[i1].Containers != nil && o.Resources.Vms[i1].Containers == nil) || (m.Resources.Vms[i1].Containers == nil && o.Resources.Vms[i1].Containers != nil) {
+				fields[ClusterInstFieldResourcesVmsContainers] = struct{}{}
+				fields[ClusterInstFieldResourcesVms] = struct{}{}
+				fields[ClusterInstFieldResources] = struct{}{}
 			}
 		}
 	}
@@ -2196,49 +2034,13 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 }
 
 var UpdateClusterInstFieldsMap = map[string]struct{}{
-	ClusterInstFieldCrmOverride:                                             struct{}{},
-	ClusterInstFieldNumNodes:                                                struct{}{},
-	ClusterInstFieldAutoScalePolicy:                                         struct{}{},
-	ClusterInstFieldSkipCrmCleanupOnFailure:                                 struct{}{},
-	ClusterInstFieldResourcesSnapshot:                                       struct{}{},
-	ClusterInstFieldResourcesSnapshotVms:                                    struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsName:                                struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsType:                                struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsStatus:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsInfraFlavor:                         struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsIpaddresses:                         struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesExternalIp:               struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsIpaddressesInternalIp:               struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainers:                          struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersName:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersType:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersStatus:                    struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersClusterip:                 struct{}{},
-	ClusterInstFieldResourcesSnapshotVmsContainersRestarts:                  struct{}{},
-	ClusterInstFieldResourcesSnapshotInfo:                                   struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoName:                               struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoValue:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoDescription:                        struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoUnits:                              struct{}{},
-	ClusterInstFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
-	ClusterInstFieldResourcesSnapshotClusterInsts:                           struct{}{},
-	ClusterInstFieldResourcesSnapshotClusterInstsClusterKey:                 struct{}{},
-	ClusterInstFieldResourcesSnapshotClusterInstsClusterKeyName:             struct{}{},
-	ClusterInstFieldResourcesSnapshotClusterInstsOrganization:               struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInsts:                             struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKey:                       struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyName:                   struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsAppKeyVersion:                struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKey:               struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey:     struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: struct{}{},
-	ClusterInstFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   struct{}{},
-	ClusterInstFieldReservationEndedAt:                                      struct{}{},
-	ClusterInstFieldReservationEndedAtSeconds:                               struct{}{},
-	ClusterInstFieldReservationEndedAtNanos:                                 struct{}{},
+	ClusterInstFieldCrmOverride:               struct{}{},
+	ClusterInstFieldNumNodes:                  struct{}{},
+	ClusterInstFieldAutoScalePolicy:           struct{}{},
+	ClusterInstFieldSkipCrmCleanupOnFailure:   struct{}{},
+	ClusterInstFieldReservationEndedAt:        struct{}{},
+	ClusterInstFieldReservationEndedAtSeconds: struct{}{},
+	ClusterInstFieldReservationEndedAtNanos:   struct{}{},
 }
 
 func (m *ClusterInst) ValidateUpdateFields() error {
@@ -2477,38 +2279,11 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 	}
 	if _, set := fmap["28"]; set {
 		if _, set := fmap["28.1"]; set {
-			if src.ResourcesSnapshot.Vms != nil {
-				m.ResourcesSnapshot.Vms = src.ResourcesSnapshot.Vms
+			if src.Resources.Vms != nil {
+				m.Resources.Vms = src.Resources.Vms
 				changed++
-			} else if m.ResourcesSnapshot.Vms != nil {
-				m.ResourcesSnapshot.Vms = nil
-				changed++
-			}
-		}
-		if _, set := fmap["28.2"]; set {
-			if src.ResourcesSnapshot.Info != nil {
-				m.ResourcesSnapshot.Info = src.ResourcesSnapshot.Info
-				changed++
-			} else if m.ResourcesSnapshot.Info != nil {
-				m.ResourcesSnapshot.Info = nil
-				changed++
-			}
-		}
-		if _, set := fmap["28.3"]; set {
-			if src.ResourcesSnapshot.ClusterInsts != nil {
-				m.ResourcesSnapshot.ClusterInsts = src.ResourcesSnapshot.ClusterInsts
-				changed++
-			} else if m.ResourcesSnapshot.ClusterInsts != nil {
-				m.ResourcesSnapshot.ClusterInsts = nil
-				changed++
-			}
-		}
-		if _, set := fmap["28.4"]; set {
-			if src.ResourcesSnapshot.VmAppInsts != nil {
-				m.ResourcesSnapshot.VmAppInsts = src.ResourcesSnapshot.VmAppInsts
-				changed++
-			} else if m.ResourcesSnapshot.VmAppInsts != nil {
-				m.ResourcesSnapshot.VmAppInsts = nil
+			} else if m.Resources.Vms != nil {
+				m.Resources.Vms = nil
 				changed++
 			}
 		}
@@ -2590,7 +2365,7 @@ func (m *ClusterInst) DeepCopyIn(src *ClusterInst) {
 	m.MasterNodeFlavor = src.MasterNodeFlavor
 	m.SkipCrmCleanupOnFailure = src.SkipCrmCleanupOnFailure
 	m.OptRes = src.OptRes
-	m.ResourcesSnapshot.DeepCopyIn(&src.ResourcesSnapshot)
+	m.Resources.DeepCopyIn(&src.Resources)
 	m.CreatedAt = src.CreatedAt
 	m.UpdatedAt = src.UpdatedAt
 	m.ReservationEndedAt = src.ReservationEndedAt
@@ -3249,7 +3024,7 @@ func (m *ClusterInst) ValidateEnums() error {
 	if err := m.Status.ValidateEnums(); err != nil {
 		return err
 	}
-	if err := m.ResourcesSnapshot.ValidateEnums(); err != nil {
+	if err := m.Resources.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -3295,7 +3070,7 @@ func IgnoreClusterInstFields(taglist string) cmp.Option {
 		names = append(names, "OptRes")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "ResourcesSnapshot")
+		names = append(names, "Resources")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "CreatedAt")
@@ -3387,42 +3162,21 @@ const ClusterInstInfoFieldStatusTaskName = "6.3"
 const ClusterInstInfoFieldStatusStepName = "6.4"
 const ClusterInstInfoFieldStatusMsgCount = "6.5"
 const ClusterInstInfoFieldStatusMsgs = "6.6"
-const ClusterInstInfoFieldResourcesSnapshot = "7"
-const ClusterInstInfoFieldResourcesSnapshotVms = "7.1"
-const ClusterInstInfoFieldResourcesSnapshotVmsName = "7.1.1"
-const ClusterInstInfoFieldResourcesSnapshotVmsType = "7.1.2"
-const ClusterInstInfoFieldResourcesSnapshotVmsStatus = "7.1.3"
-const ClusterInstInfoFieldResourcesSnapshotVmsInfraFlavor = "7.1.4"
-const ClusterInstInfoFieldResourcesSnapshotVmsIpaddresses = "7.1.5"
-const ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesExternalIp = "7.1.5.1"
-const ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesInternalIp = "7.1.5.2"
-const ClusterInstInfoFieldResourcesSnapshotVmsContainers = "7.1.6"
-const ClusterInstInfoFieldResourcesSnapshotVmsContainersName = "7.1.6.1"
-const ClusterInstInfoFieldResourcesSnapshotVmsContainersType = "7.1.6.2"
-const ClusterInstInfoFieldResourcesSnapshotVmsContainersStatus = "7.1.6.3"
-const ClusterInstInfoFieldResourcesSnapshotVmsContainersClusterip = "7.1.6.4"
-const ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts = "7.1.6.5"
-const ClusterInstInfoFieldResourcesSnapshotInfo = "7.2"
-const ClusterInstInfoFieldResourcesSnapshotInfoName = "7.2.1"
-const ClusterInstInfoFieldResourcesSnapshotInfoValue = "7.2.2"
-const ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue = "7.2.3"
-const ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue = "7.2.4"
-const ClusterInstInfoFieldResourcesSnapshotInfoDescription = "7.2.5"
-const ClusterInstInfoFieldResourcesSnapshotInfoUnits = "7.2.6"
-const ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold = "7.2.7"
-const ClusterInstInfoFieldResourcesSnapshotClusterInsts = "7.3"
-const ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKey = "7.3.1"
-const ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKeyName = "7.3.1.1"
-const ClusterInstInfoFieldResourcesSnapshotClusterInstsOrganization = "7.3.2"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInsts = "7.4"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKey = "7.4.1"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization = "7.4.1.1"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyName = "7.4.1.2"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion = "7.4.1.3"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKey = "7.4.2"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey = "7.4.2.1"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName = "7.4.2.1.1"
-const ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization = "7.4.2.2"
+const ClusterInstInfoFieldResources = "7"
+const ClusterInstInfoFieldResourcesVms = "7.1"
+const ClusterInstInfoFieldResourcesVmsName = "7.1.1"
+const ClusterInstInfoFieldResourcesVmsType = "7.1.2"
+const ClusterInstInfoFieldResourcesVmsStatus = "7.1.3"
+const ClusterInstInfoFieldResourcesVmsInfraFlavor = "7.1.4"
+const ClusterInstInfoFieldResourcesVmsIpaddresses = "7.1.5"
+const ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp = "7.1.5.1"
+const ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp = "7.1.5.2"
+const ClusterInstInfoFieldResourcesVmsContainers = "7.1.6"
+const ClusterInstInfoFieldResourcesVmsContainersName = "7.1.6.1"
+const ClusterInstInfoFieldResourcesVmsContainersType = "7.1.6.2"
+const ClusterInstInfoFieldResourcesVmsContainersStatus = "7.1.6.3"
+const ClusterInstInfoFieldResourcesVmsContainersClusterip = "7.1.6.4"
+const ClusterInstInfoFieldResourcesVmsContainersRestarts = "7.1.6.5"
 
 var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldKeyClusterKeyName,
@@ -3438,113 +3192,71 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldStatusStepName,
 	ClusterInstInfoFieldStatusMsgCount,
 	ClusterInstInfoFieldStatusMsgs,
-	ClusterInstInfoFieldResourcesSnapshotVmsName,
-	ClusterInstInfoFieldResourcesSnapshotVmsType,
-	ClusterInstInfoFieldResourcesSnapshotVmsStatus,
-	ClusterInstInfoFieldResourcesSnapshotVmsInfraFlavor,
-	ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesExternalIp,
-	ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesInternalIp,
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersName,
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersType,
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersStatus,
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersClusterip,
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts,
-	ClusterInstInfoFieldResourcesSnapshotInfoName,
-	ClusterInstInfoFieldResourcesSnapshotInfoValue,
-	ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue,
-	ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue,
-	ClusterInstInfoFieldResourcesSnapshotInfoDescription,
-	ClusterInstInfoFieldResourcesSnapshotInfoUnits,
-	ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold,
-	ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKeyName,
-	ClusterInstInfoFieldResourcesSnapshotClusterInstsOrganization,
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization,
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyName,
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion,
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName,
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization,
+	ClusterInstInfoFieldResourcesVmsName,
+	ClusterInstInfoFieldResourcesVmsType,
+	ClusterInstInfoFieldResourcesVmsStatus,
+	ClusterInstInfoFieldResourcesVmsInfraFlavor,
+	ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp,
+	ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp,
+	ClusterInstInfoFieldResourcesVmsContainersName,
+	ClusterInstInfoFieldResourcesVmsContainersType,
+	ClusterInstInfoFieldResourcesVmsContainersStatus,
+	ClusterInstInfoFieldResourcesVmsContainersClusterip,
+	ClusterInstInfoFieldResourcesVmsContainersRestarts,
 }
 
 var ClusterInstInfoAllFieldsMap = map[string]struct{}{
-	ClusterInstInfoFieldKeyClusterKeyName:                                       struct{}{},
-	ClusterInstInfoFieldKeyCloudletKeyOrganization:                              struct{}{},
-	ClusterInstInfoFieldKeyCloudletKeyName:                                      struct{}{},
-	ClusterInstInfoFieldKeyOrganization:                                         struct{}{},
-	ClusterInstInfoFieldNotifyId:                                                struct{}{},
-	ClusterInstInfoFieldState:                                                   struct{}{},
-	ClusterInstInfoFieldErrors:                                                  struct{}{},
-	ClusterInstInfoFieldStatusTaskNumber:                                        struct{}{},
-	ClusterInstInfoFieldStatusMaxTasks:                                          struct{}{},
-	ClusterInstInfoFieldStatusTaskName:                                          struct{}{},
-	ClusterInstInfoFieldStatusStepName:                                          struct{}{},
-	ClusterInstInfoFieldStatusMsgCount:                                          struct{}{},
-	ClusterInstInfoFieldStatusMsgs:                                              struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsName:                                struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsType:                                struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsStatus:                              struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsInfraFlavor:                         struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesExternalIp:               struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesInternalIp:               struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersName:                      struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersType:                      struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersStatus:                    struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersClusterip:                 struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts:                  struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoName:                               struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoValue:                              struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoDescription:                        struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoUnits:                              struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKeyName:             struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotClusterInstsOrganization:               struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                   struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: struct{}{},
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   struct{}{},
+	ClusterInstInfoFieldKeyClusterKeyName:                 struct{}{},
+	ClusterInstInfoFieldKeyCloudletKeyOrganization:        struct{}{},
+	ClusterInstInfoFieldKeyCloudletKeyName:                struct{}{},
+	ClusterInstInfoFieldKeyOrganization:                   struct{}{},
+	ClusterInstInfoFieldNotifyId:                          struct{}{},
+	ClusterInstInfoFieldState:                             struct{}{},
+	ClusterInstInfoFieldErrors:                            struct{}{},
+	ClusterInstInfoFieldStatusTaskNumber:                  struct{}{},
+	ClusterInstInfoFieldStatusMaxTasks:                    struct{}{},
+	ClusterInstInfoFieldStatusTaskName:                    struct{}{},
+	ClusterInstInfoFieldStatusStepName:                    struct{}{},
+	ClusterInstInfoFieldStatusMsgCount:                    struct{}{},
+	ClusterInstInfoFieldStatusMsgs:                        struct{}{},
+	ClusterInstInfoFieldResourcesVmsName:                  struct{}{},
+	ClusterInstInfoFieldResourcesVmsType:                  struct{}{},
+	ClusterInstInfoFieldResourcesVmsStatus:                struct{}{},
+	ClusterInstInfoFieldResourcesVmsInfraFlavor:           struct{}{},
+	ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp: struct{}{},
+	ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp: struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersName:        struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersType:        struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersStatus:      struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersClusterip:   struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersRestarts:    struct{}{},
 }
 
 var ClusterInstInfoAllFieldsStringMap = map[string]string{
-	ClusterInstInfoFieldKeyClusterKeyName:                                       "Key Cluster Key Name",
-	ClusterInstInfoFieldKeyCloudletKeyOrganization:                              "Key Cloudlet Key Organization",
-	ClusterInstInfoFieldKeyCloudletKeyName:                                      "Key Cloudlet Key Name",
-	ClusterInstInfoFieldKeyOrganization:                                         "Key Organization",
-	ClusterInstInfoFieldNotifyId:                                                "Notify Id",
-	ClusterInstInfoFieldState:                                                   "State",
-	ClusterInstInfoFieldErrors:                                                  "Errors",
-	ClusterInstInfoFieldStatusTaskNumber:                                        "Status Task Number",
-	ClusterInstInfoFieldStatusMaxTasks:                                          "Status Max Tasks",
-	ClusterInstInfoFieldStatusTaskName:                                          "Status Task Name",
-	ClusterInstInfoFieldStatusStepName:                                          "Status Step Name",
-	ClusterInstInfoFieldStatusMsgCount:                                          "Status Msg Count",
-	ClusterInstInfoFieldStatusMsgs:                                              "Status Msgs",
-	ClusterInstInfoFieldResourcesSnapshotVmsName:                                "Resources Snapshot Vms Name",
-	ClusterInstInfoFieldResourcesSnapshotVmsType:                                "Resources Snapshot Vms Type",
-	ClusterInstInfoFieldResourcesSnapshotVmsStatus:                              "Resources Snapshot Vms Status",
-	ClusterInstInfoFieldResourcesSnapshotVmsInfraFlavor:                         "Resources Snapshot Vms Infra Flavor",
-	ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesExternalIp:               "Resources Snapshot Vms Ipaddresses External Ip",
-	ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesInternalIp:               "Resources Snapshot Vms Ipaddresses Internal Ip",
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersName:                      "Resources Snapshot Vms Containers Name",
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersType:                      "Resources Snapshot Vms Containers Type",
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersStatus:                    "Resources Snapshot Vms Containers Status",
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersClusterip:                 "Resources Snapshot Vms Containers Clusterip",
-	ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts:                  "Resources Snapshot Vms Containers Restarts",
-	ClusterInstInfoFieldResourcesSnapshotInfoName:                               "Resources Snapshot Info Name",
-	ClusterInstInfoFieldResourcesSnapshotInfoValue:                              "Resources Snapshot Info Value",
-	ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue:                      "Resources Snapshot Info Infra Max Value",
-	ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      "Resources Snapshot Info Quota Max Value",
-	ClusterInstInfoFieldResourcesSnapshotInfoDescription:                        "Resources Snapshot Info Description",
-	ClusterInstInfoFieldResourcesSnapshotInfoUnits:                              "Resources Snapshot Info Units",
-	ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold:                     "Resources Snapshot Info Alert Threshold",
-	ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKeyName:             "Resources Snapshot Cluster Insts Cluster Key Name",
-	ClusterInstInfoFieldResourcesSnapshotClusterInstsOrganization:               "Resources Snapshot Cluster Insts Organization",
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           "Resources Snapshot Vm App Insts App Key Organization",
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                   "Resources Snapshot Vm App Insts App Key Name",
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                "Resources Snapshot Vm App Insts App Key Version",
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: "Resources Snapshot Vm App Insts Cluster Inst Key Cluster Key Name",
-	ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   "Resources Snapshot Vm App Insts Cluster Inst Key Organization",
+	ClusterInstInfoFieldKeyClusterKeyName:                 "Key Cluster Key Name",
+	ClusterInstInfoFieldKeyCloudletKeyOrganization:        "Key Cloudlet Key Organization",
+	ClusterInstInfoFieldKeyCloudletKeyName:                "Key Cloudlet Key Name",
+	ClusterInstInfoFieldKeyOrganization:                   "Key Organization",
+	ClusterInstInfoFieldNotifyId:                          "Notify Id",
+	ClusterInstInfoFieldState:                             "State",
+	ClusterInstInfoFieldErrors:                            "Errors",
+	ClusterInstInfoFieldStatusTaskNumber:                  "Status Task Number",
+	ClusterInstInfoFieldStatusMaxTasks:                    "Status Max Tasks",
+	ClusterInstInfoFieldStatusTaskName:                    "Status Task Name",
+	ClusterInstInfoFieldStatusStepName:                    "Status Step Name",
+	ClusterInstInfoFieldStatusMsgCount:                    "Status Msg Count",
+	ClusterInstInfoFieldStatusMsgs:                        "Status Msgs",
+	ClusterInstInfoFieldResourcesVmsName:                  "Resources Vms Name",
+	ClusterInstInfoFieldResourcesVmsType:                  "Resources Vms Type",
+	ClusterInstInfoFieldResourcesVmsStatus:                "Resources Vms Status",
+	ClusterInstInfoFieldResourcesVmsInfraFlavor:           "Resources Vms Infra Flavor",
+	ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp: "Resources Vms Ipaddresses External Ip",
+	ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp: "Resources Vms Ipaddresses Internal Ip",
+	ClusterInstInfoFieldResourcesVmsContainersName:        "Resources Vms Containers Name",
+	ClusterInstInfoFieldResourcesVmsContainersType:        "Resources Vms Containers Type",
+	ClusterInstInfoFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
+	ClusterInstInfoFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
+	ClusterInstInfoFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
 }
 
 func (m *ClusterInstInfo) IsKeyField(s string) bool {
@@ -3619,192 +3331,94 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 			}
 		}
 	}
-	if len(m.ResourcesSnapshot.Vms) != len(o.ResourcesSnapshot.Vms) {
-		fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-		fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+	if len(m.Resources.Vms) != len(o.Resources.Vms) {
+		fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+		fields[ClusterInstInfoFieldResources] = struct{}{}
 	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.Vms); i1++ {
-			if m.ResourcesSnapshot.Vms[i1].Name != o.ResourcesSnapshot.Vms[i1].Name {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmsName] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+		for i1 := 0; i1 < len(m.Resources.Vms); i1++ {
+			if m.Resources.Vms[i1].Name != o.Resources.Vms[i1].Name {
+				fields[ClusterInstInfoFieldResourcesVmsName] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Type != o.ResourcesSnapshot.Vms[i1].Type {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmsType] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].Type != o.Resources.Vms[i1].Type {
+				fields[ClusterInstInfoFieldResourcesVmsType] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Status != o.ResourcesSnapshot.Vms[i1].Status {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmsStatus] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].Status != o.Resources.Vms[i1].Status {
+				fields[ClusterInstInfoFieldResourcesVmsStatus] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].InfraFlavor != o.ResourcesSnapshot.Vms[i1].InfraFlavor {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmsInfraFlavor] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].InfraFlavor != o.Resources.Vms[i1].InfraFlavor {
+				fields[ClusterInstInfoFieldResourcesVmsInfraFlavor] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
 			}
-			if len(m.ResourcesSnapshot.Vms[i1].Ipaddresses) != len(o.ResourcesSnapshot.Vms[i1].Ipaddresses) {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+			if len(m.Resources.Vms[i1].Ipaddresses) != len(o.Resources.Vms[i1].Ipaddresses) {
+				fields[ClusterInstInfoFieldResourcesVmsIpaddresses] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
 			} else {
-				for i2 := 0; i2 < len(m.ResourcesSnapshot.Vms[i1].Ipaddresses); i2++ {
-					if m.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].ExternalIp != o.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].ExternalIp {
-						fields[ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesExternalIp] = struct{}{}
-						fields[ClusterInstInfoFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-						fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-						fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+				for i2 := 0; i2 < len(m.Resources.Vms[i1].Ipaddresses); i2++ {
+					if m.Resources.Vms[i1].Ipaddresses[i2].ExternalIp != o.Resources.Vms[i1].Ipaddresses[i2].ExternalIp {
+						fields[ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp] = struct{}{}
+						fields[ClusterInstInfoFieldResourcesVmsIpaddresses] = struct{}{}
+						fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+						fields[ClusterInstInfoFieldResources] = struct{}{}
 					}
-					if m.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].InternalIp != o.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].InternalIp {
-						fields[ClusterInstInfoFieldResourcesSnapshotVmsIpaddressesInternalIp] = struct{}{}
-						fields[ClusterInstInfoFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-						fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-						fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+					if m.Resources.Vms[i1].Ipaddresses[i2].InternalIp != o.Resources.Vms[i1].Ipaddresses[i2].InternalIp {
+						fields[ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp] = struct{}{}
+						fields[ClusterInstInfoFieldResourcesVmsIpaddresses] = struct{}{}
+						fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+						fields[ClusterInstInfoFieldResources] = struct{}{}
 					}
 				}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Containers != nil && o.ResourcesSnapshot.Vms[i1].Containers != nil {
-				if len(m.ResourcesSnapshot.Vms[i1].Containers) != len(o.ResourcesSnapshot.Vms[i1].Containers) {
-					fields[ClusterInstInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-					fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-					fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+			if m.Resources.Vms[i1].Containers != nil && o.Resources.Vms[i1].Containers != nil {
+				if len(m.Resources.Vms[i1].Containers) != len(o.Resources.Vms[i1].Containers) {
+					fields[ClusterInstInfoFieldResourcesVmsContainers] = struct{}{}
+					fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+					fields[ClusterInstInfoFieldResources] = struct{}{}
 				} else {
-					for i2 := 0; i2 < len(m.ResourcesSnapshot.Vms[i1].Containers); i2++ {
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Name != o.ResourcesSnapshot.Vms[i1].Containers[i2].Name {
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainersName] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+					for i2 := 0; i2 < len(m.Resources.Vms[i1].Containers); i2++ {
+						if m.Resources.Vms[i1].Containers[i2].Name != o.Resources.Vms[i1].Containers[i2].Name {
+							fields[ClusterInstInfoFieldResourcesVmsContainersName] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+							fields[ClusterInstInfoFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Type != o.ResourcesSnapshot.Vms[i1].Containers[i2].Type {
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainersType] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Type != o.Resources.Vms[i1].Containers[i2].Type {
+							fields[ClusterInstInfoFieldResourcesVmsContainersType] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+							fields[ClusterInstInfoFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Status != o.ResourcesSnapshot.Vms[i1].Containers[i2].Status {
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainersStatus] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Status != o.Resources.Vms[i1].Containers[i2].Status {
+							fields[ClusterInstInfoFieldResourcesVmsContainersStatus] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+							fields[ClusterInstInfoFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Clusterip != o.ResourcesSnapshot.Vms[i1].Containers[i2].Clusterip {
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainersClusterip] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Clusterip != o.Resources.Vms[i1].Containers[i2].Clusterip {
+							fields[ClusterInstInfoFieldResourcesVmsContainersClusterip] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+							fields[ClusterInstInfoFieldResources] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Restarts != o.ResourcesSnapshot.Vms[i1].Containers[i2].Restarts {
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainersRestarts] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-							fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+						if m.Resources.Vms[i1].Containers[i2].Restarts != o.Resources.Vms[i1].Containers[i2].Restarts {
+							fields[ClusterInstInfoFieldResourcesVmsContainersRestarts] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVmsContainers] = struct{}{}
+							fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+							fields[ClusterInstInfoFieldResources] = struct{}{}
 						}
 					}
 				}
-			} else if (m.ResourcesSnapshot.Vms[i1].Containers != nil && o.ResourcesSnapshot.Vms[i1].Containers == nil) || (m.ResourcesSnapshot.Vms[i1].Containers == nil && o.ResourcesSnapshot.Vms[i1].Containers != nil) {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVms] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-		}
-	}
-	if len(m.ResourcesSnapshot.Info) != len(o.ResourcesSnapshot.Info) {
-		fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-		fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.Info); i1++ {
-			if m.ResourcesSnapshot.Info[i1].Name != o.ResourcesSnapshot.Info[i1].Name {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoName] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].Value != o.ResourcesSnapshot.Info[i1].Value {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoValue] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].InfraMaxValue != o.ResourcesSnapshot.Info[i1].InfraMaxValue {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoInfraMaxValue] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].QuotaMaxValue != o.ResourcesSnapshot.Info[i1].QuotaMaxValue {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoQuotaMaxValue] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].Description != o.ResourcesSnapshot.Info[i1].Description {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoDescription] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].Units != o.ResourcesSnapshot.Info[i1].Units {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoUnits] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.Info[i1].AlertThreshold != o.ResourcesSnapshot.Info[i1].AlertThreshold {
-				fields[ClusterInstInfoFieldResourcesSnapshotInfoAlertThreshold] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotInfo] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-		}
-	}
-	if len(m.ResourcesSnapshot.ClusterInsts) != len(o.ResourcesSnapshot.ClusterInsts) {
-		fields[ClusterInstInfoFieldResourcesSnapshotClusterInsts] = struct{}{}
-		fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.ClusterInsts); i1++ {
-			if m.ResourcesSnapshot.ClusterInsts[i1].ClusterKey.Name != o.ResourcesSnapshot.ClusterInsts[i1].ClusterKey.Name {
-				fields[ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKeyName] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotClusterInstsClusterKey] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotClusterInsts] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.ClusterInsts[i1].Organization != o.ResourcesSnapshot.ClusterInsts[i1].Organization {
-				fields[ClusterInstInfoFieldResourcesSnapshotClusterInstsOrganization] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotClusterInsts] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-		}
-	}
-	if len(m.ResourcesSnapshot.VmAppInsts) != len(o.ResourcesSnapshot.VmAppInsts) {
-		fields[ClusterInstInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
-		fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.VmAppInsts); i1++ {
-			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Organization != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Organization {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Name != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Name {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyName] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Version != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Version {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.ClusterKey.Name != o.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.ClusterKey.Name {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKey] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
-			}
-			if m.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.Organization != o.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.Organization {
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInstsClusterInstKey] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
-				fields[ClusterInstInfoFieldResourcesSnapshot] = struct{}{}
+			} else if (m.Resources.Vms[i1].Containers != nil && o.Resources.Vms[i1].Containers == nil) || (m.Resources.Vms[i1].Containers == nil && o.Resources.Vms[i1].Containers != nil) {
+				fields[ClusterInstInfoFieldResourcesVmsContainers] = struct{}{}
+				fields[ClusterInstInfoFieldResourcesVms] = struct{}{}
+				fields[ClusterInstInfoFieldResources] = struct{}{}
 			}
 		}
 	}
@@ -3907,38 +3521,11 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 	}
 	if _, set := fmap["7"]; set {
 		if _, set := fmap["7.1"]; set {
-			if src.ResourcesSnapshot.Vms != nil {
-				m.ResourcesSnapshot.Vms = src.ResourcesSnapshot.Vms
+			if src.Resources.Vms != nil {
+				m.Resources.Vms = src.Resources.Vms
 				changed++
-			} else if m.ResourcesSnapshot.Vms != nil {
-				m.ResourcesSnapshot.Vms = nil
-				changed++
-			}
-		}
-		if _, set := fmap["7.2"]; set {
-			if src.ResourcesSnapshot.Info != nil {
-				m.ResourcesSnapshot.Info = src.ResourcesSnapshot.Info
-				changed++
-			} else if m.ResourcesSnapshot.Info != nil {
-				m.ResourcesSnapshot.Info = nil
-				changed++
-			}
-		}
-		if _, set := fmap["7.3"]; set {
-			if src.ResourcesSnapshot.ClusterInsts != nil {
-				m.ResourcesSnapshot.ClusterInsts = src.ResourcesSnapshot.ClusterInsts
-				changed++
-			} else if m.ResourcesSnapshot.ClusterInsts != nil {
-				m.ResourcesSnapshot.ClusterInsts = nil
-				changed++
-			}
-		}
-		if _, set := fmap["7.4"]; set {
-			if src.ResourcesSnapshot.VmAppInsts != nil {
-				m.ResourcesSnapshot.VmAppInsts = src.ResourcesSnapshot.VmAppInsts
-				changed++
-			} else if m.ResourcesSnapshot.VmAppInsts != nil {
-				m.ResourcesSnapshot.VmAppInsts = nil
+			} else if m.Resources.Vms != nil {
+				m.Resources.Vms = nil
 				changed++
 			}
 		}
@@ -3959,7 +3546,7 @@ func (m *ClusterInstInfo) DeepCopyIn(src *ClusterInstInfo) {
 		m.Errors = nil
 	}
 	m.Status.DeepCopyIn(&src.Status)
-	m.ResourcesSnapshot.DeepCopyIn(&src.ResourcesSnapshot)
+	m.Resources.DeepCopyIn(&src.Resources)
 }
 
 func (s *ClusterInstInfo) HasFields() bool {
@@ -4531,7 +4118,7 @@ func (m *ClusterInstInfo) ValidateEnums() error {
 	if err := m.Status.ValidateEnums(); err != nil {
 		return err
 	}
-	if err := m.ResourcesSnapshot.ValidateEnums(); err != nil {
+	if err := m.Resources.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -4585,6 +4172,9 @@ func (m *ClusterInst) IsValidArgsForCreateClusterInst() error {
 	}
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
+	}
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
 	}
 	if m.State != 0 {
 		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
@@ -4652,6 +4242,9 @@ func (m *ClusterInst) IsValidArgsForDeleteClusterInst() error {
 	}
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
+	}
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
 	}
 	if m.State != 0 {
 		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
@@ -4737,6 +4330,9 @@ func (m *ClusterInst) IsValidArgsForUpdateClusterInst() error {
 	}
 	if m.ReservedBy != "" {
 		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
+	}
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
 	}
 	if m.SharedVolumeSize != 0 {
 		return fmt.Errorf("Invalid field specified: SharedVolumeSize, this field is only for internal use")
@@ -4885,7 +4481,7 @@ func (m *ClusterInst) Size() (n int) {
 	if l > 0 {
 		n += 2 + l + sovClusterinst(uint64(l))
 	}
-	l = m.ResourcesSnapshot.Size()
+	l = m.Resources.Size()
 	n += 2 + l + sovClusterinst(uint64(l))
 	l = m.CreatedAt.Size()
 	n += 2 + l + sovClusterinst(uint64(l))
@@ -4936,7 +4532,7 @@ func (m *ClusterInstInfo) Size() (n int) {
 	}
 	l = m.Status.Size()
 	n += 1 + l + sovClusterinst(uint64(l))
-	l = m.ResourcesSnapshot.Size()
+	l = m.Resources.Size()
 	n += 1 + l + sovClusterinst(uint64(l))
 	return n
 }
@@ -5792,7 +5388,7 @@ func (m *ClusterInst) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 28:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ResourcesSnapshot", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Resources", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5819,7 +5415,7 @@ func (m *ClusterInst) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ResourcesSnapshot.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Resources.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -6217,7 +5813,7 @@ func (m *ClusterInstInfo) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ResourcesSnapshot", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Resources", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -6244,7 +5840,7 @@ func (m *ClusterInstInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ResourcesSnapshot.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Resources.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

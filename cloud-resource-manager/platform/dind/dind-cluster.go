@@ -146,7 +146,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 		return nil, err
 	}
 	resources := edgeproto.InfraResourcesSnapshot{
-		Vms: []edgeproto.VmInfo{
+		PlatformVms: []edgeproto.VmInfo{
 			{Name: "local-mac"},
 		},
 		Info: []edgeproto.InfraResource{
@@ -169,8 +169,8 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 	return &resources, nil
 }
 
-func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResourcesSnapshot, error) {
-	resources := edgeproto.InfraResourcesSnapshot{}
+func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
+	resources := edgeproto.InfraResources{}
 	return &resources, nil
 }
 

@@ -682,7 +682,7 @@ func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgepro
 	return nil
 }
 
-func (cd *ControllerData) clusterInstInfoResources(ctx context.Context, key *edgeproto.ClusterInstKey, resources *edgeproto.InfraResourcesSnapshot) error {
+func (cd *ControllerData) clusterInstInfoResources(ctx context.Context, key *edgeproto.ClusterInstKey, resources *edgeproto.InfraResources) error {
 	return cd.ClusterInstInfoCache.SetResources(ctx, key, resources)
 }
 
@@ -892,7 +892,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		cloudletInfo.ResourcesSnapshot.Vms = resources.Vms
+		cloudletInfo.ResourcesSnapshot.PlatformVms = resources.PlatformVms
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)

@@ -1998,7 +1998,7 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 		}
 		resInfo := []edgeproto.InfraResource{}
 		infraResources = cloudletInfo.ResourcesSnapshot
-		infraResources.Vms = []edgeproto.VmInfo{}
+		infraResources.PlatformVms = []edgeproto.VmInfo{}
 		if !usage.InfraUsage {
 			infraResources.ClusterInsts = []edgeproto.ClusterInstRefKey{}
 			infraResources.VmAppInsts = []edgeproto.AppInstRefKey{}
@@ -2017,7 +2017,7 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 
 func GetPlatformVMsResources(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) ([]edgeproto.VMResource, error) {
 	resources := []edgeproto.VMResource{}
-	for _, vm := range cloudletInfo.ResourcesSnapshot.Vms {
+	for _, vm := range cloudletInfo.ResourcesSnapshot.PlatformVms {
 		if vm.InfraFlavor == "" {
 			continue
 		}

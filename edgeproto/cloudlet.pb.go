@@ -7028,20 +7028,20 @@ const CloudletInfoFieldOsImagesDiskFormat = "14.4"
 const CloudletInfoFieldControllerCacheReceived = "15"
 const CloudletInfoFieldMaintenanceState = "16"
 const CloudletInfoFieldResourcesSnapshot = "17"
-const CloudletInfoFieldResourcesSnapshotVms = "17.1"
-const CloudletInfoFieldResourcesSnapshotVmsName = "17.1.1"
-const CloudletInfoFieldResourcesSnapshotVmsType = "17.1.2"
-const CloudletInfoFieldResourcesSnapshotVmsStatus = "17.1.3"
-const CloudletInfoFieldResourcesSnapshotVmsInfraFlavor = "17.1.4"
-const CloudletInfoFieldResourcesSnapshotVmsIpaddresses = "17.1.5"
-const CloudletInfoFieldResourcesSnapshotVmsIpaddressesExternalIp = "17.1.5.1"
-const CloudletInfoFieldResourcesSnapshotVmsIpaddressesInternalIp = "17.1.5.2"
-const CloudletInfoFieldResourcesSnapshotVmsContainers = "17.1.6"
-const CloudletInfoFieldResourcesSnapshotVmsContainersName = "17.1.6.1"
-const CloudletInfoFieldResourcesSnapshotVmsContainersType = "17.1.6.2"
-const CloudletInfoFieldResourcesSnapshotVmsContainersStatus = "17.1.6.3"
-const CloudletInfoFieldResourcesSnapshotVmsContainersClusterip = "17.1.6.4"
-const CloudletInfoFieldResourcesSnapshotVmsContainersRestarts = "17.1.6.5"
+const CloudletInfoFieldResourcesSnapshotPlatformVms = "17.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsName = "17.1.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsType = "17.1.2"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsStatus = "17.1.3"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor = "17.1.4"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses = "17.1.5"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp = "17.1.5.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp = "17.1.5.2"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainers = "17.1.6"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName = "17.1.6.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType = "17.1.6.2"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus = "17.1.6.3"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip = "17.1.6.4"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts = "17.1.6.5"
 const CloudletInfoFieldResourcesSnapshotInfo = "17.2"
 const CloudletInfoFieldResourcesSnapshotInfoName = "17.2.1"
 const CloudletInfoFieldResourcesSnapshotInfoValue = "17.2.2"
@@ -7096,17 +7096,17 @@ var CloudletInfoAllFields = []string{
 	CloudletInfoFieldOsImagesDiskFormat,
 	CloudletInfoFieldControllerCacheReceived,
 	CloudletInfoFieldMaintenanceState,
-	CloudletInfoFieldResourcesSnapshotVmsName,
-	CloudletInfoFieldResourcesSnapshotVmsType,
-	CloudletInfoFieldResourcesSnapshotVmsStatus,
-	CloudletInfoFieldResourcesSnapshotVmsInfraFlavor,
-	CloudletInfoFieldResourcesSnapshotVmsIpaddressesExternalIp,
-	CloudletInfoFieldResourcesSnapshotVmsIpaddressesInternalIp,
-	CloudletInfoFieldResourcesSnapshotVmsContainersName,
-	CloudletInfoFieldResourcesSnapshotVmsContainersType,
-	CloudletInfoFieldResourcesSnapshotVmsContainersStatus,
-	CloudletInfoFieldResourcesSnapshotVmsContainersClusterip,
-	CloudletInfoFieldResourcesSnapshotVmsContainersRestarts,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts,
 	CloudletInfoFieldResourcesSnapshotInfoName,
 	CloudletInfoFieldResourcesSnapshotInfoValue,
 	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue,
@@ -7155,17 +7155,17 @@ var CloudletInfoAllFieldsMap = map[string]struct{}{
 	CloudletInfoFieldOsImagesDiskFormat:                                      struct{}{},
 	CloudletInfoFieldControllerCacheReceived:                                 struct{}{},
 	CloudletInfoFieldMaintenanceState:                                        struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsName:                                struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsType:                                struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsStatus:                              struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsInfraFlavor:                         struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsIpaddressesExternalIp:               struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsIpaddressesInternalIp:               struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsContainersName:                      struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsContainersType:                      struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsContainersStatus:                    struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsContainersClusterip:                 struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmsContainersRestarts:                  struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                        struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                        struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                      struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                 struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:       struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:       struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:              struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:              struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:            struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:         struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:          struct{}{},
 	CloudletInfoFieldResourcesSnapshotInfoName:                               struct{}{},
 	CloudletInfoFieldResourcesSnapshotInfoValue:                              struct{}{},
 	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
@@ -7214,17 +7214,17 @@ var CloudletInfoAllFieldsStringMap = map[string]string{
 	CloudletInfoFieldOsImagesDiskFormat:                                      "Os Images Disk Format",
 	CloudletInfoFieldControllerCacheReceived:                                 "Controller Cache Received",
 	CloudletInfoFieldMaintenanceState:                                        "Maintenance State",
-	CloudletInfoFieldResourcesSnapshotVmsName:                                "Resources Snapshot Vms Name",
-	CloudletInfoFieldResourcesSnapshotVmsType:                                "Resources Snapshot Vms Type",
-	CloudletInfoFieldResourcesSnapshotVmsStatus:                              "Resources Snapshot Vms Status",
-	CloudletInfoFieldResourcesSnapshotVmsInfraFlavor:                         "Resources Snapshot Vms Infra Flavor",
-	CloudletInfoFieldResourcesSnapshotVmsIpaddressesExternalIp:               "Resources Snapshot Vms Ipaddresses External Ip",
-	CloudletInfoFieldResourcesSnapshotVmsIpaddressesInternalIp:               "Resources Snapshot Vms Ipaddresses Internal Ip",
-	CloudletInfoFieldResourcesSnapshotVmsContainersName:                      "Resources Snapshot Vms Containers Name",
-	CloudletInfoFieldResourcesSnapshotVmsContainersType:                      "Resources Snapshot Vms Containers Type",
-	CloudletInfoFieldResourcesSnapshotVmsContainersStatus:                    "Resources Snapshot Vms Containers Status",
-	CloudletInfoFieldResourcesSnapshotVmsContainersClusterip:                 "Resources Snapshot Vms Containers Clusterip",
-	CloudletInfoFieldResourcesSnapshotVmsContainersRestarts:                  "Resources Snapshot Vms Containers Restarts",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                        "Resources Snapshot Platform Vms Name",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                        "Resources Snapshot Platform Vms Type",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                      "Resources Snapshot Platform Vms Status",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                 "Resources Snapshot Platform Vms Infra Flavor",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:       "Resources Snapshot Platform Vms Ipaddresses External Ip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:       "Resources Snapshot Platform Vms Ipaddresses Internal Ip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:              "Resources Snapshot Platform Vms Containers Name",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:              "Resources Snapshot Platform Vms Containers Type",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:            "Resources Snapshot Platform Vms Containers Status",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:         "Resources Snapshot Platform Vms Containers Clusterip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:          "Resources Snapshot Platform Vms Containers Restarts",
 	CloudletInfoFieldResourcesSnapshotInfoName:                               "Resources Snapshot Info Name",
 	CloudletInfoFieldResourcesSnapshotInfoValue:                              "Resources Snapshot Info Value",
 	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                      "Resources Snapshot Info Infra Max Value",
@@ -7417,93 +7417,93 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 	if m.MaintenanceState != o.MaintenanceState {
 		fields[CloudletInfoFieldMaintenanceState] = struct{}{}
 	}
-	if len(m.ResourcesSnapshot.Vms) != len(o.ResourcesSnapshot.Vms) {
-		fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+	if len(m.ResourcesSnapshot.PlatformVms) != len(o.ResourcesSnapshot.PlatformVms) {
+		fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 		fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 	} else {
-		for i1 := 0; i1 < len(m.ResourcesSnapshot.Vms); i1++ {
-			if m.ResourcesSnapshot.Vms[i1].Name != o.ResourcesSnapshot.Vms[i1].Name {
-				fields[CloudletInfoFieldResourcesSnapshotVmsName] = struct{}{}
-				fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+		for i1 := 0; i1 < len(m.ResourcesSnapshot.PlatformVms); i1++ {
+			if m.ResourcesSnapshot.PlatformVms[i1].Name != o.ResourcesSnapshot.PlatformVms[i1].Name {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Type != o.ResourcesSnapshot.Vms[i1].Type {
-				fields[CloudletInfoFieldResourcesSnapshotVmsType] = struct{}{}
-				fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].Type != o.ResourcesSnapshot.PlatformVms[i1].Type {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsType] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Status != o.ResourcesSnapshot.Vms[i1].Status {
-				fields[CloudletInfoFieldResourcesSnapshotVmsStatus] = struct{}{}
-				fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].Status != o.ResourcesSnapshot.PlatformVms[i1].Status {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsStatus] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.ResourcesSnapshot.Vms[i1].InfraFlavor != o.ResourcesSnapshot.Vms[i1].InfraFlavor {
-				fields[CloudletInfoFieldResourcesSnapshotVmsInfraFlavor] = struct{}{}
-				fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].InfraFlavor != o.ResourcesSnapshot.PlatformVms[i1].InfraFlavor {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if len(m.ResourcesSnapshot.Vms[i1].Ipaddresses) != len(o.ResourcesSnapshot.Vms[i1].Ipaddresses) {
-				fields[CloudletInfoFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-				fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+			if len(m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses) != len(o.ResourcesSnapshot.PlatformVms[i1].Ipaddresses) {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			} else {
-				for i2 := 0; i2 < len(m.ResourcesSnapshot.Vms[i1].Ipaddresses); i2++ {
-					if m.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].ExternalIp != o.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].ExternalIp {
-						fields[CloudletInfoFieldResourcesSnapshotVmsIpaddressesExternalIp] = struct{}{}
-						fields[CloudletInfoFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-						fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+				for i2 := 0; i2 < len(m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses); i2++ {
+					if m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].ExternalIp != o.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].ExternalIp {
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 						fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 					}
-					if m.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].InternalIp != o.ResourcesSnapshot.Vms[i1].Ipaddresses[i2].InternalIp {
-						fields[CloudletInfoFieldResourcesSnapshotVmsIpaddressesInternalIp] = struct{}{}
-						fields[CloudletInfoFieldResourcesSnapshotVmsIpaddresses] = struct{}{}
-						fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+					if m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].InternalIp != o.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].InternalIp {
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 						fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 					}
 				}
 			}
-			if m.ResourcesSnapshot.Vms[i1].Containers != nil && o.ResourcesSnapshot.Vms[i1].Containers != nil {
-				if len(m.ResourcesSnapshot.Vms[i1].Containers) != len(o.ResourcesSnapshot.Vms[i1].Containers) {
-					fields[CloudletInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-					fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].Containers != nil && o.ResourcesSnapshot.PlatformVms[i1].Containers != nil {
+				if len(m.ResourcesSnapshot.PlatformVms[i1].Containers) != len(o.ResourcesSnapshot.PlatformVms[i1].Containers) {
+					fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+					fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 					fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 				} else {
-					for i2 := 0; i2 < len(m.ResourcesSnapshot.Vms[i1].Containers); i2++ {
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Name != o.ResourcesSnapshot.Vms[i1].Containers[i2].Name {
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainersName] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+					for i2 := 0; i2 < len(m.ResourcesSnapshot.PlatformVms[i1].Containers); i2++ {
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Name != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Name {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Type != o.ResourcesSnapshot.Vms[i1].Containers[i2].Type {
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainersType] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Type != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Type {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Status != o.ResourcesSnapshot.Vms[i1].Containers[i2].Status {
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainersStatus] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Status != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Status {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Clusterip != o.ResourcesSnapshot.Vms[i1].Containers[i2].Clusterip {
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainersClusterip] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Clusterip != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Clusterip {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.ResourcesSnapshot.Vms[i1].Containers[i2].Restarts != o.ResourcesSnapshot.Vms[i1].Containers[i2].Restarts {
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainersRestarts] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Restarts != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Restarts {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
 					}
 				}
-			} else if (m.ResourcesSnapshot.Vms[i1].Containers != nil && o.ResourcesSnapshot.Vms[i1].Containers == nil) || (m.ResourcesSnapshot.Vms[i1].Containers == nil && o.ResourcesSnapshot.Vms[i1].Containers != nil) {
-				fields[CloudletInfoFieldResourcesSnapshotVmsContainers] = struct{}{}
-				fields[CloudletInfoFieldResourcesSnapshotVms] = struct{}{}
+			} else if (m.ResourcesSnapshot.PlatformVms[i1].Containers != nil && o.ResourcesSnapshot.PlatformVms[i1].Containers == nil) || (m.ResourcesSnapshot.PlatformVms[i1].Containers == nil && o.ResourcesSnapshot.PlatformVms[i1].Containers != nil) {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
 				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
 		}
@@ -7761,11 +7761,11 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	}
 	if _, set := fmap["17"]; set {
 		if _, set := fmap["17.1"]; set {
-			if src.ResourcesSnapshot.Vms != nil {
-				m.ResourcesSnapshot.Vms = src.ResourcesSnapshot.Vms
+			if src.ResourcesSnapshot.PlatformVms != nil {
+				m.ResourcesSnapshot.PlatformVms = src.ResourcesSnapshot.PlatformVms
 				changed++
-			} else if m.ResourcesSnapshot.Vms != nil {
-				m.ResourcesSnapshot.Vms = nil
+			} else if m.ResourcesSnapshot.PlatformVms != nil {
+				m.ResourcesSnapshot.PlatformVms = nil
 				changed++
 			}
 		}

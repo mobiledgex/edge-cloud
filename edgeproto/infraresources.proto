@@ -97,13 +97,21 @@ message AppInstRefKey {
   option (protogen.obj_key) = true;
 }
 
+// InfraResources
+//
+// InfraResources is infomation about infrastructure resources.
+message InfraResources {
+  // Virtual machine resources info
+  repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
+}
+
 
 // InfraResourcesSnapshot
 //
-// InfraResourcesSnapshot is snapshot of information about infrastructure resources.
+// InfraResourcesSnapshot is snapshot of information about cloudlet infra resources.
 message InfraResourcesSnapshot {
   // Virtual machine resources info
-  repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
+  repeated VmInfo platform_vms = 1 [(gogoproto.nullable) = false];
   // Infra Resource information
   repeated InfraResource info = 2 [(gogoproto.nullable) = false];
   // List of clusterinsts this resources snapshot represent

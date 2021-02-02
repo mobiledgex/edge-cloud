@@ -198,7 +198,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 			{ExternalIp: "10.101.100.10"},
 		},
 	}
-	resources.Vms = append(resources.Vms, platvm)
+	resources.PlatformVms = append(resources.PlatformVms, platvm)
 	rlbvm := edgeproto.VmInfo{
 		Name:        "fake-rootlb-vm",
 		Type:        "rootlb",
@@ -208,7 +208,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 			{ExternalIp: "10.101.100.11"},
 		},
 	}
-	resources.Vms = append(resources.Vms, rlbvm)
+	resources.PlatformVms = append(resources.PlatformVms, rlbvm)
 
 	resources.Info = []edgeproto.InfraResource{
 		edgeproto.InfraResource{
@@ -288,8 +288,8 @@ func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, cloud
 	return nil
 }
 
-func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResourcesSnapshot, error) {
-	var resources edgeproto.InfraResourcesSnapshot
+func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
+	var resources edgeproto.InfraResources
 	if vms, ok := FakeClusterVMs[*clusterKey]; ok {
 		resources.Vms = append(resources.Vms, vms...)
 	}
