@@ -38,6 +38,11 @@ var CloudletKindFake = "fake"
 var OperatingSystemMac = "mac"
 var OperatingSystemLinux = "linux"
 
+const AutoClusterPrefix = "autocluster"
+const ReservableClusterPrefix = "reservable"
+const ReserveClusterEvent = "Reserve ClusterInst"
+const FreeClusterEvent = "Free ClusterInst reservation"
+
 // network schemes for use by standalone deployments (e.g. DIND)
 var NetworkSchemePublicIP = "publicip"
 var NetworkSchemePrivateIP = "privateip"

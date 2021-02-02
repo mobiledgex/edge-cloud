@@ -38,6 +38,7 @@ settings:
   updatetrustpolicytimeout: 5s
   dmeapimetricscollectioninterval: 1s
   persistentconnectionmetricscollectioninterval: 1s
+  cleanupreservableautoclusteridletime: 30m0s
 trustpolicies:
 - key:
     organization: dmuus

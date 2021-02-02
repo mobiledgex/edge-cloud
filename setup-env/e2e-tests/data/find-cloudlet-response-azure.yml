@@ -1,5 +1,5 @@
 status: FindFound
-fqdn: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-4.azure.localtest.net
+fqdn: acmeappcosomeapplication110.reservable0.azure-cloud-4.azure.localtest.net
 ports:
 - proto: LProtoTcp
   internalport: 80

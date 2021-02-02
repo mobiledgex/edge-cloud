@@ -196,6 +196,9 @@ autoprovpolicycloudlets:
     organization: dmuus
     name: dmuus-cloud-2
 
+idlereservableclusterinsts:
+  idletime: 0
+
 apps:
 - key:
     organization: AcmeAppCo

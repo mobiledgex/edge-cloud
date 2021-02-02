@@ -123,6 +123,8 @@ extend google.protobuf.FieldOptions {
   // KeyTag is a string use to identify key fields and their name for
   // logging or metrics
   string keytag = 51047;
+  // Skip KeyTag conflict check, for intentional duplicates
+  bool skip_keytag_conflict_check = 51050;
 }
 
 extend google.protobuf.MethodOptions {

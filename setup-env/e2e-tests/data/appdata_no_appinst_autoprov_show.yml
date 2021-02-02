@@ -21,6 +21,7 @@ settings:
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 1s
   persistentconnectionmetricscollectioninterval: 1s
+  cleanupreservableautoclusteridletime: 30m0s
 flavors:
 - key:
     name: x1.tiny
@@ -552,7 +553,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: ReservableCluster2
+        name: autocluster-autoprov
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
@@ -561,6 +562,7 @@ appinstances:
     latitude: 35
     longitude: -95
   liveness: LivenessAutoprov
+  realclustername: ReservableCluster2
   mappedports:
   - proto: LProtoTcp
     internalport: 81
@@ -610,7 +612,7 @@ appinstrefs:
     name: autoprovapp
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"autoprovapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"ReservableCluster2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"MobiledgeX"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"autoprovapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autocluster-autoprov"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
 - key:
     organization: AcmeAppCo

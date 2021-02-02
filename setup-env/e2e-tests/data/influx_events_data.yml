@@ -18,6 +18,7 @@
     - org
     - other
     - ram
+    - realcluster
     - status
     - vcpu
     - ver
@@ -38,6 +39,7 @@
       - null
       - null
       - null
+      - SmallCluster
       - UP
       - null
       - "1.0"
@@ -57,6 +59,7 @@
       - null
       - null
       - null
+      - SmallCluster
       - DOWN
       - null
       - "1.0"
@@ -76,6 +79,7 @@
       - null
       - null
       - null
+      - SmallCluster
       - UP
       - null
       - "1.0"
@@ -95,6 +99,7 @@
       - null
       - null
       - null
+      - SmallCluster
       - DOWN
       - null
       - "1.0"
@@ -118,6 +123,7 @@
     - org
     - other
     - ram
+    - realcluster
     - status
     - vcpu
     - ver
@@ -138,6 +144,7 @@
       - null
       - null
       - null
+      - null
       - UP
       - null
       - null
@@ -151,6 +158,7 @@
       - null
       - null
       - DELETED
+      - null
       - null
       - null
       - null
@@ -180,6 +188,7 @@
     - org
     - other
     - ram
+    - realcluster
     - status
     - vcpu
     - ver
@@ -200,6 +209,7 @@
       - AcmeAppCo
       - map[]
       - 2048
+      - null
       - UP
       - 2
       - null
@@ -219,6 +229,7 @@
       - AcmeAppCo
       - map[]
       - 2048
+      - null
       - DOWN
       - 2
       - null

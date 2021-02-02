@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -49,7 +51,7 @@ func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppI
 		require.Nil(t, err, "stream appinst")
 		require.Greater(t, len(streamAppInst.Msgs), 0, "contains stream messages")
 	} else {
-		require.NotNil(t, err, "stream appinst should return error")
+		require.NotNil(t, err, "stream appinst should return error for key %s", *key)
 	}
 	return streamAppInst.Msgs
 }
@@ -116,6 +118,7 @@ func TestAppInstApi(t *testing.T) {
 	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
 	clusterInstCnt := len(clusterInstApi.cache.Objs)
+	require.Equal(t, len(testutil.ClusterInstData), clusterInstCnt)
 
 	// Set responder to fail. This should clean up the object after
 	// the fake crm returns a failure. If it doesn't, the next test to
@@ -123,7 +126,7 @@ func TestAppInstApi(t *testing.T) {
 	responder.SetSimulateAppCreateFailure(true)
 	// clean up on failure may find ports inconsistent
 	RequireAppInstPortConsistency = false
-	for _, obj := range testutil.AppInstData {
+	for ii, obj := range testutil.AppInstData {
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
 		}
@@ -132,9 +135,9 @@ func TestAppInstApi(t *testing.T) {
 		// make sure error matches responder
 		// if app-inst triggers auto-cluster, the error will be for a cluster
 		if strings.Contains(err.Error(), "cluster inst") {
-			require.Equal(t, "Encountered failures: crm create cluster inst failed", err.Error())
+			require.Equal(t, "Encountered failures: crm create cluster inst failed", err.Error(), "AppInst[%d]: %v", ii, obj.Key)
 		} else {
-			require.Equal(t, "Encountered failures: crm create app inst failed", err.Error())
+			require.Equal(t, "Encountered failures: crm create app inst failed", err.Error(), "AppInst[%d]: %v", ii, obj.Key)
 		}
 		// As there was some progress, there should be some messages in stream
 		msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
@@ -144,12 +147,14 @@ func TestAppInstApi(t *testing.T) {
 	RequireAppInstPortConsistency = true
 	require.Equal(t, 0, len(appInstApi.cache.Objs))
 	require.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
+	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
 
 	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData)
 	InternalAppInstCachedFieldsTest(t, ctx)
 	// check cluster insts created (includes explicit and auto)
 	testutil.InternalClusterInstTest(t, "show", &clusterInstApi,
 		append(testutil.ClusterInstData, testutil.ClusterInstAutoData...))
+	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(clusterInstApi.cache.Objs))
 
 	// after app insts create, check that cloudlet refs data is correct.
 	// Note this refs data is a second set after app insts were created.
@@ -294,12 +299,16 @@ func TestAppInstApi(t *testing.T) {
 		}
 		require.Nil(t, err, "Delete app inst failed")
 	}
+	// cleanup unused reservable auto clusters
+	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
+	clusterInstApi.cleanupWorkers.WaitIdle()
+
 	for _, obj := range testutil.AppData {
 		_, err := appApi.DeleteApp(ctx, &obj)
 		if err != nil && err.Error() == obj.Key.NotFoundError().Error() {
 			continue
 		}
-		require.Nil(t, err, "Delete app failed")
+		require.Nil(t, err, "Delete app %s failed", obj.Key.GetKeyString())
 	}
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, []edgeproto.AppInstRefs{})
 
@@ -390,37 +399,100 @@ func TestAutoClusterInst(t *testing.T) {
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
-	// since cluster inst does not exist, it will be auto-created
-	copy := testutil.AppInstData[0]
-	copy.Key.ClusterInstKey.ClusterKey.Name = ClusterAutoPrefix
-	err := appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
-	require.Nil(t, err, "create app inst")
-	// As there was some progress, there should be some messages in stream
-	msgs := GetAppInstStreamMsgs(t, ctx, &copy.Key, Pass)
-	require.Greater(t, len(msgs), 0, "some progress messages")
-	clusterInst := edgeproto.ClusterInst{}
-	found := clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
-	require.True(t, found, "get auto-clusterinst")
-	require.True(t, clusterInst.Auto, "clusterinst is auto")
-	// Progress message should be there for cluster instance itself
-	msgs = GetClusterInstStreamMsgs(t, ctx, &copy.Key.ClusterInstKey, Pass)
-	require.Greater(t, len(msgs), 0, "some progress messages")
-	// delete appinst should also delete clusterinst
-	err = appInstApi.DeleteAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
-	require.Nil(t, err, "delete app inst")
-	found = clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
-	require.False(t, found, "get auto-clusterinst")
-	// Autocluster AppInst with AutoDelete delete option should fail
-	autoDeleteAppInst := edgeproto.AppInst{
-		Key: edgeproto.AppInstKey{
-			AppKey:         testutil.AppData[9].Key,
-			ClusterInstKey: testutil.ClusterInstData[0].Key,
-		},
+	checkReserved := func(cloudletKey edgeproto.CloudletKey, found bool, id, reservedBy string) {
+		key := &edgeproto.ClusterInstKey{}
+		key.ClusterKey.Name = cloudcommon.ReservableClusterPrefix + id
+		key.CloudletKey = cloudletKey
+		key.Organization = cloudcommon.OrganizationMobiledgeX
+		// look up reserved ClusterInst
+		clusterInst := edgeproto.ClusterInst{}
+		actualFound := clusterInstApi.Get(key, &clusterInst)
+		require.Equal(t, found, actualFound, "lookup %s", key.GetKeyString())
+		if !found {
+			return
+		}
+		require.True(t, clusterInst.Auto, "clusterinst is auto")
+		require.True(t, clusterInst.Reservable, "clusterinst is reservable")
+		require.Equal(t, reservedBy, clusterInst.ReservedBy, "reserved by matches")
+		// Progress message should be there for cluster instance itself
+		msgs := GetClusterInstStreamMsgs(t, ctx, key, Pass)
+		require.Greater(t, len(msgs), 0, "some progress messages")
 	}
-	autoDeleteAppInst.Key.ClusterInstKey.ClusterKey.Name = ClusterAutoPrefix
-	err = appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
-	require.NotNil(t, err, "create autodelete apppInst")
-	require.Contains(t, err.Error(), "requires an existing ClusterInst")
+	createAutoClusterAppInst := func(copy edgeproto.AppInst, expectedId string) {
+		// since cluster inst does not exist, it will be auto-created
+		copy.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + expectedId
+		copy.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
+		err := appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
+		require.Nil(t, err, "create app inst")
+		// As there was some progress, there should be some messages in stream
+		msgs := GetAppInstStreamMsgs(t, ctx, &copy.Key, Pass)
+		require.Greater(t, len(msgs), 0, "some progress messages")
+		// Check that reserved ClusterInst was created
+		checkReserved(copy.Key.ClusterInstKey.CloudletKey, true, expectedId, copy.Key.AppKey.Organization)
+		// check for expected cluster name.
+		require.Equal(t, cloudcommon.AutoClusterPrefix+expectedId, copy.Key.ClusterInstKey.ClusterKey.Name)
+	}
+	deleteAutoClusterAppInst := func(copy edgeproto.AppInst, id string) {
+		// delete appinst
+		copy.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + id
+		copy.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
+		err := appInstApi.DeleteAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
+		require.Nil(t, err, "delete app inst")
+		checkReserved(copy.Key.ClusterInstKey.CloudletKey, true, id, "")
+	}
+	checkReservedIds := func(key edgeproto.CloudletKey, expected uint64) {
+		refs := edgeproto.CloudletRefs{}
+		found := cloudletRefsApi.cache.Get(&key, &refs)
+		require.True(t, found)
+		require.Equal(t, expected, refs.ReservedAutoClusterIds)
+	}
+
+	// create auto-cluster AppInsts
+	cloudletKey := testutil.AppInstData[0].Key.ClusterInstKey.CloudletKey
+	createAutoClusterAppInst(testutil.AppInstData[0], "0")
+	checkReservedIds(cloudletKey, 1)
+	createAutoClusterAppInst(testutil.AppInstData[0], "1")
+	checkReservedIds(cloudletKey, 3)
+	createAutoClusterAppInst(testutil.AppInstData[0], "2")
+	checkReservedIds(cloudletKey, 7)
+	// delete one
+	deleteAutoClusterAppInst(testutil.AppInstData[0], "1")
+	checkReservedIds(cloudletKey, 7) // clusterinst doesn't get deleted
+	// create again, should reuse existing free ClusterInst
+	createAutoClusterAppInst(testutil.AppInstData[0], "1")
+	checkReservedIds(cloudletKey, 7)
+	// delete one again
+	deleteAutoClusterAppInst(testutil.AppInstData[0], "1")
+	checkReservedIds(cloudletKey, 7) // clusterinst doesn't get deleted
+	// cleanup unused reservable auto clusters
+	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
+	clusterInstApi.cleanupWorkers.WaitIdle()
+	checkReserved(cloudletKey, false, "1", "")
+	checkReservedIds(cloudletKey, 5)
+	// create again, should create new ClusterInst with next free id
+	createAutoClusterAppInst(testutil.AppInstData[0], "1")
+	checkReservedIds(cloudletKey, 7)
+	// delete all of them
+	deleteAutoClusterAppInst(testutil.AppInstData[0], "0")
+	deleteAutoClusterAppInst(testutil.AppInstData[0], "1")
+	deleteAutoClusterAppInst(testutil.AppInstData[0], "2")
+	checkReservedIds(cloudletKey, 7)
+	// cleanup unused reservable auto clusters
+	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
+	clusterInstApi.cleanupWorkers.WaitIdle()
+	checkReserved(cloudletKey, false, "0", "")
+	checkReserved(cloudletKey, false, "1", "")
+	checkReserved(cloudletKey, false, "2", "")
+	checkReservedIds(cloudletKey, 0)
+
+	// Autocluster AppInst with AutoDelete delete option should fail
+	autoDeleteAppInst := testutil.AppInstData[10]
+	autoDeleteAppInst.RealClusterName = ""
+	autoDeleteAppInst.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + "foo"
+	err := appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err, "create autodelete appInst")
+	require.Contains(t, err.Error(), "MobiledgeX sidecar AppInst must specify the RealClusterName field to deploy to the virtual cluster")
+
 	dummy.Stop()
 }
 
@@ -479,21 +551,17 @@ func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppIn
 // Test that Crm Override for Delete App overrides any failures
 // on both side-car auto-apps and an underlying auto-cluster.
 func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder) {
-	// autocluster
-	ac := edgeproto.ClusterInst{
-		Key: edgeproto.ClusterInstKey{
-			ClusterKey: edgeproto.ClusterKey{
-				Name: util.K8SSanitize(ClusterAutoPrefix + "override-clust"),
-			},
-			CloudletKey:  testutil.CloudletData[1].Key,
-			Organization: testutil.AppData[0].Key.Organization,
-		},
-	}
 	// autocluster app
 	ai := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:         testutil.AppData[0].Key,
-			ClusterInstKey: ac.Key,
+			AppKey: testutil.AppData[0].Key,
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
+				ClusterKey: edgeproto.ClusterKey{
+					Name: util.K8SSanitize(cloudcommon.AutoClusterPrefix + "override-clust"),
+				},
+				CloudletKey:  testutil.CloudletData[1].Key,
+				Organization: cloudcommon.OrganizationMobiledgeX,
+			},
 		},
 	}
 	// autoapp
@@ -501,7 +569,7 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 	aiauto := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:         testutil.AppData[9].Key, // auto-delete app
-			ClusterInstKey: ac.Key,
+			ClusterInstKey: ai.Key.ClusterInstKey,
 		},
 	}
 	var err error
@@ -524,33 +592,40 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
-		// create auto app
+		// set aiauto cluster name from real cluster name of create autocluster
+		clKey := obj.ClusterInstKey()
 		obj = aiauto
+		obj.Key.ClusterInstKey = *clKey.Virtual("")
+		// create auto app
 		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
-		require.Nil(t, err, "create AppInst")
+		require.Nil(t, err, "create AppInst on cluster %v", obj.Key.ClusterInstKey)
 		err = forceAppInstState(ctx, &obj, state, responder)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
-		clust = ac
+		clust = edgeproto.ClusterInst{}
+		clust.Key = *clKey
 		err = forceClusterInstState(ctx, &clust, state, responder)
 		require.Nil(t, err, "force state")
 		checkClusterInstState(t, ctx, clustApi, &clust, state)
 
-		// delete app (should delete auto cluster and auto app)
+		// delete app (to be able to delete reservable cluster)
 		obj = ai
 		obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
 		log.SpanLog(ctx, log.DebugLevelInfo, "test run appinst delete")
 		err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "override crm and transient state %s", stateName)
 		log.SpanLog(ctx, log.DebugLevelInfo, "test appinst deleted")
-		// make sure autocluster got deleted (means apps also were deleted)
-		showData := testutil.ShowClusterInst{}
-		showData.Init()
-		showData.Ctx = ctx
-		err = clustApi.ShowClusterInst(ctx, &edgeproto.ClusterInst{}, &showData)
-		require.Nil(t, err, "show ClusterInst")
-		showData.AssertNotFound(t, &clust)
+
+		// delete cluster (should also delete auto app)
+		clust.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
+		log.SpanLog(ctx, log.DebugLevelInfo, "test run ClusterInst delete")
+		err = clusterInstApi.DeleteClusterInst(&clust, testutil.NewCudStreamoutClusterInst(ctx))
+		require.Nil(t, err, "override crm and transient state %s", stateName)
+		log.SpanLog(ctx, log.DebugLevelInfo, "test ClusterInst deleted")
+		// make sure cluster got deleted (means apps also were deleted)
+		found := testutil.GetClusterInst(t, ctx, clustApi, &clust.Key, &edgeproto.ClusterInst{})
+		require.False(t, found)
 	}
 
 	responder.SetSimulateAppDeleteFailure(false)
