@@ -1422,7 +1422,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// this is retained for old autoclusters that are not reservable,
 	// and can be removed once no old autoclusters exist anymore.
 	clusterInst := edgeproto.ClusterInst{}
-	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !appInstApi.UsesClusterInst(&clusterInstKey) {
+	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !appInstApi.UsesClusterInst(&clusterInstKey) && !clusterInst.Reservable {
 		cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst"})
 		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
 		if autoerr != nil {
