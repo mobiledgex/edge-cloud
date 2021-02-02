@@ -2280,7 +2280,7 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.MappedPorts != nil {
-			if m.MappedPorts == nil && o.MappedPorts != nil || m.MappedPorts != nil && o.MappedPorts == nil {
+			if len(m.MappedPorts) == 0 && len(o.MappedPorts) > 0 || len(m.MappedPorts) > 0 && len(o.MappedPorts) == 0 {
 				return false
 			} else if m.MappedPorts != nil && o.MappedPorts != nil {
 				if !opts.Filter && len(m.MappedPorts) != len(o.MappedPorts) {
@@ -2305,7 +2305,7 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.Errors != nil {
-			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+			if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -2351,7 +2351,7 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Configs != nil {
-		if m.Configs == nil && o.Configs != nil || m.Configs != nil && o.Configs == nil {
+		if len(m.Configs) == 0 && len(o.Configs) > 0 || len(m.Configs) > 0 && len(o.Configs) == 0 {
 			return false
 		} else if m.Configs != nil && o.Configs != nil {
 			if !opts.Filter && len(m.Configs) != len(o.Configs) {
@@ -4133,7 +4133,7 @@ func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Errors != nil {
-		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+		if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {

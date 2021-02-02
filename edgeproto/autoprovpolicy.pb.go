@@ -1108,7 +1108,7 @@ func (m *AutoProvPolicy) Matches(o *AutoProvPolicy, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Cloudlets != nil {
-		if m.Cloudlets == nil && o.Cloudlets != nil || m.Cloudlets != nil && o.Cloudlets == nil {
+		if len(m.Cloudlets) == 0 && len(o.Cloudlets) > 0 || len(m.Cloudlets) > 0 && len(o.Cloudlets) == 0 {
 			return false
 		} else if m.Cloudlets != nil && o.Cloudlets != nil {
 			if !opts.Filter && len(m.Cloudlets) != len(o.Cloudlets) {
@@ -2410,7 +2410,7 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Completed != nil {
-		if m.Completed == nil && o.Completed != nil || m.Completed != nil && o.Completed == nil {
+		if len(m.Completed) == 0 && len(o.Completed) > 0 || len(m.Completed) > 0 && len(o.Completed) == 0 {
 			return false
 		} else if m.Completed != nil && o.Completed != nil {
 			if !opts.Filter && len(m.Completed) != len(o.Completed) {
@@ -2424,7 +2424,7 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Errors != nil {
-		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+		if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
