@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +16,7 @@ func TestPublicCertManager(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	api := &TestPublicCertApi{}
+	api := &cloudcommon.TestPublicCertApi{}
 	mgr := NewPublicCertManager("localhost", api)
 	_, err := mgr.GetServerTlsConfig(ctx)
 	require.Nil(t, err)

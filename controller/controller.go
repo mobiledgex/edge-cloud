@@ -324,15 +324,16 @@ func startServices() error {
 	)
 	services.notifyServerMgr = true
 
-	// Get TLS config for access server
-	var getPublicCertApi node.GetPublicCertApi
-	getPublicCertApi = &node.VaultPublicCertApi{
+	// VaultPublicCertClient implements GetPublicCertApi
+	// Allows controller to get public certs from vault
+	var getPublicCertApi cloudcommon.GetPublicCertApi
+	getPublicCertApi = &cloudcommon.VaultPublicCertApi{
 		VaultConfig: vaultConfig,
 	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		getPublicCertApi = &node.TestPublicCertApi{}
-	}
 	services.publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
+		services.publicCertManager = node.NewPublicCertManager(*publicAddr, &cloudcommon.TestPublicCertApi{})
+	}
 	accessServerTlsConfig, err := services.publicCertManager.GetServerTlsConfig(ctx)
 	if err != nil {
 		return err
