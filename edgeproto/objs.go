@@ -138,6 +138,16 @@ func (key *ClusterInstKey) ValidateKey() error {
 	return nil
 }
 
+func (key *VirtualClusterInstKey) ValidateKey() error {
+	if err := key.ClusterKey.ValidateKey(); err != nil {
+		return err
+	}
+	if err := key.CloudletKey.ValidateKey(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *ClusterInst) Validate(fields map[string]struct{}) error {
 	return s.GetKey().ValidateKey()
 }
@@ -915,4 +925,45 @@ func UpdateStatusDiff(infoStatus *StatusInfo, diffStatus *StatusInfo) {
 	} else {
 		diffStatus.Msgs = []string{}
 	}
+}
+
+func (s *AppInst) GetRealClusterName() string {
+	if s.RealClusterName != "" {
+		return s.RealClusterName
+	}
+	return s.Key.ClusterInstKey.ClusterKey.Name
+}
+
+// For vanity naming of reservable ClusterInsts, the actual ClusterInst
+// name may be on the AppInst object.
+func (s *AppInst) ClusterInstKey() *ClusterInstKey {
+	return s.Key.ClusterInstKey.Real(s.GetRealClusterName())
+}
+
+// Convert VirtualClusterInstKey to a real ClusterInstKey,
+// given the real cluster name (may be blank for no aliasing).
+func (s *VirtualClusterInstKey) Real(realClusterName string) *ClusterInstKey {
+	key := ClusterInstKey{
+		ClusterKey:   s.ClusterKey,
+		CloudletKey:  s.CloudletKey,
+		Organization: s.Organization,
+	}
+	if realClusterName != "" {
+		key.ClusterKey.Name = realClusterName
+	}
+	return &key
+}
+
+// Convert real ClusterInstKey to a VirtualClusterInstKey,
+// give the virtual cluster name (may be blank for no aliasing).
+func (s *ClusterInstKey) Virtual(virtualName string) *VirtualClusterInstKey {
+	key := VirtualClusterInstKey{
+		ClusterKey:   s.ClusterKey,
+		CloudletKey:  s.CloudletKey,
+		Organization: s.Organization,
+	}
+	if virtualName != "" {
+		key.ClusterKey.Name = virtualName
+	}
+	return &key
 }

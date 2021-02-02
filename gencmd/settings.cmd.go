@@ -219,6 +219,7 @@ var SettingsOptionalArgs = []string{
 	"updatetrustpolicytimeout",
 	"dmeapimetricscollectioninterval",
 	"persistentconnectionmetricscollectioninterval",
+	"cleanupreservableautoclusteridletime",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -246,6 +247,7 @@ var SettingsComments = map[string]string{
 	"updatetrustpolicytimeout":                      "Update Trust Policy timeout (duration)",
 	"dmeapimetricscollectioninterval":               "Metrics collection interval for DME API counts (duration)",
 	"persistentconnectionmetricscollectioninterval": "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
+	"cleanupreservableautoclusteridletime":          "Idle reservable ClusterInst clean up time",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

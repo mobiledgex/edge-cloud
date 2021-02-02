@@ -14,7 +14,7 @@ var AppInstClientData = []edgeproto.AppInstClient{
 					Organization: "devorg1",
 					Version:      "1.0",
 				},
-				ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterInstKey: edgeproto.VirtualClusterInstKey{
 					CloudletKey: edgeproto.CloudletKey{
 						Name:         "cloudlet1",
 						Organization: "operator1",
@@ -33,7 +33,7 @@ var AppInstClientData = []edgeproto.AppInstClient{
 					Organization: "devorg2",
 					Version:      "1.0",
 				},
-				ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterInstKey: edgeproto.VirtualClusterInstKey{
 					CloudletKey: edgeproto.CloudletKey{
 						Name:         "cloudlet1",
 						Organization: "operator1",
@@ -53,7 +53,7 @@ var AppInstClientData = []edgeproto.AppInstClient{
 					Organization: "devorg1",
 					Version:      "1.0",
 				},
-				ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterInstKey: edgeproto.VirtualClusterInstKey{
 					CloudletKey: edgeproto.CloudletKey{
 						Name:         "cloudlet2",
 						Organization: "operator2",
@@ -72,7 +72,7 @@ var AppInstClientData = []edgeproto.AppInstClient{
 					Organization: "devorg1",
 					Version:      "1.0",
 				},
-				ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterInstKey: edgeproto.VirtualClusterInstKey{
 					CloudletKey: edgeproto.CloudletKey{
 						Name:         "cloudlet1",
 						Organization: "operator1",
@@ -91,7 +91,7 @@ var AppInstClientData = []edgeproto.AppInstClient{
 					Organization: "devorg1",
 					Version:      "1.0",
 				},
-				ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterInstKey: edgeproto.VirtualClusterInstKey{
 					CloudletKey: edgeproto.CloudletKey{
 						Name:         "cloudlet1",
 						Organization: "operator1",

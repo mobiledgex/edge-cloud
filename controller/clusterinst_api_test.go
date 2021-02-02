@@ -248,7 +248,7 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	streamOut := testutil.NewCudStreamoutAppInst(ctx)
 	appinst := edgeproto.AppInst{}
 	appinst.Key.AppKey = testutil.AppData[0].Key
-	appinst.Key.ClusterInstKey = cinst.Key
+	appinst.Key.ClusterInstKey = *cinst.Key.Virtual("")
 	err := appInstApi.CreateAppInst(&appinst, streamOut)
 	require.Nil(t, err, "create AppInst")
 	checkReservedBy(t, ctx, api, &cinst.Key, appinst.Key.AppKey.Organization)
@@ -256,14 +256,14 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	// Cannot create another AppInst on it from different developer
 	appinst2 := edgeproto.AppInst{}
 	appinst2.Key.AppKey = testutil.AppData[10].Key
-	appinst2.Key.ClusterInstKey = cinst.Key
+	appinst2.Key.ClusterInstKey = *cinst.Key.Virtual("")
 	require.NotEqual(t, appinst.Key.AppKey.Organization, appinst2.Key.AppKey.Organization)
 	err = appInstApi.CreateAppInst(&appinst2, streamOut)
 	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
 	// Cannot create another AppInst on it from the same developer
 	appinst3 := edgeproto.AppInst{}
 	appinst3.Key.AppKey = testutil.AppData[1].Key
-	appinst3.Key.ClusterInstKey = cinst.Key
+	appinst3.Key.ClusterInstKey = *cinst.Key.Virtual("")
 	require.Equal(t, appinst.Key.AppKey.Organization, appinst3.Key.AppKey.Organization)
 	err = appInstApi.CreateAppInst(&appinst3, streamOut)
 	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
@@ -317,7 +317,7 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 	aiauto := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:         app.Key,
-			ClusterInstKey: clust.Key,
+			ClusterInstKey: *clust.Key.Virtual(""),
 		},
 	}
 
@@ -359,6 +359,10 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 
 	_, err = appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err, "delete App")
+
+	// cleanup unused reservable auto clusters
+	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
+	clusterInstApi.cleanupWorkers.WaitIdle()
 }
 
 var testInfluxProc *process.Influx
