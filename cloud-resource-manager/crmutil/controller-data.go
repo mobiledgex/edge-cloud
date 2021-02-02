@@ -191,60 +191,29 @@ func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *
 	if cd.vmActionRefAction == 0 {
 		log.SpanLog(ctx, log.DebugLevelInfra, "update cloudlet resources snapshot", "key", cloudletKey)
 		// get all the cluster instances deployed on this cloudlet
-		clusterInstKeys := []edgeproto.ClusterInstKey{}
-		cd.ClusterInstCache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
-			clusterInstKeys = append(clusterInstKeys, *k)
-		})
 		deployedClusters := make(map[edgeproto.ClusterInstRefKey]struct{})
-		for _, k := range clusterInstKeys {
-			var clusterInst edgeproto.ClusterInst
-			if cd.ClusterInstCache.Get(&k, &clusterInst) {
-				if clusterInst.State == edgeproto.TrackedState_READY {
-					refKey := &edgeproto.ClusterInstRefKey{}
-					refKey.FromClusterInstKey(&k)
-					deployedClusters[*refKey] = struct{}{}
-				}
-			}
-			var clusterInstInfo edgeproto.ClusterInstInfo
-			if cd.ClusterInstInfoCache.Get(&k, &clusterInstInfo) {
-				if clusterInstInfo.State == edgeproto.TrackedState_READY {
-					refKey := &edgeproto.ClusterInstRefKey{}
-					refKey.FromClusterInstKey(&k)
-					deployedClusters[*refKey] = struct{}{}
-				}
-			}
-		}
-		// get all the vm app instances deployed on this cloudlet
-		appInstKeys := []edgeproto.AppInstKey{}
-		cd.AppInstCache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
-			appInstKeys = append(appInstKeys, *k)
+		cd.ClusterInstInfoCache.Show(&edgeproto.ClusterInstInfo{State: edgeproto.TrackedState_READY}, func(clusterInstInfo *edgeproto.ClusterInstInfo) error {
+			refKey := edgeproto.ClusterInstRefKey{}
+			refKey.FromClusterInstKey(&clusterInstInfo.Key)
+			deployedClusters[refKey] = struct{}{}
+			return nil
 		})
+
+		// get all the vm app instances deployed on this cloudlet
 		deployedVMAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
-		for _, k := range appInstKeys {
+		cd.AppInstInfoCache.Show(&edgeproto.AppInstInfo{State: edgeproto.TrackedState_READY}, func(appInstInfo *edgeproto.AppInstInfo) error {
 			var app edgeproto.App
-			if !cd.AppCache.Get(&k.AppKey, &app) {
-				continue
+			if !cd.AppCache.Get(&appInstInfo.Key.AppKey, &app) {
+				return nil
 			}
 			if app.Deployment != cloudcommon.DeploymentTypeVM {
-				continue
+				return nil
 			}
-			var appInst edgeproto.AppInst
-			if cd.AppInstCache.Get(&k, &appInst) {
-				if appInst.State == edgeproto.TrackedState_READY {
-					refKey := &edgeproto.AppInstRefKey{}
-					refKey.FromAppInstKey(&k)
-					deployedVMAppInsts[*refKey] = struct{}{}
-				}
-			}
-			var AppInstInfo edgeproto.AppInstInfo
-			if cd.AppInstInfoCache.Get(&k, &AppInstInfo) {
-				if AppInstInfo.State == edgeproto.TrackedState_READY {
-					refKey := &edgeproto.AppInstRefKey{}
-					refKey.FromAppInstKey(&k)
-					deployedVMAppInsts[*refKey] = struct{}{}
-				}
-			}
-		}
+			refKey := edgeproto.AppInstRefKey{}
+			refKey.FromAppInstKey(&appInstInfo.Key)
+			deployedVMAppInsts[refKey] = struct{}{}
+			return nil
+		})
 
 		cloudletInfo := edgeproto.CloudletInfo{}
 		found := cd.CloudletInfoCache.Get(cloudletKey, &cloudletInfo)
@@ -927,55 +896,6 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-	} else if new.State == edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED {
-		cloudlet := edgeproto.Cloudlet{}
-		// Check current thread state
-		if cloudletFound := cd.CloudletCache.Get(&new.Key, &cloudlet); cloudletFound {
-			if cloudlet.State == edgeproto.TrackedState_UPDATING {
-				return
-			}
-		}
-		cloudletInfo := edgeproto.CloudletInfo{}
-		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
-		if !found {
-			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
-			return
-		}
-		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE {
-			// Cloudlet is already reporting its resources
-			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resource update already in progress", "key", new.Key)
-			return
-		}
-		// Reset old Status
-		cloudletInfo.Status.StatusReset()
-		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-
-		go func() {
-			resources, err := cd.platform.GetCloudletInfraResources(ctx)
-			if err != nil {
-				errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)
-				log.InfoLog("can't fetch cloudlet resources", "error", errstr, "key", new.Key)
-
-				cd.NodeMgr.Event(ctx, "Cloudlet infra resource update failure", new.Key.Organization, new.Key.GetTags(), err)
-				// set state as READY as this failure doesn't affect running of cloudlet
-				cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
-				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-				return
-			}
-			// fetch cloudletInfo again, as data might have changed by now
-			found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
-			if !found {
-				log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
-				return
-			}
-			if resources != nil {
-				cloudletInfo.ResourcesSnapshot = *resources
-			}
-			cloudletInfo.Status.StatusReset()
-			cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-		}()
 	}
 }
 

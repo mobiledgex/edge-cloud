@@ -21,7 +21,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vmspec"
-	"google.golang.org/grpc"
 )
 
 type CloudletApi struct {
@@ -413,6 +412,25 @@ func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
 	return &caches
 }
 
+func validateResourceQuotaProps(resProps *edgeproto.CloudletResourceQuotaProps, resourceQuotas []edgeproto.ResourceQuota) error {
+	resPropsMap := make(map[string]struct{})
+	resPropsNames := []string{}
+	for _, prop := range resProps.Props {
+		resPropsMap[prop.Name] = struct{}{}
+		resPropsNames = append(resPropsNames, prop.Name)
+	}
+	for _, clRes := range cloudcommon.CloudletResources {
+		resPropsMap[clRes.Name] = struct{}{}
+		resPropsNames = append(resPropsNames, clRes.Name)
+	}
+	for _, resQuota := range resourceQuotas {
+		if _, ok := resPropsMap[resQuota.Name]; !ok {
+			return fmt.Errorf("Invalid quota name: %s, valid names are %s", resQuota.Name, strings.Join(resPropsNames, ","))
+		}
+	}
+	return nil
+}
+
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := inCb.Context()
@@ -538,17 +556,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if err != nil {
 				return err
 			}
-			resPropsMap := make(map[string]struct{})
-			for _, prop := range resProps.Props {
-				resPropsMap[prop.Name] = struct{}{}
-			}
-			for _, clRes := range cloudcommon.CloudletResources {
-				resPropsMap[clRes.Name] = struct{}{}
-			}
-			for _, resQuota := range in.ResourceQuotas {
-				if _, ok := resPropsMap[resQuota.Name]; !ok {
-					return fmt.Errorf("Invalid quota name: %s, valid names are %v", resQuota.Name, resPropsMap)
-				}
+			err = validateResourceQuotaProps(resProps, in.ResourceQuotas)
+			if err != nil {
+				return err
 			}
 			if err == nil {
 				// Some platform types require caches
@@ -707,23 +717,17 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
 			if curState == dme.CloudletState_CLOUDLET_STATE_READY &&
-				cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED &&
-				cloudlet.State != edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED {
+				cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED {
 				done <- true
 				return
 			}
 		}
 
 		switch cloudlet.State {
-		case edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED:
-			fallthrough
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
 			// cloudletinfo starts out in "ready" state, so wait for crm to transition to
 			// upgrade before looking for ready state
 			if curState == dme.CloudletState_CLOUDLET_STATE_UPGRADE {
-				// transition cloudlet state to updating (next case below)
-				update <- true
-			} else if curState == dme.CloudletState_CLOUDLET_STATE_RESOURCE_UPDATE {
 				// transition cloudlet state to updating (next case below)
 				update <- true
 			}
@@ -771,9 +775,6 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			}
 		case <-update:
 			// * transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
-			//   or
-			// * transition from RESOURCE_UPDATE_REQUESTED -> UPDATING state, as crm is updating
-			//   controller's view of crm's resource info
 			err := updateCloudletState(edgeproto.TrackedState_UPDATING)
 			if err == nil {
 				// crm started upgrading, now wait for it to be Ready
@@ -990,17 +991,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			if err != nil {
 				return err
 			}
-			resPropsMap := make(map[string]struct{})
-			for _, prop := range resProps.Props {
-				resPropsMap[prop.Name] = struct{}{}
-			}
-			for _, clRes := range cloudcommon.CloudletResources {
-				resPropsMap[clRes.Name] = struct{}{}
-			}
-			for _, resQuota := range in.ResourceQuotas {
-				if _, ok := resPropsMap[resQuota.Name]; !ok {
-					return fmt.Errorf("Invalid quota name: %s, valid names are %v", resQuota.Name, resPropsMap)
-				}
+			err = validateResourceQuotaProps(resProps, in.ResourceQuotas)
+			if err != nil {
+				return err
 			}
 			crmUpdateReqd = true
 		}
@@ -2022,24 +2015,7 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 	return &infraResources, err
 }
 
-type showNode struct {
-	grpc.ServerStream
-	ctx   context.Context
-	Nodes []edgeproto.Node
-}
-
-func (s *showNode) Send(node *edgeproto.Node) error {
-	if node != nil {
-		s.Nodes = append(s.Nodes, *node)
-	}
-	return nil
-}
-
-func (s *showNode) Context() context.Context {
-	return s.ctx
-}
-
-func GetCloudletResources(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) ([]edgeproto.VMResource, error) {
+func GetPlatformVMsResources(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) ([]edgeproto.VMResource, error) {
 	resources := []edgeproto.VMResource{}
 	for _, vm := range cloudletInfo.ResourcesSnapshot.Vms {
 		if vm.InfraFlavor == "" {
@@ -2056,110 +2032,6 @@ func GetCloudletResources(ctx context.Context, cloudletInfo *edgeproto.CloudletI
 		}
 	}
 	return resources, nil
-}
-
-func (s *CloudletApi) UpdateCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "Update cloudlet resource info", "key", key)
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cloudlet := &edgeproto.Cloudlet{}
-		if !s.store.STMGet(stm, key, cloudlet) {
-			log.SpanLog(ctx, log.DebugLevelApi, "failed to update cloudlet resource, cloudlet not found", "key", key)
-			return nil
-		}
-		cloudletInfo := edgeproto.CloudletInfo{}
-		if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
-			log.SpanLog(ctx, log.DebugLevelApi, "failed to update cloudlet resource, cloudletinfo not found", "key", key)
-			return nil
-		}
-		if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
-			return fmt.Errorf("Cloudlet is not online %v", key)
-		}
-		cloudletRefs := edgeproto.CloudletRefs{}
-		cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
-		clusterInstKeys := cloudletRefs.ClusterInsts
-		// proceed with resource sync only if there are no clusterinsts action in progress
-		for _, clusterInstRefKey := range clusterInstKeys {
-			clusterInst := edgeproto.ClusterInst{}
-			clusterInstKey := edgeproto.ClusterInstKey{}
-			clusterInstKey.FromClusterInstRefKey(&clusterInstRefKey, &cloudletRefs.Key)
-			if clusterInstApi.store.STMGet(stm, &clusterInstKey, &clusterInst) {
-				if edgeproto.IsTransientState(clusterInst.State) {
-					return fmt.Errorf("ClusterInst action is in progress for %v on cloudlet %v, retry after some time", clusterInstKey, key)
-				}
-			}
-		}
-		cloudlet.State = edgeproto.TrackedState_RESOURCE_UPDATE_REQUESTED
-		s.store.STMPut(stm, cloudlet)
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	// Wait for cloudlet to finish resource sync
-	syncErr := s.WaitForCloudlet(
-		ctx, key,
-		// Set error state as READY as this error doesn't affect functioning of cloudlet
-		edgeproto.TrackedState_READY,
-		// Set success message
-		"Cloudlet resource updated successfully",
-		PlatformInitTimeout, nil,
-	)
-
-	// Post resource sync look for any resource usage warnings and generate alerts for the same
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cloudlet := edgeproto.Cloudlet{}
-		if !s.store.STMGet(stm, key, &cloudlet) {
-			return key.NotFoundError()
-		}
-		cloudletInfo := edgeproto.CloudletInfo{}
-		if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
-			return fmt.Errorf("cloudletinfo not found: %v", key)
-		}
-		if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
-			return fmt.Errorf("Cloudlet is not online %v", key)
-		}
-		cloudletRefs := edgeproto.CloudletRefs{}
-		cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
-
-		// validates resources and generates appropriate alerts
-		return validateResources(ctx, stm, nil, nil, &cloudlet, &cloudletInfo, &cloudletRefs)
-	})
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "failed to validate infra resources", "err", err)
-	}
-	return syncErr
-}
-
-func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey, warnings []string) {
-	alerts := cloudcommon.CloudletResourceUsageAlerts(ctx, key, warnings)
-	staleAlerts := make(map[edgeproto.AlertKey]struct{})
-	alertApi.cache.GetAllKeys(ctx, func(k *edgeproto.AlertKey, modRev int64) {
-		staleAlerts[*k] = struct{}{}
-	})
-	for _, alert := range alerts {
-		alertApi.store.STMPut(stm, &alert)
-		delete(staleAlerts, alert.GetKeyVal())
-	}
-	delAlert := edgeproto.Alert{}
-	for alertKey, _ := range staleAlerts {
-		edgeproto.AlertKeyStringParse(string(alertKey), &delAlert)
-		if alertName, found := delAlert.Labels["alertname"]; !found ||
-			alertName != cloudcommon.AlertCloudletResourceUsage {
-			continue
-		}
-		alertApi.store.STMDel(stm, &alertKey)
-	}
-}
-
-func (s *CloudletApi) SyncCloudletInfraResources(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
-	if key == nil {
-		return nil, fmt.Errorf("Missing cloudlet key")
-	}
-	err := s.UpdateCloudletInfraResources(ctx, key)
-	if err != nil {
-		return nil, err
-	}
-	return &edgeproto.Result{Message: "Cloudlet resources synced successfully"}, nil
 }
 
 func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error) {

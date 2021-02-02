@@ -75,6 +75,7 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 
 cloudletinfos:
 - key:
@@ -96,20 +97,42 @@ cloudletinfos:
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
+  resourcessnapshot:
     vms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 28672
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 14
+      inframaxvalue: 50
+    - name: Disk
+      value: 280
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 2
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: SmallCluster
+      organization: AcmeAppCo
+    - clusterkey:
+        name: ReservableCluster2
+      organization: MobiledgeX
 apps:
 - key:
     organization: AcmeAppCo

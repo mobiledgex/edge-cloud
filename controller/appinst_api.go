@@ -723,26 +723,58 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		// undo changes on error
 		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			var app edgeproto.App
+			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+				return in.Key.AppKey.NotFoundError()
+			}
+			refs := edgeproto.CloudletRefs{}
+			refsFound := cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs)
+			refsChanged := false
 			var curr edgeproto.AppInst
 			if s.store.STMGet(stm, &in.Key, &curr) {
-				// In case there is an error after CREATING_DEPENDENCIES state
+				// In case there is an error after CREATING_DEPENDENCIES or CREATE_REQUESTED state
 				// is set, then delete AppInst obj directly as there is
 				// no change done on CRM side
-				if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
+				if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES ||
+					curr.State == edgeproto.TrackedState_CREATE_REQUESTED {
 					s.store.STMDel(stm, &in.Key)
 					appInstRefsApi.removeRef(stm, &in.Key)
+
+					if app.Deployment == cloudcommon.DeploymentTypeVM {
+						if refsFound {
+							ii := 0
+							for ; ii < len(refs.VmAppInsts); ii++ {
+								aiKey := edgeproto.AppInstKey{}
+								aiKey.FromAppInstRefKey(&refs.VmAppInsts[ii], &in.Key.ClusterInstKey.CloudletKey)
+								if aiKey.Matches(&in.Key) {
+									break
+								}
+							}
+							if ii < len(refs.VmAppInsts) {
+								// explicity zero out deleted item to
+								// prevent memory leak
+								a := refs.VmAppInsts
+								copy(a[ii:], a[ii+1:])
+								a[len(a)-1] = edgeproto.AppInstRefKey{}
+								refs.VmAppInsts = a[:len(a)-1]
+								refsChanged = true
+							}
+						}
+					}
 				}
 			}
 			// Cleanup reserved id on failure. Note that if we fail
 			// after creating the auto-cluster, then deleting the
 			// ClusterInst will cleanup the reserved id instead.
 			if reservedAutoClusterId != -1 {
-				refs := edgeproto.CloudletRefs{}
-				if cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs) {
+				if refsFound {
 					mask := uint64(1) << reservedAutoClusterId
 					refs.ReservedAutoClusterIds &^= mask
-					cloudletRefsApi.store.STMPut(stm, &refs)
+					refsChanged = true
 				}
+			}
+			if refsFound && refsChanged {
+				cloudletRefsApi.store.STMPut(stm, &refs)
 			}
 			// Remove reservation (if done) on failure.
 			if reservedClusterInstKey != nil {

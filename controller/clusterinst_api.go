@@ -281,15 +281,15 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > thAvailableResVal {
-			errsStr = append(errsStr, fmt.Sprintf("%s, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units))
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units))
 		}
 		quotaResReqd[resName] = thAvailableResVal
 	}
 
 	err = nil
 	if len(errsStr) > 0 {
-		errsOut := strings.Join(errsStr, "\n")
-		err = fmt.Errorf("Not enough resources available:\n%s", errsOut)
+		errsOut := strings.Join(errsStr, ",")
+		err = fmt.Errorf("Not enough resources available: %s", errsOut)
 	}
 	if err != nil {
 		return warnings, err
@@ -331,7 +331,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > infraAvailableResVal {
-			errsStr = append(errsStr, fmt.Sprintf("%s, required %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units))
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units))
 		}
 		if resVal, ok := quotaResReqd[resName]; ok {
 			// generate alert if expected resource quota is not available
@@ -342,8 +342,8 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	}
 	err = nil
 	if len(errsStr) > 0 {
-		errsOut := strings.Join(errsStr, "\n")
-		err = fmt.Errorf("[Infra] Not enough resources available:\n%s", errsOut)
+		errsOut := strings.Join(errsStr, ",")
+		err = fmt.Errorf("[Infra] Not enough resources available: %s", errsOut)
 	}
 
 	return warnings, err
@@ -355,7 +355,7 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 	allVmResources := []edgeproto.VMResource{}
 	diffVmResources := []edgeproto.VMResource{}
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
-	cloudletRes, err := GetCloudletResources(ctx, cloudletInfo)
+	cloudletRes, err := GetPlatformVMsResources(ctx, cloudletInfo)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -383,11 +383,11 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if edgeproto.IsDeleteState(ci.State) {
 			continue
 		}
-		allRes, err := getClusterInstVMRequirements(ctx, stm, &ci, cloudlet, cloudletInfo, cloudletRefs)
+		ciRes, err := getClusterInstVMRequirements(ctx, stm, &ci, cloudlet, cloudletInfo, cloudletRefs)
 		if err != nil {
 			return nil, nil, err
 		}
-		allVmResources = append(allVmResources, allRes...)
+		allVmResources = append(allVmResources, ciRes...)
 
 		// maintain a diff of clusterinsts reported by CRM and what is present in controller,
 		// this is done to get accurate resource information
@@ -396,7 +396,7 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if _, ok := snapshotClusters[*clRefKey]; ok {
 			continue
 		}
-		diffVmResources = append(diffVmResources, allRes...)
+		diffVmResources = append(diffVmResources, ciRes...)
 	}
 	// get all VM app inst resources
 	for _, appInstRefKey := range cloudletRefs.VmAppInsts {
@@ -429,6 +429,27 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		diffVmResources = append(diffVmResources, vmRes...)
 	}
 	return allVmResources, diffVmResources, nil
+}
+
+func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey, warnings []string) {
+	alerts := cloudcommon.CloudletResourceUsageAlerts(ctx, key, warnings)
+	staleAlerts := make(map[edgeproto.AlertKey]struct{})
+	alertApi.cache.GetAllKeys(ctx, func(k *edgeproto.AlertKey, modRev int64) {
+		staleAlerts[*k] = struct{}{}
+	})
+	for _, alert := range alerts {
+		alertApi.store.STMPut(stm, &alert)
+		delete(staleAlerts, alert.GetKeyVal())
+	}
+	delAlert := edgeproto.Alert{}
+	for alertKey, _ := range staleAlerts {
+		edgeproto.AlertKeyStringParse(string(alertKey), &delAlert)
+		if alertName, found := delAlert.Labels["alertname"]; !found ||
+			alertName != cloudcommon.AlertCloudletResourceUsage {
+			continue
+		}
+		alertApi.store.STMDel(stm, &alertKey)
+	}
 }
 
 func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, vmAppInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
@@ -755,23 +776,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedDisk += (nodeFlavor.Disk + vmspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
-		// XXX For now just track, don't enforce.
-		if false {
-			// XXX what is static overhead?
-			var ramOverhead uint64 = 200
-			var vcoresOverhead uint64 = 2
-			var diskOverhead uint64 = 200
-			// check resources
-			if refs.UsedRam+ramOverhead > info.OsMaxRam {
-				return errors.New("Not enough RAM available")
-			}
-			if refs.UsedVcores+vcoresOverhead > info.OsMaxVcores {
-				return errors.New("Not enough Vcores available")
-			}
-			if refs.UsedDisk+diskOverhead > info.OsMaxVolGb {
-				return errors.New("Not enough Disk available")
-			}
-		}
+
 		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
 		if err != nil {
 			return err

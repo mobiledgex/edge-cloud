@@ -1111,6 +1111,14 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.ClusterInsts) != len(o.ClusterInsts) {
 				return false
 			}
+			if opts.SortArrayedKeys {
+				sort.Slice(m.ClusterInsts, func(i, j int) bool {
+					return m.ClusterInsts[i].GetKeyString() < m.ClusterInsts[j].GetKeyString()
+				})
+				sort.Slice(o.ClusterInsts, func(i, j int) bool {
+					return o.ClusterInsts[i].GetKeyString() < o.ClusterInsts[j].GetKeyString()
+				})
+			}
 			for i := 0; i < len(m.ClusterInsts); i++ {
 			}
 		}
@@ -1121,6 +1129,14 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		} else if m.VmAppInsts != nil && o.VmAppInsts != nil {
 			if !opts.Filter && len(m.VmAppInsts) != len(o.VmAppInsts) {
 				return false
+			}
+			if opts.SortArrayedKeys {
+				sort.Slice(m.VmAppInsts, func(i, j int) bool {
+					return m.VmAppInsts[i].GetKeyString() < m.VmAppInsts[j].GetKeyString()
+				})
+				sort.Slice(o.VmAppInsts, func(i, j int) bool {
+					return o.VmAppInsts[i].GetKeyString() < o.VmAppInsts[j].GetKeyString()
+				})
 			}
 			for i := 0; i < len(m.VmAppInsts); i++ {
 			}

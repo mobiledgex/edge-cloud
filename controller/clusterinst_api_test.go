@@ -498,7 +498,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, "get app inst vm requirements")
 		require.Equal(t, 1, len(vmAppResources), "matches number of vm resources")
 		require.Equal(t, cloudcommon.VMTypeAppVM, vmAppResources[0].Type, "resource type is app vm")
-		require.Equal(t, vmAppResources[0].Key, appInst.Key.ClusterInstKey, "resource key matches appinst's clusterinst key")
+		require.Equal(t, vmAppResources[0].Key, *appInst.ClusterInstKey(), "resource key matches appinst's clusterinst key")
 
 		warnings, err = validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, vmAppResources, diffRes)
 		require.Nil(t, err, "enough resource available")

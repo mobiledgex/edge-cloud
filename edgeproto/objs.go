@@ -62,6 +62,14 @@ func (a *AllData) Sort() {
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
 	})
+	for i := range a.CloudletInfos {
+		sort.Slice(a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[:], func(ii, jj int) bool {
+			return a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[ii].GetKeyString() < a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[jj].GetKeyString()
+		})
+		sort.Slice(a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[:], func(ii, jj int) bool {
+			return a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[ii].GetKeyString() < a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[jj].GetKeyString()
+		})
+	}
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
 	})

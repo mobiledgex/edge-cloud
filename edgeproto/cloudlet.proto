@@ -407,14 +407,6 @@ service CloudletApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
-  // Sync Cloudlet Infra resources. Synchronizes controller's view of cloudlet resources
-  rpc SyncCloudletInfraResources(CloudletKey) returns (Result) {
-    option (google.api.http) = {
-      post: "/sync/cloudlet/infraresources"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
-  }
 
   // Add Optional Resource tag table
   rpc AddCloudletResMapping(CloudletResMap) returns (Result) {
