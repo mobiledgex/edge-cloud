@@ -45,6 +45,9 @@ cloudlets:
     name: x1.medium
   containerversion: 2019-10-24
 
+idlereservableclusterinsts:
+  idletime: 0
+
 apps:
 - key:
     organization: AcmeAppCo
@@ -78,7 +81,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -96,7 +99,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -114,7 +117,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 35
     longitude: -95

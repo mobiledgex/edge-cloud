@@ -150,8 +150,9 @@ message App {
   string official_fqdn = 25;
   // MD5Sum of the VM-based app image
   string md5sum = 26;
-  // shared volume size when creating auto cluster
-  uint64 default_shared_volume_size = 27;
+  // (removed) shared volume size when creating auto cluster
+  reserved "default_shared_volume_size";
+  reserved 27;
   // (_deprecated_) Auto provisioning policy name
   string auto_prov_policy = 28;
   // Access type

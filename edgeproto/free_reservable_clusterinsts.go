@@ -69,7 +69,7 @@ func (s *FreeReservableClusterInstCache) Prune(ctx context.Context, validKeys ma
 
 func (s *FreeReservableClusterInstCache) Flush(ctx context.Context, notifyId int64) {}
 
-func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey, deployment string, deploymentTransformFunc func(string) string) *ClusterInstKey {
+func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey, deployment, flavor string, deploymentTransformFunc func(string) string) *ClusterInstKey {
 	// need a transform func to avoid import cycle
 	deployment = deploymentTransformFunc(deployment)
 	s.Mux.Lock()
@@ -78,7 +78,7 @@ func (s *FreeReservableClusterInstCache) GetForCloudlet(key *CloudletKey, deploy
 	log.DebugLog(log.DebugLevelDmereq, "GetForCloudlet", "key", *key, "found", found, "num-insts", len(cinsts))
 	if found && len(cinsts) > 0 {
 		for key, clust := range cinsts {
-			if deployment == clust.Deployment {
+			if deployment == clust.Deployment && flavor == clust.Flavor.Name {
 				return &key
 			}
 		}

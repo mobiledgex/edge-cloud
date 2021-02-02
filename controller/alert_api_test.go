@@ -72,7 +72,7 @@ func TestAppInstDownAlert(t *testing.T) {
 	streamOut := testutil.NewCudStreamoutAppInst(ctx)
 	appinst := edgeproto.AppInst{}
 	appinst.Key.AppKey = testutil.AppData[0].Key
-	appinst.Key.ClusterInstKey = cinst.Key
+	appinst.Key.ClusterInstKey = *cinst.Key.Virtual("")
 	err := appInstApi.CreateAppInst(&appinst, streamOut)
 	require.Nil(t, err, "create AppInst")
 	// Inject AppInst info check that all appInsts are Healthy
@@ -120,5 +120,4 @@ func testinit() {
 	cplookup := &node.CloudletPoolCache{}
 	cplookup.Init()
 	nodeMgr.CloudletPoolLookup = cplookup
-
 }

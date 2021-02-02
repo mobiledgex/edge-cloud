@@ -19,6 +19,7 @@ settings:
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 30s
   persistentconnectionmetricscollectioninterval: 1h0m0s
+  cleanupreservableautoclusteridletime: 30m0s
 flavors:
 - key:
     name: x1.tiny

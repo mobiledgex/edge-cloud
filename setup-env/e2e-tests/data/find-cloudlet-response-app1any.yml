@@ -1,5 +1,5 @@
 - status: FindFound
-  fqdn: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-4.azure.localtest.net
+  fqdn: acmeappcosomeapplication110.reservable0.azure-cloud-4.azure.localtest.net
   ports:
   - proto: LProtoTcp
     internalport: 80
@@ -17,7 +17,7 @@
     latitude: 32
     longitude: -91
 - status: FindFound
-  fqdn: dmuus-cloud-2.dmuus.localtest.net
+  fqdn: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
   ports:
   - proto: LProtoTcp
     internalport: 80

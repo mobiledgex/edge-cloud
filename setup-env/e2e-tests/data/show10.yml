@@ -20,6 +20,7 @@ settings:
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 30s
   persistentconnectionmetricscollectioninterval: 1h0m0s
+  cleanupreservableautoclusteridletime: 30m0s
 flavors:
 - key:
     name: x1.tiny
@@ -36,300 +37,340 @@ flavors:
 clusterinsts:
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-8
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: gcp
       name: gcp-cloud-10
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-4
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-5
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-1
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-2
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-2
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-7
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: azure
       name: azure-cloud-9
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-4
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-5
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-6
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-6
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-7
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-1
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-3
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-3
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-8
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: azure
       name: azure-cloud-9
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: gcp
       name: gcp-cloud-10
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
@@ -884,7 +925,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-4
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 4
@@ -907,6 +948,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -918,7 +960,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-4
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 4
@@ -941,6 +983,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -952,7 +995,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-7
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 7
@@ -975,6 +1018,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -986,7 +1030,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 1
@@ -1009,6 +1053,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1020,7 +1065,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 2
@@ -1043,6 +1088,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1054,7 +1100,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-3
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 3
@@ -1077,6 +1123,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1088,7 +1135,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-6
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 6
@@ -1111,6 +1158,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1122,7 +1170,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-8
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 8
@@ -1145,6 +1193,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1156,7 +1205,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-3
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 3
@@ -1179,6 +1228,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1190,7 +1240,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-5
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 5
@@ -1213,6 +1263,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1224,7 +1275,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-6
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 6
@@ -1247,6 +1298,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1258,7 +1310,7 @@ appinstances:
       cloudletkey:
         organization: azure
         name: azure-cloud-9
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 9
@@ -1281,6 +1333,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1292,7 +1345,7 @@ appinstances:
       cloudletkey:
         organization: gcp
         name: gcp-cloud-10
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 10
@@ -1315,6 +1368,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1326,7 +1380,7 @@ appinstances:
       cloudletkey:
         organization: gcp
         name: gcp-cloud-10
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 10
@@ -1349,6 +1403,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1360,7 +1415,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 1
@@ -1383,6 +1438,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1394,7 +1450,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 2
@@ -1417,6 +1473,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1428,7 +1485,7 @@ appinstances:
       cloudletkey:
         organization: azure
         name: azure-cloud-9
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 9
@@ -1451,6 +1508,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1462,7 +1520,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-5
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 5
@@ -1485,6 +1543,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1496,7 +1555,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-7
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 7
@@ -1519,6 +1578,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1530,7 +1590,7 @@ appinstances:
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-8
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 8
@@ -1553,6 +1613,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 
 appinstrefs:
 - key:
@@ -1564,48 +1625,48 @@ appinstrefs:
     name: someapplication1
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-3"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-3"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-4"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-4"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-5"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-5"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-6"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-6"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-7"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-7"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-8"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-8"},"organization":"MobiledgeX"}}'
     : 1
 - key:
     organization: AcmeAppCo
     name: someapplication2
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-3"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-3"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-4"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-4"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-5"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-5"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-6"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-6"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-7"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-7"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-8"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-8"},"organization":"MobiledgeX"}}'
     : 1

@@ -20,6 +20,10 @@ settings:
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 30s
   persistentconnectionmetricscollectioninterval: 1h0m0s
+  cleanupreservableautoclusteridletime: 30m0s
+operatorcodes:
+- code: wifi
+  organization: dmuus
 flavors:
 - key:
     name: x1.tiny
@@ -42,30 +46,28 @@ clusters:
 clusterinsts:
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: someapplication1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-1
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
-  auto: true
+  liveness: LivenessStatic
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: someapplication1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-2
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
-  auto: true
+  liveness: LivenessStatic
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
@@ -256,7 +258,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: someapplication1
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
@@ -290,7 +292,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: someapplication1
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
@@ -324,7 +326,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: someapplication1
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
@@ -346,7 +348,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: someapplication1
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
@@ -368,16 +370,16 @@ appinstrefs:
     name: someapplication1
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"someapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"someapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
     : 1
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"someapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
-    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"someapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
     : 1

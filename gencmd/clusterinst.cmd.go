@@ -77,6 +77,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
+	if _, found := tags["timestamp"]; found {
+		in.ReservationEndedAt = distributed_match_engine.Timestamp{}
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -421,11 +424,66 @@ func ShowClusterInsts(c *cli.Command, data []edgeproto.ClusterInst, err *error) 
 	}
 }
 
+var DeleteIdleReservableClusterInstsCmd = &cli.Command{
+	Use:          "DeleteIdleReservableClusterInsts",
+	RequiredArgs: strings.Join(IdleReservableClusterInstsRequiredArgs, " "),
+	OptionalArgs: strings.Join(IdleReservableClusterInstsOptionalArgs, " "),
+	AliasArgs:    strings.Join(IdleReservableClusterInstsAliasArgs, " "),
+	SpecialArgs:  &IdleReservableClusterInstsSpecialArgs,
+	Comments:     IdleReservableClusterInstsComments,
+	ReqData:      &edgeproto.IdleReservableClusterInsts{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteIdleReservableClusterInsts,
+}
+
+func runDeleteIdleReservableClusterInsts(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.IdleReservableClusterInsts)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DeleteIdleReservableClusterInsts(c, obj)
+}
+
+func DeleteIdleReservableClusterInsts(c *cli.Command, in *edgeproto.IdleReservableClusterInsts) error {
+	if ClusterInstApiCmd == nil {
+		return fmt.Errorf("ClusterInstApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ClusterInstApiCmd.DeleteIdleReservableClusterInsts(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteIdleReservableClusterInsts failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteIdleReservableClusterInstsBatch(c *cli.Command, data *edgeproto.IdleReservableClusterInsts, err *error) {
+	if *err != nil || data == nil {
+		return
+	}
+	fmt.Printf("DeleteIdleReservableClusterInsts %v\n", data)
+	myerr := DeleteIdleReservableClusterInsts(c, data)
+	if myerr != nil {
+		*err = myerr
+	}
+}
+
 var ClusterInstApiCmds = []*cobra.Command{
 	CreateClusterInstCmd.GenCmd(),
 	DeleteClusterInstCmd.GenCmd(),
 	UpdateClusterInstCmd.GenCmd(),
 	ShowClusterInstCmd.GenCmd(),
+	DeleteIdleReservableClusterInstsCmd.GenCmd(),
 }
 
 var ClusterInstInfoApiCmd edgeproto.ClusterInstInfoApiClient
@@ -544,6 +602,8 @@ var ClusterInstOptionalArgs = []string{
 	"reservable",
 	"sharedvolumesize",
 	"skipcrmcleanuponfailure",
+	"reservationendedat.seconds",
+	"reservationendedat.nanos",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -595,6 +655,15 @@ var ClusterInstSpecialArgs = map[string]string{
 	"fields":      "StringArray",
 	"status.msgs": "StringArray",
 }
+var IdleReservableClusterInstsRequiredArgs = []string{}
+var IdleReservableClusterInstsOptionalArgs = []string{
+	"idletime",
+}
+var IdleReservableClusterInstsAliasArgs = []string{}
+var IdleReservableClusterInstsComments = map[string]string{
+	"idletime": "Idle time (duration)",
+}
+var IdleReservableClusterInstsSpecialArgs = map[string]string{}
 var ClusterInstInfoRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.organization",
@@ -659,4 +728,6 @@ var UpdateClusterInstOptionalArgs = []string{
 	"numnodes",
 	"autoscalepolicy",
 	"skipcrmcleanuponfailure",
+	"reservationendedat.seconds",
+	"reservationendedat.nanos",
 }

@@ -1,5 +1,5 @@
 status: FindFound
-fqdn: dmuus-cloud-2.dmuus.localtest.net
+fqdn: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
 ports:
 - proto: LProtoTcp
   internalport: 80
