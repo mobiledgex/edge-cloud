@@ -17,6 +17,7 @@ settings:
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
+  influxdbmetricsretention: 672h0m0s
   cloudletmaintenancetimeout: 2s
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 1s

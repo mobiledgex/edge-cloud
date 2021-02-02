@@ -223,8 +223,12 @@ func (q *InfluxQ) WaitConnected() bool {
 // Updates the default retention policy for the database
 func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) error {
 	if !q.done {
+		shard := time.Duration(24 * time.Hour)
+		if retentionTime < shard {
+			shard = retentionTime
+		}
 		if q.dbcreated {
-			_, err := q.QueryDB(fmt.Sprintf("create retention policy %s_default ON %s duration %s replication 1 default", q.dbName, q.dbName, retentionTime.String()))
+			_, err := q.QueryDB(fmt.Sprintf("create retention policy %s_default ON %s duration %s replication 1 shard duration %s default", q.dbName, q.dbName, retentionTime.String(), shard.String()))
 			if err != nil {
 				if !strings.Contains(err.Error(), "already exists") {
 					log.DebugLog(log.DebugLevelMetrics,
@@ -232,7 +236,7 @@ func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) erro
 					return err
 				}
 				// if already exists alter policy instead
-				_, err := q.QueryDB(fmt.Sprintf("alter retention policy %s_default ON %s duration %s replication 1 default", q.dbName, q.dbName, retentionTime.String()))
+				_, err := q.QueryDB(fmt.Sprintf("alter retention policy %s_default ON %s duration %s replication 1 shard duration %s default", q.dbName, q.dbName, retentionTime.String(), shard.String()))
 				if err != nil {
 					log.DebugLog(log.DebugLevelMetrics,
 						"unable to alter policy", "db", q.dbName, "err", err)
