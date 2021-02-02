@@ -105,7 +105,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	if name == cloudcommon.AlertAppInstDown {
 		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]
 		if !ok {
-			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck satus not found",
+			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck status not found",
 				"labels", in.Labels)
 			return
 		}
