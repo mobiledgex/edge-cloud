@@ -52,6 +52,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.UpdateTrustPolicyTimeout = edgeproto.GetDefaultSettings().UpdateTrustPolicyTimeout
 			modified = true
 		}
+		if cur.InfluxDbMetricsRetention == 0 {
+			cur.InfluxDbMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbMetricsRetention
+			modified = true
+		}
 		if cur.CleanupReservableAutoClusterIdletime == 0 {
 			cur.CleanupReservableAutoClusterIdletime = edgeproto.GetDefaultSettings().CleanupReservableAutoClusterIdletime
 			modified = true
@@ -88,7 +92,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 				if in.MasterNodeFlavor == "" {
 					// allow a 'clear setting' operation
 					s.store.STMPut(stm, &cur)
-					return nil
+					continue
 				}
 				// check the value used for MasterNodeFlavor currently
 				// exists as a flavor, error if not.
@@ -99,6 +103,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 					return fmt.Errorf("Flavor must preexist")
 				}
 			} else if field == edgeproto.SettingsFieldInfluxDbMetricsRetention {
+				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb retention policy", "timer", in.InfluxDbMetricsRetention)
 				err1 := services.influxQ.UpdateDefaultRetentionPolicy(in.InfluxDbMetricsRetention.TimeDuration())
 				if err1 != nil {
 					return err1
@@ -113,7 +118,10 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 }
 
 func (s *SettingsApi) ResetSettings(ctx context.Context, in *edgeproto.Settings) (*edgeproto.Result, error) {
-	return s.store.Put(ctx, edgeproto.GetDefaultSettings(), s.sync.syncWait)
+	settings := edgeproto.GetDefaultSettings()
+	// Set all the fields
+	settings.Fields = edgeproto.SettingsAllFields
+	return s.UpdateSettings(ctx, settings)
 }
 
 func (s *SettingsApi) ShowSettings(ctx context.Context, in *edgeproto.Settings) (*edgeproto.Settings, error) {
