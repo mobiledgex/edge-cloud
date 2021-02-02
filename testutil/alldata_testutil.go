@@ -19,22 +19,23 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 type AllDataOut struct {
-	Flavors                 []edgeproto.Result
-	Settings                *edgeproto.Result
-	OperatorCodes           []edgeproto.Result
-	ResTagTables            []edgeproto.Result
-	TrustPolicies           [][]edgeproto.Result
-	Cloudlets               [][]edgeproto.Result
-	CloudletInfos           []edgeproto.Result
-	CloudletPools           []edgeproto.Result
-	AutoProvPolicies        []edgeproto.Result
-	AutoProvPolicyCloudlets []edgeproto.Result
-	AutoScalePolicies       []edgeproto.Result
-	ClusterInsts            [][]edgeproto.Result
-	Apps                    []edgeproto.Result
-	AppInstances            [][]edgeproto.Result
-	VmPools                 []edgeproto.Result
-	Errors                  []Err
+	Flavors                    []edgeproto.Result
+	Settings                   *edgeproto.Result
+	OperatorCodes              []edgeproto.Result
+	ResTagTables               []edgeproto.Result
+	TrustPolicies              [][]edgeproto.Result
+	Cloudlets                  [][]edgeproto.Result
+	CloudletInfos              []edgeproto.Result
+	CloudletPools              []edgeproto.Result
+	AutoProvPolicies           []edgeproto.Result
+	AutoProvPolicyCloudlets    []edgeproto.Result
+	AutoScalePolicies          []edgeproto.Result
+	IdleReservableClusterInsts *edgeproto.Result
+	ClusterInsts               [][]edgeproto.Result
+	Apps                       []edgeproto.Result
+	AppInstances               [][]edgeproto.Result
+	VmPools                    []edgeproto.Result
+	Errors                     []Err
 }
 
 func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut) {
@@ -49,6 +50,7 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
+	run.ClusterInstApi_IdleReservableClusterInsts(in.IdleReservableClusterInsts, inMap["idlereservableclusterinsts"], &out.IdleReservableClusterInsts)
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
@@ -61,6 +63,7 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
+	run.ClusterInstApi_IdleReservableClusterInsts(in.IdleReservableClusterInsts, inMap["idlereservableclusterinsts"], &out.IdleReservableClusterInsts)
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)

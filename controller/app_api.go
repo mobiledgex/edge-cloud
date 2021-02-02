@@ -580,13 +580,12 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	// set state to prevent new AppInsts from being created from this App
-	var dynInsts map[edgeproto.AppInstKey]*edgeproto.AppInst
+	dynInsts := []*edgeproto.AppInst{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
 		// use refs to check existing AppInsts to avoid race conditions
-		dynInsts = make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
 		refs := edgeproto.AppInstRefs{}
 		appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
 		for k, _ := range refs.Insts {
@@ -601,7 +600,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			if inst.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
 				return errors.New("Application in use by static AppInst")
 			}
-			dynInsts[inst.Key] = &inst
+			dynInsts = append(dynInsts, &inst)
 		}
 
 		in.DeletePrepare = true
@@ -752,6 +751,7 @@ func validateRequiredOutboundConnections(req []*edgeproto.RemoteConnection) erro
 
 func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error {
 	// make sure policies exist
+	numPolicies := 0
 	for name, _ := range app.GetAutoProvPolicies() {
 		policyKey := edgeproto.PolicyKey{}
 		policyKey.Organization = app.Key.Organization
@@ -760,6 +760,40 @@ func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error
 		if !autoProvPolicyApi.store.STMGet(stm, &policyKey, &policy) {
 			return policyKey.NotFoundError()
 		}
+		numPolicies++
+	}
+	if numPolicies > 0 {
+		if err := validateAutoDeployApp(stm, app); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateAutoDeployApp(stm concurrency.STM, app *edgeproto.App) error {
+	// to reduce the number of permutations of reservable autocluster
+	// configurations, we only support a subset of all features
+	// for autoclusters and auto-provisioning.
+	if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+		return fmt.Errorf("For auto-provisioning or auto-clusters, App access type direct is not supported")
+	}
+	if app.DefaultFlavor.Name == "" {
+		return fmt.Errorf("For auto-provisioning or auto-clusters, App must have default flavor defined")
+	}
+	validDeployments := []string{
+		cloudcommon.DeploymentTypeKubernetes,
+		cloudcommon.DeploymentTypeHelm,
+		cloudcommon.DeploymentTypeDocker,
+	}
+	validDep := false
+	for _, dep := range validDeployments {
+		if app.Deployment == dep {
+			validDep = true
+			break
+		}
+	}
+	if !validDep {
+		return fmt.Errorf("For auto-provisioning or auto-clusters, App deployment types are limited to %s", strings.Join(validDeployments, ", "))
 	}
 	return nil
 }

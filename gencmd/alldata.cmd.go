@@ -163,6 +163,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
+		if _, found := tags["timestamp"]; found {
+			in.ClusterInsts[i0].ReservationEndedAt = distributed_match_engine.Timestamp{}
+		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -297,6 +300,7 @@ var AllDataOptionalArgs = []string{
 	"settings.updatetrustpolicytimeout",
 	"settings.dmeapimetricscollectioninterval",
 	"settings.persistentconnectionmetricscollectioninterval",
+	"settings.cleanupreservableautoclusteridletime",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -472,6 +476,7 @@ var AllDataOptionalArgs = []string{
 	"autoscalepolicies:#.scaleupcputhresh",
 	"autoscalepolicies:#.scaledowncputhresh",
 	"autoscalepolicies:#.triggertimesec",
+	"idlereservableclusterinsts.idletime",
 	"clusterinsts:#.fields",
 	"clusterinsts:#.key.clusterkey.name",
 	"clusterinsts:#.key.cloudletkey.organization",
@@ -520,6 +525,8 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.createdat.nanos",
 	"clusterinsts:#.updatedat.seconds",
 	"clusterinsts:#.updatedat.nanos",
+	"clusterinsts:#.reservationendedat.seconds",
+	"clusterinsts:#.reservationendedat.nanos",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -543,7 +550,6 @@ var AllDataOptionalArgs = []string{
 	"apps:#.revision",
 	"apps:#.officialfqdn",
 	"apps:#.md5sum",
-	"apps:#.defaultsharedvolumesize",
 	"apps:#.autoprovpolicy",
 	"apps:#.accesstype",
 	"apps:#.deleteprepare",
@@ -603,7 +609,6 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.updatemultiple",
 	"appinstances:#.configs:#.kind",
 	"appinstances:#.configs:#.config",
-	"appinstances:#.sharedvolumesize",
 	"appinstances:#.healthcheck",
 	"appinstances:#.privacypolicy",
 	"appinstances:#.powerstate",
@@ -613,6 +618,7 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.optres",
 	"appinstances:#.updatedat.seconds",
 	"appinstances:#.updatedat.nanos",
+	"appinstances:#.realclustername",
 	"appinstrefs:#.key.organization",
 	"appinstrefs:#.key.name",
 	"appinstrefs:#.key.version",
@@ -676,6 +682,7 @@ var AllDataComments = map[string]string{
 	"settings.updatetrustpolicytimeout":                          "Update Trust Policy timeout (duration)",
 	"settings.dmeapimetricscollectioninterval":                   "Metrics collection interval for DME API counts (duration)",
 	"settings.persistentconnectionmetricscollectioninterval":     "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
+	"settings.cleanupreservableautoclusteridletime":              "Idle reservable ClusterInst clean up time",
 	"operatorcodes:#.code":                                       "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                               "Operator Organization name",
 	"restagtables:#.key.name":                                    "Resource Table Name",
@@ -821,6 +828,7 @@ var AllDataComments = map[string]string{
 	"autoscalepolicies:#.scaleupcputhresh":                       "Scale up cpu threshold (percentage 1 to 100)",
 	"autoscalepolicies:#.scaledowncputhresh":                     "Scale down cpu threshold (percentage 1 to 100)",
 	"autoscalepolicies:#.triggertimesec":                         "Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.",
+	"idlereservableclusterinsts.idletime":                        "Idle time (duration)",
 	"clusterinsts:#.fields":                                      "Fields are used for the Update API to specify which fields to apply",
 	"clusterinsts:#.key.clusterkey.name":                         "Cluster name",
 	"clusterinsts:#.key.cloudletkey.organization":                "Organization of the cloudlet site",
@@ -880,7 +888,6 @@ var AllDataComments = map[string]string{
 	"apps:#.revision":                                            "Revision can be specified or defaults to current timestamp when app is updated",
 	"apps:#.officialfqdn":                                        "Official FQDN is the FQDN that the app uses to connect by default",
 	"apps:#.md5sum":                                              "MD5Sum of the VM-based app image",
-	"apps:#.defaultsharedvolumesize":                             "shared volume size when creating auto cluster",
 	"apps:#.autoprovpolicy":                                      "(_deprecated_) Auto provisioning policy name",
 	"apps:#.accesstype":                                          "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"apps:#.deleteprepare":                                       "Preparing to be deleted",
@@ -920,13 +927,12 @@ var AllDataComments = map[string]string{
 	"appinstances:#.errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"appinstances:#.crmoverride":                                 "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"appinstances:#.runtimeinfo.containerids":                    "List of container names",
-	"appinstances:#.autoclusteripaccess":                         "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
+	"appinstances:#.autoclusteripaccess":                         "(Deprecated) IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
 	"appinstances:#.revision":                                    "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"appinstances:#.forceupdate":                                 "Force Appinst refresh even if revision number matches App revision number.",
 	"appinstances:#.updatemultiple":                              "Allow multiple instances to be updated at once",
 	"appinstances:#.configs:#.kind":                              "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"appinstances:#.configs:#.config":                            "config file contents or URI reference",
-	"appinstances:#.sharedvolumesize":                            "shared volume size when creating auto cluster",
 	"appinstances:#.healthcheck":                                 "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"appinstances:#.privacypolicy":                               "Optional privacy policy name",
 	"appinstances:#.powerstate":                                  "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
@@ -934,6 +940,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.availabilityzone":                            "Optional Availability Zone if any",
 	"appinstances:#.vmflavor":                                    "OS node flavor to use",
 	"appinstances:#.optres":                                      "Optional Resources required by OS flavor if any",
+	"appinstances:#.realclustername":                             "Real ClusterInst name",
 	"appinstrefs:#.key.organization":                             "App developer organization",
 	"appinstrefs:#.key.name":                                     "App name",
 	"appinstrefs:#.key.version":                                  "App version",

@@ -125,10 +125,10 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	} else {
 		execReqType = cloudcommon.ExecReqShell
 		clusterInst := edgeproto.ClusterInst{}
-		found := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
+		found := cd.ClusterInstCache.Get(appInst.ClusterInstKey(), &clusterInst)
 		if !found {
 			return fmt.Errorf("cluster inst %s not found",
-				appInst.Key.ClusterInstKey.GetKeyString())
+				appInst.ClusterInstKey().GetKeyString())
 		}
 
 		run.contcmd, err = cd.platform.GetContainerCommand(ctx, &clusterInst, &app, &appInst, req)

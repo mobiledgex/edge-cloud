@@ -261,7 +261,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		log.SpanLog(ctx, log.DebugLevelInfra, "update appinst runtime info", "clusterkey", new.Key)
 		var app edgeproto.App
 		cd.AppInstCache.Show(&edgeproto.AppInst{}, func(obj *edgeproto.AppInst) error {
-			if obj.Key.ClusterInstKey.Matches(&new.Key) && cd.AppCache.Get(&obj.Key.AppKey, &app) {
+			if obj.ClusterInstKey().Matches(&new.Key) && cd.AppCache.Get(&obj.Key.AppKey, &app) {
 				if obj.State != edgeproto.TrackedState_READY {
 					return nil
 				}
@@ -374,10 +374,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		}
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
-			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
+			clusterInstFound := cd.ClusterInstCache.Get(new.ClusterInstKey(), &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
-					new.Key.ClusterInstKey.ClusterKey.Name)
+					new.ClusterInstKey().ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
 				return
 			}
@@ -441,10 +441,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		}
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
-			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
+			clusterInstFound := cd.ClusterInstCache.Get(new.ClusterInstKey(), &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
-					new.Key.ClusterInstKey.ClusterKey.Name)
+					new.ClusterInstKey().ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateAppCacheCallback)
 				return
 			}
@@ -469,10 +469,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		resetStatus = edgeproto.ResetStatus
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
-			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
+			clusterInstFound := cd.ClusterInstCache.Get(new.ClusterInstKey(), &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
-					new.Key.ClusterInstKey.ClusterKey.Name)
+					new.ClusterInstKey().ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateAppCacheCallback)
 				return
 			}
