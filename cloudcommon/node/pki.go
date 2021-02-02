@@ -617,17 +617,6 @@ func (s *internalPki) getVaultCAsController(ctx context.Context, issuer string) 
 	return []byte(reply.CaChainPem), nil
 }
 
-func (s *NodeMgr) CommonName() string {
-	if s.commonName != "" {
-		return s.commonName
-	}
-	cn := s.MyNode.Key.Type
-	if cn == NodeTypeController {
-		cn = "ctrl"
-	}
-	return cn + "." + s.InternalDomain
-}
-
 type TlsOptions struct {
 	serverName      string
 	skipVerify      bool

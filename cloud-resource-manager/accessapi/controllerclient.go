@@ -23,6 +23,7 @@ const (
 	GetDNSRecords           = "get-dns-records"
 	DeleteDNSRecord         = "delete-dns-record"
 	GetSessionTokens        = "get-session-tokens"
+	GetPublicCert           = "get-public-cert"
 )
 
 // ControllerClient implements platform.AccessApi for cloudlet
@@ -115,6 +116,20 @@ func (s *ControllerClient) GetChefAuthKey(ctx context.Context) (*chefmgmt.ChefAu
 	auth := &chefmgmt.ChefAuthKey{}
 	err = json.Unmarshal(reply.Data, auth)
 	return auth, err
+}
+
+func (s *ControllerClient) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
+	req := &edgeproto.AccessDataRequest{
+		Type: GetPublicCert,
+		Data: []byte(commonName),
+	}
+	reply, err := s.client.GetAccessData(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	pubcert := &vault.PublicCert{}
+	err = json.Unmarshal(reply.Data, pubcert)
+	return pubcert, err
 }
 
 type DNSRequest struct {

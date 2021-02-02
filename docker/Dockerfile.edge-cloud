@@ -58,12 +58,10 @@ ARG BUILD_TAG=latest
 
 ADD edge-cloud/docker/mex-docker.env /root/mex-docker.env
 ADD edge-cloud/docker/edge-cloud-entrypoint.sh /usr/local/bin
-ADD edge-cloud/docker/vault-cert /usr/local/bin
 ADD edge-cloud/docker/test-edgectl.sh /usr/local/bin
 ADD edge-cloud/docker/atomic-certs-update.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh \
 	     /usr/local/bin/test-edgectl.sh \
-	     /usr/local/bin/vault-cert \
 	     /usr/local/bin/atomic-certs-update.sh
 
 COPY --from=build /go/bin/controller \
