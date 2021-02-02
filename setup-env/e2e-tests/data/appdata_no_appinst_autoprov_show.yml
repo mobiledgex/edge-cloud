@@ -202,7 +202,7 @@ cloudletinfos:
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
-    vms:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
@@ -257,7 +257,7 @@ cloudletinfos:
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
-    vms:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
@@ -312,7 +312,7 @@ cloudletinfos:
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
-    vms:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
@@ -360,7 +360,7 @@ cloudletinfos:
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
-    vms:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
@@ -408,7 +408,7 @@ cloudletinfos:
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
-    vms:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE

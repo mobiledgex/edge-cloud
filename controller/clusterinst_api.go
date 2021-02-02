@@ -453,6 +453,7 @@ func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *ed
 }
 
 func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, vmAppInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validate resources", "cloudlet", cloudlet.Key, "clusterinst", clusterInst, "vmappinst", vmAppInst)
 	reqdVmResources := []edgeproto.VMResource{}
 	if clusterInst != nil {
 		ciResources, err := getClusterInstVMRequirements(ctx, stm, clusterInst, cloudlet, cloudletInfo, cloudletRefs)
@@ -889,15 +890,19 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		resChanged := false
 		resClusterInst := &edgeproto.ClusterInst{}
 		resClusterInst.DeepCopyIn(&inbuf)
-		if resClusterInst.NumNodes > in.NumNodes {
+		if in.NumNodes > resClusterInst.NumNodes {
 			// update diff
 			resClusterInst.NumNodes = in.NumNodes - resClusterInst.NumNodes
 			resChanged = true
+		} else {
+			resClusterInst.NumNodes = 0
 		}
-		if resClusterInst.NumMasters > in.NumMasters {
+		if in.NumMasters > resClusterInst.NumMasters {
 			// update diff
 			resClusterInst.NumMasters = in.NumMasters - resClusterInst.NumMasters
 			resChanged = true
+		} else {
+			resClusterInst.NumMasters = 0
 		}
 		if resChanged {
 			cloudlet := edgeproto.Cloudlet{}
@@ -910,17 +915,23 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 			cloudletRefs := edgeproto.CloudletRefs{}
 			cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs)
+			// set ipaccess to unknown so that rootlb resource is not calculated as part of diff resource calculation
+			resClusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
 			err = validateResources(ctx, stm, resClusterInst, nil, &cloudlet, &info, &cloudletRefs)
 			if err != nil {
 				return err
 			}
 		}
+		// invalidate resClusterInst obj so that it is not used anymore,
+		// as it was just made for above diff resource calculation
+		resClusterInst = nil
 
 		changeCount = inbuf.CopyInFields(in)
 		if changeCount == 0 && !retry {
 			// nothing changed
 			return nil
 		}
+
 		if err := validateClusterInstUpdates(ctx, stm, &inbuf); err != nil {
 			return err
 		}

@@ -101,6 +101,54 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 
 func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Updating Cluster Inst")
+	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
+	fakeNodes := make(map[string]struct{})
+	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
+		nodeName := fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix)
+		fakeNodes[nodeName] = struct{}{}
+	}
+	fakeMasters := make(map[string]struct{})
+	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
+		masterName := fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix)
+		fakeMasters[masterName] = struct{}{}
+	}
+	cVMs, ok := FakeClusterVMs[clusterInst.Key]
+	if !ok {
+		return fmt.Errorf("missing cluster vms for %v", clusterInst.Key)
+	}
+	for _, vmInfo := range cVMs {
+		if vmInfo.Type == cloudcommon.VMTypeClusterNode {
+			if _, ok := fakeNodes[vmInfo.Name]; ok {
+				delete(fakeNodes, vmInfo.Name)
+			}
+		} else if vmInfo.Type == cloudcommon.VMTypeClusterMaster {
+			if _, ok := fakeMasters[vmInfo.Name]; ok {
+				delete(fakeMasters, vmInfo.Name)
+			}
+		}
+	}
+	for vmName, _ := range fakeNodes {
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        vmName,
+			Type:        cloudcommon.VMTypeClusterNode,
+			InfraFlavor: "m4.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+	}
+	for vmName, _ := range fakeMasters {
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        vmName,
+			Type:        cloudcommon.VMTypeClusterMaster,
+			InfraFlavor: "m4.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+	}
 	return nil
 }
 func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {

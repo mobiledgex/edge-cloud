@@ -272,6 +272,10 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		resetStatus = edgeproto.NoResetStatus
 	}
 
+	if old != nil && old.State == new.State {
+		return
+	}
+
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
