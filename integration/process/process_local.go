@@ -266,7 +266,7 @@ func (p *Controller) GetTlsFile() string {
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.GetTlsFile(), "", false)
+	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.GetTlsFile(), "", false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -306,15 +306,6 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.CloudletKey)
 	}
 	args = p.TLS.AddInternalPkiArgs(args)
-	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
-		if p.TLS.ApiCert != "" {
-			args = append(args, "--tlsApiCertFile", p.TLS.ApiCert)
-			args = append(args, "--tlsApiKeyFile", p.TLS.ApiKey)
-		} else {
-			args = append(args, "--tlsApiCertFile", p.TLS.ServerCert)
-			args = append(args, "--tlsApiKeyFile", p.TLS.ServerKey)
-		}
-	}
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
@@ -376,15 +367,26 @@ func (p *Dme) GetExeName() string { return "dme-server" }
 func (p *Dme) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
 func (p *Dme) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr, p.getTlsConfig())
+	return connectAPIImpl(timeout, p.ApiAddr, p.getTlsConfig(p.ApiAddr))
 }
 
 func (p *Dme) GetRestClient(timeout time.Duration) (*http.Client, error) {
-	return getRestClientImpl(timeout, p.HttpAddr, p.getTlsConfig())
+	return getRestClientImpl(timeout, p.HttpAddr, p.getTlsConfig(p.HttpAddr))
 }
 
-func (p *Dme) getTlsConfig() *tls.Config {
-	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
+func (p *Dme) getTlsConfig(addr string) *tls.Config {
+	if p.UseVaultCerts && p.VaultAddr != "" {
+		region := p.Region
+		if region == "" {
+			region = "local"
+		}
+		cert := "/tmp/edgectl." + region + "/mex.crt"
+		config, err := mextls.GetTLSClientConfig(addr, cert, "", true, nil)
+		if err != nil {
+			return nil
+		}
+		return config
+	} else if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
 		// ServerAuth TLS. For real clients, they'll use
 		// their built-in trusted CAs to verify the cert.
 		// Since we're using self-signed certs here, add
@@ -398,9 +400,9 @@ func (p *Dme) getTlsConfig() *tls.Config {
 			RootCAs: certPool,
 		}
 		return config
+	} else {
+		return nil
 	}
-	// no TLS
-	return nil
 }
 
 // CrmLocal

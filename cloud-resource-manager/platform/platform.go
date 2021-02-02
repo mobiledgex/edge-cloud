@@ -127,6 +127,7 @@ type ClusterSvc interface {
 // use Vault directly (Controller) or may go indirectly via Controller (CRM).
 type AccessApi interface {
 	cloudcommon.RegistryAuthApi
+	cloudcommon.GetPublicCertApi
 	GetCloudletAccessVars(ctx context.Context) (map[string]string, error)
 	SignSSHKey(ctx context.Context, publicKey string) (string, error)
 	GetSSHPublicKey(ctx context.Context) (string, error)

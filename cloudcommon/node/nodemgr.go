@@ -168,6 +168,17 @@ func (s *NodeMgr) Finish() {
 	log.FinishTracer()
 }
 
+func (s *NodeMgr) CommonName() string {
+	if s.commonName != "" {
+		return s.commonName
+	}
+	cn := s.MyNode.Key.Type
+	if cn == NodeTypeController {
+		cn = "ctrl"
+	}
+	return cn + "." + s.InternalDomain
+}
+
 type NodeOptions struct {
 	name               string
 	cloudletKey        edgeproto.CloudletKey
