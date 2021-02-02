@@ -114,7 +114,10 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 }
 
 func (s *SettingsApi) ResetSettings(ctx context.Context, in *edgeproto.Settings) (*edgeproto.Result, error) {
-	return s.UpdateSettings(ctx, edgeproto.GetDefaultSettings())
+	settings := edgeproto.GetDefaultSettings()
+	// Set all the fields
+	settings.Fields = edgeproto.SettingsAllFields
+	return s.UpdateSettings(ctx, settings)
 }
 
 func (s *SettingsApi) ShowSettings(ctx context.Context, in *edgeproto.Settings) (*edgeproto.Settings, error) {
