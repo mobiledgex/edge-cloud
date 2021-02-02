@@ -39,6 +39,7 @@ message AllData {
   repeated AutoProvPolicy auto_prov_policies = 11 [(gogoproto.nullable) = false];
   repeated AutoProvPolicyCloudlet auto_prov_policy_cloudlets = 12 [(gogoproto.nullable) = false];
   repeated AutoScalePolicy auto_scale_policies = 13 [(gogoproto.nullable) = false];
+  IdleReservableClusterInsts idle_reservable_cluster_insts = 20;
   repeated ClusterInst cluster_insts = 15 [(gogoproto.nullable) = false];
   repeated App apps = 16 [(gogoproto.nullable) = false];
   repeated AppInst app_instances = 17 [(gogoproto.nullable) = false];

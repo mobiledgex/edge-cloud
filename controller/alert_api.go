@@ -71,7 +71,7 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 				Name:         appName,
 				Version:      appVer,
 			},
-			ClusterInstKey: edgeproto.ClusterInstKey{
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
 				ClusterKey: edgeproto.ClusterKey{
 					Name: cluster,
 				},

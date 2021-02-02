@@ -240,7 +240,7 @@ message Cloudlet {
   string crm_access_public_key = 33 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // CRM access key upgrade required
   bool crm_access_key_upgrade_required = 34 [(protogen.backend) = true];
-    // Created at time
+  // Created at time
   distributed_match_engine.Timestamp created_at = 35 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Updated at time
   distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];

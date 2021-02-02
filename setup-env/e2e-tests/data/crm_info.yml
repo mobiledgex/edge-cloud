@@ -21,6 +21,7 @@ settings:
   dmeapimetricscollectioninterval: 30s
   persistentconnectionmetricscollectioninterval: 1h0m0s
   influxdbmetricsretention: 672h0m0s
+  cleanupreservableautoclusteridletime: 30m0s
 flavors:
 - key:
     name: x1.tiny
@@ -41,11 +42,11 @@ flavors:
 clusterinsts:
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-1
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -57,6 +58,8 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  reservable: true
+  reservedby: AcmeAppCo
   resources:
     vms:
     - name: fake-cluster-vm-0
@@ -79,11 +82,11 @@ clusterinsts:
       - externalip: 10.100.100.12
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-2
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -95,6 +98,8 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  reservable: true
+  reservedby: AcmeAppCo
   resources:
     vms:
     - name: fake-cluster-vm-0
@@ -117,11 +122,11 @@ clusterinsts:
       - externalip: 10.100.100.12
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-2
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
@@ -133,6 +138,8 @@ clusterinsts:
   nummasters: 1
   numnodes: 1
   masternodeflavor: x1.small
+  reservable: true
+  reservedby: AcmeAppCo
   resources:
     vms:
     - name: fake-cluster-vm-0
@@ -467,7 +474,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -495,6 +502,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0  
 - key:
     appkey:
       organization: MobiledgeX
@@ -502,15 +510,15 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: reservable0
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication1.tmus-cloud-2.tmus.localtest.net
+  uri: reservable0.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -529,15 +537,15 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication2
+        name: reservable1
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: autoclustersomeapplication2.tmus-cloud-2.tmus.localtest.net
+  uri: reservable1.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -560,7 +568,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -584,6 +592,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -595,7 +604,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-1
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -623,6 +632,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: MobiledgeX
@@ -630,15 +640,15 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: reservable0
       cloudletkey:
         organization: tmus
         name: tmus-cloud-1
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: autoclustersomeapplication1.tmus-cloud-1.tmus.localtest.net
+  uri: reservable0.tmus-cloud-1.tmus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -657,25 +667,25 @@ appinstrefs:
     name: someapplication1
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
 - key:
     organization: AcmeAppCo
     name: someapplication2
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"reservable0"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"reservable0"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"reservable1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1

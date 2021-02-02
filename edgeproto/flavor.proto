@@ -41,7 +41,7 @@ message Flavor {
   // Amount of disk space in gigabytes
   uint64 disk = 5;
   // Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci]
-  // form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1
+  // form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1
   map<string, string> opt_res_map = 6;
 
   option (protogen.generate_matches) = true;

@@ -197,6 +197,9 @@ autoprovpolicycloudlets:
     organization: tmus
     name: tmus-cloud-2
 
+idlereservableclusterinsts:
+  idletime: 0
+
 apps:
 - key:
     organization: AcmeAppCo

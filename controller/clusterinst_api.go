@@ -4,29 +4,32 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util/tasks"
+	"google.golang.org/grpc"
 )
 
 type ClusterInstApi struct {
-	sync  *Sync
-	store edgeproto.ClusterInstStore
-	cache edgeproto.ClusterInstCache
+	sync           *Sync
+	store          edgeproto.ClusterInstStore
+	cache          edgeproto.ClusterInstCache
+	cleanupWorkers tasks.KeyWorkers
 }
 
 var clusterInstApi = ClusterInstApi{}
 
-const ClusterAutoPrefix = "autocluster"
-
-var ClusterAutoPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
-	ClusterAutoPrefix)
+var AutoClusterPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
+	cloudcommon.AutoClusterPrefix)
 
 // Transition states indicate states in which the CRM is still busy.
 var CreateClusterInstTransitions = map[edgeproto.TrackedState]struct{}{
@@ -44,6 +47,8 @@ func InitClusterInstApi(sync *Sync) {
 	clusterInstApi.store = edgeproto.NewClusterInstStore(sync.store)
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
 	sync.RegisterCache(&clusterInstApi.cache)
+	clusterInstApi.cleanupWorkers.Init("ClusterInst-cleanup", clusterInstApi.cleanupClusterInst)
+	go clusterInstApi.cleanupThread()
 }
 
 func (s *ClusterInstApi) HasKey(key *edgeproto.ClusterInstKey) bool {
@@ -167,7 +172,7 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 }
 
 func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
-	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}
 	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
@@ -180,18 +185,26 @@ func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, 
 }
 
 func stopClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, streamSendObj *streamSend, objErr error) {
-	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key}
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}
 	if err := streamObjApi.stopStream(ctx, streamKey, streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop ClusterInst stream", "err", err)
 	}
 }
 
 func (s *StreamObjApi) StreamClusterInst(key *edgeproto.ClusterInstKey, cb edgeproto.StreamObjApi_StreamClusterInstServer) error {
-	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: *key}, cb)
+	return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}, cb)
 }
 
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Auto = false
+	if strings.HasPrefix(in.Key.ClusterKey.Name, cloudcommon.ReservableClusterPrefix) {
+		// User cannot specify a cluster name that will conflict with
+		// reservable cluster names.
+		rest := strings.TrimPrefix(in.Key.ClusterKey.Name, cloudcommon.ReservableClusterPrefix)
+		if _, err := strconv.Atoi(rest); err == nil {
+			return fmt.Errorf("Invalid cluster name, format \"%s[digits]\" is reserved for internal use", cloudcommon.ReservableClusterPrefix)
+		}
+	}
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
@@ -233,6 +246,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	if in.Reservable && in.Key.Organization != cloudcommon.OrganizationMobiledgeX {
 		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.OrganizationMobiledgeX)
+	}
+	if in.Reservable {
+		in.ReservationEndedAt = cloudcommon.TimeToTimestamp(time.Now())
 	}
 
 	// validate deployment
@@ -295,8 +311,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if err != nil {
 				return err
 			}
-			if !in.Auto && strings.HasPrefix(in.Key.ClusterKey.Name, ClusterAutoPrefix) {
-				return errors.New(ClusterAutoPrefixErr)
+			if !in.Auto && strings.HasPrefix(in.Key.ClusterKey.Name, cloudcommon.AutoClusterPrefix) {
+				return errors.New(AutoClusterPrefixErr)
 			}
 		}
 		if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
@@ -573,7 +589,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	// If it is autoClusterInst and creation had failed, then deletion should proceed
 	// even though clusterinst is in use by Application Instance
-	if !(cctx.Undo && strings.HasPrefix(in.Key.ClusterKey.Name, ClusterAutoPrefix)) {
+	if !(cctx.Undo && strings.HasPrefix(in.Key.ClusterKey.Name, cloudcommon.AutoClusterPrefix)) {
 		if appInstApi.UsesClusterInst(&in.Key) {
 			return errors.New("ClusterInst in use by Application Instance")
 		}
@@ -673,6 +689,17 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			refs.UsedDisk -= nodeFlavor.Disk * uint64(in.NumNodes+in.NumMasters)
 			freeIP(in, &cloudlet, &refs)
 
+			if in.Reservable && in.Auto && strings.HasPrefix(in.Key.ClusterKey.Name, cloudcommon.ReservableClusterPrefix) {
+				idstr := strings.TrimPrefix(in.Key.ClusterKey.Name, cloudcommon.ReservableClusterPrefix)
+				id, err := strconv.Atoi(idstr)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelApi, "Failed to convert reservable auto-cluster id in name", "name", in.Key.ClusterKey.Name, "err", err)
+				} else {
+					// clear bit
+					mask := uint64(1) << id
+					refs.ReservedAutoClusterIds &^= mask
+				}
+			}
 			cloudletRefsApi.store.STMPut(stm, &refs)
 		}
 		if ignoreCRM(cctx) {
@@ -892,4 +919,68 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	metric.AddStringVal("ipaccess", info.IpAccess.String())
 
 	services.events.AddMetric(&metric)
+}
+
+func (s *ClusterInstApi) cleanupIdleReservableAutoClusters(ctx context.Context, idletime time.Duration) {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		cinst := data.Obj
+		if cinst.Auto && cinst.Reservable && cinst.ReservedBy == "" && time.Since(cloudcommon.TimestampToTime(cinst.ReservationEndedAt)) > idletime {
+			// spawn worker for cleanupClusterInst
+			s.cleanupWorkers.NeedsWork(ctx, cinst.Key)
+		}
+	}
+}
+
+func (s *ClusterInstApi) cleanupClusterInst(ctx context.Context, k interface{}) {
+	key, ok := k.(edgeproto.ClusterInstKey)
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelApi, "Unexpected failure, key not ClusterInstKey", "key", k)
+		return
+	}
+	log.SetContextTags(ctx, key.GetTags())
+	clusterInst := edgeproto.ClusterInst{
+		Key: key,
+	}
+	startTime := time.Now()
+	cb := &DummyStreamout{}
+	cb.ctx = ctx
+	err := s.DeleteClusterInst(&clusterInst, cb)
+	log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst cleanup", "ClusterInst", key, "err", err)
+	if err != nil && err.Error() == key.NotFoundError().Error() {
+		// don't log event if it was already deleted
+		return
+	}
+	nodeMgr.TimedEvent(ctx, "ClusterInst cleanup", key.Organization, node.EventType, key.GetTags(), err, startTime, time.Now())
+}
+
+type DummyStreamout struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (d *DummyStreamout) Context() context.Context {
+	return d.ctx
+}
+
+func (d *DummyStreamout) Send(res *edgeproto.Result) error {
+	return nil
+}
+
+func (s *ClusterInstApi) cleanupThread() {
+	for {
+		idletime := settingsApi.Get().CleanupReservableAutoClusterIdletime.TimeDuration()
+		time.Sleep(idletime / 5)
+		span := log.StartSpan(log.DebugLevelApi, "ClusterInst cleanup thread")
+		ctx := log.ContextWithSpan(context.Background(), span)
+		s.cleanupIdleReservableAutoClusters(ctx, idletime)
+		span.Finish()
+	}
+}
+
+func (s *ClusterInstApi) DeleteIdleReservableClusterInsts(ctx context.Context, in *edgeproto.IdleReservableClusterInsts) (*edgeproto.Result, error) {
+	s.cleanupIdleReservableAutoClusters(ctx, in.IdleTime.TimeDuration())
+	s.cleanupWorkers.WaitIdle()
+	return &edgeproto.Result{Message: "Delete done"}, nil
 }
