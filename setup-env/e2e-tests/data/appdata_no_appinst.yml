@@ -18,6 +18,7 @@ settings:
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 1s
   persistentconnectionmetricscollectioninterval: 1s
+  influxdbmetricsretention: 672h0m0s
 flavors:
 - key:
     name: x1.tiny
