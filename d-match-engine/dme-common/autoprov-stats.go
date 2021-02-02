@@ -90,10 +90,10 @@ func (s *AutoProvStats) UpdateSettings(intervalSec float64) {
 	}
 }
 
-func (s *AutoProvStats) Increment(ctx context.Context, appKey *edgeproto.AppKey, cinstKey *edgeproto.ClusterInstKey, policy *AutoProvPolicy) {
+func (s *AutoProvStats) Increment(ctx context.Context, appKey *edgeproto.AppKey, cloudletKey *edgeproto.CloudletKey, deployNowKey *edgeproto.ClusterInstKey, policy *AutoProvPolicy) {
 	key := edgeproto.AppCloudletKey{
 		AppKey:      *appKey,
-		CloudletKey: cinstKey.CloudletKey,
+		CloudletKey: *cloudletKey,
 	}
 	idx := util.GetShardIndex(key, s.numShards)
 	shard := &s.shards[idx]
@@ -113,12 +113,12 @@ func (s *AutoProvStats) Increment(ctx context.Context, appKey *edgeproto.AppKey,
 		sendCounts := edgeproto.AutoProvCounts{
 			DmeNodeName: s.nodeKey.Name,
 			Counts: []*edgeproto.AutoProvCount{
-				&edgeproto.AutoProvCount{
+				{
 					AppKey:       *appKey,
-					CloudletKey:  cinstKey.CloudletKey,
+					CloudletKey:  *cloudletKey,
 					Count:        stats.count,
 					ProcessNow:   true,
-					DeployNowKey: *cinstKey,
+					DeployNowKey: *deployNowKey,
 				},
 			},
 		}

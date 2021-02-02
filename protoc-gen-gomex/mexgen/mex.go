@@ -2487,6 +2487,10 @@ func (m *mex) generateAllKeyTags() {
 				if tag == "" {
 					continue
 				}
+				if GetSkipKeyTagConflictCheck(field) {
+					continue
+				}
+
 				fname := generator.CamelCase(*field.Name)
 				tagLoc := *message.Name + "." + fname
 				if conflict, found := tags[tag]; found {
@@ -2651,6 +2655,10 @@ func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 
 func GetKeyTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protogen.E_Keytag, "")
+}
+
+func GetSkipKeyTagConflictCheck(field *descriptor.FieldDescriptorProto) bool {
+	return proto.GetBoolExtension(field.Options, protogen.E_SkipKeytagConflictCheck, false)
 }
 
 func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {

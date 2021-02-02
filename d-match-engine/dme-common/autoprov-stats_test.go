@@ -175,10 +175,16 @@ func TestAutoProvStats(t *testing.T) {
 	test.locs = locs
 	test.run(t, ctx)
 
-	// no reservable cluster insts means no stats
+	// no reservable cluster insts means reservable cluster inst
+	// will be automatically created on closest cloudlet
 	test = emptyTest
 	test.policies = append(policies, immPolicies...)
 	test.locs = locs
+	test.expectedCounts = map[edgeproto.CloudletKey]uint64{
+		apCloudlets[0].Key: 1, // req loc 1,1
+		apCloudlets[1].Key: 1, // req loc 4,4
+		apCloudlets[2].Key: 1, // req loc 8,8
+	}
 	test.run(t, ctx)
 
 	// single policy01

@@ -47,6 +47,11 @@ var VMTypePlatformClusterNode = "platform-cluster-node"
 var VMTypeClusterMaster = "cluster-master"
 var VMTypeClusterNode = "cluster-node"
 
+const AutoClusterPrefix = "autocluster"
+const ReservableClusterPrefix = "reservable"
+const ReserveClusterEvent = "Reserve ClusterInst"
+const FreeClusterEvent = "Free ClusterInst reservation"
+
 // network schemes for use by standalone deployments (e.g. DIND)
 var NetworkSchemePublicIP = "publicip"
 var NetworkSchemePrivateIP = "privateip"

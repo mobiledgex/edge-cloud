@@ -8,10 +8,10 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "app.proto";
 import "flavor.proto";
-import "clusterinst.proto";
 import "common.proto";
 import "cloudlet.proto";
 import "autoscalepolicy.proto";
+import "cluster.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 import "gogoproto/gogo.proto";
@@ -20,6 +20,19 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+// Virtual ClusterInstKey
+message VirtualClusterInstKey {
+  // Name of Cluster
+  ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
+  // Name of Cloudlet on which the Cluster is instantiated
+  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  // Name of Developer organization that this cluster belongs to
+  string organization = 3 [(protogen.keytag) = "clusterorg", (protogen.skip_keytag_conflict_check) = true];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
 // App Instance Unique Key
 //
 // AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
@@ -27,7 +40,7 @@ message AppInstKey {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
   // Cluster instance on which this is instantiated
-  ClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  VirtualClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -105,7 +118,7 @@ message AppInst {
   AppInstRuntime runtime_info = 17 [(gogoproto.nullable) = false];
   // Created at time
   distributed_match_engine.Timestamp created_at = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
-  // IpAccess for auto-clusters. Ignored otherwise.
+  // (Deprecated) IpAccess for auto-clusters. Ignored otherwise.
   IpAccess auto_cluster_ip_access = 22 [(protogen.backend) = true];
   // status is used to reflect progress of creation or other events
   StatusInfo status = 23 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
@@ -117,8 +130,9 @@ message AppInst {
   bool update_multiple = 26 [(protogen.hidetag) = "nocmp"];
   // Customization files passed through to implementing services
   repeated ConfigFile configs = 27;
-  // shared volume size when creating auto cluster
-  uint64 shared_volume_size = 28;
+  // (removed) shared volume size when creating auto cluster
+  reserved "shared_volume_size";
+  reserved 28;
   // Health Check status
   distributed_match_engine.HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
   // Optional privacy policy name
@@ -135,6 +149,8 @@ message AppInst {
   string opt_res = 35 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   // Updated at time
   distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // Real ClusterInst name
+  string real_cluster_name = 37 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -144,7 +160,7 @@ message AppInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,VmFlavor,ExternalVolumeSize,AvailabilityZone,State,UpdatedAt,OptRes";
+  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,VmFlavor,ExternalVolumeSize,AvailabilityZone,State,UpdatedAt,OptRes,SharedVolumeSize,AutoClusterIpAccess";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
   option (protogen.not_required) = "Key.ClusterInstKey.Organization,Key.ClusterInstKey.ClusterKey.Name";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";

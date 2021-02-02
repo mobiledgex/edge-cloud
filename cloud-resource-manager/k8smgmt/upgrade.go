@@ -74,7 +74,7 @@ func upgradeVersionSingleClusterConfigDir(ctx context.Context, caches *platform.
 			continue
 		}
 		cinst := edgeproto.ClusterInst{}
-		if !caches.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &cinst) {
+		if !caches.ClusterInstCache.Get(appInst.ClusterInstKey(), &cinst) {
 			log.SpanLog(ctx, log.DebugLevelInfra, "upgrade version single cluster config dir, ClusterInst not found", "AppInst", appInst.Key)
 			continue
 		}

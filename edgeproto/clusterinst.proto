@@ -95,6 +95,8 @@ message ClusterInst {
   distributed_match_engine.Timestamp created_at = 29 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Updated at time
   distributed_match_engine.Timestamp updated_at = 30 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // For reservable ClusterInsts, when the last reservation ended
+  distributed_match_engine.Timestamp reservation_ended_at = 31 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -108,6 +110,14 @@ message ClusterInst {
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,cluster-org=Key.Organization,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
   option (protogen.uses_org) = "custom";
+}
+
+// Parameters for selecting reservable ClusterInsts to delete
+message IdleReservableClusterInsts {
+  // Idle time (duration)
+  int64 idle_time = 1 [(gogoproto.casttype) = "Duration"];
+  option (protogen.singular_data) = true;
+  option (protogen.uses_org) = "none";
 }
 
 service ClusterInstApi {
@@ -149,6 +159,14 @@ service ClusterInstApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Key.Organization";
+  }
+  // Cleanup Reservable Cluster Instances. Deletes reservable cluster instances that are not in use.
+  rpc DeleteIdleReservableClusterInsts(IdleReservableClusterInsts) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/idlereservableclusterinsts"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,";
   }
 }
 

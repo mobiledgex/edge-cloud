@@ -126,7 +126,7 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 		return nil, fmt.Errorf("VM flavor %s does not exist", appInst.VmFlavor)
 	}
 	vmResources = append(vmResources, edgeproto.VMResource{
-		Key:           appInst.Key.ClusterInstKey,
+		Key:           *appInst.ClusterInstKey(),
 		VmFlavor:      vmFlavor,
 		Type:          VMTypeAppVM,
 		AppAccessType: edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,

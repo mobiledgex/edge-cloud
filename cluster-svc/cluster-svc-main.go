@@ -313,7 +313,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:         app.Key,
-			ClusterInstKey: clusterInst.Key,
+			ClusterInstKey: *clusterInst.Key.Virtual(""),
 		},
 		Flavor: clusterInst.Flavor,
 	}
@@ -450,7 +450,7 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 			err = fmt.Errorf("CreateApp failed: %s", errstr)
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "create app", "app", app.String(), "result", res.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "create app", "app", app.String(), "result", res.String(), "err", err)
 	if err == nil {
 		nodeMgr.TimedEvent(ctx, "cluster-svc create App", app.Key.Organization, node.EventType, app.Key.GetTags(), err, eventStart, time.Now())
 	}

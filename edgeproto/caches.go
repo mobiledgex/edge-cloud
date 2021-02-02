@@ -42,6 +42,19 @@ func (s *AppInstCache) GetForCloudlet(key *CloudletKey, cb func(appInstKey *AppI
 	}
 }
 
+func (s *AppInstCache) GetForRealClusterInstKey(key *ClusterInstKey, cb func(appInst *AppInst)) {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+	for _, v := range s.Objs {
+		obj := v.Obj
+		clusterInstKey := obj.ClusterInstKey()
+		if !key.Matches(clusterInstKey) {
+			continue
+		}
+		cb(obj)
+	}
+}
+
 // GetForCloudlet finds all ClusterInsts associated with the
 // given cloudlets
 func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, cb func(clusterInstKey *ClusterInstKey, modRev int64)) {

@@ -28,7 +28,8 @@ enum VersionHash {
   HASH_1a57396698c4ade15f0579c9f5714cd6 = 20 [(protogen.upgrade_func) = "CheckForHttpPorts"];
   HASH_71c580746ee2a6b7d1a4182b3a54407a = 21 [(protogen.upgrade_func) = "PruneSamsungPlatformDevices"];
   HASH_a18636af1f4272c38ca72881b2a8bcea = 22 [(protogen.upgrade_func) = "SetTrusted"];
-  HASH_5172f54d72f7d2062d45c9c7ed60cc7e = 23 [(protogen.upgrade_func) = "UpdateCloudletRefsObjKeys"];
+  HASH_efbddcee4ba444e3656f64e430a5e3be = 23; // Add VirtualClusterInstKey
+  HASH_9d3d66f6b3e78a5872c6a3096f4b8148 = 24 [(protogen.upgrade_func) = "UpdateCloudletRefsObjKeys"];
 
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "6";
