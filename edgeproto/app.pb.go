@@ -1575,7 +1575,7 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Configs != nil {
-		if m.Configs == nil && o.Configs != nil || m.Configs != nil && o.Configs == nil {
+		if len(m.Configs) == 0 && len(o.Configs) > 0 || len(m.Configs) > 0 && len(o.Configs) == 0 {
 			return false
 		} else if m.Configs != nil && o.Configs != nil {
 			if !opts.Filter && len(m.Configs) != len(o.Configs) {
@@ -1628,7 +1628,7 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.AutoProvPolicies != nil {
-		if m.AutoProvPolicies == nil && o.AutoProvPolicies != nil || m.AutoProvPolicies != nil && o.AutoProvPolicies == nil {
+		if len(m.AutoProvPolicies) == 0 && len(o.AutoProvPolicies) > 0 || len(m.AutoProvPolicies) > 0 && len(o.AutoProvPolicies) == 0 {
 			return false
 		} else if m.AutoProvPolicies != nil && o.AutoProvPolicies != nil {
 			if !opts.Filter && len(m.AutoProvPolicies) != len(o.AutoProvPolicies) {
@@ -1661,7 +1661,7 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RequiredOutboundConnections != nil {
-		if m.RequiredOutboundConnections == nil && o.RequiredOutboundConnections != nil || m.RequiredOutboundConnections != nil && o.RequiredOutboundConnections == nil {
+		if len(m.RequiredOutboundConnections) == 0 && len(o.RequiredOutboundConnections) > 0 || len(m.RequiredOutboundConnections) > 0 && len(o.RequiredOutboundConnections) == 0 {
 			return false
 		} else if m.RequiredOutboundConnections != nil && o.RequiredOutboundConnections != nil {
 			if !opts.Filter && len(m.RequiredOutboundConnections) != len(o.RequiredOutboundConnections) {

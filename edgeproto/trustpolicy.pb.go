@@ -637,7 +637,7 @@ func (m *TrustPolicy) Matches(o *TrustPolicy, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.OutboundSecurityRules != nil {
-		if m.OutboundSecurityRules == nil && o.OutboundSecurityRules != nil || m.OutboundSecurityRules != nil && o.OutboundSecurityRules == nil {
+		if len(m.OutboundSecurityRules) == 0 && len(o.OutboundSecurityRules) > 0 || len(m.OutboundSecurityRules) > 0 && len(o.OutboundSecurityRules) == 0 {
 			return false
 		} else if m.OutboundSecurityRules != nil && o.OutboundSecurityRules != nil {
 			if !opts.Filter && len(m.OutboundSecurityRules) != len(o.OutboundSecurityRules) {

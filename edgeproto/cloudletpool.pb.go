@@ -801,7 +801,7 @@ func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Cloudlets != nil {
-		if m.Cloudlets == nil && o.Cloudlets != nil || m.Cloudlets != nil && o.Cloudlets == nil {
+		if len(m.Cloudlets) == 0 && len(o.Cloudlets) > 0 || len(m.Cloudlets) > 0 && len(o.Cloudlets) == 0 {
 			return false
 		} else if m.Cloudlets != nil && o.Cloudlets != nil {
 			if !opts.Filter && len(m.Cloudlets) != len(o.Cloudlets) {
