@@ -298,7 +298,7 @@ func GetDeploymentManifest(ctx context.Context, authApi RegistryAuthApi, manifes
 	if strings.HasPrefix(manifest, "http://") || strings.HasPrefix(manifest, "https://") {
 
 		if strings.HasSuffix(manifest, ".zip") {
-			log.DebugLog(log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
+			log.SpanLog(ctx, log.DebugLevelApi, "zipfile manifest found", "manifest", manifest)
 			return manifest, validateRemoteZipManifest(ctx, authApi, manifest)
 		}
 		mf, err := GetRemoteManifest(ctx, authApi, manifest)
