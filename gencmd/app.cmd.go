@@ -497,7 +497,6 @@ var AppOptionalArgs = []string{
 	"revision",
 	"officialfqdn",
 	"md5sum",
-	"autoprovpolicy",
 	"accesstype",
 	"autoprovpolicies",
 	"templatedelimiter",
@@ -552,18 +551,22 @@ var AppSpecialArgs = map[string]string{
 	"autoprovpolicies": "StringArray",
 	"fields":           "StringArray",
 }
-var AppAutoProvPolicyRequiredArgs = []string{}
-var AppAutoProvPolicyOptionalArgs = []string{
-	"appkey.organization",
-	"appkey.name",
-	"appkey.version",
+var AppAutoProvPolicyRequiredArgs = []string{
+	"app-org",
+	"appname",
+	"appvers",
 	"autoprovpolicy",
 }
-var AppAutoProvPolicyAliasArgs = []string{}
+var AppAutoProvPolicyOptionalArgs = []string{}
+var AppAutoProvPolicyAliasArgs = []string{
+	"app-org=appkey.organization",
+	"appname=appkey.name",
+	"appvers=appkey.version",
+}
 var AppAutoProvPolicyComments = map[string]string{
-	"appkey.organization": "App developer organization",
-	"appkey.name":         "App name",
-	"appkey.version":      "App version",
-	"autoprovpolicy":      "Auto provisioning policy name",
+	"app-org":        "App developer organization",
+	"appname":        "App name",
+	"appvers":        "App version",
+	"autoprovpolicy": "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}

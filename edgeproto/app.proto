@@ -184,7 +184,7 @@ message App {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
-  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,DelOpt";
+  option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,DelOpt,AutoProvPolicy";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
 }
@@ -194,6 +194,8 @@ message AppAutoProvPolicy {
   AppKey app_key = 1 [(gogoproto.nullable) = false];
   // Auto provisioning policy name
   string auto_prov_policy = 2;
+  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization";
+  option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
 }
 
 service AppApi {
