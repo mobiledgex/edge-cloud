@@ -213,9 +213,18 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
  *   it and begins the session as usual
  */
 func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAuthApi, reqConfig *RequestConfig) (*http.Response, error) {
-	auth, err := authApi.GetRegistryAuth(ctx, regUrl)
-	if err != nil {
-		return nil, err
+	var auth *RegistryAuth
+	var err error
+
+	// if authApi is nil, this is a public registry
+	if authApi != nil {
+		auth, err = authApi.GetRegistryAuth(ctx, regUrl)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		auth = nil
+		log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
 	}
 	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth, reqConfig)
 	if err != nil {

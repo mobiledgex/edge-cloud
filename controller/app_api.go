@@ -270,7 +270,7 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return fmt.Errorf("Deployment is not valid for image type")
 	}
-	if err := validateAppConfigsForDeployment(in.Configs, in.Deployment); err != nil {
+	if err := validateAppConfigsForDeployment(ctx, in.Configs, in.Deployment); err != nil {
 		return err
 	}
 	if err := validateRequiredOutboundConnections(in.RequiredOutboundConnections); err != nil {
@@ -692,13 +692,18 @@ func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppA
 	return &edgeproto.Result{}, err
 }
 
-func validateAppConfigsForDeployment(configs []*edgeproto.ConfigFile, deployment string) error {
+func validateAppConfigsForDeployment(ctx context.Context, configs []*edgeproto.ConfigFile, deployment string) error {
 	for _, cfg := range configs {
 		invalid := false
 		switch cfg.Kind {
 		case edgeproto.AppConfigHelmYaml:
 			if deployment != cloudcommon.DeploymentTypeHelm {
 				invalid = true
+			}
+			// Validate that this is a valid url
+			_, err := cloudcommon.GetDeploymentManifest(ctx, nil, cfg.Config)
+			if err != nil {
+				return err
 			}
 		case edgeproto.AppConfigEnvYaml:
 			if deployment != cloudcommon.DeploymentTypeKubernetes {
