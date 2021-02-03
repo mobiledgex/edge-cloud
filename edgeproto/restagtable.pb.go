@@ -803,7 +803,7 @@ func (m *ResTagTable) Matches(o *ResTagTable, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Tags != nil {
-		if m.Tags == nil && o.Tags != nil || m.Tags != nil && o.Tags == nil {
+		if len(m.Tags) == 0 && len(o.Tags) > 0 || len(m.Tags) > 0 && len(o.Tags) == 0 {
 			return false
 		} else if m.Tags != nil && o.Tags != nil {
 			if !opts.Filter && len(m.Tags) != len(o.Tags) {
