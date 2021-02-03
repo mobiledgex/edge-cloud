@@ -803,7 +803,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Clusters != nil {
-		if m.Clusters == nil && o.Clusters != nil || m.Clusters != nil && o.Clusters == nil {
+		if len(m.Clusters) == 0 && len(o.Clusters) > 0 || len(m.Clusters) > 0 && len(o.Clusters) == 0 {
 			return false
 		} else if m.Clusters != nil && o.Clusters != nil {
 			if !opts.Filter && len(m.Clusters) != len(o.Clusters) {
@@ -840,7 +840,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RootLbPorts != nil {
-		if m.RootLbPorts == nil && o.RootLbPorts != nil || m.RootLbPorts != nil && o.RootLbPorts == nil {
+		if len(m.RootLbPorts) == 0 && len(o.RootLbPorts) > 0 || len(m.RootLbPorts) > 0 && len(o.RootLbPorts) == 0 {
 			return false
 		} else if m.RootLbPorts != nil && o.RootLbPorts != nil {
 			if !opts.Filter && len(m.RootLbPorts) != len(o.RootLbPorts) {
@@ -868,7 +868,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.OptResUsedMap != nil {
-		if m.OptResUsedMap == nil && o.OptResUsedMap != nil || m.OptResUsedMap != nil && o.OptResUsedMap == nil {
+		if len(m.OptResUsedMap) == 0 && len(o.OptResUsedMap) > 0 || len(m.OptResUsedMap) > 0 && len(o.OptResUsedMap) == 0 {
 			return false
 		} else if m.OptResUsedMap != nil && o.OptResUsedMap != nil {
 			if !opts.Filter && len(m.OptResUsedMap) != len(o.OptResUsedMap) {
@@ -1528,7 +1528,7 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Apps != nil {
-		if m.Apps == nil && o.Apps != nil || m.Apps != nil && o.Apps == nil {
+		if len(m.Apps) == 0 && len(o.Apps) > 0 || len(m.Apps) > 0 && len(o.Apps) == 0 {
 			return false
 		} else if m.Apps != nil && o.Apps != nil {
 			if !opts.Filter && len(m.Apps) != len(o.Apps) {
@@ -2161,7 +2161,7 @@ func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Insts != nil {
-		if m.Insts == nil && o.Insts != nil || m.Insts != nil && o.Insts == nil {
+		if len(m.Insts) == 0 && len(o.Insts) > 0 || len(m.Insts) > 0 && len(o.Insts) == 0 {
 			return false
 		} else if m.Insts != nil && o.Insts != nil {
 			if !opts.Filter && len(m.Insts) != len(o.Insts) {

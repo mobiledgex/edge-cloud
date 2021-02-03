@@ -1424,7 +1424,7 @@ func (m *ClusterInst) Matches(o *ClusterInst, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.Errors != nil {
-			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+			if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -3125,7 +3125,7 @@ func (m *ClusterInstInfo) Matches(o *ClusterInstInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Errors != nil {
-		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+		if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
