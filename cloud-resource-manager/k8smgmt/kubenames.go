@@ -57,7 +57,8 @@ func NormalizeName(name string) string {
 	return util.K8SSanitize(name)
 }
 
-// FixImagePath removes localhost and adds Docker Hub as needed
+// FixImagePath removes localhost and adds Docker Hub as needed.  For example,
+// networkstatic/iperf3 becomes docker.io/networkstatic/iperf3
 func FixImagePath(origImagePath string) string {
 	newImagePath := origImagePath
 	parts := strings.Split(origImagePath, "/")
