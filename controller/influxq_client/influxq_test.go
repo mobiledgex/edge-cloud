@@ -135,6 +135,7 @@ func TestInfluxQ(t *testing.T) {
 		}
 	}
 	testAutoProvCounts(t, ctx, q)
+	testRetentionPolicyAndContinuousQuery(t, ctx, q, addr)
 }
 
 // Test pushing auto prov counts to influxdb and reading back.
@@ -174,4 +175,109 @@ func testAutoProvCounts(t *testing.T, ctx context.Context, q *influxq.InfluxQ) {
 	require.Equal(t, msg.DmeNodeName, dmeid, "check dmeid")
 	require.Equal(t, ts, tsCheck, "check timestmap")
 	require.Equal(t, ap, *apCheck, "check auto prov stats")
+}
+
+func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q *influxq.InfluxQ, addr string) {
+	// Create Downsampled DB
+	qd := influxq.NewInfluxQ(cloudcommon.DownsampledMetricsDbName, "", "")
+	// Start downsample db
+	err := qd.Start("http://" + addr)
+	require.Nil(t, err, "new influx q")
+	defer qd.Stop()
+	connected := qd.WaitConnected()
+	assert.True(t, connected, "connected downsampled db")
+	// Add a Continuous Query
+	cqs := &influxq.ContinuousQuerySettings{
+		Measurement: "test-metric",
+		AggregationFunctions: map[string]string{
+			"val1": "sum(\"val1\")",
+		},
+		NewDbName:          cloudcommon.DownsampledMetricsDbName,
+		CollectionInterval: time.Duration(10 * time.Millisecond),
+	}
+	cqDone := q.CreateContinuousQuery(cqs)
+	assert.Nil(t, cqDone.Err, "create cq")
+	time.Sleep(1 * time.Second)
+	// Add some more data for continuous query to aggregate
+	for ii := 0; ii < 2; ii++ {
+		tmst, _ := types.TimestampProto(time.Now())
+		metric := edgeproto.Metric{}
+		metric.Name = "test-metric"
+		metric.Timestamp = *tmst
+		metric.Tags = make([]*edgeproto.MetricTag, 0)
+		metric.Tags = append(metric.Tags, &edgeproto.MetricTag{
+			Name: "tag1",
+			Val:  "someval1",
+		})
+		metric.Tags = append(metric.Tags, &edgeproto.MetricTag{
+			Name: "tag2",
+			Val:  "someval2",
+		})
+		metric.Vals = make([]*edgeproto.MetricVal, 0)
+		metric.Vals = append(metric.Vals, &edgeproto.MetricVal{
+			Name: "val1",
+			Value: &edgeproto.MetricVal_Ival{
+				Ival: uint64(5),
+			},
+		})
+		q.AddMetric(&metric)
+		time.Sleep(time.Microsecond)
+	}
+	// Check that continuous query has aggregated data
+	time.Sleep(2 * time.Second)
+	query := fmt.Sprintf("select * from \"test-metric-10ms\"")
+	res, err := qd.QueryDB(query)
+	assert.Nil(t, err, "select *")
+	assert.True(t, len(res[0].Series[0].Values) > 0, "num results")
+
+	// Add retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
+	rp := time.Duration(1 * time.Hour)
+	rpres := qd.UpdateDefaultRetentionPolicy(rp)
+	// Check that retention policy has been created
+	assert.Nil(t, rpres.Err)
+	assert.NotEqual(t, "", rpres.RpName)
+	// Add a Continuous Query on new rp
+	cqs = &influxq.ContinuousQuerySettings{
+		Measurement: "test-metric",
+		AggregationFunctions: map[string]string{
+			"val2": "sum(\"val2\")",
+		},
+		NewDbName:           cloudcommon.DownsampledMetricsDbName,
+		CollectionInterval:  time.Duration(5 * time.Millisecond),
+		RetentionPolicyName: rpres.RpName,
+	}
+	cqDone = q.CreateContinuousQuery(cqs)
+	assert.Nil(t, cqDone.Err, "create cq")
+	time.Sleep(2 * time.Second)
+	// Add some more data for new continuous query to aggregate
+	for ii := 0; ii < 2; ii++ {
+		tmst, _ := types.TimestampProto(time.Now())
+		metric := edgeproto.Metric{}
+		metric.Name = "test-metric"
+		metric.Timestamp = *tmst
+		metric.Tags = make([]*edgeproto.MetricTag, 0)
+		metric.Tags = append(metric.Tags, &edgeproto.MetricTag{
+			Name: "tag1",
+			Val:  "someval1",
+		})
+		metric.Tags = append(metric.Tags, &edgeproto.MetricTag{
+			Name: "tag2",
+			Val:  "someval2",
+		})
+		metric.Vals = make([]*edgeproto.MetricVal, 0)
+		metric.Vals = append(metric.Vals, &edgeproto.MetricVal{
+			Name: "val2",
+			Value: &edgeproto.MetricVal_Dval{
+				Dval: float64(6.2),
+			},
+		})
+		q.AddMetric(&metric)
+		time.Sleep(time.Microsecond)
+	}
+	// Check that new continuous query has aggregated data
+	time.Sleep(3 * time.Second)
+	query = fmt.Sprintf("select * from \"test-metric-5ms\"")
+	res, err = qd.QueryDB(query)
+	assert.Nil(t, err, "select *")
+	assert.True(t, len(res[0].Series[0].Values) > 0, "num results")
 }

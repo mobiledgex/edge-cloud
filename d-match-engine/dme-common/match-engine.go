@@ -103,14 +103,6 @@ type StatKey struct {
 	CloudletFound edgeproto.CloudletKey
 	CellId        uint32
 	Method        string
-	// Only for EdgeEvents (to identify AppInsts)
-	ClusterKey     edgeproto.ClusterKey
-	ClusterInstOrg string
-}
-
-type EdgeEventStatKey struct {
-	AppInstKey edgeproto.AppInstKey
-	Metric     string
 }
 
 // This is for passing the carrier/cloudlet in the context
@@ -911,7 +903,7 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
-func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration *time.Duration) error {
+func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, deviceInfo *dme.DeviceInfo, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration *time.Duration) error {
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
@@ -932,14 +924,38 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		mreply.Ports = copyPorts(best.appInst.ports)
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
 
-		key := EdgeEventsCookieKey{
+		key := &EdgeEventsCookieKey{
 			ClusterOrg:   best.appInst.clusterInstKey.Organization,
 			ClusterName:  best.appInst.clusterInstKey.ClusterKey.Name,
 			CloudletOrg:  best.appInst.clusterInstKey.CloudletKey.Organization,
 			CloudletName: best.appInst.clusterInstKey.CloudletKey.Name,
 		}
-		eecookie, _ := GenerateEdgeEventsCookie(&key, ctx, edgeEventsCookieExpiration)
+		ctx = NewEdgeEventsCookieContext(ctx, key)
+		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
 		mreply.EdgeEventsCookie = eecookie
+
+		// Update edgeevents stats influx db with gps locations
+		if EEStats != nil {
+			appInstKey := edgeproto.AppInstKey{
+				AppKey: *appkey,
+				ClusterInstKey: edgeproto.VirtualClusterInstKey{
+					ClusterKey:   best.appInst.clusterInstKey.ClusterKey,
+					CloudletKey:  best.appInst.clusterInstKey.CloudletKey,
+					Organization: best.appInst.clusterInstKey.Organization,
+				},
+			}
+			devinfo := &dme.DeviceInfo{}
+			if deviceInfo != nil {
+				devinfo = deviceInfo
+			}
+			deviceStatKey := GetDeviceStatKey(appInstKey, devinfo, carrier, loc, int(Settings.LocationTileSideLengthKm))
+			edgeEventStatCall := &EdgeEventStatCall{
+				Metric:        cloudcommon.DeviceMetric,
+				DeviceStatKey: deviceStatKey,
+			}
+			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
+		}
+
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
@@ -1157,28 +1173,36 @@ loop:
 			break loop
 		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
 			// Client sent latency samples to be processed
-			stats, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			_, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
 				reterr = err
 				break loop
 			}
-			deviceInfo := dme.DeviceInfo{}
+			deviceInfo := &dme.DeviceInfo{}
 			if cupdate.DeviceInfo != nil {
-				deviceInfo = *cupdate.DeviceInfo
+				deviceInfo = cupdate.DeviceInfo
 			}
-			RecordAppInstLatencyStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, edgeEventsCookieKey, stats, cupdate.CarrierName, deviceInfo)
+			latencyStatKey := GetLatencyStatKey(*appInstKey, deviceInfo, cupdate.CarrierName, cupdate.GpsLocation, int(Settings.LocationTileSideLengthKm))
+			latencyStatInfo := &LatencyStatInfo{
+				Samples: cupdate.Samples,
+			}
+			edgeEventStatCall := &EdgeEventStatCall{
+				Metric:          cloudcommon.LatencyMetric,
+				LatencyStatKey:  latencyStatKey,
+				LatencyStatInfo: latencyStatInfo,
+			}
+			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			// Gps location stats update
-			deviceInfo := dme.DeviceInfo{}
+			deviceInfo := &dme.DeviceInfo{}
 			if cupdate.DeviceInfo != nil {
-				deviceInfo = *cupdate.DeviceInfo
+				deviceInfo = cupdate.DeviceInfo
 			}
-			RecordGpsLocationStatCall(cupdate.GpsLocation, appInstKey, sessionCookieKey, cupdate.CarrierName, deviceInfo)
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
-			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, fcreply, EdgeEventsCookieExpiration)
+			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, deviceInfo, fcreply, EdgeEventsCookieExpiration)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
 				continue
@@ -1197,8 +1221,16 @@ loop:
 				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
 			}
 		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
-			// Client sent custom stat to be stored
-			RecordCustomStatCall(appInstKey, sessionCookieKey, cupdate.CustomEvent, cupdate.Samples)
+			customStatKey := GetCustomStatKey(*appInstKey, cupdate.CustomEvent)
+			customStatInfo := &CustomStatInfo{
+				Samples: cupdate.Samples,
+			}
+			edgeEventStatCall := &EdgeEventStatCall{
+				Metric:         cloudcommon.CustomMetric,
+				CustomStatKey:  customStatKey,
+				CustomStatInfo: customStatInfo,
+			}
+			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
@@ -1282,7 +1314,8 @@ func AppExists(orgname string, appname string, appvers string) bool {
 }
 
 func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
+	Settings = *new
 	autoProvStats.UpdateSettings(new.AutoDeployIntervalSec)
 	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
-	EEStats.UpdateSettings(time.Duration(new.PersistentConnectionMetricsCollectionInterval))
+	EEStats.UpdateSettings(time.Duration(new.EdgeEventsMetricsCollectionInterval))
 }

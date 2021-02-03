@@ -98,7 +98,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, dmecommon.EdgeEventsCookieExpiration)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, req.DeviceInfo, reply, dmecommon.EdgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -144,7 +144,7 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
-	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, cookieExpiration)
+	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, req.DeviceInfo, reply, cookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -529,7 +529,7 @@ func main() {
 	dmecommon.Stats.Start()
 	defer dmecommon.Stats.Stop()
 
-	edgeEventsInterval := dmecommon.Settings.PersistentConnectionMetricsCollectionInterval.TimeDuration()
+	edgeEventsInterval := dmecommon.Settings.EdgeEventsMetricsCollectionInterval.TimeDuration()
 	dmecommon.EEStats = dmecommon.NewEdgeEventStats(edgeEventsInterval, *statsShards, sendMetric.Update)
 	dmecommon.EEStats.Start()
 	defer dmecommon.EEStats.Stop()

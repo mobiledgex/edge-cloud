@@ -111,10 +111,22 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.UpdateTrustPolicyTimeout), 0)
 		case SettingsFieldDmeApiMetricsCollectionInterval:
 			v.CheckGT(f, int64(s.DmeApiMetricsCollectionInterval), 0)
-		case SettingsFieldPersistentConnectionMetricsCollectionInterval:
-			v.CheckGT(f, int64(s.PersistentConnectionMetricsCollectionInterval), 0)
 		case SettingsFieldCleanupReservableAutoClusterIdletime:
 			v.CheckGT(f, int64(s.CleanupReservableAutoClusterIdletime), 0)
+		case SettingsFieldEdgeEventsMetricsCollectionInterval:
+			v.CheckGT(f, int64(s.EdgeEventsMetricsCollectionInterval), 0)
+		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals:
+			for _, val := range s.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+				v.CheckGT(f, int64(val.Interval), 0)
+			}
+		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval:
+			// no validation
+		case SettingsFieldInfluxDbEdgeEventsMetricsRetention:
+			// no validation
+		case SettingsFieldInfluxDbDownsampledMetricsRetention:
+			// no validation
+		case SettingsFieldLocationTileSideLengthKm:
+			v.CheckGT(f, int64(s.LocationTileSideLengthKm), 0)
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -153,10 +165,24 @@ func GetDefaultSettings() *Settings {
 	s.UpdateVmPoolTimeout = Duration(20 * time.Minute)
 	s.UpdateTrustPolicyTimeout = Duration(10 * time.Minute)
 	s.DmeApiMetricsCollectionInterval = Duration(30 * time.Second)
-	s.PersistentConnectionMetricsCollectionInterval = Duration(60 * time.Minute)
 	s.InfluxDbMetricsRetention = Duration(672 * time.Hour) // 28 days is a default
 	s.CleanupReservableAutoClusterIdletime = Duration(30 * time.Minute)
 	s.InfluxDbCloudletUsageMetricsRetention = Duration(8760 * time.Hour) // 1 year
+	s.LocationTileSideLengthKm = 2
+	s.EdgeEventsMetricsCollectionInterval = Duration(1 * time.Hour)  // Collect every hour
+	s.InfluxDbEdgeEventsMetricsRetention = Duration(672 * time.Hour) // 28 days
+	s.EdgeEventsMetricsContinuousQueriesCollectionIntervals = []*CollectionInterval{
+		&CollectionInterval{
+			Interval: Duration(24 * time.Hour), // Downsample into daily intervals
+		},
+		&CollectionInterval{
+			Interval: Duration(168 * time.Hour), // Downsample into weekly intervals
+		},
+		&CollectionInterval{
+			Interval: Duration(672 * time.Hour), // Downsample into monthly intervals
+		},
+	}
+	s.InfluxDbDownsampledMetricsRetention = Duration(8760 * time.Hour) // 1 year
 	return &s
 }
 
