@@ -4181,7 +4181,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.Errors != nil {
-			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+			if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -4237,7 +4237,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.EnvVar != nil {
-		if m.EnvVar == nil && o.EnvVar != nil || m.EnvVar != nil && o.EnvVar == nil {
+		if len(m.EnvVar) == 0 && len(o.EnvVar) > 0 || len(m.EnvVar) > 0 && len(o.EnvVar) == 0 {
 			return false
 		} else if m.EnvVar != nil && o.EnvVar != nil {
 			if !opts.Filter && len(m.EnvVar) != len(o.EnvVar) {
@@ -4263,7 +4263,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.ResTagMap != nil {
-			if m.ResTagMap == nil && o.ResTagMap != nil || m.ResTagMap != nil && o.ResTagMap == nil {
+			if len(m.ResTagMap) == 0 && len(o.ResTagMap) > 0 || len(m.ResTagMap) > 0 && len(o.ResTagMap) == 0 {
 				return false
 			} else if m.ResTagMap != nil && o.ResTagMap != nil {
 				if !opts.Filter && len(m.ResTagMap) != len(o.ResTagMap) {
@@ -4282,7 +4282,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.AccessVars != nil {
-		if m.AccessVars == nil && o.AccessVars != nil || m.AccessVars != nil && o.AccessVars == nil {
+		if len(m.AccessVars) == 0 && len(o.AccessVars) > 0 || len(m.AccessVars) > 0 && len(o.AccessVars) == 0 {
 			return false
 		} else if m.AccessVars != nil && o.AccessVars != nil {
 			if !opts.Filter && len(m.AccessVars) != len(o.AccessVars) {
@@ -4316,7 +4316,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.ChefClientKey != nil {
-			if m.ChefClientKey == nil && o.ChefClientKey != nil || m.ChefClientKey != nil && o.ChefClientKey == nil {
+			if len(m.ChefClientKey) == 0 && len(o.ChefClientKey) > 0 || len(m.ChefClientKey) > 0 && len(o.ChefClientKey) == 0 {
 				return false
 			} else if m.ChefClientKey != nil && o.ChefClientKey != nil {
 				if !opts.Filter && len(m.ChefClientKey) != len(o.ChefClientKey) {
@@ -4380,7 +4380,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.ResourceQuotas != nil {
-		if m.ResourceQuotas == nil && o.ResourceQuotas != nil || m.ResourceQuotas != nil && o.ResourceQuotas == nil {
+		if len(m.ResourceQuotas) == 0 && len(o.ResourceQuotas) > 0 || len(m.ResourceQuotas) > 0 && len(o.ResourceQuotas) == 0 {
 			return false
 		} else if m.ResourceQuotas != nil && o.ResourceQuotas != nil {
 			if !opts.Filter && len(m.ResourceQuotas) != len(o.ResourceQuotas) {
@@ -6920,7 +6920,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Errors != nil {
-		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+		if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -6934,7 +6934,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Flavors != nil {
-		if m.Flavors == nil && o.Flavors != nil || m.Flavors != nil && o.Flavors == nil {
+		if len(m.Flavors) == 0 && len(o.Flavors) > 0 || len(m.Flavors) > 0 && len(o.Flavors) == 0 {
 			return false
 		} else if m.Flavors != nil && o.Flavors != nil {
 			if !opts.Filter && len(m.Flavors) != len(o.Flavors) {
@@ -6950,7 +6950,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.AvailabilityZones != nil {
-		if m.AvailabilityZones == nil && o.AvailabilityZones != nil || m.AvailabilityZones != nil && o.AvailabilityZones == nil {
+		if len(m.AvailabilityZones) == 0 && len(o.AvailabilityZones) > 0 || len(m.AvailabilityZones) > 0 && len(o.AvailabilityZones) == 0 {
 			return false
 		} else if m.AvailabilityZones != nil && o.AvailabilityZones != nil {
 			if !opts.Filter && len(m.AvailabilityZones) != len(o.AvailabilityZones) {
@@ -6961,7 +6961,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.OsImages != nil {
-		if m.OsImages == nil && o.OsImages != nil || m.OsImages != nil && o.OsImages == nil {
+		if len(m.OsImages) == 0 && len(o.OsImages) > 0 || len(m.OsImages) > 0 && len(o.OsImages) == 0 {
 			return false
 		} else if m.OsImages != nil && o.OsImages != nil {
 			if !opts.Filter && len(m.OsImages) != len(o.OsImages) {

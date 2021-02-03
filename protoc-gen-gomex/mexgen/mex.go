@@ -359,10 +359,12 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	// ignore field if filter was specified and o.name is 0 or nil
 	nilval := "0"
 	nilCheck := true
+	repeated := false
 	name := generator.CamelCase(*field.Name)
 	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
 		nilval = "nil"
+		repeated = true
 	} else {
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -380,13 +382,16 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		m.P("if !opts.Filter || o.", name, " != ", nilval, " {")
 	}
 	if nilCheck && nilval == "nil" {
-		m.P("if m.", name, " == nil && o.", name, " != nil || m.", name, " != nil && o.", name, " == nil {")
+		if repeated {
+			m.P("if len(m.", name, ") == 0 && len(o.", name, ") > 0 || len(m.", name, ") > 0 && len(o.", name, ") == 0 {")
+		} else {
+			m.P("if m.", name, " == nil && o.", name, " != nil || m.", name, " != nil && o.", name, " == nil {")
+		}
 		m.P("return false")
 		m.P("} else if m.", name, " != nil && o.", name, "!= nil {")
 	}
 
 	mapType := m.support.GetMapType(m.gen, field)
-	repeated := false
 	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
 		m.P("if !opts.Filter && len(m.", name, ") != len(o.", name, ") {")
@@ -418,7 +423,6 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 			name = name + "[k]"
 			field = mapType.ValField
 		}
-		repeated = true
 	}
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:

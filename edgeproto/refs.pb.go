@@ -1054,7 +1054,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RootLbPorts != nil {
-		if m.RootLbPorts == nil && o.RootLbPorts != nil || m.RootLbPorts != nil && o.RootLbPorts == nil {
+		if len(m.RootLbPorts) == 0 && len(o.RootLbPorts) > 0 || len(m.RootLbPorts) > 0 && len(o.RootLbPorts) == 0 {
 			return false
 		} else if m.RootLbPorts != nil && o.RootLbPorts != nil {
 			if !opts.Filter && len(m.RootLbPorts) != len(o.RootLbPorts) {
@@ -1082,7 +1082,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.OptResUsedMap != nil {
-		if m.OptResUsedMap == nil && o.OptResUsedMap != nil || m.OptResUsedMap != nil && o.OptResUsedMap == nil {
+		if len(m.OptResUsedMap) == 0 && len(o.OptResUsedMap) > 0 || len(m.OptResUsedMap) > 0 && len(o.OptResUsedMap) == 0 {
 			return false
 		} else if m.OptResUsedMap != nil && o.OptResUsedMap != nil {
 			if !opts.Filter && len(m.OptResUsedMap) != len(o.OptResUsedMap) {
@@ -1105,7 +1105,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.ClusterInsts != nil {
-		if m.ClusterInsts == nil && o.ClusterInsts != nil || m.ClusterInsts != nil && o.ClusterInsts == nil {
+		if len(m.ClusterInsts) == 0 && len(o.ClusterInsts) > 0 || len(m.ClusterInsts) > 0 && len(o.ClusterInsts) == 0 {
 			return false
 		} else if m.ClusterInsts != nil && o.ClusterInsts != nil {
 			if !opts.Filter && len(m.ClusterInsts) != len(o.ClusterInsts) {
@@ -1124,7 +1124,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.VmAppInsts != nil {
-		if m.VmAppInsts == nil && o.VmAppInsts != nil || m.VmAppInsts != nil && o.VmAppInsts == nil {
+		if len(m.VmAppInsts) == 0 && len(o.VmAppInsts) > 0 || len(m.VmAppInsts) > 0 && len(o.VmAppInsts) == 0 {
 			return false
 		} else if m.VmAppInsts != nil && o.VmAppInsts != nil {
 			if !opts.Filter && len(m.VmAppInsts) != len(o.VmAppInsts) {
@@ -1800,7 +1800,7 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Apps != nil {
-		if m.Apps == nil && o.Apps != nil || m.Apps != nil && o.Apps == nil {
+		if len(m.Apps) == 0 && len(o.Apps) > 0 || len(m.Apps) > 0 && len(o.Apps) == 0 {
 			return false
 		} else if m.Apps != nil && o.Apps != nil {
 			if !opts.Filter && len(m.Apps) != len(o.Apps) {
@@ -2433,7 +2433,7 @@ func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Insts != nil {
-		if m.Insts == nil && o.Insts != nil || m.Insts != nil && o.Insts == nil {
+		if len(m.Insts) == 0 && len(o.Insts) > 0 || len(m.Insts) > 0 && len(o.Insts) == 0 {
 			return false
 		} else if m.Insts != nil && o.Insts != nil {
 			if !opts.Filter && len(m.Insts) != len(o.Insts) {

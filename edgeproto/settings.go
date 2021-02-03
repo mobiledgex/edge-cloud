@@ -146,6 +146,7 @@ func GetDefaultSettings() *Settings {
 	s.UpdateTrustPolicyTimeout = Duration(10 * time.Minute)
 	s.DmeApiMetricsCollectionInterval = Duration(30 * time.Second)
 	s.PersistentConnectionMetricsCollectionInterval = Duration(60 * time.Minute)
+	s.InfluxDbMetricsRetention = Duration(672 * time.Hour) // 28 days is a default
 	s.CleanupReservableAutoClusterIdletime = Duration(30 * time.Minute)
 	return &s
 }

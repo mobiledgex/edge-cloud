@@ -363,7 +363,7 @@ func (m *Alert) Matches(o *Alert, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Labels != nil {
-		if m.Labels == nil && o.Labels != nil || m.Labels != nil && o.Labels == nil {
+		if len(m.Labels) == 0 && len(o.Labels) > 0 || len(m.Labels) > 0 && len(o.Labels) == 0 {
 			return false
 		} else if m.Labels != nil && o.Labels != nil {
 			if !opts.Filter && len(m.Labels) != len(o.Labels) {
@@ -381,7 +381,7 @@ func (m *Alert) Matches(o *Alert, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Annotations != nil {
-		if m.Annotations == nil && o.Annotations != nil || m.Annotations != nil && o.Annotations == nil {
+		if len(m.Annotations) == 0 && len(o.Annotations) > 0 || len(m.Annotations) > 0 && len(o.Annotations) == 0 {
 			return false
 		} else if m.Annotations != nil && o.Annotations != nil {
 			if !opts.Filter && len(m.Annotations) != len(o.Annotations) {

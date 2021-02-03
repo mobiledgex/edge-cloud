@@ -1335,7 +1335,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedInt != nil {
-		if m.RepeatedInt == nil && o.RepeatedInt != nil || m.RepeatedInt != nil && o.RepeatedInt == nil {
+		if len(m.RepeatedInt) == 0 && len(o.RepeatedInt) > 0 || len(m.RepeatedInt) > 0 && len(o.RepeatedInt) == 0 {
 			return false
 		} else if m.RepeatedInt != nil && o.RepeatedInt != nil {
 			if !opts.Filter && len(m.RepeatedInt) != len(o.RepeatedInt) {
@@ -1349,7 +1349,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Ip != nil {
-		if m.Ip == nil && o.Ip != nil || m.Ip != nil && o.Ip == nil {
+		if len(m.Ip) == 0 && len(o.Ip) > 0 || len(m.Ip) > 0 && len(o.Ip) == 0 {
 			return false
 		} else if m.Ip != nil && o.Ip != nil {
 			if !opts.Filter && len(m.Ip) != len(o.Ip) {
@@ -1363,7 +1363,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Names != nil {
-		if m.Names == nil && o.Names != nil || m.Names != nil && o.Names == nil {
+		if len(m.Names) == 0 && len(o.Names) > 0 || len(m.Names) > 0 && len(o.Names) == 0 {
 			return false
 		} else if m.Names != nil && o.Names != nil {
 			if !opts.Filter && len(m.Names) != len(o.Names) {
@@ -1377,7 +1377,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedMsg != nil {
-		if m.RepeatedMsg == nil && o.RepeatedMsg != nil || m.RepeatedMsg != nil && o.RepeatedMsg == nil {
+		if len(m.RepeatedMsg) == 0 && len(o.RepeatedMsg) > 0 || len(m.RepeatedMsg) > 0 && len(o.RepeatedMsg) == 0 {
 			return false
 		} else if m.RepeatedMsg != nil && o.RepeatedMsg != nil {
 			if !opts.Filter && len(m.RepeatedMsg) != len(o.RepeatedMsg) {
@@ -1388,7 +1388,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedMsgNonnull != nil {
-		if m.RepeatedMsgNonnull == nil && o.RepeatedMsgNonnull != nil || m.RepeatedMsgNonnull != nil && o.RepeatedMsgNonnull == nil {
+		if len(m.RepeatedMsgNonnull) == 0 && len(o.RepeatedMsgNonnull) > 0 || len(m.RepeatedMsgNonnull) > 0 && len(o.RepeatedMsgNonnull) == 0 {
 			return false
 		} else if m.RepeatedMsgNonnull != nil && o.RepeatedMsgNonnull != nil {
 			if !opts.Filter && len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
@@ -1399,7 +1399,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedFields != nil {
-		if m.RepeatedFields == nil && o.RepeatedFields != nil || m.RepeatedFields != nil && o.RepeatedFields == nil {
+		if len(m.RepeatedFields) == 0 && len(o.RepeatedFields) > 0 || len(m.RepeatedFields) > 0 && len(o.RepeatedFields) == 0 {
 			return false
 		} else if m.RepeatedFields != nil && o.RepeatedFields != nil {
 			if !opts.Filter && len(m.RepeatedFields) != len(o.RepeatedFields) {
@@ -1410,7 +1410,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedFieldsNonnull != nil {
-		if m.RepeatedFieldsNonnull == nil && o.RepeatedFieldsNonnull != nil || m.RepeatedFieldsNonnull != nil && o.RepeatedFieldsNonnull == nil {
+		if len(m.RepeatedFieldsNonnull) == 0 && len(o.RepeatedFieldsNonnull) > 0 || len(m.RepeatedFieldsNonnull) > 0 && len(o.RepeatedFieldsNonnull) == 0 {
 			return false
 		} else if m.RepeatedFieldsNonnull != nil && o.RepeatedFieldsNonnull != nil {
 			if !opts.Filter && len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
@@ -1421,7 +1421,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedInnerMsg != nil {
-		if m.RepeatedInnerMsg == nil && o.RepeatedInnerMsg != nil || m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg == nil {
+		if len(m.RepeatedInnerMsg) == 0 && len(o.RepeatedInnerMsg) > 0 || len(m.RepeatedInnerMsg) > 0 && len(o.RepeatedInnerMsg) == 0 {
 			return false
 		} else if m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg != nil {
 			if !opts.Filter && len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
@@ -1432,7 +1432,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedInnerMsgNonnull != nil {
-		if m.RepeatedInnerMsgNonnull == nil && o.RepeatedInnerMsgNonnull != nil || m.RepeatedInnerMsgNonnull != nil && o.RepeatedInnerMsgNonnull == nil {
+		if len(m.RepeatedInnerMsgNonnull) == 0 && len(o.RepeatedInnerMsgNonnull) > 0 || len(m.RepeatedInnerMsgNonnull) > 0 && len(o.RepeatedInnerMsgNonnull) == 0 {
 			return false
 		} else if m.RepeatedInnerMsgNonnull != nil && o.RepeatedInnerMsgNonnull != nil {
 			if !opts.Filter && len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
@@ -1443,7 +1443,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedLoc != nil {
-		if m.RepeatedLoc == nil && o.RepeatedLoc != nil || m.RepeatedLoc != nil && o.RepeatedLoc == nil {
+		if len(m.RepeatedLoc) == 0 && len(o.RepeatedLoc) > 0 || len(m.RepeatedLoc) > 0 && len(o.RepeatedLoc) == 0 {
 			return false
 		} else if m.RepeatedLoc != nil && o.RepeatedLoc != nil {
 			if !opts.Filter && len(m.RepeatedLoc) != len(o.RepeatedLoc) {
@@ -1454,7 +1454,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.RepeatedLocNonnull != nil {
-		if m.RepeatedLocNonnull == nil && o.RepeatedLocNonnull != nil || m.RepeatedLocNonnull != nil && o.RepeatedLocNonnull == nil {
+		if len(m.RepeatedLocNonnull) == 0 && len(o.RepeatedLocNonnull) > 0 || len(m.RepeatedLocNonnull) > 0 && len(o.RepeatedLocNonnull) == 0 {
 			return false
 		} else if m.RepeatedLocNonnull != nil && o.RepeatedLocNonnull != nil {
 			if !opts.Filter && len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
@@ -1465,7 +1465,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.IntMap != nil {
-		if m.IntMap == nil && o.IntMap != nil || m.IntMap != nil && o.IntMap == nil {
+		if len(m.IntMap) == 0 && len(o.IntMap) > 0 || len(m.IntMap) > 0 && len(o.IntMap) == 0 {
 			return false
 		} else if m.IntMap != nil && o.IntMap != nil {
 			if !opts.Filter && len(m.IntMap) != len(o.IntMap) {
@@ -1483,7 +1483,7 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.MsgMap != nil {
-		if m.MsgMap == nil && o.MsgMap != nil || m.MsgMap != nil && o.MsgMap == nil {
+		if len(m.MsgMap) == 0 && len(o.MsgMap) > 0 || len(m.MsgMap) > 0 && len(o.MsgMap) == 0 {
 			return false
 		} else if m.MsgMap != nil && o.MsgMap != nil {
 			if !opts.Filter && len(m.MsgMap) != len(o.MsgMap) {
