@@ -57,6 +57,22 @@ func NormalizeName(name string) string {
 	return util.K8SSanitize(name)
 }
 
+// FixImagePath removes localhost and adds Docker Hub as needed.  For example,
+// networkstatic/iperf3 becomes docker.io/networkstatic/iperf3
+func FixImagePath(origImagePath string) string {
+	newImagePath := origImagePath
+	parts := strings.Split(origImagePath, "/")
+	if parts[0] == "localhost" {
+		newImagePath = strings.Replace(origImagePath, "localhost/", "", -1)
+	} else {
+		// Append default registry address for internal image paths
+		if len(parts) < 2 || !strings.Contains(parts[0], ".") {
+			newImagePath = cloudcommon.DockerHub + "/" + origImagePath
+		}
+	}
+	return newImagePath
+}
+
 // GetKubeNames udpates kubeNames with normalized strings for the included clusterinst, app, and appisnt
 func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*KubeNames, error) {
 	if clusterInst == nil {
@@ -133,7 +149,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 				return nil, fmt.Errorf("invalid docker compose yaml, %s", err.Error())
 			}
 			for _, cont := range containers {
-				kubeNames.ImagePaths = append(kubeNames.ImagePaths, cont.Image)
+				kubeNames.ImagePaths = append(kubeNames.ImagePaths, FixImagePath(cont.Image))
 			}
 		}
 	}
