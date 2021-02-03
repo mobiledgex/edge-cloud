@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -132,6 +133,42 @@ func TestAppApi(t *testing.T) {
 	require.Contains(t, err.Error(), "Empty config for config kind")
 
 	dummy.Stop()
+}
+
+var testInvalidUrlHelmCfg = "http://invalidUrl"
+var testValidYmlHelmCfg = `nfs:
+  path: /share
+  server: [[ .Deployment.ClusterIp ]]
+storageClass:
+  name: standard
+  defaultClass: true
+`
+
+func TestValidateAppConfigs(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	// valid config
+	configs := []*edgeproto.ConfigFile{
+		&edgeproto.ConfigFile{
+			Kind:   edgeproto.AppConfigHelmYaml,
+			Config: testValidYmlHelmCfg,
+		},
+	}
+	err := validateAppConfigsForDeployment(ctx, configs, cloudcommon.DeploymentTypeHelm)
+	require.Nil(t, err)
+
+	// invalid url
+	configs = []*edgeproto.ConfigFile{
+		&edgeproto.ConfigFile{
+			Kind:   edgeproto.AppConfigHelmYaml,
+			Config: testInvalidUrlHelmCfg,
+		},
+	}
+	err = validateAppConfigsForDeployment(ctx, configs, cloudcommon.DeploymentTypeHelm)
+	require.NotNil(t, err)
 }
 
 var testK8SManifest1 = `---
