@@ -657,7 +657,7 @@ var AllDataComments = map[string]string{
 	"flavors:#.ram":                                              "RAM in megabytes",
 	"flavors:#.vcpus":                                            "Number of virtual CPUs",
 	"flavors:#.disk":                                             "Amount of disk space in gigabytes",
-	"flavors:#.optresmap":                                        "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1",
+	"flavors:#.optresmap":                                        "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
 	"settings.fields":                                            "Fields are used for the Update API to specify which fields to apply",
 	"settings.shepherdmetricscollectioninterval":                 "Shepherd metrics collection interval for k8s and docker appInstances (duration)",
 	"settings.shepherdalertevaluationinterval":                   "Shepherd alert evaluation interval for k8s and docker appInstances (duration)",

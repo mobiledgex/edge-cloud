@@ -338,16 +338,7 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 
 	if !cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER && in.ImagePath != "" {
-			parts := strings.Split(in.ImagePath, "/")
-			if parts[0] == "localhost" {
-				in.ImagePath = strings.Replace(in.ImagePath, "localhost/", "", -1)
-			} else {
-				// Append default registry address for internal image paths
-				if len(parts) < 2 || !strings.Contains(parts[0], ".") {
-					in.ImagePath = cloudcommon.DockerHub + "/" + in.ImagePath
-					log.SpanLog(ctx, log.DebugLevelApi, "Using default docker registry", "ImagePath", in.ImagePath)
-				}
-			}
+			in.ImagePath = k8smgmt.FixImagePath(in.ImagePath)
 		}
 	}
 
