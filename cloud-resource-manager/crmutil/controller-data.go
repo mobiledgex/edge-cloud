@@ -259,6 +259,10 @@ func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *
 func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
 
+	if old != nil && old.State == new.State {
+		return
+	}
+
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
 	resetStatus := edgeproto.NoResetStatus
@@ -270,10 +274,6 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			cd.ClusterInstInfoCache.SetStatusStep(ctx, &new.Key, value, resetStatus)
 		}
 		resetStatus = edgeproto.NoResetStatus
-	}
-
-	if old != nil && old.State == new.State {
-		return
 	}
 
 	// do request
@@ -442,6 +442,10 @@ func (cd *ControllerData) clusterInstDeleted(ctx context.Context, old *edgeproto
 
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
 	var err error
+
+	if old != nil && old.State == new.State {
+		return
+	}
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "app inst changed", "key", new.Key)
 	app := edgeproto.App{}

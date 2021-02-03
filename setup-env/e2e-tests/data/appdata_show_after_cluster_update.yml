@@ -231,18 +231,18 @@ cloudletinfos:
       - externalip: 10.101.100.11
     info:
     - name: RAM
-      value: 24576
+      value: 28672
       inframaxvalue: 40960
       units: MB
     - name: vCPUs
-      value: 12
+      value: 14
       inframaxvalue: 50
     - name: Disk
-      value: 240
+      value: 280
       inframaxvalue: 5000
       units: GB
     - name: External IPs
-      value: 1
+      value: 2
       inframaxvalue: 10
     clusterinsts:
     - clusterkey:
@@ -292,18 +292,18 @@ cloudletinfos:
       - externalip: 10.101.100.11
     info:
     - name: RAM
-      value: 24576
+      value: 28672
       inframaxvalue: 40960
       units: MB
     - name: vCPUs
-      value: 12
+      value: 14
       inframaxvalue: 50
     - name: Disk
-      value: 240
+      value: 280
       inframaxvalue: 5000
       units: GB
     - name: External IPs
-      value: 2
+      value: 3
       inframaxvalue: 10
     clusterinsts:
     - clusterkey:

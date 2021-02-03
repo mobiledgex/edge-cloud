@@ -131,7 +131,7 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
 			Type:        cloudcommon.VMTypeClusterNode,
-			InfraFlavor: "m4.small",
+			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
 		})
 		FakeRamUsed += 4096
@@ -142,7 +142,7 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
 			Type:        cloudcommon.VMTypeClusterMaster,
-			InfraFlavor: "m4.small",
+			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
 		})
 		FakeRamUsed += 4096
@@ -164,7 +164,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix),
 			Type:        cloudcommon.VMTypeClusterMaster,
-			InfraFlavor: "m4.small",
+			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
 		})
 		FakeRamUsed += 4096
@@ -175,7 +175,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix),
 			Type:        cloudcommon.VMTypeClusterNode,
-			InfraFlavor: "m4.small",
+			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
 		})
 		FakeRamUsed += 4096
@@ -187,7 +187,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        rootLBFQDN,
 			Type:        cloudcommon.VMTypeRootLB,
-			InfraFlavor: "m4.small",
+			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
 		})
 		FakeRamUsed += 4096
@@ -347,6 +347,22 @@ func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edg
 func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Creating App Inst")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst ready")
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
+		appFQN := cloudcommon.GetAppFQN(&app.Key)
+		clusterInst.Key.ClusterKey.Name = appFQN + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        appFQN,
+			Type:        cloudcommon.VMTypeAppVM,
+			InfraFlavor: "x1.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			FakeExternalIpsUsed += 1
+		}
+	}
 	return nil
 }
 
@@ -354,6 +370,17 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	updateCallback(edgeproto.UpdateTask, "First Delete Task")
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst deleted")
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
+		appFQN := cloudcommon.GetAppFQN(&app.Key)
+		clusterInst.Key.ClusterKey.Name = appFQN + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name
+		FakeRamUsed -= 4096
+		FakeVcpusUsed -= 2
+		FakeDiskUsed -= 40
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			FakeExternalIpsUsed -= 1
+		}
+		delete(FakeClusterVMs, clusterInst.Key)
+	}
 	return nil
 }
 

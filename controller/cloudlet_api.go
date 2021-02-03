@@ -1978,6 +1978,7 @@ func getResourceUsage(ctx context.Context, stm concurrency.STM, cloudlet *edgepr
 }
 
 func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgeproto.CloudletResourceUsage) (*edgeproto.InfraResourcesSnapshot, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetCloudletResourceUsage", "key", usage.Key)
 	infraResources := edgeproto.InfraResourcesSnapshot{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := edgeproto.Cloudlet{}
@@ -1997,11 +1998,9 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 			return err
 		}
 		resInfo := []edgeproto.InfraResource{}
-		infraResources = cloudletInfo.ResourcesSnapshot
-		infraResources.PlatformVms = []edgeproto.VmInfo{}
+		infraResources = edgeproto.InfraResourcesSnapshot{}
+		infraResources.Info = cloudletInfo.ResourcesSnapshot.Info
 		if !usage.InfraUsage {
-			infraResources.ClusterInsts = []edgeproto.ClusterInstRefKey{}
-			infraResources.VmAppInsts = []edgeproto.AppInstRefKey{}
 			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, allVmResources, usage.InfraUsage)
 		} else {
 			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, diffVmResources, usage.InfraUsage)
@@ -2035,6 +2034,7 @@ func GetPlatformVMsResources(ctx context.Context, cloudletInfo *edgeproto.Cloudl
 }
 
 func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetCloudletResourceQuotaProps", "platformtype", in.PlatformType)
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
 	if err != nil {
 		return nil, err

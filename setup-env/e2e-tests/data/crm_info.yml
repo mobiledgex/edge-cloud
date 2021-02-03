@@ -65,11 +65,11 @@ clusterinsts:
     - name: fake-master-1-tmus-cloud-1-reservable0-mobiledgex
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
     - name: fake-node-1-tmus-cloud-1-reservable0-mobiledgex
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
 - key:
     clusterkey:
       name: reservable0
@@ -95,11 +95,11 @@ clusterinsts:
     - name: fake-master-1-tmus-cloud-2-reservable0-mobiledgex
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
     - name: fake-node-1-tmus-cloud-2-reservable0-mobiledgex
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
 - key:
     clusterkey:
       name: reservable1
@@ -125,11 +125,11 @@ clusterinsts:
     - name: fake-master-1-tmus-cloud-2-reservable1-mobiledgex
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
     - name: fake-node-1-tmus-cloud-2-reservable1-mobiledgex
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
 cloudlets:
 - key:
     organization: tmus

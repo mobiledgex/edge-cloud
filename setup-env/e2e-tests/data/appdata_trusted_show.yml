@@ -233,19 +233,19 @@ clusterinsts:
     - name: fake-cluster-vm-0
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.10
     - name: fake-cluster-vm-1
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.12
   createdat:
@@ -273,19 +273,19 @@ clusterinsts:
     - name: fake-cluster-vm-0
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.10
     - name: fake-cluster-vm-1
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.12
   createdat:
