@@ -448,6 +448,14 @@ func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *ed
 			alertName != cloudcommon.AlertCloudletResourceUsage {
 			continue
 		}
+		if cloudletName, found := delAlert.Labels[edgeproto.CloudletKeyTagName]; !found ||
+			cloudletName != key.Name {
+			continue
+		}
+		if cloudletOrg, found := delAlert.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+			cloudletOrg != key.Organization {
+			continue
+		}
 		alertApi.store.STMDel(stm, &alertKey)
 	}
 }
