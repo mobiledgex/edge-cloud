@@ -255,15 +255,14 @@ func main() {
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
-				resources, err := platform.GetCloudletInfraResources(ctx)
-				if err != nil {
-					log.FatalLog("Cloudlet resources not found for cloudlet", "err", err)
-				}
+				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
 				err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resources, cloudlet.ResourceQuotas)
 				if err != nil {
 					log.FatalLog("Failed to validate cloudlet resource quota", "err", err)
 				}
-				myCloudletInfo.ResourcesSnapshot = *resources
+				if resources != nil {
+					myCloudletInfo.ResourcesSnapshot = *resources
+				}
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 				if cloudlet.TrustPolicy == "" {

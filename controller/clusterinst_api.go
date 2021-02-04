@@ -288,7 +288,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 
 	err = nil
 	if len(errsStr) > 0 {
-		errsOut := strings.Join(errsStr, ",")
+		errsOut := strings.Join(errsStr, ", ")
 		err = fmt.Errorf("Not enough resources available: %s", errsOut)
 	}
 	if err != nil {
@@ -342,7 +342,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	}
 	err = nil
 	if len(errsStr) > 0 {
-		errsOut := strings.Join(errsStr, ",")
+		errsOut := strings.Join(errsStr, ", ")
 		err = fmt.Errorf("[Infra] Not enough resources available: %s", errsOut)
 	}
 

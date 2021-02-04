@@ -101,14 +101,38 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 	return err
 }
 
-// AddCloudletRefsClusterInstKeys adds ClusterInst keys to cloudlet refs
-// the assumption that Internal-only apps are trusted
-func UpdateCloudletRefsObjKeys(ctx context.Context, objStore objstore.KVStore) error {
-	log.SpanLog(ctx, log.DebugLevelUpgrade, "UpdateCloudletRefsObjKeys")
+// Handles following upgrade:
+// * Set default resource alert threshold for cloudlets
+// * AddCloudletRefsClusterInstKeys adds ClusterInst keys to cloudlet refs
+//   the assumption that Internal-only apps are trusted
+func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "CloudletResourceUpgradeFunc")
+
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Cloudlet"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var cloudlet Cloudlet
+		err2 := json.Unmarshal(val, &cloudlet)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudlet", cloudlet)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "set defaultresourcealertthreshold for cloudlet", "cloudletkey", cloudlet.Key.String())
+		if cloudlet.DefaultResourceAlertThreshold == 0 {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Setting default alert threshold to 80 for cloudlet", "cloudlet", cloudlet)
+			cloudlet.DefaultResourceAlertThreshold = 80
+			val, err2 = json.Marshal(cloudlet)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudlet", cloudlet)
+				return err2
+			}
+			objStore.Put(ctx, string(key), string(val))
+		}
+		return nil
+	})
 
 	clusterMap := make(map[CloudletKey][]ClusterInstRefKey)
-	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
-	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var clusterInst ClusterInst
 		err2 := json.Unmarshal(val, &clusterInst)
 		if err2 != nil {
