@@ -62,6 +62,8 @@ message Settings {
   int64 persistent_connection_metrics_collection_interval = 24 [(gogoproto.casttype) = "Duration"];
   // Idle reservable ClusterInst clean up time
   int64 cleanup_reservable_auto_cluster_idletime = 25 [(gogoproto.casttype) = "Duration"];
+  // Default influxDB cloudlet usage metrics retention policy (duration)
+  int64 influx_db_cloudlet_usage_metrics_retention = 26 [(gogoproto.casttype) = "Duration"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
