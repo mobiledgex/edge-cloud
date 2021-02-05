@@ -10,6 +10,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -208,6 +209,380 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
+func getClusterInstVMRequirements(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
+	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, error) {
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return nil, err
+	}
+	rootlbFlavor, err := cloudletPlatform.GetRootLBFlavor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	lbFlavor := &edgeproto.FlavorInfo{}
+	if rootlbFlavor != nil {
+		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, *cloudlet, *cloudletInfo)
+		if err != nil {
+			return nil, err
+		}
+		lbFlavor = vmspec.FlavorInfo
+	}
+	res, err := cloudcommon.GetClusterInstVMRequirements(ctx, in, cloudletInfo.Flavors, lbFlavor)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// Validate resource requirements for the VMs on the cloudlet
+func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource) ([]string, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
+
+	infraResInfo := make(map[string]*edgeproto.InfraResource)
+	for _, resInfo := range infraResources.Info {
+		newResInfo := &edgeproto.InfraResource{}
+		newResInfo.DeepCopyIn(&resInfo)
+		infraResInfo[newResInfo.Name] = newResInfo
+	}
+
+	reqdResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, reqdVmResources, infraResInfo)
+	if err != nil {
+		return nil, err
+	}
+	allResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, allClusterResources, infraResInfo)
+	if err != nil {
+		return nil, err
+	}
+	diffResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, diffVmResources, infraResInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	warnings := []string{}
+	quotaResReqd := make(map[string]uint64)
+
+	// Theoretical Validation
+	errsStr := []string{}
+	for resName, resInfo := range allResInfo {
+		max := resInfo.QuotaMaxValue
+		if max == 0 {
+			max = resInfo.InfraMaxValue
+		}
+		if max == 0 {
+			// no validation can be done
+			continue
+		}
+		resReqd, ok := reqdResInfo[resName]
+		if !ok {
+			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+		}
+		thAvailableResVal := max - resInfo.Value
+		if float64(resInfo.Value*100)/float64(max) > float64(resInfo.AlertThreshold) {
+			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", resInfo.AlertThreshold, resName))
+		}
+		if resReqd.Value > thAvailableResVal {
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units))
+		}
+		quotaResReqd[resName] = thAvailableResVal
+	}
+
+	err = nil
+	if len(errsStr) > 0 {
+		errsOut := strings.Join(errsStr, ", ")
+		err = fmt.Errorf("Not enough resources available: %s", errsOut)
+	}
+	if err != nil {
+		return warnings, err
+	}
+
+	resQuotasInfo := make(map[string]edgeproto.InfraResource)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
+			Name:           resQuota.Name,
+			Value:          resQuota.Value,
+			AlertThreshold: resQuota.AlertThreshold,
+		}
+	}
+
+	// Infra based validation
+	for resName, _ := range infraResInfo {
+		if resInfo, ok := diffResInfo[resName]; ok {
+			infraResInfo[resName].Value += resInfo.Value
+		}
+	}
+	errsStr = []string{}
+	for resName, resInfo := range infraResInfo {
+		if resInfo.InfraMaxValue == 0 {
+			// no validation can be done
+			continue
+		}
+		resInfo.AlertThreshold = cloudlet.DefaultResourceAlertThreshold
+		if quota, ok := resQuotasInfo[resInfo.Name]; ok {
+			if quota.AlertThreshold > 0 {
+				resInfo.AlertThreshold = quota.AlertThreshold
+			}
+		}
+		resReqd, ok := reqdResInfo[resName]
+		if !ok {
+			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+		}
+		infraAvailableResVal := resInfo.InfraMaxValue - resInfo.Value
+		if float64(resInfo.Value*100)/float64(resInfo.InfraMaxValue) > float64(resInfo.AlertThreshold) {
+			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", resInfo.AlertThreshold, resName))
+		}
+		if resReqd.Value > infraAvailableResVal {
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units))
+		}
+		if resVal, ok := quotaResReqd[resName]; ok {
+			// generate alert if expected resource quota is not available
+			if infraAvailableResVal < resVal {
+				warnings = append(warnings, fmt.Sprintf("[Quota] Expected %s available to be %d%s, but only %d%s is available", resName, resVal, resInfo.Units, infraAvailableResVal, resInfo.Units))
+			}
+		}
+	}
+	err = nil
+	if len(errsStr) > 0 {
+		errsOut := strings.Join(errsStr, ", ")
+		err = fmt.Errorf("[Infra] Not enough resources available: %s", errsOut)
+	}
+
+	return warnings, err
+}
+
+// getAllCloudletResources
+// Returns (1) All the VM resources on the cloudlet (2) Diff of VM resources reported by CRM and seen by controller
+func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, []edgeproto.VMResource, error) {
+	allVmResources := []edgeproto.VMResource{}
+	diffVmResources := []edgeproto.VMResource{}
+	// get all cloudlet resources (platformVM, sharedRootLB, etc)
+	cloudletRes, err := GetPlatformVMsResources(ctx, cloudletInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+	allVmResources = append(allVmResources, cloudletRes...)
+
+	snapshotClusters := make(map[edgeproto.ClusterInstRefKey]struct{})
+	for _, clKey := range cloudletInfo.ResourcesSnapshot.ClusterInsts {
+		snapshotClusters[clKey] = struct{}{}
+	}
+
+	snapshotVmAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
+	for _, aiKey := range cloudletInfo.ResourcesSnapshot.VmAppInsts {
+		snapshotVmAppInsts[aiKey] = struct{}{}
+	}
+
+	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
+	clusterInstKeys := cloudletRefs.ClusterInsts
+	for _, clusterInstRefKey := range clusterInstKeys {
+		ci := edgeproto.ClusterInst{}
+		clusterInstKey := edgeproto.ClusterInstKey{}
+		clusterInstKey.FromClusterInstRefKey(&clusterInstRefKey, &cloudletRefs.Key)
+		if !clusterInstApi.store.STMGet(stm, &clusterInstKey, &ci) {
+			continue
+		}
+		if edgeproto.IsDeleteState(ci.State) {
+			continue
+		}
+		ciRes, err := getClusterInstVMRequirements(ctx, stm, &ci, cloudlet, cloudletInfo, cloudletRefs)
+		if err != nil {
+			return nil, nil, err
+		}
+		allVmResources = append(allVmResources, ciRes...)
+
+		// maintain a diff of clusterinsts reported by CRM and what is present in controller,
+		// this is done to get accurate resource information
+		clRefKey := &edgeproto.ClusterInstRefKey{}
+		clRefKey.FromClusterInstKey(&clusterInstKey)
+		if _, ok := snapshotClusters[*clRefKey]; ok {
+			continue
+		}
+		diffVmResources = append(diffVmResources, ciRes...)
+	}
+	// get all VM app inst resources
+	for _, appInstRefKey := range cloudletRefs.VmAppInsts {
+		appInst := edgeproto.AppInst{}
+		appInstKey := edgeproto.AppInstKey{}
+		appInstKey.FromAppInstRefKey(&appInstRefKey, &cloudlet.Key)
+		if !appInstApi.store.STMGet(stm, &appInstKey, &appInst) {
+			continue
+		}
+		if edgeproto.IsDeleteState(appInst.State) {
+			continue
+		}
+		app := edgeproto.App{}
+		if !appApi.store.STMGet(stm, &appInstKey.AppKey, &app) {
+			return nil, nil, fmt.Errorf("App not found: %v", appInstKey.AppKey)
+		}
+		vmRes, err := cloudcommon.GetVMAppRequirements(ctx, &app, &appInst, cloudletInfo.Flavors)
+		if err != nil {
+			return nil, nil, err
+		}
+		allVmResources = append(allVmResources, vmRes...)
+
+		// maintain a diff of VM appinsts reported by CRM and what is present in controller,
+		// this is done to get accurate resource information
+		aiRefKey := &edgeproto.AppInstRefKey{}
+		aiRefKey.FromAppInstKey(&appInstKey)
+		if _, ok := snapshotVmAppInsts[*aiRefKey]; ok {
+			continue
+		}
+		diffVmResources = append(diffVmResources, vmRes...)
+	}
+	return allVmResources, diffVmResources, nil
+}
+
+func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey, warnings []string) {
+	alerts := cloudcommon.CloudletResourceUsageAlerts(ctx, key, warnings)
+	staleAlerts := make(map[edgeproto.AlertKey]struct{})
+	alertApi.cache.GetAllKeys(ctx, func(k *edgeproto.AlertKey, modRev int64) {
+		staleAlerts[*k] = struct{}{}
+	})
+	for _, alert := range alerts {
+		alertApi.store.STMPut(stm, &alert)
+		delete(staleAlerts, alert.GetKeyVal())
+	}
+	delAlert := edgeproto.Alert{}
+	for alertKey, _ := range staleAlerts {
+		edgeproto.AlertKeyStringParse(string(alertKey), &delAlert)
+		if alertName, found := delAlert.Labels["alertname"]; !found ||
+			alertName != cloudcommon.AlertCloudletResourceUsage {
+			continue
+		}
+		if cloudletName, found := delAlert.Labels[edgeproto.CloudletKeyTagName]; !found ||
+			cloudletName != key.Name {
+			continue
+		}
+		if cloudletOrg, found := delAlert.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+			cloudletOrg != key.Organization {
+			continue
+		}
+		alertApi.store.STMDel(stm, &alertKey)
+	}
+}
+
+func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, vmAppInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validate resources", "cloudlet", cloudlet.Key, "clusterinst", clusterInst, "vmappinst", vmAppInst)
+	reqdVmResources := []edgeproto.VMResource{}
+	if clusterInst != nil {
+		ciResources, err := getClusterInstVMRequirements(ctx, stm, clusterInst, cloudlet, cloudletInfo, cloudletRefs)
+		if err != nil {
+			return err
+		}
+		reqdVmResources = append(reqdVmResources, ciResources...)
+	}
+	if vmAppInst != nil {
+		app := edgeproto.App{}
+		if !appApi.store.STMGet(stm, &vmAppInst.Key.AppKey, &app) {
+			return fmt.Errorf("App not found: %v", vmAppInst.Key.AppKey)
+		}
+		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &app, vmAppInst, cloudletInfo.Flavors)
+		if err != nil {
+			return err
+		}
+		reqdVmResources = append(reqdVmResources, vmAppResources...)
+	}
+
+	// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
+	allVmResources, diffVmResources, err := getAllCloudletResources(ctx, stm, cloudlet, cloudletInfo, cloudletRefs)
+	if err != nil {
+		return err
+	}
+
+	warnings, err := validateCloudletInfraResources(ctx, stm, cloudlet, &cloudletInfo.ResourcesSnapshot, allVmResources, reqdVmResources, diffVmResources)
+	if err != nil {
+		return err
+	}
+
+	// generate alerts for these warnings
+	// clear off those alerts which are no longer firing
+	handleResourceUsageAlerts(ctx, stm, &cloudlet.Key, warnings)
+	return nil
+}
+
+func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey) ([]*edgeproto.Metric, error) {
+	cloudlet := edgeproto.Cloudlet{}
+	if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
+		return nil, fmt.Errorf("Cloudlet not found: %v", key)
+	}
+	cloudletInfo := edgeproto.CloudletInfo{}
+	if !cloudletInfoApi.store.STMGet(stm, key, &cloudletInfo) {
+		return nil, fmt.Errorf("CloudletInfo not found: %v", key)
+	}
+	cloudletRefs := edgeproto.CloudletRefs{}
+	if !cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs) {
+		return nil, fmt.Errorf("CloudletRefs not found: %v", key)
+	}
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	if err != nil {
+		return nil, err
+	}
+	pfType := cloudletPlatform.GetType()
+
+	// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
+	allResources, _, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
+	if err != nil {
+		return nil, err
+	}
+
+	ramUsed := uint64(0)
+	vcpusUsed := uint64(0)
+	diskUsed := uint64(0)
+	for _, vmRes := range allResources {
+		if vmRes.VmFlavor != nil {
+			ramUsed += vmRes.VmFlavor.Ram
+			vcpusUsed += vmRes.VmFlavor.Vcpus
+			diskUsed += vmRes.VmFlavor.Disk
+		}
+	}
+
+	resMetric := edgeproto.Metric{}
+	ts, _ := types.TimestampProto(time.Now())
+	resMetric.Timestamp = *ts
+	resMetric.Name = fmt.Sprintf("%s-resource-usage", pfType)
+	resMetric.AddTag("cloudletorg", key.Organization)
+	resMetric.AddTag("cloudlet", key.Name)
+	resMetric.AddIntVal("ramUsed", ramUsed)
+	resMetric.AddIntVal("vcpusUsed", vcpusUsed)
+	resMetric.AddIntVal("diskUsed", diskUsed)
+
+	// get additional infra specific metric
+	err = cloudletPlatform.GetClusterAdditionalResourceMetric(ctx, &cloudlet, &resMetric, allResources)
+	if err != nil {
+		return nil, err
+	}
+
+	// get cloudlet metric
+	gpusUsed := uint64(0)
+	flavorCount := make(map[string]uint64)
+	for _, vmRes := range allResources {
+		if vmRes.VmFlavor != nil {
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, cloudlet) {
+				gpusUsed += 1
+			}
+			if _, ok := flavorCount[vmRes.VmFlavor.Name]; ok {
+				flavorCount[vmRes.VmFlavor.Name] += 1
+			} else {
+				flavorCount[vmRes.VmFlavor.Name] = 1
+			}
+		}
+	}
+	resMetric.AddIntVal("gpusUsed", gpusUsed)
+	metrics := []*edgeproto.Metric{}
+	metrics = append(metrics, &resMetric)
+
+	for fName, fCount := range flavorCount {
+		flavorMetric := edgeproto.Metric{}
+		flavorMetric.Name = "cloudlet-flavor-usage"
+		flavorMetric.Timestamp = *ts
+		flavorMetric.AddTag("cloudletorg", cloudlet.Key.Organization)
+		flavorMetric.AddTag("cloudlet", cloudlet.Key.Name)
+		flavorMetric.AddTag("flavor", fName)
+		flavorMetric.AddIntVal("count", fCount)
+		metrics = append(metrics, &flavorMetric)
+	}
+	return metrics, nil
+}
+
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
@@ -400,27 +775,17 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
 			}
 		}
+
+		err = validateResources(ctx, stm, in, nil, &cloudlet, &info, &refs)
+		if err != nil {
+			return err
+		}
+
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedDisk += (nodeFlavor.Disk + vmspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
-		// XXX For now just track, don't enforce.
-		if false {
-			// XXX what is static overhead?
-			var ramOverhead uint64 = 200
-			var vcoresOverhead uint64 = 2
-			var diskOverhead uint64 = 200
-			// check resources
-			if refs.UsedRam+ramOverhead > info.OsMaxRam {
-				return errors.New("Not enough RAM available")
-			}
-			if refs.UsedVcores+vcoresOverhead > info.OsMaxVcores {
-				return errors.New("Not enough Vcores available")
-			}
-			if refs.UsedDisk+diskOverhead > info.OsMaxVolGb {
-				return errors.New("Not enough Disk available")
-			}
-		}
+
 		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
 		if err != nil {
 			return err
@@ -429,7 +794,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
-		refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
+		cRefKey := edgeproto.ClusterInstRefKey{}
+		cRefKey.FromClusterInstKey(&in.Key)
+		refs.ClusterInsts = append(refs.ClusterInsts, cRefKey)
 		cloudletRefsApi.store.STMPut(stm, &refs)
 
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
@@ -466,6 +833,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst creation: %v", undoErr)})
 			log.InfoLog("Undo create ClusterInst", "undoErr", undoErr)
 		}
+	}
+	if err == nil {
+		s.updateCloudletResourcesMetric(ctx, in)
 	}
 	return err
 }
@@ -523,14 +893,57 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 				return errors.New("ClusterInst busy, cannot update")
 			}
 		}
+
+		// Get diff of nodes to validate and track cloudlet resources
+		resChanged := false
+		resClusterInst := &edgeproto.ClusterInst{}
+		resClusterInst.DeepCopyIn(&inbuf)
+		if in.NumNodes > resClusterInst.NumNodes {
+			// update diff
+			resClusterInst.NumNodes = in.NumNodes - resClusterInst.NumNodes
+			resChanged = true
+		} else {
+			resClusterInst.NumNodes = 0
+		}
+		if in.NumMasters > resClusterInst.NumMasters {
+			// update diff
+			resClusterInst.NumMasters = in.NumMasters - resClusterInst.NumMasters
+			resChanged = true
+		} else {
+			resClusterInst.NumMasters = 0
+		}
+		if resChanged {
+			cloudlet := edgeproto.Cloudlet{}
+			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+				return errors.New("Specified Cloudlet not found")
+			}
+			info := edgeproto.CloudletInfo{}
+			if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
+				return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
+			}
+			cloudletRefs := edgeproto.CloudletRefs{}
+			cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs)
+			// set ipaccess to unknown so that rootlb resource is not calculated as part of diff resource calculation
+			resClusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
+			err = validateResources(ctx, stm, resClusterInst, nil, &cloudlet, &info, &cloudletRefs)
+			if err != nil {
+				return err
+			}
+		}
+		// invalidate resClusterInst obj so that it is not used anymore,
+		// as it was just made for above diff resource calculation
+		resClusterInst = nil
+
 		changeCount = inbuf.CopyInFields(in)
 		if changeCount == 0 && !retry {
 			// nothing changed
 			return nil
 		}
+
 		if err := validateClusterInstUpdates(ctx, stm, &inbuf); err != nil {
 			return err
 		}
+
 		if !ignoreCRM(cctx) {
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
@@ -559,7 +972,24 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		return nil
 	}
 	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(), "Updated ClusterInst successfully", cb.Send)
+	if err == nil {
+		s.updateCloudletResourcesMetric(ctx, in)
+	}
 	return err
+}
+
+func (s *ClusterInstApi) updateCloudletResourcesMetric(ctx context.Context, in *edgeproto.ClusterInst) {
+	var err error
+	metrics := []*edgeproto.Metric{}
+	resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+		return err
+	})
+	if resErr == nil {
+		services.cloudletResourcesInfluxQ.AddMetric(metrics...)
+	} else {
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+	}
 }
 
 func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst) error {
@@ -670,18 +1100,20 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
 			ii := 0
-			for ; ii < len(refs.Clusters); ii++ {
-				if refs.Clusters[ii].Matches(&in.Key.ClusterKey) {
+			for ; ii < len(refs.ClusterInsts); ii++ {
+				cKey := edgeproto.ClusterInstKey{}
+				cKey.FromClusterInstRefKey(&refs.ClusterInsts[ii], &in.Key.CloudletKey)
+				if cKey.Matches(&in.Key) {
 					break
 				}
 			}
-			if ii < len(refs.Clusters) {
+			if ii < len(refs.ClusterInsts) {
 				// explicity zero out deleted item to
 				// prevent memory leak
-				a := refs.Clusters
+				a := refs.ClusterInsts
 				copy(a[ii:], a[ii+1:])
-				a[len(a)-1] = edgeproto.ClusterKey{}
-				refs.Clusters = a[:len(a)-1]
+				a[len(a)-1] = edgeproto.ClusterInstRefKey{}
+				refs.ClusterInsts = a[:len(a)-1]
 			}
 			// remove used resources
 			refs.UsedRam -= nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
@@ -735,6 +1167,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
 			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETE_ERROR, cloudcommon.InstanceDown)
 		}
+	}
+	if err == nil {
+		s.updateCloudletResourcesMetric(ctx, in)
 	}
 	return err
 }

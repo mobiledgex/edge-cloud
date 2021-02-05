@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
 	math "math"
 )
 
@@ -68,6 +69,55 @@ var VmInfoComments = map[string]string{
 	"containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var VmInfoSpecialArgs = map[string]string{}
+var InfraResourceRequiredArgs = []string{}
+var InfraResourceOptionalArgs = []string{
+	"name",
+	"value",
+	"inframaxvalue",
+	"quotamaxvalue",
+	"description",
+	"units",
+	"alertthreshold",
+}
+var InfraResourceAliasArgs = []string{}
+var InfraResourceComments = map[string]string{
+	"name":           "Resource name",
+	"value":          "Resource value",
+	"inframaxvalue":  "Resource infra max value",
+	"quotamaxvalue":  "Resource quota max value",
+	"description":    "Resource description",
+	"units":          "Resource units",
+	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
+}
+var InfraResourceSpecialArgs = map[string]string{}
+var ClusterInstRefKeyRequiredArgs = []string{}
+var ClusterInstRefKeyOptionalArgs = []string{
+	"clusterkey.name",
+	"organization",
+}
+var ClusterInstRefKeyAliasArgs = []string{}
+var ClusterInstRefKeyComments = map[string]string{
+	"clusterkey.name": "Cluster name",
+	"organization":    "Name of Developer organization that this cluster belongs to",
+}
+var ClusterInstRefKeySpecialArgs = map[string]string{}
+var AppInstRefKeyRequiredArgs = []string{}
+var AppInstRefKeyOptionalArgs = []string{
+	"appkey.organization",
+	"appkey.name",
+	"appkey.version",
+	"clusterinstkey.clusterkey.name",
+	"clusterinstkey.organization",
+}
+var AppInstRefKeyAliasArgs = []string{}
+var AppInstRefKeyComments = map[string]string{
+	"appkey.organization":            "App developer organization",
+	"appkey.name":                    "App name",
+	"appkey.version":                 "App version",
+	"clusterinstkey.clusterkey.name": "Cluster name",
+	"clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
+}
+var AppInstRefKeySpecialArgs = map[string]string{}
 var InfraResourcesRequiredArgs = []string{}
 var InfraResourcesOptionalArgs = []string{
 	"vms:#.name",
@@ -95,3 +145,58 @@ var InfraResourcesComments = map[string]string{
 	"vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 }
 var InfraResourcesSpecialArgs = map[string]string{}
+var InfraResourcesSnapshotRequiredArgs = []string{}
+var InfraResourcesSnapshotOptionalArgs = []string{
+	"platformvms:#.name",
+	"platformvms:#.type",
+	"platformvms:#.status",
+	"platformvms:#.infraflavor",
+	"platformvms:#.ipaddresses:#.externalip",
+	"platformvms:#.ipaddresses:#.internalip",
+	"platformvms:#.containers:#.name",
+	"platformvms:#.containers:#.type",
+	"platformvms:#.containers:#.status",
+	"platformvms:#.containers:#.clusterip",
+	"platformvms:#.containers:#.restarts",
+	"info:#.name",
+	"info:#.value",
+	"info:#.inframaxvalue",
+	"info:#.quotamaxvalue",
+	"info:#.description",
+	"info:#.units",
+	"info:#.alertthreshold",
+	"clusterinsts:#.clusterkey.name",
+	"clusterinsts:#.organization",
+	"vmappinsts:#.appkey.organization",
+	"vmappinsts:#.appkey.name",
+	"vmappinsts:#.appkey.version",
+	"vmappinsts:#.clusterinstkey.clusterkey.name",
+	"vmappinsts:#.clusterinstkey.organization",
+}
+var InfraResourcesSnapshotAliasArgs = []string{}
+var InfraResourcesSnapshotComments = map[string]string{
+	"platformvms:#.name":                          "Virtual machine name",
+	"platformvms:#.type":                          "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"platformvms:#.status":                        "Runtime status of the VM",
+	"platformvms:#.infraflavor":                   "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"platformvms:#.containers:#.name":             "Name of the container",
+	"platformvms:#.containers:#.type":             "Type can be docker or kubernetes",
+	"platformvms:#.containers:#.status":           "Runtime status of the container",
+	"platformvms:#.containers:#.clusterip":        "IP within the CNI and is applicable to kubernetes only",
+	"platformvms:#.containers:#.restarts":         "Restart count, applicable to kubernetes only",
+	"info:#.name":                                 "Resource name",
+	"info:#.value":                                "Resource value",
+	"info:#.inframaxvalue":                        "Resource infra max value",
+	"info:#.quotamaxvalue":                        "Resource quota max value",
+	"info:#.description":                          "Resource description",
+	"info:#.units":                                "Resource units",
+	"info:#.alertthreshold":                       "Generate alert when more than threshold percentage of resource is used",
+	"clusterinsts:#.clusterkey.name":              "Cluster name",
+	"clusterinsts:#.organization":                 "Name of Developer organization that this cluster belongs to",
+	"vmappinsts:#.appkey.organization":            "App developer organization",
+	"vmappinsts:#.appkey.name":                    "App name",
+	"vmappinsts:#.appkey.version":                 "App version",
+	"vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
+	"vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
+}
+var InfraResourcesSnapshotSpecialArgs = map[string]string{}

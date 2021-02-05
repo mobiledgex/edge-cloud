@@ -62,6 +62,14 @@ func (a *AllData) Sort() {
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
 	})
+	for i := range a.CloudletInfos {
+		sort.Slice(a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[:], func(ii, jj int) bool {
+			return a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[ii].GetKeyString() < a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[jj].GetKeyString()
+		})
+		sort.Slice(a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[:], func(ii, jj int) bool {
+			return a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[ii].GetKeyString() < a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[jj].GetKeyString()
+		})
+	}
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
 	})
@@ -268,6 +276,20 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	}
 	if err := s.ValidateEnums(); err != nil {
 		return err
+	}
+
+	if _, found := fields[CloudletFieldDefaultResourceAlertThreshold]; found {
+		if s.DefaultResourceAlertThreshold <= 0 || s.DefaultResourceAlertThreshold > 100 {
+			return fmt.Errorf("Invalid resource alert threshold %d specified, valid threshold is in the range of 1 to 100", s.DefaultResourceAlertThreshold)
+
+		}
+	}
+
+	for _, resQuota := range s.ResourceQuotas {
+		if resQuota.AlertThreshold <= 0 || resQuota.AlertThreshold > 100 {
+			return fmt.Errorf("Invalid resource quota alert threshold %d specified for %s, valid threshold is in the range of 1 to 100", resQuota.AlertThreshold, resQuota.Name)
+
+		}
 	}
 
 	return nil
@@ -966,4 +988,28 @@ func (s *ClusterInstKey) Virtual(virtualName string) *VirtualClusterInstKey {
 		key.ClusterKey.Name = virtualName
 	}
 	return &key
+}
+
+func (s *ClusterInstRefKey) FromClusterInstKey(key *ClusterInstKey) {
+	s.ClusterKey = key.ClusterKey
+	s.Organization = key.Organization
+}
+
+func (s *ClusterInstKey) FromClusterInstRefKey(key *ClusterInstRefKey, clKey *CloudletKey) {
+	s.ClusterKey = key.ClusterKey
+	s.Organization = key.Organization
+	s.CloudletKey = *clKey
+}
+
+func (s *AppInstRefKey) FromAppInstKey(key *AppInstKey) {
+	s.AppKey = key.AppKey
+	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
+	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
+}
+
+func (s *AppInstKey) FromAppInstRefKey(key *AppInstRefKey, clKey *CloudletKey) {
+	s.AppKey = key.AppKey
+	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
+	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
+	s.ClusterInstKey.CloudletKey = *clKey
 }

@@ -687,6 +687,21 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			refs := edgeproto.CloudletRefs{}
+			if !cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs) {
+				initCloudletRefs(&refs, &in.Key.ClusterInstKey.CloudletKey)
+			}
+			err = validateResources(ctx, stm, nil, in, &cloudlet, &info, &refs)
+			if err != nil {
+				return err
+			}
+			vmAppInstRefKey := edgeproto.AppInstRefKey{}
+			vmAppInstRefKey.FromAppInstKey(&in.Key)
+			refs.VmAppInsts = append(refs.VmAppInsts, vmAppInstRefKey)
+			cloudletRefsApi.store.STMPut(stm, &refs)
+		}
+
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
@@ -708,6 +723,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		// undo changes on error
 		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			var app edgeproto.App
+			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+				return in.Key.AppKey.NotFoundError()
+			}
+			refs := edgeproto.CloudletRefs{}
+			refsFound := cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs)
+			refsChanged := false
 			var curr edgeproto.AppInst
 			if s.store.STMGet(stm, &in.Key, &curr) {
 				// In case there is an error after CREATING_DEPENDENCIES state
@@ -716,18 +738,42 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
 					s.store.STMDel(stm, &in.Key)
 					appInstRefsApi.removeRef(stm, &in.Key)
+
+					if app.Deployment == cloudcommon.DeploymentTypeVM {
+						if refsFound {
+							ii := 0
+							for ; ii < len(refs.VmAppInsts); ii++ {
+								aiKey := edgeproto.AppInstKey{}
+								aiKey.FromAppInstRefKey(&refs.VmAppInsts[ii], &in.Key.ClusterInstKey.CloudletKey)
+								if aiKey.Matches(&in.Key) {
+									break
+								}
+							}
+							if ii < len(refs.VmAppInsts) {
+								// explicity zero out deleted item to
+								// prevent memory leak
+								a := refs.VmAppInsts
+								copy(a[ii:], a[ii+1:])
+								a[len(a)-1] = edgeproto.AppInstRefKey{}
+								refs.VmAppInsts = a[:len(a)-1]
+								refsChanged = true
+							}
+						}
+					}
 				}
 			}
 			// Cleanup reserved id on failure. Note that if we fail
 			// after creating the auto-cluster, then deleting the
 			// ClusterInst will cleanup the reserved id instead.
 			if reservedAutoClusterId != -1 {
-				refs := edgeproto.CloudletRefs{}
-				if cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs) {
+				if refsFound {
 					mask := uint64(1) << reservedAutoClusterId
 					refs.ReservedAutoClusterIds &^= mask
-					cloudletRefsApi.store.STMPut(stm, &refs)
+					refsChanged = true
 				}
+			}
+			if refsFound && refsChanged {
+				cloudletRefsApi.store.STMPut(stm, &refs)
 			}
 			// Remove reservation (if done) on failure.
 			if reservedClusterInstKey != nil {
@@ -968,7 +1014,37 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			log.InfoLog("Undo create AppInst", "undoErr", undoErr)
 		}
 	}
+	if err == nil {
+		s.updateCloudletResourcesMetric(ctx, in)
+	}
 	return err
+}
+
+func (s *AppInstApi) updateCloudletResourcesMetric(ctx context.Context, in *edgeproto.AppInst) {
+	var err error
+	metrics := []*edgeproto.Metric{}
+	skipMetric := true
+	resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		var app edgeproto.App
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return in.Key.AppKey.NotFoundError()
+		}
+		skipMetric = true
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			metrics, err = getCloudletResourceMetric(ctx, stm, &in.Key.ClusterInstKey.CloudletKey)
+			skipMetric = false
+			return err
+		}
+		return nil
+	})
+	if !skipMetric {
+		if resErr == nil {
+			services.cloudletResourcesInfluxQ.AddMetric(metrics...)
+		} else {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		}
+	}
+	return
 }
 
 func (s *AppInstApi) updateAppInstStore(ctx context.Context, in *edgeproto.AppInst) error {
@@ -1367,6 +1443,25 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		}
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			ii := 0
+			for ; ii < len(cloudletRefs.VmAppInsts); ii++ {
+				aiKey := edgeproto.AppInstKey{}
+				aiKey.FromAppInstRefKey(&cloudletRefs.VmAppInsts[ii], &in.Key.ClusterInstKey.CloudletKey)
+				if aiKey.Matches(&in.Key) {
+					break
+				}
+			}
+			if ii < len(cloudletRefs.VmAppInsts) {
+				// explicity zero out deleted item to
+				// prevent memory leak
+				a := cloudletRefs.VmAppInsts
+				copy(a[ii:], a[ii+1:])
+				a[len(a)-1] = edgeproto.AppInstRefKey{}
+				cloudletRefs.VmAppInsts = a[:len(a)-1]
+				cloudletRefsChanged = true
+			}
+		}
 		clusterInstKey = *in.ClusterInstKey()
 		if cloudletRefsChanged {
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
@@ -1416,6 +1511,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				log.InfoLog("Undo delete AppInst", "undoErr", undoErr)
 			}
 			return err
+		}
+		if err == nil {
+			s.updateCloudletResourcesMetric(ctx, in)
 		}
 	}
 	// delete clusterinst afterwards if it was auto-created and nobody is left using it

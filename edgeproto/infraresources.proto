@@ -3,7 +3,10 @@
 syntax = "proto3";
 package edgeproto;
 
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
+import "cluster.proto";
+import "app.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -52,11 +55,67 @@ message VmInfo{
   repeated ContainerInfo containers = 6;
 }
 
+// InfraResource
+//
+// InfraResource is information about cloudlet infra resource.
+message InfraResource {
+  // Resource name
+  string name = 1;
+  // Resource value
+  uint64 value = 2;
+  // Resource infra max value
+  uint64 infra_max_value = 3;
+  // Resource quota max value
+  uint64 quota_max_value = 4;
+  // Resource description
+  string description = 5;
+  // Resource units
+  string units = 6;
+  // Generate alert when more than threshold percentage of resource is used
+  int32 alert_threshold = 7;
+}
+
+// ClusterInst Ref Key
+//
+// ClusterInstRefKey is cluster instance key without cloudlet key.
+message ClusterInstRefKey {
+  // Name of Cluster
+  ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
+  // Name of Developer organization that this cluster belongs to
+  string organization = 2 [(protogen.keytag) = "clusterreforg"];
+  option (protogen.obj_key) = true;
+}
+
+// AppInst Ref Key
+//
+// AppInstRefKey is app instance key without cloudlet key.
+message AppInstRefKey {
+  // App key
+  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  // Cluster instance on which this is instantiated
+  ClusterInstRefKey cluster_inst_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.obj_key) = true;
+}
+
 // InfraResources
 //
-// InfraResources is infomation about infrastructure resources. 
-message InfraResources{
+// InfraResources is infomation about infrastructure resources.
+message InfraResources {
+  // Virtual machine resources info
   repeated VmInfo vms = 1 [(gogoproto.nullable) = false];
 }
 
 
+// InfraResourcesSnapshot
+//
+// InfraResourcesSnapshot is snapshot of information about cloudlet infra resources.
+message InfraResourcesSnapshot {
+  // Virtual machine resources info
+  repeated VmInfo platform_vms = 1 [(gogoproto.nullable) = false];
+  // Infra Resource information
+  repeated InfraResource info = 2 [(gogoproto.nullable) = false];
+  // List of clusterinsts this resources snapshot represent
+  repeated ClusterInstRefKey cluster_insts = 3 [(gogoproto.nullable) = false];
+  // List of vm appinsts this resources snapshot represent
+  repeated AppInstRefKey vm_app_insts = 4 [(gogoproto.nullable) = false];
+}

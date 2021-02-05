@@ -1107,6 +1107,18 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(ImageType(0)):
+		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(DeleteType(0)):
+		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(AccessType(0)):
+		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PlatformType(0)):
 		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1121,18 +1133,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(VMAction(0)):
 		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(ImageType(0)):
-		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(DeleteType(0)):
-		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(AccessType(0)):
-		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(PowerState(0)):
@@ -1161,13 +1161,13 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowFlavor":          struct{}{},
 	"ShowOperatorCode":    struct{}{},
 	"ShowResTagTable":     struct{}{},
+	"ShowApp":             struct{}{},
 	"ShowCloudlet":        struct{}{},
 	"ShowCloudletInfo":    struct{}{},
 	"ShowCloudletMetrics": struct{}{},
 	"ShowCloudletPool":    struct{}{},
 	"ShowVMPool":          struct{}{},
 	"ShowAutoScalePolicy": struct{}{},
-	"ShowApp":             struct{}{},
 	"ShowClusterInst":     struct{}{},
 	"ShowClusterInstInfo": struct{}{},
 	"ShowAutoProvPolicy":  struct{}{},
@@ -1199,6 +1199,7 @@ var AllKeyTags = []string{
 	"cloudletpoolorg",
 	"cluster",
 	"clusterorg",
+	"clusterreforg",
 	"controlleraddr",
 	"deviceid",
 	"deviceidtype",
@@ -1226,6 +1227,7 @@ var AllKeyTagsMap = map[string]struct{}{
 	"cloudletpoolorg": struct{}{},
 	"cluster":         struct{}{},
 	"clusterorg":      struct{}{},
+	"clusterreforg":   struct{}{},
 	"controlleraddr":  struct{}{},
 	"deviceid":        struct{}{},
 	"deviceidtype":    struct{}{},

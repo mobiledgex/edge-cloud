@@ -83,18 +83,19 @@ var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
 
 type Services struct {
-	etcdLocal           *process.Etcd
-	sync                *Sync
-	influxQ             *influxq.InfluxQ
-	events              *influxq.InfluxQ
-	persConnInfluxQ     *influxq.InfluxQ
-	notifyServerMgr     bool
-	grpcServer          *grpc.Server
-	httpServer          *http.Server
-	notifyClient        *notify.Client
-	accessKeyGrpcServer node.AccessKeyGrpcServer
-	listeners           []net.Listener
-	publicCertManager   *node.PublicCertManager
+	etcdLocal                *process.Etcd
+	sync                     *Sync
+	influxQ                  *influxq.InfluxQ
+	events                   *influxq.InfluxQ
+	persConnInfluxQ          *influxq.InfluxQ
+	cloudletResourcesInfluxQ *influxq.InfluxQ
+	notifyServerMgr          bool
+	grpcServer               *grpc.Server
+	httpServer               *http.Server
+	notifyClient             *notify.Client
+	accessKeyGrpcServer      node.AccessKeyGrpcServer
+	listeners                []net.Listener
+	publicCertManager        *node.PublicCertManager
 }
 
 func main() {
@@ -279,6 +280,14 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.persConnInfluxQ = persConnInfluxQ
+	// cloudlet resources influx
+	cloudletResourcesInfluxQ := influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, influxAuth.User, influxAuth.Pass)
+	err = cloudletResourcesInfluxQ.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	services.cloudletResourcesInfluxQ = cloudletResourcesInfluxQ
 
 	InitNotify(influxQ, persConnInfluxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {
@@ -493,7 +502,10 @@ func stopServices() {
 		services.events.Stop()
 	}
 	if services.persConnInfluxQ != nil {
-		services.events.Stop()
+		services.persConnInfluxQ.Stop()
+	}
+	if services.cloudletResourcesInfluxQ != nil {
+		services.cloudletResourcesInfluxQ.Stop()
 	}
 	if services.sync != nil {
 		services.sync.Done()
