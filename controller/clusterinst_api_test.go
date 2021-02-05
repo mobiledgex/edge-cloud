@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
@@ -164,6 +166,8 @@ func TestClusterInstApi(t *testing.T) {
 
 	testReservableClusterInst(t, ctx, commonApi)
 	testClusterInstOverrideTransientDelete(t, ctx, commonApi, responder)
+
+	testClusterInstResourceUsage(t, ctx)
 
 	dummy.Stop()
 }
@@ -363,6 +367,166 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 	// cleanup unused reservable auto clusters
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
 	clusterInstApi.cleanupWorkers.WaitIdle()
+}
+
+func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
+	obj := testutil.ClusterInstData[0]
+	obj.NumNodes = 10
+	obj.Flavor = testutil.FlavorData[3].Key
+	err := clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "not enough resources available")
+	require.Contains(t, err.Error(), "Not enough")
+
+	// create appinst
+	testutil.InternalResTagTableTest(t, "cud", &resTagTableApi, testutil.ResTagTableData)
+	testutil.InternalResTagTableTest(t, "show", &resTagTableApi, testutil.ResTagTableData)
+	testutil.InternalAppCreate(t, &appApi, []edgeproto.App{
+		testutil.AppData[0], testutil.AppData[12],
+	})
+	clusterInstObj := testutil.ClusterInstData[0]
+	clusterInstObj.Key.ClusterKey.Name = "GPUCluster"
+	clusterInstObj.Flavor = testutil.FlavorData[4].Key
+	err = clusterInstApi.CreateClusterInst(&clusterInstObj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "create cluster inst with gpu flavor")
+	appInstObj := testutil.AppInstData[0]
+	appInstObj.Key.ClusterInstKey = *clusterInstObj.Key.Virtual("")
+	testutil.InternalAppInstCreate(t, &appInstApi, []edgeproto.AppInst{
+		appInstObj, testutil.AppInstData[11],
+	})
+
+	err = clusterInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cloudletKey := obj.Key.CloudletKey
+		cloudlet := edgeproto.Cloudlet{}
+		found := cloudletApi.store.STMGet(stm, &cloudletKey, &cloudlet)
+		require.True(t, found, "cloudlet exists")
+
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found = cloudletInfoApi.store.STMGet(stm, &cloudletKey, &cloudletInfo)
+		require.True(t, found, "cloudlet info exists")
+
+		cloudletRefs := edgeproto.CloudletRefs{}
+		found = cloudletRefsApi.store.STMGet(stm, &cloudletKey, &cloudletRefs)
+		require.True(t, found, "cloudlet refs exists")
+
+		allRes, diffRes, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
+		require.Nil(t, err, "get all cloudlet resources")
+		require.Equal(t, len(allRes), len(diffRes), "should match as crm resource snapshot doesn't have any tracked resources")
+		clusters := make(map[edgeproto.ClusterInstKey]struct{})
+		resTypeVMAppCount := 0
+		for _, res := range allRes {
+			if res.Type == cloudcommon.VMTypeAppVM {
+				resTypeVMAppCount++
+				continue
+			}
+			existingCl := edgeproto.ClusterInst{}
+			found = clusterInstApi.store.STMGet(stm, &res.Key, &existingCl)
+			require.True(t, found, "cluster inst from resources exists")
+			clusters[res.Key] = struct{}{}
+		}
+		require.Equal(t, resTypeVMAppCount, 1, "one vm appinst resource exists")
+		for _, ciRefKey := range cloudletRefs.ClusterInsts {
+			ciKey := edgeproto.ClusterInstKey{}
+			ciKey.FromClusterInstRefKey(&ciRefKey, &cloudletRefs.Key)
+			existingCl := edgeproto.ClusterInst{}
+			if clusterInstApi.store.STMGet(stm, &ciKey, &existingCl) {
+				_, found = clusters[ciKey]
+				require.True(t, found, "refs clusterinst exists", ciKey)
+			}
+		}
+		require.Equal(t, len(cloudletRefs.VmAppInsts), 1, "1 vm appinsts exists")
+
+		// test cluster inst vm requirements
+		quotaMap := make(map[string]edgeproto.ResourceQuota)
+		for _, quota := range cloudlet.ResourceQuotas {
+			quotaMap[quota.Name] = quota
+		}
+		clusterInst := testutil.ClusterInstData[0]
+		clusterInst.NumMasters = 2
+		clusterInst.NumNodes = 2
+		clusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
+		clusterInst.Flavor = testutil.FlavorData[4].Key
+		clusterInst.NodeFlavor = "flavor.large"
+		ciResources, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, &cloudlet, &cloudletInfo, &cloudletRefs)
+		require.Nil(t, err, "get cluster inst vm requirements")
+		// number of vm resources = num_nodes + num_masters + num_of_rootLBs
+		require.Equal(t, 5, len(ciResources), "matches number of vm resources")
+		numNodes := 0
+		numMasters := 0
+		numRootLB := 0
+		for _, res := range ciResources {
+			if res.Type == cloudcommon.VMTypeClusterMaster {
+				numMasters++
+			} else if res.Type == cloudcommon.VMTypeClusterNode {
+				numNodes++
+			} else if res.Type == cloudcommon.VMTypeRootLB {
+				numRootLB++
+			} else {
+				require.Fail(t, "invalid resource type", "type", res.Type)
+			}
+			require.Equal(t, res.Key, clusterInst.Key, "resource key matches cluster inst key")
+		}
+		require.Equal(t, numMasters, int(clusterInst.NumMasters), "resource type count matches")
+		require.Equal(t, numNodes, int(clusterInst.NumNodes), "resource type count matches")
+		require.Equal(t, numRootLB, 1, "resource type count matches")
+
+		warnings, err := validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, ciResources, diffRes)
+		require.NotNil(t, err, "not enough resource available error")
+		require.Greater(t, len(warnings), 0, "warnings for resources", "warnings", warnings)
+		for _, warning := range warnings {
+			if strings.Contains(warning, "RAM") {
+				quota, found := quotaMap["RAM"]
+				require.True(t, found, "quota for RAM is set")
+				require.Contains(t, warning, fmt.Sprintf("%d%%", quota.AlertThreshold))
+			} else if strings.Contains(warning, "vCPUs") {
+				quota, found := quotaMap["vCPUs"]
+				require.True(t, found, "quota for vCPUs is set")
+				require.Contains(t, warning, fmt.Sprintf("%d%%", quota.AlertThreshold))
+			} else if strings.Contains(warning, "GPUs") {
+				quota, found := quotaMap["GPUs"]
+				require.True(t, found, "quota for GPUs is set")
+				require.Contains(t, warning, fmt.Sprintf("%d%%", quota.AlertThreshold))
+			} else {
+				require.Contains(t, warning, fmt.Sprintf("%d%%", cloudlet.DefaultResourceAlertThreshold))
+			}
+		}
+
+		// test vm app inst resource requirements
+		appInst := testutil.AppInstData[11]
+		appInst.Flavor = testutil.FlavorData[4].Key
+		appInst.VmFlavor = "flavor.large"
+		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &testutil.AppData[12], &appInst, cloudletInfo.Flavors)
+		require.Nil(t, err, "get app inst vm requirements")
+		require.Equal(t, 1, len(vmAppResources), "matches number of vm resources")
+		require.Equal(t, cloudcommon.VMTypeAppVM, vmAppResources[0].Type, "resource type is app vm")
+		require.Equal(t, vmAppResources[0].Key, *appInst.ClusterInstKey(), "resource key matches appinst's clusterinst key")
+
+		warnings, err = validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, vmAppResources, diffRes)
+		require.Nil(t, err, "enough resource available")
+		require.Greater(t, len(warnings), 0, "warnings for resources", "warnings", warnings)
+
+		for _, warning := range warnings {
+			if strings.HasPrefix(warning, "[Quota]") {
+				continue
+			} else if strings.Contains(warning, "RAM") {
+				quota, found := quotaMap["RAM"]
+				require.True(t, found, "quota for RAM is set")
+				require.Contains(t, warning, fmt.Sprintf("%d%%", quota.AlertThreshold))
+			} else if strings.Contains(warning, "vCPUs") {
+				quota, found := quotaMap["vCPUs"]
+				require.True(t, found, "quota for vCPUs is set")
+				require.Contains(t, warning, fmt.Sprintf("%d%%", quota.AlertThreshold))
+			} else if strings.Contains(warning, "GPUs") {
+				quota, found := quotaMap["GPUs"]
+				require.True(t, found, "quota for GPUs is set")
+				require.Contains(t, warning, fmt.Sprintf("%d%%", quota.AlertThreshold))
+			} else {
+				require.Contains(t, warning, fmt.Sprintf("%d%%", cloudlet.DefaultResourceAlertThreshold))
+			}
+		}
+
+		return nil
+	})
+	require.Nil(t, err)
 }
 
 var testInfluxProc *process.Influx

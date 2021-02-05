@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -19,6 +20,40 @@ import (
 
 type Platform struct {
 	consoleServer *httptest.Server
+}
+
+var (
+	ResourceExternalIps = "External IPs"
+
+	FakeRamUsed         = uint64(0)
+	FakeVcpusUsed       = uint64(0)
+	FakeDiskUsed        = uint64(0)
+	FakeExternalIpsUsed = uint64(0)
+
+	FakeRamMax         = uint64(40960)
+	FakeVcpusMax       = uint64(50)
+	FakeDiskMax        = uint64(5000)
+	FakeExternalIpsMax = uint64(10)
+)
+
+var FakeAppDNSRoot = "fake.net"
+
+var FakeClusterVMs = map[edgeproto.ClusterInstKey][]edgeproto.VmInfo{}
+
+var FakeFlavorList = []*edgeproto.FlavorInfo{
+	&edgeproto.FlavorInfo{
+		Name:  "x1.small",
+		Vcpus: uint64(2),
+		Ram:   uint64(4096),
+		Disk:  uint64(40),
+	},
+}
+
+var RootLBFlavor = edgeproto.Flavor{
+	Key:   edgeproto.FlavorKey{Name: "rootlb-flavor"},
+	Vcpus: uint64(2),
+	Ram:   uint64(4096),
+	Disk:  uint64(40),
 }
 
 func (s *Platform) GetType() string {
@@ -48,32 +83,118 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
 	}))
+	// Update resource info for platformVM and RootLBVM
+	FakeRamUsed += 4096 + 4096
+	FakeVcpusUsed += 2 + 2
+	FakeDiskUsed += 40 + 40
+	FakeExternalIpsUsed += 1
 	return nil
 }
 
 func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
-	info.OsMaxRam = 500
-	info.OsMaxVcores = 50
-	info.OsMaxVolGb = 5000
-	info.Flavors = []*edgeproto.FlavorInfo{
-		&edgeproto.FlavorInfo{
-			Name:  "x1.small",
-			Vcpus: uint64(10),
-			Ram:   uint64(101024),
-			Disk:  uint64(500),
-		},
-	}
+	info.OsMaxRam = FakeRamMax
+	info.OsMaxVcores = FakeVcpusMax
+	info.OsMaxVolGb = FakeDiskMax
+	info.Flavors = FakeFlavorList
 	return nil
 }
 
 func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Updating Cluster Inst")
+	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
+	fakeNodes := make(map[string]struct{})
+	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
+		nodeName := fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix)
+		fakeNodes[nodeName] = struct{}{}
+	}
+	fakeMasters := make(map[string]struct{})
+	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
+		masterName := fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix)
+		fakeMasters[masterName] = struct{}{}
+	}
+	cVMs, ok := FakeClusterVMs[clusterInst.Key]
+	if !ok {
+		return fmt.Errorf("missing cluster vms for %v", clusterInst.Key)
+	}
+	for _, vmInfo := range cVMs {
+		if vmInfo.Type == cloudcommon.VMTypeClusterNode {
+			if _, ok := fakeNodes[vmInfo.Name]; ok {
+				delete(fakeNodes, vmInfo.Name)
+			}
+		} else if vmInfo.Type == cloudcommon.VMTypeClusterMaster {
+			if _, ok := fakeMasters[vmInfo.Name]; ok {
+				delete(fakeMasters, vmInfo.Name)
+			}
+		}
+	}
+	for vmName, _ := range fakeNodes {
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        vmName,
+			Type:        cloudcommon.VMTypeClusterNode,
+			InfraFlavor: "x1.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+	}
+	for vmName, _ := range fakeMasters {
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        vmName,
+			Type:        cloudcommon.VMTypeClusterMaster,
+			InfraFlavor: "x1.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+	}
 	return nil
 }
 func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake CreateClusterInst", "clusterInst", clusterInst)
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
+	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
+	if len(FakeClusterVMs) == 0 {
+		FakeClusterVMs = make(map[edgeproto.ClusterInstKey][]edgeproto.VmInfo)
+	}
+	FakeClusterVMs[clusterInst.Key] = []edgeproto.VmInfo{}
+	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix),
+			Type:        cloudcommon.VMTypeClusterMaster,
+			InfraFlavor: "x1.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+	}
+	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix),
+			Type:        cloudcommon.VMTypeClusterNode,
+			InfraFlavor: "x1.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+	}
+	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+		rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        rootLBFQDN,
+			Type:        cloudcommon.VMTypeRootLB,
+			InfraFlavor: "x1.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+		FakeExternalIpsUsed += 1
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst ready")
 	return nil
 }
@@ -81,54 +202,144 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "First Delete Task")
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
+	rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
+	vms := make(map[string]struct{})
+	vms[rootLBFQDN] = struct{}{}
+	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
+	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
+		vmName := fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix)
+		vms[vmName] = struct{}{}
+	}
+	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
+		vmName := fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix)
+		vms[vmName] = struct{}{}
+	}
+	newVMs := []edgeproto.VmInfo{}
+	if clusterVMs, ok := FakeClusterVMs[clusterInst.Key]; ok {
+		for _, vm := range clusterVMs {
+			if _, ok := vms[vm.Name]; ok {
+				FakeRamUsed -= 4096
+				FakeVcpusUsed -= 2
+				FakeDiskUsed -= 40
+				if vm.Name == rootLBFQDN {
+					FakeExternalIpsUsed -= 1
+				}
+				continue
+			}
+			newVMs = append(newVMs, vm)
+		}
+		delete(FakeClusterVMs, clusterInst.Key)
+	}
+
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst deleted")
 	return nil
 }
 
-func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
-	var resources edgeproto.InfraResources
+func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResourcesSnapshot, error) {
+	var resources edgeproto.InfraResourcesSnapshot
 	platvm := edgeproto.VmInfo{
 		Name:        "fake-platform-vm",
 		Type:        "platform",
-		InfraFlavor: "m4.small",
+		InfraFlavor: "x1.small",
 		Status:      "ACTIVE",
 		Ipaddresses: []edgeproto.IpAddr{
 			{ExternalIp: "10.101.100.10"},
 		},
 	}
-	resources.Vms = append(resources.Vms, platvm)
+	resources.PlatformVms = append(resources.PlatformVms, platvm)
 	rlbvm := edgeproto.VmInfo{
 		Name:        "fake-rootlb-vm",
 		Type:        "rootlb",
-		InfraFlavor: "m4.small",
+		InfraFlavor: "x1.small",
 		Status:      "ACTIVE",
 		Ipaddresses: []edgeproto.IpAddr{
 			{ExternalIp: "10.101.100.11"},
 		},
 	}
-	resources.Vms = append(resources.Vms, rlbvm)
+	resources.PlatformVms = append(resources.PlatformVms, rlbvm)
+
+	resources.Info = []edgeproto.InfraResource{
+		edgeproto.InfraResource{
+			Name:          cloudcommon.ResourceRamMb,
+			Value:         FakeRamUsed,
+			InfraMaxValue: FakeRamMax,
+			Units:         cloudcommon.ResourceRamUnits,
+		},
+		edgeproto.InfraResource{
+			Name:          cloudcommon.ResourceVcpus,
+			Value:         FakeVcpusUsed,
+			InfraMaxValue: FakeVcpusMax,
+		},
+		edgeproto.InfraResource{
+			Name:          cloudcommon.ResourceDiskGb,
+			Value:         FakeDiskUsed,
+			InfraMaxValue: FakeDiskMax,
+			Units:         cloudcommon.ResourceDiskUnits,
+		},
+		edgeproto.InfraResource{
+			Name:          ResourceExternalIps,
+			Value:         FakeExternalIpsUsed,
+			InfraMaxValue: FakeExternalIpsMax,
+		},
+	}
 
 	return &resources, nil
 }
 
+// called by controller, make sure it doesn't make any calls to infra API
+func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource {
+	// resource name -> resource units
+	cloudletRes := map[string]string{
+		ResourceExternalIps: "",
+	}
+	resInfo := make(map[string]*edgeproto.InfraResource)
+	for resName, resUnits := range cloudletRes {
+		resMax := uint64(0)
+		if infraRes, ok := infraResMap[resName]; ok {
+			resMax = infraRes.InfraMaxValue
+		}
+		resInfo[resName] = &edgeproto.InfraResource{
+			Name:          resName,
+			InfraMaxValue: resMax,
+			Units:         resUnits,
+		}
+	}
+
+	for _, vmRes := range vmResources {
+		if vmRes.Type == cloudcommon.VMTypeRootLB {
+			resInfo[ResourceExternalIps].Value += 1
+		}
+	}
+	return resInfo
+}
+
+func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeproto.CloudletResourceQuotaProps, error) {
+	return &edgeproto.CloudletResourceQuotaProps{
+		Props: []edgeproto.InfraResource{
+			edgeproto.InfraResource{
+				Name:        ResourceExternalIps,
+				Description: "Limit on external IPs available",
+			},
+		},
+	}, nil
+}
+
+func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, cloudlet *edgeproto.Cloudlet, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error {
+	externalIpsUsed := uint64(0)
+	for _, vmRes := range resources {
+		if vmRes.Type == cloudcommon.VMTypeRootLB {
+			externalIpsUsed += 1
+		}
+	}
+
+	resMetric.AddIntVal("externalIpsUsed", externalIpsUsed)
+	return nil
+}
+
 func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
 	var resources edgeproto.InfraResources
-	vmtype := "cluster-master"
-	for i := 0; i < 3; i++ {
-		if i > 1 {
-			vmtype = "cluster-node"
-		}
-		ipstr := fmt.Sprintf("10.100.100.1%d", i)
-		vm := edgeproto.VmInfo{
-			Name:        fmt.Sprintf("fake-cluster-vm-%d", i),
-			Type:        vmtype,
-			InfraFlavor: "m4.small",
-			Status:      "ACTIVE",
-			Ipaddresses: []edgeproto.IpAddr{
-				{ExternalIp: ipstr},
-			},
-		}
-		resources.Vms = append(resources.Vms, vm)
+	if vms, ok := FakeClusterVMs[*clusterKey]; ok {
+		resources.Vms = append(resources.Vms, vms...)
 	}
 	return &resources, nil
 }
@@ -136,6 +347,22 @@ func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edg
 func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "Creating App Inst")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst ready")
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
+		appFQN := cloudcommon.GetAppFQN(&app.Key)
+		clusterInst.Key.ClusterKey.Name = appFQN + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name
+		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
+			Name:        appFQN,
+			Type:        cloudcommon.VMTypeAppVM,
+			InfraFlavor: "x1.small",
+			Status:      "ACTIVE",
+		})
+		FakeRamUsed += 4096
+		FakeVcpusUsed += 2
+		FakeDiskUsed += 40
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			FakeExternalIpsUsed += 1
+		}
+	}
 	return nil
 }
 
@@ -143,6 +370,17 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	updateCallback(edgeproto.UpdateTask, "First Delete Task")
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst deleted")
+	if app.Deployment == cloudcommon.DeploymentTypeVM {
+		appFQN := cloudcommon.GetAppFQN(&app.Key)
+		clusterInst.Key.ClusterKey.Name = appFQN + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name
+		FakeRamUsed -= 4096
+		FakeVcpusUsed -= 2
+		FakeDiskUsed -= 40
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			FakeExternalIpsUsed -= 1
+		}
+		delete(FakeClusterVMs, clusterInst.Key)
+	}
 	return nil
 }
 
@@ -296,4 +534,8 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 
 func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error) {
 	return nil, nil
+}
+
+func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
+	return &RootLBFlavor, nil
 }
