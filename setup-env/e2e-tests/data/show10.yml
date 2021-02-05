@@ -396,6 +396,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-2
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-5
@@ -410,6 +411,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-5
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-6
@@ -424,6 +426,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-6
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: azure
     name: azure-cloud-9
@@ -438,6 +441,7 @@ cloudlets:
     name: x1.tiny
   physicalname: azure-cloud-9
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: gcp
     name: gcp-cloud-10
@@ -452,6 +456,7 @@ cloudlets:
     name: x1.tiny
   physicalname: gcp-cloud-10
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-1
@@ -466,6 +471,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-1
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-3
@@ -480,6 +486,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-3
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-4
@@ -494,6 +501,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-4
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-7
@@ -508,6 +516,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-7
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-8
@@ -522,6 +531,7 @@ cloudlets:
     name: x1.tiny
   physicalname: dmuus-cloud-8
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 
 cloudletinfos:
 - key:
@@ -530,99 +540,165 @@ cloudletinfos:
   state: CloudletStateReady
   notifyid: 49
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 32768
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 16
+      inframaxvalue: 50
+    - name: Disk
+      value: 320
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 3
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-2
   state: CloudletStateReady
   notifyid: 41
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-3
   state: CloudletStateReady
   notifyid: 42
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 
 - key:
     organization: dmuus
@@ -630,231 +706,385 @@ cloudletinfos:
   state: CloudletStateReady
   notifyid: 43
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-5
   state: CloudletStateReady
   notifyid: 44
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-6
   state: CloudletStateReady
   notifyid: 45
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-7
   state: CloudletStateReady
   notifyid: 46
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: azure
     name: azure-cloud-9
   state: CloudletStateReady
   notifyid: 48
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 32768
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 16
+      inframaxvalue: 50
+    - name: Disk
+      value: 320
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 3
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-1
   state: CloudletStateReady
   notifyid: 40
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-8
   state: CloudletStateReady
   notifyid: 47
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 apps:
 - key:
     organization: platos

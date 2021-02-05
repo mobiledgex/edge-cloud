@@ -71,6 +71,11 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["nocmp"]; found {
 		in.TrustPolicyState = 0
 	}
+	for i0 := 0; i0 < len(in.ResourceQuotas); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DefaultResourceAlertThreshold = 0
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -96,11 +101,17 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 	for i0 := 0; i0 < len(in.OsImages); i0++ {
 	}
-	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
-		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.PlatformVms); i1++ {
+		for i2 := 0; i2 < len(in.ResourcesSnapshot.PlatformVms[i1].Ipaddresses); i2++ {
 		}
-		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
+		for i2 := 0; i2 < len(in.ResourcesSnapshot.PlatformVms[i1].Containers); i2++ {
 		}
+	}
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.Info); i1++ {
+	}
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.ClusterInsts); i1++ {
+	}
+	for i1 := 0; i1 < len(in.ResourcesSnapshot.VmAppInsts); i1++ {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.TrustPolicyState = 0
@@ -544,6 +555,120 @@ func GetCloudletPropss(c *cli.Command, data []edgeproto.CloudletProps, err *erro
 	}
 }
 
+var GetCloudletResourceQuotaPropsCmd = &cli.Command{
+	Use:          "GetCloudletResourceQuotaProps",
+	RequiredArgs: strings.Join(GetCloudletResourceQuotaPropsRequiredArgs, " "),
+	OptionalArgs: strings.Join(GetCloudletResourceQuotaPropsOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletResourceQuotaPropsAliasArgs, " "),
+	SpecialArgs:  &CloudletResourceQuotaPropsSpecialArgs,
+	Comments:     CloudletResourceQuotaPropsComments,
+	ReqData:      &edgeproto.CloudletResourceQuotaProps{},
+	ReplyData:    &edgeproto.CloudletResourceQuotaProps{},
+	Run:          runGetCloudletResourceQuotaProps,
+}
+
+func runGetCloudletResourceQuotaProps(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletResourceQuotaProps)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletResourceQuotaProps(c, obj)
+}
+
+func GetCloudletResourceQuotaProps(c *cli.Command, in *edgeproto.CloudletResourceQuotaProps) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletResourceQuotaProps(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletResourceQuotaProps failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletResourceQuotaPropss(c *cli.Command, data []edgeproto.CloudletResourceQuotaProps, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletResourceQuotaProps %v\n", data[ii])
+		myerr := GetCloudletResourceQuotaProps(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var GetCloudletResourceUsageCmd = &cli.Command{
+	Use:          "GetCloudletResourceUsage",
+	RequiredArgs: strings.Join(CloudletResourceUsageRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletResourceUsageOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletResourceUsageAliasArgs, " "),
+	SpecialArgs:  &CloudletResourceUsageSpecialArgs,
+	Comments:     CloudletResourceUsageComments,
+	ReqData:      &edgeproto.CloudletResourceUsage{},
+	ReplyData:    &edgeproto.InfraResourcesSnapshot{},
+	Run:          runGetCloudletResourceUsage,
+}
+
+func runGetCloudletResourceUsage(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletResourceUsage)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletResourceUsage(c, obj)
+}
+
+func GetCloudletResourceUsage(c *cli.Command, in *edgeproto.CloudletResourceUsage) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletResourceUsage(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletResourceUsage failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletResourceUsages(c *cli.Command, data []edgeproto.CloudletResourceUsage, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletResourceUsage %v\n", data[ii])
+		myerr := GetCloudletResourceUsage(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AddCloudletResMappingCmd = &cli.Command{
 	Use:          "AddCloudletResMapping",
 	RequiredArgs: strings.Join(CloudletResMapRequiredArgs, " "),
@@ -836,6 +961,8 @@ var CloudletApiCmds = []*cobra.Command{
 	ShowCloudletCmd.GenCmd(),
 	GetCloudletManifestCmd.GenCmd(),
 	GetCloudletPropsCmd.GenCmd(),
+	GetCloudletResourceQuotaPropsCmd.GenCmd(),
+	GetCloudletResourceUsageCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
@@ -1237,6 +1364,19 @@ var InfraConfigComments = map[string]string{
 	"flavorname":          "Infra specific flavor name",
 }
 var InfraConfigSpecialArgs = map[string]string{}
+var ResourceQuotaRequiredArgs = []string{}
+var ResourceQuotaOptionalArgs = []string{
+	"name",
+	"value",
+	"alertthreshold",
+}
+var ResourceQuotaAliasArgs = []string{}
+var ResourceQuotaComments = map[string]string{
+	"name":           "Resource name on which to set quota",
+	"value":          "Quota value of the resource",
+	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
+}
+var ResourceQuotaSpecialArgs = map[string]string{}
 var CloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
@@ -1274,6 +1414,10 @@ var CloudletOptionalArgs = []string{
 	"overridepolicycontainerversion",
 	"vmpool",
 	"trustpolicy",
+	"resourcequotas:#.name",
+	"resourcequotas:#.value",
+	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1346,6 +1490,10 @@ var CloudletComments = map[string]string{
 	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
 	"trustpolicy":                         "Optional Trust Policy",
 	"trustpolicystate":                    "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"resourcequotas:#.name":               "Resource name on which to set quota",
+	"resourcequotas:#.value":              "Quota value of the resource",
+	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
+	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1424,6 +1572,46 @@ var CloudletPropsComments = map[string]string{
 	"properties:#.value.internal":    "Is the property internal, not to be set by Operator",
 }
 var CloudletPropsSpecialArgs = map[string]string{}
+var CloudletResourceQuotaPropsRequiredArgs = []string{}
+var CloudletResourceQuotaPropsOptionalArgs = []string{
+	"platformtype",
+	"props:#.name",
+	"props:#.value",
+	"props:#.inframaxvalue",
+	"props:#.quotamaxvalue",
+	"props:#.description",
+	"props:#.units",
+	"props:#.alertthreshold",
+}
+var CloudletResourceQuotaPropsAliasArgs = []string{}
+var CloudletResourceQuotaPropsComments = map[string]string{
+	"platformtype":           "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd",
+	"props:#.name":           "Resource name",
+	"props:#.value":          "Resource value",
+	"props:#.inframaxvalue":  "Resource infra max value",
+	"props:#.quotamaxvalue":  "Resource quota max value",
+	"props:#.description":    "Resource description",
+	"props:#.units":          "Resource units",
+	"props:#.alertthreshold": "Generate alert when more than threshold percentage of resource is used",
+}
+var CloudletResourceQuotaPropsSpecialArgs = map[string]string{}
+var CloudletResourceUsageRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+}
+var CloudletResourceUsageOptionalArgs = []string{
+	"infrausage",
+}
+var CloudletResourceUsageAliasArgs = []string{
+	"cloudlet-org=key.organization",
+	"cloudlet=key.name",
+}
+var CloudletResourceUsageComments = map[string]string{
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"infrausage":   "Show Infra based usage",
+}
+var CloudletResourceUsageSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -1498,6 +1686,31 @@ var CloudletInfoOptionalArgs = []string{
 	"osimages:#.diskformat",
 	"controllercachereceived",
 	"maintenancestate",
+	"resourcessnapshot.platformvms:#.name",
+	"resourcessnapshot.platformvms:#.type",
+	"resourcessnapshot.platformvms:#.status",
+	"resourcessnapshot.platformvms:#.infraflavor",
+	"resourcessnapshot.platformvms:#.ipaddresses:#.externalip",
+	"resourcessnapshot.platformvms:#.ipaddresses:#.internalip",
+	"resourcessnapshot.platformvms:#.containers:#.name",
+	"resourcessnapshot.platformvms:#.containers:#.type",
+	"resourcessnapshot.platformvms:#.containers:#.status",
+	"resourcessnapshot.platformvms:#.containers:#.clusterip",
+	"resourcessnapshot.platformvms:#.containers:#.restarts",
+	"resourcessnapshot.info:#.name",
+	"resourcessnapshot.info:#.value",
+	"resourcessnapshot.info:#.inframaxvalue",
+	"resourcessnapshot.info:#.quotamaxvalue",
+	"resourcessnapshot.info:#.description",
+	"resourcessnapshot.info:#.units",
+	"resourcessnapshot.info:#.alertthreshold",
+	"resourcessnapshot.clusterinsts:#.clusterkey.name",
+	"resourcessnapshot.clusterinsts:#.organization",
+	"resourcessnapshot.vmappinsts:#.appkey.organization",
+	"resourcessnapshot.vmappinsts:#.appkey.name",
+	"resourcessnapshot.vmappinsts:#.appkey.version",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization",
 	"trustpolicystate",
 }
 var CloudletInfoAliasArgs = []string{
@@ -1527,16 +1740,30 @@ var CloudletInfoComments = map[string]string{
 	"osimages:#.diskformat":                  "format qcow2, img, etc",
 	"controllercachereceived":                "Indicates all controller data has been sent to CRM",
 	"maintenancestate":                       "State for maintenance, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
-	"resources.vms:#.name":                   "Virtual machine name",
-	"resources.vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
-	"resources.vms:#.status":                 "Runtime status of the VM",
-	"resources.vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
-	"resources.vms:#.containers:#.name":      "Name of the container",
-	"resources.vms:#.containers:#.type":      "Type can be docker or kubernetes",
-	"resources.vms:#.containers:#.status":    "Runtime status of the container",
-	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
-	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
-	"trustpolicystate":                       "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"resourcessnapshot.platformvms:#.name":   "Virtual machine name",
+	"resourcessnapshot.platformvms:#.type":   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"resourcessnapshot.platformvms:#.status": "Runtime status of the VM",
+	"resourcessnapshot.platformvms:#.infraflavor":                   "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"resourcessnapshot.platformvms:#.containers:#.name":             "Name of the container",
+	"resourcessnapshot.platformvms:#.containers:#.type":             "Type can be docker or kubernetes",
+	"resourcessnapshot.platformvms:#.containers:#.status":           "Runtime status of the container",
+	"resourcessnapshot.platformvms:#.containers:#.clusterip":        "IP within the CNI and is applicable to kubernetes only",
+	"resourcessnapshot.platformvms:#.containers:#.restarts":         "Restart count, applicable to kubernetes only",
+	"resourcessnapshot.info:#.name":                                 "Resource name",
+	"resourcessnapshot.info:#.value":                                "Resource value",
+	"resourcessnapshot.info:#.inframaxvalue":                        "Resource infra max value",
+	"resourcessnapshot.info:#.quotamaxvalue":                        "Resource quota max value",
+	"resourcessnapshot.info:#.description":                          "Resource description",
+	"resourcessnapshot.info:#.units":                                "Resource units",
+	"resourcessnapshot.info:#.alertthreshold":                       "Generate alert when more than threshold percentage of resource is used",
+	"resourcessnapshot.clusterinsts:#.clusterkey.name":              "Cluster name",
+	"resourcessnapshot.clusterinsts:#.organization":                 "Name of Developer organization that this cluster belongs to",
+	"resourcessnapshot.vmappinsts:#.appkey.organization":            "App developer organization",
+	"resourcessnapshot.vmappinsts:#.appkey.name":                    "App name",
+	"resourcessnapshot.vmappinsts:#.appkey.version":                 "App version",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
+	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
+	"trustpolicystate": "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
@@ -1587,6 +1814,10 @@ var CreateCloudletOptionalArgs = []string{
 	"overridepolicycontainerversion",
 	"vmpool",
 	"trustpolicy",
+	"resourcequotas:#.name",
+	"resourcequotas:#.value",
+	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1622,6 +1853,10 @@ var DeleteCloudletOptionalArgs = []string{
 	"overridepolicycontainerversion",
 	"vmpool",
 	"trustpolicy",
+	"resourcequotas:#.name",
+	"resourcequotas:#.value",
+	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1645,6 +1880,10 @@ var UpdateCloudletOptionalArgs = []string{
 	"accessvars",
 	"maintenancestate",
 	"trustpolicy",
+	"resourcequotas:#.name",
+	"resourcequotas:#.value",
+	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1680,8 +1919,24 @@ var ShowCloudletOptionalArgs = []string{
 	"overridepolicycontainerversion",
 	"vmpool",
 	"trustpolicy",
+	"resourcequotas:#.name",
+	"resourcequotas:#.value",
+	"resourcequotas:#.alertthreshold",
+	"defaultresourcealertthreshold",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",
 }
 var GetCloudletPropsOptionalArgs = []string{}
+var GetCloudletResourceQuotaPropsRequiredArgs = []string{
+	"platformtype",
+}
+var GetCloudletResourceQuotaPropsOptionalArgs = []string{
+	"props:#.name",
+	"props:#.value",
+	"props:#.inframaxvalue",
+	"props:#.quotamaxvalue",
+	"props:#.description",
+	"props:#.units",
+	"props:#.alertthreshold",
+}

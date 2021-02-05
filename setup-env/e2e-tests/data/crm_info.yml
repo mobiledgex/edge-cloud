@@ -62,24 +62,14 @@ clusterinsts:
   reservedby: AcmeAppCo
   resources:
     vms:
-    - name: fake-cluster-vm-0
+    - name: fake-master-1-dmuus-cloud-1-reservable0-mobiledgex
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.10
-    - name: fake-cluster-vm-1
-      type: cluster-master
-      status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.11
-    - name: fake-cluster-vm-2
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-1-reservable0-mobiledgex
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.12
+      infraflavor: x1.small
 - key:
     clusterkey:
       name: reservable0
@@ -102,24 +92,14 @@ clusterinsts:
   reservedby: AcmeAppCo
   resources:
     vms:
-    - name: fake-cluster-vm-0
+    - name: fake-master-1-dmuus-cloud-2-reservable0-mobiledgex
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.10
-    - name: fake-cluster-vm-1
-      type: cluster-master
-      status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.11
-    - name: fake-cluster-vm-2
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-2-reservable0-mobiledgex
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.12
+      infraflavor: x1.small
 - key:
     clusterkey:
       name: reservable1
@@ -142,24 +122,14 @@ clusterinsts:
   reservedby: AcmeAppCo
   resources:
     vms:
-    - name: fake-cluster-vm-0
+    - name: fake-master-1-dmuus-cloud-2-reservable1-mobiledgex
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.10
-    - name: fake-cluster-vm-1
-      type: cluster-master
-      status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.11
-    - name: fake-cluster-vm-2
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-2-reservable1-mobiledgex
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
-      ipaddresses:
-      - externalip: 10.100.100.12
+      infraflavor: x1.small
 cloudlets:
 - key:
     organization: dmuus
@@ -177,6 +147,7 @@ cloudlets:
   containerversion: 2019-10-24
   deployment: docker
   trustpolicystate: NotPresent
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -193,6 +164,7 @@ cloudlets:
   containerversion: 2019-10-24
   deployment: docker
   trustpolicystate: NotPresent
+  defaultresourcealertthreshold: 80
 
 cloudletinfos:
 - key:
@@ -200,61 +172,102 @@ cloudletinfos:
     name: dmuus-cloud-1
   state: CloudletStateReady
   notifyid: 37
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  trustpolicystate: NotPresent
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
-  trustpolicystate: NotPresent
+    info:
+    - name: RAM
+      value: 16384
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 8
+      inframaxvalue: 50
+    - name: Disk
+      value: 160
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
 - key:
     organization: dmuus
     name: dmuus-cloud-2
   state: CloudletStateReady
   notifyid: 38
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  trustpolicystate: NotPresent
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
-  trustpolicystate: NotPresent
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 apps:
 - key:
     organization: AcmeAppCo

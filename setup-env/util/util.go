@@ -364,7 +364,7 @@ func PrintToFile(fname string, outputDir string, out string, truncate bool) {
 			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
 		}
 		log.Printf("writing file: %s\n%s\n", fname, out)
-		fmt.Fprintf(ofile, out)
+		fmt.Fprint(ofile, out)
 	}
 }
 

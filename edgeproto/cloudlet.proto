@@ -173,6 +173,16 @@ message InfraConfig {
   string flavor_name = 2;
 }
 
+// Resource Quota
+message ResourceQuota {
+  // Resource name on which to set quota
+  string name = 1;
+  // Quota value of the resource
+  uint64 value = 2;
+  // Generate alert when more than threshold percentage of resource is used
+  int32 alert_threshold = 3;
+}
+
 // Cloudlet
 //
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
@@ -248,6 +258,10 @@ message Cloudlet {
   string trust_policy = 37;
   // State of trust policy
   TrackedState trust_policy_state = 38 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Resource quotas
+  repeated ResourceQuota resource_quotas = 39 [(gogoproto.nullable) = false];
+  // Default resource alert threshold percentage
+  int32 default_resource_alert_threshold = 40 [(protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -294,6 +308,21 @@ message CloudletProps {
   PlatformType platform_type = 1;
   // Single Key-Value pair of env var to be passed to CRM
   map<string, PropertyInfo> properties = 2;
+}
+
+message CloudletResourceQuotaProps {
+  // Platform type
+  PlatformType platform_type = 1;
+  // Cloudlet resource properties
+  repeated InfraResource props = 2 [(gogoproto.nullable) = false];
+}
+
+message CloudletResourceUsage {
+  // Cloudlet Key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Show Infra based usage
+  bool infra_usage = 2;
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
 }
 
 service CloudletApi {
@@ -360,6 +389,24 @@ service CloudletApi {
     option (protogen.method_noconfig) = "Properties";
     option (protogen.method_also_required) = "PlatformType";
   }
+  // Get Cloudlet Resource Quota Properties. Shows all the resource quota properties of the cloudlet
+  rpc GetCloudletResourceQuotaProps(CloudletResourceQuotaProps) returns (CloudletResourceQuotaProps) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/resource/props"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.method_noconfig) = "Properties";
+    option (protogen.method_also_required) = "PlatformType";
+  }
+  // Get Cloudlet resource information. Shows cloudlet resources used and their limits
+  rpc GetCloudletResourceUsage(CloudletResourceUsage) returns (InfraResourcesSnapshot) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/resource/usage"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
 
   // Add Optional Resource tag table
   rpc AddCloudletResMapping(CloudletResMap) returns (Result) {
@@ -418,6 +465,7 @@ message FlavorInfo {
   // OS Flavor Properties, if any
   map<string,string> prop_map = 5 [(protogen.backend) = true];
 }
+
 message OSAZone {
   string name   = 1;
   string status = 2;
@@ -468,8 +516,8 @@ message CloudletInfo {
   bool controller_cache_received = 15;
   // State for maintenance
   distributed_match_engine.MaintenanceState maintenance_state = 16;
-  // Resources used by cloudlet
-  InfraResources resources = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  // Snapshot of resources used by cloudlet
+  InfraResourcesSnapshot resources_snapshot = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Trust Policy State
   TrackedState trust_policy_state = 18 [(protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;

@@ -83,6 +83,7 @@ cloudlets:
     nanos: 425508000
   trustpolicy: TrustPolicy1
   trustpolicystate: Ready
+  defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: cloudlet2
@@ -106,6 +107,7 @@ cloudlets:
     seconds: 1607989352
     nanos: 116783000
   trustpolicystate: NotPresent
+  defaultresourcealertthreshold: 80
 cloudletinfos:
 - key:
     organization: dmuus
@@ -113,62 +115,100 @@ cloudletinfos:
   state: CloudletStateReady
   notifyid: 1
   controller: JMORRIS-MAC.local@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  trustpolicystate: Ready
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
-  trustpolicystate: Ready
+    info:
+    - name: RAM
+      value: 20480
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 10
+      inframaxvalue: 50
+    - name: Disk
+      value: 200
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: cluster1
+      organization: AcmeAppCo
 - key:
     organization: dmuus
     name: cloudlet2
   state: CloudletStateReady
   notifyid: 2
   controller: JMORRIS-MAC.local@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  trustpolicystate: NotPresent
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
-  trustpolicystate: NotPresent
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 2
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: cluster2
+      organization: AcmeAppCo
 clusterinsts:
 - key:
     clusterkey:
@@ -193,19 +233,19 @@ clusterinsts:
     - name: fake-cluster-vm-0
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.10
     - name: fake-cluster-vm-1
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.12
   createdat:
@@ -233,19 +273,19 @@ clusterinsts:
     - name: fake-cluster-vm-0
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.10
     - name: fake-cluster-vm-1
       type: cluster-master
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
       type: cluster-node
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.100.100.12
   createdat:

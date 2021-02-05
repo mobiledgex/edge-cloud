@@ -100,3 +100,127 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 	})
 	return err
 }
+
+// Handles following upgrade:
+// * Set default resource alert threshold for cloudlets
+// * AddCloudletRefsClusterInstKeys adds ClusterInst keys to cloudlet refs
+//   the assumption that Internal-only apps are trusted
+func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "CloudletResourceUpgradeFunc")
+
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Cloudlet"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var cloudlet Cloudlet
+		err2 := json.Unmarshal(val, &cloudlet)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudlet", cloudlet)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "set defaultresourcealertthreshold for cloudlet", "cloudletkey", cloudlet.Key.String())
+		if cloudlet.DefaultResourceAlertThreshold == 0 {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Setting default alert threshold to 80 for cloudlet", "cloudlet", cloudlet)
+			cloudlet.DefaultResourceAlertThreshold = 80
+			val, err2 = json.Marshal(cloudlet)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudlet", cloudlet)
+				return err2
+			}
+			objStore.Put(ctx, string(key), string(val))
+		}
+		return nil
+	})
+
+	clusterMap := make(map[CloudletKey][]ClusterInstRefKey)
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var clusterInst ClusterInst
+		err2 := json.Unmarshal(val, &clusterInst)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "clusterinst", clusterInst)
+			return err2
+		}
+		clKey := ClusterInstRefKey{}
+		clKey.FromClusterInstKey(&clusterInst.Key)
+		clusterMap[clusterInst.Key.CloudletKey] = append(clusterMap[clusterInst.Key.CloudletKey], clKey)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	vmAppMap := make(map[AppKey]struct{})
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var app App
+		err2 := json.Unmarshal(val, &app)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
+			return err2
+		}
+		if app.Deployment == "vm" {
+			vmAppMap[app.Key] = struct{}{}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	vmAppInstMap := make(map[CloudletKey][]AppInstRefKey)
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var appInst AppInst
+		err2 := json.Unmarshal(val, &appInst)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appinst", appInst)
+			return err2
+		}
+		if _, ok := vmAppMap[appInst.Key.AppKey]; !ok {
+			return nil
+		}
+		aiKey := AppInstRefKey{}
+		aiKey.FromAppInstKey(&appInst.Key)
+		clKey := appInst.Key.ClusterInstKey.CloudletKey
+		vmAppInstMap[clKey] = append(vmAppInstMap[clKey], aiKey)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletRefs"))
+	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var refs CloudletRefs
+		err2 := json.Unmarshal(val, &refs)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletrefs", refs)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "AddCloudletRefsClusterInstKeys found obj", "cloudletKey", refs.Key.String())
+		objChanged := false
+		clusterKeys, ok := clusterMap[refs.Key]
+		if !ok {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "No clusters found for cloudlet", "cloudlet key", refs.Key)
+		} else {
+			refs.ClusterInsts = clusterKeys
+			objChanged = true
+		}
+		vmAppInstKeys, ok := vmAppInstMap[refs.Key]
+		if !ok {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "No vm appinsts found for cloudlet", "cloudlet key", refs.Key)
+		} else {
+			refs.VmAppInsts = vmAppInstKeys
+			objChanged = true
+		}
+		if objChanged {
+			val, err2 = json.Marshal(refs)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudletrefs", refs)
+				return err2
+			}
+			objStore.Put(ctx, string(key), string(val))
+		}
+		return nil
+	})
+	return err
+}

@@ -220,6 +220,16 @@ func IsTransientState(state TrackedState) bool {
 	return false
 }
 
+func IsDeleteState(state TrackedState) bool {
+	if state == TrackedState_DELETE_REQUESTED ||
+		state == TrackedState_DELETING ||
+		state == TrackedState_DELETE_PREPARE ||
+		state == TrackedState_DELETE_DONE {
+		return true
+	}
+	return false
+}
+
 type PowerStateType int
 
 const (

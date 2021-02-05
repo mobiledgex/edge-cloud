@@ -139,10 +139,31 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
-	resources := edgeproto.InfraResources{
-		Vms: []edgeproto.VmInfo{
+func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResourcesSnapshot, error) {
+	info := edgeproto.CloudletInfo{}
+	err := GetLimits(&info)
+	if err != nil {
+		return nil, err
+	}
+	resources := edgeproto.InfraResourcesSnapshot{
+		PlatformVms: []edgeproto.VmInfo{
 			{Name: "local-mac"},
+		},
+		Info: []edgeproto.InfraResource{
+			edgeproto.InfraResource{
+				Name:          cloudcommon.ResourceRamMb,
+				InfraMaxValue: uint64(info.OsMaxRam),
+				Units:         cloudcommon.ResourceRamUnits,
+			},
+			edgeproto.InfraResource{
+				Name:          cloudcommon.ResourceVcpus,
+				InfraMaxValue: uint64(info.OsMaxVcores),
+			},
+			edgeproto.InfraResource{
+				Name:          cloudcommon.ResourceDiskGb,
+				InfraMaxValue: uint64(500),
+				Units:         cloudcommon.ResourceDiskUnits,
+			},
 		},
 	}
 	return &resources, nil
