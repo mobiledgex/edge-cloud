@@ -71,3 +71,7 @@ func (s *Platform) GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudl
 func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error) {
 	return nil, nil
 }
+
+func (s *Platform) GetVersionProperties() map[string]string {
+	return map[string]string{}
+}

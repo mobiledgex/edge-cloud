@@ -222,7 +222,7 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	if err != nil {
 		return err
 	}
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return fmt.Errorf("Failed to get platform: %v", err)
 	}
@@ -522,7 +522,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(ctx, in, pfConfig)
 	} else {
-		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
+		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err == nil {
 			if len(accessVars) > 0 {
 				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
@@ -937,7 +937,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	if !ignoreCRMState(cctx) {
 		var cloudletPlatform pf.Platform
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
+		cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err != nil {
 			return err
 		}
@@ -1277,7 +1277,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			err = cloudcommon.StopCRMService(ctx, in)
 		} else {
 			var cloudletPlatform pf.Platform
-			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
+			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 			if err == nil {
 				// Some platform types require caches
 				caches := getCaches(ctx, &vmPool)
@@ -1562,7 +1562,7 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, key *edgeproto.Cl
 		return nil, err
 	}
 	accessApi := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return nil, err
 	}
@@ -1614,7 +1614,7 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 
 func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
 
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return nil, err
 	}

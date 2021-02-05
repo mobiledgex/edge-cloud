@@ -631,6 +631,9 @@ func main() {
 	if err != nil {
 		log.FatalLog("get cluster service", "err", err)
 	}
+	if clusterSvcPlugin != nil {
+		nodeMgr.UpdateNodeProps(ctx, clusterSvcPlugin.GetVersionProperties())
+	}
 
 	clientTlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
 		nodeMgr.CommonName(),
