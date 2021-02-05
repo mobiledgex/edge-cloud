@@ -732,11 +732,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			refsChanged := false
 			var curr edgeproto.AppInst
 			if s.store.STMGet(stm, &in.Key, &curr) {
-				// In case there is an error after CREATING_DEPENDENCIES or CREATE_REQUESTED state
+				// In case there is an error after CREATING_DEPENDENCIES state
 				// is set, then delete AppInst obj directly as there is
 				// no change done on CRM side
-				if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES ||
-					curr.State == edgeproto.TrackedState_CREATE_REQUESTED {
+				if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
 					s.store.STMDel(stm, &in.Key)
 					appInstRefsApi.removeRef(stm, &in.Key)
 
