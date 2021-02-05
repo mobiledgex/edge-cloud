@@ -289,13 +289,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, "stop cloudlet")
 	}()
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_CRM_INITOK
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_READY
@@ -310,14 +310,33 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudlet.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_UPGRADE, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_UPGRADE)
 	require.Nil(t, err, "cloudlet state transition")
 
 	cloudlet.State = edgeproto.TrackedState_UPDATING
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
-	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, crm_v1)
+	err = ctrlHandler.WaitForCloudletState(&cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY)
 	require.Nil(t, err, "cloudlet state transition")
+
+	cloudletInfo := edgeproto.CloudletInfo{}
+	found := ctrlHandler.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo)
+	require.True(t, found, "cloudlet info exists")
+	require.Equal(t, len(cloudletInfo.ResourcesSnapshot.Info), 4, "cloudlet resources info exists")
+	for _, resInfo := range cloudletInfo.ResourcesSnapshot.Info {
+		switch resInfo.Name {
+		case cloudcommon.ResourceRamMb:
+			require.Equal(t, resInfo.Value, uint64(8192), "cloudlet resources info exists")
+		case cloudcommon.ResourceVcpus:
+			require.Equal(t, resInfo.Value, uint64(4), "cloudlet resources info exists")
+		case cloudcommon.ResourceDiskGb:
+			require.Equal(t, resInfo.Value, uint64(80), "cloudlet resources info exists")
+		case "External IPs":
+			require.Equal(t, resInfo.Value, uint64(1), "cloudlet resources info exists")
+		default:
+			require.True(t, false, fmt.Sprintf("invalid resinfo name: %s", resInfo.Name))
+		}
+	}
 }
 
 func testManualBringup(t *testing.T, ctx context.Context) {

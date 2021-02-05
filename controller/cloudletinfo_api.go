@@ -59,7 +59,8 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		info := edgeproto.CloudletInfo{}
 		if s.store.STMGet(stm, &in.Key, &info) {
-			if in.State == dme.CloudletState_CLOUDLET_STATE_READY && info.State != dme.CloudletState_CLOUDLET_STATE_READY {
+			if in.State == dme.CloudletState_CLOUDLET_STATE_READY &&
+				info.State != dme.CloudletState_CLOUDLET_STATE_READY {
 				changedToOnline = true
 			}
 		}
@@ -119,6 +120,21 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	}
 	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
 		ClearCloudletDownAlert(ctx, in)
+		// Validate cloudlet resources and generate appropriate warnings
+		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
+				return key.NotFoundError()
+			}
+			cloudletRefs := edgeproto.CloudletRefs{}
+			if !cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs) {
+				return key.NotFoundError()
+			}
+			return validateResources(ctx, stm, nil, nil, &cloudlet, in, &cloudletRefs)
+		})
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to validate cloudlet resources",
+				"key", in.Key, "err", err)
+		}
 	}
 }
 

@@ -37,6 +37,7 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 cloudletinfos:
 - key:
     organization: dmuus
@@ -44,33 +45,52 @@ cloudletinfos:
   state: CloudletStateReady
   notifyid: 6
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 16384
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 8
+      inframaxvalue: 50
+    - name: Disk
+      value: 160
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 10
+    clusterinsts:
+    - clusterkey:
+        name: SmallCluster
+      organization: AcmeAppCo
 flavors:
 - key:
     name: x1.tiny

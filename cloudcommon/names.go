@@ -38,6 +38,15 @@ var CloudletKindFake = "fake"
 var OperatingSystemMac = "mac"
 var OperatingSystemLinux = "linux"
 
+// cloudlet vm types
+var VMTypeAppVM = "appvm"
+var VMTypeRootLB = "rootlb"
+var VMTypePlatform = "platform"
+var VMTypePlatformClusterMaster = "platform-cluster-master"
+var VMTypePlatformClusterNode = "platform-cluster-node"
+var VMTypeClusterMaster = "cluster-master"
+var VMTypeClusterNode = "cluster-node"
+
 const AutoClusterPrefix = "autocluster"
 const ReservableClusterPrefix = "reservable"
 const ReserveClusterEvent = "Reserve ClusterInst"
@@ -76,6 +85,9 @@ var LatencyPerCarrierMetric = "latency-per-carrier"
 var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
 var LatencyPerLocationMetric = "latency-per-location"
 var CustomMetric = "custom-metrics"
+
+// Cloudlet resource usage
+var CloudletResourceUsageDbName = "cloudlet_resource_usage"
 
 // Map used to identify which metrics should go to persistent_metrics db
 var PersistentMetrics = map[string]struct{}{
