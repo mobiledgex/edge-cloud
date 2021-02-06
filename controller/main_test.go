@@ -34,6 +34,7 @@ func TestController(t *testing.T) {
 	*initLocalEtcd = true
 	testinit()
 
+	os.Setenv("E2ETEST_TLS", "true")
 	err := startServices()
 	require.Nil(t, err, "start")
 	defer stopServices()

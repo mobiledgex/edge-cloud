@@ -40,7 +40,7 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	tlsMode := tls.GetTlsMode()
 	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, tlsMode, cfg.GetCertificate, "")
 	if err != nil {
-		log.FatalLog("Unable to get TLSClient Dial Option")
+		log.FatalLog("Unable to get TLSClient Dial Option", "error", err)
 	}
 	conn, err := grpc.DialContext(ctx, cfg.ApiAddr, dialOption)
 	if err != nil {
