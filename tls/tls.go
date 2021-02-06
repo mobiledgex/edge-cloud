@@ -5,12 +5,37 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+type TlsMode int
+
+const (
+	NoTls       TlsMode = iota
+	InsecureTls         // Clients will skip server verify, Servers will skip client auth
+	Tls
+)
+
+// Utility function to get TlsMode from env vars
+func GetTlsMode() TlsMode {
+	e2eTls := os.Getenv("E2ETEST_TLS")
+	if e2eTls != "" {
+		switch e2eTls {
+		case "true":
+			return InsecureTls
+		case "false":
+			fallthrough
+		default:
+			return NoTls
+		}
+	}
+	return Tls
+}
 
 // helper function to get the cert pool
 func getClientCertificate(tlsCertFile string) (tls.Certificate, error) {
@@ -56,8 +81,8 @@ func GetClientCertPool(tlsCertFile string, caCertFile string) (*x509.CertPool, e
 }
 
 // GetTLSClientDialOption gets GRPC options needed for TLS connection
-func GetTLSClientDialOption(serverAddr string, getCertFunc func(*tls.CertificateRequestInfo) (*tls.Certificate, error), tlsCertFile string, skipVerify bool, testMode bool) (grpc.DialOption, error) {
-	config, err := GetTLSClientConfig(serverAddr, getCertFunc, tlsCertFile, "", skipVerify, true, testMode)
+func GetTLSClientDialOption(serverAddr string, tlsMode TlsMode, getCertFunc func(*tls.CertificateRequestInfo) (*tls.Certificate, error), tlsCertFile string) (grpc.DialOption, error) {
+	config, err := GetTLSClientConfig(serverAddr, tlsMode, getCertFunc, tlsCertFile, "", true)
 	if err != nil {
 		return nil, err
 	}
@@ -69,42 +94,45 @@ func GetTLSClientDialOption(serverAddr string, getCertFunc func(*tls.Certificate
 // exernal servers with their own privately signed certs.  Leave this blank to use the mex-ca.crt.
 // Skipverify is only to be used for internal connections such as GRPCGW to GRPC.
 // Requires either a tlsCertFile or a getCertFunc if mutualAuth
-func GetTLSClientConfig(serverAddr string, getCertFunc func(*tls.CertificateRequestInfo) (*tls.Certificate, error), tlsCertFile string, caCertFile string, skipVerify bool, mutualAuth bool, testMode bool) (*tls.Config, error) {
-	var tlscfg *tls.Config
+// TODO: Comments
+func GetTLSClientConfig(serverAddr string, tlsMode TlsMode, getCertFunc func(*tls.CertificateRequestInfo) (*tls.Certificate, error), tlsCertFile string, caCertFile string, mutualAuth bool) (*tls.Config, error) {
+	tlscfg := &tls.Config{}
 	if serverAddr != "" {
 		serverName := strings.Split(serverAddr, ":")[0]
-		tlscfg = &tls.Config{
-			ServerName:         serverName,
-			InsecureSkipVerify: skipVerify,
-		}
-	} else {
-		// do not validate the server address.
-		tlscfg = &tls.Config{
-			InsecureSkipVerify: skipVerify,
-		}
+		tlscfg.ServerName = serverName
 	}
-	// No client certs required for non mTLS and for tests
-	if !mutualAuth || testMode {
+
+	switch tlsMode {
+	case NoTls:
+		return nil, nil
+	case InsecureTls:
+		tlscfg.InsecureSkipVerify = true
 		return tlscfg, nil
-	}
-	// tlsConfig requires either Certificates or GetClientCertificate to be set for mTLS
-	if getCertFunc != nil {
-		tlscfg.GetClientCertificate = getCertFunc
-	} else if tlsCertFile != "" {
-		certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
-		if err != nil {
-			return nil, err
+	case Tls:
+		if !mutualAuth {
+			return tlscfg, nil
 		}
-		certificate, err := getClientCertificate(tlsCertFile)
-		if err != nil {
-			return nil, err
+		if getCertFunc != nil {
+			tlscfg.GetClientCertificate = getCertFunc
+			return tlscfg, nil
+		} else if tlsCertFile != "" {
+			certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
+			if err != nil {
+				return nil, err
+			}
+			certificate, err := getClientCertificate(tlsCertFile)
+			if err != nil {
+				return nil, err
+			}
+			tlscfg.RootCAs = certPool
+			tlscfg.Certificates = []tls.Certificate{certificate}
+			return tlscfg, nil
+		} else {
+			return nil, fmt.Errorf("mTLS requires a certFile or getCertFunc")
 		}
-		tlscfg.RootCAs = certPool
-		tlscfg.Certificates = []tls.Certificate{certificate}
-	} else {
-		return nil, fmt.Errorf("mTLS requires a certFile or getCertFunc")
+	default:
+		return nil, fmt.Errorf("unkown tlsMode %d", tlsMode)
 	}
-	return tlscfg, nil
 }
 
 func GetGrpcDialOption(config *tls.Config) grpc.DialOption {

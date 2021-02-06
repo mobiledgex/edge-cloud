@@ -425,9 +425,6 @@ func startServices() error {
 			edgeproto.RegisterOrganizationApiHandler,
 		},
 	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		gwcfg.Test = true
-	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
 		return fmt.Errorf("Failed to create grpc gateway, %v", err)

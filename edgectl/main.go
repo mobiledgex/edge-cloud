@@ -15,6 +15,8 @@ import (
 
 var addr string
 var tlsCertFile string
+var noTls bool
+var skipVerify bool
 var conn *grpc.ClientConn
 
 var rootCmd = &cobra.Command{
@@ -53,12 +55,21 @@ var completionCmd = &cobra.Command{
 func connect(cmd *cobra.Command, args []string) error {
 	var err error
 
-	var skipVerify, testMode bool
-	if tlsCertFile == "" {
-		skipVerify = true
-		testMode = true
+	var tlsMode tls.TlsMode
+	if skipVerify && noTls {
+		return fmt.Errorf("Only one of --skipverify and --notls is allowed. For an insecure tls connection, use --skipverify. For no tls, use --notls")
+	} else if skipVerify {
+		tlsMode = tls.InsecureTls
+	} else if noTls {
+		tlsMode = tls.NoTls
+	} else {
+		if tlsCertFile == "" {
+			// If neither --skipverify nor --notls is set, then we assume a normal tls connection. Therefore, we require a tls file
+			return fmt.Errorf("The --tls flag required for a tls connection. For an insecure tls connection, use --skipverify. For no tls, use --notls")
+		}
+		tlsMode = tls.Tls
 	}
-	dialOption, err := tls.GetTLSClientDialOption(addr, nil, tlsCertFile, skipVerify, testMode)
+	dialOption, err := tls.GetTLSClientDialOption(addr, tlsMode, nil, tlsCertFile)
 	if err != nil {
 		return err
 	}
@@ -113,6 +124,8 @@ func main() {
 	rootCmd.AddCommand(completionCmd)
 	rootCmd.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:55001", "address to connect to")
 	rootCmd.PersistentFlags().StringVar(&tlsCertFile, "tls", "", "tls cert file")
+	rootCmd.PersistentFlags().BoolVar(&noTls, "notls", false, "switch off tls")
+	rootCmd.PersistentFlags().BoolVar(&skipVerify, "skipverify", false, "don't verify cert for TLS connections")
 	cli.AddInputFlags(rootCmd.PersistentFlags())
 	cli.AddOutputFlags(rootCmd.PersistentFlags())
 	cli.AddDebugFlag(rootCmd.PersistentFlags())

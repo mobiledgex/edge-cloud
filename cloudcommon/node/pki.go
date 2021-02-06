@@ -14,6 +14,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
@@ -43,6 +44,7 @@ type internalPki struct {
 	cas   map[string][]*x509.Certificate
 
 	enabled        bool
+	tlsMode        mextls.TlsMode
 	vaultConfig    *vault.Config
 	localRegion    string
 	refreshTrigger chan bool
@@ -99,6 +101,11 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 	if s.InternalPki.UseVaultCerts {
 		s.InternalPki.enabled = true
 		pkiDesc = append(pkiDesc, "useVaultCerts")
+	}
+
+	s.InternalPki.tlsMode = mextls.GetTlsMode()
+	if s.InternalPki.tlsMode == mextls.NoTls {
+		s.InternalPki.enabled = false
 	}
 
 	if len(pkiDesc) == 0 {
@@ -268,6 +275,9 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 	if opts.usePublicCAPool {
 		config.VerifyPeerCertificate = nil
 	}
+	if s.tlsMode == mextls.InsecureTls {
+		config.InsecureSkipVerify = true
+	}
 	return config, nil
 }
 
@@ -306,7 +316,7 @@ func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, server
 		GetCertificate:        s.getCertificateFunc(id),
 		VerifyPeerCertificate: s.getVerifyFunc(clientIssuers),
 	}
-	if opts.noMutualAuth {
+	if opts.noMutualAuth || s.tlsMode == mextls.InsecureTls {
 		config.ClientAuth = tls.NoClientCert
 	}
 	return config, nil

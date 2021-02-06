@@ -603,9 +603,6 @@ func main() {
 			dme.RegisterMatchEngineApiHandler,
 		},
 	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		gwcfg.Test = true
-	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
 		span.Finish()

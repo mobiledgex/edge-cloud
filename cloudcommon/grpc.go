@@ -31,14 +31,14 @@ type GrpcGWConfig struct {
 	ApiAddr        string
 	GetCertificate func(*ctls.CertificateRequestInfo) (*ctls.Certificate, error)
 	ApiHandles     []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error
-	Test           bool
 }
 
 func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	ctx := context.Background()
 	// GRPC GW does not validate the GRPC server cert because it may be public signed and therefore
 	// may not work with internal addressing
-	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, cfg.GetCertificate, "", true, cfg.Test)
+	tlsMode := tls.GetTlsMode()
+	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, tlsMode, cfg.GetCertificate, "")
 	if err != nil {
 		log.FatalLog("Unable to get TLSClient Dial Option")
 	}

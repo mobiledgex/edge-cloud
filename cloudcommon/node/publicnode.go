@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 )
 
 // Third party services that we deploy all have their own letsencrypt-public
@@ -18,14 +18,15 @@ import (
 // services use an internal vault pki cert.
 // Examples of such services are Jaeger, ElasticSearch, etc.
 func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, error) {
-	if s.tlsClientIssuer == NoTlsClientIssuer {
+	tlsMode := mextls.GetTlsMode()
+	if s.tlsClientIssuer == NoTlsClientIssuer || tlsMode == mextls.NoTls {
 		// unit test mode
 		return nil, nil
 	}
 	tlsOpts := []TlsOp{
 		WithPublicCAPool(),
 	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+	if tlsMode == mextls.InsecureTls {
 		// skip verifying cert if e2e-tests, because cert
 		// will be self-signed
 		log.SpanLog(ctx, log.DebugLevelInfo, "public client tls e2e-test mode")
@@ -92,12 +93,22 @@ func (s *PublicCertManager) GetServerTlsConfig(ctx context.Context) (*tls.Config
 			return nil, err
 		}
 	}
-	config := &tls.Config{
-		MinVersion:     tls.VersionTLS12,
-		ClientAuth:     tls.NoClientCert,
-		GetCertificate: s.GetCertificateFunc(),
+	tlsMode := mextls.GetTlsMode()
+	switch tlsMode {
+	case mextls.NoTls:
+		return nil, nil
+	case mextls.InsecureTls:
+		fallthrough
+	case mextls.Tls:
+		config := &tls.Config{
+			MinVersion:     tls.VersionTLS12,
+			ClientAuth:     tls.NoClientCert,
+			GetCertificate: s.GetCertificateFunc(),
+		}
+		return config, nil
+	default:
+		return nil, fmt.Errorf("unknown tlsCertMode %d", tlsMode)
 	}
-	return config, nil
 }
 
 func (s *PublicCertManager) GetCertificateFunc() func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
