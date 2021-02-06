@@ -1,0 +1,673 @@
+- series:
+  - name: cloudlet-flavor-usage
+    tags: {}
+    columns:
+    - time
+    - cloudlet
+    - cloudletorg
+    - count
+    - diskUsed
+    - externalIpsUsed
+    - flavor
+    - gpusUsed
+    - ramUsed
+    - vcpusUsed
+    values:
+    - - "2021-02-05T12:31:32.715828Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:33.053967Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:39.640798Z"
+      - tmus-cloud-1
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:40.05729Z"
+      - tmus-cloud-2
+      - tmus
+      - 7
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:42.64888Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:43.043184Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:44.202162Z"
+      - tmus-cloud-1
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:44.844485Z"
+      - tmus-cloud-2
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:49.984159Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:50.452302Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:55.935513Z"
+      - tmus-cloud-1
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:31:56.280772Z"
+      - tmus-cloud-2
+      - tmus
+      - 7
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:02.372059Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:02.745478Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:04.041363Z"
+      - tmus-cloud-1
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:04.580921Z"
+      - tmus-cloud-2
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:15.35396Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:16.104549Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:23.631859Z"
+      - tmus-cloud-1
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:24.292236Z"
+      - tmus-cloud-2
+      - tmus
+      - 7
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:35.493821Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:35.979287Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:38.922147Z"
+      - tmus-cloud-1
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:39.648869Z"
+      - tmus-cloud-2
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:54.159696Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:32:54.936784Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:33:01.344747Z"
+      - tmus-cloud-1
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:33:01.805099Z"
+      - tmus-cloud-2
+      - tmus
+      - 7
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:33:11.941115Z"
+      - tmus-cloud-1
+      - tmus
+      - 5
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:33:12.460453Z"
+      - tmus-cloud-2
+      - tmus
+      - 6
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:33:15.569804Z"
+      - tmus-cloud-1
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-05T12:33:16.355897Z"
+      - tmus-cloud-2
+      - tmus
+      - 2
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    partial: false
+  - name: fake-resource-usage
+    tags: {}
+    columns:
+    - time
+    - cloudlet
+    - cloudletorg
+    - count
+    - diskUsed
+    - externalIpsUsed
+    - flavor
+    - gpusUsed
+    - ramUsed
+    - vcpusUsed
+    values:
+    - - "2021-02-05T12:31:32.715828Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:31:33.053967Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:31:39.640798Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 240
+      - 1
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:31:40.05729Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 280
+      - 2
+      - null
+      - 0
+      - 28672
+      - 14
+    - - "2021-02-05T12:31:42.64888Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:31:43.043184Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:31:44.202162Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    - - "2021-02-05T12:31:44.844485Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    - - "2021-02-05T12:31:49.984159Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:31:50.452302Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:31:55.935513Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 240
+      - 1
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:31:56.280772Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 280
+      - 2
+      - null
+      - 0
+      - 28672
+      - 14
+    - - "2021-02-05T12:32:02.372059Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:32:02.745478Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:32:04.041363Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    - - "2021-02-05T12:32:04.580921Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    - - "2021-02-05T12:32:15.35396Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:32:16.104549Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:32:23.631859Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 240
+      - 1
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:32:24.292236Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 280
+      - 2
+      - null
+      - 0
+      - 28672
+      - 14
+    - - "2021-02-05T12:32:35.493821Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:32:35.979287Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:32:38.922147Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    - - "2021-02-05T12:32:39.648869Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    - - "2021-02-05T12:32:54.159696Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:32:54.936784Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:33:01.344747Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 240
+      - 1
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:33:01.805099Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 280
+      - 2
+      - null
+      - 0
+      - 28672
+      - 14
+    - - "2021-02-05T12:33:11.941115Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 200
+      - 1
+      - null
+      - 0
+      - 20480
+      - 10
+    - - "2021-02-05T12:33:12.460453Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 240
+      - 2
+      - null
+      - 0
+      - 24576
+      - 12
+    - - "2021-02-05T12:33:15.569804Z"
+      - tmus-cloud-1
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    - - "2021-02-05T12:33:16.355897Z"
+      - tmus-cloud-2
+      - tmus
+      - null
+      - 80
+      - 1
+      - null
+      - 0
+      - 8192
+      - 4
+    partial: false
+  messages: []
+  err: ""

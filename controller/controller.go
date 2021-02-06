@@ -288,6 +288,7 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.cloudletResourcesInfluxQ = cloudletResourcesInfluxQ
+	services.cloudletResourcesInfluxQ.UpdateDefaultRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration())
 
 	InitNotify(influxQ, persConnInfluxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {
