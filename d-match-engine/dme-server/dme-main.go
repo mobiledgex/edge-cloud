@@ -597,12 +597,15 @@ func main() {
 	// REST service
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
-		ApiAddr:        *apiAddr,
-		GetCertificate: clientTlsConfig.GetClientCertificate,
+		ApiAddr: *apiAddr,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},
 	}
+	if clientTlsConfig != nil {
+		gwcfg.GetCertificate = clientTlsConfig.GetClientCertificate
+	}
+
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
 		span.Finish()
