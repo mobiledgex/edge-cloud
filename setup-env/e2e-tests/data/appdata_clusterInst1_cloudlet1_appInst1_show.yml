@@ -22,6 +22,7 @@ settings:
   persistentconnectionmetricscollectioninterval: 1h0m0s
   influxdbmetricsretention: 672h0m0s
   cleanupreservableautoclusteridletime: 30m0s
+  influxdbcloudletusagemetricsretention: 8760h0m0s
 cloudlets:
 - key:
     organization: dmuus

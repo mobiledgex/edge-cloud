@@ -23,6 +23,7 @@ settings:
   persistentconnectionmetricscollectioninterval: 1s
   influxdbmetricsretention: 672h0m0s
   cleanupreservableautoclusteridletime: 30m0s
+  influxdbcloudletusagemetricsretention: 8760h0m0s
 flavors:
 - key:
     name: x1.tiny

@@ -98,6 +98,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		case SettingsFieldCloudletMaintenanceTimeout:
 			v.CheckGT(f, int64(s.CloudletMaintenanceTimeout), 0)
 		case SettingsFieldInfluxDbMetricsRetention:
+			fallthrough
+		case SettingsFieldInfluxDbCloudletUsageMetricsRetention:
 			// no validation
 		case SettingsFieldUpdateVmPoolTimeout:
 			v.CheckGT(f, int64(s.UpdateVmPoolTimeout), 0)
@@ -148,6 +150,7 @@ func GetDefaultSettings() *Settings {
 	s.PersistentConnectionMetricsCollectionInterval = Duration(60 * time.Minute)
 	s.InfluxDbMetricsRetention = Duration(672 * time.Hour) // 28 days is a default
 	s.CleanupReservableAutoClusterIdletime = Duration(30 * time.Minute)
+	s.InfluxDbCloudletUsageMetricsRetention = Duration(8760 * time.Hour) // 1 year
 	return &s
 }
 
