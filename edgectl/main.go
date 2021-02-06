@@ -53,11 +53,12 @@ var completionCmd = &cobra.Command{
 func connect(cmd *cobra.Command, args []string) error {
 	var err error
 
-	var skipVerify bool
+	var skipVerify, testMode bool
 	if tlsCertFile == "" {
 		skipVerify = true
+		testMode = true
 	}
-	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile, skipVerify)
+	dialOption, err := tls.GetTLSClientDialOption(addr, nil, tlsCertFile, skipVerify, testMode)
 	if err != nil {
 		return err
 	}
