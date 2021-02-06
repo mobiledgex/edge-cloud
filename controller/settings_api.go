@@ -60,6 +60,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.CleanupReservableAutoClusterIdletime = edgeproto.GetDefaultSettings().CleanupReservableAutoClusterIdletime
 			modified = true
 		}
+		if cur.InfluxDbCloudletUsageMetricsRetention == 0 {
+			cur.InfluxDbCloudletUsageMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbCloudletUsageMetricsRetention
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}
@@ -105,6 +109,12 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 			} else if field == edgeproto.SettingsFieldInfluxDbMetricsRetention {
 				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb retention policy", "timer", in.InfluxDbMetricsRetention)
 				err1 := services.influxQ.UpdateDefaultRetentionPolicy(in.InfluxDbMetricsRetention.TimeDuration())
+				if err1 != nil {
+					return err1
+				}
+			} else if field == edgeproto.SettingsFieldInfluxDbCloudletUsageMetricsRetention {
+				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb cloudlet usage metrics retention policy", "timer", in.InfluxDbCloudletUsageMetricsRetention)
+				err1 := services.cloudletResourcesInfluxQ.UpdateDefaultRetentionPolicy(in.InfluxDbCloudletUsageMetricsRetention.TimeDuration())
 				if err1 != nil {
 					return err1
 				}
