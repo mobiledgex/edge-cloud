@@ -39,6 +39,7 @@ settings:
   dmeapimetricscollectioninterval: 1s
   persistentconnectionmetricscollectioninterval: 1s
   cleanupreservableautoclusteridletime: 30m0s
+  influxdbcloudletusagemetricsretention: 8760h0m0s
 trustpolicies:
 - key:
     organization: dmuus

@@ -6,6 +6,7 @@ tests:
   - includefile: add_delete.yml
   - includefile: add_delete.yml
     mods: [cli]
+  - includefile: check_cloudlet_usage_metrics.yml
   - includefile: check_events.yml
   - includefile: check_events.yml
     mods: [cli]
