@@ -179,6 +179,16 @@ func (s *NodeMgr) CommonName() string {
 	return cn + "." + s.InternalDomain
 }
 
+func (s *NodeMgr) UpdateNodeProps(ctx context.Context, props map[string]string) {
+	for k, v := range props {
+		if s.MyNode.Properties == nil {
+			s.MyNode.Properties = make(map[string]string)
+		}
+		s.MyNode.Properties[k] = v
+	}
+	s.UpdateMyNode(ctx)
+}
+
 type NodeOptions struct {
 	name               string
 	cloudletKey        edgeproto.CloudletKey

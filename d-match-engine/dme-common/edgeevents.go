@@ -9,6 +9,7 @@ import (
 )
 
 type EdgeEventsHandler interface {
+	GetVersionProperties() map[string]string
 	AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, sendFunc func(event *dme.ServerEdgeEvent))
 	RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
 	RemoveAppInstKey(ctx context.Context, appInstKey edgeproto.AppInstKey)
@@ -65,4 +66,8 @@ func (e *EmptyEdgeEventsHandler) SendAppInstStateEvent(ctx context.Context, appI
 func (e *EmptyEdgeEventsHandler) SendEdgeEventToClient(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, appInstKey edgeproto.AppInstKey, cookieKey CookieKey) {
 	log.DebugLog(log.DebugLevelDmereq, "SendEdgeEventToClient not implemented for EmptyEdgeEventHandler. Returning")
 	return
+}
+
+func (e *EmptyEdgeEventsHandler) GetVersionProperties() map[string]string {
+	return map[string]string{}
 }

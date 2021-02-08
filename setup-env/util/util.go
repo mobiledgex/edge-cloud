@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -624,14 +625,24 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		err1 = ReadYamlFile(firstYamlFile, &r1)
 		err2 = ReadYamlFile(secondYamlFile, &r2)
+		// Only compare keys of properties, since Node Property values
+		// are not constant.
+		for ii, _ := range r1.Nodes {
+			ClearMapValues(r1.Nodes[ii].Properties)
+		}
+		for ii, _ := range r2.Nodes {
+			ClearMapValues(r2.Nodes[ii].Properties)
+		}
 		copts = []cmp.Option{
 			edgeproto.IgnoreNodeFields("nocmp"),
 			cmpopts.SortSlices(func(a edgeproto.Node, b edgeproto.Node) bool {
 				// ignore nocmp fields, include internalPki
 				// because one controller has a different
 				// one and the keys end up being the same.
-				ca := a.Key.Type + a.Key.Region + a.Key.CloudletKey.GetKeyString() + a.InternalPki
-				cb := b.Key.Type + b.Key.Region + b.Key.CloudletKey.GetKeyString() + b.InternalPki
+				// Include if props are present because one
+				// controller will have fakeinfra version props.
+				ca := a.Key.Type + a.Key.Region + a.Key.CloudletKey.GetKeyString() + a.InternalPki + strconv.Itoa(len(a.Properties))
+				cb := b.Key.Type + b.Key.Region + b.Key.CloudletKey.GetKeyString() + b.InternalPki + strconv.Itoa(len(b.Properties))
 				return ca < cb
 			}),
 		}
@@ -786,6 +797,16 @@ func ClearAppDataOutputStatus(output *testutil.AllDataOut) {
 	output.Cloudlets = testutil.FilterStreamResults(output.Cloudlets)
 	output.ClusterInsts = testutil.FilterStreamResults(output.ClusterInsts)
 	output.AppInstances = testutil.FilterStreamResults(output.AppInstances)
+}
+
+// clears map values so that only key names are compared
+func ClearMapValues(m map[string]string) {
+	if m == nil {
+		return
+	}
+	for k, _ := range m {
+		m[k] = ""
+	}
 }
 
 func ReadConsoleURL(consoleUrl string, cookies []*http.Cookie) (string, error) {

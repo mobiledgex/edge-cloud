@@ -98,7 +98,7 @@ func main() {
 	log.SpanLog(ctx, log.DebugLevelInfo, "Using cloudletKey", "key", myCloudletInfo.Key, "platform", *platformName, "physicalName", physicalName)
 
 	// Load platform implementation.
-	platform, err = pfutils.GetPlatform(ctx, *platformName)
+	platform, err = pfutils.GetPlatform(ctx, *platformName, nodeMgr.UpdateNodeProps)
 	if err != nil {
 		span.Finish()
 		log.FatalLog(err.Error())

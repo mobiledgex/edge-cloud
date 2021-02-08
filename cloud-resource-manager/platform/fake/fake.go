@@ -536,6 +536,10 @@ func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client,
 	return nil, nil
 }
 
+func (s *Platform) GetVersionProperties() map[string]string {
+	return map[string]string{}
+}
+
 func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
 	return &RootLBFlavor, nil
 }
