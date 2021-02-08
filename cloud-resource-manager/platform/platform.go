@@ -55,6 +55,8 @@ type Caches struct {
 type Platform interface {
 	// GetType returns the cloudlet's stack type, i.e. Openstack, Azure, etc.
 	GetType() string
+	// GetVersionProperties returns properties related to the platform version
+	GetVersionProperties() map[string]string
 	// Init is called once during CRM startup.
 	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
@@ -127,6 +129,9 @@ type Platform interface {
 }
 
 type ClusterSvc interface {
+	// GetVersionProperties returns properties related to the platform version
+	GetVersionProperties() map[string]string
+	// Get AppInst Configs
 	GetAppInstConfigs(ctx context.Context, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst, autoScalePolicy *edgeproto.AutoScalePolicy) ([]*edgeproto.ConfigFile, error)
 }
 
