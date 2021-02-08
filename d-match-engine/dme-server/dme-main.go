@@ -375,7 +375,12 @@ func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, e
 	if !ok {
 		log.FatalLog("plugin GetOperatorApiGw symbol does not implement func(ctx context.Context, opername string) (op.OperatorApiGw, error)", "plugin", *solib)
 	}
-	return getOperatorFunc(ctx, operatorName)
+	apiGw, err := getOperatorFunc(ctx, operatorName)
+	if err != nil {
+		return nil, err
+	}
+	nodeMgr.UpdateNodeProps(ctx, apiGw.GetVersionProperties())
+	return apiGw, nil
 }
 
 // Loads EdgeEvent Plugin functions into EEHandler
@@ -405,6 +410,7 @@ func initEdgeEventsPlugin(ctx context.Context, operatorName string) (dmecommon.E
 	if err != nil {
 		return nil, err
 	}
+	nodeMgr.UpdateNodeProps(ctx, eehandler.GetVersionProperties())
 	return eehandler, nil
 }
 

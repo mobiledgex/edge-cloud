@@ -2,6 +2,7 @@ package defaultoperator
 
 import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/version"
 
 	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
 	simulatedloc "github.com/mobiledgex/edge-cloud/d-match-engine/operator/defaultoperator/simulated-location"
@@ -37,4 +38,8 @@ func (*OperatorApiGw) GetLocation(mreq *dme.GetLocationRequest, mreply *dme.GetL
 func (*OperatorApiGw) GetQOSPositionKPI(mreq *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error {
 	log.DebugLog(log.DebugLevelDmereq, "getting simulated results for operator with no QOS Pos implementation")
 	return simulatedqos.GetSimulatedQOSPositionKPI(mreq, getQosSvr)
+}
+
+func (*OperatorApiGw) GetVersionProperties() map[string]string {
+	return version.BuildProps("DefaultOperator")
 }

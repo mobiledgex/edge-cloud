@@ -211,7 +211,7 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 
 func getClusterInstVMRequirements(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
 	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, error) {
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return nil, err
 	}
@@ -512,7 +512,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	if !cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs) {
 		return nil, fmt.Errorf("CloudletRefs not found: %v", key)
 	}
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return nil, err
 	}
