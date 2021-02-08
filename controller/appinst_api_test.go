@@ -286,7 +286,6 @@ func TestAppInstApi(t *testing.T) {
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}
-	testAppFlavorRequest(t, ctx, commonApi, responder)
 
 	// delete all AppInsts and Apps and check that refs are empty
 	for _, obj := range testutil.AppInstData {
@@ -299,6 +298,9 @@ func TestAppInstApi(t *testing.T) {
 		}
 		require.Nil(t, err, "Delete app inst failed")
 	}
+
+	testAppFlavorRequest(t, ctx, commonApi, responder)
+
 	// cleanup unused reservable auto clusters
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
 	clusterInstApi.cleanupWorkers.WaitIdle()
@@ -541,11 +543,11 @@ func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppIn
 	}
 	_, err := flavorApi.CreateFlavor(ctx, &testflavor)
 	require.Nil(t, err, "CreateFlavor")
-	nonNomApp := testutil.AppInstData[0]
+	nonNomApp := testutil.AppInstData[2]
 	nonNomApp.Flavor = testflavor.Key
 	err = appInstApi.CreateAppInst(&nonNomApp, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "non-nom-app-create")
-	require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet San Jose Site supports none", err.Error())
+	require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet New York Site supports none", err.Error())
 }
 
 // Test that Crm Override for Delete App overrides any failures

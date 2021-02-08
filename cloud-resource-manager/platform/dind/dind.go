@@ -75,3 +75,11 @@ func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client,
 func (s *Platform) GetVersionProperties() map[string]string {
 	return map[string]string{}
 }
+
+func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
+	return &edgeproto.Flavor{
+		Vcpus: uint64(0),
+		Ram:   uint64(0),
+		Disk:  uint64(0),
+	}, nil
+}

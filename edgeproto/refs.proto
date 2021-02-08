@@ -4,15 +4,29 @@ syntax = "proto3";
 package edgeproto;
 
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
 import "cloudlet.proto";
-import "cluster.proto";
 import "clusterinst.proto";
 import "app.proto";
-import "gogoproto/gogo.proto";
+import "infraresources.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
+
+// VMResource
+//
+// VMResource specifies the resource requirement of a VM
+message VMResource {
+  // ClusterInstKey to track which cluster this VM resource belongs to
+  ClusterInstKey key = 1 [(gogoproto.nullable) = false];
+  // Flavor requirement of the VM required by the cluster
+  FlavorInfo vm_flavor = 2;
+  // Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+  string type = 3;
+  // Access type for resource of type App VM
+  AccessType app_access_type = 4;
+}
 
 // Refs track ref counts of used resources, ports, etc.
 // They are not part of the base Cloudlet/Cluster objects because
@@ -26,8 +40,6 @@ option (gogoproto.goproto_sizecache_all) = false;
 message CloudletRefs {
   // Cloudlet key
   CloudletKey key = 1 [(gogoproto.nullable) = false];
-  // Clusters instantiated on the Cloudlet
-  repeated ClusterKey clusters = 2 [(gogoproto.nullable) = false];
   // Used RAM in MB
   uint64 used_ram = 4;
   // Used VCPU cores
@@ -45,7 +57,10 @@ message CloudletRefs {
   map<string, uint32> opt_res_used_map = 11;
   // Track reservable autoclusterinsts ids in use. This is a bitmap.
   fixed64 reserved_auto_cluster_ids = 12;
-
+  // Clusters instantiated on the Cloudlet
+  repeated ClusterInstRefKey cluster_insts = 13 [(gogoproto.nullable) = false];
+  // VM apps instantiated on the Cloudlet
+  repeated AppInstRefKey vm_app_insts = 14 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
@@ -75,6 +90,7 @@ message ClusterRefs {
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
   option (protogen.uses_org) = "none";
+  option (protogen.notify_cache) = true;
 }
 
 // This API should be admin-only

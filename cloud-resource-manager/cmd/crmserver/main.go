@@ -255,6 +255,14 @@ func main() {
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
+				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
+				err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resources, cloudlet.ResourceQuotas)
+				if err != nil {
+					log.FatalLog("Failed to validate cloudlet resource quota", "err", err)
+				}
+				if resources != nil {
+					myCloudletInfo.ResourcesSnapshot = *resources
+				}
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 				if cloudlet.TrustPolicy == "" {
@@ -263,12 +271,6 @@ func main() {
 					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-				resources, err := platform.GetCloudletInfraResources(ctx)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key, "err", err)
-				} else {
-					myCloudletInfo.Resources = *resources
-				}
 			}
 		}
 

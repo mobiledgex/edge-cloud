@@ -243,7 +243,9 @@ func CrmServiceWait(key edgeproto.CloudletKey) error {
 			return nil
 		}
 		delete(trackedProcess, key)
-		return fmt.Errorf("Crm Service Stopped: %v", err)
+		if err != nil {
+			return fmt.Errorf("Crm Service Stopped: %v", err)
+		}
 	}
 	return nil
 }

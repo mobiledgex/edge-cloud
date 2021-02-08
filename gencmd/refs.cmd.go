@@ -270,12 +270,43 @@ var AppInstRefsApiCmds = []*cobra.Command{
 	ShowAppInstRefsCmd.GenCmd(),
 }
 
+var VMResourceRequiredArgs = []string{
+	"key.clusterkey.name",
+	"key.cloudletkey.organization",
+	"key.cloudletkey.name",
+	"key.organization",
+}
+var VMResourceOptionalArgs = []string{
+	"vmflavor.name",
+	"vmflavor.vcpus",
+	"vmflavor.ram",
+	"vmflavor.disk",
+	"vmflavor.propmap",
+	"type",
+	"appaccesstype",
+}
+var VMResourceAliasArgs = []string{}
+var VMResourceComments = map[string]string{
+	"key.clusterkey.name":          "Cluster name",
+	"key.cloudletkey.organization": "Organization of the cloudlet site",
+	"key.cloudletkey.name":         "Name of the cloudlet",
+	"key.organization":             "Name of Developer organization that this cluster belongs to",
+	"vmflavor.name":                "Name of the flavor on the Cloudlet",
+	"vmflavor.vcpus":               "Number of VCPU cores on the Cloudlet",
+	"vmflavor.ram":                 "Ram in MB on the Cloudlet",
+	"vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
+	"vmflavor.propmap":             "OS Flavor Properties, if any",
+	"type":                         "Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"appaccesstype":                "Access type for resource of type App VM, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+}
+var VMResourceSpecialArgs = map[string]string{
+	"vmflavor.propmap": "StringToString",
+}
 var CloudletRefsRequiredArgs = []string{
 	"key.organization",
 	"key.name",
 }
 var CloudletRefsOptionalArgs = []string{
-	"clusters:#.name",
 	"usedram",
 	"usedvcores",
 	"useddisk",
@@ -286,18 +317,31 @@ var CloudletRefsOptionalArgs = []string{
 	"optresusedmap:#.key",
 	"optresusedmap:#.value",
 	"reservedautoclusterids",
+	"clusterinsts:#.clusterkey.name",
+	"clusterinsts:#.organization",
+	"vmappinsts:#.appkey.organization",
+	"vmappinsts:#.appkey.name",
+	"vmappinsts:#.appkey.version",
+	"vmappinsts:#.clusterinstkey.clusterkey.name",
+	"vmappinsts:#.clusterinstkey.organization",
 }
 var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
-	"key.organization":       "Organization of the cloudlet site",
-	"key.name":               "Name of the cloudlet",
-	"clusters:#.name":        "Cluster name",
-	"usedram":                "Used RAM in MB",
-	"usedvcores":             "Used VCPU cores",
-	"useddisk":               "Used disk in GB",
-	"useddynamicips":         "Used dynamic IPs",
-	"usedstaticips":          "Used static IPs",
-	"reservedautoclusterids": "Track reservable autoclusterinsts ids in use. This is a bitmap.",
+	"key.organization":                            "Organization of the cloudlet site",
+	"key.name":                                    "Name of the cloudlet",
+	"usedram":                                     "Used RAM in MB",
+	"usedvcores":                                  "Used VCPU cores",
+	"useddisk":                                    "Used disk in GB",
+	"useddynamicips":                              "Used dynamic IPs",
+	"usedstaticips":                               "Used static IPs",
+	"reservedautoclusterids":                      "Track reservable autoclusterinsts ids in use. This is a bitmap.",
+	"clusterinsts:#.clusterkey.name":              "Cluster name",
+	"clusterinsts:#.organization":                 "Name of Developer organization that this cluster belongs to",
+	"vmappinsts:#.appkey.organization":            "App developer organization",
+	"vmappinsts:#.appkey.name":                    "App name",
+	"vmappinsts:#.appkey.version":                 "App version",
+	"vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
+	"vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
 var ClusterRefsRequiredArgs = []string{
