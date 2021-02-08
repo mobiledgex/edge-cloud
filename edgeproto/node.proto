@@ -27,7 +27,7 @@ message NodeKey {
   option (gogoproto.gostring) = true;
 }
 
-// Node defines a DME (distributed matching engine) or CRM (cloudlet resource manager) instance.
+// Node identifies an Edge Cloud service.
 message Node {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
@@ -49,6 +49,8 @@ message Node {
   string container_version = 8 [(protogen.backend) = true];
   // Internal PKI Config
   string internal_pki = 9 [(protogen.backend) = true];
+  // Additional properties
+  map<string, string> properties = 11;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
