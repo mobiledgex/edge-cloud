@@ -463,11 +463,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 	cctx.SetOverride(&in.CrmOverride)
 
-	var autocluster bool
-	tenant := isTenantAppInst(&in.Key)
-	if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization && in.Key.AppKey.Organization != cloudcommon.OrganizationMobiledgeX && !tenant {
-		return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
-	}
+	autocluster := false
+	tenant := false
 	err = s.checkForAppinstCollisions(ctx, &in.Key)
 	if err != nil {
 		return err
@@ -480,6 +477,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// reset modified state in case STM hits conflict and runs again
 		autocluster = false
+		tenant = false
 		reservedAutoClusterId = -1
 		reservedClusterInstKey = nil
 		in.RealClusterName = realClusterName
@@ -494,6 +492,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if in.Flavor.Name == "" {
 				return fmt.Errorf("No AppInst or App flavor specified")
 			}
+		}
+		tenant = isTenantAppInst(&in.Key, app.DelOpt)
+		if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization && in.Key.AppKey.Organization != cloudcommon.OrganizationMobiledgeX && !tenant {
+			return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
 		}
 
 		// make sure cloudlet exists so we don't create refs for missing cloudlet
@@ -1802,7 +1804,7 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	services.events.AddMetric(&metric)
 
 	// check to see if it was autoprovisioned and they used a reserved clusterinst, then log the start and stop of the clusterinst as well
-	if isTenantAppInst(appInstKey) && (event == cloudcommon.CREATED || event == cloudcommon.DELETED) {
+	if isTenantAppInst(appInstKey, app.DelOpt) && (event == cloudcommon.CREATED || event == cloudcommon.DELETED) {
 		clusterEvent := cloudcommon.RESERVED
 		if event == cloudcommon.DELETED {
 			clusterEvent = cloudcommon.UNRESERVED
@@ -1811,8 +1813,8 @@ func RecordAppInstEvent(ctx context.Context, appInstKey *edgeproto.AppInstKey, e
 	}
 }
 
-func isTenantAppInst(appInstKey *edgeproto.AppInstKey) bool {
-	return appInstKey.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX && appInstKey.AppKey.Organization != cloudcommon.OrganizationMobiledgeX
+func isTenantAppInst(appInstKey *edgeproto.AppInstKey, appDelOpt edgeproto.DeleteType) bool {
+	return appInstKey.ClusterInstKey.Organization == cloudcommon.OrganizationMobiledgeX && appInstKey.AppKey.Organization != cloudcommon.OrganizationMobiledgeX && appDelOpt != edgeproto.DeleteType_AUTO_DELETE
 }
 
 func clusterInstReservationEvent(ctx context.Context, eventName string, appInst *edgeproto.AppInst) {
