@@ -14,7 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
+	proxycerts "github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy/certs"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -305,8 +305,8 @@ func main() {
 				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
-			proxy.Init(ctx, lbClients)
-			proxy.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, platform.GetType(), rootlb, *commercialCerts)
+			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(accessClient))
+			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, platform.GetType(), rootlb, *commercialCerts)
 		}
 		tlsSpan.Finish()
 	}()
