@@ -41,11 +41,13 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		cloudlet := edgeproto.Cloudlet{}
 		cloudlet.Key.Organization = org
 		cloudlet.Key.Name = name
+		cloudlet.EnvVar = map[string]string{"key1": "val1"}
 		s.CloudletCache.Update(ctx, &cloudlet, int64(ii))
 
 		cloudletInfo := edgeproto.CloudletInfo{}
 		cloudletInfo.Key.Organization = org
 		cloudletInfo.Key.Name = name
+		cloudletInfo.ContainerVersion = "xyz"
 		s.CloudletInfoCache.Update(ctx, &cloudletInfo, int64(ii))
 
 		pool := edgeproto.CloudletPool{}
