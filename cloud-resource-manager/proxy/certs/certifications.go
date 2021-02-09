@@ -78,8 +78,8 @@ var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
 
 var accessApi *accessapi.ControllerClient
 
-func Init(ctx context.Context, clients map[string]ssh.Client, accessClient edgeproto.CloudletAccessApiClient) {
-	accessApi = accessapi.NewControllerClient(accessClient)
+func Init(ctx context.Context, clients map[string]ssh.Client, inAccessApi *accessapi.ControllerClient) {
+	accessApi = inAccessApi
 	if len(DedicatedClients) == 0 {
 		DedicatedClients = make(map[string]ssh.Client)
 	}

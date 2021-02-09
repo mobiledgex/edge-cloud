@@ -305,7 +305,7 @@ func main() {
 				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
-			proxycerts.Init(ctx, lbClients, accessClient)
+			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(accessClient))
 			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, platform.GetType(), rootlb, *commercialCerts)
 		}
 		tlsSpan.Finish()
