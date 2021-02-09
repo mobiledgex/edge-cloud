@@ -29,7 +29,7 @@ func ParseGrpcMethod(method string) (path string, cmd string) {
 
 type GrpcGWConfig struct {
 	ApiAddr        string
-	GetCertificate func(*ctls.ClientHelloInfo) (*ctls.Certificate, error)
+	GetCertificate func(*ctls.CertificateRequestInfo) (*ctls.Certificate, error)
 	ApiHandles     []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error
 }
 
@@ -39,7 +39,7 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	// may not work with internal addressing
 	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, "", true)
 	if err != nil {
-		log.FatalLog("Unable to get TLSClient Dial Option")
+		log.FatalLog("Unable to get TLSClient Dial Option", "error", err)
 	}
 	conn, err := grpc.DialContext(ctx, cfg.ApiAddr, dialOption)
 	if err != nil {
@@ -67,7 +67,7 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	return mux, nil
 }
 
-func GrpcGatewayServe(cfg *GrpcGWConfig, server *http.Server) {
+func GrpcGatewayServe(server *http.Server) {
 	// Serve REST gateway
 	if err := server.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
 		log.FatalLog("Failed to serve HTTP TLS", "error", err)

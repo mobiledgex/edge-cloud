@@ -487,7 +487,7 @@ func main() {
 	dmecommon.SetupMatchEngine(eehandler)
 	grpcOpts := make([]grpc.ServerOption, 0)
 
-	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+	clientTlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
 		nodeMgr.CommonName(),
 		myCertIssuer,
 		[]node.MatchCA{node.SameRegionalMatchCA()})
@@ -503,7 +503,7 @@ func main() {
 			nodeMgr.AccessKeyClient.StreamAddAccessKey)
 	}
 	notifyClient := initNotifyClient(ctx, *notifyAddrs,
-		tls.GetGrpcDialOption(notifyClientTls),
+		tls.GetGrpcDialOption(clientTlsConfig),
 		notifyClientUnaryOp,
 		notifyClientStreamOp,
 	)
@@ -603,12 +603,15 @@ func main() {
 	// REST service
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
-		ApiAddr:        *apiAddr,
-		GetCertificate: publicCertManager.GetCertificateFunc(),
+		ApiAddr: *apiAddr,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},
 	}
+	if clientTlsConfig != nil {
+		gwcfg.GetCertificate = clientTlsConfig.GetClientCertificate
+	}
+
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
 		span.Finish()
@@ -643,7 +646,7 @@ func main() {
 		ErrorLog:  &nullLogger,
 	}
 
-	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
+	go cloudcommon.GrpcGatewayServe(httpServer)
 	defer httpServer.Shutdown(context.Background())
 
 	sigChan = make(chan os.Signal, 1)
