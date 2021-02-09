@@ -1,8 +1,7 @@
-package proxy
+package certs
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -12,15 +11,14 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
-
-var CertName = "envoyTlsCerts" // cannot use common name as filename since envoy doesn't know if the app is dedicated or not
 
 const LETS_ENCRYPT_MAX_DOMAINS_PER_CERT = 100
 
@@ -78,7 +76,10 @@ var fixedCerts = false
 
 var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
 
-func Init(ctx context.Context, clients map[string]ssh.Client) {
+var accessApi *accessapi.ControllerClient
+
+func Init(ctx context.Context, clients map[string]ssh.Client, inAccessApi *accessapi.ControllerClient) {
+	accessApi = inAccessApi
 	if len(DedicatedClients) == 0 {
 		DedicatedClients = make(map[string]ssh.Client)
 	}
@@ -92,19 +93,6 @@ func Init(ctx context.Context, clients map[string]ssh.Client) {
 	}
 }
 
-// GetCertsDirAndFiles returns certsDir, certFile, keyFile
-func GetCertsDirAndFiles(ctx context.Context, client ssh.Client) (string, string, string, error) {
-	out, err := client.Output("pwd")
-	if err != nil {
-		return "", "", "", err
-	}
-	pwd := strings.TrimSpace(string(out))
-	certsDir := pwd + "/envoy/certs"
-	certFile := certsDir + "/" + CertName + ".crt"
-	keyFile := certsDir + "/" + CertName + ".key"
-	return certsDir, certFile, keyFile, nil
-}
-
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
 func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, platformType string, client ssh.Client, commercialCerts bool) {
 	_, found := noSudoMap[platformType]
@@ -114,11 +102,12 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName,
 	if strings.Contains(platformType, "fake") {
 		fixedCerts = true
 	}
-	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
+	out, err := client.Output("pwd")
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get cert info", "dedicatedCommonName", dedicatedCommonName, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get pwd", "dedicatedCommonName", dedicatedCommonName, "err", err)
 		return
 	}
+	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
 	SharedRootLbClient = client
 	getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
 	// refresh every 30 days
@@ -132,13 +121,9 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName,
 
 func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool) {
 	var err error
-	var config *vault.Config
 	tls := access.TLSCert{}
 	if commercialCerts {
-		config, err = vault.BestConfig(nodeMgr.VaultAddr)
-		if err == nil {
-			err = getCertFromVault(ctx, config, &tls, commonName, dedicatedCommonName)
-		}
+		err = getCertFromVault(ctx, &tls, commonName, dedicatedCommonName)
 	} else {
 		err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
 	}
@@ -163,6 +148,7 @@ func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commo
 		DedicatedMux.Unlock()
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
+		nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), fmt.Errorf("Unable to get certs: %v", err))
 	}
 }
 
@@ -207,7 +193,7 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 			return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
 		}
-		err = pc.Run(client, fmt.Sprintf("bash %s -d %s -c %s -k %s -e %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile), EnvoyImageDigest))
+		err = pc.Run(client, fmt.Sprintf("bash %s -d %s -c %s -k %s -e %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile), cloudcommon.EnvoyImageDigest))
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 			return fmt.Errorf("failed to atomically update tls certs: %v", err)
@@ -218,41 +204,33 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 
 // GetCertFromVault fills in the cert fields by calling the vault  plugin.  The vault plugin will
 // return a new cert if one is not already available, or a cached copy of an existing cert.
-func getCertFromVault(ctx context.Context, config *vault.Config, tlsCert *access.TLSCert, commonNames ...string) error {
+func getCertFromVault(ctx context.Context, tlsCert *access.TLSCert, commonNames ...string) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "GetCertFromVault", "commonName", commonNames)
-	client, err := config.Login()
-	if err != nil {
-		return err
-	}
 	// needs to have at least one domain name specified, and not more than LetsEncrypt's limit per cert
 	// in reality len(commonNames) should always be 2, one for the sharedLB and a wildcard one for the dedicatedLBs
 	if len(commonNames) < 1 || LETS_ENCRYPT_MAX_DOMAINS_PER_CERT < len(commonNames) {
 		return fmt.Errorf("must have between 1 and %d domain names specified", LETS_ENCRYPT_MAX_DOMAINS_PER_CERT)
 	}
 	names := strings.Join(commonNames, ",")
-	// vault API uses "_" to denote wildcard
-	path := "/certs/cert/" + strings.Replace(names, "*", "_", 1)
-	result, err := vault.GetKV(client, path, 0)
-	if err != nil {
-		return err
+	if accessApi == nil {
+		return fmt.Errorf("Access API is not initialized")
 	}
-	var ok bool
-	tlsCert.CertString, ok = result["cert"].(string)
-	if !ok {
+	// vault API uses "_" to denote wildcard
+	commonName := strings.Replace(names, "*", "_", 1)
+	pubCert, err := accessApi.GetPublicCert(ctx, commonName)
+	if err != nil {
+		return fmt.Errorf("Failed to get public cert from vault for commonName %s: %v", commonName, err)
+	}
+	if pubCert.Cert == "" {
 		return fmt.Errorf("No cert found in cert from vault")
 	}
-	tlsCert.KeyString, ok = result["key"].(string)
-	if !ok {
+	if pubCert.Key == "" {
 		return fmt.Errorf("No key found in cert from vault")
 	}
-	ttlval, ok := result["ttl"].(json.Number)
-	if !ok {
-		return fmt.Errorf("ttl key found in cert from vault")
-	}
-	tlsCert.TTL, err = ttlval.Int64()
-	if err != nil {
-		return fmt.Errorf("Error in decoding TTL from vault: %v", err)
-	}
+
+	tlsCert.CertString = pubCert.Cert
+	tlsCert.KeyString = pubCert.Key
+	tlsCert.TTL = pubCert.TTL
 	tlsCert.CommonName = names
 	return nil
 }
@@ -300,11 +278,12 @@ func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonName
 }
 
 func NewDedicatedLB(ctx context.Context, key *edgeproto.CloudletKey, name string, client ssh.Client, nodeMgr *node.NodeMgr) {
-	certsDir, certFile, keyFile, err := GetCertsDirAndFiles(ctx, client)
+	out, err := client.Output("pwd")
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Error: failed to get cert dir and files", "name", name, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get pwd", "name", name, "err", err)
 		return
 	}
+	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
 	DedicatedMux.Lock()
 	defer DedicatedMux.Unlock()
 	DedicatedClients[name] = client
