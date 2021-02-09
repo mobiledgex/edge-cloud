@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -133,6 +134,10 @@ var MexNodePrefix = "mex-k8s-node-"
 // GCP limits to 40, Azure has issues above 54.  For consistency go with the lower limit
 const MaxClusterNameLength = 40
 
+// Common cert name. Cannot use common name as filename since envoy doesn't know if the app is dedicated or not
+const CertName = "envoyTlsCerts"
+const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
+
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only platos's Enabling layer is included.
 var platformApps = map[string]bool{
@@ -254,4 +259,13 @@ func GetAppClientType(app *edgeproto.App) string {
 		clientType = ClientTypeClusterVM
 	}
 	return clientType
+}
+
+// GetCertsDirAndFiles returns certsDir, certFile, keyFile
+func GetCertsDirAndFiles(pwd string) (string, string, string) {
+	pwd = strings.TrimSpace(pwd)
+	certsDir := pwd + "/envoy/certs"
+	certFile := certsDir + "/" + CertName + ".crt"
+	keyFile := certsDir + "/" + CertName + ".key"
+	return certsDir, certFile, keyFile
 }

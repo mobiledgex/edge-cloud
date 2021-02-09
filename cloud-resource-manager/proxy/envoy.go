@@ -22,8 +22,6 @@ var sdsYamlT *template.Template
 // this is the default value in envoy, for DOS protection
 const defaultConcurrentConns uint64 = 1024
 
-const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
-
 func init() {
 	envoyYamlT = template.Must(template.New("yaml").Parse(envoyYaml))
 	sdsYamlT = template.Must(template.New("yaml").Parse(sdsYaml))
@@ -70,10 +68,11 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		// For dind, we use the network which the dind cluster is on.
 		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
-	certsDir, _, _, err := GetCertsDirAndFiles(ctx, client)
+	out, err = client.Output("pwd")
 	if err != nil {
-		return fmt.Errorf("Unable to get certsDir - %v", "err")
+		return fmt.Errorf("Unable to get pwd: %v", err)
 	}
+	certsDir, _, _ := cloudcommon.GetCertsDirAndFiles(string(out))
 	if isTLS {
 		// use envoy SDS (secret discovery service) to refresh certs
 		cmdArgs = append(cmdArgs, "-v", syamlName+":/etc/envoy/sds.yaml")
@@ -82,7 +81,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		"-v", certsDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/tmp/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
-		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@" + EnvoyImageDigest}...)
+		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@" + cloudcommon.EnvoyImageDigest}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
@@ -129,7 +128,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 	spec := ProxySpec{
 		Name:       name,
 		MetricPort: cloudcommon.ProxyMetricsPort,
-		CertName:   CertName,
+		CertName:   cloudcommon.CertName,
 	}
 	// check skip health check ports
 	if skipHcPorts == "all" {
