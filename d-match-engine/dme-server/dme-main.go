@@ -47,6 +47,8 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
+var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
+var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
@@ -570,10 +572,20 @@ func main() {
 		}
 		accessApi = accessapi.NewVaultClient(cloudlet, nodeMgr.VaultConfig, *region)
 	}
+
+	var getPublicCertApi cloudcommon.GetPublicCertApi
+	if nodeMgr.InternalPki.UseVaultPki {
+		if tls.IsTestTls() || *testMode {
+			getPublicCertApi = &cloudcommon.TestPublicCertApi{}
+		} else {
+			getPublicCertApi = accessApi
+		}
+	}
 	// Setup PublicCertManager for dme
-	publicCertManager := node.NewPublicCertManager("_.dme.mobiledgex.net", accessApi)
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), &cloudcommon.TestPublicCertApi{})
+	publicCertManager, err := node.NewPublicCertManager("_.dme.mobiledgex.net", getPublicCertApi, *tlsApiCertFile, *tlsApiKeyFile)
+	if err != nil {
+		span.Finish()
+		log.FatalLog("unable to get public cert manager", "err", err)
 	}
 	publicCertManager.StartRefresh()
 	// Get TLS Config for grpc Creds from PublicCertManager
@@ -603,7 +615,8 @@ func main() {
 	// REST service
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
-		ApiAddr: *apiAddr,
+		ApiAddr:     *apiAddr,
+		TlsCertFile: *tlsApiCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},
@@ -646,7 +659,7 @@ func main() {
 		ErrorLog:  &nullLogger,
 	}
 
-	go cloudcommon.GrpcGatewayServe(httpServer)
+	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
 	defer httpServer.Shutdown(context.Background())
 
 	sigChan = make(chan os.Signal, 1)

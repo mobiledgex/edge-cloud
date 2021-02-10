@@ -261,7 +261,8 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	defer ctrlMgr.Stop()
 
 	getPublicCertApi := &cloudcommon.TestPublicCertApi{}
-	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
+	publicCertManager, err := node.NewPublicCertManager("localhost", getPublicCertApi, "", "")
+	require.Nil(t, err)
 	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	require.Nil(t, err)
 	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, tlsConfig, func(accessServer *grpc.Server) {

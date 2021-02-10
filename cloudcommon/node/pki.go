@@ -23,10 +23,8 @@ type internalPki struct {
 	// Internal PKI supports either cert files supplied on the
 	// command line or retrieved from Vault.
 	// Command line certs are supported if specified.
-	// Vault CAs are supported if UseVaultCAs is set.
-	// Vault certs are used (overrides file cert) if UseVaultCerts is set.
-	UseVaultCAs   bool
-	UseVaultCerts bool
+	// Vault Certs and CAs (overrides fileCert and fileCAs) are supported if UseVaultPki is set.
+	UseVaultPki bool
 
 	// These are the certs loaded from disk specified on the command line.
 	fileCert *tls.Certificate
@@ -80,12 +78,10 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		s.InternalPki.vaultConfig = nil // should never talk to Vault
 		pkiDesc = append(pkiDesc, "useAccessKey")
 	}
-	if s.InternalPki.UseVaultCerts {
-		s.InternalPki.UseVaultCAs = true
-	}
-	if s.InternalPki.UseVaultCAs {
+	if s.InternalPki.UseVaultPki {
+		s.InternalPki.enabled = true
 		if !s.AccessKeyClient.enabled && s.InternalPki.vaultConfig.Addr == "" {
-			return fmt.Errorf("AccessKey file or Vault address required for UseVaultCAs or UseVaultCerts")
+			return fmt.Errorf("AccessKey file or Vault address required for UseVaultPki")
 		}
 		// enable Vault certs
 		log.SpanLog(ctx, log.DebugLevelInfo, "enable internal Vault PKI CAs")
@@ -94,11 +90,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		s.InternalPki.cas = make(map[string][]*x509.Certificate)
 		s.InternalPki.localRegion = s.Region
 		s.InternalPki.refreshTrigger = make(chan bool, 1)
-		pkiDesc = append(pkiDesc, "useVaultCAs")
-	}
-	if s.InternalPki.UseVaultCerts {
-		s.InternalPki.enabled = true
-		pkiDesc = append(pkiDesc, "useVaultCerts")
+		pkiDesc = append(pkiDesc, "UseVaultPki")
 	}
 
 	if len(pkiDesc) == 0 {
@@ -111,7 +103,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 
 // Must be called after Jaeger is initialized because it creates new spans.
 func (s *internalPki) start() {
-	if s.UseVaultCerts {
+	if s.UseVaultPki {
 		go s.refreshCerts()
 	}
 }
@@ -169,7 +161,7 @@ func (s *internalPki) refreshCerts() {
 }
 
 func (s *internalPki) RefreshNow(ctx context.Context) error {
-	if !s.UseVaultCerts {
+	if !s.UseVaultPki {
 		return nil
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "refreshing certs")
@@ -380,7 +372,7 @@ func (s *internalPki) getCertificateFunc(id CertId) func(*tls.ClientHelloInfo) (
 }
 
 func (s *internalPki) lookupCertForHandshake(id CertId) (*tls.Certificate, error) {
-	if s.UseVaultCerts {
+	if s.UseVaultPki {
 		s.mux.Lock()
 		cert, found := s.certs[id]
 		s.mux.Unlock()
@@ -396,7 +388,7 @@ func (s *internalPki) lookupCertForHandshake(id CertId) (*tls.Certificate, error
 }
 
 func (s *internalPki) ensureCertInCache(ctx context.Context, id CertId) error {
-	if !s.UseVaultCerts {
+	if !s.UseVaultPki {
 		return nil
 	}
 	s.mux.Lock()
@@ -552,7 +544,7 @@ func (s *internalPki) getFileCAs(ctx context.Context, pool *x509.CertPool) {
 }
 
 func (s *internalPki) getVaultCAs(ctx context.Context, pool *x509.CertPool, issuers []MatchCA) error {
-	if !s.UseVaultCAs {
+	if !s.UseVaultPki {
 		return nil
 	}
 	var err error

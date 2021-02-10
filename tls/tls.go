@@ -5,12 +5,20 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+func IsTestTls() bool {
+	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+		return true
+	}
+	return false
+}
 
 // helper function to get the cert pool
 func getClientCertificate(tlsCertFile string) (tls.Certificate, error) {
@@ -56,8 +64,12 @@ func GetClientCertPool(tlsCertFile string, caCertFile string) (*x509.CertPool, e
 }
 
 // GetTLSClientDialOption gets GRPC options needed for TLS connection
-func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bool) (grpc.DialOption, error) {
-	config, err := GetTLSClientConfig(serverAddr, tlsCertFile, "", skipVerify, nil)
+func GetTLSClientDialOption(serverAddr string, getCertFunc func(*tls.CertificateRequestInfo) (*tls.Certificate, error), tlsCertFile string) (grpc.DialOption, error) {
+	if getCertFunc == nil && tlsCertFile == "" {
+		// If no getCertFunc or CertFile is presented, then no tls
+		return GetGrpcDialOption(nil), nil
+	}
+	config, err := GetTLSClientConfig(serverAddr, getCertFunc, tlsCertFile, "", true)
 	if err != nil {
 		return nil, err
 	}
@@ -68,27 +80,24 @@ func GetTLSClientDialOption(serverAddr string, tlsCertFile string, skipVerify bo
 // is blank, no validation is done on the cert.  CaCertFile is specified when communicating to
 // exernal servers with their own privately signed certs.  Leave this blank to use the mex-ca.crt.
 // Skipverify is only to be used for internal connections such as GRPCGW to GRPC.
-// Requires either a tlsCertFile or a getCertFunc if not skipVerify
-func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string, skipVerify bool, getCertFunc func(*tls.ClientHelloInfo) (*tls.Certificate, error)) (*tls.Config, error) {
-	// If we are verifying the server and neither a certFile nor a getCertFunc is provided, return an err
-	if tlsCertFile == "" && getCertFunc == nil && !skipVerify {
-		return nil, fmt.Errorf("when verifying server, a certFile or getCertFunc is required")
+// Requires either a tlsCertFile or a getCertFunc if mutualAuth
+func GetTLSClientConfig(serverAddr string, getCertFunc func(*tls.CertificateRequestInfo) (*tls.Certificate, error), tlsCertFile string, caCertFile string, mutualAuth bool) (*tls.Config, error) {
+	tlscfg := &tls.Config{}
+	// Skip verification of self signed server certs if e2e tests
+	if IsTestTls() {
+		tlscfg.InsecureSkipVerify = true
 	}
-	var tlscfg *tls.Config
 	if serverAddr != "" {
 		serverName := strings.Split(serverAddr, ":")[0]
-		tlscfg = &tls.Config{
-			ServerName:         serverName,
-			InsecureSkipVerify: skipVerify,
-		}
-	} else {
-		// do not validate the server address.
-		tlscfg = &tls.Config{
-			InsecureSkipVerify: skipVerify,
-		}
+		tlscfg.ServerName = serverName
 	}
-	// tlsConfig requires either Certificates or GetCertificate to be set
-	if tlsCertFile != "" {
+	if !mutualAuth {
+		return tlscfg, nil
+	}
+	// mTLS requires either Certificates or GetClientCertificate to be set for clients
+	if getCertFunc != nil {
+		tlscfg.GetClientCertificate = getCertFunc
+	} else if tlsCertFile != "" {
 		certPool, err := GetClientCertPool(tlsCertFile, caCertFile)
 		if err != nil {
 			return nil, err
@@ -99,9 +108,10 @@ func GetTLSClientConfig(serverAddr string, tlsCertFile string, caCertFile string
 		}
 		tlscfg.RootCAs = certPool
 		tlscfg.Certificates = []tls.Certificate{certificate}
-	} else if getCertFunc != nil {
-		tlscfg.GetCertificate = getCertFunc
+	} else {
+		return nil, fmt.Errorf("mTLS requires a certFile or getCertFunc")
 	}
+
 	return tlscfg, nil
 }
 
