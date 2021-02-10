@@ -276,7 +276,12 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		if !ok {
 			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
 		}
-		thAvailableResVal := max - resInfo.Value
+		thAvailableResVal := uint64(0)
+		if resInfo.Value > max {
+			warnings = append(warnings, fmt.Sprintf("[Quota] Invalid quota set for %s, quota max value %d is less than used resource value %d", resName, max, resInfo.Value))
+		} else {
+			thAvailableResVal = max - resInfo.Value
+		}
 		if float64(resInfo.Value*100)/float64(max) > float64(resInfo.AlertThreshold) {
 			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
@@ -781,11 +786,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 
-		// Do we allocate resources based on max nodes (no over-provisioning)?
-		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
-		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
-		refs.UsedDisk += (nodeFlavor.Disk + vmspec.ExternalVolumeSize) * uint64(in.NumNodes+in.NumMasters)
-
 		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
 		if err != nil {
 			return err
@@ -1115,10 +1115,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 				a[len(a)-1] = edgeproto.ClusterInstRefKey{}
 				refs.ClusterInsts = a[:len(a)-1]
 			}
-			// remove used resources
-			refs.UsedRam -= nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
-			refs.UsedVcores -= nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
-			refs.UsedDisk -= nodeFlavor.Disk * uint64(in.NumNodes+in.NumMasters)
 			freeIP(in, &cloudlet, &refs)
 
 			if in.Reservable && in.Auto && strings.HasPrefix(in.Key.ClusterKey.Name, cloudcommon.ReservableClusterPrefix) {

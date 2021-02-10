@@ -1019,8 +1019,26 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
 			return fmt.Errorf("Missing cloudlet info: %v", in.Key)
 		}
+		cloudletRefs := edgeproto.CloudletRefs{}
+		cloudletRefsApi.store.STMGet(stm, &in.Key, &cloudletRefs)
 		if _, found := fmap[edgeproto.CloudletFieldResourceQuotas]; found {
-			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, &cloudletInfo.ResourcesSnapshot, in.ResourceQuotas)
+			// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
+			allVmResources, _, err := getAllCloudletResources(ctx, stm, cur, &cloudletInfo, &cloudletRefs)
+			if err != nil {
+				return err
+			}
+			infraResInfo := make(map[string]*edgeproto.InfraResource)
+			for _, resInfo := range cloudletInfo.ResourcesSnapshot.Info {
+				newResInfo := &edgeproto.InfraResource{}
+				newResInfo.DeepCopyIn(&resInfo)
+				infraResInfo[newResInfo.Name] = newResInfo
+			}
+
+			allResInfo, err := GetCloudletResourceInfo(ctx, stm, cur, allVmResources, infraResInfo)
+			if err != nil {
+				return err
+			}
+			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, allResInfo, in.ResourceQuotas)
 			if err != nil {
 				return err
 			}
@@ -1990,9 +2008,7 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 			return fmt.Errorf("No resource information found for Cloudlet %s", usage.Key)
 		}
 		cloudletRefs := edgeproto.CloudletRefs{}
-		if !cloudletRefsApi.store.STMGet(stm, &usage.Key, &cloudletRefs) {
-			return fmt.Errorf("No refs found for cloudlet %s", usage.Key)
-		}
+		cloudletRefsApi.store.STMGet(stm, &usage.Key, &cloudletRefs)
 		allVmResources, diffVmResources, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
 		if err != nil {
 			return err

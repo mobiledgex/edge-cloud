@@ -983,9 +983,6 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 				Organization: ClusterInstData[7].Key.Organization,
 			},
 		},
-		UsedRam:        GetCloudletUsedRam(0, 3, 7),
-		UsedVcores:     GetCloudletUsedVcores(0, 3, 7),
-		UsedDisk:       GetCloudletUsedDisk(0, 3, 7),
 		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4]:
@@ -1001,9 +998,6 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 				Organization: ClusterInstData[4].Key.Organization,
 			},
 		},
-		UsedRam:    GetCloudletUsedRam(1, 4),
-		UsedVcores: GetCloudletUsedVcores(1, 4),
-		UsedDisk:   GetCloudletUsedDisk(1, 4),
 	},
 	// ClusterInstData[2,5]:
 	edgeproto.CloudletRefs{
@@ -1018,9 +1012,6 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 				Organization: ClusterInstData[5].Key.Organization,
 			},
 		},
-		UsedRam:        GetCloudletUsedRam(2, 5),
-		UsedVcores:     GetCloudletUsedVcores(2, 5),
-		UsedDisk:       GetCloudletUsedDisk(2, 5),
 		UsedDynamicIps: 1,
 	},
 	// ClusterInstData[6]:
@@ -1032,9 +1023,6 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 				Organization: ClusterInstData[6].Key.Organization,
 			},
 		},
-		UsedRam:    GetCloudletUsedRam(6),
-		UsedVcores: GetCloudletUsedVcores(6),
-		UsedDisk:   GetCloudletUsedDisk(6),
 	},
 }
 
@@ -1069,9 +1057,6 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 				},
 			},
 		},
-		UsedRam:        GetCloudletUsedRam(0, 3, 7),
-		UsedVcores:     GetCloudletUsedVcores(0, 3, 7),
-		UsedDisk:       GetCloudletUsedDisk(0, 3, 7),
 		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4], ClusterInstAutoData[0]: (shared,shared,shared)
@@ -1092,9 +1077,6 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 				Organization: ClusterInstAutoData[0].Key.Organization,
 			},
 		},
-		UsedRam:                GetCloudletUsedRam(1, 4, -1, 0),
-		UsedVcores:             GetCloudletUsedVcores(1, 4, -1, 0),
-		UsedDisk:               GetCloudletUsedDisk(1, 4, -1, 0),
 		RootLbPorts:            map[int32]int32{80: 1, 81: 1, 443: 1, 10000: 1, 10002: 3},
 		ReservedAutoClusterIds: 1,
 	},
@@ -1120,9 +1102,6 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 				Organization: ClusterInstAutoData[2].Key.Organization,
 			},
 		},
-		UsedRam:                GetCloudletUsedRam(2, 5, -1, 1, 2),
-		UsedVcores:             GetCloudletUsedVcores(2, 5, -1, 1, 2),
-		UsedDisk:               GetCloudletUsedDisk(2, 5, -1, 1, 2),
 		UsedDynamicIps:         1,
 		RootLbPorts:            map[int32]int32{443: 1, 11111: 2, 2024: 2, 80: 1, 8001: 2, 65535: 1},
 		ReservedAutoClusterIds: 3,
@@ -1136,9 +1115,6 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 				Organization: ClusterInstData[6].Key.Organization,
 			},
 		},
-		UsedRam:    GetCloudletUsedRam(6),
-		UsedVcores: GetCloudletUsedVcores(6),
-		UsedDisk:   GetCloudletUsedDisk(6),
 	},
 }
 
@@ -1211,54 +1187,6 @@ var ResTagTableData = []edgeproto.ResTagTable{
 		Key:  Restblkeys[3],
 		Tags: map[string]string{"pci": "t4:1"},
 	},
-}
-
-func GetCloudletUsedRam(indices ...int) uint64 {
-	var ram uint64
-	data := ClusterInstData
-	for _, idx := range indices {
-		if idx == -1 {
-			data = ClusterInstAutoData
-			continue
-		}
-		clinst := data[idx]
-		clflavor := data[idx].Flavor
-		flavor, _ := FindFlavorData(&clflavor, FlavorData)
-		ram += flavor.Ram * uint64(clinst.NumNodes+clinst.NumMasters)
-	}
-	return ram
-}
-
-func GetCloudletUsedVcores(indices ...int) uint64 {
-	var vcores uint64
-	data := ClusterInstData
-	for _, idx := range indices {
-		if idx == -1 {
-			data = ClusterInstAutoData
-			continue
-		}
-		clinst := data[idx]
-		clflavor := data[idx].Flavor
-		flavor, _ := FindFlavorData(&clflavor, FlavorData)
-		vcores += flavor.Vcpus * uint64(clinst.NumNodes+clinst.NumMasters)
-	}
-	return vcores
-}
-
-func GetCloudletUsedDisk(indices ...int) uint64 {
-	var disk uint64
-	data := ClusterInstData
-	for _, idx := range indices {
-		if idx == -1 {
-			data = ClusterInstAutoData
-			continue
-		}
-		clinst := data[idx]
-		clflavor := data[idx].Flavor
-		flavor, _ := FindFlavorData(&clflavor, FlavorData)
-		disk += flavor.Disk * uint64(clinst.NumNodes+clinst.NumMasters)
-	}
-	return disk
 }
 
 var AlertData = []edgeproto.Alert{

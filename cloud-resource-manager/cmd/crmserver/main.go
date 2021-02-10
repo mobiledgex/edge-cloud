@@ -256,11 +256,17 @@ func main() {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
 				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
-				err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resources, cloudlet.ResourceQuotas)
-				if err != nil {
-					log.FatalLog("Failed to validate cloudlet resource quota", "err", err)
-				}
 				if resources != nil {
+					resMap := make(map[string]*edgeproto.InfraResource)
+					for _, resInfo := range resources.Info {
+						newResInfo := &edgeproto.InfraResource{}
+						newResInfo.DeepCopyIn(&resInfo)
+						resMap[newResInfo.Name] = newResInfo
+					}
+					err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
+					if err != nil {
+						log.FatalLog("Failed to validate cloudlet resource quota", "err", err)
+					}
 					myCloudletInfo.ResourcesSnapshot = *resources
 				}
 				myCloudletInfo.Errors = nil
