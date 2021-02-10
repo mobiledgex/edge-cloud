@@ -84,21 +84,27 @@ func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
 	return false
 }
 
-func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.ClusterInstKey]struct{}) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	static := false
-	for key, data := range s.cache.Objs {
-		val := data.Obj
-		if key.CloudletKey.Matches(in) {
-			if val.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
-				static = true
-			} else if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
-				dynInsts[key] = struct{}{}
-			}
+func (s *ClusterInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.CloudletRefs, dynInsts map[edgeproto.ClusterInstKey]struct{}) error {
+	for _, ciRefKey := range refs.ClusterInsts {
+		ci := edgeproto.ClusterInst{}
+		ci.Key.FromClusterInstRefKey(&ciRefKey, &refs.Key)
+		if !clusterInstApi.store.STMGet(stm, &ci.Key, &ci) {
+			continue
 		}
+		if ci.Reservable && ci.Auto && ci.ReservedBy == "" {
+			// auto-delete unused reservable autoclusters
+			// since they are created automatically by
+			// the system.
+			dynInsts[ci.Key] = struct{}{}
+			continue
+		}
+		// report usage of reservable ClusterInst by the reservation owner.
+		if ci.Reservable && ci.ReservedBy != "" {
+			return fmt.Errorf("Cloudlet in use by ClusterInst name %s, reserved by Organization %s", ciRefKey.ClusterKey.Name, ci.ReservedBy)
+		}
+		return fmt.Errorf("Cloudlet in use by ClusterInst name %s Organization %s", ciRefKey.ClusterKey.Name, ciRefKey.Organization)
 	}
-	return static
+	return nil
 }
 
 // Checks if there is some action in progress by ClusterInst on the cloudlet
@@ -669,7 +675,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Create); err != nil {
 			return err
 		}
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
@@ -881,7 +887,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
 		}
-		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Update); err != nil {
 			return err
 		}
 
@@ -1041,7 +1047,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
-		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey); err != nil {
+		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Delete); err != nil {
 			return err
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
