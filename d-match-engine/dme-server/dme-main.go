@@ -636,14 +636,16 @@ func main() {
 		span.Finish()
 		log.FatalLog("get TLS config for http server failed", "err", err)
 	}
-	tlscfg.CurvePreferences = []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256}
-	tlscfg.PreferServerCipherSuites = true
-	tlscfg.CipherSuites = []uint16{
-		ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-		ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
+	if tlscfg != nil {
+		tlscfg.CurvePreferences = []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256}
+		tlscfg.PreferServerCipherSuites = true
+		tlscfg.CipherSuites = []uint16{
+			ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		}
 	}
 
 	// Suppress contant stream of TLS error logs due to LB health check. There is discussion in the community
