@@ -420,12 +420,18 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.trustpolicy",
 	"cloudlets:#.trustpolicystate",
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> autogen files
 	"cloudlets:#.resourcequotas:#.name",
 	"cloudlets:#.resourcequotas:#.value",
 	"cloudlets:#.resourcequotas:#.alertthreshold",
 	"cloudlets:#.defaultresourcealertthreshold",
+<<<<<<< HEAD
 	"cloudlets:#.hostcontroller",
 =======
+=======
+>>>>>>> autogen files
 	"cloudlets:#.kafkacluster",
 	"cloudlets:#.kafkauser",
 	"cloudlets:#.kafkapassword",
@@ -710,6 +716,9 @@ var AllDataOptionalArgs = []string{
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> autogen files
 	"flavors:#.fields":                                                              "Fields are used for the Update API to specify which fields to apply",
 	"flavors:#.key.name":                                                            "Flavor name",
 	"flavors:#.ram":                                                                 "RAM in megabytes",
@@ -738,6 +747,7 @@ var AllDataComments = map[string]string{
 	"settings.updatevmpooltimeout":                                                  "Update VM pool timeout (duration)",
 	"settings.updatetrustpolicytimeout":                                             "Update Trust Policy timeout (duration)",
 	"settings.dmeapimetricscollectioninterval":                                      "Metrics collection interval for DME API counts (duration)",
+<<<<<<< HEAD
 	"settings.edgeeventsmetricscollectioninterval":                                  "Collection interval for edgeevents metrics (latency, device, and custom)",
 	"settings.cleanupreservableautoclusteridletime":                                 "Idle reservable ClusterInst clean up time",
 	"settings.influxdbcloudletusagemetricsretention":                                "Default influxDB cloudlet usage metrics retention policy (duration)",
@@ -748,6 +758,11 @@ var AllDataComments = map[string]string{
 	"settings.influxdbdownsampledmetricsretention":                                  "Default retention policy for downsampled influx db (duration)",
 	"settings.influxdbedgeeventsmetricsretention":                                   "Default retention policy for edgeevents metrics influx db (duration)",
 	"settings.appinstclientcleanupinterval":                                         "AppInstClient cleanup thread run interval",
+=======
+	"settings.persistentconnectionmetricscollectioninterval":                        "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
+	"settings.cleanupreservableautoclusteridletime":                                 "Idle reservable ClusterInst clean up time",
+	"settings.influxdbcloudletusagemetricsretention":                                "Default influxDB cloudlet usage metrics retention policy (duration)",
+>>>>>>> autogen files
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",
@@ -784,7 +799,15 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.state":                                                             "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudlets:#.crmoverride":                                                       "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                                   "Deploy cloudlet services locally",
+<<<<<<< HEAD
 	"cloudlets:#.platformtype":                                                      "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
+=======
+<<<<<<< HEAD
+	"cloudlets:#.platformtype":                                                      "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind",
+=======
+	"cloudlets:#.platformtype":                                                      "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd",
+>>>>>>> autogen files
+>>>>>>> autogen files
 	"cloudlets:#.notifysrvaddr":                                                     "Address for the CRM notify listener to run on",
 	"cloudlets:#.flavor.name":                                                       "Flavor name",
 	"cloudlets:#.physicalname":                                                      "Physical infrastructure cloudlet name",
@@ -803,7 +826,12 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.cleanupmode":                                                "Internal cleanup flag",
 	"cloudlets:#.config.region":                                                     "Region",
 	"cloudlets:#.config.commercialcerts":                                            "Get certs from vault or generate your own for the root load balancer",
+<<<<<<< HEAD
 	"cloudlets:#.config.usevaultpki":                                                "Use Vault certs and CAs for internal TLS communication",
+=======
+	"cloudlets:#.config.usevaultcerts":                                              "Use Vault certs for internal TLS communication",
+	"cloudlets:#.config.usevaultcas":                                                "Use Vault CAs to authenticate TLS communication",
+>>>>>>> autogen files
 	"cloudlets:#.config.appdnsroot":                                                 "App domain name root",
 	"cloudlets:#.config.chefserverpath":                                             "Path to Chef Server",
 	"cloudlets:#.config.chefclientinterval":                                         "Chef client interval",
@@ -830,7 +858,13 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.resourcequotas:#.value":                                            "Quota value of the resource",
 	"cloudlets:#.resourcequotas:#.alertthreshold":                                   "Generate alert when more than threshold percentage of resource is used",
 	"cloudlets:#.defaultresourcealertthreshold":                                     "Default resource alert threshold percentage",
+<<<<<<< HEAD
 	"cloudlets:#.hostcontroller":                                                    "Addr of the controller hosting the cloudlet services if it is running locally",
+=======
+	"cloudlets:#.kafkacluster":                                                      "operator provided kafka cluster endpoint to push events to",
+	"cloudlets:#.kafkauser":                                                         "username for kafka SASL/PLAIN authentification",
+	"cloudlets:#.kafkapassword":                                                     "password for kafka SASL/PLAIN authentification",
+>>>>>>> autogen files
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",
@@ -877,8 +911,14 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 	"cloudletinfos:#.trustpolicystate":                                              "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+<<<<<<< HEAD
 	"cloudletinfos:#.compatibilityversion":                                          "Version for compatibility tracking",
+<<<<<<< HEAD
 	"cloudletinfos:#.properties":                                                    "Cloudlet properties",
+=======
+=======
+>>>>>>> autogen files
+>>>>>>> autogen files
 	"cloudletpools:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
@@ -1053,6 +1093,7 @@ var AllDataComments = map[string]string{
 	"vmpools:#.state":                                                               "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"vmpools:#.errors":                                                              "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+<<<<<<< HEAD
 =======
 	"flavors:#.fields":                                           "Fields are used for the Update API to specify which fields to apply",
 	"flavors:#.key.name":                                         "Flavor name",
@@ -1368,6 +1409,8 @@ var AllDataComments = map[string]string{
 	"vmpools:#.errors":                                           "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                      "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 >>>>>>> kafka bus
+=======
+>>>>>>> autogen files
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",

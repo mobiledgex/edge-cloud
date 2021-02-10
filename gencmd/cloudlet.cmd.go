@@ -1518,6 +1518,9 @@ var CloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1589,11 +1592,11 @@ var CloudletComments = map[string]string{
 	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
 	"trustpolicy":                         "Optional Trust Policy",
 	"trustpolicystate":                    "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
-<<<<<<< HEAD
 	"resourcequotas:#.name":               "Resource name on which to set quota",
 	"resourcequotas:#.value":              "Quota value of the resource",
 	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
 	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
+<<<<<<< HEAD
 <<<<<<< HEAD
 	"hostcontroller":                      "Addr of the controller hosting the cloudlet services if it is running locally",
 =======
@@ -1603,6 +1606,11 @@ var CloudletComments = map[string]string{
 	"kafkapassword":                       "password for kafka SASL/PLAIN authentification",
 >>>>>>> kafka bus
 >>>>>>> kafka bus
+=======
+	"kafkacluster":                        "operator provided kafka cluster endpoint to push events to",
+	"kafkauser":                           "username for kafka SASL/PLAIN authentification",
+	"kafkapassword":                       "password for kafka SASL/PLAIN authentification",
+>>>>>>> autogen files
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1946,16 +1954,13 @@ var CreateCloudletOptionalArgs = []string{
 	"overridepolicycontainerversion",
 	"vmpool",
 	"trustpolicy",
-<<<<<<< HEAD
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
-=======
 	"kafkacluster",
 	"kafkauser",
 	"kafkapassword",
->>>>>>> kafka bus
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1991,16 +1996,13 @@ var DeleteCloudletOptionalArgs = []string{
 	"overridepolicycontainerversion",
 	"vmpool",
 	"trustpolicy",
-<<<<<<< HEAD
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
-=======
 	"kafkacluster",
 	"kafkauser",
 	"kafkapassword",
->>>>>>> kafka bus
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2024,16 +2026,13 @@ var UpdateCloudletOptionalArgs = []string{
 	"accessvars",
 	"maintenancestate",
 	"trustpolicy",
-<<<<<<< HEAD
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
-=======
 	"kafkacluster",
 	"kafkauser",
 	"kafkapassword",
->>>>>>> kafka bus
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2069,16 +2068,13 @@ var ShowCloudletOptionalArgs = []string{
 	"overridepolicycontainerversion",
 	"vmpool",
 	"trustpolicy",
-<<<<<<< HEAD
 	"resourcequotas:#.name",
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
-=======
 	"kafkacluster",
 	"kafkauser",
 	"kafkapassword",
->>>>>>> kafka bus
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",
