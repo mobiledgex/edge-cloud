@@ -6,9 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	loggers "log"
-	"os"
 	"sync"
 
 	"github.com/Shopify/sarama"
@@ -30,21 +27,15 @@ type producer struct {
 	address  string
 }
 
+var kafka_access_api_type = "get-kafka-creds"
 var topic_prefix_operator = "operator"
 var topic_prefix_developer = "developer"
-var logger_set = false
 
 // keep a list of producers and the addresses they point to so that we can still access them on a delete cloudlet
 var producerLock sync.Mutex
 var producers = make(map[edgeproto.CloudletKey]producer)
 
 func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[string]string, keysAndValues ...string) {
-	fmt.Printf("asdf made it to kafkasend: %+v\n", event)
-
-	if !logger_set {
-		sarama.Logger = loggers.New(os.Stderr, "", loggers.LstdFlags)
-	}
-
 	var err error
 	orgName, ok := keyTags["cloudletorg"]
 	if !ok {
@@ -64,7 +55,6 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 			return
 		}
 	}
-	fmt.Printf("kafka 1\n")
 	cloudletKey := edgeproto.CloudletKey{
 		Organization: orgName,
 		Name:         cloudletName,
@@ -77,7 +67,6 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 	cloudletFound := s.CloudletLookup.GetCloudlet(region, &cloudletKey, &cloudlet)
 	if !ok {
 		if !cloudletFound {
-			fmt.Printf("no cloudlet found, region: %s, key: %+v\n", region, cloudletKey)
 			return
 		} else if cloudlet.KafkaCluster == "" {
 			return
@@ -125,7 +114,6 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 		Value:     sarama.StringEncoder(buildMessageBody(event)),
 		Timestamp: event.Timestamp,
 	}
-	fmt.Printf("sending message: %+v\n", message)
 
 	_, _, err = (*producer.producer).SendMessage(message)
 	if err != nil {
@@ -141,7 +129,6 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "Failed to send event to operator kafka cluster", "cloudletKey", cloudletKey, "message", message, "error", err)
 	}
-	fmt.Printf("done sending\n")
 }
 
 func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (producer, error) {
@@ -156,7 +143,7 @@ func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (
 		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
 
 		req := &edgeproto.AccessDataRequest{
-			Type: "get-kafka-creds",
+			Type: kafka_access_api_type,
 		}
 		reply, err := accessClient.GetAccessData(ctx, req)
 		if err != nil {
@@ -177,25 +164,12 @@ func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (
 	config.ClientID = s.MyNode.Key.Type
 	config.Producer.Return.Successes = true
 	config.Producer.Return.Errors = true
-	// always use SSL encryption, TODO: add option for client-side authentification at a later date
+	// always use SSL encryption
 	config.Net.TLS.Enable = true
 	rootCAs, err := x509.SystemCertPool()
 	if err != nil {
 		return producer{}, fmt.Errorf("Unable to get system certs")
 	}
-	////////////////////////////////////////////////////////
-	localCertFile := "/Users/matthewchu/kafka_2.13-2.7.0/config/cert-signed"
-	// Read in the cert file
-	certs, err := ioutil.ReadFile(localCertFile)
-	if err != nil {
-		return producer{}, fmt.Errorf("Failed to append %q to RootCAs: %v", localCertFile, err)
-	}
-
-	// Append our cert to the system pool
-	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-		return producer{}, fmt.Errorf("No certs appended, using system certs only")
-	}
-	////////////////////////////////////////////////////////
 	newConfig := tls.Config{RootCAs: rootCAs}
 	if s.unitTestMode {
 		newConfig.InsecureSkipVerify = true

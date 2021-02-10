@@ -637,10 +637,14 @@ type Cloudlet struct {
 	// Default resource alert threshold percentage
 	DefaultResourceAlertThreshold int32 `protobuf:"varint,40,opt,name=default_resource_alert_threshold,json=defaultResourceAlertThreshold,proto3" json:"default_resource_alert_threshold,omitempty"`
 <<<<<<< HEAD
+<<<<<<< HEAD
 	// Addr of the controller hosting the cloudlet services if it is running locally
 	HostController string `protobuf:"bytes,41,opt,name=HostController,proto3" json:"HostController,omitempty"`
 =======
 	// operator provided kafka cluster endpoint to push events to
+=======
+	// operator provided kafka cluster endpoint to push events to, specify REMOVE_KAFKA on a cloudletUpdate to stop pushing to kafka
+>>>>>>> cleanup
 	KafkaCluster string `protobuf:"bytes,41,opt,name=kafka_cluster,json=kafkaCluster,proto3" json:"kafka_cluster,omitempty"`
 	// username for kafka SASL/PLAIN authentification
 	KafkaUser string `protobuf:"bytes,42,opt,name=kafka_user,json=kafkaUser,proto3" json:"kafka_user,omitempty"`

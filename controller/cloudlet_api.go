@@ -61,6 +61,7 @@ var CreateCloudletTransitions = map[edgeproto.TrackedState]struct{}{
 var UpdateCloudletTransitions = map[edgeproto.TrackedState]struct{}{
 	edgeproto.TrackedState_UPDATING: struct{}{},
 }
+var kafka_cluster_remove = "REMOVE_KAFKA"
 
 const (
 	PlatformInitTimeout           = 20 * time.Minute
@@ -817,8 +818,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		in.AccessVars = nil
 	}
 
-	// TODO: make that a constant
-	if in.KafkaCluster != "REMOVE_KAFKA" {
+	if in.KafkaCluster != kafka_cluster_remove {
 		kafkaDetails := node.KafkaCreds{}
 		kafkaChangeReqd := false
 		// must specify either just a new endpoint, or everything

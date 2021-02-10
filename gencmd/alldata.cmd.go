@@ -859,9 +859,13 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.resourcequotas:#.alertthreshold":                                   "Generate alert when more than threshold percentage of resource is used",
 	"cloudlets:#.defaultresourcealertthreshold":                                     "Default resource alert threshold percentage",
 <<<<<<< HEAD
+<<<<<<< HEAD
 	"cloudlets:#.hostcontroller":                                                    "Addr of the controller hosting the cloudlet services if it is running locally",
 =======
 	"cloudlets:#.kafkacluster":                                                      "operator provided kafka cluster endpoint to push events to",
+=======
+	"cloudlets:#.kafkacluster":                                                      "operator provided kafka cluster endpoint to push events to, specify REMOVE_KAFKA on a cloudletUpdate to stop pushing to kafka",
+>>>>>>> cleanup
 	"cloudlets:#.kafkauser":                                                         "username for kafka SASL/PLAIN authentification",
 	"cloudlets:#.kafkapassword":                                                     "password for kafka SASL/PLAIN authentification",
 >>>>>>> autogen files

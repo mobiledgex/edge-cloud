@@ -338,8 +338,6 @@ func (s *NodeMgr) EventAtTime(ctx context.Context, name, org, typ string, keyTag
 }
 
 func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[string]string, err error, ts time.Time, keysAndValues ...string) {
-	fmt.Printf("qwerty eventing\n")
-	fmt.Printf("name: %s, org: %s, typ: %s\nkeyTags: %+v\n err: %v\nts: %v\nkeysAndValues:%+v\n", name, org, typ, keyTags, err, ts, keysAndValues)
 	event := EventData{
 		Name:      name,
 		Org:       []string{org},

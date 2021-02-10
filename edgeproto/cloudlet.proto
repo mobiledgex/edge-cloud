@@ -289,15 +289,9 @@ message Cloudlet {
   // operator provided kafka cluster endpoint to push events to
   string kafka_cluster = 42;
   // username for kafka SASL/PLAIN authentification
-<<<<<<< HEAD
   string kafka_user = 43;
   // password for kafka SASL/PLAIN authentification
   string kafka_password = 44;
-=======
-  string kafka_user = 42;
-  // password for kafka SASL/PLAIN authentification
-  string kafka_password = 43;
->>>>>>> autogen files
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
