@@ -69,6 +69,7 @@ func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.
 }
 
 func (s *CloudletApi) GetAccessData(ctx context.Context, req *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
+	fmt.Printf("qwerty here : %+v\n", req)
 	verified := node.ContextGetAccessKeyVerified(ctx)
 	if verified == nil {
 		// should never reach here if it wasn't verified

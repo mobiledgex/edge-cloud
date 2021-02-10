@@ -23,8 +23,12 @@ type ControllerData struct {
 	cloudletKey                 edgeproto.CloudletKey
 	AppCache                    edgeproto.AppCache
 	AppInstCache                edgeproto.AppInstCache
+<<<<<<< HEAD
 	CloudletCache               edgeproto.CloudletCache
 	CloudletInternalCache       edgeproto.CloudletInternalCache
+=======
+	CloudletCache               *edgeproto.CloudletCache
+>>>>>>> kafka bus
 	VMPoolCache                 edgeproto.VMPoolCache
 	FlavorCache                 edgeproto.FlavorCache
 	ClusterInstCache            edgeproto.ClusterInstCache
@@ -70,8 +74,8 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.cloudletKey = *key
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
-	edgeproto.InitCloudletCache(&cd.CloudletCache)
 	edgeproto.InitCloudletInternalCache(&cd.CloudletInternalCache)
+	cd.CloudletCache = nodeMgr.CloudletLookup.GetCloudletCache("")
 	edgeproto.InitVMPoolCache(&cd.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)

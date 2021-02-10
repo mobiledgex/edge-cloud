@@ -324,7 +324,6 @@ func (s *NodeMgr) esQueuedEvent() {
 func (s *NodeMgr) Event(ctx context.Context, name, org string, keyTags map[string]string, err error, keysAndValues ...string) {
 	s.EventAtTime(ctx, name, org, "event", keyTags, err, time.Now(), keysAndValues...)
 }
-
 func (s *NodeMgr) TimedEvent(ctx context.Context, name, org, typ string, keyTags map[string]string, err error, startTime, endTime time.Time, keysAndValues ...string) {
 	keysAndValues = append(keysAndValues,
 		"duration", endTime.Sub(startTime).String(),
