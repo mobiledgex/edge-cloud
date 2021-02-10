@@ -7,13 +7,13 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
@@ -136,7 +136,7 @@ func (s *internalPki) loadCerts(certFile, keyFile, caFile string) error {
 func (s *internalPki) refreshCerts() {
 	// for e2e-tests, to test refresh set a low refresh interval.
 	// e2e-tests last 15 minutes or so, so it doesn't have to be super fast.
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+	if mextls.IsTestTls() {
 		refreshCertInterval = 30 * time.Second
 	}
 
@@ -260,6 +260,9 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 	if opts.usePublicCAPool {
 		config.VerifyPeerCertificate = nil
 	}
+	if mextls.IsTestTls() {
+		config.InsecureSkipVerify = true
+	}
 	return config, nil
 }
 
@@ -298,7 +301,7 @@ func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, server
 		GetCertificate:        s.getCertificateFunc(id),
 		VerifyPeerCertificate: s.getVerifyFunc(clientIssuers),
 	}
-	if opts.noMutualAuth {
+	if opts.noMutualAuth || mextls.IsTestTls() {
 		config.ClientAuth = tls.NoClientCert
 	}
 	return config, nil

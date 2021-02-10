@@ -263,7 +263,8 @@ func (p *Controller) GetTlsFile() string {
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, nil, p.GetTlsFile(), "", true)
+	os.Setenv("E2ETEST_TLS", "true")
+	tlsConfig, err := mextls.GetTLSClientConfig(true, p.ApiAddr, nil, p.GetTlsFile(), "", true)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +376,8 @@ func (p *Dme) getTlsConfig(addr string) *tls.Config {
 			region = "local"
 		}
 		cert := "/tmp/edgectl." + region + "/mex.crt"
-		config, err := mextls.GetTLSClientConfig(addr, nil, cert, "", true)
+		os.Setenv("E2ETEST_TLS", "true")
+		config, err := mextls.GetTLSClientConfig(true, addr, nil, cert, "", true)
 		if err != nil {
 			return nil
 		}
