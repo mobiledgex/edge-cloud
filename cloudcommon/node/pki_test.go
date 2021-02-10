@@ -368,17 +368,6 @@ func TestInternalPki(t *testing.T) {
 		CertKey:  "./ctrl.key",
 		CAFile:   "./mex-ca.crt",
 	}
-	/*nodePhase1 := &PkiConfig{
-		Region:      "us",
-		Type:        node.NodeTypeController,
-		CertFile:    "./ctrl.crt",
-		CertKey:     "./ctrl.key",
-		CAFile:      "./mex-ca.crt",
-		UseVaultPki: true,
-		RemoteCAs: []node.MatchCA{
-			node.SameRegionalMatchCA(),
-		},
-	}*/
 	nodePhase2 := &PkiConfig{
 		Region:      "us",
 		Type:        node.NodeTypeController,
@@ -410,32 +399,6 @@ func TestInternalPki(t *testing.T) {
 		Server: nodeFileOnly,
 		Client: nodeFileOnly,
 	})
-	// phase1
-	/*csTests.add(ClientServer{
-		Server: nodePhase1,
-		Client: nodePhase1,
-	})
-	csTests.add(ClientServer{
-		Server: nodeFileOnly,
-		Client: nodePhase1,
-	})
-	csTests.add(ClientServer{
-		Server: nodePhase1,
-		Client: nodeFileOnly,
-	})
-	// phase2
-	csTests.add(ClientServer{
-		Server: nodePhase2,
-		Client: nodePhase2,
-	})
-	csTests.add(ClientServer{
-		Server: nodePhase1,
-		Client: nodePhase2,
-	})
-	csTests.add(ClientServer{
-		Server: nodePhase2,
-		Client: nodePhase1,
-	})*/
 	// phase3
 	csTests.add(ClientServer{
 		Server: nodePhase3,
