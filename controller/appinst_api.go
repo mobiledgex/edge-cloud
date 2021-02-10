@@ -58,23 +58,27 @@ func (s *AppInstApi) HasKey(key *edgeproto.AppInstKey) bool {
 	return s.cache.HasKey(key)
 }
 
-func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
-	var app edgeproto.App
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	static := false
-	for key, data := range s.cache.Objs {
-		val := data.Obj
-		if key.ClusterInstKey.CloudletKey.Matches(in) && appApi.Get(&val.Key.AppKey, &app) {
-			if (val.Liveness == edgeproto.Liveness_LIVENESS_STATIC || val.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV) && (app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE) {
-				static = true
-				//if can autodelete it then also add it to the dynInsts to be deleted later
-			} else if (val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC) || (app.DelOpt == edgeproto.DeleteType_AUTO_DELETE) {
-				dynInsts[key] = struct{}{}
-			}
+func (s *AppInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.CloudletRefs, dynInsts map[edgeproto.AppInstKey]struct{}) error {
+	// Only need to check VM apps, as other AppInsts require ClusterInsts,
+	// so ClusterInst check will apply.
+	for _, aiRefKey := range refs.VmAppInsts {
+		ai := edgeproto.AppInst{}
+		ai.Key.FromAppInstRefKey(&aiRefKey, &refs.Key)
+		if !appInstApi.store.STMGet(stm, &ai.Key, &ai) {
+			continue
+		}
+		app := edgeproto.App{}
+		if !appApi.store.STMGet(stm, &ai.Key.AppKey, &app) {
+			continue
+		}
+		if (ai.Liveness == edgeproto.Liveness_LIVENESS_STATIC || ai.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV) && (app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE) {
+			return fmt.Errorf("Cloudlet in use by AppInst %s", ai.Key.GetKeyString())
+			//if can autodelete it then also add it to the dynInsts to be deleted later
+		} else if (ai.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC) || (app.DelOpt == edgeproto.DeleteType_AUTO_DELETE) {
+			dynInsts[ai.Key] = struct{}{}
 		}
 	}
-	return static
+	return nil
 }
 
 func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, TrustPolicy *edgeproto.TrustPolicy) error {
@@ -97,21 +101,6 @@ func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ckey *edgepr
 		}
 	}
 	return nil
-}
-
-// Checks if there is some action in progress by AppInst on the cloudlet
-func (s *AppInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for key, data := range s.cache.Objs {
-		val := data.Obj
-		if key.ClusterInstKey.CloudletKey.Matches(in) {
-			if edgeproto.IsTransientState(val.State) {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func (s *AppInstApi) updateAppInstRevision(ctx context.Context, key *edgeproto.AppInstKey, revision string) error {
@@ -601,7 +590,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return err
 			}
 		}
-		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey); err != nil {
+		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey, cloudcommon.Create); err != nil {
 			return err
 		}
 		if app.DeletePrepare {
@@ -1102,7 +1091,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			crmUpdateRequired = false
 		} else {
 			// check cloudlet state before updating
-			cloudletErr := checkCloudletReady(cctx, stm, &key.ClusterInstKey.CloudletKey)
+			cloudletErr := checkCloudletReady(cctx, stm, &key.ClusterInstKey.CloudletKey, cloudcommon.Update)
 			if crmUpdateRequired && cloudletErr != nil {
 				return cloudletErr
 			}
@@ -1393,7 +1382,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			log.SpanLog(ctx, log.DebugLevelApi, "AppInst busy, cannot delete", "state", in.State)
 			return errors.New("AppInst busy, cannot delete")
 		}
-		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey); err != nil {
+		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey, cloudcommon.Delete); err != nil {
 			return err
 		}
 

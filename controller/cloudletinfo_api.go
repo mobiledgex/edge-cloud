@@ -262,7 +262,7 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) dme.Cloud
 	return dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 }
 
-func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey) error {
+func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey, action cloudcommon.Action) error {
 	if cctx != nil && ignoreCRM(cctx) {
 		return nil
 	}
@@ -271,6 +271,9 @@ func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.C
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
 		return key.NotFoundError()
+	}
+	if action == cloudcommon.Delete && cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE {
+		return nil
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {
