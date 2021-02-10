@@ -1352,6 +1352,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic app inst",
 					"key", key, "err", derr)
+				return derr
 			}
 		}
 	}
@@ -1363,6 +1364,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic ClusterInst",
 					"key", key, "err", derr)
+				return derr
 			}
 		}
 	}
