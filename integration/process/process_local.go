@@ -401,9 +401,7 @@ func (p *Dme) getTlsConfig(addr string) *tls.Config {
 			region = "local"
 		}
 		cert := "/tmp/edgectl." + region + "/mex.crt"
-		if p.TestMode {
-			os.Setenv("E2ETEST_TLS", "true")
-		}
+		os.Setenv("E2ETEST_TLS", "true")
 		config, err := mextls.GetTLSClientConfig(true, addr, nil, cert, "", true)
 		if err != nil {
 			return nil
