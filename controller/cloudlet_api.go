@@ -552,7 +552,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if len(accessVars) > 0 {
 				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
 			}
-			resProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
+			var resProps *edgeproto.CloudletResourceQuotaProps
+			resProps, err = cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
 			if err != nil {
 				return err
 			}
