@@ -82,7 +82,7 @@ var ClusterKeys = []edgeproto.ClusterKey{
 }
 
 var AppData = []edgeproto.App{
-	edgeproto.App{
+	edgeproto.App{ // 0
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Pillimo Go!",
@@ -93,7 +93,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 1
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Pillimo Go!",
@@ -104,7 +104,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 2
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Hunna Stoll Go! Go!",
@@ -115,7 +115,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 3
 		Key: edgeproto.AppKey{
 			Organization: DevData[1],
 			Name:         "AI",
@@ -127,7 +127,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 4
 		Key: edgeproto.AppKey{
 			Organization: DevData[2],
 			Name:         "my reality",
@@ -139,7 +139,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
 		DefaultFlavor: FlavorData[2].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 5
 		Key: edgeproto.AppKey{
 			Organization: DevData[3],
 			Name:         "helmApp",
@@ -151,7 +151,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[2].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 6
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Nelon",
@@ -162,7 +162,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 7
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "NoPorts",
@@ -172,7 +172,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 8
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "PortRangeApp",
@@ -183,7 +183,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 9
 		Key: edgeproto.AppKey{
 			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
 			Name:         "AutoDeleteApp",
@@ -194,7 +194,7 @@ var AppData = []edgeproto.App{
 		DefaultFlavor: FlavorData[0].Key,
 		DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 10
 		Key: edgeproto.AppKey{
 			Organization: DevData[1],
 			Name:         "Dev1App",
@@ -205,7 +205,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 11
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Pillimo Go!",
@@ -220,7 +220,7 @@ var AppData = []edgeproto.App{
 			AutoProvPolicyData[3].Key.Name,
 		},
 	},
-	edgeproto.App{
+	edgeproto.App{ // 12
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "vm lb",
@@ -231,6 +231,17 @@ var AppData = []edgeproto.App{
 		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "tcp:10003",
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor: FlavorData[0].Key,
+	},
+	edgeproto.App{ // 13 - MobiledgeX app
+		Key: edgeproto.AppKey{
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Name:         "SampleApp",
+			Version:      "1.0.0",
+		},
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		AccessPorts:   "tcp:889",
 		DefaultFlavor: FlavorData[0].Key,
 	},
 }
@@ -460,7 +471,6 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey: edgeproto.ClusterKey{
-				//Name: util.K8SSanitize("AutoCluster" + AppData[1].Key.Name),
 				Name: "reservable0",
 			},
 			CloudletKey:  CloudletData[1].Key,
@@ -478,7 +488,6 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey: edgeproto.ClusterKey{
-				//Name: util.K8SSanitize("AutoCluster" + AppData[2].Key.Name),
 				Name: "reservable0",
 			},
 			CloudletKey:  CloudletData[2].Key,
@@ -496,7 +505,6 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey: edgeproto.ClusterKey{
-				//Name: util.K8SSanitize("AutoCluster" + AppData[6].Key.Name),
 				Name: "reservable1",
 			},
 			CloudletKey:  CloudletData[2].Key,
@@ -509,6 +517,23 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 		Auto:       true,
 		Reservable: true,
 		ReservedBy: DevData[0],
+	},
+	// from AppInstData[12] -> AppData[13]
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey: edgeproto.ClusterKey{
+				Name: "reservable0",
+			},
+			CloudletKey:  CloudletData[3].Key,
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+		},
+		Flavor:     FlavorData[0].Key,
+		NumMasters: 1,
+		NumNodes:   1,
+		State:      edgeproto.TrackedState_READY,
+		Auto:       true,
+		Reservable: true,
+		ReservedBy: "MobiledgeX",
 	},
 }
 var AppInstData = []edgeproto.AppInst{
@@ -604,6 +629,13 @@ var AppInstData = []edgeproto.AppInst{
 			},
 		},
 		CloudletLoc: CloudletData[1].Location,
+	},
+	edgeproto.AppInst{ // 12 - deploy MobiledgeX app to reservable autocluster
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[13].Key, // mobiledgex sample app
+			ClusterInstKey: *ClusterInstAutoData[3].Key.Virtual(util.K8SSanitize("autocluster" + AppData[13].Key.Name)),
+		},
+		CloudletLoc: CloudletData[3].Location,
 	},
 }
 
@@ -705,6 +737,12 @@ var AppInstRefsData = []edgeproto.AppInstRefs{
 		Key: AppData[12].Key,
 		Insts: map[string]uint32{
 			AppInstData[11].Key.GetKeyString(): 1,
+		},
+	},
+	edgeproto.AppInstRefs{
+		Key: AppData[13].Key,
+		Insts: map[string]uint32{
+			AppInstData[12].Key.GetKeyString(): 1,
 		},
 	},
 }
@@ -1127,7 +1165,9 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		RootLbPorts:            map[int32]int32{443: 1, 11111: 2, 2024: 2, 80: 1, 8001: 2, 65535: 1},
 		ReservedAutoClusterIds: 3,
 	},
-	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
+	// ClusterInstData[6]: (no app insts on this clusterinst) (shared),
+	// ClusterInstAutoData[3]: (shared)
+	// AppInstData[12] -> ports[tcp:889]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
 		ClusterInsts: []edgeproto.ClusterInstRefKey{
@@ -1135,10 +1175,16 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 				ClusterKey:   ClusterInstData[6].Key.ClusterKey,
 				Organization: ClusterInstData[6].Key.Organization,
 			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstAutoData[3].Key.ClusterKey,
+				Organization: ClusterInstAutoData[3].Key.Organization,
+			},
 		},
-		UsedRam:    GetCloudletUsedRam(6),
-		UsedVcores: GetCloudletUsedVcores(6),
-		UsedDisk:   GetCloudletUsedDisk(6),
+		UsedRam:                GetCloudletUsedRam(6, -1, 3),
+		UsedVcores:             GetCloudletUsedVcores(6, -1, 3),
+		UsedDisk:               GetCloudletUsedDisk(6, -1, 3),
+		RootLbPorts:            map[int32]int32{889: 1},
+		ReservedAutoClusterIds: 1,
 	},
 }
 
