@@ -163,17 +163,16 @@ func CloudletResourceUsageAlerts(ctx context.Context, key *edgeproto.CloudletKey
 	return alerts
 }
 
-func ValidateCloudletResourceQuotas(ctx context.Context, curRes map[string]*edgeproto.InfraResource, resourceQuotas []edgeproto.ResourceQuota) error {
+func ValidateCloudletResourceQuotas(ctx context.Context, curRes map[string]edgeproto.InfraResource, resourceQuotas []edgeproto.ResourceQuota) error {
 	quotaNames := []string{}
 	for name, _ := range curRes {
 		quotaNames = append(quotaNames, name)
 	}
 	for _, resQuota := range resourceQuotas {
-		val, ok := curRes[resQuota.Name]
+		infraRes, ok := curRes[resQuota.Name]
 		if !ok {
 			return fmt.Errorf("Invalid resource quota name: %s, valid names are %s", resQuota.Name, strings.Join(quotaNames, ","))
 		}
-		infraRes := *val
 		if infraRes.InfraMaxValue > 0 && resQuota.Value > infraRes.InfraMaxValue {
 			return fmt.Errorf("Resource quota %s exceeded max supported value: %d", resQuota.Name, infraRes.InfraMaxValue)
 		}

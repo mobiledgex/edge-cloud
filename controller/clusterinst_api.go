@@ -10,6 +10,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
+	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
@@ -238,11 +239,9 @@ func getClusterInstVMRequirements(ctx context.Context, stm concurrency.STM, in *
 func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource) ([]string, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
 
-	infraResInfo := make(map[string]*edgeproto.InfraResource)
+	infraResInfo := make(map[string]edgeproto.InfraResource)
 	for _, resInfo := range infraResources.Info {
-		newResInfo := &edgeproto.InfraResource{}
-		newResInfo.DeepCopyIn(&resInfo)
-		infraResInfo[newResInfo.Name] = newResInfo
+		infraResInfo[resInfo.Name] = resInfo
 	}
 
 	reqdResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, reqdVmResources, infraResInfo)
@@ -312,7 +311,11 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	// Infra based validation
 	for resName, _ := range infraResInfo {
 		if resInfo, ok := diffResInfo[resName]; ok {
-			infraResInfo[resName].Value += resInfo.Value
+			outInfo, ok := infraResInfo[resName]
+			if ok {
+				outInfo.Value += resInfo.Value
+				infraResInfo[resName] = outInfo
+			}
 		}
 	}
 	errsStr = []string{}
@@ -521,7 +524,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	if err != nil {
 		return nil, err
 	}
-	pfType := cloudletPlatform.GetType()
+	pfType := pf.GetType(cloudlet.PlatformType.String())
 
 	// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
 	allResources, _, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
@@ -543,7 +546,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	resMetric := edgeproto.Metric{}
 	ts, _ := types.TimestampProto(time.Now())
 	resMetric.Timestamp = *ts
-	resMetric.Name = fmt.Sprintf("%s-resource-usage", pfType)
+	resMetric.Name = cloudcommon.GetCloudletResourceUsageMeasurement(pfType)
 	resMetric.AddTag("cloudletorg", key.Organization)
 	resMetric.AddTag("cloudlet", key.Name)
 	resMetric.AddIntVal("ramUsed", ramUsed)
@@ -577,7 +580,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 
 	for fName, fCount := range flavorCount {
 		flavorMetric := edgeproto.Metric{}
-		flavorMetric.Name = "cloudlet-flavor-usage"
+		flavorMetric.Name = cloudcommon.CloudletFlavorUsageMeasurement
 		flavorMetric.Timestamp = *ts
 		flavorMetric.AddTag("cloudletorg", cloudlet.Key.Organization)
 		flavorMetric.AddTag("cloudlet", cloudlet.Key.Name)

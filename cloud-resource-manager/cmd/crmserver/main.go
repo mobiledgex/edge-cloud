@@ -257,15 +257,13 @@ func main() {
 				}
 				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
 				if resources != nil {
-					resMap := make(map[string]*edgeproto.InfraResource)
+					resMap := make(map[string]edgeproto.InfraResource)
 					for _, resInfo := range resources.Info {
-						newResInfo := &edgeproto.InfraResource{}
-						newResInfo.DeepCopyIn(&resInfo)
-						resMap[newResInfo.Name] = newResInfo
+						resMap[resInfo.Name] = resInfo
 					}
 					err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
 					if err != nil {
-						log.FatalLog("Failed to validate cloudlet resource quota", "err", err)
+						log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
 					}
 					myCloudletInfo.ResourcesSnapshot = *resources
 				}
@@ -312,7 +310,8 @@ func main() {
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
 			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(accessClient))
-			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, platform.GetType(), rootlb, *commercialCerts)
+			pfType := pf.GetType(cloudlet.PlatformType.String())
+			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, rootlb, *commercialCerts)
 		}
 		tlsSpan.Finish()
 	}()
@@ -355,7 +354,8 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		AccessApi:           accessApi,
 		TrustPolicy:         cloudlet.TrustPolicy,
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
+	pfType := pf.GetType(cloudlet.PlatformType.String())
+	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
 	err := platform.Init(ctx, &pc, caches, updateCallback)
 	return err
 }
