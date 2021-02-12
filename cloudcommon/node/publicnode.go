@@ -41,7 +41,7 @@ func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, er
 // PublicCertManager manages refreshing the public cert.
 type PublicCertManager struct {
 	commonName          string
-	enabled             bool // if not enabled, then no tls
+	tlsMode             mextls.TLSMode
 	useGetPublicCertApi bool // denotes whether to use GetPublicCertApi to grab certs or use command line provided cert (should be equivalent to useVaultPki flag)
 	getPublicCertApi    cloudcommon.GetPublicCertApi
 	cert                *tls.Certificate
@@ -61,7 +61,7 @@ func NewPublicCertManager(commonName string, getPublicCertApi cloudcommon.GetPub
 		refreshTrigger:    make(chan bool, 1),
 		refreshThreshold:  30 * 24 * time.Hour,
 		refreshRetryDelay: 24 * time.Hour,
-		enabled:           true,
+		tlsMode:           mextls.ServerAuthTLS,
 	}
 
 	if getPublicCertApi != nil {
@@ -75,13 +75,13 @@ func NewPublicCertManager(commonName string, getPublicCertApi cloudcommon.GetPub
 		mgr.cert = &cert
 	} else {
 		// no tls
-		mgr.enabled = false
+		mgr.tlsMode = mextls.NoTLS
 	}
 	return mgr, nil
 }
 
 func (s *PublicCertManager) updateCert(ctx context.Context) error {
-	if !s.enabled || !s.useGetPublicCertApi {
+	if s.tlsMode == mextls.NoTLS || !s.useGetPublicCertApi {
 		// If no tls or using command line certs, do not update
 		return nil
 	}
@@ -105,7 +105,7 @@ func (s *PublicCertManager) updateCert(ctx context.Context) error {
 
 // For now this just assumes server-side only TLS.
 func (s *PublicCertManager) GetServerTlsConfig(ctx context.Context) (*tls.Config, error) {
-	if !s.enabled {
+	if s.tlsMode == mextls.NoTLS {
 		// No tls
 		return nil, nil
 	}

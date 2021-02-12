@@ -40,7 +40,7 @@ type internalPki struct {
 	certs map[CertId]*tls.Certificate
 	cas   map[string][]*x509.Certificate
 
-	enabled        bool
+	tlsMode        mextls.TLSMode
 	vaultConfig    *vault.Config
 	localRegion    string
 	refreshTrigger chan bool
@@ -69,7 +69,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		s.InternalPki.enabled = true
+		s.InternalPki.tlsMode = mextls.MutualAuthTLS
 		pkiDesc = append(pkiDesc, "from-file")
 	}
 	s.InternalPki.vaultConfig = s.VaultConfig
@@ -79,7 +79,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		pkiDesc = append(pkiDesc, "useAccessKey")
 	}
 	if s.InternalPki.UseVaultPki {
-		s.InternalPki.enabled = true
+		s.InternalPki.tlsMode = mextls.MutualAuthTLS
 		if !s.AccessKeyClient.enabled && s.InternalPki.vaultConfig.Addr == "" {
 			return fmt.Errorf("AccessKey file or Vault address required for UseVaultPki")
 		}
@@ -223,7 +223,7 @@ func certsFromPem(pemCerts []byte) ([]*x509.Certificate, error) {
 // The server issuers specify which CAs are trusted when verifying the
 // remote server's certificate.
 func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, clientIssuer string, serverIssuers []MatchCA, ops ...TlsOp) (*tls.Config, error) {
-	if !s.enabled {
+	if s.tlsMode == mextls.NoTLS {
 		return nil, nil
 	}
 	opts := &TlsOptions{}
@@ -271,7 +271,7 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 // The client issuers specify which CAs are trusted when verifying the
 // remote client's certificate.
 func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, serverIssuer string, clientIssuers []MatchCA, ops ...TlsOp) (*tls.Config, error) {
-	if !s.enabled {
+	if s.tlsMode == mextls.NoTLS {
 		return nil, nil
 	}
 	opts := &TlsOptions{}
@@ -301,7 +301,10 @@ func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, server
 		GetCertificate:        s.getCertificateFunc(id),
 		VerifyPeerCertificate: s.getVerifyFunc(clientIssuers),
 	}
-	if opts.noMutualAuth || mextls.IsTestTls() {
+	if mextls.IsTestTls() {
+		config.ClientAuth = tls.RequireAnyClientCert
+	}
+	if opts.noMutualAuth {
 		config.ClientAuth = tls.NoClientCert
 	}
 	return config, nil

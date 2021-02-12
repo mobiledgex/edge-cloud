@@ -262,37 +262,16 @@ func (p *Controller) GetTlsFile() string {
 	return p.TLS.ClientCert
 }
 
-func (p *Controller) getTlsConfig(addr string) *tls.Config {
-	if p.UseVaultPki && p.VaultAddr != "" {
-		if p.TestMode {
-			os.Setenv("E2ETEST_TLS", "true")
-		}
-		config, err := mextls.GetTLSClientConfig(true, addr, nil, p.GetTlsFile(), "", true)
-		if err != nil {
-			return nil
-		}
-		return config
-	} else if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
-		// ServerAuth TLS. For real clients, they'll use
-		// their built-in trusted CAs to verify the cert.
-		// Since we're using self-signed certs here, add
-		// our CA to the cert pool.
-		certPool, err := mextls.GetClientCertPool(p.TLS.ServerCert, "")
-		if err != nil {
-			log.Printf("GetClientCertPool failed, %v\n", err)
-			return nil
-		}
-		config := &tls.Config{
-			RootCAs: certPool,
-		}
-		return config
-	} else {
-		return nil
-	}
-}
-
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig := p.getTlsConfig(p.ApiAddr)
+	tlsMode := mextls.MutualAuthTLS
+	skipVerify := false
+	if p.TestMode {
+		skipVerify = true
+	}
+	tlsConfig, err := mextls.GetTLSClientConfig(tlsMode, p.ApiAddr, nil, p.GetTlsFile(), "", skipVerify)
+	if err != nil {
+		return nil, err
+	}
 	return connectAPIImpl(timeout, p.ApiAddr, tlsConfig)
 }
 
@@ -396,17 +375,9 @@ func (p *Dme) GetRestClient(timeout time.Duration) (*http.Client, error) {
 
 func (p *Dme) getTlsConfig(addr string) *tls.Config {
 	if p.UseVaultPki && p.VaultAddr != "" {
-		region := p.Region
-		if region == "" {
-			region = "local"
+		return &tls.Config{
+			InsecureSkipVerify: true,
 		}
-		cert := "/tmp/edgectl." + region + "/mex.crt"
-		os.Setenv("E2ETEST_TLS", "true")
-		config, err := mextls.GetTLSClientConfig(true, addr, nil, cert, "", true)
-		if err != nil {
-			return nil
-		}
-		return config
 	} else if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
 		// ServerAuth TLS. For real clients, they'll use
 		// their built-in trusted CAs to verify the cert.
