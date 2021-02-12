@@ -3,7 +3,7 @@
 REPO=$1
 OUT=version.go
 # if no local/branch commits beyond master, master and head will be the same
-BUILD_MASTER=`git describe --tags master`
+BUILD_MASTER=`git describe --tags origin/master`
 BUILD_HEAD=`git describe --tags --dirty=+`
 BUILD_AUTHOR=`git config user.name`
 DATE=`date`
