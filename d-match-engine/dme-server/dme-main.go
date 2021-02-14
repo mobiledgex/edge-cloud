@@ -571,7 +571,7 @@ func main() {
 		accessApi = accessapi.NewVaultClient(cloudlet, nodeMgr.VaultConfig, *region)
 	}
 	// Setup PublicCertManager for dme
-	publicCertManager := node.NewPublicCertManager(nodeMgr.CommonName(), accessApi)
+	publicCertManager := node.NewPublicCertManager("_.dme.mobiledgex.net", accessApi)
 	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
 		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), &cloudcommon.TestPublicCertApi{})
 	}
