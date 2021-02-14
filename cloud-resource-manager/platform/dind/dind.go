@@ -40,9 +40,9 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	info.Flavors = []*edgeproto.FlavorInfo{
 		&edgeproto.FlavorInfo{
 			Name:  "DINDFlavor",
-			Vcpus: uint64(info.OsMaxVcores),
-			Ram:   uint64(info.OsMaxRam),
-			Disk:  uint64(500),
+			Vcpus: uint64(1),
+			Ram:   uint64(1024),
+			Disk:  uint64(10),
 		},
 	}
 	return nil
