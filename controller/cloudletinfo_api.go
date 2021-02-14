@@ -21,7 +21,7 @@ type CloudletInfoApi struct {
 }
 
 var cloudletInfoApi = CloudletInfoApi{}
-var cleanupCloudletInfoTimeout = 5 * time.Second
+var cleanupCloudletInfoTimeout = 5 * time.Minute
 
 func InitCloudletInfoApi(sync *Sync) {
 	cloudletInfoApi.sync = sync
