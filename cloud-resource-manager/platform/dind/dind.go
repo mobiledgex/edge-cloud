@@ -14,10 +14,6 @@ import (
 type Platform struct {
 }
 
-func (s *Platform) GetType() string {
-	return "dind"
-}
-
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, controllerData *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	// for backwards compatibility, removes l7 proxies, can delete this later
 	client, err := s.GetNodePlatformClient(ctx, nil)
