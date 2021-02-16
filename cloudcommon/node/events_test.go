@@ -29,6 +29,7 @@ func TestEvents(t *testing.T) {
 	ctx, _, err := nodeMgr.Init(NodeTypeController, "", WithRegion("unit-test"),
 		WithESUrls("http://localhost:9200"))
 	require.Nil(t, err)
+	defer nodeMgr.Finish()
 	nodeMgr.unitTestMode = true
 
 	starttime := time.Date(2020, time.August, 1, 0, 0, 0, 0, time.UTC)
@@ -88,8 +89,10 @@ func TestEvents(t *testing.T) {
 	keyTags[edgeproto.CloudletKeyTagName] = "cloudlet1"
 	nodeMgr.EventAtTime(ctx, "update AppInst", org, "event", keyTags, nil, ts)
 
+	// wait for queued events to be written to ES
+	waitEvents(t, &nodeMgr)
 	// for some reason ES is not ready immediately for searching
-	time.Sleep(time.Second)
+	time.Sleep(2 * time.Second)
 
 	//
 	// ---------------------------------------------------
@@ -630,4 +633,14 @@ func TestEvents(t *testing.T) {
 	}
 	_, err = nodeMgr.ShowEvents(ctx, &es)
 	require.NotNil(t, err)
+}
+
+func waitEvents(t *testing.T, nm *NodeMgr) {
+	for ii := 0; ii < 20; ii++ {
+		if len(nm.esEvents) == 0 {
+			break
+		}
+		time.Sleep(1000 * time.Millisecond)
+	}
+	require.Equal(t, 0, len(nm.esEvents))
 }
