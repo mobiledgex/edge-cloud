@@ -126,9 +126,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				return key.NotFoundError()
 			}
 			cloudletRefs := edgeproto.CloudletRefs{}
-			if !cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs) {
-				return key.NotFoundError()
-			}
+			cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
 			return validateResources(ctx, stm, nil, nil, &cloudlet, in, &cloudletRefs)
 		})
 		if err != nil {
