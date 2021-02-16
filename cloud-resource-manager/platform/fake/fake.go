@@ -56,10 +56,6 @@ var RootLBFlavor = edgeproto.Flavor{
 	Disk:  uint64(40),
 }
 
-func (s *Platform) GetType() string {
-	return "fake"
-}
-
 var fakeProps = map[string]*edgeproto.PropertyInfo{
 	// Property: Default-Value
 	"PROP_1": &edgeproto.PropertyInfo{
@@ -287,18 +283,18 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 }
 
 // called by controller, make sure it doesn't make any calls to infra API
-func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource {
+func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]edgeproto.InfraResource) map[string]edgeproto.InfraResource {
 	// resource name -> resource units
 	cloudletRes := map[string]string{
 		ResourceExternalIps: "",
 	}
-	resInfo := make(map[string]*edgeproto.InfraResource)
+	resInfo := make(map[string]edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
 		resMax := uint64(0)
 		if infraRes, ok := infraResMap[resName]; ok {
 			resMax = infraRes.InfraMaxValue
 		}
-		resInfo[resName] = &edgeproto.InfraResource{
+		resInfo[resName] = edgeproto.InfraResource{
 			Name:          resName,
 			InfraMaxValue: resMax,
 			Units:         resUnits,
@@ -307,7 +303,11 @@ func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *
 
 	for _, vmRes := range vmResources {
 		if vmRes.Type == cloudcommon.VMTypeRootLB {
-			resInfo[ResourceExternalIps].Value += 1
+			out, ok := resInfo[ResourceExternalIps]
+			if ok {
+				out.Value += 1
+				resInfo[ResourceExternalIps] = out
+			}
 		}
 	}
 	return resInfo

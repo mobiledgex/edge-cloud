@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -53,8 +54,6 @@ type Caches struct {
 
 // Platform abstracts the underlying cloudlet platform.
 type Platform interface {
-	// GetType returns the cloudlet's stack type, i.e. Openstack, Azure, etc.
-	GetType() string
 	// GetVersionProperties returns properties related to the platform version
 	GetVersionProperties() map[string]string
 	// Init is called once during CRM startup.
@@ -72,7 +71,7 @@ type Platform interface {
 	// Get resources used by the cloudlet
 	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResourcesSnapshot, error)
 	// Get cluster additional resources used by the vms specific to the platform
-	GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]*edgeproto.InfraResource) map[string]*edgeproto.InfraResource
+	GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]edgeproto.InfraResource) map[string]edgeproto.InfraResource
 	// Get Cloudlet Resource Properties
 	GetCloudletResourceQuotaProps(ctx context.Context) (*edgeproto.CloudletResourceQuotaProps, error)
 	// Get cluster additional resource metric
@@ -150,4 +149,19 @@ type AccessApi interface {
 	GetDNSRecords(ctx context.Context, zone, fqdn string) ([]cloudflare.DNSRecord, error)
 	DeleteDNSRecord(ctx context.Context, zone, recordID string) error
 	GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error)
+}
+
+var pfMaps = map[string]string{
+	"fakeinfra": "fake",
+	"edgebox":   "dind",
+}
+
+func GetType(pfType string) string {
+	out := strings.TrimPrefix(pfType, "PLATFORM_TYPE_")
+	out = strings.ToLower(out)
+	out = strings.Replace(out, "_", "", -1)
+	if mapOut, found := pfMaps[out]; found {
+		return mapOut
+	}
+	return out
 }

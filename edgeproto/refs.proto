@@ -40,12 +40,6 @@ message VMResource {
 message CloudletRefs {
   // Cloudlet key
   CloudletKey key = 1 [(gogoproto.nullable) = false];
-  // Used RAM in MB
-  uint64 used_ram = 4;
-  // Used VCPU cores
-  uint64 used_vcores = 5;
-  // Used disk in GB
-  uint64 used_disk = 6;
   // Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol
   // bitmap: bit 0: tcp, bit 1: udp
   map<int32, int32> root_lb_ports = 8;
