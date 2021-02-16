@@ -5,6 +5,7 @@ import (
 	"flag"
 
 	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -38,6 +39,8 @@ type NodeMgr struct {
 	InternalPki        internalPki
 	InternalDomain     string
 	ESClient           *elasticsearch.Client
+	esEvents           chan esapi.IndexRequest
+	esEventsDone       chan struct{}
 	tlsClientIssuer    string
 	commonName         string
 	DeploymentTag      string
@@ -165,6 +168,7 @@ func (s *NodeMgr) Name() string {
 }
 
 func (s *NodeMgr) Finish() {
+	close(s.esEventsDone)
 	log.FinishTracer()
 }
 

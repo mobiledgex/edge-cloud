@@ -157,6 +157,8 @@ type AggrVal struct {
 }
 
 func (s *NodeMgr) initEvents(ctx context.Context, opts *NodeOptions) error {
+	s.esEvents = make(chan esapi.IndexRequest, 100)
+	s.esEventsDone = make(chan struct{})
 	// ES_SERVER_URLS should be set in environment, it exists as an parameter
 	// option just for unit-tests.
 	if opts.esUrls == "" {
@@ -201,21 +203,57 @@ func (s *NodeMgr) initEvents(ctx context.Context, opts *NodeOptions) error {
 	if err != nil {
 		return err
 	}
+	go s.writeEvents()
+	return nil
+}
 
-	for ii := 0; ii < 20; ii++ {
+func (s *NodeMgr) writeEvents() {
+	// initialize index
+	startTime := time.Now()
+	done := false
+	for {
 		// retry loop in case ElasticSearch not online/ready right away
-		err = s.writeIndex(ctx)
+		span := log.StartSpan(log.DebugLevelInfo, "init-es-events")
+		ctx := log.ContextWithSpan(context.Background(), span)
+		err := s.writeIndex(ctx)
 		if err == nil {
+			// log start once we can talk to ES
+			s.EventAtTime(ctx, s.MyNode.Key.Type+" start", NoOrg, "event", s.MyNode.Key.GetTags(), nil, startTime)
+			span.Finish()
 			break
 		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "write event-log failed, will retry", "try", ii, "err", err)
-		time.Sleep(time.Second)
+		log.SpanLog(ctx, log.DebugLevelInfo, "write event-log failed, will retry", "err", err)
+		span.Finish()
+		select {
+		case <-time.After(10 * time.Second):
+		case <-s.esEventsDone:
+			done = true
+			break
+		}
 	}
-	if err != nil {
-		return err
+	// write events
+	for !done {
+		var req esapi.IndexRequest
+		select {
+		case req = <-s.esEvents:
+		case <-s.esEventsDone:
+			done = true
+			break
+		}
+		res, err := req.Do(context.Background(), s.ESClient)
+		if err == nil && res.StatusCode/100 != http.StatusOK/100 {
+			res.Body.Close()
+			err = fmt.Errorf("%v", res)
+		}
+		if err != nil {
+			span := log.StartSpan(log.DebugLevelEvents, "es-write-event")
+			ctx := log.ContextWithSpan(context.Background(), span)
+			log.SpanLog(ctx, log.DebugLevelEvents, "failed to log event", "err", err)
+			span.Finish()
+			continue
+		}
+		res.Body.Close()
 	}
-	s.Event(ctx, s.MyNode.Key.Type+" start", NoOrg, s.MyNode.Key.GetTags(), nil)
-	return nil
 }
 
 func (s *NodeMgr) writeIndex(ctx context.Context) error {
@@ -318,21 +356,16 @@ func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[
 		return
 	}
 
-	log.SpanLog(ctx, log.DebugLevelEvents, "write event", "event", string(dat))
 	req := esapi.IndexRequest{
 		Index: esEventLog + "-" + indexTime(ts),
 		Body:  strings.NewReader(string(dat)),
 	}
-	res, err := req.Do(ctx, s.ESClient)
-	if err == nil && res.StatusCode/100 != http.StatusOK/100 {
-		defer res.Body.Close()
-		err = fmt.Errorf("%v", res)
+	select {
+	case s.esEvents <- req:
+		log.SpanLog(ctx, log.DebugLevelEvents, "queued event", "event", string(dat))
+	default:
+		log.SpanLog(ctx, log.DebugLevelEvents, "dropped event", "event", string(dat))
 	}
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "failed to log event", "event", event, "err", err)
-		return
-	}
-	defer res.Body.Close()
 }
 
 func (s *NodeMgr) ShowEvents(ctx context.Context, search *EventSearch) ([]EventData, error) {
