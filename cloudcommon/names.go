@@ -89,6 +89,7 @@ var CustomMetric = "custom-metrics"
 
 // Cloudlet resource usage
 var CloudletResourceUsageDbName = "cloudlet_resource_usage"
+var CloudletFlavorUsageMeasurement = "cloudlet-flavor-usage"
 
 // Map used to identify which metrics should go to persistent_metrics db
 var PersistentMetrics = map[string]struct{}{
@@ -268,4 +269,8 @@ func GetCertsDirAndFiles(pwd string) (string, string, string) {
 	certFile := certsDir + "/" + CertName + ".crt"
 	keyFile := certsDir + "/" + CertName + ".key"
 	return certsDir, certFile, keyFile
+}
+
+func GetCloudletResourceUsageMeasurement(pfType string) string {
+	return fmt.Sprintf("%s-resource-usage", pfType)
 }
