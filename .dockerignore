@@ -12,8 +12,6 @@
 edge-cloud/controller/etcdLocal_data
 edge-cloud/edge-mvp
 
-edge-cloud-infra/terraform
-
 # postgres comes from unit tests
 edge-cloud-infra/mc/orm/.postgres
 edge-cloud-infra/openstack-tenant/agent/build

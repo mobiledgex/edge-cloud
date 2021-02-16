@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -40,6 +41,7 @@ var eMock *EventMock
 type EventMock struct {
 	names map[string][]node.EventTag
 	addr  string
+	mux   sync.Mutex
 }
 
 func NewEventMock(addr string) *EventMock {
@@ -65,14 +67,28 @@ func (e *EventMock) registerResponders(t *testing.T) {
 			err := json.Unmarshal(data, &eData)
 			require.Nil(t, err, "json unmarshal event data")
 			require.NotEmpty(t, eData.Name, "event name exists")
+			e.mux.Lock()
 			e.names[strings.ToLower(eData.Name)] = eData.Tags
+			e.mux.Unlock()
 			return httpmock.NewStringResponse(200, "Success"), nil
 		},
 	)
 }
 
 func (e *EventMock) verifyEvent(t *testing.T, name string, tags []node.EventTag) {
-	eTags, ok := e.names[strings.ToLower(name)]
+	// Events are written in a separate thread so we need to poll
+	// to check when they're registered.
+	var eTags []node.EventTag
+	var ok bool
+	for ii := 0; ii < 20; ii++ {
+		e.mux.Lock()
+		eTags, ok = e.names[strings.ToLower(name)]
+		e.mux.Unlock()
+		if ok {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	require.True(t, ok, "event exists")
 	require.NotEqual(t, len(eTags), 0, "there should be more than 0 tags")
 	require.NotEqual(t, len(tags), 0, "there should be more than 0 tags")
@@ -118,6 +134,7 @@ func TestCloudletApi(t *testing.T) {
 		node.WithESUrls(esURL))
 	require.Nil(t, err)
 	require.NotNil(t, nodeMgr.ESClient)
+	defer nodeMgr.Finish()
 
 	// create flavors
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)

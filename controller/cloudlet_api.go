@@ -551,8 +551,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err == nil {
 			if len(accessVars) > 0 {
 				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
+				if err != nil {
+					return err
+				}
 			}
-			resProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
+			var resProps *edgeproto.CloudletResourceQuotaProps
+			resProps, err = cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
 			if err != nil {
 				return err
 			}
@@ -1287,22 +1291,17 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}()
 
-	dynInsts := make(map[edgeproto.AppInstKey]struct{})
-	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
-		// disallow delete if static instances are present
-		return errors.New("Cloudlet in use by static AppInst")
-	}
-
-	clDynInsts := make(map[edgeproto.ClusterInstKey]struct{})
-	if clusterInstApi.UsesCloudlet(&in.Key, clDynInsts) {
-		return errors.New("Cloudlet in use by static ClusterInst")
-	}
+	var dynInsts map[edgeproto.AppInstKey]struct{}
+	var clDynInsts map[edgeproto.ClusterInstKey]struct{}
 
 	cctx.SetOverride(&in.CrmOverride)
 
 	var pfConfig *edgeproto.PlatformConfig
 	vmPool := edgeproto.VMPool{}
+
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		dynInsts = make(map[edgeproto.AppInstKey]struct{})
+		clDynInsts = make(map[edgeproto.ClusterInstKey]struct{})
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
@@ -1311,10 +1310,22 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err != nil {
 			return err
 		}
+		refs := edgeproto.CloudletRefs{}
+		if cloudletRefsApi.store.STMGet(stm, &in.Key, &refs) {
+			err = clusterInstApi.deleteCloudletOk(stm, &refs, clDynInsts)
+			if err != nil {
+				return err
+			}
+			err = appInstApi.deleteCloudletOk(stm, &refs, dynInsts)
+			if err != nil {
+				return err
+			}
+		}
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
 			return nil
 		}
+
 		if in.VmPool != "" {
 			vmPoolKey := edgeproto.VMPoolKey{
 				Name:         in.VmPool,
@@ -1350,6 +1361,34 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 
+	// Delete dynamic instances while Cloudlet is still in database
+	// and CRM is still up.
+	if len(dynInsts) > 0 {
+		// delete dynamic instances
+		for key, _ := range dynInsts {
+			appInst := edgeproto.AppInst{Key: key}
+			derr := appInstApi.deleteAppInstInternal(DefCallContext(), &appInst, cb)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic app inst",
+					"key", key, "err", derr)
+				return derr
+			}
+		}
+	}
+	if len(clDynInsts) > 0 {
+		for key, _ := range clDynInsts {
+			clInst := edgeproto.ClusterInst{Key: key}
+			derr := clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clInst, cb)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic ClusterInst",
+					"key", key, "err", derr)
+				return derr
+			}
+		}
+	}
+
 	if !ignoreCRMState(cctx) {
 		updatecb := updateCloudletCallback{in, cb}
 
@@ -1373,6 +1412,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
+	// Delete cloudlet from database
 	updateCloudlet := edgeproto.Cloudlet{}
 	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &updateCloudlet) {
@@ -1400,30 +1440,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	// Note: don't delete cloudletinfo, that will get deleted once CRM
 	// disconnects. Otherwise if admin deletes/recreates Cloudlet with
 	// CRM connected the whole time, we will end up without cloudletInfo.
-	// also delete dynamic instances
-	if len(dynInsts) > 0 {
-		// delete dynamic instances
-		for key, _ := range dynInsts {
-			appInst := edgeproto.AppInst{Key: key}
-			derr := appInstApi.deleteAppInstInternal(DefCallContext(), &appInst, cb)
-			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
-					"Failed to delete dynamic app inst",
-					"key", key, "err", derr)
-			}
-		}
-	}
-	if len(clDynInsts) > 0 {
-		for key, _ := range clDynInsts {
-			clInst := edgeproto.ClusterInst{Key: key}
-			derr := clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clInst, cb)
-			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
-					"Failed to delete dynamic ClusterInst",
-					"key", key, "err", derr)
-			}
-		}
-	}
 	cloudletPoolApi.cloudletDeleted(ctx, &in.Key)
 	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
 	return nil

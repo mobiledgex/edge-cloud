@@ -64,8 +64,10 @@ func (s *Sync) Start() {
 			log.SpanLog(ctx, log.DebugLevelInfo, "sync failed", "err", err)
 			span.SetTag("level", "warn")
 		}
+		s.mux.Lock()
 		s.syncDone = true
 		s.cond.Broadcast()
+		s.mux.Unlock()
 	}()
 
 	// Wait until the initial show of the sync call is complete.

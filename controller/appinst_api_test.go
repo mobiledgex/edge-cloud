@@ -493,7 +493,7 @@ func TestAutoClusterInst(t *testing.T) {
 	autoDeleteAppInst.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + "foo"
 	err := appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "create autodelete appInst")
-	require.Contains(t, err.Error(), "MobiledgeX sidecar AppInst must specify the RealClusterName field to deploy to the virtual cluster")
+	require.Contains(t, err.Error(), "Sidecar AppInst (AutoDelete App) must specify the RealClusterName field to deploy to the virtual cluster")
 
 	dummy.Stop()
 }
