@@ -13,7 +13,47 @@
     - ramUsed
     - vcpusUsed
     values:
-    - - "2021-02-05T12:31:32.715828Z"
+    - - "2021-02-17T13:37:39.973801Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:39.973801Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:40.735371Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:40.735371Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:47.982768Z"
       - dmuus-cloud-1
       - dmuus
       - 5
@@ -23,38 +63,28 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:31:33.053967Z"
-      - dmuus-cloud-2
-      - dmuus
-      - 6
-      - null
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-    - - "2021-02-05T12:31:39.640798Z"
+    - - "2021-02-17T13:37:47.982768Z"
       - dmuus-cloud-1
       - dmuus
-      - 6
+      - 1
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:31:40.05729Z"
+    - - "2021-02-17T13:37:48.277872Z"
       - dmuus-cloud-2
       - dmuus
-      - 7
+      - 2
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:31:42.64888Z"
-      - dmuus-cloud-1
+    - - "2021-02-17T13:37:48.277872Z"
+      - dmuus-cloud-2
       - dmuus
       - 5
       - null
@@ -63,17 +93,47 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:31:43.043184Z"
-      - dmuus-cloud-2
+    - - "2021-02-17T13:37:50.94465Z"
+      - dmuus-cloud-1
       - dmuus
-      - 6
+      - 4
       - null
       - null
       - x1.small
       - null
       - null
       - null
-    - - "2021-02-05T12:31:44.202162Z"
+    - - "2021-02-17T13:37:50.94465Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:51.242108Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:51.242108Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:52.425158Z"
       - dmuus-cloud-1
       - dmuus
       - 2
@@ -83,7 +143,7 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:31:44.844485Z"
+    - - "2021-02-17T13:37:52.95226Z"
       - dmuus-cloud-2
       - dmuus
       - 2
@@ -93,7 +153,47 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:31:49.984159Z"
+    - - "2021-02-17T13:37:58.039959Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:58.039959Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:58.828351Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:37:58.828351Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:04.251317Z"
       - dmuus-cloud-1
       - dmuus
       - 5
@@ -103,38 +203,28 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:31:50.452302Z"
-      - dmuus-cloud-2
-      - dmuus
-      - 6
-      - null
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-    - - "2021-02-05T12:31:55.935513Z"
+    - - "2021-02-17T13:38:04.251317Z"
       - dmuus-cloud-1
       - dmuus
-      - 6
+      - 1
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:31:56.280772Z"
+    - - "2021-02-17T13:38:04.565081Z"
       - dmuus-cloud-2
       - dmuus
-      - 7
+      - 2
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:32:02.372059Z"
-      - dmuus-cloud-1
+    - - "2021-02-17T13:38:04.565081Z"
+      - dmuus-cloud-2
       - dmuus
       - 5
       - null
@@ -143,17 +233,47 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:02.745478Z"
-      - dmuus-cloud-2
+    - - "2021-02-17T13:38:11.007728Z"
+      - dmuus-cloud-1
       - dmuus
-      - 6
+      - 4
       - null
       - null
       - x1.small
       - null
       - null
       - null
-    - - "2021-02-05T12:32:04.041363Z"
+    - - "2021-02-17T13:38:11.007728Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:11.412383Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:11.412383Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:12.64183Z"
       - dmuus-cloud-1
       - dmuus
       - 2
@@ -163,7 +283,7 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:04.580921Z"
+    - - "2021-02-17T13:38:13.184887Z"
       - dmuus-cloud-2
       - dmuus
       - 2
@@ -173,7 +293,47 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:15.35396Z"
+    - - "2021-02-17T13:38:23.30466Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:23.30466Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:24.089201Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:24.089201Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:30.700326Z"
       - dmuus-cloud-1
       - dmuus
       - 5
@@ -183,38 +343,28 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:16.104549Z"
-      - dmuus-cloud-2
-      - dmuus
-      - 6
-      - null
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-    - - "2021-02-05T12:32:23.631859Z"
+    - - "2021-02-17T13:38:30.700326Z"
       - dmuus-cloud-1
       - dmuus
-      - 6
+      - 1
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:32:24.292236Z"
+    - - "2021-02-17T13:38:31.147082Z"
       - dmuus-cloud-2
       - dmuus
-      - 7
+      - 2
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:32:35.493821Z"
-      - dmuus-cloud-1
+    - - "2021-02-17T13:38:31.147082Z"
+      - dmuus-cloud-2
       - dmuus
       - 5
       - null
@@ -223,17 +373,47 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:35.979287Z"
-      - dmuus-cloud-2
+    - - "2021-02-17T13:38:40.819676Z"
+      - dmuus-cloud-1
       - dmuus
-      - 6
+      - 4
       - null
       - null
       - x1.small
       - null
       - null
       - null
-    - - "2021-02-05T12:32:38.922147Z"
+    - - "2021-02-17T13:38:40.819676Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:41.256274Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:41.256274Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:44.260797Z"
       - dmuus-cloud-1
       - dmuus
       - 2
@@ -243,7 +423,7 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:39.648869Z"
+    - - "2021-02-17T13:38:44.978865Z"
       - dmuus-cloud-2
       - dmuus
       - 2
@@ -253,7 +433,47 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:54.159696Z"
+    - - "2021-02-17T13:38:58.70642Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:58.70642Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:59.572117Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:38:59.572117Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:39:05.859642Z"
       - dmuus-cloud-1
       - dmuus
       - 5
@@ -263,38 +483,28 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:32:54.936784Z"
-      - dmuus-cloud-2
-      - dmuus
-      - 6
-      - null
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-    - - "2021-02-05T12:33:01.344747Z"
+    - - "2021-02-17T13:39:05.859642Z"
       - dmuus-cloud-1
       - dmuus
-      - 6
+      - 1
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:33:01.805099Z"
+    - - "2021-02-17T13:39:06.280879Z"
       - dmuus-cloud-2
       - dmuus
-      - 7
+      - 2
       - null
       - null
-      - x1.small
+      - x1.tiny
       - null
       - null
       - null
-    - - "2021-02-05T12:33:11.941115Z"
-      - dmuus-cloud-1
+    - - "2021-02-17T13:39:06.280879Z"
+      - dmuus-cloud-2
       - dmuus
       - 5
       - null
@@ -303,17 +513,47 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:33:12.460453Z"
-      - dmuus-cloud-2
+    - - "2021-02-17T13:39:15.627418Z"
+      - dmuus-cloud-1
       - dmuus
-      - 6
+      - 4
       - null
       - null
       - x1.small
       - null
       - null
       - null
-    - - "2021-02-05T12:33:15.569804Z"
+    - - "2021-02-17T13:39:15.627418Z"
+      - dmuus-cloud-1
+      - dmuus
+      - 1
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:39:16.066328Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - null
+      - x1.tiny
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:39:16.066328Z"
+      - dmuus-cloud-2
+      - dmuus
+      - 4
+      - null
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+    - - "2021-02-17T13:39:18.754238Z"
       - dmuus-cloud-1
       - dmuus
       - 2
@@ -323,7 +563,7 @@
       - null
       - null
       - null
-    - - "2021-02-05T12:33:16.355897Z"
+    - - "2021-02-17T13:39:19.358157Z"
       - dmuus-cloud-2
       - dmuus
       - 2
@@ -348,67 +588,67 @@
     - ramUsed
     - vcpusUsed
     values:
-    - - "2021-02-05T12:31:32.715828Z"
+    - - "2021-02-17T13:37:39.973801Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:37:40.735371Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
+      - 2
       - null
       - 0
-      - 20480
+      - 18432
       - 10
-    - - "2021-02-05T12:31:33.053967Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
-      - 2
-      - null
-      - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:31:39.640798Z"
+    - - "2021-02-17T13:37:47.982768Z"
       - dmuus-cloud-1
       - dmuus
       - null
-      - 240
+      - 220
       - 1
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:31:40.05729Z"
+      - 21504
+      - 11
+    - - "2021-02-17T13:37:48.277872Z"
       - dmuus-cloud-2
       - dmuus
       - null
-      - 280
+      - 240
       - 2
       - null
       - 0
-      - 28672
-      - 14
-    - - "2021-02-05T12:31:42.64888Z"
+      - 22528
+      - 12
+    - - "2021-02-17T13:37:50.94465Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:37:51.242108Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
-      - null
-      - 0
-      - 20480
-      - 10
-    - - "2021-02-05T12:31:43.043184Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
       - 2
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:31:44.202162Z"
+      - 18432
+      - 10
+    - - "2021-02-17T13:37:52.425158Z"
       - dmuus-cloud-1
       - dmuus
       - null
@@ -418,7 +658,7 @@
       - 0
       - 8192
       - 4
-    - - "2021-02-05T12:31:44.844485Z"
+    - - "2021-02-17T13:37:52.95226Z"
       - dmuus-cloud-2
       - dmuus
       - null
@@ -428,67 +668,67 @@
       - 0
       - 8192
       - 4
-    - - "2021-02-05T12:31:49.984159Z"
+    - - "2021-02-17T13:37:58.039959Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:37:58.828351Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
+      - 2
       - null
       - 0
-      - 20480
+      - 18432
       - 10
-    - - "2021-02-05T12:31:50.452302Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
-      - 2
-      - null
-      - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:31:55.935513Z"
+    - - "2021-02-17T13:38:04.251317Z"
       - dmuus-cloud-1
       - dmuus
       - null
-      - 240
+      - 220
       - 1
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:31:56.280772Z"
+      - 21504
+      - 11
+    - - "2021-02-17T13:38:04.565081Z"
       - dmuus-cloud-2
       - dmuus
       - null
-      - 280
+      - 240
       - 2
       - null
       - 0
-      - 28672
-      - 14
-    - - "2021-02-05T12:32:02.372059Z"
+      - 22528
+      - 12
+    - - "2021-02-17T13:38:11.007728Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:38:11.412383Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
-      - null
-      - 0
-      - 20480
-      - 10
-    - - "2021-02-05T12:32:02.745478Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
       - 2
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:32:04.041363Z"
+      - 18432
+      - 10
+    - - "2021-02-17T13:38:12.64183Z"
       - dmuus-cloud-1
       - dmuus
       - null
@@ -498,7 +738,7 @@
       - 0
       - 8192
       - 4
-    - - "2021-02-05T12:32:04.580921Z"
+    - - "2021-02-17T13:38:13.184887Z"
       - dmuus-cloud-2
       - dmuus
       - null
@@ -508,67 +748,67 @@
       - 0
       - 8192
       - 4
-    - - "2021-02-05T12:32:15.35396Z"
+    - - "2021-02-17T13:38:23.30466Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:38:24.089201Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
+      - 2
       - null
       - 0
-      - 20480
+      - 18432
       - 10
-    - - "2021-02-05T12:32:16.104549Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
-      - 2
-      - null
-      - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:32:23.631859Z"
+    - - "2021-02-17T13:38:30.700326Z"
       - dmuus-cloud-1
       - dmuus
       - null
-      - 240
+      - 220
       - 1
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:32:24.292236Z"
+      - 21504
+      - 11
+    - - "2021-02-17T13:38:31.147082Z"
       - dmuus-cloud-2
       - dmuus
       - null
-      - 280
+      - 240
       - 2
       - null
       - 0
-      - 28672
-      - 14
-    - - "2021-02-05T12:32:35.493821Z"
+      - 22528
+      - 12
+    - - "2021-02-17T13:38:40.819676Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:38:41.256274Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
-      - null
-      - 0
-      - 20480
-      - 10
-    - - "2021-02-05T12:32:35.979287Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
       - 2
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:32:38.922147Z"
+      - 18432
+      - 10
+    - - "2021-02-17T13:38:44.260797Z"
       - dmuus-cloud-1
       - dmuus
       - null
@@ -578,7 +818,7 @@
       - 0
       - 8192
       - 4
-    - - "2021-02-05T12:32:39.648869Z"
+    - - "2021-02-17T13:38:44.978865Z"
       - dmuus-cloud-2
       - dmuus
       - null
@@ -588,67 +828,67 @@
       - 0
       - 8192
       - 4
-    - - "2021-02-05T12:32:54.159696Z"
+    - - "2021-02-17T13:38:58.70642Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:38:59.572117Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
+      - 2
       - null
       - 0
-      - 20480
+      - 18432
       - 10
-    - - "2021-02-05T12:32:54.936784Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
-      - 2
-      - null
-      - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:33:01.344747Z"
+    - - "2021-02-17T13:39:05.859642Z"
       - dmuus-cloud-1
       - dmuus
       - null
-      - 240
+      - 220
       - 1
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:33:01.805099Z"
+      - 21504
+      - 11
+    - - "2021-02-17T13:39:06.280879Z"
       - dmuus-cloud-2
       - dmuus
       - null
-      - 280
+      - 240
       - 2
       - null
       - 0
-      - 28672
-      - 14
-    - - "2021-02-05T12:33:11.941115Z"
+      - 22528
+      - 12
+    - - "2021-02-17T13:39:15.627418Z"
       - dmuus-cloud-1
+      - dmuus
+      - null
+      - 180
+      - 1
+      - null
+      - 0
+      - 17408
+      - 9
+    - - "2021-02-17T13:39:16.066328Z"
+      - dmuus-cloud-2
       - dmuus
       - null
       - 200
-      - 1
-      - null
-      - 0
-      - 20480
-      - 10
-    - - "2021-02-05T12:33:12.460453Z"
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 240
       - 2
       - null
       - 0
-      - 24576
-      - 12
-    - - "2021-02-05T12:33:15.569804Z"
+      - 18432
+      - 10
+    - - "2021-02-17T13:39:18.754238Z"
       - dmuus-cloud-1
       - dmuus
       - null
@@ -658,7 +898,7 @@
       - 0
       - 8192
       - 4
-    - - "2021-02-05T12:33:16.355897Z"
+    - - "2021-02-17T13:39:19.358157Z"
       - dmuus-cloud-2
       - dmuus
       - null
