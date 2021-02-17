@@ -88,6 +88,10 @@ cloudletinfos:
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
     vcpus: 2
     ram: 4096
@@ -125,7 +129,7 @@ cloudletinfos:
       units: GB
     - name: External IPs
       value: 1
-      inframaxvalue: 10
+      inframaxvalue: 30
     clusterinsts:
     - clusterkey:
         name: SmallCluster
