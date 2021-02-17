@@ -157,7 +157,7 @@ service VMPoolApi {
       post: "/show/vmpool"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.Organization";
   }
   // Add VMPoolMember. Adds a VM to existing VM Pool.
   rpc AddVMPoolMember(VMPoolMember) returns (Result) {
