@@ -140,6 +140,8 @@ enum PlatformType {
   PLATFORM_TYPE_AWS_EC2 = 10;
   // VMWare vCloud Director Cloudlet
   PLATFORM_TYPE_VCD = 11;
+   // Anthos on bare metal
+  PLATFORM_TYPE_ANTHOS = 12;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
