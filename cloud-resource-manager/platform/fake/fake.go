@@ -33,7 +33,7 @@ var (
 	FakeRamMax         = uint64(40960)
 	FakeVcpusMax       = uint64(50)
 	FakeDiskMax        = uint64(5000)
-	FakeExternalIpsMax = uint64(10)
+	FakeExternalIpsMax = uint64(30)
 )
 
 var FakeAppDNSRoot = "fake.net"
@@ -41,6 +41,12 @@ var FakeAppDNSRoot = "fake.net"
 var FakeClusterVMs = map[edgeproto.ClusterInstKey][]edgeproto.VmInfo{}
 
 var FakeFlavorList = []*edgeproto.FlavorInfo{
+	&edgeproto.FlavorInfo{
+		Name:  "x1.tiny",
+		Vcpus: uint64(1),
+		Ram:   uint64(1024),
+		Disk:  uint64(20),
+	},
 	&edgeproto.FlavorInfo{
 		Name:  "x1.small",
 		Vcpus: uint64(2),
@@ -51,9 +57,9 @@ var FakeFlavorList = []*edgeproto.FlavorInfo{
 
 var RootLBFlavor = edgeproto.Flavor{
 	Key:   edgeproto.FlavorKey{Name: "rootlb-flavor"},
-	Vcpus: uint64(2),
-	Ram:   uint64(4096),
-	Disk:  uint64(40),
+	Vcpus: uint64(1),
+	Ram:   uint64(1024),
+	Disk:  uint64(20),
 }
 
 var fakeProps = map[string]*edgeproto.PropertyInfo{
