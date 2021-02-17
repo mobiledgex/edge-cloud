@@ -194,6 +194,10 @@ cloudletinfos:
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
     vcpus: 2
     ram: 4096
@@ -231,7 +235,7 @@ cloudletinfos:
       units: GB
     - name: External IPs
       value: 3
-      inframaxvalue: 10
+      inframaxvalue: 30
     clusterinsts:
     - clusterkey:
         name: SmallCluster
@@ -249,6 +253,10 @@ cloudletinfos:
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
     vcpus: 2
     ram: 4096
@@ -286,7 +294,7 @@ cloudletinfos:
       units: GB
     - name: External IPs
       value: 2
-      inframaxvalue: 10
+      inframaxvalue: 30
     clusterinsts:
     - clusterkey:
         name: ReservableCluster2
@@ -304,6 +312,10 @@ cloudletinfos:
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
     vcpus: 2
     ram: 4096
@@ -341,7 +353,7 @@ cloudletinfos:
       units: GB
     - name: External IPs
       value: 1
-      inframaxvalue: 10
+      inframaxvalue: 30
 - key:
     organization: azure
     name: azure-cloud-4
@@ -352,6 +364,10 @@ cloudletinfos:
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
     vcpus: 2
     ram: 4096
@@ -389,7 +405,7 @@ cloudletinfos:
       units: GB
     - name: External IPs
       value: 1
-      inframaxvalue: 10
+      inframaxvalue: 30
 - key:
     organization: gcp
     name: gcp-cloud-5
@@ -400,6 +416,10 @@ cloudletinfos:
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
     vcpus: 2
     ram: 4096
@@ -437,7 +457,7 @@ cloudletinfos:
       units: GB
     - name: External IPs
       value: 1
-      inframaxvalue: 10
+      inframaxvalue: 30
 apps:
 - key:
     organization: AcmeAppCo
