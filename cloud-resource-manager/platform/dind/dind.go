@@ -2,6 +2,7 @@ package dind
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -12,9 +13,11 @@ import (
 )
 
 type Platform struct {
+	Caches *platform.Caches
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, controllerData *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
+	s.Caches = caches
 	// for backwards compatibility, removes l7 proxies, can delete this later
 	client, err := s.GetNodePlatformClient(ctx, nil)
 	if err != nil {
@@ -33,14 +36,29 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	if err != nil {
 		return err
 	}
-	info.Flavors = []*edgeproto.FlavorInfo{
-		&edgeproto.FlavorInfo{
-			Name:  "DINDFlavor",
-			Vcpus: uint64(1),
-			Ram:   uint64(1024),
-			Disk:  uint64(10),
-		},
+	// Use flavors from controller as platform flavor for DIND
+	var flavors []*edgeproto.FlavorInfo
+	if s.Caches == nil {
+		return fmt.Errorf("Flavor cache is nil")
 	}
+	flavorkeys := make(map[edgeproto.FlavorKey]struct{})
+	s.Caches.FlavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
+		flavorkeys[*k] = struct{}{}
+	})
+	for k := range flavorkeys {
+		var flav edgeproto.Flavor
+		if s.Caches.FlavorCache.Get(&k, &flav) {
+			var flavInfo edgeproto.FlavorInfo
+			flavInfo.Name = flav.Key.Name
+			flavInfo.Ram = flav.Ram
+			flavInfo.Vcpus = flav.Vcpus
+			flavInfo.Disk = flav.Disk
+			flavors = append(flavors, &flavInfo)
+		} else {
+			return fmt.Errorf("fail to fetch flavor %s", k)
+		}
+	}
+	info.Flavors = flavors
 	return nil
 }
 
