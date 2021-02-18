@@ -1383,17 +1383,14 @@ func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
 {{- if .CudCache}}
-		log.DebugLog(log.DebugLevelApi, "Compare {{.Name}}", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
 {{- end}}
-		log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

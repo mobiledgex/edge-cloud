@@ -943,15 +943,12 @@ func (c *ControllerCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Controller", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Controller", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Controller", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

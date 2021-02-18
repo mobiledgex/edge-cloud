@@ -2655,15 +2655,12 @@ func (c *AppCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show App", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare App", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show App", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

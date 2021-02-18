@@ -1612,15 +1612,12 @@ func (c *DeviceCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *DeviceCache) Show(filter *Device, cb func(ret *Device) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Device", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Device", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Device", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
