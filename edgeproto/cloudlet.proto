@@ -130,13 +130,13 @@ enum PlatformType {
   PLATFORM_TYPE_EDGEBOX = 5;
   // Fake Infra Cloudlet
   PLATFORM_TYPE_FAKEINFRA = 6;
-   // VMWare VSphere (ESXi)
+  // VMWare VSphere (ESXi)
   PLATFORM_TYPE_VSPHERE = 7;
   // AWS EKS Cloudlet
   PLATFORM_TYPE_AWS_EKS = 8;
   // VM Pool Cloudlet
   PLATFORM_TYPE_VM_POOL = 9;
-    // AWS EC2 VM Cloudlet
+  // AWS EC2 VM Cloudlet
   PLATFORM_TYPE_AWS_EC2 = 10;
   // VMWare vCloud Director Cloudlet
   PLATFORM_TYPE_VCD = 11;
