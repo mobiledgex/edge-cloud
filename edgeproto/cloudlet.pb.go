@@ -58,6 +58,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // 9: `PLATFORM_TYPE_VM_POOL`
 // 10: `PLATFORM_TYPE_AWS_EC2`
 // 11: `PLATFORM_TYPE_VCD`
+// 12: `PLATFORM_TYPE_ANTHOS`
 type PlatformType int32
 
 const (
