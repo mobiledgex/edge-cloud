@@ -37,14 +37,13 @@ func (s *Platform) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto
 func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "delete cloudlet for dind")
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
-	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
-	err := cloudcommon.StopCRMService(ctx, cloudlet)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "dind cloudlet delete failed", "err", err)
-		return err
-	}
-
+	// rely on controller to stop the crm service
 	return nil
+}
+
+func (s *Platform) StopLocalCloudletServices(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {
+	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
+	return cloudcommon.StopCRMService(ctx, cloudlet)
 }
 
 func (s *Platform) SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, vaultConfig *vault.Config, updateCallback edgeproto.CacheUpdateCallback) error {

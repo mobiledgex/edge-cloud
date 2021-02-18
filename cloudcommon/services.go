@@ -125,7 +125,7 @@ func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformCon
 	return crmProc.GetArgs(opts...), &crmProc.Common.EnvVars, nil
 }
 
-var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
+var TrackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
 
 func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key)
@@ -151,7 +151,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	}
 
 	// track all local crm processes
-	trackedProcess[cloudlet.Key] = nil
+	TrackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "started "+crmProc.GetExeName(), "pfConfig", pfConfig)
-	trackedProcess[cloudlet.Key] = crmProc
+	TrackedProcess[cloudlet.Key] = crmProc
 
 	return nil
 }
@@ -191,17 +191,17 @@ func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
 
 	// After above, processes will be in Zombie state. Hence use wait to cleanup the processes
 	if cloudlet != nil {
-		if cmdProc, ok := trackedProcess[cloudlet.Key]; ok {
+		if cmdProc, ok := TrackedProcess[cloudlet.Key]; ok {
 			// Wait is in a goroutine as it is blocking call if
 			// process is not killed for some reasons
 			go cmdProc.Wait()
-			delete(trackedProcess, cloudlet.Key)
+			delete(TrackedProcess, cloudlet.Key)
 		}
 	} else {
-		for _, v := range trackedProcess {
+		for _, v := range TrackedProcess {
 			go v.Wait()
 		}
-		trackedProcess = make(map[edgeproto.CloudletKey]*process.Crm)
+		TrackedProcess = make(map[edgeproto.CloudletKey]*process.Crm)
 	}
 	return nil
 }
@@ -237,12 +237,12 @@ func GetCloudletLog(ctx context.Context, key *edgeproto.CloudletKey) (string, er
 }
 
 func CrmServiceWait(key edgeproto.CloudletKey) error {
-	if _, ok := trackedProcess[key]; ok {
-		err := trackedProcess[key].Wait()
+	if _, ok := TrackedProcess[key]; ok {
+		err := TrackedProcess[key].Wait()
 		if err != nil && strings.Contains(err.Error(), "Wait was already called") {
 			return nil
 		}
-		delete(trackedProcess, key)
+		delete(TrackedProcess, key)
 		if err != nil {
 			return fmt.Errorf("Crm Service Stopped: %v", err)
 		}

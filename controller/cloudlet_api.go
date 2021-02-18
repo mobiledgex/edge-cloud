@@ -1277,9 +1277,18 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 }
 
 func (s *CloudletApi) StopCrmService(cloudlet *edgeproto.Cloudlet, cb edgeproto.CloudletApi_StopCrmServiceServer) error {
+	if _, ok := cloudcommon.TrackedProcess[cloudlet.Key]; !ok {
+		// cloudlet is not running here, skip
+		return nil
+	}
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "Stop local crmserver", "key", cloudlet.Key)
-	return cloudcommon.StopCRMService(ctx, cloudlet)
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return err
+	}
+	updatecb := updateCloudletCallback{cloudlet, cb}
+	return cloudletPlatform.StopLocalCloudletServices(ctx, cloudlet, updatecb.cb)
 }
 
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
@@ -1400,51 +1409,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if !ignoreCRMState(cctx) {
 		updatecb := updateCloudletCallback{in, cb}
 
-		if in.DeploymentLocal {
-			updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-			// since crmserver is running locally to the controller
-			// we don't know which controller is hosting the crm, hence
-			// broadcast this deletion of crmservice to all the controllers
-			err = controllerApi.RunJobs(func(arg interface{}, addr string) error {
-				if addr == *externalApiAddr {
-					// local node
-					return s.StopCrmService(in, cb)
-				}
-				// connect to remote node
-				conn, cErr := ControllerConnect(ctx, addr)
-				if cErr != nil {
-					return cErr
-				}
-				defer conn.Close()
-
-				cmd := edgeproto.NewCloudletApiClient(conn)
-				ctx, cancel := context.WithTimeout(context.Background(), CloudletCrmCleanupTimeout)
-				defer cancel()
-				stream, sErr := cmd.StopCrmService(ctx, in)
-				if sErr != nil {
-					return sErr
-				}
-				var sMsg *edgeproto.Result
-				for {
-					sMsg, sErr = stream.Recv()
-					if sErr == io.EOF {
-						sErr = nil
-						break
-					}
-					if sErr != nil {
-						break
-					}
-					cb.Send(sMsg)
-				}
-				if sErr != nil {
-					return sErr
-				}
-				return nil
-			}, nil)
-			if err != nil {
-				return err
-			}
-		} else {
+		if !in.DeploymentLocal {
 			var cloudletPlatform pf.Platform
 			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 			if err == nil {
@@ -1452,6 +1417,51 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				caches := getCaches(ctx, &vmPool)
 				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
 				err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
+			}
+		}
+		if err == nil {
+			pfType := pf.GetType(in.PlatformType.String())
+			// stop cloudlet services if they are running locally to the controller
+			if in.DeploymentLocal || pfType == "fake" || pfType == "dind" {
+				// since crmserver is running locally to the controller
+				// we don't know which controller is hosting the crm, hence
+				// broadcast this deletion of crmservice to all the controllers
+				err = controllerApi.RunJobs(func(arg interface{}, addr string) error {
+					if addr == *externalApiAddr {
+						// local node
+						return s.StopCrmService(in, cb)
+					}
+					// connect to remote node
+					conn, cErr := ControllerConnect(ctx, addr)
+					if cErr != nil {
+						return cErr
+					}
+					defer conn.Close()
+
+					cmd := edgeproto.NewCloudletApiClient(conn)
+					ctx, cancel := context.WithTimeout(context.Background(), CloudletCrmCleanupTimeout)
+					defer cancel()
+					stream, sErr := cmd.StopCrmService(ctx, in)
+					if sErr != nil {
+						return sErr
+					}
+					var sMsg *edgeproto.Result
+					for {
+						sMsg, sErr = stream.Recv()
+						if sErr == io.EOF {
+							sErr = nil
+							break
+						}
+						if sErr != nil {
+							break
+						}
+						cb.Send(sMsg)
+					}
+					if sErr != nil {
+						return sErr
+					}
+					return nil
+				}, nil)
 			}
 		}
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
