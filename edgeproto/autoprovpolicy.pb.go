@@ -1797,15 +1797,12 @@ func (c *AutoProvPolicyCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AutoProvPolicyCache) Show(filter *AutoProvPolicy, cb func(ret *AutoProvPolicy) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AutoProvPolicy", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AutoProvPolicy", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -2948,15 +2945,12 @@ func (c *AutoProvInfoCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AutoProvInfoCache) Show(filter *AutoProvInfo, cb func(ret *AutoProvInfo) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AutoProvInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AutoProvInfo", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AutoProvInfo", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

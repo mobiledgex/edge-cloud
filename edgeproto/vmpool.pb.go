@@ -2366,15 +2366,12 @@ func (c *VMPoolCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *VMPoolCache) Show(filter *VMPool, cb func(ret *VMPool) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show VMPool", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare VMPool", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show VMPool", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -3716,15 +3713,12 @@ func (c *VMPoolInfoCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *VMPoolInfoCache) Show(filter *VMPoolInfo, cb func(ret *VMPoolInfo) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show VMPoolInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare VMPoolInfo", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show VMPoolInfo", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
