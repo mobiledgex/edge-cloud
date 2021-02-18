@@ -41,8 +41,7 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	return nil
 }
 
-func (s *Platform) StopLocalCloudletServices(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {
-	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
+func (s *Platform) StopLocalCloudletServices(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
 	return cloudcommon.StopCRMService(ctx, cloudlet)
 }
 

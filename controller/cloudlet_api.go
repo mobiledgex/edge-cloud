@@ -1277,18 +1277,12 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 }
 
 func (s *CloudletApi) StopCrmService(cloudlet *edgeproto.Cloudlet, cb edgeproto.CloudletApi_StopCrmServiceServer) error {
-	if _, ok := cloudcommon.TrackedProcess[cloudlet.Key]; !ok {
-		// cloudlet is not running here, skip
-		return nil
-	}
 	ctx := cb.Context()
-	log.SpanLog(ctx, log.DebugLevelApi, "Stop local crmserver", "key", cloudlet.Key)
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return err
 	}
-	updatecb := updateCloudletCallback{cloudlet, cb}
-	return cloudletPlatform.StopLocalCloudletServices(ctx, cloudlet, updatecb.cb)
+	return cloudletPlatform.StopLocalCloudletServices(ctx, cloudlet)
 }
 
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
@@ -1409,6 +1403,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if !ignoreCRMState(cctx) {
 		updatecb := updateCloudletCallback{in, cb}
 
+		err = nil
 		if !in.DeploymentLocal {
 			var cloudletPlatform pf.Platform
 			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
@@ -1426,6 +1421,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				// since crmserver is running locally to the controller
 				// we don't know which controller is hosting the crm, hence
 				// broadcast this deletion of crmservice to all the controllers
+				log.DebugLog(log.DebugLevelApi, "Stop local cloudlet services", "key", in.Key)
+				updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
 				err = controllerApi.RunJobs(func(arg interface{}, addr string) error {
 					if addr == *externalApiAddr {
 						// local node
