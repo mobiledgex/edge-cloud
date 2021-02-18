@@ -365,9 +365,7 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		FakeRamUsed += 4096
 		FakeVcpusUsed += 2
 		FakeDiskUsed += 40
-		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
-			FakeExternalIpsUsed += 1
-		}
+		FakeExternalIpsUsed += 1 // VMApp create a dedicated LB that consumes one IP
 	}
 	return nil
 }

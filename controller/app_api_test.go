@@ -52,12 +52,10 @@ func TestAppApi(t *testing.T) {
 
 	// update should also validate skipHcPorts
 	upapp = testutil.AppData[3]
-	upapp.SkipHcPorts = "tcp:123"
+	upapp.SkipHcPorts = "tcp:8080"
 	upapp.Fields = []string{edgeproto.AppFieldSkipHcPorts}
 	_, err = appApi.UpdateApp(ctx, &upapp)
-	require.NotNil(t, err, "Update app with SkipHcPort 123")
-	require.Contains(t, err.Error(), "skipHcPorts not supported for type")
-
+	require.Nil(t, err, "Update app with SkipHcPort 8080")
 	obj := testutil.AppData[3]
 	_, err = appApi.DeleteApp(ctx, &obj)
 	require.Nil(t, err)

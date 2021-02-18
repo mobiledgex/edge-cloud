@@ -124,7 +124,7 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "tcp:8080",
-		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{ // 4
@@ -136,7 +136,7 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "udp:1024",
-		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[2].Key,
 	},
 	edgeproto.App{ // 5

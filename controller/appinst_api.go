@@ -641,8 +641,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
-		if in.AutoClusterIpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED && app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
-			return fmt.Errorf("Cannot specify AutoClusterIpAccess as IP_ACCESS_SHARED if App access type is ACCESS_TYPE_DIRECT")
+		// there may be direct access apps still defined, disallow them from being instantiated.
+		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+			return fmt.Errorf("Direct Access Apps are no longer supported, please re-create App as ACCESS_TYPE_LOAD_BALANCER")
 		}
 
 		// Check if specified ClusterInst exists
@@ -652,9 +653,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			found := clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &clusterInst)
 			if !found {
 				return errors.New("Specified ClusterInst not found")
-			}
-			if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT && clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
-				return fmt.Errorf("Direct Access App cannot be deployed on IP_ACCESS_SHARED ClusterInst")
 			}
 			if !sidecarApp && clusterInst.Reservable {
 				// caller specified reservable ClusterInst
