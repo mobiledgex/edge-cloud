@@ -602,7 +602,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: vm
-  accesstype: AccessTypeDirect
+  accesstype: AccessTypeLoadBalancer
 - key:
     organization: AcmeAppCo1
     name: vmapp2
@@ -615,7 +615,7 @@ apps:
   cluster:
     name: DefaultVMCluster
   deployment: vm
-  accesstype: AccessTypeDirect
+  accesstype: AccessTypeLoadBalancer
 - key:
     organization: AcmeAppCo
     name: NoPortsApp
