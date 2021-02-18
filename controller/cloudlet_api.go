@@ -1423,7 +1423,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				// broadcast this deletion of crmservice to all the controllers
 				log.DebugLog(log.DebugLevelApi, "Stop local cloudlet services", "key", in.Key)
 				updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-				err = controllerApi.RunJobs(func(arg interface{}, addr string) error {
+				sErr := controllerApi.RunJobs(func(arg interface{}, addr string) error {
 					if addr == *externalApiAddr {
 						// local node
 						return s.StopCrmService(in, cb)
@@ -1459,6 +1459,9 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 					}
 					return nil
 				}, nil)
+				if sErr != nil {
+					log.DebugLog(log.DebugLevelApi, "Failed to stop local cloudlet services", "key", in.Key, "err", err)
+				}
 			}
 		}
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
