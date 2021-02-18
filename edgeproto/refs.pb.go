@@ -1521,15 +1521,12 @@ func (c *CloudletRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletRefs", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -2159,15 +2156,12 @@ func (c *ClusterRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare ClusterRefs", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -2756,15 +2750,12 @@ func (c *AppInstRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppInstRefsCache) Show(filter *AppInstRefs, cb func(ret *AppInstRefs) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AppInstRefs", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

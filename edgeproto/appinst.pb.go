@@ -3668,15 +3668,12 @@ func (c *AppInstCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AppInst", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AppInst", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AppInst", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -4867,15 +4864,12 @@ func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppInstInfoCache) Show(filter *AppInstInfo, cb func(ret *AppInstInfo) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AppInstInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AppInstInfo", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AppInstInfo", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

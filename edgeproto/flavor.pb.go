@@ -1225,15 +1225,12 @@ func (c *FlavorCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Flavor", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Flavor", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Flavor", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
