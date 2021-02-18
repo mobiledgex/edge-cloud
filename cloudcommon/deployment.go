@@ -83,27 +83,15 @@ func GetDockerDeployType(manifest string) string {
 	return "docker-compose"
 }
 
-// GetMappedAccessType gets the default access type for the deployment if AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT
-// is specified.  It returns an error if the access type is not valid for the deployment
+// GetMappedAccessType gets the default access type for the deployment.  As of 2.4.1 only Load Balancer access is supported.  Once
+// the UI is updated to remove all references to access type, this can be removed altogether
 func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deploymentManifest string) (edgeproto.AccessType, error) {
-	switch accessType {
-
-	case edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER:
-		if deployment == DeploymentTypeKubernetes || deployment == DeploymentTypeHelm || deployment == DeploymentTypeDocker || deployment == DeploymentTypeVM {
-			return accessType, nil
-		}
-	case edgeproto.AccessType_ACCESS_TYPE_DIRECT:
-		if deployment == DeploymentTypeVM || deployment == DeploymentTypeDocker {
-			return accessType, nil
-		}
-	case edgeproto.AccessType_ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT:
-		if deployment == DeploymentTypeVM {
-			return edgeproto.AccessType_ACCESS_TYPE_DIRECT, nil
-		}
-		// all others default to LB
-		return edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER, nil
+	if accessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
+		// this can be removed altogether once removed from the UI
+		return accessType, fmt.Errorf("Access Type Direct no longer supported")
 	}
-	return accessType, fmt.Errorf("Invalid access type for deployment")
+	return edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER, nil
+
 }
 
 func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports []dme.AppPort) error {
