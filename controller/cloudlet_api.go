@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -54,6 +55,7 @@ var (
 
 const (
 	PlatformInitTimeout           = 20 * time.Minute
+	CloudletCrmCleanupTimeout     = 5 * time.Minute
 	DefaultResourceAlertThreshold = 80 // percentage
 )
 
@@ -1274,6 +1276,12 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	return s.deleteCloudletInternal(DefCallContext(), in, cb)
 }
 
+func (s *CloudletApi) StopCrmService(cloudlet *edgeproto.Cloudlet, cb edgeproto.CloudletApi_StopCrmServiceServer) error {
+	ctx := cb.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "Stop local crmserver", "key", cloudlet.Key)
+	return cloudcommon.StopCRMService(ctx, cloudlet)
+}
+
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
 	ctx := inCb.Context()
 
@@ -1394,7 +1402,48 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 		if in.DeploymentLocal {
 			updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-			err = cloudcommon.StopCRMService(ctx, in)
+			// since crmserver is running locally to the controller
+			// we don't know which controller is hosting the crm, hence
+			// broadcast this deletion of crmservice to all the controllers
+			err = controllerApi.RunJobs(func(arg interface{}, addr string) error {
+				if addr == *externalApiAddr {
+					// local node
+					return s.StopCrmService(in, cb)
+				}
+				// connect to remote node
+				conn, cErr := ControllerConnect(ctx, addr)
+				if cErr != nil {
+					return cErr
+				}
+				defer conn.Close()
+
+				cmd := edgeproto.NewCloudletApiClient(conn)
+				ctx, cancel := context.WithTimeout(context.Background(), CloudletCrmCleanupTimeout)
+				defer cancel()
+				stream, sErr := cmd.StopCrmService(ctx, in)
+				if sErr != nil {
+					return sErr
+				}
+				var sMsg *edgeproto.Result
+				for {
+					sMsg, sErr = stream.Recv()
+					if sErr == io.EOF {
+						sErr = nil
+						break
+					}
+					if sErr != nil {
+						break
+					}
+					cb.Send(sMsg)
+				}
+				if sErr != nil {
+					return sErr
+				}
+				return nil
+			}, nil)
+			if err != nil {
+				return err
+			}
 		} else {
 			var cloudletPlatform pf.Platform
 			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)

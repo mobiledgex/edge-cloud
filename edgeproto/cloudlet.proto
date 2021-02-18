@@ -450,6 +450,8 @@ service CloudletApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
+  // This is used internally to forward requests to other Controllers
+  rpc StopCrmService(Cloudlet) returns (stream Result) {}
 }
 
 // Flavor details from the Cloudlet
