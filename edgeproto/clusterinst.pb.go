@@ -2701,15 +2701,12 @@ func (c *ClusterInstCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ClusterInstCache) Show(filter *ClusterInst, cb func(ret *ClusterInst) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show ClusterInst", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare ClusterInst", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show ClusterInst", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -3909,15 +3906,12 @@ func (c *ClusterInstInfoCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ClusterInstInfoCache) Show(filter *ClusterInstInfo, cb func(ret *ClusterInstInfo) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show ClusterInstInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare ClusterInstInfo", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show ClusterInstInfo", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

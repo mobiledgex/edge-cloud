@@ -1421,15 +1421,12 @@ func (c *NodeCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *NodeCache) Show(filter *Node, cb func(ret *Node) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Node", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Node", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Node", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err

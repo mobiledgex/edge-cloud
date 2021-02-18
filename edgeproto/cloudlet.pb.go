@@ -6198,15 +6198,12 @@ func (c *CloudletCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Cloudlet", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -8220,15 +8217,12 @@ func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletInfo", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
