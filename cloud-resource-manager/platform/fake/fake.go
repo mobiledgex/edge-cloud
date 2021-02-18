@@ -471,7 +471,7 @@ func (s *Platform) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto
 func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelInfra, "delete fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
-	// rely on controller to stop the crm service
+	// rely on controller to stop cloudlet services
 	return nil
 }
 

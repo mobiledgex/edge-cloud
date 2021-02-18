@@ -1278,7 +1278,7 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 func (s *CloudletApi) StopCrmService(cloudlet *edgeproto.Cloudlet, cb edgeproto.CloudletApi_StopCrmServiceServer) error {
 	ctx := cb.Context()
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nil)
 	if err != nil {
 		return err
 	}
