@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -598,6 +599,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			cloudlet.ChefClientKey = in.ChefClientKey
 			cloudlet.State = newState
+			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
+				cloudlet.HostController = *externalApiAddr
+			}
 			s.store.STMPut(stm, &cloudlet)
 			return nil
 		})
@@ -1270,6 +1274,46 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 	return err
 }
 
+func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_PlatformDeleteCloudletServer) error {
+	ctx := cb.Context()
+	updatecb := updateCloudletCallback{in, cb}
+	if in.DeploymentLocal {
+		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
+		return cloudcommon.StopCRMService(ctx, in)
+	}
+	var pfConfig *edgeproto.PlatformConfig
+	vmPool := edgeproto.VMPool{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		var err error
+		pfConfig, err = getPlatformConfig(cb.Context(), in)
+		if err != nil {
+			return err
+		}
+		if in.VmPool != "" {
+			vmPoolKey := edgeproto.VMPoolKey{
+				Name:         in.VmPool,
+				Organization: in.Key.Organization,
+			}
+			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
+				return fmt.Errorf("VM Pool %s not found", in.VmPool)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	var cloudletPlatform pf.Platform
+	cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return err
+	}
+	// Some platform types require caches
+	caches := getCaches(ctx, &vmPool)
+	accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
+	return cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
+}
+
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
 	return s.deleteCloudletInternal(DefCallContext(), in, cb)
 }
@@ -1392,17 +1436,56 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if !ignoreCRMState(cctx) {
 		updatecb := updateCloudletCallback{in, cb}
 
-		if in.DeploymentLocal {
-			updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-			err = cloudcommon.StopCRMService(ctx, in)
-		} else {
-			var cloudletPlatform pf.Platform
-			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
-			if err == nil {
-				// Some platform types require caches
-				caches := getCaches(ctx, &vmPool)
-				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
-				err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
+		var cloudletPlatform pf.Platform
+		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+		if err != nil {
+			return err
+		}
+
+		if err == nil {
+			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
+				if in.HostController != "" && in.HostController != *externalApiAddr {
+					// connect to Controller where Cloudlet is running and do delete
+					conn, cErr := ControllerConnect(ctx, in.HostController)
+					if cErr != nil {
+						return cErr
+					}
+					cmd := edgeproto.NewCloudletApiClient(conn)
+					stream, sErr := cmd.PlatformDeleteCloudlet(ctx, in)
+					if sErr != nil {
+						return sErr
+					}
+					var sMsg *edgeproto.Result
+					for {
+						sMsg, sErr = stream.Recv()
+						if sErr == io.EOF {
+							sErr = nil
+							break
+						}
+						if sErr != nil {
+							break
+						}
+						cb.Send(sMsg)
+					}
+					if sErr != nil {
+						return sErr
+					}
+				} else {
+					// run delete on this Controller
+					err = s.PlatformDeleteCloudlet(in, cb)
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				var cloudletPlatform pf.Platform
+				cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+				if err == nil {
+					// Some platform types require caches
+					caches := getCaches(ctx, &vmPool)
+					accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
+					err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
+				}
 			}
 		}
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
