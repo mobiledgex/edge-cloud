@@ -1834,6 +1834,7 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trust
 		if result.errString == "" {
 			numPassed++
 		} else {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to update cloudlet: %s - %s", k, result.errString)})
 			numFailed++
 		}
 	}
