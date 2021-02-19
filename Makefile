@@ -120,6 +120,14 @@ test-dind-docker-start:
 test-dind-docker-stop:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/delete_dind_stop_cleanup_docker.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp
 
+# requires kind to be installed
+test-kind-start:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_kind.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp -stop
+
+test-kind-stop:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/delete_kind_stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp
+
+
 
 clean: build-vers
 	go clean ./...

@@ -139,25 +139,6 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResourcesSnapshot, error) {
-	info := edgeproto.CloudletInfo{}
-	err := GetLimits(&info)
-	if err != nil {
-		return nil, err
-	}
-	resources := edgeproto.InfraResourcesSnapshot{
-		PlatformVms: []edgeproto.VmInfo{
-			{Name: "local-mac"},
-		},
-	}
-	return &resources, nil
-}
-
-func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
-	resources := edgeproto.InfraResources{}
-	return &resources, nil
-}
-
 func GetClusterID(id int) string {
 	return strconv.Itoa(id)
 }
@@ -208,4 +189,20 @@ func NewClusterFor(clusterName string, id int) DindCluster {
 
 func GetDockerNetworkName(cluster *DindCluster) string {
 	return "kubeadm-dind-net-" + cluster.ClusterName + "-" + GetClusterID(cluster.ClusterID)
+}
+
+func (s *Platform) GetMasterIp(ctx context.Context, names *k8smgmt.KubeNames) (string, error) {
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		return "", err
+	}
+	return cluster.MasterAddr, nil
+}
+
+func (s *Platform) GetDockerNetworkName(ctx context.Context, names *k8smgmt.KubeNames) (string, error) {
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		return "", err
+	}
+	return GetDockerNetworkName(cluster), nil
 }
