@@ -81,10 +81,8 @@ message PlatformConfig {
   string region = 12;
   // Get certs from vault or generate your own for the root load balancer
   bool commercial_certs = 13;
-  // Use Vault certs for internal TLS communication
-  bool use_vault_certs = 14;
-  // Use Vault CAs to authenticate TLS communication
-  bool use_vault_cas = 15;
+  // Use Vault certs and CAs for internal TLS communication
+  bool use_vault_pki = 14;
   // App domain name root
   string app_dns_root = 16;
   // Path to Chef Server
