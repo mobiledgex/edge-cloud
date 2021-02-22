@@ -1340,9 +1340,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
-	var pfConfig *edgeproto.PlatformConfig
-	vmPool := edgeproto.VMPool{}
-
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
 		clDynInsts = make(map[edgeproto.ClusterInstKey]struct{})
@@ -1350,10 +1347,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return in.Key.NotFoundError()
 		}
 		var err error
-		pfConfig, err = getPlatformConfig(cb.Context(), in)
-		if err != nil {
-			return err
-		}
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key, &refs) {
 			err = clusterInstApi.deleteCloudletOk(stm, &refs, clDynInsts)
@@ -1370,15 +1363,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return nil
 		}
 
-		if in.VmPool != "" {
-			vmPoolKey := edgeproto.VMPoolKey{
-				Name:         in.VmPool,
-				Organization: in.Key.Organization,
-			}
-			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
-				return fmt.Errorf("VM Pool %s not found", in.VmPool)
-			}
-		}
 		if !cctx.Undo {
 			if in.State == edgeproto.TrackedState_CREATE_REQUESTED ||
 				in.State == edgeproto.TrackedState_CREATING ||
@@ -1434,58 +1418,37 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	}
 
 	if !ignoreCRMState(cctx) {
-		updatecb := updateCloudletCallback{in, cb}
-
-		var cloudletPlatform pf.Platform
-		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
-		if err != nil {
-			return err
-		}
-
-		if err == nil {
-			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
-				if in.HostController != "" && in.HostController != *externalApiAddr {
-					// connect to Controller where Cloudlet is running and do delete
-					conn, cErr := ControllerConnect(ctx, in.HostController)
-					if cErr != nil {
-						return cErr
-					}
-					cmd := edgeproto.NewCloudletApiClient(conn)
-					stream, sErr := cmd.PlatformDeleteCloudlet(ctx, in)
-					if sErr != nil {
-						return sErr
-					}
-					var sMsg *edgeproto.Result
-					for {
-						sMsg, sErr = stream.Recv()
-						if sErr == io.EOF {
-							sErr = nil
-							break
-						}
-						if sErr != nil {
-							break
-						}
-						cb.Send(sMsg)
-					}
-					if sErr != nil {
-						return sErr
-					}
-				} else {
-					// run delete on this Controller
-					err = s.PlatformDeleteCloudlet(in, cb)
-					if err != nil {
-						return err
-					}
+		if in.HostController != "" && in.HostController != *externalApiAddr {
+			// connect to Controller where Cloudlet is running and do delete
+			conn, cErr := ControllerConnect(ctx, in.HostController)
+			if cErr != nil {
+				return cErr
+			}
+			cmd := edgeproto.NewCloudletApiClient(conn)
+			stream, sErr := cmd.PlatformDeleteCloudlet(ctx, in)
+			if sErr != nil {
+				return sErr
+			}
+			var sMsg *edgeproto.Result
+			for {
+				sMsg, sErr = stream.Recv()
+				if sErr == io.EOF {
+					sErr = nil
+					break
 				}
-			} else {
-				var cloudletPlatform pf.Platform
-				cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
-				if err == nil {
-					// Some platform types require caches
-					caches := getCaches(ctx, &vmPool)
-					accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
-					err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
+				if sErr != nil {
+					break
 				}
+				cb.Send(sMsg)
+			}
+			if sErr != nil {
+				return sErr
+			}
+		} else {
+			// run delete on this Controller
+			err = s.PlatformDeleteCloudlet(in, cb)
+			if err != nil {
+				return err
 			}
 		}
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
