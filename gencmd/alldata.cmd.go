@@ -82,6 +82,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].DefaultResourceAlertThreshold = 0
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].HostController = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -410,6 +413,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.resourcequotas:#.value",
 	"cloudlets:#.resourcequotas:#.alertthreshold",
 	"cloudlets:#.defaultresourcealertthreshold",
+	"cloudlets:#.hostcontroller",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -797,6 +801,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.resourcequotas:#.value":                                            "Quota value of the resource",
 	"cloudlets:#.resourcequotas:#.alertthreshold":                                   "Generate alert when more than threshold percentage of resource is used",
 	"cloudlets:#.defaultresourcealertthreshold":                                     "Default resource alert threshold percentage",
+	"cloudlets:#.hostcontroller":                                                    "Addr of the controller hosting the cloudlet services if it is running locally",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",
