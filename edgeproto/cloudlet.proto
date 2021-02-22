@@ -265,6 +265,8 @@ message Cloudlet {
   repeated ResourceQuota resource_quotas = 39 [(gogoproto.nullable) = false];
   // Default resource alert threshold percentage
   int32 default_resource_alert_threshold = 40 [(protogen.hidetag) = "nocmp"];
+  // Addr of the controller hosting the cloudlet services if it is running locally
+  string HostController = 41 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -273,7 +275,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -453,6 +455,9 @@ service CloudletApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
   }
+
+  // This is used internally to forward requests to other Controllers
+  rpc PlatformDeleteCloudlet(Cloudlet) returns (stream Result) {}
 }
 
 // Flavor details from the Cloudlet
