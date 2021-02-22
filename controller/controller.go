@@ -553,6 +553,7 @@ func InitApis(sync *Sync) {
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
+	InitStreamObjApi(sync)
 	InitClusterInstApi(sync)
 	InitCloudletInfoApi(sync)
 	InitVMPoolApi(sync)

@@ -185,3 +185,30 @@ func (s *AlertApi) ShowAlert(in *edgeproto.Alert, cb edgeproto.AlertApi_ShowAler
 	})
 	return err
 }
+
+func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.CloudletKey) {
+	matches := make([]edgeproto.AlertKey, 0)
+	s.cache.Mux.Lock()
+	for _, data := range s.cache.Objs {
+		val := data.Obj
+		matches = append(matches, val.GetKeyVal())
+	}
+	s.cache.Mux.Unlock()
+
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		info := edgeproto.Alert{}
+		for _, alertKey := range matches {
+			edgeproto.AlertKeyStringParse(string(alertKey), &info)
+			if cloudletName, found := info.Labels[edgeproto.CloudletKeyTagName]; !found ||
+				cloudletName != key.Name {
+				continue
+			}
+			if cloudletOrg, found := info.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+				cloudletOrg != key.Organization {
+				continue
+			}
+			s.store.STMDel(stm, &alertKey)
+		}
+		return nil
+	})
+}
