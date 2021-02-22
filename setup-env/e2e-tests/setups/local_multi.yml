@@ -54,7 +54,7 @@ controllers:
   testmode: true
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
-  usevaultcas: true
+  usevaultpki: true
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
   accessapiaddr: "127.0.0.1:41001"
@@ -78,7 +78,7 @@ controllers:
   testmode: true
   versiontag: "2019-10-24"
   notifyparentaddrs: "127.0.0.1:53001"
-  usevaultcerts: true
+  usevaultpki: true
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
   accessapiaddr: "127.0.0.1:41002"
@@ -91,7 +91,7 @@ clustersvcs:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   ctrladdrs: "127.0.0.1:55001"
   vaultaddr: "http://127.0.0.1:8200"
-  usevaultcerts: true
+  usevaultpki: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -105,7 +105,7 @@ clustersvcs:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   ctrladdrs: "127.0.0.1:55002"
   vaultaddr: "http://127.0.0.1:8200"
-  usevaultcerts: true
+  usevaultpki: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -122,7 +122,7 @@ dmes:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   cloudletkey: '{"organization":"dmuus","name":"dmuus-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
-  usevaultcerts: true
+  usevaultpki: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -138,7 +138,7 @@ dmes:
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   cloudletkey: '{"organization":"dmuus","name":"dmuus-cloud-2"}'
   vaultaddr: "http://127.0.0.1:8200"
-  usevaultcerts: true
+  usevaultpki: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -188,7 +188,7 @@ notifyroots:
 - name: notifyroot
   hostname: "127.0.0.1"
   vaultaddr: "http://127.0.0.1:8200"
-  usevaultcerts: true
+  usevaultpki: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -199,7 +199,7 @@ edgeturns:
   hostname: "127.0.0.1"
   testmode: true
   vaultaddr: "http://127.0.0.1:8200"
-  usevaultcas: true
+  usevaultpki: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"

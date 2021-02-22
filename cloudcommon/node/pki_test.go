@@ -149,48 +149,48 @@ func TestInternalPki(t *testing.T) {
 
 	// define nodes for certificate exchange tests
 	notifyRootServer := &PkiConfig{
-		Type:          node.NodeTypeNotifyRoot,
-		LocalIssuer:   node.CertIssuerGlobal,
-		UseVaultCerts: true,
+		Type:        node.NodeTypeNotifyRoot,
+		LocalIssuer: node.CertIssuerGlobal,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.AnyRegionalMatchCA(),
 			node.GlobalMatchCA(),
 		},
 	}
 	controllerClientUS := &PkiConfig{
-		Region:        "us",
-		Type:          node.NodeTypeController,
-		LocalIssuer:   node.CertIssuerRegional,
-		UseVaultCerts: true,
+		Region:      "us",
+		Type:        node.NodeTypeController,
+		LocalIssuer: node.CertIssuerRegional,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.GlobalMatchCA(),
 		},
 	}
 	controllerServerUS := &PkiConfig{
-		Region:        "us",
-		Type:          node.NodeTypeController,
-		LocalIssuer:   node.CertIssuerRegional,
-		UseVaultCerts: true,
+		Region:      "us",
+		Type:        node.NodeTypeController,
+		LocalIssuer: node.CertIssuerRegional,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
 			node.SameRegionalCloudletMatchCA(),
 		},
 	}
 	controllerApiServerUS := &PkiConfig{
-		Region:        "us",
-		Type:          node.NodeTypeController,
-		LocalIssuer:   node.CertIssuerRegional,
-		UseVaultCerts: true,
+		Region:      "us",
+		Type:        node.NodeTypeController,
+		LocalIssuer: node.CertIssuerRegional,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.GlobalMatchCA(),
 			node.SameRegionalMatchCA(),
 		},
 	}
 	controllerApiServerEU := &PkiConfig{
-		Region:        "eu",
-		Type:          node.NodeTypeController,
-		LocalIssuer:   node.CertIssuerRegional,
-		UseVaultCerts: true,
+		Region:      "eu",
+		Type:        node.NodeTypeController,
+		LocalIssuer: node.CertIssuerRegional,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.GlobalMatchCA(),
 			node.SameRegionalMatchCA(),
@@ -200,7 +200,7 @@ func TestInternalPki(t *testing.T) {
 		Region:        "us",
 		Type:          node.NodeTypeCRM,
 		LocalIssuer:   node.CertIssuerRegionalCloudlet,
-		UseVaultCerts: true,
+		UseVaultPki:   true,
 		AccessKeyFile: tc1.KeyClient.AccessKeyFile,
 		AccessApiAddr: tc1.KeyClient.AccessApiAddr,
 		CloudletKey:   &tc1.Cloudlet.Key,
@@ -212,7 +212,7 @@ func TestInternalPki(t *testing.T) {
 		Region:        "eu",
 		Type:          node.NodeTypeCRM,
 		LocalIssuer:   node.CertIssuerRegionalCloudlet,
-		UseVaultCerts: true,
+		UseVaultPki:   true,
 		AccessKeyFile: tc2.KeyClient.AccessKeyFile,
 		AccessApiAddr: tc2.KeyClient.AccessApiAddr,
 		CloudletKey:   &tc2.Cloudlet.Key,
@@ -221,18 +221,18 @@ func TestInternalPki(t *testing.T) {
 		},
 	}
 	dmeClientRegionalUS := &PkiConfig{
-		Region:        "us",
-		Type:          node.NodeTypeDME,
-		LocalIssuer:   node.CertIssuerRegional,
-		UseVaultCerts: true,
+		Region:      "us",
+		Type:        node.NodeTypeDME,
+		LocalIssuer: node.CertIssuerRegional,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
 		},
 	}
 	mc := &PkiConfig{
-		Type:          node.NodeTypeNotifyRoot,
-		LocalIssuer:   node.CertIssuerGlobal,
-		UseVaultCerts: true,
+		Type:        node.NodeTypeNotifyRoot,
+		LocalIssuer: node.CertIssuerGlobal,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.AnyRegionalMatchCA(),
 		},
@@ -243,7 +243,7 @@ func TestInternalPki(t *testing.T) {
 		Region:        "eu",
 		Type:          node.NodeTypeCRM,
 		LocalIssuer:   node.CertIssuerRegionalCloudlet,
-		UseVaultCerts: true,
+		UseVaultPki:   true,
 		AccessKeyFile: tc2.KeyClient.AccessKeyFile,
 		AccessApiAddr: tc2.KeyClient.AccessApiAddr,
 		CloudletKey:   &tc2.Cloudlet.Key,
@@ -255,19 +255,19 @@ func TestInternalPki(t *testing.T) {
 		},
 	}
 	edgeTurnEU := &PkiConfig{
-		Region:        "eu",
-		Type:          node.NodeTypeEdgeTurn,
-		LocalIssuer:   node.CertIssuerRegional,
-		UseVaultCerts: true,
+		Region:      "eu",
+		Type:        node.NodeTypeEdgeTurn,
+		LocalIssuer: node.CertIssuerRegional,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalCloudletMatchCA(),
 		},
 	}
 	edgeTurnUS := &PkiConfig{
-		Region:        "us",
-		Type:          node.NodeTypeEdgeTurn,
-		LocalIssuer:   node.CertIssuerRegional,
-		UseVaultCerts: true,
+		Region:      "us",
+		Type:        node.NodeTypeEdgeTurn,
+		LocalIssuer: node.CertIssuerRegional,
+		UseVaultPki: true,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalCloudletMatchCA(),
 		},
@@ -368,34 +368,23 @@ func TestInternalPki(t *testing.T) {
 		CertKey:  "./ctrl.key",
 		CAFile:   "./mex-ca.crt",
 	}
-	nodePhase1 := &PkiConfig{
+	nodePhase2 := &PkiConfig{
 		Region:      "us",
 		Type:        node.NodeTypeController,
 		CertFile:    "./ctrl.crt",
 		CertKey:     "./ctrl.key",
 		CAFile:      "./mex-ca.crt",
-		UseVaultCAs: true,
-		RemoteCAs: []node.MatchCA{
-			node.SameRegionalMatchCA(),
-		},
-	}
-	nodePhase2 := &PkiConfig{
-		Region:        "us",
-		Type:          node.NodeTypeController,
-		CertFile:      "./ctrl.crt",
-		CertKey:       "./ctrl.key",
-		CAFile:        "./mex-ca.crt",
-		UseVaultCerts: true,
-		LocalIssuer:   node.CertIssuerRegional,
+		UseVaultPki: true,
+		LocalIssuer: node.CertIssuerRegional,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
 		},
 	}
 	nodePhase3 := &PkiConfig{
-		Region:        "us",
-		Type:          node.NodeTypeController,
-		UseVaultCerts: true,
-		LocalIssuer:   node.CertIssuerRegional,
+		Region:      "us",
+		Type:        node.NodeTypeController,
+		UseVaultPki: true,
+		LocalIssuer: node.CertIssuerRegional,
 		RemoteCAs: []node.MatchCA{
 			node.SameRegionalMatchCA(),
 		},
@@ -409,32 +398,6 @@ func TestInternalPki(t *testing.T) {
 	csTests.add(ClientServer{
 		Server: nodeFileOnly,
 		Client: nodeFileOnly,
-	})
-	// phase1
-	csTests.add(ClientServer{
-		Server: nodePhase1,
-		Client: nodePhase1,
-	})
-	csTests.add(ClientServer{
-		Server: nodeFileOnly,
-		Client: nodePhase1,
-	})
-	csTests.add(ClientServer{
-		Server: nodePhase1,
-		Client: nodeFileOnly,
-	})
-	// phase2
-	csTests.add(ClientServer{
-		Server: nodePhase2,
-		Client: nodePhase2,
-	})
-	csTests.add(ClientServer{
-		Server: nodePhase1,
-		Client: nodePhase2,
-	})
-	csTests.add(ClientServer{
-		Server: nodePhase2,
-		Client: nodePhase1,
 	})
 	// phase3
 	csTests.add(ClientServer{
@@ -544,7 +507,7 @@ func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRo
 	log.SpanLog(ctx, log.DebugLevelInfo, "run testGetTlsConfig", "cfg", cfg)
 	vc := getVaultConfig(cfg.NodeType, cfg.Region, vroles)
 	mgr := node.NodeMgr{}
-	mgr.InternalPki.UseVaultCerts = true
+	mgr.InternalPki.UseVaultPki = true
 	mgr.InternalDomain = "mobiledgex.net"
 	if cfg.AccessKeyFile != "" && cfg.AccessApiAddr != "" {
 		mgr.AccessKeyClient.AccessKeyFile = cfg.AccessKeyFile
@@ -581,8 +544,7 @@ type PkiConfig struct {
 	CertFile      string
 	CertKey       string
 	CAFile        string
-	UseVaultCAs   bool
-	UseVaultCerts bool
+	UseVaultPki   bool
 	RemoteCAs     []node.MatchCA
 	AccessKeyFile string
 	AccessApiAddr string
@@ -603,8 +565,7 @@ func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, err
 	nodeMgr.SetInternalTlsCertFile(s.CertFile)
 	nodeMgr.SetInternalTlsKeyFile(s.CertKey)
 	nodeMgr.SetInternalTlsCAFile(s.CAFile)
-	nodeMgr.InternalPki.UseVaultCAs = s.UseVaultCAs
-	nodeMgr.InternalPki.UseVaultCerts = s.UseVaultCerts
+	nodeMgr.InternalPki.UseVaultPki = s.UseVaultPki
 	nodeMgr.InternalDomain = "mobiledgex.net"
 	if s.AccessKeyFile != "" && s.AccessApiAddr != "" {
 		nodeMgr.AccessKeyClient.AccessKeyFile = s.AccessKeyFile
@@ -639,7 +600,7 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 		cs.Server.LocalIssuer,
 		cs.Server.RemoteCAs)
 	require.Nil(t, err, "get server tls config %s", cs.Line)
-	if cs.Server.CertFile != "" || cs.Server.UseVaultCerts {
+	if cs.Server.CertFile != "" || cs.Server.UseVaultPki {
 		require.NotNil(t, serverTls)
 	}
 
@@ -650,7 +611,7 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 		cs.Client.LocalIssuer,
 		cs.Client.RemoteCAs)
 	require.Nil(t, err, "get client tls config %s", cs.Line)
-	if cs.Client.CertFile != "" || cs.Client.UseVaultCerts {
+	if cs.Client.CertFile != "" || cs.Client.UseVaultPki {
 		require.NotNil(t, clientTls)
 		// must set ServerName due to the way this test is set up
 		clientTls.ServerName = serverNode.CommonName()
@@ -737,7 +698,7 @@ func testTlsConnect(t *testing.T, ctx context.Context, cc *ClientController) {
 		cc.Client.LocalIssuer,
 		cc.Client.RemoteCAs)
 	require.Nil(t, err, "get client tls config %s", cc.Line)
-	if cc.Client.CertFile != "" || cc.Client.UseVaultCerts {
+	if cc.Client.CertFile != "" || cc.Client.UseVaultPki {
 		require.NotNil(t, clientTls)
 		// must set ServerName due to the way this test is set up
 		clientTls.ServerName = cc.Controller.nodeMgr.CommonName()
@@ -861,7 +822,7 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 	s.vroles = vroles
 
 	vc := getVaultConfig(node.NodeTypeController, region, vroles)
-	s.nodeMgr.InternalPki.UseVaultCerts = true
+	s.nodeMgr.InternalPki.UseVaultPki = true
 	s.nodeMgr.InternalDomain = "mobiledgex.net"
 	_, _, err := s.nodeMgr.Init(node.NodeTypeController, node.NoTlsClientIssuer, node.WithRegion(region), node.WithVaultConfig(vc))
 	return err

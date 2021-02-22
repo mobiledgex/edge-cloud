@@ -47,6 +47,8 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
+var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
+var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"DMUUS\"},\"name\":\"tmocloud1\"}'")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
@@ -487,7 +489,7 @@ func main() {
 	dmecommon.SetupMatchEngine(eehandler)
 	grpcOpts := make([]grpc.ServerOption, 0)
 
-	notifyClientTls, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
+	clientTlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
 		nodeMgr.CommonName(),
 		myCertIssuer,
 		[]node.MatchCA{node.SameRegionalMatchCA()})
@@ -503,7 +505,7 @@ func main() {
 			nodeMgr.AccessKeyClient.StreamAddAccessKey)
 	}
 	notifyClient := initNotifyClient(ctx, *notifyAddrs,
-		tls.GetGrpcDialOption(notifyClientTls),
+		tls.GetGrpcDialOption(clientTlsConfig),
 		notifyClientUnaryOp,
 		notifyClientStreamOp,
 	)
@@ -570,10 +572,26 @@ func main() {
 		}
 		accessApi = accessapi.NewVaultClient(cloudlet, nodeMgr.VaultConfig, *region)
 	}
+
+	var getPublicCertApi cloudcommon.GetPublicCertApi
+	if nodeMgr.InternalPki.UseVaultPki {
+		if tls.IsTestTls() || *testMode {
+			getPublicCertApi = &cloudcommon.TestPublicCertApi{}
+		} else {
+			getPublicCertApi = accessApi
+		}
+	}
+
 	// Setup PublicCertManager for dme
-	publicCertManager := node.NewPublicCertManager("_.dme.mobiledgex.net", accessApi)
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		publicCertManager = node.NewPublicCertManager(nodeMgr.CommonName(), &cloudcommon.TestPublicCertApi{})
+	var publicCertManager *node.PublicCertManager
+	if publicTls := os.Getenv("PUBLIC_ENDPOINT_TLS"); publicTls == "false" {
+		publicCertManager, err = node.NewPublicCertManager("_.dme.mobiledgex.net", nil, "", "")
+	} else {
+		publicCertManager, err = node.NewPublicCertManager("_.dme.mobiledgex.net", getPublicCertApi, *tlsApiCertFile, *tlsApiKeyFile)
+	}
+	if err != nil {
+		span.Finish()
+		log.FatalLog("unable to get public cert manager", "err", err)
 	}
 	publicCertManager.StartRefresh()
 	// Get TLS Config for grpc Creds from PublicCertManager
@@ -603,12 +621,16 @@ func main() {
 	// REST service
 	mux := http.NewServeMux()
 	gwcfg := &cloudcommon.GrpcGWConfig{
-		ApiAddr:        *apiAddr,
-		GetCertificate: publicCertManager.GetCertificateFunc(),
+		ApiAddr:     *apiAddr,
+		TlsCertFile: *tlsApiCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 			dme.RegisterMatchEngineApiHandler,
 		},
 	}
+	if clientTlsConfig != nil {
+		gwcfg.GetCertificate = clientTlsConfig.GetClientCertificate
+	}
+
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
 		span.Finish()
@@ -620,14 +642,16 @@ func main() {
 		span.Finish()
 		log.FatalLog("get TLS config for http server failed", "err", err)
 	}
-	tlscfg.CurvePreferences = []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256}
-	tlscfg.PreferServerCipherSuites = true
-	tlscfg.CipherSuites = []uint16{
-		ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-		ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
+	if tlscfg != nil {
+		tlscfg.CurvePreferences = []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256}
+		tlscfg.PreferServerCipherSuites = true
+		tlscfg.CipherSuites = []uint16{
+			ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		}
 	}
 
 	// Suppress contant stream of TLS error logs due to LB health check. There is discussion in the community
@@ -643,7 +667,7 @@ func main() {
 		ErrorLog:  &nullLogger,
 	}
 
-	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
+	go cloudcommon.GrpcGatewayServe(httpServer, *tlsApiCertFile)
 	defer httpServer.Shutdown(context.Background())
 
 	sigChan = make(chan os.Signal, 1)

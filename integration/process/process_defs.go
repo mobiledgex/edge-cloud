@@ -36,8 +36,7 @@ type Controller struct {
 	InfluxAddr             string
 	Region                 string
 	TLS                    TLSCerts
-	UseVaultCAs            bool
-	UseVaultCerts          bool
+	UseVaultPki            bool
 	cmd                    *exec.Cmd
 	TestMode               bool
 	RegistryFQDN           string
@@ -66,8 +65,7 @@ type Dme struct {
 	CookieExpr    string
 	Region        string
 	TLS           TLSCerts
-	UseVaultCAs   bool
-	UseVaultCerts bool
+	UseVaultPki   bool
 	cmd           *exec.Cmd
 	AccessKeyFile string
 	AccessApiAddr string
@@ -80,8 +78,7 @@ type Crm struct {
 	Platform            string
 	Plugin              string
 	TLS                 TLSCerts
-	UseVaultCAs         bool
-	UseVaultCerts       bool
+	UseVaultPki         bool
 	cmd                 *exec.Cmd
 	VaultAddr           string
 	PhysicalName        string
@@ -140,8 +137,7 @@ type ClusterSvc struct {
 	Region         string
 	VaultAddr      string
 	PluginRequired bool
-	UseVaultCAs    bool
-	UseVaultCerts  bool
+	UseVaultPki    bool
 	TLS            TLSCerts
 	cmd            *exec.Cmd
 }
@@ -165,22 +161,20 @@ type Traefik struct {
 	cmd    *exec.Cmd
 }
 type NotifyRoot struct {
-	Common        `yaml:",inline"`
-	VaultAddr     string
-	TLS           TLSCerts
-	UseVaultCAs   bool
-	UseVaultCerts bool
-	cmd           *exec.Cmd
+	Common      `yaml:",inline"`
+	VaultAddr   string
+	TLS         TLSCerts
+	UseVaultPki bool
+	cmd         *exec.Cmd
 }
 type EdgeTurn struct {
-	Common        `yaml:",inline"`
-	TLS           TLSCerts
-	cmd           *exec.Cmd
-	UseVaultCAs   bool
-	UseVaultCerts bool
-	VaultAddr     string
-	ListenAddr    string
-	ProxyAddr     string
-	Region        string
-	TestMode      bool
+	Common      `yaml:",inline"`
+	TLS         TLSCerts
+	cmd         *exec.Cmd
+	UseVaultPki bool
+	VaultAddr   string
+	ListenAddr  string
+	ProxyAddr   string
+	Region      string
+	TestMode    bool
 }

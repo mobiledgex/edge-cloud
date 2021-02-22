@@ -337,13 +337,21 @@ func startServices() error {
 	// VaultPublicCertClient implements GetPublicCertApi
 	// Allows controller to get public certs from vault
 	var getPublicCertApi cloudcommon.GetPublicCertApi
-	getPublicCertApi = &cloudcommon.VaultPublicCertApi{
-		VaultConfig: vaultConfig,
+	if nodeMgr.InternalPki.UseVaultPki {
+		if tls.IsTestTls() || *testMode {
+			getPublicCertApi = &cloudcommon.TestPublicCertApi{}
+		} else {
+			getPublicCertApi = &cloudcommon.VaultPublicCertApi{
+				VaultConfig: vaultConfig,
+			}
+		}
 	}
-	services.publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		services.publicCertManager = node.NewPublicCertManager(*publicAddr, &cloudcommon.TestPublicCertApi{})
+	publicCertManager, err := node.NewPublicCertManager(*publicAddr, getPublicCertApi, "", "")
+	if err != nil {
+		span.Finish()
+		log.FatalLog("unable to get public cert manager", "err", err)
 	}
+	services.publicCertManager = publicCertManager
 	accessServerTlsConfig, err := services.publicCertManager.GetServerTlsConfig(ctx)
 	if err != nil {
 		return err

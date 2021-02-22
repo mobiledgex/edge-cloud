@@ -172,7 +172,8 @@ func TestCRM(t *testing.T) {
 		KeyServer: keyServer,
 	}
 	getPublicCertApi := &cloudcommon.TestPublicCertApi{}
-	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
+	publicCertManager, err := node.NewPublicCertManager("localhost", getPublicCertApi, "", "")
+	require.Nil(t, err)
 	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	require.Nil(t, err)
 	accessKeyGrpcServer.Start("127.0.0.1:0", keyServer, tlsConfig, func(server *grpc.Server) {

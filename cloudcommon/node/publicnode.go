@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 )
 
 // Third party services that we deploy all have their own letsencrypt-public
@@ -25,7 +25,7 @@ func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, er
 	tlsOpts := []TlsOp{
 		WithPublicCAPool(),
 	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+	if mextls.IsTestTls() {
 		// skip verifying cert if e2e-tests, because cert
 		// will be self-signed
 		log.SpanLog(ctx, log.DebugLevelInfo, "public client tls e2e-test mode")
@@ -40,31 +40,51 @@ func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, er
 
 // PublicCertManager manages refreshing the public cert.
 type PublicCertManager struct {
-	commonName        string
-	getPublicCertApi  cloudcommon.GetPublicCertApi
-	cert              *tls.Certificate
-	expiresAt         time.Time
-	done              bool
-	refreshTrigger    chan bool
-	refreshThreshold  time.Duration
-	refreshRetryDelay time.Duration
-	mux               sync.Mutex
+	commonName          string
+	tlsMode             mextls.TLSMode
+	useGetPublicCertApi bool // denotes whether to use GetPublicCertApi to grab certs or use command line provided cert (should be equivalent to useVaultPki flag)
+	getPublicCertApi    cloudcommon.GetPublicCertApi
+	cert                *tls.Certificate
+	expiresAt           time.Time
+	done                bool
+	refreshTrigger      chan bool
+	refreshThreshold    time.Duration
+	refreshRetryDelay   time.Duration
+	mux                 sync.Mutex
 }
 
-func NewPublicCertManager(commonName string, getPublicCertApi cloudcommon.GetPublicCertApi) *PublicCertManager {
+func NewPublicCertManager(commonName string, getPublicCertApi cloudcommon.GetPublicCertApi, tlsCertFile string, tlsKeyFile string) (*PublicCertManager, error) {
 	// Nominally letsencrypt certs are valid for 90 days
 	// and they recommend refreshing at 30 days to expiration.
 	mgr := &PublicCertManager{
 		commonName:        commonName,
-		getPublicCertApi:  getPublicCertApi,
 		refreshTrigger:    make(chan bool, 1),
 		refreshThreshold:  30 * 24 * time.Hour,
 		refreshRetryDelay: 24 * time.Hour,
+		tlsMode:           mextls.ServerAuthTLS,
 	}
-	return mgr
+
+	if getPublicCertApi != nil {
+		mgr.useGetPublicCertApi = true
+		mgr.getPublicCertApi = getPublicCertApi
+	} else if tlsCertFile != "" && tlsKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
+		if err != nil {
+			return nil, err
+		}
+		mgr.cert = &cert
+	} else {
+		// no tls
+		mgr.tlsMode = mextls.NoTLS
+	}
+	return mgr, nil
 }
 
 func (s *PublicCertManager) updateCert(ctx context.Context) error {
+	if s.tlsMode == mextls.NoTLS || !s.useGetPublicCertApi {
+		// If no tls or using command line certs, do not update
+		return nil
+	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "update public cert", "name", s.commonName)
 	pubCert, err := s.getPublicCertApi.GetPublicCert(ctx, s.commonName)
 	if err != nil {
@@ -85,6 +105,10 @@ func (s *PublicCertManager) updateCert(ctx context.Context) error {
 
 // For now this just assumes server-side only TLS.
 func (s *PublicCertManager) GetServerTlsConfig(ctx context.Context) (*tls.Config, error) {
+	if s.tlsMode == mextls.NoTLS {
+		// No tls
+		return nil, nil
+	}
 	if s.cert == nil {
 		// make sure we have cert
 		err := s.updateCert(ctx)
