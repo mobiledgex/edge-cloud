@@ -73,9 +73,10 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	return mux, nil
 }
 
-func GrpcGatewayServe(cfg *GrpcGWConfig, server *http.Server) {
+func GrpcGatewayServe(server *http.Server, tlsCertFile string) {
 	// Serve REST gateway
-	if cfg.GetCertificate == nil && cfg.TlsCertFile == "" {
+	cfg := server.TLSConfig
+	if cfg == nil || (cfg.GetCertificate == nil && tlsCertFile == "") {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
 			log.FatalLog("Failed to serve HTTP", "error", err)
 		}
@@ -84,8 +85,8 @@ func GrpcGatewayServe(cfg *GrpcGWConfig, server *http.Server) {
 			log.FatalLog("Failed to serve HTTP TLS", "error", err)
 		}
 	} else {
-		tlsKeyFile := strings.Replace(cfg.TlsCertFile, ".crt", ".key", -1)
-		if err := server.ListenAndServeTLS(cfg.TlsCertFile, tlsKeyFile); err != http.ErrServerClosed {
+		tlsKeyFile := strings.Replace(tlsCertFile, ".crt", ".key", -1)
+		if err := server.ListenAndServeTLS(tlsCertFile, tlsKeyFile); err != http.ErrServerClosed {
 			log.FatalLog("Failed to serve HTTP TLS", "error", err)
 		}
 	}

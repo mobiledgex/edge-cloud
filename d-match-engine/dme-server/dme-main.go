@@ -581,8 +581,14 @@ func main() {
 			getPublicCertApi = accessApi
 		}
 	}
+
 	// Setup PublicCertManager for dme
-	publicCertManager, err := node.NewPublicCertManager("_.dme.mobiledgex.net", getPublicCertApi, *tlsApiCertFile, *tlsApiKeyFile)
+	var publicCertManager *node.PublicCertManager
+	if publicTls := os.Getenv("PUBLIC_ENDPOINT_TLS"); publicTls == "false" {
+		publicCertManager, err = node.NewPublicCertManager("_.dme.mobiledgex.net", nil, "", "")
+	} else {
+		publicCertManager, err = node.NewPublicCertManager("_.dme.mobiledgex.net", getPublicCertApi, *tlsApiCertFile, *tlsApiKeyFile)
+	}
 	if err != nil {
 		span.Finish()
 		log.FatalLog("unable to get public cert manager", "err", err)
@@ -661,7 +667,7 @@ func main() {
 		ErrorLog:  &nullLogger,
 	}
 
-	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
+	go cloudcommon.GrpcGatewayServe(httpServer, *tlsApiCertFile)
 	defer httpServer.Shutdown(context.Background())
 
 	sigChan = make(chan os.Signal, 1)
