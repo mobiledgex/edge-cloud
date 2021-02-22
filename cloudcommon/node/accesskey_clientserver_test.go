@@ -300,7 +300,10 @@ func (s *DummyController) Init(vaultAddr string) {
 // more grpc handlers.
 func (s *DummyController) Start(ctx context.Context, addr string) {
 	api := &cloudcommon.TestPublicCertApi{}
-	mgr := NewPublicCertManager("localhost", api)
+	mgr, err := NewPublicCertManager("localhost", api, "", "")
+	if err != nil {
+		panic(err.Error())
+	}
 	tlsConfig, err := mgr.GetServerTlsConfig(ctx)
 	if err != nil {
 		panic(err.Error())
