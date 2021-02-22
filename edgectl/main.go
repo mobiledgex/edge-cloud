@@ -53,10 +53,11 @@ var completionCmd = &cobra.Command{
 func connect(cmd *cobra.Command, args []string) error {
 	var err error
 
-	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile, false)
-	if err != nil {
-		return err
+	tlsMode := tls.NoTLS
+	if tlsCertFile != "" {
+		tlsMode = tls.MutualAuthTLS
 	}
+	dialOption, err := tls.GetTLSClientDialOption(tlsMode, addr, nil, tlsCertFile, false)
 	conn, err = grpc.Dial(addr, dialOption)
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())

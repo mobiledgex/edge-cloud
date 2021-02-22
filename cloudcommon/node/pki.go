@@ -7,13 +7,13 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
@@ -23,10 +23,8 @@ type internalPki struct {
 	// Internal PKI supports either cert files supplied on the
 	// command line or retrieved from Vault.
 	// Command line certs are supported if specified.
-	// Vault CAs are supported if UseVaultCAs is set.
-	// Vault certs are used (overrides file cert) if UseVaultCerts is set.
-	UseVaultCAs   bool
-	UseVaultCerts bool
+	// Vault Certs and CAs (overrides fileCert and fileCAs) are supported if UseVaultPki is set.
+	UseVaultPki bool
 
 	// These are the certs loaded from disk specified on the command line.
 	fileCert *tls.Certificate
@@ -42,7 +40,7 @@ type internalPki struct {
 	certs map[CertId]*tls.Certificate
 	cas   map[string][]*x509.Certificate
 
-	enabled        bool
+	tlsMode        mextls.TLSMode
 	vaultConfig    *vault.Config
 	localRegion    string
 	refreshTrigger chan bool
@@ -71,7 +69,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		s.InternalPki.enabled = true
+		s.InternalPki.tlsMode = mextls.MutualAuthTLS
 		pkiDesc = append(pkiDesc, "from-file")
 	}
 	s.InternalPki.vaultConfig = s.VaultConfig
@@ -80,12 +78,10 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		s.InternalPki.vaultConfig = nil // should never talk to Vault
 		pkiDesc = append(pkiDesc, "useAccessKey")
 	}
-	if s.InternalPki.UseVaultCerts {
-		s.InternalPki.UseVaultCAs = true
-	}
-	if s.InternalPki.UseVaultCAs {
+	if s.InternalPki.UseVaultPki {
+		s.InternalPki.tlsMode = mextls.MutualAuthTLS
 		if !s.AccessKeyClient.enabled && s.InternalPki.vaultConfig.Addr == "" {
-			return fmt.Errorf("AccessKey file or Vault address required for UseVaultCAs or UseVaultCerts")
+			return fmt.Errorf("AccessKey file or Vault address required for UseVaultPki")
 		}
 		// enable Vault certs
 		log.SpanLog(ctx, log.DebugLevelInfo, "enable internal Vault PKI CAs")
@@ -94,11 +90,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 		s.InternalPki.cas = make(map[string][]*x509.Certificate)
 		s.InternalPki.localRegion = s.Region
 		s.InternalPki.refreshTrigger = make(chan bool, 1)
-		pkiDesc = append(pkiDesc, "useVaultCAs")
-	}
-	if s.InternalPki.UseVaultCerts {
-		s.InternalPki.enabled = true
-		pkiDesc = append(pkiDesc, "useVaultCerts")
+		pkiDesc = append(pkiDesc, "UseVaultPki")
 	}
 
 	if len(pkiDesc) == 0 {
@@ -111,7 +103,7 @@ func (s *NodeMgr) initInternalPki(ctx context.Context) error {
 
 // Must be called after Jaeger is initialized because it creates new spans.
 func (s *internalPki) start() {
-	if s.UseVaultCerts {
+	if s.UseVaultPki {
 		go s.refreshCerts()
 	}
 }
@@ -144,7 +136,7 @@ func (s *internalPki) loadCerts(certFile, keyFile, caFile string) error {
 func (s *internalPki) refreshCerts() {
 	// for e2e-tests, to test refresh set a low refresh interval.
 	// e2e-tests last 15 minutes or so, so it doesn't have to be super fast.
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+	if mextls.IsTestTls() {
 		refreshCertInterval = 30 * time.Second
 	}
 
@@ -169,7 +161,7 @@ func (s *internalPki) refreshCerts() {
 }
 
 func (s *internalPki) RefreshNow(ctx context.Context) error {
-	if !s.UseVaultCerts {
+	if !s.UseVaultPki {
 		return nil
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "refreshing certs")
@@ -231,7 +223,7 @@ func certsFromPem(pemCerts []byte) ([]*x509.Certificate, error) {
 // The server issuers specify which CAs are trusted when verifying the
 // remote server's certificate.
 func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, clientIssuer string, serverIssuers []MatchCA, ops ...TlsOp) (*tls.Config, error) {
-	if !s.enabled {
+	if s.tlsMode == mextls.NoTLS {
 		return nil, nil
 	}
 	opts := &TlsOptions{}
@@ -268,6 +260,9 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 	if opts.usePublicCAPool {
 		config.VerifyPeerCertificate = nil
 	}
+	if mextls.IsTestTls() {
+		config.InsecureSkipVerify = true
+	}
 	return config, nil
 }
 
@@ -276,7 +271,7 @@ func (s *internalPki) GetClientTlsConfig(ctx context.Context, commonName, client
 // The client issuers specify which CAs are trusted when verifying the
 // remote client's certificate.
 func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, serverIssuer string, clientIssuers []MatchCA, ops ...TlsOp) (*tls.Config, error) {
-	if !s.enabled {
+	if s.tlsMode == mextls.NoTLS {
 		return nil, nil
 	}
 	opts := &TlsOptions{}
@@ -305,6 +300,9 @@ func (s *internalPki) GetServerTlsConfig(ctx context.Context, commonName, server
 		ClientCAs:             caPool,
 		GetCertificate:        s.getCertificateFunc(id),
 		VerifyPeerCertificate: s.getVerifyFunc(clientIssuers),
+	}
+	if mextls.IsTestTls() {
+		config.ClientAuth = tls.RequireAnyClientCert
 	}
 	if opts.noMutualAuth {
 		config.ClientAuth = tls.NoClientCert
@@ -380,7 +378,7 @@ func (s *internalPki) getCertificateFunc(id CertId) func(*tls.ClientHelloInfo) (
 }
 
 func (s *internalPki) lookupCertForHandshake(id CertId) (*tls.Certificate, error) {
-	if s.UseVaultCerts {
+	if s.UseVaultPki {
 		s.mux.Lock()
 		cert, found := s.certs[id]
 		s.mux.Unlock()
@@ -396,7 +394,7 @@ func (s *internalPki) lookupCertForHandshake(id CertId) (*tls.Certificate, error
 }
 
 func (s *internalPki) ensureCertInCache(ctx context.Context, id CertId) error {
-	if !s.UseVaultCerts {
+	if !s.UseVaultPki {
 		return nil
 	}
 	s.mux.Lock()
@@ -552,7 +550,7 @@ func (s *internalPki) getFileCAs(ctx context.Context, pool *x509.CertPool) {
 }
 
 func (s *internalPki) getVaultCAs(ctx context.Context, pool *x509.CertPool, issuers []MatchCA) error {
-	if !s.UseVaultCAs {
+	if !s.UseVaultPki {
 		return nil
 	}
 	var err error
