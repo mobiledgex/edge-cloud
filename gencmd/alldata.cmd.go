@@ -82,6 +82,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].DefaultResourceAlertThreshold = 0
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].HostController = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -377,8 +380,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.cleanupmode",
 	"cloudlets:#.config.region",
 	"cloudlets:#.config.commercialcerts",
-	"cloudlets:#.config.usevaultcerts",
-	"cloudlets:#.config.usevaultcas",
+	"cloudlets:#.config.usevaultpki",
 	"cloudlets:#.config.appdnsroot",
 	"cloudlets:#.config.chefserverpath",
 	"cloudlets:#.config.chefclientinterval",
@@ -410,6 +412,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.resourcequotas:#.value",
 	"cloudlets:#.resourcequotas:#.alertthreshold",
 	"cloudlets:#.defaultresourcealertthreshold",
+	"cloudlets:#.hostcontroller",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -769,8 +772,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.cleanupmode":                                                "Internal cleanup flag",
 	"cloudlets:#.config.region":                                                     "Region",
 	"cloudlets:#.config.commercialcerts":                                            "Get certs from vault or generate your own for the root load balancer",
-	"cloudlets:#.config.usevaultcerts":                                              "Use Vault certs for internal TLS communication",
-	"cloudlets:#.config.usevaultcas":                                                "Use Vault CAs to authenticate TLS communication",
+	"cloudlets:#.config.usevaultpki":                                                "Use Vault certs and CAs for internal TLS communication",
 	"cloudlets:#.config.appdnsroot":                                                 "App domain name root",
 	"cloudlets:#.config.chefserverpath":                                             "Path to Chef Server",
 	"cloudlets:#.config.chefclientinterval":                                         "Chef client interval",
@@ -797,6 +799,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.resourcequotas:#.value":                                            "Quota value of the resource",
 	"cloudlets:#.resourcequotas:#.alertthreshold":                                   "Generate alert when more than threshold percentage of resource is used",
 	"cloudlets:#.defaultresourcealertthreshold":                                     "Default resource alert threshold percentage",
+	"cloudlets:#.hostcontroller":                                                    "Addr of the controller hosting the cloudlet services if it is running locally",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",

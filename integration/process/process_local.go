@@ -141,11 +141,8 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.EdgeTurnAddr != "" {
 		args = append(args, "--edgeTurnAddr")
@@ -255,7 +252,7 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 }
 
 func (p *Controller) GetTlsFile() string {
-	if p.UseVaultCerts && p.VaultAddr != "" {
+	if p.UseVaultPki && p.VaultAddr != "" {
 		region := p.Region
 		if region == "" {
 			region = "local"
@@ -266,7 +263,12 @@ func (p *Controller) GetTlsFile() string {
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.GetTlsFile(), "", false, nil)
+	tlsMode := mextls.MutualAuthTLS
+	skipVerify := false
+	if p.TestMode {
+		skipVerify = true
+	}
+	tlsConfig, err := mextls.GetTLSClientConfig(tlsMode, p.ApiAddr, nil, p.GetTlsFile(), "", skipVerify)
 	if err != nil {
 		return nil, err
 	}
@@ -310,11 +312,8 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.CookieExpr != "" {
 		args = append(args, "--cookieExpiration")
@@ -375,17 +374,10 @@ func (p *Dme) GetRestClient(timeout time.Duration) (*http.Client, error) {
 }
 
 func (p *Dme) getTlsConfig(addr string) *tls.Config {
-	if p.UseVaultCerts && p.VaultAddr != "" {
-		region := p.Region
-		if region == "" {
-			region = "local"
+	if p.UseVaultPki && p.VaultAddr != "" {
+		return &tls.Config{
+			InsecureSkipVerify: true,
 		}
-		cert := "/tmp/edgectl." + region + "/mex.crt"
-		config, err := mextls.GetTLSClientConfig(addr, cert, "", true, nil)
-		if err != nil {
-			return nil
-		}
-		return config
 	} else if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
 		// ServerAuth TLS. For real clients, they'll use
 		// their built-in trusted CAs to verify the cert.
@@ -461,11 +453,8 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--region")
 		args = append(args, p.Region)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.AppDNSRoot != "" {
 		args = append(args, "--appDNSRoot")
@@ -657,11 +646,8 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
@@ -1249,7 +1235,7 @@ func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 
 	// combine all cas into one for nginx config
 	// Note we can remove p.TLS.CACert once we transition to all services
-	// using "useVaultCerts" instead of "useVaultCAs".
+	// using "useVaultPki"
 	err := writeAllCAs(p.TLS.CACert, configDir+"/allcas.pem")
 	if err != nil {
 		return err
@@ -1337,11 +1323,8 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.VaultAddr)
 	}
 	args = p.TLS.AddInternalPkiArgs(args)
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -1396,11 +1379,8 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 	if p.TestMode {
 		args = append(args, "--testMode")
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")

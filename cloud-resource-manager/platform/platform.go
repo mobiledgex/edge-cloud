@@ -98,6 +98,8 @@ type Platform interface {
 	GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error)
 	// Set power state of the AppInst
 	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
+	// Is cloudlet services running locally to controller on the given platform
+	IsCloudletServicesLocal() bool
 	// Create Cloudlet
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error

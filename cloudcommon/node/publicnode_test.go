@@ -17,8 +17,9 @@ func TestPublicCertManager(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	api := &cloudcommon.TestPublicCertApi{}
-	mgr := NewPublicCertManager("localhost", api)
-	_, err := mgr.GetServerTlsConfig(ctx)
+	mgr, err := NewPublicCertManager("localhost", api, "", "")
+	require.Nil(t, err)
+	_, err = mgr.GetServerTlsConfig(ctx)
 	require.Nil(t, err)
 	require.Equal(t, 1, api.GetCount)
 

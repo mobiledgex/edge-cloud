@@ -615,6 +615,18 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 				}
 				*outp = append(*outp, out...)
 			}
+		case "platformdeletecloudlet":
+			out, err := r.client.PlatformDeleteCloudlet(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
 		}
 	}
 }
@@ -821,6 +833,16 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 		err := server.Send(obj)
 		return err
 	})
+	return err
+}
+
+func (s *DummyServer) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_PlatformDeleteCloudletServer) error {
+	var err error
+	if true {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
+	}
 	return err
 }
 
@@ -1155,6 +1177,22 @@ func (s *CliClient) GenerateAccessKey(ctx context.Context, in *edgeproto.Cloudle
 	return &out, err
 }
 
+func (s *ApiClient) PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.PlatformDeleteCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "PlatformDeleteCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
 type CloudletApiClient interface {
 	CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 	DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
@@ -1169,6 +1207,7 @@ type CloudletApiClient interface {
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)
 	RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	GenerateAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
+	PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 }
 
 type CloudletInfoStream interface {
