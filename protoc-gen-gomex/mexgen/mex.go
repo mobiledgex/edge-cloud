@@ -1677,7 +1677,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	}
 	cancel()
-	if wSpec.StreamCache != nil {
+	if streamCancel != nil {
 		streamCancel()
 	}
 	// note: do not close done/failed, garbage collector will deal with it.

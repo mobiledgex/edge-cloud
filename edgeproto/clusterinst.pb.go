@@ -2986,7 +2986,7 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 		}
 	}
 	cancel()
-	if wSpec.StreamCache != nil {
+	if streamCancel != nil {
 		streamCancel()
 	}
 	// note: do not close done/failed, garbage collector will deal with it.

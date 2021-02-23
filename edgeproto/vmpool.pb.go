@@ -2651,7 +2651,7 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 		}
 	}
 	cancel()
-	if wSpec.StreamCache != nil {
+	if streamCancel != nil {
 		streamCancel()
 	}
 	// note: do not close done/failed, garbage collector will deal with it.
