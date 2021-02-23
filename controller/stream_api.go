@@ -7,17 +7,22 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	grpc "google.golang.org/grpc"
 )
 
-var streamObjApi = StreamObjApi{}
+var (
+	streamObjs   = cloudcommon.StreamObj{}
+	streamObjApi = StreamObjApi{}
 
-var StreamTimeout = 30 * time.Minute
+	StreamTimeout = 30 * time.Minute
 
-var streamObjs = cloudcommon.StreamObj{}
+	SaveOnStreamObj      = true
+	DonotSaveOnStreamObj = false
+)
 
 type streamSend struct {
 	cb       GenericCb
@@ -25,7 +30,11 @@ type streamSend struct {
 	streamer *cloudcommon.Streamer
 }
 
-type StreamObjApi struct{}
+type StreamObjApi struct {
+	sync  *Sync
+	store edgeproto.StreamObjStore
+	cache edgeproto.StreamObjCache
+}
 
 type GenericCb interface {
 	Send(*edgeproto.Result) error
@@ -35,6 +44,13 @@ type GenericCb interface {
 type CbWrapper struct {
 	GenericCb
 	streamSendObj *streamSend
+}
+
+func InitStreamObjApi(sync *Sync) {
+	streamObjApi.sync = sync
+	streamObjApi.store = edgeproto.NewStreamObjStore(sync.store)
+	edgeproto.InitStreamObjCache(&streamObjApi.cache)
+	sync.RegisterCache(&streamObjApi.cache)
 }
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
@@ -128,7 +144,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	return err
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) (*streamSend, error) {
+func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb, saveOnStreamObj bool) (*streamSend, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", key)
 	streamer := streamObjs.Get(*key)
 	if streamer != nil {
@@ -137,6 +153,21 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 			return nil, key.ExistsError()
 		}
 	}
+
+	if saveOnStreamObj {
+		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			streamObj := edgeproto.StreamObj{}
+			streamObj.Key = *key
+			streamObj.Status = edgeproto.StatusInfo{}
+			// Init stream obj regardless of it being present or not
+			s.store.STMPut(stm, &streamObj)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	streamer = cloudcommon.NewStreamer()
 	streamSendObj := streamSend{}
 	streamSendObj.cb = inCb
@@ -159,5 +190,52 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 		}
 	}
 
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		streamObj := edgeproto.StreamObj{}
+		if !s.store.STMGet(stm, key, &streamObj) {
+			// if stream obj is deleted, then ignore emptying
+			// the status obj
+			return nil
+		}
+		streamObj.Status = edgeproto.StatusInfo{}
+		s.store.STMPut(stm, &streamObj)
+		return nil
+	})
+
 	return nil
+}
+
+func (s *StreamObjApi) CleanupStreamObj(ctx context.Context, in *edgeproto.StreamObj) error {
+	return s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		streamObj := edgeproto.StreamObj{}
+		if !s.store.STMGet(stm, &in.Key, &streamObj) {
+			// already removed
+			return nil
+		}
+		s.store.STMDel(stm, &in.Key)
+		return nil
+	})
+}
+
+// Status from info will always contain the full status update list,
+// changes we copy to status that is saved to etcd is only the diff
+// from the last update.
+func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.StatusInfo, key *edgeproto.AppInstKey) {
+	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		streamObj := edgeproto.StreamObj{}
+		if !s.store.STMGet(stm, key, &streamObj) {
+			streamObj.Key = *key
+			streamObj.Status = edgeproto.StatusInfo{}
+		}
+		lastMsgId := int(streamObj.Status.MsgCount)
+		if lastMsgId < len(infoStatus.Msgs) {
+			streamObj.Status.Msgs = []string{}
+			for ii := lastMsgId; ii < len(infoStatus.Msgs); ii++ {
+				streamObj.Status.Msgs = append(streamObj.Status.Msgs, infoStatus.Msgs[ii])
+			}
+			streamObj.Status.MsgCount += uint32(len(streamObj.Status.Msgs))
+			s.store.STMPut(stm, &streamObj)
+		}
+		return nil
+	})
 }
