@@ -316,7 +316,7 @@ func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.
 }
 
 func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
-	streamSendObj, err := streamObjApi.startStream(ctx, key, inCb)
+	streamSendObj, err := streamObjApi.startStream(ctx, key, inCb, SaveOnStreamObj)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
 		return nil, inCb, err
@@ -986,7 +986,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
 		return nil
 	}
-	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR, settingsApi.Get().CreateAppInstTimeout.TimeDuration(), "Created AppInst successfully", cb.Send)
+	err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY,
+		CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR,
+		settingsApi.Get().CreateAppInstTimeout.TimeDuration(),
+		"Created AppInst successfully", cb.Send,
+		edgeproto.WithStreamObj(&streamObjApi.cache, &in.Key),
+	)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
@@ -1113,7 +1118,12 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 				RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
 			}
 		}()
-		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY, UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateAppInstTimeout.TimeDuration(), "", cb.Send)
+		err = appInstApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY,
+			UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
+			settingsApi.Get().UpdateAppInstTimeout.TimeDuration(),
+			"", cb.Send,
+			edgeproto.WithStreamObj(&streamObjApi.cache, &key),
+		)
 	}
 	if err != nil {
 		return false, err
@@ -1346,6 +1356,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if reservationFreed {
 			RecordClusterInstEvent(ctx, &clusterInstKey, cloudcommon.UNRESERVED, cloudcommon.InstanceDown)
 		}
+		if cErr := streamObjApi.CleanupStreamObj(ctx, &edgeproto.StreamObj{Key: in.Key}); cErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup streamobj", "key", in.Key, "err", cErr)
+		}
 	}()
 
 	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
@@ -1489,7 +1502,12 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 	} else {
-		err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteAppInstTimeout.TimeDuration(), "Deleted AppInst successfully", cb.Send)
+		err = appInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
+			DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
+			settingsApi.Get().DeleteAppInstTimeout.TimeDuration(),
+			"Deleted AppInst successfully", cb.Send,
+			edgeproto.WithStreamObj(&streamObjApi.cache, &in.Key),
+		)
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
 			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_DELETE_DONE)
@@ -1564,6 +1582,10 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
 	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState)
+
+	// update only diff of status msgs
+	streamObjApi.UpdateStatus(ctx, &in.Status, &in.Key)
+
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -1578,15 +1600,14 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			inst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_UNKNOWN {
 			inst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_OK
 		}
-		// update only diff of status msgs
-		edgeproto.UpdateStatusDiff(&in.Status, &inst.Status)
+
 		if inst.State == in.State {
 			// already in that state
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
+				s.store.STMPut(stm, &inst)
 			}
-			s.store.STMPut(stm, &inst)
 			return nil
 		}
 		// please see state_transitions.md

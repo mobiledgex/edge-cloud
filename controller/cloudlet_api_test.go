@@ -469,8 +469,14 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
+	found := autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
+	require.True(t, found, "autoprovinfo for cloudlet exists")
+
 	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
+
+	found = autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
+	require.False(t, found, "autoprovinfo for cloudlet should be cleaned up")
 }
 
 func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet) {
