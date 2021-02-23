@@ -182,7 +182,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 
 func startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) (*streamSend, edgeproto.CloudletApi_CreateCloudletServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: *key}}
-	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
+	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb, DonotSaveOnStreamObj)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start Cloudlet stream", "err", err)
 		return nil, inCb, err
@@ -1487,6 +1487,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	// CRM connected the whole time, we will end up without cloudletInfo.
 	cloudletPoolApi.cloudletDeleted(ctx, &in.Key)
 	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
+	autoProvInfoApi.Delete(ctx, &edgeproto.AutoProvInfo{Key: in.Key}, 0)
+	alertApi.CleanupCloudletAlerts(ctx, &in.Key)
 	return nil
 }
 
