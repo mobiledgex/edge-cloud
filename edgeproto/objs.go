@@ -39,6 +39,21 @@ var ReservedPlatformPorts = map[string]string{
 	"tcp:20800": "Kubernetes master join server",
 }
 
+type WaitStateSpec struct {
+	StreamCache *StreamObjCache
+	StreamKey   *AppInstKey
+}
+
+type WaitStateOps func(wSpec *WaitStateSpec) error
+
+func WithStreamObj(streamCache *StreamObjCache, streamKey *AppInstKey) WaitStateOps {
+	return func(wSpec *WaitStateSpec) error {
+		wSpec.StreamCache = streamCache
+		wSpec.StreamKey = streamKey
+		return nil
+	}
+}
+
 // sort each slice by key
 func (a *AllData) Sort() {
 	sort.Slice(a.AppInstances[:], func(i, j int) bool {
@@ -933,22 +948,6 @@ func (s *CloudletPool) GetCloudletKeys() map[CloudletKey]struct{} {
 	return keys
 }
 
-// Status from info will always contain the full status update list,
-// changes we copy to status that is saved to etcd is only the diff
-// from the last update.
-func UpdateStatusDiff(infoStatus *StatusInfo, diffStatus *StatusInfo) {
-	lastMsgId := int(diffStatus.MsgCount)
-	if lastMsgId < len(infoStatus.Msgs) {
-		diffStatus.Msgs = []string{}
-		for ii := lastMsgId; ii < len(infoStatus.Msgs); ii++ {
-			diffStatus.Msgs = append(diffStatus.Msgs, infoStatus.Msgs[ii])
-		}
-		diffStatus.MsgCount += uint32(len(diffStatus.Msgs))
-	} else {
-		diffStatus.Msgs = []string{}
-	}
-}
-
 func (s *AppInst) GetRealClusterName() string {
 	if s.RealClusterName != "" {
 		return s.RealClusterName
@@ -1012,4 +1011,25 @@ func (s *AppInstKey) FromAppInstRefKey(key *AppInstRefKey, clKey *CloudletKey) {
 	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
 	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
 	s.ClusterInstKey.CloudletKey = *clKey
+}
+
+func (s *StreamObj) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetStreamKeyFromClusterInstKey(key *VirtualClusterInstKey) AppInstKey {
+	return AppInstKey{
+		ClusterInstKey: *key,
+	}
+}
+
+func GetStreamKeyFromCloudletKey(key *CloudletKey) AppInstKey {
+	return AppInstKey{
+		ClusterInstKey: VirtualClusterInstKey{
+			CloudletKey: *key,
+		},
+	}
 }

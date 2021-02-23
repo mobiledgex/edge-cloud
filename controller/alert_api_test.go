@@ -38,6 +38,42 @@ func TestAlertApi(t *testing.T) {
 	}
 	testutil.InternalAlertTest(t, "show", &alertApi, testutil.AlertData)
 
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testCloudlet := testutil.CloudletData[0]
+	testCloudlet.Key.Name = "testcloudlet"
+	testutil.InternalCloudletCreate(t, &cloudletApi, []edgeproto.Cloudlet{testCloudlet})
+	testCloudletInfo := testutil.CloudletInfoData[0]
+	testCloudletInfo.Key.Name = testCloudlet.Key.Name
+	insertCloudletInfo(ctx, []edgeproto.CloudletInfo{testCloudletInfo})
+	getAlertsCount := func() (int, int) {
+		count := 0
+		totalCount := 0
+		for _, data := range alertApi.cache.Objs {
+			val := data.Obj
+			totalCount++
+			if cloudletName, found := val.Labels[edgeproto.CloudletKeyTagName]; !found ||
+				cloudletName != testCloudlet.Key.Name {
+				continue
+			}
+			if cloudletOrg, found := val.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+				cloudletOrg != testCloudlet.Key.Organization {
+				continue
+			}
+			count++
+		}
+		return count, totalCount
+	}
+	cloudletCount, totalCount := getAlertsCount()
+	require.Greater(t, cloudletCount, 0, "cloudlet alerts exists")
+	require.Greater(t, totalCount, 0, "alerts exists")
+	err := cloudletApi.DeleteCloudlet(&testCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err, "delete cloudlet")
+	expectedTotalCount := totalCount - cloudletCount
+	cloudletCount, totalCount = getAlertsCount()
+	require.Equal(t, cloudletCount, 0, "cloudlet alerts should not exist")
+	require.Equal(t, totalCount, expectedTotalCount, "expected alerts should exist")
+
 	dummy.Stop()
 }
 

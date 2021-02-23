@@ -3838,12 +3838,44 @@ func (c *AppInstCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error) error {
+func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
-	done := make(chan bool, 1)
+	done := make(chan string, 1)
 	failed := make(chan bool, 1)
-	var lastMsg string
+	var lastMsgCnt int
 	var err error
+
+	var wSpec WaitStateSpec
+	for _, op := range opts {
+		if err := op(&wSpec); err != nil {
+			return err
+		}
+	}
+
+	var streamCancel context.CancelFunc
+	if wSpec.StreamCache != nil {
+		checkStreamMsg := func() {
+			streamObj := StreamObj{}
+			if !wSpec.StreamCache.Get(wSpec.StreamKey, &streamObj) {
+				return
+			}
+			if len(streamObj.Status.Msgs) > 0 || streamObj.Status.MsgCount > 0 {
+				if lastMsgCnt < int(streamObj.Status.MsgCount) {
+					for ii := 0; ii < len(streamObj.Status.Msgs); ii++ {
+						send(&Result{Message: streamObj.Status.Msgs[ii]})
+						lastMsgCnt++
+					}
+				}
+			}
+		}
+
+		streamCancel = wSpec.StreamCache.WatchKey(wSpec.StreamKey, func(ctx context.Context) {
+			checkStreamMsg()
+		})
+
+		// After setting up watch, check if any status messages were received in the meantime
+		checkStreamMsg()
+	}
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := AppInst{}
@@ -3852,42 +3884,16 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		} else {
 			curState = TrackedState_NOT_PRESENT
 		}
-		if send != nil {
-			if curState == TrackedState_NOT_PRESENT {
-				msg := TrackedState_CamelName[int32(curState)]
-				if lastMsg != msg {
-					send(&Result{Message: msg})
-					lastMsg = msg
-				}
-			} else {
-				if len(info.Status.Msgs) > 0 || info.Status.MsgCount > 0 {
-					for ii := 0; ii < len(info.Status.Msgs); ii++ {
-						if lastMsg == info.Status.Msgs[ii] {
-							continue
-						}
-						send(&Result{Message: info.Status.Msgs[ii]})
-						lastMsg = info.Status.Msgs[ii]
-					}
-				} else {
-					// for backwards compatibility
-					statusString := info.Status.ToString()
-					var msg string
-					if statusString != "" {
-						msg = statusString
-					} else {
-						msg = TrackedState_CamelName[int32(curState)]
-					}
-					lastMsg = msg
-					send(&Result{Message: msg})
-				}
-			}
-		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for AppInst")
 		log.DebugLog(log.DebugLevelApi, "Watch event for AppInst", "key", key, "state", TrackedState_CamelName[int32(curState)], "status", info.Status)
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
-			done <- true
+			msg := ""
+			if curState == TrackedState_NOT_PRESENT {
+				msg = TrackedState_CamelName[int32(curState)]
+			}
+			done <- msg
 		}
 	})
 	// After setting up watch, check current state,
@@ -3899,11 +3905,18 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		curState = TrackedState_NOT_PRESENT
 	}
 	if curState == targetState {
-		done <- true
+		msg := ""
+		if curState == TrackedState_NOT_PRESENT {
+			msg = TrackedState_CamelName[int32(curState)]
+		}
+		done <- msg
 	}
 
 	select {
-	case <-done:
+	case doneMsg := <-done:
+		if doneMsg != "" {
+			send(&Result{Message: doneMsg})
+		}
 		err = nil
 		if successMsg != "" && send != nil {
 			send(&Result{Message: successMsg})
@@ -3940,6 +3953,9 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		}
 	}
 	cancel()
+	if streamCancel != nil {
+		streamCancel()
+	}
 	// note: do not close done/failed, garbage collector will deal with it.
 	return err
 }

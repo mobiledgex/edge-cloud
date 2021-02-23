@@ -353,3 +353,34 @@ var StreamObjApiCmds = []*cobra.Command{
 	StreamCloudletCmd.GenCmd(),
 	StreamLocalMsgsCmd.GenCmd(),
 }
+
+var StreamObjRequiredArgs = []string{
+	"key.appkey.organization",
+	"key.appkey.name",
+	"key.appkey.version",
+	"key.clusterinstkey.clusterkey.name",
+	"key.clusterinstkey.cloudletkey.organization",
+	"key.clusterinstkey.cloudletkey.name",
+	"key.clusterinstkey.organization",
+}
+var StreamObjOptionalArgs = []string{
+	"status.tasknumber",
+	"status.maxtasks",
+	"status.taskname",
+	"status.stepname",
+	"status.msgcount",
+	"status.msgs",
+}
+var StreamObjAliasArgs = []string{}
+var StreamObjComments = map[string]string{
+	"key.appkey.organization":                     "App developer organization",
+	"key.appkey.name":                             "App name",
+	"key.appkey.version":                          "App version",
+	"key.clusterinstkey.clusterkey.name":          "Cluster name",
+	"key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
+	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
+	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
+}
+var StreamObjSpecialArgs = map[string]string{
+	"status.msgs": "StringArray",
+}
