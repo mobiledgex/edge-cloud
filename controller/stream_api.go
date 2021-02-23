@@ -20,8 +20,8 @@ var (
 
 	StreamTimeout = 30 * time.Minute
 
-	EnableCRMStream  = true
-	DisableCRMStream = false
+	SaveOnStreamObj      = true
+	DonotSaveOnStreamObj = false
 )
 
 type streamSend struct {
@@ -144,7 +144,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	return err
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb, enableCrmStream bool) (*streamSend, error) {
+func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb, saveOnStreamObj bool) (*streamSend, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", key)
 	streamer := streamObjs.Get(*key)
 	if streamer != nil {
@@ -154,7 +154,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		}
 	}
 
-	if enableCrmStream {
+	if saveOnStreamObj {
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			streamObj := edgeproto.StreamObj{}
 			streamObj.Key = *key
