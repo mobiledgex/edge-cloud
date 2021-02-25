@@ -1125,52 +1125,58 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	cd.VMPoolUpdateMux.Lock()
 	defer cd.VMPoolUpdateMux.Unlock()
 
-	cd.VMPoolMux.Lock()
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "failed to verify VMs", "vms", validateVMs, "err", err)
-		// revert intermediate states
-		revertVMs := []edgeproto.VM{}
+	// New function block so that we can call defer on VMPoolMux Unlock
+	fErr := func() error {
+		cd.VMPoolMux.Lock()
+		defer cd.VMPoolMux.Unlock()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to verify VMs", "vms", validateVMs, "err", err)
+			// revert intermediate states
+			revertVMs := []edgeproto.VM{}
+			for _, vm := range cd.VMPool.Vms {
+				switch vm.State {
+				case edgeproto.VMState_VM_ADD:
+					continue
+				case edgeproto.VMState_VM_REMOVE:
+					vm.State = edgeproto.VMState_VM_FREE
+				case edgeproto.VMState_VM_UPDATE:
+					if oVM, ok := oldVMs[vm.Name]; ok {
+						vm = oVM
+					}
+					vm.State = edgeproto.VMState_VM_FREE
+				}
+				revertVMs = append(revertVMs, vm)
+			}
+			cd.VMPool.Vms = revertVMs
+			cd.UpdateVMPoolInfo(
+				ctx,
+				edgeproto.TrackedState_UPDATE_ERROR,
+				fmt.Sprintf("%v", err))
+			return err
+		}
+
+		newVMs := []edgeproto.VM{}
 		for _, vm := range cd.VMPool.Vms {
 			switch vm.State {
 			case edgeproto.VMState_VM_ADD:
-				continue
+				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
 			case edgeproto.VMState_VM_REMOVE:
-				vm.State = edgeproto.VMState_VM_FREE
+				continue
 			case edgeproto.VMState_VM_UPDATE:
-				if oVM, ok := oldVMs[vm.Name]; ok {
-					vm = oVM
-				}
 				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
+			default:
+				newVMs = append(newVMs, vm)
 			}
-			revertVMs = append(revertVMs, vm)
 		}
-		cd.VMPool.Vms = revertVMs
-		cd.UpdateVMPoolInfo(
-			ctx,
-			edgeproto.TrackedState_UPDATE_ERROR,
-			fmt.Sprintf("%v", err))
-		cd.VMPoolMux.Unlock()
+		// save VM to VM pool
+		cd.VMPool.Vms = newVMs
+		return nil
+	}()
+	if fErr != nil {
 		return
 	}
-
-	newVMs := []edgeproto.VM{}
-	for _, vm := range cd.VMPool.Vms {
-		switch vm.State {
-		case edgeproto.VMState_VM_ADD:
-			vm.State = edgeproto.VMState_VM_FREE
-			newVMs = append(newVMs, vm)
-		case edgeproto.VMState_VM_REMOVE:
-			continue
-		case edgeproto.VMState_VM_UPDATE:
-			vm.State = edgeproto.VMState_VM_FREE
-			newVMs = append(newVMs, vm)
-		default:
-			newVMs = append(newVMs, vm)
-		}
-	}
-	// save VM to VM pool
-	cd.VMPool.Vms = newVMs
-	cd.VMPoolMux.Unlock()
 
 	// calculate Flavor info and send CloudletInfo again
 	log.SpanLog(ctx, log.DebugLevelInfra, "gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey)
