@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-var RFC3339Millis = "2006-01-02T15:04:05.000Z0700"
-
 // Used for search queries to specify a time range
 type TimeRange struct {
 	StartTime time.Time     `json:"starttime"`
