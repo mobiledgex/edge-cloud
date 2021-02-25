@@ -76,6 +76,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["nocmp"]; found {
 		in.DefaultResourceAlertThreshold = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.HostController = ""
+	}
 }
 
 func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
@@ -954,6 +957,83 @@ func GenerateAccessKeys(c *cli.Command, data []edgeproto.CloudletKey, err *error
 	}
 }
 
+var PlatformDeleteCloudletCmd = &cli.Command{
+	Use:          "PlatformDeleteCloudlet",
+	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
+	SpecialArgs:  &CloudletSpecialArgs,
+	Comments:     CloudletComments,
+	ReqData:      &edgeproto.Cloudlet{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runPlatformDeleteCloudlet,
+}
+
+func runPlatformDeleteCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.Cloudlet)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return PlatformDeleteCloudlet(c, obj)
+}
+
+func PlatformDeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletApiCmd.PlatformDeleteCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("PlatformDeleteCloudlet failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("PlatformDeleteCloudlet recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func PlatformDeleteCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("PlatformDeleteCloudlet %v\n", data[ii])
+		myerr := PlatformDeleteCloudlet(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var CloudletApiCmds = []*cobra.Command{
 	CreateCloudletCmd.GenCmd(),
 	DeleteCloudletCmd.GenCmd(),
@@ -968,6 +1048,7 @@ var CloudletApiCmds = []*cobra.Command{
 	FindFlavorMatchCmd.GenCmd(),
 	RevokeAccessKeyCmd.GenCmd(),
 	GenerateAccessKeyCmd.GenCmd(),
+	PlatformDeleteCloudletCmd.GenCmd(),
 }
 
 var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
@@ -1299,8 +1380,7 @@ var PlatformConfigOptionalArgs = []string{
 	"cleanupmode",
 	"region",
 	"commercialcerts",
-	"usevaultcerts",
-	"usevaultcas",
+	"usevaultpki",
 	"appdnsroot",
 	"chefserverpath",
 	"chefclientinterval",
@@ -1323,8 +1403,7 @@ var PlatformConfigComments = map[string]string{
 	"cleanupmode":           "Internal cleanup flag",
 	"region":                "Region",
 	"commercialcerts":       "Get certs from vault or generate your own for the root load balancer",
-	"usevaultcerts":         "Use Vault certs for internal TLS communication",
-	"usevaultcas":           "Use Vault CAs to authenticate TLS communication",
+	"usevaultpki":           "Use Vault certs and CAs for internal TLS communication",
 	"appdnsroot":            "App domain name root",
 	"chefserverpath":        "Path to Chef Server",
 	"chefclientinterval":    "Chef client interval",
@@ -1466,8 +1545,7 @@ var CloudletComments = map[string]string{
 	"config.cleanupmode":                  "Internal cleanup flag",
 	"config.region":                       "Region",
 	"config.commercialcerts":              "Get certs from vault or generate your own for the root load balancer",
-	"config.usevaultcerts":                "Use Vault certs for internal TLS communication",
-	"config.usevaultcas":                  "Use Vault CAs to authenticate TLS communication",
+	"config.usevaultpki":                  "Use Vault certs and CAs for internal TLS communication",
 	"config.appdnsroot":                   "App domain name root",
 	"config.chefserverpath":               "Path to Chef Server",
 	"config.chefclientinterval":           "Chef client interval",
@@ -1494,6 +1572,7 @@ var CloudletComments = map[string]string{
 	"resourcequotas:#.value":              "Quota value of the resource",
 	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
 	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
+	"hostcontroller":                      "Addr of the controller hosting the cloudlet services if it is running locally",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",

@@ -181,7 +181,7 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 
 func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}
-	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
+	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb, SaveOnStreamObj)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
 		return nil, inCb, err
@@ -825,7 +825,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions, edgeproto.TrackedState_CREATE_ERROR, settingsApi.Get().CreateClusterInstTimeout.TimeDuration(), "Created ClusterInst successfully", cb.Send)
+	streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions,
+		edgeproto.TrackedState_CREATE_ERROR, settingsApi.Get().CreateClusterInstTimeout.TimeDuration(),
+		"Created ClusterInst successfully", cb.Send,
+		edgeproto.WithStreamObj(&streamObjApi.cache, &streamKey))
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
@@ -980,7 +984,13 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(), "Updated ClusterInst successfully", cb.Send)
+	streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY,
+		UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
+		settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(),
+		"Updated ClusterInst successfully", cb.Send,
+		edgeproto.WithStreamObj(&streamObjApi.cache, &streamKey),
+	)
 	if err == nil {
 		s.updateCloudletResourcesMetric(ctx, in)
 	}
@@ -1073,6 +1083,11 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	defer func() {
 		if reterr == nil {
 			RecordClusterInstEvent(context.WithValue(ctx, in.Key, *in), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			streamObj := edgeproto.StreamObj{}
+			streamObj.Key = edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+			if cErr := streamObjApi.CleanupStreamObj(ctx, &streamObj); cErr != nil {
+				log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup streamobj", "key", streamObj.Key, "err", cErr)
+			}
 		}
 	}()
 
@@ -1156,7 +1171,13 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR, settingsApi.Get().DeleteClusterInstTimeout.TimeDuration(), "Deleted ClusterInst successfully", cb.Send)
+	streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+	err = clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
+		DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
+		settingsApi.Get().DeleteClusterInstTimeout.TimeDuration(),
+		"Deleted ClusterInst successfully", cb.Send,
+		edgeproto.WithStreamObj(&streamObjApi.cache, &streamKey),
+	)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
@@ -1239,6 +1260,11 @@ func ignoreCRM(cctx *CallContext) bool {
 
 func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) {
 	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "state", in.State, "status", in.Status, "resources", in.Resources)
+
+	// update only diff of status msgs
+	streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+	streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
+
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -1246,11 +1272,9 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		inst.Resources = in.Resources
-		// update only diff of status msgs
-		edgeproto.UpdateStatusDiff(&in.Status, &inst.Status)
+
 		if inst.State == in.State {
 			log.SpanLog(ctx, log.DebugLevelApi, "no state change")
-			s.store.STMPut(stm, &inst)
 			return nil
 		}
 		// please see state_transitions.md

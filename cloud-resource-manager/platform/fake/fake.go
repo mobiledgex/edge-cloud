@@ -438,6 +438,10 @@ func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (strin
 	return "", fmt.Errorf("no console server to fetch URL from")
 }
 
+func (s *Platform) IsCloudletServicesLocal() bool {
+	return true
+}
+
 func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "create fake cloudlet", "key", cloudlet.Key)
 	if cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS {

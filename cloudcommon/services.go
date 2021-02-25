@@ -51,8 +51,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	cloudletVMImagePath := ""
 	region := ""
 	commercialCerts := false
-	useVaultCAs := false
-	useVaultCerts := false
+	useVaultPki := false
 	appDNSRoot := ""
 	chefServerPath := ""
 	deploymentTag := ""
@@ -70,8 +69,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		cloudletVMImagePath = pfConfig.CloudletVmImagePath
 		region = pfConfig.Region
 		commercialCerts = pfConfig.CommercialCerts
-		useVaultCAs = pfConfig.UseVaultCas
-		useVaultCerts = pfConfig.UseVaultCerts
+		useVaultPki = pfConfig.UseVaultPki
 		appDNSRoot = pfConfig.AppDnsRoot
 		chefServerPath = pfConfig.ChefServerPath
 		deploymentTag = pfConfig.DeploymentTag
@@ -106,8 +104,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		CloudletVMImagePath: cloudletVMImagePath,
 		Region:              region,
 		CommercialCerts:     commercialCerts,
-		UseVaultCAs:         useVaultCAs,
-		UseVaultCerts:       useVaultCerts,
+		UseVaultPki:         useVaultPki,
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
 		DeploymentTag:       deploymentTag,

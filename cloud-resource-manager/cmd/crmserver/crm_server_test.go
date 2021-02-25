@@ -172,7 +172,8 @@ func TestCRM(t *testing.T) {
 		KeyServer: keyServer,
 	}
 	getPublicCertApi := &cloudcommon.TestPublicCertApi{}
-	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
+	publicCertManager, err := node.NewPublicCertManager("localhost", getPublicCertApi, "", "")
+	require.Nil(t, err)
 	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	require.Nil(t, err)
 	accessKeyGrpcServer.Start("127.0.0.1:0", keyServer, tlsConfig, func(server *grpc.Server) {
@@ -277,7 +278,7 @@ func TestNotifyOrder(t *testing.T) {
 	_, _, err := nodeMgr.Init(node.NodeTypeCRM, node.NoTlsClientIssuer)
 	require.Nil(t, err)
 	defer nodeMgr.Finish()
-	controllerData = crmutil.NewControllerData(nil, &nodeMgr)
+	controllerData = crmutil.NewControllerData(nil, &edgeproto.CloudletKey{}, &nodeMgr)
 	mgr := notify.ServerMgr{}
 	initSrvNotify(&mgr)
 	testservices.CheckNotifySendOrder(t, mgr.GetSendOrder())

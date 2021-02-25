@@ -29,7 +29,8 @@ func ParseGrpcMethod(method string) (path string, cmd string) {
 
 type GrpcGWConfig struct {
 	ApiAddr        string
-	GetCertificate func(*ctls.ClientHelloInfo) (*ctls.Certificate, error)
+	GetCertificate func(*ctls.CertificateRequestInfo) (*ctls.Certificate, error)
+	TlsCertFile    string
 	ApiHandles     []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error
 }
 
@@ -37,9 +38,14 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	ctx := context.Background()
 	// GRPC GW does not validate the GRPC server cert because it may be public signed and therefore
 	// may not work with internal addressing
-	dialOption, err := tls.GetTLSClientDialOption(cfg.ApiAddr, "", true)
+	skipVerify := true
+	tlsMode := tls.MutualAuthTLS
+	if cfg.GetCertificate == nil && cfg.TlsCertFile == "" {
+		tlsMode = tls.NoTLS
+	}
+	dialOption, err := tls.GetTLSClientDialOption(tlsMode, cfg.ApiAddr, cfg.GetCertificate, cfg.TlsCertFile, skipVerify)
 	if err != nil {
-		log.FatalLog("Unable to get TLSClient Dial Option")
+		log.FatalLog("Unable to get TLSClient Dial Option", "error", err)
 	}
 	conn, err := grpc.DialContext(ctx, cfg.ApiAddr, dialOption)
 	if err != nil {
@@ -67,10 +73,22 @@ func GrpcGateway(cfg *GrpcGWConfig) (http.Handler, error) {
 	return mux, nil
 }
 
-func GrpcGatewayServe(cfg *GrpcGWConfig, server *http.Server) {
+func GrpcGatewayServe(server *http.Server, tlsCertFile string) {
 	// Serve REST gateway
-	if err := server.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
-		log.FatalLog("Failed to serve HTTP TLS", "error", err)
+	cfg := server.TLSConfig
+	if cfg == nil || (cfg.GetCertificate == nil && tlsCertFile == "") {
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.FatalLog("Failed to serve HTTP", "error", err)
+		}
+	} else if cfg.GetCertificate != nil {
+		if err := server.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
+			log.FatalLog("Failed to serve HTTP TLS", "error", err)
+		}
+	} else {
+		tlsKeyFile := strings.Replace(tlsCertFile, ".crt", ".key", -1)
+		if err := server.ListenAndServeTLS(tlsCertFile, tlsKeyFile); err != http.ErrServerClosed {
+			log.FatalLog("Failed to serve HTTP TLS", "error", err)
+		}
 	}
 }
 

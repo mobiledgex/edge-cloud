@@ -261,7 +261,8 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	defer ctrlMgr.Stop()
 
 	getPublicCertApi := &cloudcommon.TestPublicCertApi{}
-	publicCertManager := node.NewPublicCertManager("localhost", getPublicCertApi)
+	publicCertManager, err := node.NewPublicCertManager("localhost", getPublicCertApi, "", "")
+	require.Nil(t, err)
 	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	require.Nil(t, err)
 	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, tlsConfig, func(accessServer *grpc.Server) {
@@ -468,8 +469,14 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
+	found := autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
+	require.True(t, found, "autoprovinfo for cloudlet exists")
+
 	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
+
+	found = autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
+	require.False(t, found, "autoprovinfo for cloudlet should be cleaned up")
 }
 
 func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet) {
