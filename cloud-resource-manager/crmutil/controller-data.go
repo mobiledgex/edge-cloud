@@ -19,6 +19,7 @@ import (
 //ControllerData contains cache data for controller
 type ControllerData struct {
 	platform                    platform.Platform
+	cloudletKey                 edgeproto.CloudletKey
 	AppCache                    edgeproto.AppCache
 	AppInstCache                edgeproto.AppInstCache
 	CloudletCache               edgeproto.CloudletCache
@@ -43,6 +44,7 @@ type ControllerData struct {
 	NodeMgr                     *node.NodeMgr
 	VMPool                      edgeproto.VMPool
 	VMPoolMux                   sync.Mutex
+	VMPoolUpdateMux             sync.Mutex
 	updateVMWorkers             tasks.KeyWorkers
 	updateTrustPolicyKeyworkers tasks.KeyWorkers
 	vmActionRefMux              sync.Mutex
@@ -60,9 +62,10 @@ func (cd *ControllerData) RecvAllStart() {
 }
 
 // NewControllerData creates a new instance to track data from the controller
-func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerData {
+func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr *node.NodeMgr) *ControllerData {
 	cd := &ControllerData{}
 	cd.platform = pf
+	cd.cloudletKey = *key
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
@@ -1118,57 +1121,79 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 		err = cd.platform.VerifyVMs(ctx, validateVMs)
 	}
 
-	cd.VMPoolMux.Lock()
-	defer cd.VMPoolMux.Unlock()
+	// Update lock to update VMPool & gather new flavor list (cloudletinfo)
+	cd.VMPoolUpdateMux.Lock()
+	defer cd.VMPoolUpdateMux.Unlock()
 
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "failed to verify VMs", "vms", validateVMs, "err", err)
-		// revert intermediate states
-		revertVMs := []edgeproto.VM{}
+	// New function block so that we can call defer on VMPoolMux Unlock
+	fErr := func() error {
+		cd.VMPoolMux.Lock()
+		defer cd.VMPoolMux.Unlock()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to verify VMs", "vms", validateVMs, "err", err)
+			// revert intermediate states
+			revertVMs := []edgeproto.VM{}
+			for _, vm := range cd.VMPool.Vms {
+				switch vm.State {
+				case edgeproto.VMState_VM_ADD:
+					continue
+				case edgeproto.VMState_VM_REMOVE:
+					vm.State = edgeproto.VMState_VM_FREE
+				case edgeproto.VMState_VM_UPDATE:
+					if oVM, ok := oldVMs[vm.Name]; ok {
+						vm = oVM
+					}
+					vm.State = edgeproto.VMState_VM_FREE
+				}
+				revertVMs = append(revertVMs, vm)
+			}
+			cd.VMPool.Vms = revertVMs
+			cd.UpdateVMPoolInfo(
+				ctx,
+				edgeproto.TrackedState_UPDATE_ERROR,
+				fmt.Sprintf("%v", err))
+			return err
+		}
+
+		newVMs := []edgeproto.VM{}
 		for _, vm := range cd.VMPool.Vms {
 			switch vm.State {
 			case edgeproto.VMState_VM_ADD:
-				continue
+				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
 			case edgeproto.VMState_VM_REMOVE:
-				vm.State = edgeproto.VMState_VM_FREE
+				continue
 			case edgeproto.VMState_VM_UPDATE:
-				if oVM, ok := oldVMs[vm.Name]; ok {
-					vm = oVM
-				}
 				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
+			default:
+				newVMs = append(newVMs, vm)
 			}
-			revertVMs = append(revertVMs, vm)
 		}
-		cd.VMPool.Vms = revertVMs
-		cd.UpdateVMPoolInfo(
-			ctx,
-			edgeproto.TrackedState_UPDATE_ERROR,
-			fmt.Sprintf("%v", err))
+		// save VM to VM pool
+		cd.VMPool.Vms = newVMs
+		return nil
+	}()
+	if fErr != nil {
 		return
 	}
 
-	newVMs := []edgeproto.VM{}
-	for _, vm := range cd.VMPool.Vms {
-		switch vm.State {
-		case edgeproto.VMState_VM_ADD:
-			vm.State = edgeproto.VMState_VM_FREE
-			newVMs = append(newVMs, vm)
-		case edgeproto.VMState_VM_REMOVE:
-			continue
-		case edgeproto.VMState_VM_UPDATE:
-			vm.State = edgeproto.VMState_VM_FREE
-			newVMs = append(newVMs, vm)
-		default:
-			newVMs = append(newVMs, vm)
-		}
+	// calculate Flavor info and send CloudletInfo again
+	log.SpanLog(ctx, log.DebugLevelInfra, "gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey)
+	var cloudletInfo edgeproto.CloudletInfo
+	if !cd.CloudletInfoCache.Get(&cd.cloudletKey, &cloudletInfo) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to update vmpool flavors, missing cloudletinfo", "vmpool", key, "cloudlet", cd.cloudletKey)
+		return
 	}
-	// save VM to VM pool
-	cd.VMPool.Vms = newVMs
+	err = cd.platform.GatherCloudletInfo(ctx, &cloudletInfo)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey, "err", err)
+		return
+	}
+	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 	// notify controller
 	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
-
-	// TODO calculate Flavor info and send CloudletInfo again
 }
 
 func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) {
