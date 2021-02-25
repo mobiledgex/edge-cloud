@@ -1,6 +1,7 @@
 package node
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 func TestEvents(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelEvents)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelEvents | log.DebugLevelInfo)
 
 	// elasticsearch docker takes a while to start up (~20s),
 	// so make sure to include all unit-testing against it here.
@@ -23,6 +24,20 @@ func TestEvents(t *testing.T) {
 	err := esProc.StartLocal("")
 	require.Nil(t, err)
 	defer esProc.StopLocal()
+
+	// start Jaeger to test searching spans in elasticsearch
+	jaegerProc := process.Jaeger{}
+	jaegerProc.Common.Name = "jaeger-unit-test"
+	jaegerProc.DockerEnvVars = make(map[string]string)
+	jaegerProc.DockerEnvVars["ES_SERVER_URLS"] = "http://elasticsearch:9200"
+	jaegerProc.DockerEnvVars["SPAN_STORAGE_TYPE"] = "elasticsearch"
+	jaegerProc.Links = []string{"elasticsearch-unit-test:elasticsearch"}
+	err = jaegerProc.StartLocalNoTraefik("")
+	require.Nil(t, err)
+	defer jaegerProc.StopLocal()
+
+	// set true otherwise logger will not log spans for unit-tests
+	log.JaegerUnitTest = true
 
 	// events rely on nodeMgr
 	nodeMgr := NodeMgr{}
@@ -89,10 +104,44 @@ func TestEvents(t *testing.T) {
 	keyTags[edgeproto.CloudletKeyTagName] = "cloudlet1"
 	nodeMgr.EventAtTime(ctx, "update AppInst", org, "event", keyTags, nil, ts)
 
+	//
+	// ---------------------------------------------------
+	// Span logs test data
+	// ---------------------------------------------------
+	//
+	span := log.StartSpan(log.DebugLevelInfo, "span1")
+	sctx := log.ContextWithSpan(context.Background(), span)
+	log.SpanLog(sctx, log.DebugLevelInfo, "span1-msg1", "key1", "somevalue")
+	log.SpanLog(sctx, log.DebugLevelInfo, "msg2")
+	span.Finish()
+
+	span = log.StartSpan(log.DebugLevelInfo, "span2")
+	sctx = log.ContextWithSpan(context.Background(), span)
+	log.SpanLog(sctx, log.DebugLevelInfo, "span2-msg1", "key2", "foooobar")
+	log.SpanLog(sctx, log.DebugLevelInfo, "msg2")
+	span.Finish()
+
+	span = log.StartSpan(log.DebugLevelInfo, "span3")
+	sctx = log.ContextWithSpan(context.Background(), span)
+	log.SpanLog(sctx, log.DebugLevelInfo, "msg3")
+	log.SpanLog(sctx, log.DebugLevelInfo, "msg3", "key2", "foooobar")
+	span.Finish()
+
+	span = log.StartSpan(log.DebugLevelInfo, "span4")
+	sctx = log.ContextWithSpan(context.Background(), span)
+	log.SpanLog(sctx, log.DebugLevelInfo, "span4-msg1", "anotherkey", "anothervalue")
+	log.SpanLog(sctx, log.DebugLevelInfo, "msg3")
+	span.Finish()
+
 	// wait for queued events to be written to ES
-	waitEvents(t, &nodeMgr)
+	waitEvents(t, &nodeMgr, 7)
+	// wait for queued spans to be written
+	waitSpans(t, 5) // one extra because nodeMgr creates one
+
+	endtime := time.Now()
+
 	// for some reason ES is not ready immediately for searching
-	time.Sleep(2 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	//
 	// ---------------------------------------------------
@@ -100,44 +149,55 @@ func TestEvents(t *testing.T) {
 	// ---------------------------------------------------
 	//
 
+	aggr := func(name string, count int) AggrVal {
+		return AggrVal{
+			Key:      name,
+			DocCount: count,
+		}
+	}
+
 	// check terms aggregations over all events
 	search := EventSearch{
 		TimeRange: util.TimeRange{
 			StartTime: starttime,
-			EndTime:   time.Now(),
+			EndTime:   endtime,
 		},
 		Limit: 100,
 	}
 	terms, err := nodeMgr.EventTerms(ctx, &search)
 	require.Nil(t, err)
 	expectedTerms := EventTerms{
-		Names: []string{
-			"cloudlet online",
-			"controller start",
-			"create AppInst",
-			"delete AppInst",
-			"test start",
-			"update AppInst",
+		Names: []AggrVal{
+			aggr("create AppInst", 2),
+			aggr("cloudlet online", 1),
+			aggr("controller start", 1),
+			aggr("delete AppInst", 1),
+			aggr("test start", 1),
+			aggr("update AppInst", 1),
 		},
-		Orgs:    []string{NoOrg, org, operOrg},
-		Types:   []string{"event"},
-		Regions: []string{"unit-test"},
-		TagKeys: []string{
-			edgeproto.AppKeyTagName,
-			edgeproto.AppKeyTagOrganization,
-			edgeproto.AppKeyTagVersion,
-			edgeproto.CloudletKeyTagName,
-			edgeproto.CloudletKeyTagOrganization,
-			edgeproto.ClusterKeyTagName,
-			edgeproto.ClusterInstKeyTagOrganization,
-			"hostname",
-			"lineno",
-			"node",
-			"noderegion",
-			"nodetype",
-			"spanid",
-			"the reason",
-			"traceid",
+		Orgs: []AggrVal{
+			aggr(org, 4),
+			aggr(NoOrg, 2),
+			aggr(operOrg, 2),
+		},
+		Types:   []AggrVal{aggr("event", 7)},
+		Regions: []AggrVal{aggr("unit-test", 7)},
+		TagKeys: []AggrVal{
+			aggr("hostname", 7),
+			aggr("lineno", 7),
+			aggr("spanid", 7),
+			aggr("traceid", 7),
+			aggr(edgeproto.CloudletKeyTagName, 6),
+			aggr(edgeproto.CloudletKeyTagOrganization, 6),
+			aggr(edgeproto.AppKeyTagName, 4),
+			aggr(edgeproto.AppKeyTagOrganization, 4),
+			aggr(edgeproto.AppKeyTagVersion, 4),
+			aggr(edgeproto.ClusterKeyTagName, 4),
+			aggr(edgeproto.ClusterInstKeyTagOrganization, 4),
+			aggr("the reason", 2),
+			aggr("node", 1),
+			aggr("noderegion", 1),
+			aggr("nodetype", 1),
 		},
 	}
 	require.Equal(t, expectedTerms, *terms)
@@ -148,27 +208,30 @@ func TestEvents(t *testing.T) {
 	terms, err = nodeMgr.EventTerms(ctx, &es)
 	require.Nil(t, err)
 	expectedTerms = EventTerms{
-		Names: []string{
-			"create AppInst",
-			"delete AppInst",
-			"update AppInst",
+		Names: []AggrVal{
+			aggr("create AppInst", 2),
+			aggr("delete AppInst", 1),
+			aggr("update AppInst", 1),
 		},
-		Orgs:    []string{org, operOrg},
-		Types:   []string{"event"},
-		Regions: []string{"unit-test"},
-		TagKeys: []string{
-			edgeproto.AppKeyTagName,
-			edgeproto.AppKeyTagOrganization,
-			edgeproto.AppKeyTagVersion,
-			edgeproto.CloudletKeyTagName,
-			edgeproto.CloudletKeyTagOrganization,
-			edgeproto.ClusterKeyTagName,
-			edgeproto.ClusterInstKeyTagOrganization,
-			"hostname",
-			"lineno",
-			"spanid",
-			"the reason",
-			"traceid",
+		Orgs: []AggrVal{
+			aggr(org, 4),
+			aggr(operOrg, 1),
+		},
+		Types:   []AggrVal{aggr("event", 4)},
+		Regions: []AggrVal{aggr("unit-test", 4)},
+		TagKeys: []AggrVal{
+			aggr(edgeproto.AppKeyTagName, 4),
+			aggr(edgeproto.AppKeyTagOrganization, 4),
+			aggr(edgeproto.AppKeyTagVersion, 4),
+			aggr(edgeproto.CloudletKeyTagName, 4),
+			aggr(edgeproto.CloudletKeyTagOrganization, 4),
+			aggr(edgeproto.ClusterKeyTagName, 4),
+			aggr(edgeproto.ClusterInstKeyTagOrganization, 4),
+			aggr("hostname", 4),
+			aggr("lineno", 4),
+			aggr("spanid", 4),
+			aggr("traceid", 4),
+			aggr("the reason", 2),
 		},
 	}
 	require.Equal(t, expectedTerms, *terms)
@@ -179,28 +242,71 @@ func TestEvents(t *testing.T) {
 	terms, err = nodeMgr.EventTerms(ctx, &es)
 	require.Nil(t, err)
 	expectedTerms = EventTerms{
-		Names: []string{
-			"cloudlet online",
-			"update AppInst",
+		Names: []AggrVal{
+			aggr("cloudlet online", 1),
+			aggr("update AppInst", 1),
 		},
-		Orgs:    []string{org, operOrg},
-		Types:   []string{"event"},
-		Regions: []string{"unit-test"},
-		TagKeys: []string{
-			edgeproto.AppKeyTagName,
-			edgeproto.AppKeyTagOrganization,
-			edgeproto.AppKeyTagVersion,
-			edgeproto.CloudletKeyTagName,
-			edgeproto.CloudletKeyTagOrganization,
-			edgeproto.ClusterKeyTagName,
-			edgeproto.ClusterInstKeyTagOrganization,
-			"hostname",
-			"lineno",
-			"spanid",
-			"traceid",
+		Orgs: []AggrVal{
+			aggr(operOrg, 2),
+			aggr(org, 1),
+		},
+		Types:   []AggrVal{aggr("event", 2)},
+		Regions: []AggrVal{aggr("unit-test", 2)},
+		TagKeys: []AggrVal{
+			aggr(edgeproto.CloudletKeyTagName, 2),
+			aggr(edgeproto.CloudletKeyTagOrganization, 2),
+			aggr("hostname", 2),
+			aggr("lineno", 2),
+			aggr("spanid", 2),
+			aggr("traceid", 2),
+			aggr(edgeproto.AppKeyTagName, 1),
+			aggr(edgeproto.AppKeyTagOrganization, 1),
+			aggr(edgeproto.AppKeyTagVersion, 1),
+			aggr(edgeproto.ClusterKeyTagName, 1),
+			aggr(edgeproto.ClusterInstKeyTagOrganization, 1),
 		},
 	}
 	require.Equal(t, expectedTerms, *terms)
+
+	//
+	// ---------------------------------------------------
+	// Tests for span term aggregations
+	// ---------------------------------------------------
+	//
+	spansearch := SpanSearch{
+		TimeRange: util.TimeRange{
+			StartTime: starttime,
+			EndTime:   endtime,
+		},
+		Limit: 100,
+	}
+	sterms, err := nodeMgr.SpanTerms(ctx, &spansearch)
+	require.Nil(t, err)
+	expectedSpanTerms := &SpanTerms{
+		Operations: []AggrVal{
+			aggr("init-es-events", 1),
+			aggr("span1", 1),
+			aggr("span2", 1),
+			aggr("span3", 1),
+			aggr("span4", 1),
+		},
+		Services: []AggrVal{
+			aggr("node.test", 5),
+		},
+		Msgs: []AggrVal{
+			aggr("msg3", 3),
+			aggr("msg2", 2),
+			aggr("queued event", 1),
+			aggr("span1-msg1", 1),
+			aggr("span2-msg1", 1),
+			aggr("span4-msg1", 1),
+			aggr("write event-log index template", 1),
+		},
+	}
+	// ignore tags and hostnames
+	sterms.Tags = nil
+	sterms.Hostnames = nil
+	require.Equal(t, expectedSpanTerms, sterms)
 
 	//
 	// ---------------------------------------------------
@@ -635,12 +741,27 @@ func TestEvents(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func waitEvents(t *testing.T, nm *NodeMgr) {
+func waitEvents(t *testing.T, nm *NodeMgr, num uint64) {
 	for ii := 0; ii < 20; ii++ {
-		if len(nm.esEvents) == 0 {
+		fmt.Printf("waitEvents %d: %d\n", ii, nm.ESWroteEvents)
+		if nm.ESWroteEvents == num {
 			break
 		}
 		time.Sleep(1000 * time.Millisecond)
 	}
-	require.Equal(t, 0, len(nm.esEvents))
+	require.Equal(t, num, nm.ESWroteEvents)
+}
+
+func waitSpans(t *testing.T, num int64) {
+	name := "jaeger.tracer.reporter_spans|result=ok"
+	counters := map[string]int64{}
+	for ii := 0; ii < 20; ii++ {
+		counters, _ = log.ReporterMetrics.Snapshot()
+		fmt.Printf("waitSpans %d: %v\n", ii, counters)
+		if counters[name] == num {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	require.Equal(t, num, counters[name])
 }

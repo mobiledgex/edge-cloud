@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var RFC3339Millis = "2006-01-02T15:04:05.000Z0700"
+
 // Used for search queries to specify a time range
 type TimeRange struct {
 	StartTime time.Time     `json:"starttime"`
@@ -45,4 +47,16 @@ func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 		return fmt.Errorf("start time must be before (older than) end time")
 	}
 	return nil
+}
+
+// Get the number of milliseconds since epoch for the time.
+// This is used for ElasticSearch.
+func GetEpochMillis(t time.Time) int64 {
+	return (t.Unix()*1e3 + int64(t.Nanosecond())/1e6)
+}
+
+func TimeFromEpochMicros(us int64) time.Time {
+	sec := us / 1e6
+	ns := (us % 1e6) * 1e3
+	return time.Unix(sec, ns)
 }

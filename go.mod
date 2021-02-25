@@ -23,7 +23,6 @@ require (
 	github.com/coreos/bbolt v1.3.2 // indirect
 	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
-	github.com/coreos/go-systemd v0.0.0-20181012123002-c6f51f82210d // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/creack/pty v1.1.10
 	github.com/daviddengcn/go-colortext v0.0.0-20171126034257-17e75f6184bc
@@ -44,7 +43,6 @@ require (
 	github.com/go-openapi/swag v0.19.9
 	github.com/go-openapi/validate v0.19.11
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
-	github.com/gocql/gocql v0.0.0-20190402132108-0e1d5de854df // indirect
 	github.com/gogo/gateway v1.0.0
 	github.com/gogo/googleapis v1.1.0
 	github.com/gogo/protobuf v1.3.1
@@ -59,21 +57,21 @@ require (
 	github.com/gophercloud/gophercloud v0.8.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.14.1
+	github.com/grpc-ecosystem/grpc-gateway v1.14.5
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.2.1 // indirect
 	github.com/hashicorp/vault v1.4.2 // indirect
 	github.com/hashicorp/vault/api v1.0.5-0.20200317185738-82f498082f02
 	github.com/influxdata/influxdb v1.7.7
+	github.com/jaegertracing/jaeger v1.21.0
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jcelliott/lumber v0.0.0-20160324203708-dd349441af25 // indirect
 	github.com/jefferai/jsonx v1.0.0 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/keybase/go-crypto v0.0.0-20190403132359-d65b6b94177f // indirect
-	github.com/kr/pty v1.1.5 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mobiledgex/golang-ssh v0.0.10
@@ -86,25 +84,25 @@ require (
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.6.0 // indirect
-	github.com/prometheus/common v0.9.1
+	github.com/prometheus/common v0.10.0
 	github.com/segmentio/ksuid v1.0.2
 	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/cobra v0.0.4
+	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
 	github.com/uber-go/atomic v1.4.0 // indirect
-	github.com/uber/jaeger-client-go v2.16.1-0.20190705220040-402bec9e6ead+incompatible
-	github.com/uber/jaeger-lib v2.0.0+incompatible // indirect
+	github.com/uber/jaeger-client-go v2.23.1+incompatible
+	github.com/uber/jaeger-lib v2.4.0+incompatible
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	github.com/xtaci/smux v1.3.6
 	go.etcd.io/bbolt v1.3.5 // indirect
-	go.uber.org/zap v1.13.0
+	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb
 	google.golang.org/genproto v0.0.0-20200305110556-506484158171 // indirect
-	google.golang.org/grpc v1.27.1
+	google.golang.org/grpc v1.29.1
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/yaml.v2 v2.3.0
