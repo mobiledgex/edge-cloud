@@ -278,7 +278,7 @@ func TestNotifyOrder(t *testing.T) {
 	_, _, err := nodeMgr.Init(node.NodeTypeCRM, node.NoTlsClientIssuer)
 	require.Nil(t, err)
 	defer nodeMgr.Finish()
-	controllerData = crmutil.NewControllerData(nil, &nodeMgr)
+	controllerData = crmutil.NewControllerData(nil, &edgeproto.CloudletKey{}, &nodeMgr)
 	mgr := notify.ServerMgr{}
 	initSrvNotify(&mgr)
 	testservices.CheckNotifySendOrder(t, mgr.GetSendOrder())
