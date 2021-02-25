@@ -1,6 +1,7 @@
-package dind
+package xind
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"regexp"
@@ -8,18 +9,17 @@ import (
 	"strconv"
 	"strings"
 
-	sh "github.com/codeskyblue/go-sh"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	ssh "github.com/mobiledgex/golang-ssh"
 )
 
-func getMacLimits(info *edgeproto.CloudletInfo) error {
+func getMacLimits(ctx context.Context, client ssh.Client, info *edgeproto.CloudletInfo) error {
 	// get everything
-	s, err := sh.Command("sysctl", "-a").Output()
+	sysout, err := client.Output("sysctl -a")
 	if err != nil {
 		return err
 	}
-	sysout := string(s)
 
 	rmem, _ := regexp.Compile("hw.memsize:\\s+(\\d+)")
 	if rmem.MatchString(sysout) {
@@ -47,10 +47,9 @@ func getMacLimits(info *edgeproto.CloudletInfo) error {
 	return nil
 }
 
-func getLinuxLimits(info *edgeproto.CloudletInfo) error {
+func getLinuxLimits(ctx context.Context, client ssh.Client, info *edgeproto.CloudletInfo) error {
 	// get memory
-	m, err := sh.Command("grep", "MemTotal", "/proc/meminfo").Output()
-	memline := string(m)
+	memline, err := client.Output("grep MemTotal /proc/meminfo")
 	if err != nil {
 		return err
 	}
@@ -65,8 +64,7 @@ func getLinuxLimits(info *edgeproto.CloudletInfo) error {
 		memoryMb := math.Round((float64(memoryKb) / 1024))
 		info.OsMaxRam = uint64(memoryMb)
 	}
-	c, err := sh.Command("grep", "-c", "processor", "/proc/cpuinfo").Output()
-	cpuline := string(c)
+	cpuline, err := client.Output("grep -c processor /proc/cpuinfo")
 	cpuline = strings.TrimSpace(cpuline)
 	cpus, err := strconv.Atoi(cpuline)
 	if err != nil {
@@ -75,8 +73,7 @@ func getLinuxLimits(info *edgeproto.CloudletInfo) error {
 	info.OsMaxVcores = uint64(cpus)
 
 	// disk space
-	fd, err := sh.Command("fdisk", "-l").Output()
-	fdstr := string(fd)
+	fdstr, err := client.Output("fdisk -l")
 	rdisk, err := regexp.Compile("Disk\\s+\\S+:\\s+(\\d+)\\s+GiB")
 	if err != nil {
 		return err
@@ -90,19 +87,19 @@ func getLinuxLimits(info *edgeproto.CloudletInfo) error {
 		}
 		info.OsMaxVolGb = uint64(diskGb)
 	}
-	log.DebugLog(log.DebugLevelInfra, "getLinuxLimits results", "info", info)
+	log.SpanLog(ctx, log.DebugLevelInfra, "getLinuxLimits results", "info", info)
 	return nil
 
 }
 
-// DINDGetLimits gets CPU, Memory from the local machine
-func GetLimits(info *edgeproto.CloudletInfo) error {
-	log.DebugLog(log.DebugLevelInfra, "DINDGetLimits called", "os", runtime.GOOS)
+// GetLimits gets CPU, Memory from the local machine
+func GetLimits(ctx context.Context, client ssh.Client, info *edgeproto.CloudletInfo) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetLimits called", "os", runtime.GOOS)
 	switch runtime.GOOS {
 	case "darwin":
-		return getMacLimits(info)
+		return getMacLimits(ctx, client, info)
 	case "linux":
-		return getLinuxLimits(info)
+		return getLinuxLimits(ctx, client, info)
 	}
-	return fmt.Errorf("Unsupported OS %s for DIND", runtime.GOOS)
+	return fmt.Errorf("Unsupported OS %s for XIND", runtime.GOOS)
 }

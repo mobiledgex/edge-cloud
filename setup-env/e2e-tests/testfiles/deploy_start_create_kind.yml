@@ -10,5 +10,5 @@ tests:
   actions: [start]
 
 - name: create provisioning
-  apifile: "{{datadir}}/appdata_dind.yml"
+  apifile: "{{datadir}}/appdata_kind.yml"
   actions: [ctrlapi-create]

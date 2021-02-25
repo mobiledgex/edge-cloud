@@ -114,6 +114,7 @@ message PlatformConfig {
 // 10: `PLATFORM_TYPE_AWS_EC2`
 // 11: `PLATFORM_TYPE_VCD`
 // 12: `PLATFORM_TYPE_ANTHOS`
+// 13: `PLATFORM_TYPE_KIND`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -141,6 +142,8 @@ enum PlatformType {
   PLATFORM_TYPE_VCD = 11;
   // Anthos on bare metal
   PLATFORM_TYPE_ANTHOS = 12;
+  // KIND Cloudlet
+  PLATFORM_TYPE_KIND = 13;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name

@@ -1,4 +1,4 @@
-package dind
+package kind
 
 import (
 	"context"

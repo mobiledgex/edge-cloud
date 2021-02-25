@@ -9,6 +9,7 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/dind"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/fake"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/kind"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
@@ -22,6 +23,8 @@ func GetPlatform(ctx context.Context, plat string, setVersionProps func(context.
 		return &dind.Platform{}, nil
 	} else if plat == "PLATFORM_TYPE_FAKE" {
 		return &fake.Platform{}, nil
+	} else if plat == "PLATFORM_TYPE_KIND" {
+		return &kind.Platform{}, nil
 	}
 	if GetPlatformFunc == nil {
 		plug, err := loadPlugin(ctx)

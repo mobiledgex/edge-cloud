@@ -261,9 +261,14 @@ func CleanupDIND() error {
 			log.Printf("done dind clean for: %s out: %s\n", clusterName, out)
 		}
 	}
-	// cleanup nginx and other docker containers
+	log.Println("done CleanupDIND")
+	return nil
+}
+
+func CleanupLocalProxies() error {
+	// cleanup nginx and other docker containers common to both DIND and KIND
 	pscmd := exec.Command("docker", "ps", "-a", "-q", "--filter", "label=edge-cloud")
-	output, err = pscmd.Output()
+	output, err := pscmd.Output()
 	if err != nil {
 		log.Printf("Error running docker ps: %v", err)
 		return err
@@ -283,9 +288,38 @@ func CleanupDIND() error {
 			}
 		}
 	}
-	log.Println("done CleanupDIND")
+	log.Println("done Cleanup local proxies")
 	return nil
+}
 
+func CleanupKIND() error {
+	log.Printf("Running CleanupKIND\n")
+	vercmd := exec.Command("kind", "version")
+	_, err := vercmd.CombinedOutput()
+	if err != nil {
+		// no kind installed
+		log.Printf("No kind installed\n")
+		return nil
+	}
+
+	lscmd := exec.Command("kind", "get", "clusters")
+	output, err := lscmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error running kind command to get clusters, %s, %s\n", string(output), err)
+		return err
+	}
+	clusters := strings.Split(string(output), "\n")
+	for _, name := range clusters {
+		log.Printf("deleting KIND cluster %s\n", name)
+		cmd := exec.Command("kind", "delete", "cluster", "--name", name)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Failed to delete kind cluster %s, %s, %s\n", name, string(out), err)
+			return err
+		}
+	}
+	log.Printf("done Cleanup KIND\n")
+	return nil
 }
 
 func StopProcesses(processName string, allprocs []process.Process) bool {
@@ -557,7 +591,15 @@ func Cleanup(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return CleanupDIND()
+	err = CleanupKIND()
+	if err != nil {
+		return err
+	}
+	err = CleanupDIND()
+	if err != nil {
+		return err
+	}
+	return CleanupLocalProxies()
 }
 
 func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string, vars map[string]string, retry *bool) []string {
