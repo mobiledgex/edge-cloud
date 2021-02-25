@@ -1,0 +1,126 @@
+cloudlets:
+- key:
+    organization: mexdev
+    name: localtest
+  accessuri: localtest.tmo
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeKind
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+clusters:
+- key:
+    name: AppCluster
+  defaultflavor:
+    name: x1.medium
+clusterinsts:
+- key:
+    clusterkey:
+      name: AppCluster
+    cloudletkey:
+      organization: mexdev
+      name: localtest
+    organization: MobiledgeX
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+  nummasters: 1
+  numnodes: 3
+apps:
+- key:
+    organization: MobiledgeX
+    name: MobiledgeX SDK Demo
+    version: "1.0"
+  imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/mobiledgexsdkdemo
+  imagetype: ImageTypeDocker
+  accessports: tcp:7777
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AppCluster
+  deployment: kubernetes
+  androidpackagename: com.mobiledgex.sdkdemo
+  configs:
+   - kind: appAccessCustomization
+     config: |
+       dnsOverride: "*.[[.Deployment.DeveloperOrg]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
+       lbTlsCertCommonName: "*.[[.Deployment.DeveloperOrg]]-[[.Deployment.CloudletName]].[[.Deployment.DnsZone]]"
+- key:
+    organization: MobiledgeX
+    name: Face Detection Demo
+    version: "1.0"
+  imagepath: docker.mobiledgex.net/mobiledgex/mobiledgex_public/facedetection
+  imagetype: ImageTypeDocker
+  accessports: tcp:8008
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AppCluster
+  deployment: kubernetes
+  androidpackagename: com.mobiledgex.facedemo
+  configs:
+  - kind: envVarsYaml
+    config: |
+      - name: SOME_ENV1
+        value: value1
+      - name: CrmValue
+        value: [[ .Deployment.ClusterIp ]]
+      - name: SOME_ENV2
+        valueFrom:
+          configMapKeyRef:
+            key: CloudletName
+            name: mexcluster-info
+            optional: true
+- key:
+    organization: MobiledgeX
+    name: insightedge
+    version: "1.0"
+  imagepath: https://resources.gigaspaces.com/helm-charts:gigaspaces/insightedge
+  deployment: helm
+  annotations: version=14.5.0
+  defaultflavor:
+    name: x1.small
+  accessports: udp:3000,tcp:3000
+  androidpackagename: com.mobiledgex.node
+appinstances:
+- key:
+    appkey:
+      organization: MobiledgeX
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: AppCluster
+      cloudletkey:
+        organization: mexdev
+        name: localtest
+      organization: MobiledgeX
+- key:
+    appkey:
+      organization: MobiledgeX
+      name: Face Detection Demo
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: AppCluster
+      cloudletkey:
+        organization: mexdev
+        name: localtest
+      organization: MobiledgeX
