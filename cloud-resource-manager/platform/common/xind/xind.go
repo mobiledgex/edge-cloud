@@ -44,7 +44,7 @@ func (s *Xind) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 	if err != nil {
 		return err
 	}
-	// Use flavors from controller as platform flavor for DIND
+	// Use flavors from controller as platform flavor
 	var flavors []*edgeproto.FlavorInfo
 	if s.Caches == nil {
 		return fmt.Errorf("Flavor cache is nil")

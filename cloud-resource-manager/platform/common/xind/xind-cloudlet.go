@@ -16,35 +16,35 @@ func (s *Xind) IsCloudletServicesLocal() bool {
 }
 
 func (s *Xind) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, acccessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "create cloudlet for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "create cloudlet for xind")
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "dind cloudlet create failed", "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "xind cloudlet create failed", "err", err)
 		return err
 	}
 	return nil
 }
 
 func (s *Xind) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "update dind Cloudlet", "key", cloudlet.Key)
+	log.SpanLog(ctx, log.DebugLevelInfra, "update xind Cloudlet", "key", cloudlet.Key)
 	return nil
 }
 
 func (s *Xind) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "update dind TrustPolicy", "policy", TrustPolicy)
+	log.SpanLog(ctx, log.DebugLevelInfra, "update xind TrustPolicy", "policy", TrustPolicy)
 	return nil
 }
 
 func (s *Xind) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "delete cloudlet for dind")
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete cloudlet for xind")
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
 	err := cloudcommon.StopCRMService(ctx, cloudlet)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "dind cloudlet delete failed", "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "xind cloudlet delete failed", "err", err)
 		return err
 	}
 
@@ -73,7 +73,7 @@ func (s *Xind) SyncControllerCache(ctx context.Context, caches *platform.Caches,
 
 func (s *Xind) GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi platform.AccessApi, flavor *edgeproto.Flavor, caches *platform.Caches) (*edgeproto.CloudletManifest, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "Get cloudlet manifest", "cloudletName", cloudlet.Key.Name)
-	return &edgeproto.CloudletManifest{Manifest: "dind manifest"}, nil
+	return &edgeproto.CloudletManifest{Manifest: "xind manifest"}, nil
 }
 
 func (s *Xind) VerifyVMs(ctx context.Context, vms []edgeproto.VM) error {

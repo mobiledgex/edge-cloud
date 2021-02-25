@@ -92,7 +92,7 @@ func getLinuxLimits(ctx context.Context, client ssh.Client, info *edgeproto.Clou
 
 }
 
-// DINDGetLimits gets CPU, Memory from the local machine
+// GetLimits gets CPU, Memory from the local machine
 func GetLimits(ctx context.Context, client ssh.Client, info *edgeproto.CloudletInfo) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "GetLimits called", "os", runtime.GOOS)
 	switch runtime.GOOS {
@@ -101,5 +101,5 @@ func GetLimits(ctx context.Context, client ssh.Client, info *edgeproto.CloudletI
 	case "linux":
 		return getLinuxLimits(ctx, client, info)
 	}
-	return fmt.Errorf("Unsupported OS %s for DIND", runtime.GOOS)
+	return fmt.Errorf("Unsupported OS %s for XIND", runtime.GOOS)
 }

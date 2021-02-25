@@ -157,7 +157,7 @@ func (s *Xind) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Cluster
 	}
 
 	if len(appInst.MappedPorts) > 0 {
-		log.SpanLog(ctx, log.DebugLevelInfra, "DeleteNginxProxy for dind")
+		log.SpanLog(ctx, log.DebugLevelInfra, "DeleteNginxProxy for xind")
 		if err = proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key)); err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "cannot delete proxy", "name", names.AppName)
 			return err
@@ -217,8 +217,8 @@ func (s *Xind) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.Clu
 	return k8smgmt.GetAppInstRuntime(ctx, client, names, app, appInst)
 }
 
-func (s *Xind) patchDindSevice(ctx context.Context, kubeNames *k8smgmt.KubeNames, ipaddr string) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "Patch DIND service", "kubeNames", kubeNames, "ipaddr", ipaddr)
+func (s *Xind) patchXindSevice(ctx context.Context, kubeNames *k8smgmt.KubeNames, ipaddr string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Patch XIND service", "kubeNames", kubeNames, "ipaddr", ipaddr)
 
 	client, err := s.GetClient(ctx)
 	if err != nil {
