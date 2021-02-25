@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"text/template"
 	"time"
@@ -16,7 +17,8 @@ import (
 )
 
 // See https://hub.docker.com/r/kindest/node/tags for all available versions
-var NodeImage = "kindest/node:v1.16.15"
+// Use env var KIND_IMAGE to override default below.
+var DefaultNodeImage = "kindest/node:v1.16.15"
 
 func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	var err error
@@ -89,7 +91,11 @@ func (s *Platform) CreateKINDCluster(ctx context.Context, clusterInst *edgeproto
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("kind create cluster --config=%s --kubeconfig=%s --image=%s --name=%s --wait 300s", configFile, kconf, NodeImage, name)
+	nodeImage := os.Getenv("KIND_IMAGE")
+	if nodeImage == "" {
+		nodeImage = DefaultNodeImage
+	}
+	cmd := fmt.Sprintf("kind create cluster --config=%s --kubeconfig=%s --image=%s --name=%s --wait 300s", configFile, kconf, nodeImage, name)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("failed to run cmd %s, %s, %s", cmd, out, err)
