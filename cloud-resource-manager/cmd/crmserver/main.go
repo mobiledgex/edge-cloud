@@ -119,7 +119,7 @@ func main() {
 
 	accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
 
-	controllerData = crmutil.NewControllerData(platform, &nodeMgr)
+	controllerData = crmutil.NewControllerData(platform, &myCloudletInfo.Key, &nodeMgr)
 
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
