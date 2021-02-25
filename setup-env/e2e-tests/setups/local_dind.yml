@@ -23,13 +23,7 @@ influxs:
 - name: influx1
   datadir: /var/tmp/edge-cloud-local-influx/influx1
   httpaddr: "127.0.0.1:8086"
-  tls:
-    servercert: "{{tlsoutdir}}/mex-server.crt"
-    serverkey: "{{tlsoutdir}}/mex-server.key"
   hostname: "127.0.0.1"
-  auth:
-    user: "root"
-    pass: "root"
 
 etcds:
 - name: etcd1
@@ -61,11 +55,16 @@ controllers:
   notifyaddr: "127.0.0.1:37001"
   influxaddr: "https://127.0.0.1:8086"
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   testmode: true
+  envvars:
+    E2ETEST_TLS: true
 
 dmes:
 - name: dme1
@@ -77,20 +76,28 @@ dmes:
   carrier: GDDT
   cloudletkey: '{"organization":"mexdev","name":"mexdev-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   cookieexpr: "24h"
   hostname: "127.0.0.1"
+  envvars:
+    E2ETEST_TLS: true
 
 clustersvcs:
 - name: cluster-svc1
   notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
   ctrladdrs: "127.0.0.1:55001"
   vaultaddr: "http://127.0.0.1:8200"
+  usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
-    clientcert: "{{tlsoutdir}}/mex-client.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+    cacert: "{{tlsoutdir}}/mex-ca.crt"
   promports: "tcp:9090"
   interval: "5s"
   hostname: "127.0.0.1"
+  envvars:
+    E2ETEST_TLS: true
