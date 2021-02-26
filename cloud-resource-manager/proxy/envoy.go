@@ -81,6 +81,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		"-v", certsDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/tmp/access.log",
 		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
+		"-u", "1000:1000",
 		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@" + cloudcommon.EnvoyImageDigest}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,

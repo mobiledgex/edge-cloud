@@ -3,6 +3,7 @@ package cloudflaremgmt
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
@@ -168,4 +169,18 @@ func DeleteDNSRecord(ctx context.Context, api *cloudflare.API, zone, recordID st
 	}
 
 	return api.DeleteDNSRecord(zoneID, recordID)
+}
+
+func LookupDNS(name string) (string, error) {
+	ips, err := net.LookupIP(name)
+	if err != nil {
+		return "", fmt.Errorf("DNS lookup error, %s, %v", name, err)
+	}
+	if len(ips) == 0 {
+		return "", fmt.Errorf("no DNS records, %s", name)
+	}
+	for _, ip := range ips {
+		return ip.String(), nil //XXX return only first one
+	}
+	return "", fmt.Errorf("no IP in DNS record for %s", name)
 }
