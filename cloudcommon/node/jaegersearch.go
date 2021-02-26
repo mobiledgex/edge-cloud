@@ -519,28 +519,18 @@ func (s *NodeMgr) SpanTerms(ctx context.Context, search *SpanSearch) (*SpanTerms
 		if err != nil {
 			return nil, err
 		}
-		//vals := []string{}
-		//for _, bucket := range aggr.Buckets {
-		//	vals = append(vals, bucket.Key)
-		//}
-		//sort.Strings(vals)
 		vals := aggr.Buckets
 		switch k {
 		case "operations":
 			terms.Operations = vals
-			//counts.Operations = aggrOut
 		case "services":
 			terms.Services = vals
-			//counts.Services = aggrOut
 		case "hostnames":
 			terms.Hostnames = vals
-			//counts.Hostnames = aggrOut
 		case "msgs":
 			terms.Msgs = vals
-			//counts.Msgs = aggrOut
 		case "tags":
 			terms.Tags = vals
-			//counts.Tags = aggrOut
 		}
 	}
 	return terms, nil
