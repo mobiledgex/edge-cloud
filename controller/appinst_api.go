@@ -495,6 +495,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return errors.New("Specified Cloudlet not found")
 		}
 
+		if autoClusterSpecified {
+			if !cloudcommon.IsClusterInstReqd(&app) {
+				return fmt.Errorf("No cluster required for App deployment type %s, cannot use cluster name %s which attempts to use or create a ClusterInst", app.Deployment, cloudcommon.AutoClusterPrefix)
+			}
+		}
 		// Check for autocluster. All auto-clusters are reservable.
 		// To allow for vanity naming, the cluster name in the key
 		// can by any name prefixed with the AutoClusterPrefix, but
@@ -505,9 +510,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.RealClusterName == "" && autoClusterSpecified {
 			// search for free reservable ClusterInst
 			log.SpanLog(ctx, log.DebugLevelInfo, "reservable auto-cluster search", "key", in.Key)
-			if !cloudcommon.IsClusterInstReqd(&app) {
-				return fmt.Errorf("No cluster required for App deployment type %s, cannot use cluster name %s which attempts to use or create a ClusterInst", app.Deployment, cloudcommon.AutoClusterPrefix)
-			}
 			if sidecarApp {
 				return fmt.Errorf("Sidecar AppInst (AutoDelete App) must specify the RealClusterName field to deploy to the virtual cluster name %s, or specify the real cluster name in the key", in.Key.ClusterInstKey.ClusterKey.Name)
 			}
