@@ -289,6 +289,23 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	err = appInstApi.DeleteAppInst(&appinst2, streamOut)
 	require.Nil(t, err, "delete AppInst on reservable ClusterInst")
 	checkReservedBy(t, ctx, api, &cinst.Key, "")
+
+	// Cannot create VM with autocluster
+	appinstBad := edgeproto.AppInst{}
+	appinstBad.Key.AppKey = testutil.AppData[12].Key
+	appinstBad.Key.ClusterInstKey.CloudletKey = testutil.CloudletData[0].Key
+	appinstBad.Key.ClusterInstKey.ClusterKey.Name = "autoclusterBad"
+	appinstBad.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
+	err = appInstApi.CreateAppInst(&appinstBad, streamOut)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "No cluster required for App deployment type vm")
+
+	// Cannot create VM with autocluster and realclustername
+	appinstBad.RealClusterName = cinst.Key.ClusterKey.Name
+	err = appInstApi.CreateAppInst(&appinstBad, streamOut)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "No cluster required for App deployment type vm")
+
 	// Delete App
 	for _, app := range testutil.AppData {
 		_, err = appApi.DeleteApp(ctx, &app)
