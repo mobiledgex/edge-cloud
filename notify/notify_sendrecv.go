@@ -132,6 +132,8 @@ type SendRecv struct {
 	sendAllRecvHandler SendAllRecv
 }
 
+var METRIC_SPAN_NAME = "edgeproto.Metric"
+
 func (s *SendRecv) init(cliserv string) {
 	s.cliserv = cliserv
 	s.sendlist = make([]NotifySend, 0)
@@ -325,7 +327,7 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 			// anonymous inner func so we can use defer to close span
 			ctx := context.Background()
 			name, err := types.AnyMessageName(&notice.Any)
-			if notice.Span != "" {
+			if notice.Span != "" && name != METRIC_SPAN_NAME {
 				spanName := fmt.Sprintf("notify-recv %s", name)
 				span := log.NewSpanFromString(log.DebugLevelNotify, notice.Span, spanName)
 				span.SetTag("action", notice.Action)
