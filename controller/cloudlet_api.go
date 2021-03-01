@@ -642,8 +642,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
 				cloudlet.HostController = *externalApiAddr
+				s.store.STMPut(stm, &cloudlet)
 			}
-			s.store.STMPut(stm, &cloudlet)
 			return nil
 		})
 		if err != nil {
