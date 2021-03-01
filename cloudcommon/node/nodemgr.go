@@ -3,9 +3,9 @@ package node
 import (
 	"context"
 	"flag"
+	"sync"
 
 	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -39,8 +39,11 @@ type NodeMgr struct {
 	InternalPki        internalPki
 	InternalDomain     string
 	ESClient           *elasticsearch.Client
-	esEvents           chan esapi.IndexRequest
+	esEvents           [][]byte
+	esEventsMux        sync.Mutex
+	esWriteSignal      chan bool
 	esEventsDone       chan struct{}
+	ESWroteEvents      uint64
 	tlsClientIssuer    string
 	commonName         string
 	DeploymentTag      string
