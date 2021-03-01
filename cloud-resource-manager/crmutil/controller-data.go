@@ -1183,14 +1183,14 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 	var cloudletInfo edgeproto.CloudletInfo
 	if !cd.CloudletInfoCache.Get(&cd.cloudletKey, &cloudletInfo) {
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to update vmpool flavors, missing cloudletinfo", "vmpool", key, "cloudlet", cd.cloudletKey)
-		return
+	} else {
+		err = cd.platform.GatherCloudletInfo(ctx, &cloudletInfo)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey, "err", err)
+		} else {
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		}
 	}
-	err = cd.platform.GatherCloudletInfo(ctx, &cloudletInfo)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "failed to gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey, "err", err)
-		return
-	}
-	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 	// notify controller
 	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
