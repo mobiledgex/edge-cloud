@@ -464,7 +464,7 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	}
 }
 
-func (m *mex) getInvalidMethodFields(names []string, invalidFieldsMap map[string]string, subAllInvalidFields bool, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
+func (m *mex) getInvalidMethodFields(names []string, subAllInvalidFields bool, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
 	message := desc.DescriptorProto
 	noconfig := gensupport.GetNoConfig(message, method)
 	noconfigMap := make(map[string]string)
@@ -503,24 +503,42 @@ func (m *mex) getInvalidMethodFields(names []string, invalidFieldsMap map[string
 			}
 		}
 		fieldName := strings.Join(append(names, name), ".")
+		nullableMessage := false
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			if nilcheck {
+				if _, ok := noconfigMap[fieldName]; !ok {
+					for ncField, _ := range noconfigMap {
+						if strings.HasPrefix(ncField, fieldName) {
+							m.P("if m", fieldName, " != ", nilval, " {")
+							nullableMessage = true
+							break
+						}
+					}
+				}
 				if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
-					invalidFieldsMap[fieldName] = nilval
+					m.P("if m", fieldName, " != ", nilval, " {")
+					argStr := strings.TrimLeft(fieldName, ".")
+					m.P("return fmt.Errorf(\"Invalid field specified: ", argStr, ", this field is only for internal use\")")
+					m.P("}")
 					continue
 				}
 			}
 			subAllInvalidFields := false
 			if _, ok := noconfigMap[fieldName]; ok {
 				subAllInvalidFields = true
-				delete(invalidFieldsMap, fieldName)
 			}
 			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
-			m.getInvalidMethodFields(append(names, name), invalidFieldsMap, subAllInvalidFields, subDesc, method)
+			m.getInvalidMethodFields(append(names, name), subAllInvalidFields, subDesc, method)
+			if nullableMessage {
+				m.P("}")
+			}
 		default:
 			if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
-				invalidFieldsMap[fieldName] = nilval
+				m.P("if m", fieldName, " != ", nilval, " {")
+				argStr := strings.TrimLeft(fieldName, ".")
+				m.P("return fmt.Errorf(\"Invalid field specified: ", argStr, ", this field is only for internal use\")")
+				m.P("}")
 			}
 		}
 	}
@@ -2597,21 +2615,8 @@ func (m *mex) generateService(file *generator.FileDescriptor, service *descripto
 func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) {
 	in := gensupport.GetDesc(m.gen, method.GetInputType())
 	if !gensupport.IsShow(method) {
-		invalidArgsMap := make(map[string]string)
-		m.getInvalidMethodFields([]string{""}, invalidArgsMap, false, in, method)
-		keys := make([]string, 0)
-		for k, _ := range invalidArgsMap {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
 		m.P("func (m *", *in.DescriptorProto.Name, ") IsValidArgsFor", *method.Name, "() error {")
-		for _, arg := range keys {
-			argnilval := invalidArgsMap[arg]
-			m.P("if m", arg, " != ", argnilval, " {")
-			argStr := strings.TrimLeft(arg, ".")
-			m.P("return fmt.Errorf(\"Invalid field specified: ", argStr, ", this field is only for internal use\")")
-			m.P("}")
-		}
+		m.getInvalidMethodFields([]string{""}, false, in, method)
 		m.P("return nil")
 		m.P("}")
 		m.P("")

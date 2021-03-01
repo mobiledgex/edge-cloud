@@ -4147,50 +4147,35 @@ func IgnoreClusterInstInfoFields(taglist string) cmp.Option {
 }
 
 func (m *ClusterInst) IsValidArgsForCreateClusterInst() error {
-	if m.AllocatedIp != "" {
-		return fmt.Errorf("Invalid field specified: AllocatedIp, this field is only for internal use")
-	}
-	if m.Auto != false {
-		return fmt.Errorf("Invalid field specified: Auto, this field is only for internal use")
-	}
-	if m.AvailabilityZone != "" {
-		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
-	}
-	if m.CreatedAt.Nanos != 0 {
-		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
-	}
-	if m.CreatedAt.Seconds != 0 {
-		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
 	}
 	if m.Errors != nil {
 		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
 	}
-	if m.ExternalVolumeSize != 0 {
-		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
+	if m.AllocatedIp != "" {
+		return fmt.Errorf("Invalid field specified: AllocatedIp, this field is only for internal use")
 	}
 	if m.Liveness != 0 {
 		return fmt.Errorf("Invalid field specified: Liveness, this field is only for internal use")
 	}
-	if m.MasterNodeFlavor != "" {
-		return fmt.Errorf("Invalid field specified: MasterNodeFlavor, this field is only for internal use")
+	if m.Auto != false {
+		return fmt.Errorf("Invalid field specified: Auto, this field is only for internal use")
 	}
 	if m.NodeFlavor != "" {
 		return fmt.Errorf("Invalid field specified: NodeFlavor, this field is only for internal use")
 	}
-	if m.OptRes != "" {
-		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
-	}
-	if m.ReservedBy != "" {
-		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
-	}
-	if m.Resources.Vms != nil {
-		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
-	}
-	if m.State != 0 {
-		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
 	if m.Status.MaxTasks != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
 	}
 	if m.Status.MsgCount != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
@@ -4198,69 +4183,69 @@ func (m *ClusterInst) IsValidArgsForCreateClusterInst() error {
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
 	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	if m.ExternalVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
 	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	if m.AvailabilityZone != "" {
+		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
 	}
-	if m.Status.TaskNumber != 0 {
-		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	if m.ReservedBy != "" {
+		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
 	}
-	if m.UpdatedAt.Nanos != 0 {
-		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	if m.MasterNodeFlavor != "" {
+		return fmt.Errorf("Invalid field specified: MasterNodeFlavor, this field is only for internal use")
+	}
+	if m.OptRes != "" {
+		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	}
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
 	}
 	if m.UpdatedAt.Seconds != 0 {
 		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *ClusterInst) IsValidArgsForDeleteClusterInst() error {
-	if m.AllocatedIp != "" {
-		return fmt.Errorf("Invalid field specified: AllocatedIp, this field is only for internal use")
-	}
-	if m.Auto != false {
-		return fmt.Errorf("Invalid field specified: Auto, this field is only for internal use")
-	}
-	if m.AvailabilityZone != "" {
-		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
-	}
-	if m.CreatedAt.Nanos != 0 {
-		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
-	}
-	if m.CreatedAt.Seconds != 0 {
-		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
 	}
 	if m.Errors != nil {
 		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
 	}
-	if m.ExternalVolumeSize != 0 {
-		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
+	if m.AllocatedIp != "" {
+		return fmt.Errorf("Invalid field specified: AllocatedIp, this field is only for internal use")
 	}
 	if m.Liveness != 0 {
 		return fmt.Errorf("Invalid field specified: Liveness, this field is only for internal use")
 	}
-	if m.MasterNodeFlavor != "" {
-		return fmt.Errorf("Invalid field specified: MasterNodeFlavor, this field is only for internal use")
+	if m.Auto != false {
+		return fmt.Errorf("Invalid field specified: Auto, this field is only for internal use")
 	}
 	if m.NodeFlavor != "" {
 		return fmt.Errorf("Invalid field specified: NodeFlavor, this field is only for internal use")
 	}
-	if m.OptRes != "" {
-		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
-	}
-	if m.ReservedBy != "" {
-		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
-	}
-	if m.Resources.Vms != nil {
-		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
-	}
-	if m.State != 0 {
-		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
 	if m.Status.MaxTasks != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
 	}
 	if m.Status.MsgCount != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
@@ -4268,63 +4253,60 @@ func (m *ClusterInst) IsValidArgsForDeleteClusterInst() error {
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
 	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	if m.ExternalVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
 	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	if m.AvailabilityZone != "" {
+		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
 	}
-	if m.Status.TaskNumber != 0 {
-		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	if m.ReservedBy != "" {
+		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
 	}
-	if m.UpdatedAt.Nanos != 0 {
-		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	if m.MasterNodeFlavor != "" {
+		return fmt.Errorf("Invalid field specified: MasterNodeFlavor, this field is only for internal use")
+	}
+	if m.OptRes != "" {
+		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	}
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
 	}
 	if m.UpdatedAt.Seconds != 0 {
 		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *ClusterInst) IsValidArgsForUpdateClusterInst() error {
-	if m.AllocatedIp != "" {
-		return fmt.Errorf("Invalid field specified: AllocatedIp, this field is only for internal use")
+	if m.Flavor.Name != "" {
+		return fmt.Errorf("Invalid field specified: Flavor.Name, this field is only for internal use")
 	}
-	if m.Auto != false {
-		return fmt.Errorf("Invalid field specified: Auto, this field is only for internal use")
-	}
-	if m.AvailabilityZone != "" {
-		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
-	}
-	if m.CreatedAt.Nanos != 0 {
-		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
-	}
-	if m.CreatedAt.Seconds != 0 {
-		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
-	}
-	if m.Deployment != "" {
-		return fmt.Errorf("Invalid field specified: Deployment, this field is only for internal use")
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
 	}
 	if m.Errors != nil {
 		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
 	}
-	if m.ExternalVolumeSize != 0 {
-		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
-	}
-	if m.Flavor.Name != "" {
-		return fmt.Errorf("Invalid field specified: Flavor.Name, this field is only for internal use")
-	}
-	if m.ImageName != "" {
-		return fmt.Errorf("Invalid field specified: ImageName, this field is only for internal use")
-	}
 	if m.IpAccess != 0 {
 		return fmt.Errorf("Invalid field specified: IpAccess, this field is only for internal use")
+	}
+	if m.AllocatedIp != "" {
+		return fmt.Errorf("Invalid field specified: AllocatedIp, this field is only for internal use")
 	}
 	if m.Liveness != 0 {
 		return fmt.Errorf("Invalid field specified: Liveness, this field is only for internal use")
 	}
-	if m.MasterNodeFlavor != "" {
-		return fmt.Errorf("Invalid field specified: MasterNodeFlavor, this field is only for internal use")
+	if m.Auto != false {
+		return fmt.Errorf("Invalid field specified: Auto, this field is only for internal use")
 	}
 	if m.NodeFlavor != "" {
 		return fmt.Errorf("Invalid field specified: NodeFlavor, this field is only for internal use")
@@ -4332,26 +4314,20 @@ func (m *ClusterInst) IsValidArgsForUpdateClusterInst() error {
 	if m.NumMasters != 0 {
 		return fmt.Errorf("Invalid field specified: NumMasters, this field is only for internal use")
 	}
-	if m.OptRes != "" {
-		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	if m.Deployment != "" {
+		return fmt.Errorf("Invalid field specified: Deployment, this field is only for internal use")
 	}
-	if m.Reservable != false {
-		return fmt.Errorf("Invalid field specified: Reservable, this field is only for internal use")
-	}
-	if m.ReservedBy != "" {
-		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
-	}
-	if m.Resources.Vms != nil {
-		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
-	}
-	if m.SharedVolumeSize != 0 {
-		return fmt.Errorf("Invalid field specified: SharedVolumeSize, this field is only for internal use")
-	}
-	if m.State != 0 {
-		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
 	if m.Status.MaxTasks != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
 	}
 	if m.Status.MsgCount != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
@@ -4359,20 +4335,44 @@ func (m *ClusterInst) IsValidArgsForUpdateClusterInst() error {
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
 	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	if m.ExternalVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
 	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	if m.AvailabilityZone != "" {
+		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
 	}
-	if m.Status.TaskNumber != 0 {
-		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	if m.ImageName != "" {
+		return fmt.Errorf("Invalid field specified: ImageName, this field is only for internal use")
 	}
-	if m.UpdatedAt.Nanos != 0 {
-		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	if m.Reservable != false {
+		return fmt.Errorf("Invalid field specified: Reservable, this field is only for internal use")
+	}
+	if m.ReservedBy != "" {
+		return fmt.Errorf("Invalid field specified: ReservedBy, this field is only for internal use")
+	}
+	if m.SharedVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: SharedVolumeSize, this field is only for internal use")
+	}
+	if m.MasterNodeFlavor != "" {
+		return fmt.Errorf("Invalid field specified: MasterNodeFlavor, this field is only for internal use")
+	}
+	if m.OptRes != "" {
+		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	}
+	if m.Resources.Vms != nil {
+		return fmt.Errorf("Invalid field specified: Resources.Vms, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
 	}
 	if m.UpdatedAt.Seconds != 0 {
 		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
 	}
 	return nil
 }
