@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
@@ -23,6 +25,9 @@ type Platform struct {
 }
 
 var (
+	ResourceAdd    = true
+	ResourceRemove = false
+
 	ResourceExternalIps = "External IPs"
 
 	FakeRamUsed         = uint64(0)
@@ -57,9 +62,9 @@ var FakeFlavorList = []*edgeproto.FlavorInfo{
 
 var RootLBFlavor = edgeproto.Flavor{
 	Key:   edgeproto.FlavorKey{Name: "rootlb-flavor"},
-	Vcpus: uint64(1),
-	Ram:   uint64(1024),
-	Disk:  uint64(20),
+	Vcpus: uint64(2),
+	Ram:   uint64(4096),
+	Disk:  uint64(40),
 }
 
 var fakeProps = map[string]*edgeproto.PropertyInfo{
@@ -77,6 +82,41 @@ var fakeProps = map[string]*edgeproto.PropertyInfo{
 	},
 }
 
+func UpdateResourcesMax() error {
+	// Make fake resource limits configurable for QA testing
+	ramMax := os.Getenv("FAKE_RAM_MAX")
+	if ramMax != "" {
+		ram, err := strconv.Atoi(ramMax)
+		if err != nil {
+			return err
+		}
+		if ram > 0 {
+			FakeRamMax = uint64(ram)
+		}
+	}
+	vcpusMax := os.Getenv("FAKE_VCPUS_MAX")
+	if vcpusMax != "" {
+		vcpus, err := strconv.Atoi(vcpusMax)
+		if err != nil {
+			return err
+		}
+		if vcpus > 0 {
+			FakeVcpusMax = uint64(vcpus)
+		}
+	}
+	diskMax := os.Getenv("FAKE_DISK_MAX")
+	if diskMax != "" {
+		disk, err := strconv.Atoi(diskMax)
+		if err != nil {
+			return err
+		}
+		if disk > 0 {
+			FakeDiskMax = uint64(disk)
+		}
+	}
+	return nil
+}
+
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
@@ -90,6 +130,12 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	FakeVcpusUsed += 2 + 2
 	FakeDiskUsed += 40 + 40
 	FakeExternalIpsUsed += 1
+
+	err := UpdateResourcesMax()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -99,6 +145,30 @@ func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.Cloud
 	info.OsMaxVolGb = FakeDiskMax
 	info.Flavors = FakeFlavorList
 	return nil
+}
+
+func UpdateCommonResourcesUsed(flavor string, add bool) {
+	if flavor == "x1.tiny" {
+		if add {
+			FakeRamUsed += FakeFlavorList[0].Ram
+			FakeVcpusUsed += FakeFlavorList[0].Vcpus
+			FakeDiskUsed += FakeFlavorList[0].Disk
+		} else {
+			FakeRamUsed -= FakeFlavorList[0].Ram
+			FakeVcpusUsed -= FakeFlavorList[0].Vcpus
+			FakeDiskUsed -= FakeFlavorList[0].Disk
+		}
+	} else {
+		if add {
+			FakeRamUsed += FakeFlavorList[1].Ram
+			FakeVcpusUsed += FakeFlavorList[1].Vcpus
+			FakeDiskUsed += FakeFlavorList[1].Disk
+		} else {
+			FakeRamUsed -= FakeFlavorList[1].Ram
+			FakeVcpusUsed -= FakeFlavorList[1].Vcpus
+			FakeDiskUsed -= FakeFlavorList[1].Disk
+		}
+	}
 }
 
 func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
@@ -133,23 +203,19 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
 			Type:        cloudcommon.VMTypeClusterNode,
-			InfraFlavor: "x1.small",
+			InfraFlavor: clusterInst.NodeFlavor,
 			Status:      "ACTIVE",
 		})
-		FakeRamUsed += 4096
-		FakeVcpusUsed += 2
-		FakeDiskUsed += 40
+		UpdateCommonResourcesUsed(clusterInst.NodeFlavor, ResourceAdd)
 	}
 	for vmName, _ := range fakeMasters {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
 			Type:        cloudcommon.VMTypeClusterMaster,
-			InfraFlavor: "x1.small",
+			InfraFlavor: clusterInst.MasterNodeFlavor,
 			Status:      "ACTIVE",
 		})
-		FakeRamUsed += 4096
-		FakeVcpusUsed += 2
-		FakeDiskUsed += 40
+		UpdateCommonResourcesUsed(clusterInst.MasterNodeFlavor, ResourceAdd)
 	}
 	return nil
 }
@@ -166,23 +232,19 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix),
 			Type:        cloudcommon.VMTypeClusterMaster,
-			InfraFlavor: "x1.small",
+			InfraFlavor: clusterInst.MasterNodeFlavor,
 			Status:      "ACTIVE",
 		})
-		FakeRamUsed += 4096
-		FakeVcpusUsed += 2
-		FakeDiskUsed += 40
+		UpdateCommonResourcesUsed(clusterInst.MasterNodeFlavor, ResourceAdd)
 	}
 	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix),
 			Type:        cloudcommon.VMTypeClusterNode,
-			InfraFlavor: "x1.small",
+			InfraFlavor: clusterInst.NodeFlavor,
 			Status:      "ACTIVE",
 		})
-		FakeRamUsed += 4096
-		FakeVcpusUsed += 2
-		FakeDiskUsed += 40
+		UpdateCommonResourcesUsed(clusterInst.NodeFlavor, ResourceAdd)
 	}
 	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 		rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
@@ -192,9 +254,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
 		})
-		FakeRamUsed += 4096
-		FakeVcpusUsed += 2
-		FakeDiskUsed += 40
+		UpdateCommonResourcesUsed("x1.small", ResourceAdd)
 		FakeExternalIpsUsed += 1
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst ready")
@@ -205,30 +265,26 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 	updateCallback(edgeproto.UpdateTask, "First Delete Task")
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
 	rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
-	vms := make(map[string]struct{})
-	vms[rootLBFQDN] = struct{}{}
+	vms := make(map[string]string)
+	vms[rootLBFQDN] = "x1.small"
 	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
 	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
 		vmName := fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix)
-		vms[vmName] = struct{}{}
+		vms[vmName] = clusterInst.MasterNodeFlavor
 	}
 	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
 		vmName := fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix)
-		vms[vmName] = struct{}{}
+		vms[vmName] = clusterInst.NodeFlavor
 	}
-	newVMs := []edgeproto.VmInfo{}
 	if clusterVMs, ok := FakeClusterVMs[clusterInst.Key]; ok {
 		for _, vm := range clusterVMs {
-			if _, ok := vms[vm.Name]; ok {
-				FakeRamUsed -= 4096
-				FakeVcpusUsed -= 2
-				FakeDiskUsed -= 40
+			if vmFlavor, ok := vms[vm.Name]; ok {
+				UpdateCommonResourcesUsed(vmFlavor, ResourceRemove)
 				if vm.Name == rootLBFQDN {
 					FakeExternalIpsUsed -= 1
 				}
 				continue
 			}
-			newVMs = append(newVMs, vm)
 		}
 		delete(FakeClusterVMs, clusterInst.Key)
 	}
@@ -359,12 +415,10 @@ func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        appFQN,
 			Type:        cloudcommon.VMTypeAppVM,
-			InfraFlavor: "x1.small",
+			InfraFlavor: appInst.VmFlavor,
 			Status:      "ACTIVE",
 		})
-		FakeRamUsed += 4096
-		FakeVcpusUsed += 2
-		FakeDiskUsed += 40
+		UpdateCommonResourcesUsed(appInst.VmFlavor, ResourceAdd)
 		FakeExternalIpsUsed += 1 // VMApp create a dedicated LB that consumes one IP
 	}
 	return nil
@@ -377,9 +431,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	if app.Deployment == cloudcommon.DeploymentTypeVM {
 		appFQN := cloudcommon.GetAppFQN(&app.Key)
 		clusterInst.Key.ClusterKey.Name = appFQN + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name
-		FakeRamUsed -= 4096
-		FakeVcpusUsed -= 2
-		FakeDiskUsed -= 40
+		UpdateCommonResourcesUsed(appInst.VmFlavor, ResourceRemove)
 		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {
 			FakeExternalIpsUsed -= 1
 		}
