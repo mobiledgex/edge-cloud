@@ -332,7 +332,7 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 			"key", key,
 			"modRev", notice.ModRev)
 {{- else}}
-			"msg", msg)
+			"message", msg)
 {{- end}}
 {{- end}}
 		err = stream.Send(notice)
@@ -529,7 +529,7 @@ func (s *{{.Name}}Recv) Recv(ctx context.Context, notice *edgeproto.Notice, noti
 		"key", buf.GetKeyVal(),
 		"modRev", notice.ModRev)
 {{- else}}
-		"msg", buf)
+		"message", buf)
 {{- end}}
 {{- end}}
 {{- if .Cache}}

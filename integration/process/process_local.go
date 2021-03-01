@@ -1117,6 +1117,41 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 	return err
 }
 
+func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
+	args := p.getRunArgs()
+	// jaeger version should match "jaeger_version" in
+	// ansible/roles/jaeger/defaults/main.yaml
+	args = append(args,
+		"-p", "16686:16686",
+		"-p", "14268:14268",
+		"jaegertracing/all-in-one:1.17.1")
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	if err == nil {
+		// wait until up
+		url := "http://127.0.0.1:16686/"
+		var resp *http.Response
+		for ii := 0; ii < 30; ii++ {
+			client := http.Client{
+				Timeout: time.Second,
+			}
+			resp, err = client.Get(url)
+			if err != nil {
+				time.Sleep(time.Second)
+				log.Printf("jeager %s try %d: err %v\n", url, ii, err)
+				continue
+			}
+			log.Printf("jeager %s try %d: response %d\n", url, ii, resp.StatusCode)
+			if resp.StatusCode != http.StatusOK {
+				time.Sleep(time.Second)
+				continue
+			}
+			break
+		}
+	}
+	return err
+}
+
 func (p *DockerGeneric) getRunArgs() []string {
 	args := []string{
 		"run", "--rm", "--name", p.Name,

@@ -137,7 +137,7 @@ func (s *internalPki) refreshCerts() {
 	// for e2e-tests, to test refresh set a low refresh interval.
 	// e2e-tests last 15 minutes or so, so it doesn't have to be super fast.
 	if mextls.IsTestTls() {
-		refreshCertInterval = 30 * time.Second
+		refreshCertInterval = 240 * time.Second
 	}
 
 	interval := refreshCertInterval
