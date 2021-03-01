@@ -59,17 +59,34 @@ func (e *EventMock) registerResponders(t *testing.T) {
 			return httpmock.NewStringResponse(200, "Success"), nil
 		},
 	)
+	recordEvent := func(data []byte) {
+		eData := node.EventData{}
+		err := json.Unmarshal(data, &eData)
+		require.Nil(t, err, "json unmarshal event data")
+		require.NotEmpty(t, eData.Name, "event name exists")
+		e.mux.Lock()
+		e.names[strings.ToLower(eData.Name)] = eData.Tags
+		e.mux.Unlock()
+	}
+
 	api = fmt.Sprintf("=~%s/events-log-.*/_doc", e.addr)
 	httpmock.RegisterResponder("POST", api,
 		func(req *http.Request) (*http.Response, error) {
 			data, _ := ioutil.ReadAll(req.Body)
-			eData := node.EventData{}
-			err := json.Unmarshal(data, &eData)
-			require.Nil(t, err, "json unmarshal event data")
-			require.NotEmpty(t, eData.Name, "event name exists")
-			e.mux.Lock()
-			e.names[strings.ToLower(eData.Name)] = eData.Tags
-			e.mux.Unlock()
+			recordEvent(data)
+			return httpmock.NewStringResponse(200, "Success"), nil
+		},
+	)
+	api = fmt.Sprintf("=~%s/.*/_bulk", e.addr)
+	httpmock.RegisterResponder("POST", api,
+		func(req *http.Request) (*http.Response, error) {
+			data, _ := ioutil.ReadAll(req.Body)
+			lines := strings.Split(string(data), "\n")
+			// each record is 2 lines, first line is metadata,
+			// second line is data. Final line is blank.
+			for ii := 0; ii < len(lines)-1; ii += 2 {
+				recordEvent([]byte(lines[ii+1]))
+			}
 			return httpmock.NewStringResponse(200, "Success"), nil
 		},
 	)
@@ -104,7 +121,7 @@ func (e *EventMock) verifyEvent(t *testing.T, name string, tags []node.EventTag)
 }
 
 func TestCloudletApi(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelEvents)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
