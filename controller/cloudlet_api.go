@@ -590,15 +590,23 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			saveCloudlet := false
 			if !s.store.STMGet(stm, &in.Key, &cloudlet) {
 				return in.Key.NotFoundError()
 			}
-			if in.ChefClientKey == nil && cloudlet.State == newState {
-				return nil
+			if in.ChefClientKey != nil || cloudlet.State != newState {
+				saveCloudlet = true
+			}
+			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
+				// Store controller address if crmserver is started locally
+				cloudlet.HostController = *externalApiAddr
+				saveCloudlet = true
 			}
 			cloudlet.ChefClientKey = in.ChefClientKey
 			cloudlet.State = newState
-			s.store.STMPut(stm, &cloudlet)
+			if saveCloudlet {
+				s.store.STMPut(stm, &cloudlet)
+			}
 			return nil
 		})
 		if err != nil {
@@ -632,22 +640,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
-		}
-	} else {
-		// Store controller address if crmserver is started locally
-		cloudlet := edgeproto.Cloudlet{}
-		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if !s.store.STMGet(stm, &in.Key, &cloudlet) {
-				return in.Key.NotFoundError()
-			}
-			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
-				cloudlet.HostController = *externalApiAddr
-				s.store.STMPut(stm, &cloudlet)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
 		}
 	}
 	if deleteAccessVars {
