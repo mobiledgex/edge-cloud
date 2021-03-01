@@ -27,6 +27,8 @@ var spanString = contextKey{}
 var noPanicOrphanedSpans bool
 var SpanServiceName string
 
+var JaegerUnitTest bool
+
 // InitTracer configures the Jaeger OpenTracing client to log traces.
 // Set JAEGER_ENDPOINT to http://<jaegerhost>:14268/api/traces to
 // specify the Jaeger server.
@@ -54,7 +56,7 @@ func InitTracer(tlsConfig *tls.Config) {
 	// Note that we create the Reporter manually to be able to do mTLS
 	rc := &config.ReporterConfig{
 		CollectorEndpoint: jaegerEndpoint,
-		QueueSize:         500,
+		QueueSize:         1000,
 	}
 	logger := zap.NewLogger(slogger.Desugar())
 	reporter := NewReporter(SpanServiceName, tlsConfig, rc, logger)
@@ -65,8 +67,9 @@ func InitTracer(tlsConfig *tls.Config) {
 			Type:  jaeger.SamplerTypeProbabilistic,
 			Param: 0.001,
 		},
+		RPCMetrics: true,
 	}
-	if strings.HasSuffix(os.Args[0], ".test") {
+	if strings.HasSuffix(os.Args[0], ".test") && !JaegerUnitTest {
 		// unit test, don't bother reporting
 		reporter = jaeger.NewNullReporter()
 	}
