@@ -4146,85 +4146,91 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 func (m *VMPool) IsValidArgsForCreateVMPool() error {
-	if m.Errors != nil {
-		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	if m.Vms != nil {
 	}
 	if m.State != 0 {
 		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
 	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
 	if m.Status.MaxTasks != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
 	}
 	if m.Status.MsgCount != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
 	}
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
-	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
-	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
-	}
-	if m.Status.TaskNumber != 0 {
-		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *VMPool) IsValidArgsForDeleteVMPool() error {
-	if m.Errors != nil {
-		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	if m.Vms != nil {
 	}
 	if m.State != 0 {
 		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
 	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
 	if m.Status.MaxTasks != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
 	}
 	if m.Status.MsgCount != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
 	}
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
-	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
-	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
-	}
-	if m.Status.TaskNumber != 0 {
-		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *VMPool) IsValidArgsForUpdateVMPool() error {
-	if m.Errors != nil {
-		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	if m.Vms != nil {
 	}
 	if m.State != 0 {
 		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
 	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
 	if m.Status.MaxTasks != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
 	}
 	if m.Status.MsgCount != 0 {
 		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
 	}
 	if m.Status.Msgs != nil {
 		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
-	}
-	if m.Status.StepName != "" {
-		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
-	}
-	if m.Status.TaskName != "" {
-		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
-	}
-	if m.Status.TaskNumber != 0 {
-		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
 	return nil
 }
@@ -4234,14 +4240,14 @@ func (m *VMPoolMember) IsValidArgsForAddVMPoolMember() error {
 }
 
 func (m *VMPoolMember) IsValidArgsForRemoveVMPoolMember() error {
-	if m.Vm.Flavor != nil {
-		return fmt.Errorf("Invalid field specified: Vm.Flavor, this field is only for internal use")
-	}
 	if m.Vm.NetInfo.ExternalIp != "" {
 		return fmt.Errorf("Invalid field specified: Vm.NetInfo.ExternalIp, this field is only for internal use")
 	}
 	if m.Vm.NetInfo.InternalIp != "" {
 		return fmt.Errorf("Invalid field specified: Vm.NetInfo.InternalIp, this field is only for internal use")
+	}
+	if m.Vm.Flavor != nil {
+		return fmt.Errorf("Invalid field specified: Vm.Flavor, this field is only for internal use")
 	}
 	return nil
 }

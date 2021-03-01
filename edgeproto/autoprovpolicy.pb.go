@@ -3164,14 +3164,20 @@ func IgnoreAutoProvInfoFields(taglist string) cmp.Option {
 }
 
 func (m *AutoProvPolicy) IsValidArgsForCreateAutoProvPolicy() error {
+	if m.Cloudlets != nil {
+	}
 	return nil
 }
 
 func (m *AutoProvPolicy) IsValidArgsForDeleteAutoProvPolicy() error {
+	if m.Cloudlets != nil {
+	}
 	return nil
 }
 
 func (m *AutoProvPolicy) IsValidArgsForUpdateAutoProvPolicy() error {
+	if m.Cloudlets != nil {
+	}
 	return nil
 }
 
