@@ -172,14 +172,14 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("ver", key.AppKey.Version)
 	metric.AddTag("cloudletorg", MyCloudletKey.Organization)
 	metric.AddTag("cloudlet", MyCloudletKey.Name)
-	metric.AddTag("id", *ScaleID)
-	metric.AddTag("method", key.Method)
+	metric.AddStringVal("id", *ScaleID)
+	metric.AddStringVal("method", key.Method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
-	metric.AddTag("foundCloudlet", key.CloudletFound.Name)
-	metric.AddTag("foundOperator", key.CloudletFound.Organization)
+	metric.AddStringVal("foundCloudlet", key.CloudletFound.Name)
+	metric.AddStringVal("foundOperator", key.CloudletFound.Organization)
 	// Cell ID is just a unique number - keep it as a string
-	metric.AddTag("cellID", strconv.FormatUint(uint64(key.CellId), 10))
+	metric.AddStringVal("cellID", strconv.FormatUint(uint64(key.CellId), 10))
 	stat.latency.AddToMetric(&metric)
 	return &metric
 }
