@@ -1272,8 +1272,7 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 			// got deleted in the meantime
 			return nil
 		}
-		if len(in.Resources.Vms) > 0 && len(inst.Resources.Vms) != len(in.Resources.Vms) {
-			inst.Resources = in.Resources
+		if inst.Resources.UpdateResources(&in.Resources) {
 			saveInst = true
 		}
 
