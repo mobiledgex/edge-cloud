@@ -1170,76 +1170,81 @@ func IgnoreExecRequestFields(taglist string) cmp.Option {
 }
 
 func (m *ExecRequest) IsValidArgsForRunCommand() error {
-	if m.AccessUrl != "" {
-		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	if m.Offer != "" {
+		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
 	}
 	if m.Answer != "" {
 		return fmt.Errorf("Invalid field specified: Answer, this field is only for internal use")
 	}
-	if m.Cmd.CloudletMgmtNode != nil {
-		return fmt.Errorf("Invalid field specified: Cmd.CloudletMgmtNode, this field is only for internal use")
-	}
-	if m.Console != nil {
-		return fmt.Errorf("Invalid field specified: Console, this field is only for internal use")
-	}
-	if m.EdgeTurnAddr != "" {
-		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
-	}
 	if m.Err != "" {
 		return fmt.Errorf("Invalid field specified: Err, this field is only for internal use")
+	}
+	if m.Cmd != nil {
+		if m.Cmd.CloudletMgmtNode != nil {
+			return fmt.Errorf("Invalid field specified: Cmd.CloudletMgmtNode, this field is only for internal use")
+		}
 	}
 	if m.Log != nil {
 		return fmt.Errorf("Invalid field specified: Log, this field is only for internal use")
 	}
-	if m.Offer != "" {
-		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
+	if m.Console != nil {
+		return fmt.Errorf("Invalid field specified: Console, this field is only for internal use")
 	}
 	if m.Timeout != 0 {
 		return fmt.Errorf("Invalid field specified: Timeout, this field is only for internal use")
+	}
+	if m.AccessUrl != "" {
+		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	}
+	if m.EdgeTurnAddr != "" {
+		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *ExecRequest) IsValidArgsForRunConsole() error {
-	if m.AccessUrl != "" {
-		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
-	}
-	if m.Answer != "" {
-		return fmt.Errorf("Invalid field specified: Answer, this field is only for internal use")
-	}
-	if m.Cmd != nil {
-		return fmt.Errorf("Invalid field specified: Cmd, this field is only for internal use")
-	}
-	if m.Console != nil {
-		return fmt.Errorf("Invalid field specified: Console, this field is only for internal use")
-	}
 	if m.ContainerId != "" {
 		return fmt.Errorf("Invalid field specified: ContainerId, this field is only for internal use")
-	}
-	if m.EdgeTurnAddr != "" {
-		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
-	}
-	if m.Err != "" {
-		return fmt.Errorf("Invalid field specified: Err, this field is only for internal use")
-	}
-	if m.Log != nil {
-		return fmt.Errorf("Invalid field specified: Log, this field is only for internal use")
 	}
 	if m.Offer != "" {
 		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
 	}
+	if m.Answer != "" {
+		return fmt.Errorf("Invalid field specified: Answer, this field is only for internal use")
+	}
+	if m.Err != "" {
+		return fmt.Errorf("Invalid field specified: Err, this field is only for internal use")
+	}
+	if m.Cmd != nil {
+		return fmt.Errorf("Invalid field specified: Cmd, this field is only for internal use")
+	}
+	if m.Log != nil {
+		return fmt.Errorf("Invalid field specified: Log, this field is only for internal use")
+	}
+	if m.Console != nil {
+		return fmt.Errorf("Invalid field specified: Console, this field is only for internal use")
+	}
 	if m.Timeout != 0 {
 		return fmt.Errorf("Invalid field specified: Timeout, this field is only for internal use")
+	}
+	if m.AccessUrl != "" {
+		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	}
+	if m.EdgeTurnAddr != "" {
+		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *ExecRequest) IsValidArgsForShowLogs() error {
-	if m.AccessUrl != "" {
-		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	if m.Offer != "" {
+		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
 	}
 	if m.Answer != "" {
 		return fmt.Errorf("Invalid field specified: Answer, this field is only for internal use")
+	}
+	if m.Err != "" {
+		return fmt.Errorf("Invalid field specified: Err, this field is only for internal use")
 	}
 	if m.Cmd != nil {
 		return fmt.Errorf("Invalid field specified: Cmd, this field is only for internal use")
@@ -1247,33 +1252,24 @@ func (m *ExecRequest) IsValidArgsForShowLogs() error {
 	if m.Console != nil {
 		return fmt.Errorf("Invalid field specified: Console, this field is only for internal use")
 	}
-	if m.EdgeTurnAddr != "" {
-		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
-	}
-	if m.Err != "" {
-		return fmt.Errorf("Invalid field specified: Err, this field is only for internal use")
-	}
-	if m.Offer != "" {
-		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
-	}
 	if m.Timeout != 0 {
 		return fmt.Errorf("Invalid field specified: Timeout, this field is only for internal use")
+	}
+	if m.AccessUrl != "" {
+		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	}
+	if m.EdgeTurnAddr != "" {
+		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *ExecRequest) IsValidArgsForAccessCloudlet() error {
-	if m.AccessUrl != "" {
-		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
-	}
-	if m.Answer != "" {
-		return fmt.Errorf("Invalid field specified: Answer, this field is only for internal use")
+	if m.AppInstKey.AppKey.Organization != "" {
+		return fmt.Errorf("Invalid field specified: AppInstKey.AppKey.Organization, this field is only for internal use")
 	}
 	if m.AppInstKey.AppKey.Name != "" {
 		return fmt.Errorf("Invalid field specified: AppInstKey.AppKey.Name, this field is only for internal use")
-	}
-	if m.AppInstKey.AppKey.Organization != "" {
-		return fmt.Errorf("Invalid field specified: AppInstKey.AppKey.Organization, this field is only for internal use")
 	}
 	if m.AppInstKey.AppKey.Version != "" {
 		return fmt.Errorf("Invalid field specified: AppInstKey.AppKey.Version, this field is only for internal use")
@@ -1284,14 +1280,14 @@ func (m *ExecRequest) IsValidArgsForAccessCloudlet() error {
 	if m.AppInstKey.ClusterInstKey.Organization != "" {
 		return fmt.Errorf("Invalid field specified: AppInstKey.ClusterInstKey.Organization, this field is only for internal use")
 	}
-	if m.Console != nil {
-		return fmt.Errorf("Invalid field specified: Console, this field is only for internal use")
-	}
 	if m.ContainerId != "" {
 		return fmt.Errorf("Invalid field specified: ContainerId, this field is only for internal use")
 	}
-	if m.EdgeTurnAddr != "" {
-		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
+	if m.Offer != "" {
+		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
+	}
+	if m.Answer != "" {
+		return fmt.Errorf("Invalid field specified: Answer, this field is only for internal use")
 	}
 	if m.Err != "" {
 		return fmt.Errorf("Invalid field specified: Err, this field is only for internal use")
@@ -1299,33 +1295,41 @@ func (m *ExecRequest) IsValidArgsForAccessCloudlet() error {
 	if m.Log != nil {
 		return fmt.Errorf("Invalid field specified: Log, this field is only for internal use")
 	}
-	if m.Offer != "" {
-		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
+	if m.Console != nil {
+		return fmt.Errorf("Invalid field specified: Console, this field is only for internal use")
 	}
 	if m.Timeout != 0 {
 		return fmt.Errorf("Invalid field specified: Timeout, this field is only for internal use")
+	}
+	if m.AccessUrl != "" {
+		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	}
+	if m.EdgeTurnAddr != "" {
+		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
 	}
 	return nil
 }
 
 func (m *ExecRequest) IsValidArgsForSendLocalRequest() error {
-	if m.AccessUrl != "" {
-		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	if m.Offer != "" {
+		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
 	}
 	if m.Answer != "" {
 		return fmt.Errorf("Invalid field specified: Answer, this field is only for internal use")
 	}
-	if m.EdgeTurnAddr != "" {
-		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
-	}
 	if m.Err != "" {
 		return fmt.Errorf("Invalid field specified: Err, this field is only for internal use")
 	}
-	if m.Offer != "" {
-		return fmt.Errorf("Invalid field specified: Offer, this field is only for internal use")
+	if m.Console != nil {
 	}
 	if m.Timeout != 0 {
 		return fmt.Errorf("Invalid field specified: Timeout, this field is only for internal use")
+	}
+	if m.AccessUrl != "" {
+		return fmt.Errorf("Invalid field specified: AccessUrl, this field is only for internal use")
+	}
+	if m.EdgeTurnAddr != "" {
+		return fmt.Errorf("Invalid field specified: EdgeTurnAddr, this field is only for internal use")
 	}
 	return nil
 }

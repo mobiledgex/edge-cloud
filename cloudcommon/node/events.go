@@ -1,6 +1,7 @@
 package node
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	fmt "fmt"
@@ -8,8 +9,8 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v7"
@@ -84,11 +85,24 @@ var (
 	AuditType = "audit"
 
 	DefaultTimeDuration = 48 * time.Hour
+
+	MaxQueuedEvents = 1000
 )
 
 type EventData struct {
 	Name      string            `json:"name"`
 	Org       []string          `json:"org"`
+	Type      string            `json:"type"`
+	Region    string            `json:"region,omitempty"`
+	Timestamp time.Time         `json:"timestamp"`
+	Error     string            `json:"error,omitempty"`
+	Tags      []EventTag        `json:"tags,omitempty"`  // this is needed for writing to elasticsearch
+	Mtags     map[string]string `json:"mtags,omitempty"` // used for show output
+}
+
+type EventDataOld struct {
+	Name      string            `json:"name"`
+	Org       string            `json:"org"`
 	Type      string            `json:"type"`
 	Region    string            `json:"region,omitempty"`
 	Timestamp time.Time         `json:"timestamp"`
@@ -122,11 +136,11 @@ type EventSearch struct {
 }
 
 type EventTerms struct {
-	Names   []string `json:"names,omitempty"`
-	Orgs    []string `json:"orgs,omitempty"`
-	Types   []string `json:"types,omitempty"`
-	Regions []string `json:"regions,omitempty"`
-	TagKeys []string `json:"tagkeys,omitempty"`
+	Names   []AggrVal `json:"names,omitempty"`
+	Orgs    []AggrVal `json:"orgs,omitempty"`
+	Types   []AggrVal `json:"types,omitempty"`
+	Regions []AggrVal `json:"regions,omitempty"`
+	TagKeys []AggrVal `json:"tagkeys,omitempty"`
 }
 
 // These search structs are just for parsing the search response from ElasticSearch
@@ -153,11 +167,12 @@ type AggrResult struct {
 }
 type AggrVal struct {
 	Key      string `json:"key"`
-	DocCount int    `json:"doc_count"`
+	DocCount int    `json:"count,omitempty" yaml:"count,omitempty" mapstructure:"doc_count,omitempty"`
 }
 
 func (s *NodeMgr) initEvents(ctx context.Context, opts *NodeOptions) error {
-	s.esEvents = make(chan esapi.IndexRequest, 100)
+	s.esEvents = make([][]byte, 0)
+	s.esWriteSignal = make(chan bool, 1)
 	s.esEventsDone = make(chan struct{})
 	// ES_SERVER_URLS should be set in environment, it exists as an parameter
 	// option just for unit-tests.
@@ -233,26 +248,51 @@ func (s *NodeMgr) writeEvents() {
 	}
 	// write events
 	for !done {
-		var req esapi.IndexRequest
 		select {
-		case req = <-s.esEvents:
+		case <-s.esWriteSignal:
 		case <-s.esEventsDone:
 			done = true
+		}
+		if done {
 			break
 		}
-		res, err := req.Do(context.Background(), s.ESClient)
-		if err == nil && res.StatusCode/100 != http.StatusOK/100 {
-			res.Body.Close()
-			err = fmt.Errorf("%v", res)
+		s.esEventsMux.Lock()
+		events := s.esEvents
+		s.esEvents = make([][]byte, 0)
+		s.esEventsMux.Unlock()
+
+		if len(events) == 0 {
+			continue
 		}
+		buf := bytes.Buffer{}
+		for _, dat := range events {
+			buf.WriteString(`{"index":{}}`)
+			buf.WriteRune('\n')
+			buf.Write(dat)
+			buf.WriteRune('\n')
+		}
+		startT := time.Now()
+		req := esapi.BulkRequest{
+			Index: esEventLog + "-" + indexTime(startT),
+			Body:  bytes.NewReader(buf.Bytes()),
+		}
+		res, err := req.Do(context.Background(), s.ESClient)
+		took := time.Since(startT).String()
+		status := 0
+		if res != nil {
+			status = res.StatusCode
+		}
+		log.DebugLog(log.DebugLevelEvents, "write events took", "took", took, "num", len(events), "err", err, "status", status)
 		if err != nil {
 			span := log.StartSpan(log.DebugLevelEvents, "es-write-event")
 			ctx := log.ContextWithSpan(context.Background(), span)
-			log.SpanLog(ctx, log.DebugLevelEvents, "failed to log event", "err", err)
+			log.SpanLog(ctx, log.DebugLevelEvents, "failed to log events", "err", err, "res", res.String(), "num", len(events), "took", took)
 			span.Finish()
-			continue
 		}
-		res.Body.Close()
+		if res != nil && res.Body != nil {
+			res.Body.Close()
+		}
+		atomic.AddUint64(&s.ESWroteEvents, uint64(len(events)))
 	}
 }
 
@@ -272,6 +312,13 @@ func (s *NodeMgr) writeIndex(ctx context.Context) error {
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "write event-log index template", "res", res)
 	return nil
+}
+
+func (s *NodeMgr) esQueuedEvent() {
+	select {
+	case s.esWriteSignal <- true:
+	default:
+	}
 }
 
 func (s *NodeMgr) Event(ctx context.Context, name, org string, keyTags map[string]string, err error, keysAndValues ...string) {
@@ -356,16 +403,15 @@ func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[
 		return
 	}
 
-	req := esapi.IndexRequest{
-		Index: esEventLog + "-" + indexTime(ts),
-		Body:  strings.NewReader(string(dat)),
-	}
-	select {
-	case s.esEvents <- req:
-		log.SpanLog(ctx, log.DebugLevelEvents, "queued event", "event", string(dat))
-	default:
+	s.esEventsMux.Lock()
+	if len(s.esEvents) >= MaxQueuedEvents {
 		log.SpanLog(ctx, log.DebugLevelEvents, "dropped event", "event", string(dat))
+	} else {
+		s.esEvents = append(s.esEvents, dat)
+		s.esQueuedEvent()
+		log.SpanLog(ctx, log.DebugLevelEvents, "queued event", "event", string(dat))
 	}
+	s.esEventsMux.Unlock()
 }
 
 func (s *NodeMgr) ShowEvents(ctx context.Context, search *EventSearch) ([]EventData, error) {
@@ -481,7 +527,7 @@ func (s *NodeMgr) getQuery(ctx context.Context, searchType string, search *Event
 	// allowed orgs for rbac enforcement
 	filter := []map[string]interface{}{}
 	if len(search.AllowedOrgs) > 0 {
-		filter = append(filter, esSearchKeywords("org", search.AllowedOrgs))
+		filter = append(filter, esSearchKeywords("org", search.AllowedOrgs...))
 	}
 	// time range is always specified
 	// Resolve{} is idempotent so may already have been done.
@@ -501,6 +547,10 @@ func (s *NodeMgr) getQuery(ctx context.Context, searchType string, search *Event
 	}
 	filter = append(filter, timerange)
 
+	return s.getQueryCommon(ctx, searchType, search.TimeRange, search.From, search.Limit, "timestamp", smaps, mustnot, filter)
+}
+
+func (s *NodeMgr) getQueryCommon(ctx context.Context, searchType string, tr util.TimeRange, from, limit int, timeField string, smaps, mustnot, filter []map[string]interface{}) (map[string]interface{}, error) {
 	query := map[string]interface{}{}
 	if searchType == searchTypeFilter {
 		query["query"] = map[string]interface{}{
@@ -512,7 +562,7 @@ func (s *NodeMgr) getQuery(ctx context.Context, searchType string, search *Event
 		// sort by timestamp
 		query["sort"] = []map[string]interface{}{
 			map[string]interface{}{
-				"timestamp": map[string]interface{}{
+				timeField: map[string]interface{}{
 					"order": "desc",
 				},
 			},
@@ -527,11 +577,11 @@ func (s *NodeMgr) getQuery(ctx context.Context, searchType string, search *Event
 		}
 	}
 
-	if search.From != 0 {
-		query["from"] = search.From
+	if from != 0 {
+		query["from"] = from
 	}
-	if search.Limit != 0 {
-		query["size"] = search.Limit
+	if limit != 0 {
+		query["size"] = limit
 	}
 	return query, nil
 }
@@ -544,16 +594,16 @@ func (s *NodeMgr) getMatchQueries(ctx context.Context, searchType string, match 
 	// Search parameters (search maps)
 	smaps := []map[string]interface{}{}
 	if len(match.Names) > 0 {
-		smaps = append(smaps, esSearchKeywords("name", match.Names))
+		smaps = append(smaps, esSearchKeywords("name", match.Names...))
 	}
 	if len(match.Regions) > 0 {
-		smaps = append(smaps, esSearchKeywords("region", match.Regions))
+		smaps = append(smaps, esSearchKeywords("region", match.Regions...))
 	}
 	if len(match.Orgs) > 0 {
-		smaps = append(smaps, esSearchKeywords("org", match.Orgs))
+		smaps = append(smaps, esSearchKeywords("org", match.Orgs...))
 	}
 	if len(match.Types) > 0 {
-		smaps = append(smaps, esSearchKeywords("type", match.Types))
+		smaps = append(smaps, esSearchKeywords("type", match.Types...))
 	}
 	if match.Error != "" {
 		smaps = append(smaps, esSearchText("match", "error", match.Error, searchType))
@@ -620,7 +670,7 @@ func esSearchText(typ, field, val, searchType string) map[string]interface{} {
 	}
 }
 
-func esSearchKeywords(field string, vals []string) map[string]interface{} {
+func esSearchKeywords(field string, vals ...string) map[string]interface{} {
 	// multiple values for keywords are treated as an OR
 	smaps := []map[string]interface{}{}
 	for _, val := range vals {
@@ -654,6 +704,9 @@ func (s *NodeMgr) EventTerms(ctx context.Context, search *EventSearch) (*EventTe
 	if err != nil {
 		return nil, err
 	}
+	if search.Limit == 0 {
+		search.Limit = 100
+	}
 	// Set size to 0 because we don't need the overhead of returned results,
 	// because we're going to ignore them. This does however disable pagination
 	// results for event terms, but it's unlikely pagination will be needed
@@ -663,25 +716,25 @@ func (s *NodeMgr) EventTerms(ctx context.Context, search *EventSearch) (*EventTe
 		"names": map[string]interface{}{
 			"terms": map[string]interface{}{
 				"field": "name",
-				"size":  100,
+				"size":  search.Limit,
 			},
 		},
 		"orgs": map[string]interface{}{
 			"terms": map[string]interface{}{
 				"field": "org",
-				"size":  100,
+				"size":  search.Limit,
 			},
 		},
 		"types": map[string]interface{}{
 			"terms": map[string]interface{}{
 				"field": "type",
-				"size":  100,
+				"size":  search.Limit,
 			},
 		},
 		"regions": map[string]interface{}{
 			"terms": map[string]interface{}{
 				"field": "region",
-				"size":  100,
+				"size":  search.Limit,
 			},
 		},
 		"tagkeys": map[string]interface{}{
@@ -692,7 +745,7 @@ func (s *NodeMgr) EventTerms(ctx context.Context, search *EventSearch) (*EventTe
 				"tagkeys": map[string]interface{}{
 					"terms": map[string]interface{}{
 						"field": "tags.key",
-						"size":  500,
+						"size":  2 * search.Limit,
 					},
 				},
 			},
@@ -749,11 +802,7 @@ func (s *NodeMgr) EventTerms(ctx context.Context, search *EventSearch) (*EventTe
 		if err != nil {
 			return nil, err
 		}
-		vals := []string{}
-		for _, bucket := range aggr.Buckets {
-			vals = append(vals, bucket.Key)
-		}
-		sort.Strings(vals)
+		vals := aggr.Buckets
 		switch k {
 		case "names":
 			terms.Names = vals
@@ -770,14 +819,19 @@ func (s *NodeMgr) EventTerms(ctx context.Context, search *EventSearch) (*EventTe
 	return terms, nil
 }
 
-func getMap(source map[string]interface{}, key string) (map[string]interface{}, error) {
-	i, found := source[key]
-	if !found {
-		return nil, fmt.Errorf("key %s not found in %v", key, source)
-	}
-	m, ok := i.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("key %s not a map in %v", key, source)
+func getMap(source map[string]interface{}, keys ...string) (map[string]interface{}, error) {
+	var m map[string]interface{}
+	m = source
+	for _, key := range keys {
+		i, found := m[key]
+		if !found {
+			return nil, fmt.Errorf("key %s not found in %v", key, m)
+		}
+		subm, ok := i.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("key %s not a map in %v", key, m)
+		}
+		m = subm
 	}
 	return m, nil
 }
