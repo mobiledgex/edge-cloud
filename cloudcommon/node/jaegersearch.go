@@ -45,7 +45,7 @@ type SpanOutCondensed struct {
 	StartTime time.Time              `json:"starttime,omitempty"`
 	Duration  time.Duration          `json:"duration,omitempty"`
 	Hostname  string                 `json:"hostname,omitempty"`
-	Tags      map[string]interface{} `json:"tags"`
+	Tags      map[string]interface{} `json:"tags,omitempty"`
 	Logs      []SpanLogOut           `json:"logs,omitempty"`
 }
 
@@ -85,6 +85,7 @@ func (s *NodeMgr) ShowSpansCondensed(ctx context.Context, search *SpanSearch) ([
 		sp.Operation = span.OperationName
 		sp.StartTime = util.TimeFromEpochMicros(int64(span.StartTime))
 		sp.Duration = time.Duration(span.Duration * 1e3)
+		sp.Tags = make(map[string]interface{})
 		for _, kv := range span.Process.Tags {
 			if kv.Key == "hostname" {
 				val, ok := kv.Value.(string)
@@ -95,8 +96,7 @@ func (s *NodeMgr) ShowSpansCondensed(ctx context.Context, search *SpanSearch) ([
 			}
 		}
 		for _, kv := range span.Tags {
-			sp.Tags = make(map[string]interface{})
-			if ignoreSpanTag(kv.Key) {
+			if log.IgnoreSpanTag(kv.Key) {
 				continue
 			}
 			sp.Tags[kv.Key] = kv.Value
@@ -127,17 +127,6 @@ func (s *NodeMgr) ShowSpansCondensed(ctx context.Context, search *SpanSearch) ([
 	return out, nil
 }
 
-func ignoreSpanTag(tag string) bool {
-	if tag == "internal.span.format" ||
-		tag == "sampler.param" ||
-		tag == "sampler.type" ||
-		tag == "sampling.priority" ||
-		tag == "span.kind" {
-		return true
-	}
-	return false
-}
-
 func (s *NodeMgr) searchSpans(ctx context.Context, search *SpanSearch) ([]dbmodel.Span, error) {
 	searchType := searchTypeFilter
 	if search.SearchByRelevance {
@@ -152,11 +141,6 @@ func (s *NodeMgr) searchSpans(ctx context.Context, search *SpanSearch) ([]dbmode
 	if err != nil {
 		return nil, err
 	}
-	dat2, err := json.MarshalIndent(query, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("%s\n", string(dat2))
 
 	req := esapi.SearchRequest{
 		Index: []string{"jaeger-span-*"},
@@ -178,7 +162,7 @@ func (s *NodeMgr) searchSpans(ctx context.Context, search *SpanSearch) ([]dbmode
 	}
 	defer res.Body.Close()
 
-	log.SpanLog(ctx, log.DebugLevelEvents, "event search response", "res", res)
+	log.SpanLog(ctx, log.DebugLevelEvents, "span search response", "res", res)
 
 	resp := SearchResp{}
 	err = json.NewDecoder(res.Body).Decode(&resp)
@@ -205,9 +189,6 @@ func (s *NodeMgr) searchSpans(ctx context.Context, search *SpanSearch) ([]dbmode
 }
 
 func (s *NodeMgr) getSpanQuery(ctx context.Context, searchType string, search *SpanSearch) (map[string]interface{}, error) {
-	if out, err := json.MarshalIndent(search, "", "  "); err == nil {
-		fmt.Printf("search:\n%s\n", string(out))
-	}
 	if searchType != searchTypeFilter && searchType != searchTypeRelevance {
 		return nil, fmt.Errorf("invalid event search type %s", searchType)
 	}
@@ -483,9 +464,6 @@ func (s *NodeMgr) SpanTerms(ctx context.Context, search *SpanSearch) (*SpanTerms
 	aggrs, err := getMap(resp, "aggregations")
 	if err != nil {
 		return nil, err
-	}
-	if debug, err := json.MarshalIndent(aggrs, "", "  "); err == nil {
-		fmt.Printf("aggrs:\n%s\n", debug)
 	}
 	terms := &SpanTerms{}
 	for k, v := range aggrs {
