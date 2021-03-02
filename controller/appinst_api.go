@@ -147,6 +147,12 @@ func (s *AppInstApi) UsesClusterInst(in *edgeproto.ClusterInstKey) bool {
 			if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
 				continue
 			}
+			// If appInst state is `CREATING_DEPENDENCIES`, then this appInst
+			// itself has auto created this cluster. Hence, ignore it to
+			// avoid the deadlock
+			if val.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
+				continue
+			}
 			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name, "autodelete", app.DelOpt.String())
 			if app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE {
 				return true
