@@ -135,6 +135,7 @@ func SpanToString(ctx context.Context) string {
 }
 
 func NewSpanFromString(lvl uint64, val, spanName string) opentracing.Span {
+	linenoOpt := WithSpanLineno{GetLineno(1)}
 	if val != "" {
 		var t TraceData
 		t = make(map[string]string)
@@ -144,9 +145,9 @@ func NewSpanFromString(lvl uint64, val, spanName string) opentracing.Span {
 			if err == nil {
 				// parent span exists so new lvl is ignored,
 				// lvl used for parent is honored.
-				return StartSpan(IgnoreLvl, spanName, ext.RPCServerOption(spanCtx))
+				return StartSpan(IgnoreLvl, spanName, ext.RPCServerOption(spanCtx), linenoOpt)
 			}
 		}
 	}
-	return StartSpan(lvl, spanName)
+	return StartSpan(lvl, spanName, linenoOpt)
 }

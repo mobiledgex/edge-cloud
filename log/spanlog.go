@@ -27,6 +27,17 @@ func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOp
 	if tracer == nil {
 		panic("tracer not initialized. Use log.InitTracer()")
 	}
+
+	// Add lineno tag if not specified by caller.
+	// This check avoids duplicate calls to runtime.Caller() which
+	// is expensive.
+	var withSpanLineno *WithSpanLineno
+	for _, op := range opts {
+		if v, ok := op.(WithSpanLineno); ok {
+			withSpanLineno = &v
+			break
+		}
+	}
 	ospan := tracer.StartSpan(operationName, opts...)
 	if lvl == SuppressLvl {
 		// log to span but not to disk, allows caller to decide
@@ -58,10 +69,21 @@ func StartSpan(lvl uint64, operationName string, opts ...opentracing.StartSpanOp
 		span.suppress = true
 	}
 
-	if jspan.SpanContext().IsSampled() && !span.suppress {
-		ec := zapcore.NewEntryCaller(runtime.Caller(1))
-		spanlogger.Info(getSpanMsg(span, ec.TrimmedPath(), "start "+operationName))
+	// passing the option into StartSpan to try to set the tag didn't work
+	// because of checking for sampling in jaeger code, so set lineno tag
+	// after span is created here.
+	lineno := ""
+	if withSpanLineno != nil {
+		lineno = withSpanLineno.lineno
+	} else {
+		lineno = GetLineno(1)
 	}
+	span.SetTag("lineno", lineno)
+
+	if jspan.SpanContext().IsSampled() && !span.suppress {
+		spanlogger.Info(getSpanMsg(span, lineno, "start "+operationName))
+	}
+
 	return span
 }
 
@@ -127,8 +149,7 @@ func SpanLog(ctx context.Context, lvl uint64, msg string, keysAndValues ...inter
 		return
 	}
 
-	ec := zapcore.NewEntryCaller(runtime.Caller(1))
-	lineno := ec.TrimmedPath()
+	lineno := GetLineno(1)
 	if span.noTracing {
 		// just log to disk
 		zfields := getFields(keysAndValues)
@@ -191,15 +212,11 @@ func (s *Span) Finish() {
 		return
 	}
 
-	ec := zapcore.NewEntryCaller(runtime.Caller(1))
-	lineno := ec.TrimmedPath()
+	lineno := GetLineno(1)
 
 	fields := []zap.Field{}
 	for k, v := range jspan.Tags() {
-		if k == "span.kind" ||
-			k == "sampler.type" ||
-			k == "sampler.param" ||
-			k == "sampling.priority" {
+		if IgnoreSpanTag(k) {
 			continue
 		}
 		fields = append(fields, zap.Any(k, v))
@@ -230,4 +247,26 @@ func NoLogSpan(span opentracing.Span) {
 
 func ForceLogSpan(span opentracing.Span) {
 	ext.SamplingPriority.Set(span, 1)
+}
+
+func GetLineno(skip int) string {
+	ec := zapcore.NewEntryCaller(runtime.Caller(skip + 1))
+	return ec.TrimmedPath()
+}
+
+type WithSpanLineno struct {
+	lineno string
+}
+
+func (s WithSpanLineno) Apply(options *opentracing.StartSpanOptions) {}
+
+func IgnoreSpanTag(tag string) bool {
+	if tag == "internal.span.format" ||
+		tag == "sampler.param" ||
+		tag == "sampler.type" ||
+		tag == "sampling.priority" ||
+		tag == "span.kind" {
+		return true
+	}
+	return false
 }
