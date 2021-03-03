@@ -179,6 +179,44 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	return clusterInst.IpAccess, nil
 }
 
+func validatePlatformForDeployment(ctx context.Context, platformType edgeproto.PlatformType, deploymentType string) error {
+	log.DebugLog(log.DebugLevelApi, "validatePlatformForDeployment", "platformType", platformType.String(), "deploymentType", deploymentType)
+
+	switch platformType {
+	case edgeproto.PlatformType_PLATFORM_TYPE_GCP:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AZURE:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
+		if deploymentType != cloudcommon.DeploymentTypeKubernetes {
+			return fmt.Errorf("Only kubernetes clusters can be deployed in cloudlet platform: %s", platformType.String())
+		}
+	}
+	return nil
+}
+
+func validateNumNodesForDeployment(ctx context.Context, platformType edgeproto.PlatformType, numnodes uint32) error {
+	log.DebugLog(log.DebugLevelApi, "validatePlatformForDeployment", "platformType", platformType.String(), "numnodes", numnodes)
+
+	switch platformType {
+	case edgeproto.PlatformType_PLATFORM_TYPE_GCP:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AZURE:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
+		if numnodes == 0 {
+			return fmt.Errorf("NumNodes cannot be 0 for %s", platformType.String())
+		}
+	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
+		if numnodes != 0 {
+			return fmt.Errorf("NumNodes must be 0 for %s", platformType.String())
+		}
+	}
+	return nil
+}
+
 func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}
 	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb, SaveOnStreamObj)
@@ -723,14 +761,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
 			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
-		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
-			if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
-				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
-			}
-			if in.NumNodes == 0 {
-				return errors.New("NumNodes cannot be 0 for Azure or GCP")
-			}
-
+		err = validatePlatformForDeployment(ctx, cloudlet.PlatformType, in.Deployment)
+		if err != nil {
+			return err
+		}
+		err = validateNumNodesForDeployment(ctx, cloudlet.PlatformType, in.NumNodes)
+		if err != nil {
+			return err
 		}
 		if err := validateClusterInstUpdates(ctx, stm, in); err != nil {
 			return err

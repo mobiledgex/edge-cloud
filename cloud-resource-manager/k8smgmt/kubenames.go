@@ -73,6 +73,10 @@ func FixImagePath(origImagePath string) string {
 	return newImagePath
 }
 
+func GetNormalizedClusterName(clusterInst *edgeproto.ClusterInst) string {
+	return NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
+}
+
 // GetKubeNames udpates kubeNames with normalized strings for the included clusterinst, app, and appisnt
 func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*KubeNames, error) {
 	if clusterInst == nil {
@@ -85,7 +89,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		return nil, fmt.Errorf("nil app inst")
 	}
 	kubeNames := KubeNames{}
-	kubeNames.ClusterName = NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Organization)
+	kubeNames.ClusterName = GetNormalizedClusterName(clusterInst)
 	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(&clusterInst.Key)
 	kubeNames.AppName = NormalizeName(app.Key.Name)
 	kubeNames.AppVersion = NormalizeName(app.Key.Version)
