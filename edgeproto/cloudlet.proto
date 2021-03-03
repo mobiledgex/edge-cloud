@@ -113,11 +113,8 @@ message PlatformConfig {
 // 9: `PLATFORM_TYPE_VM_POOL`
 // 10: `PLATFORM_TYPE_AWS_EC2`
 // 11: `PLATFORM_TYPE_VCD`
-<<<<<<< HEAD
-=======
 // 12: `PLATFORM_TYPE_ANTHOS`
 // 13: `PLATFORM_TYPE_KIND`
->>>>>>> master
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;

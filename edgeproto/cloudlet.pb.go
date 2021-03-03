@@ -1102,7 +1102,6 @@ func init() {
 func init() { proto.RegisterFile("cloudlet.proto", fileDescriptor_3aea31a648a25d86) }
 
 var fileDescriptor_3aea31a648a25d86 = []byte{
-
 	// 3838 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x39, 0x5d, 0x6c, 0x1b, 0x47,
 	0x7a, 0x5e, 0xfd, 0x99, 0xfc, 0x28, 0x51, 0xd4, 0xc8, 0x92, 0xd6, 0xb4, 0x2d, 0xcb, 0x9b, 0x3a,
@@ -1344,7 +1343,6 @@ var fileDescriptor_3aea31a648a25d86 = []byte{
 	0x8f, 0x1f, 0x2f, 0x2a, 0x9f, 0x3c, 0x5e, 0x54, 0x7e, 0xfa, 0x78, 0x51, 0xf9, 0xe0, 0xd3, 0xc5,
 	0x73, 0x9f, 0x7c, 0xba, 0x78, 0xee, 0x5f, 0x3f, 0x5d, 0x3c, 0x77, 0x30, 0x21, 0x04, 0xdf, 0xfe,
 	0xff, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x55, 0xaa, 0x4b, 0xe7, 0x2b, 0x00, 0x00,
->>>>>>> master
 }
 
 func (this *CloudletKey) GoString() string {
@@ -8585,11 +8583,8 @@ var PlatformTypeStrings = []string{
 	"PLATFORM_TYPE_VM_POOL",
 	"PLATFORM_TYPE_AWS_EC2",
 	"PLATFORM_TYPE_VCD",
-<<<<<<< HEAD
-=======
 	"PLATFORM_TYPE_ANTHOS",
 	"PLATFORM_TYPE_KIND",
->>>>>>> master
 }
 
 const (
@@ -8605,11 +8600,8 @@ const (
 	PlatformTypePLATFORM_TYPE_VM_POOL   uint64 = 1 << 9
 	PlatformTypePLATFORM_TYPE_AWS_EC2   uint64 = 1 << 10
 	PlatformTypePLATFORM_TYPE_VCD       uint64 = 1 << 11
-<<<<<<< HEAD
-=======
 	PlatformTypePLATFORM_TYPE_ANTHOS    uint64 = 1 << 12
 	PlatformTypePLATFORM_TYPE_KIND      uint64 = 1 << 13
->>>>>>> master
 )
 
 var PlatformType_CamelName = map[int32]string{
@@ -8637,13 +8629,10 @@ var PlatformType_CamelName = map[int32]string{
 	10: "PlatformTypeAwsEc2",
 	// PLATFORM_TYPE_VCD -> PlatformTypeVcd
 	11: "PlatformTypeVcd",
-<<<<<<< HEAD
-=======
 	// PLATFORM_TYPE_ANTHOS -> PlatformTypeAnthos
 	12: "PlatformTypeAnthos",
 	// PLATFORM_TYPE_KIND -> PlatformTypeKind
 	13: "PlatformTypeKind",
->>>>>>> master
 }
 var PlatformType_CamelValue = map[string]int32{
 	"PlatformTypeFake":      0,
@@ -8658,11 +8647,8 @@ var PlatformType_CamelValue = map[string]int32{
 	"PlatformTypeVmPool":    9,
 	"PlatformTypeAwsEc2":    10,
 	"PlatformTypeVcd":       11,
-<<<<<<< HEAD
-=======
 	"PlatformTypeAnthos":    12,
 	"PlatformTypeKind":      13,
->>>>>>> master
 }
 
 func (e *PlatformType) UnmarshalYAML(unmarshal func(interface{}) error) error {

@@ -685,7 +685,6 @@ var AllDataOptionalArgs = []string{
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
-
 	"flavors:#.fields":                                                              "Fields are used for the Update API to specify which fields to apply",
 	"flavors:#.key.name":                                                            "Flavor name",
 	"flavors:#.ram":                                                                 "RAM in megabytes",
@@ -1016,7 +1015,6 @@ var AllDataComments = map[string]string{
 	"vmpools:#.state":                                                               "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"vmpools:#.errors":                                                              "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
->>>>>>> master
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
