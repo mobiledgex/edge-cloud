@@ -1033,3 +1033,26 @@ func GetStreamKeyFromCloudletKey(key *CloudletKey) AppInstKey {
 		},
 	}
 }
+
+func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
+	if inRes == nil || len(inRes.Vms) == 0 {
+		return false
+	}
+	if len(r.Vms) != len(inRes.Vms) {
+		return true
+	}
+	vmStatusMap := make(map[string]string)
+	for _, vmInfo := range r.Vms {
+		vmStatusMap[vmInfo.Name] = vmInfo.Status
+	}
+	for _, vmInfo := range inRes.Vms {
+		status, ok := vmStatusMap[vmInfo.Name]
+		if !ok {
+			return true
+		}
+		if status != vmInfo.Status {
+			return true
+		}
+	}
+	return false
+}

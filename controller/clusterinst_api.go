@@ -1266,21 +1266,24 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 	streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		saveInst := false
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
-		inst.Resources = in.Resources
-
-		if inst.State == in.State {
-			log.SpanLog(ctx, log.DebugLevelApi, "no state change")
-			return nil
+		if inst.Resources.UpdateResources(&in.Resources) {
+			inst.Resources = in.Resources
+			saveInst = true
 		}
-		// please see state_transitions.md
-		if !crmTransitionOk(inst.State, in.State) {
-			log.SpanLog(ctx, log.DebugLevelApi, "invalid state transition", "cur", inst.State, "next", in.State)
-			return nil
+
+		if inst.State != in.State {
+			saveInst = true
+			// please see state_transitions.md
+			if !crmTransitionOk(inst.State, in.State) {
+				log.SpanLog(ctx, log.DebugLevelApi, "invalid state transition", "cur", inst.State, "next", in.State)
+				return nil
+			}
 		}
 		inst.State = in.State
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
@@ -1288,7 +1291,9 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 		} else {
 			inst.Errors = nil
 		}
-		s.store.STMPut(stm, &inst)
+		if saveInst {
+			s.store.STMPut(stm, &inst)
+		}
 		return nil
 	})
 	if in.State == edgeproto.TrackedState_DELETE_DONE {
