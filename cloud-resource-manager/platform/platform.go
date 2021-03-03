@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -30,19 +32,20 @@ type PlatformConfig struct {
 	DeploymentTag       string
 	Upgrade             bool
 	AccessApi           AccessApi
+	TrustPolicy         string
 }
 
 type Caches struct {
-	SettingsCache      *edgeproto.SettingsCache
-	FlavorCache        *edgeproto.FlavorCache
-	PrivacyPolicyCache *edgeproto.PrivacyPolicyCache
-	ClusterInstCache   *edgeproto.ClusterInstCache
-	AppInstCache       *edgeproto.AppInstCache
-	AppCache           *edgeproto.AppCache
-	ResTagTableCache   *edgeproto.ResTagTableCache
-	CloudletCache      *edgeproto.CloudletCache
-	VMPoolCache        *edgeproto.VMPoolCache
-	VMPoolInfoCache    *edgeproto.VMPoolInfoCache
+	SettingsCache    *edgeproto.SettingsCache
+	FlavorCache      *edgeproto.FlavorCache
+	TrustPolicyCache *edgeproto.TrustPolicyCache
+	ClusterInstCache *edgeproto.ClusterInstCache
+	AppInstCache     *edgeproto.AppInstCache
+	AppCache         *edgeproto.AppCache
+	ResTagTableCache *edgeproto.ResTagTableCache
+	CloudletCache    *edgeproto.CloudletCache
+	VMPoolCache      *edgeproto.VMPoolCache
+	VMPoolInfoCache  *edgeproto.VMPoolInfoCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
@@ -51,8 +54,8 @@ type Caches struct {
 
 // Platform abstracts the underlying cloudlet platform.
 type Platform interface {
-	// GetType returns the cloudlet's stack type, i.e. Openstack, Azure, etc.
-	GetType() string
+	// GetVersionProperties returns properties related to the platform version
+	GetVersionProperties() map[string]string
 	// Init is called once during CRM startup.
 	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
@@ -60,17 +63,23 @@ type Platform interface {
 	// Returns true if sync with controller is required
 	GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error
 	// Create a Kubernetes Cluster on the cloudlet.
-	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
+	CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error
 	// Delete a Kuberentes Cluster on the cloudlet.
 	DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update the cluster
-	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get resources used by the cloudlet
-	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error)
+	GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResourcesSnapshot, error)
+	// Get cluster additional resources used by the vms specific to the platform
+	GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]edgeproto.InfraResource) map[string]edgeproto.InfraResource
+	// Get Cloudlet Resource Properties
+	GetCloudletResourceQuotaProps(ctx context.Context) (*edgeproto.CloudletResourceQuotaProps, error)
+	// Get cluster additional resource metric
+	GetClusterAdditionalResourceMetric(ctx context.Context, cloudlet *edgeproto.Cloudlet, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error
 	// Get resources used by the cluster
 	GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error)
 	// Create an AppInst on a Cluster
-	CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error
+	CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete an AppInst on a Cluster
 	DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update an AppInst
@@ -89,6 +98,8 @@ type Platform interface {
 	GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error)
 	// Set power state of the AppInst
 	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
+	// Is cloudlet services running locally to controller on the given platform
+	IsCloudletServicesLocal() bool
 	// Create Cloudlet
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
@@ -99,7 +110,7 @@ type Platform interface {
 	// Delete Cloudlet AccessVars
 	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, vaultConfig *vault.Config, updateCallback edgeproto.CacheUpdateCallback) error
 	// Sync data with controller
-	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState edgeproto.CloudletState) error
+	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState dme.CloudletState) error
 	// Get Cloudlet Manifest Config
 	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, flavor *edgeproto.Flavor, caches *Caches) (*edgeproto.CloudletManifest, error)
 	// Verify VM
@@ -108,11 +119,20 @@ type Platform interface {
 	GetCloudletProps(ctx context.Context) (*edgeproto.CloudletProps, error)
 	// Platform-sepcific access data lookup (only called from Controller context)
 	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
+	// Update the cloudlet's Trust Policy
+	UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error
 	// Get restricted cloudlet create status
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
+	// Get ssh clients of all root LBs
+	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
+	// Get RootLB Flavor
+	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
 }
 
 type ClusterSvc interface {
+	// GetVersionProperties returns properties related to the platform version
+	GetVersionProperties() map[string]string
+	// Get AppInst Configs
 	GetAppInstConfigs(ctx context.Context, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst, autoScalePolicy *edgeproto.AutoScalePolicy) ([]*edgeproto.ConfigFile, error)
 }
 
@@ -121,6 +141,7 @@ type ClusterSvc interface {
 // use Vault directly (Controller) or may go indirectly via Controller (CRM).
 type AccessApi interface {
 	cloudcommon.RegistryAuthApi
+	cloudcommon.GetPublicCertApi
 	GetCloudletAccessVars(ctx context.Context) (map[string]string, error)
 	SignSSHKey(ctx context.Context, publicKey string) (string, error)
 	GetSSHPublicKey(ctx context.Context) (string, error)
@@ -130,4 +151,19 @@ type AccessApi interface {
 	GetDNSRecords(ctx context.Context, zone, fqdn string) ([]cloudflare.DNSRecord, error)
 	DeleteDNSRecord(ctx context.Context, zone, recordID string) error
 	GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error)
+}
+
+var pfMaps = map[string]string{
+	"fakeinfra": "fake",
+	"edgebox":   "dind",
+}
+
+func GetType(pfType string) string {
+	out := strings.TrimPrefix(pfType, "PLATFORM_TYPE_")
+	out = strings.ToLower(out)
+	out = strings.Replace(out, "_", "", -1)
+	if mapOut, found := pfMaps[out]; found {
+		return mapOut
+	}
+	return out
 }

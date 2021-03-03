@@ -4,13 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
-	edgetls "github.com/mobiledgex/edge-cloud/tls"
-	"github.com/mobiledgex/edge-cloud/vault"
+	mextls "github.com/mobiledgex/edge-cloud/tls"
 )
 
 // Third party services that we deploy all have their own letsencrypt-public
@@ -26,7 +25,7 @@ func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, er
 	tlsOpts := []TlsOp{
 		WithPublicCAPool(),
 	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" {
+	if mextls.IsTestTls() {
 		// skip verifying cert if e2e-tests, because cert
 		// will be self-signed
 		log.SpanLog(ctx, log.DebugLevelInfo, "public client tls e2e-test mode")
@@ -39,49 +38,53 @@ func (s *NodeMgr) GetPublicClientTlsConfig(ctx context.Context) (*tls.Config, er
 		tlsOpts...)
 }
 
-// GetPublicCertApi abstracts the way the public cert is retrieved.
-// Certain services, like DME running on a Cloudlet, may need to connect
-// to the controller to get a public cert from Vault.
-type GetPublicCertApi interface {
-	GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error)
-}
-
-// VaultPublicCertApi implements GetPublicCertApi by connecting directly to Vault.
-type VaultPublicCertApi struct {
-	VaultConfig *vault.Config
-}
-
-func (s *VaultPublicCertApi) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
-	return vault.GetPublicCert(s.VaultConfig, commonName)
-}
-
 // PublicCertManager manages refreshing the public cert.
 type PublicCertManager struct {
-	commonName        string
-	getPublicCertApi  GetPublicCertApi
-	cert              *tls.Certificate
-	expiresAt         time.Time
-	done              bool
-	refreshTrigger    chan bool
-	refreshThreshold  time.Duration
-	refreshRetryDelay time.Duration
-	mux               sync.Mutex
+	commonName          string
+	tlsMode             mextls.TLSMode
+	useGetPublicCertApi bool // denotes whether to use GetPublicCertApi to grab certs or use command line provided cert (should be equivalent to useVaultPki flag)
+	getPublicCertApi    cloudcommon.GetPublicCertApi
+	cert                *tls.Certificate
+	expiresAt           time.Time
+	done                bool
+	refreshTrigger      chan bool
+	refreshThreshold    time.Duration
+	refreshRetryDelay   time.Duration
+	mux                 sync.Mutex
 }
 
-func NewPublicCertManager(commonName string, getPublicCertApi GetPublicCertApi) *PublicCertManager {
+func NewPublicCertManager(commonName string, getPublicCertApi cloudcommon.GetPublicCertApi, tlsCertFile string, tlsKeyFile string) (*PublicCertManager, error) {
 	// Nominally letsencrypt certs are valid for 90 days
 	// and they recommend refreshing at 30 days to expiration.
 	mgr := &PublicCertManager{
 		commonName:        commonName,
-		getPublicCertApi:  getPublicCertApi,
 		refreshTrigger:    make(chan bool, 1),
 		refreshThreshold:  30 * 24 * time.Hour,
 		refreshRetryDelay: 24 * time.Hour,
+		tlsMode:           mextls.ServerAuthTLS,
 	}
-	return mgr
+
+	if getPublicCertApi != nil {
+		mgr.useGetPublicCertApi = true
+		mgr.getPublicCertApi = getPublicCertApi
+	} else if tlsCertFile != "" && tlsKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
+		if err != nil {
+			return nil, err
+		}
+		mgr.cert = &cert
+	} else {
+		// no tls
+		mgr.tlsMode = mextls.NoTLS
+	}
+	return mgr, nil
 }
 
 func (s *PublicCertManager) updateCert(ctx context.Context) error {
+	if s.tlsMode == mextls.NoTLS || !s.useGetPublicCertApi {
+		// If no tls or using command line certs, do not update
+		return nil
+	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "update public cert", "name", s.commonName)
 	pubCert, err := s.getPublicCertApi.GetPublicCert(ctx, s.commonName)
 	if err != nil {
@@ -102,6 +105,10 @@ func (s *PublicCertManager) updateCert(ctx context.Context) error {
 
 // For now this just assumes server-side only TLS.
 func (s *PublicCertManager) GetServerTlsConfig(ctx context.Context) (*tls.Config, error) {
+	if s.tlsMode == mextls.NoTLS {
+		// No tls
+		return nil, nil
+	}
 	if s.cert == nil {
 		// make sure we have cert
 		err := s.updateCert(ctx)
@@ -112,12 +119,12 @@ func (s *PublicCertManager) GetServerTlsConfig(ctx context.Context) (*tls.Config
 	config := &tls.Config{
 		MinVersion:     tls.VersionTLS12,
 		ClientAuth:     tls.NoClientCert,
-		GetCertificate: s.getCertificateFunc(),
+		GetCertificate: s.GetCertificateFunc(),
 	}
 	return config, nil
 }
 
-func (s *PublicCertManager) getCertificateFunc() func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (s *PublicCertManager) GetCertificateFunc() func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
 	return func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
 		s.mux.Lock()
 		defer s.mux.Unlock()
@@ -166,19 +173,4 @@ func (s *PublicCertManager) StopRefresh() {
 	case s.refreshTrigger <- true:
 	default:
 	}
-}
-
-// TestPublicCertApi implements GetPublicCertApi for unit/e2e testing
-type TestPublicCertApi struct {
-	GetCount int
-}
-
-func (s *TestPublicCertApi) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
-	cert := &vault.PublicCert{}
-	cert.Cert = edgetls.LocalTestCert
-	cert.Key = edgetls.LocalTestKey
-	// 24 hours in seconds
-	cert.TTL = 24 * 3600
-	s.GetCount++
-	return cert, nil
 }

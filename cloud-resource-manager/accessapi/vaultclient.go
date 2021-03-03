@@ -39,7 +39,7 @@ func NewVaultClient(cloudlet *edgeproto.Cloudlet, vaultConfig *vault.Config, reg
 
 func (s *VaultClient) GetCloudletAccessVars(ctx context.Context) (map[string]string, error) {
 	// Platform-specific implementation.
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, s.cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, s.cloudlet.PlatformType.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -133,9 +133,17 @@ func (s *VaultClient) DeleteDNSRecord(ctx context.Context, zone, recordID string
 
 func (s *VaultClient) GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error) {
 	// Platform-specific implementation
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, s.cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, s.cloudlet.PlatformType.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 	return cloudletPlatform.GetAccessData(ctx, s.cloudlet, s.region, s.vaultConfig, GetSessionTokens, arg)
+}
+
+func (s *VaultClient) GetPublicCert(ctx context.Context, commonName string) (*vault.PublicCert, error) {
+	publicCert, err := vault.GetPublicCert(s.vaultConfig, commonName)
+	if err != nil {
+		return nil, err
+	}
+	return publicCert, nil
 }

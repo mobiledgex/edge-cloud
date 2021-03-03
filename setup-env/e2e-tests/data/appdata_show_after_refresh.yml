@@ -12,13 +12,18 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
-  masternodeflavor: x1.tiny
+  updatetrustpolicytimeout: 5s
+  masternodeflavor: x1.small
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   influxdbmetricsretention: 2h
   cloudletmaintenancetimeout: 2s
   updatevmpooltimeout: 20m0s
+  dmeapimetricscollectioninterval: 1s
+  persistentconnectionmetricscollectioninterval: 1s
+  cleanupreservableautoclusteridletime: 30m0s
+  influxdbcloudletusagemetricsretention: 8760h0m0s
 flavors:
 - key:
     name: x1.tiny
@@ -35,26 +40,6 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
-privacypolicies:
-- key:
-    organization: AcmeAppCo
-    name: PrivPolicy1
-  outboundsecurityrules:
-  - protocol: tcp
-    portrangemin: 443
-    portrangemax: 443
-    remotecidr: 35.247.68.151/32
-  - protocol: tcp
-    portrangemin: 8080
-    portrangemax: 8088
-    remotecidr: 0.0.0.0/0
-  - protocol: udp
-    portrangemin: 53
-    portrangemax: 53
-    remotecidr: 0.0.0.0/0
-  - protocol: icmp
-    remotecidr: 80.0.0.0/8
 
 clusterinsts:
 - key:
@@ -86,7 +71,6 @@ clusterinsts:
   deployment: kubernetes
   nummasters: 1
   numnodes: 2
-  privacypolicy: PrivPolicy1
 
 operatorcodes:
 - code: 31026
@@ -106,6 +90,7 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -119,6 +104,7 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-2
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-3
@@ -132,6 +118,7 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-3
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: azure
     name: azure-cloud-4
@@ -145,6 +132,7 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: azure-cloud-4
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: gcp
     name: gcp-cloud-5
@@ -158,6 +146,7 @@ cloudlets:
     name: DefaultPlatformFlavor
   physicalname: gcp-cloud-5
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 
 cloudletinfos:
 - key:
@@ -166,165 +155,286 @@ cloudletinfos:
   state: CloudletStateReady
   notifyid: 34
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 8192
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 4
+      inframaxvalue: 50
+    - name: Disk
+      value: 80
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
 - key:
     organization: tmus
     name: tmus-cloud-1
   state: CloudletStateReady
   notifyid: 35
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 2
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: SmallCluster
+      organization: AcmeAppCo
+    vmappinsts:
+    - appkey:
+        organization: AcmeAppCo1
+        name: vmapp1
+        version: "1.0"
+      clusterinstkey:
+        clusterkey:
+          name: DefaultVMCluster
+        organization: AcmeAppCo1
 - key:
     organization: tmus
     name: tmus-cloud-2
   state: CloudletStateReady
   notifyid: 36
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 28672
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 14
+      inframaxvalue: 50
+    - name: Disk
+      value: 280
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 3
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: SmallCluster
+      organization: AcmeAppCo
+    vmappinsts:
+    - appkey:
+        organization: AcmeAppCo1
+        name: vmapp2
+        version: "1.0"
+      clusterinstkey:
+        clusterkey:
+          name: DefaultVMCluster
+        organization: AcmeAppCo1
 - key:
     organization: tmus
     name: tmus-cloud-3
   state: CloudletStateReady
   notifyid: 32
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 8192
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 4
+      inframaxvalue: 50
+    - name: Disk
+      value: 80
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
 - key:
     organization: azure
     name: azure-cloud-4
   state: CloudletStateReady
   notifyid: 33
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 8192
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 4
+      inframaxvalue: 50
+    - name: Disk
+      value: 80
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
 apps:
 - key:
     organization: AcmeAppCo
@@ -397,6 +507,7 @@ apps:
         name: standard
         defaultClass: true
   internalports: true
+  trusted: true
 - key:
     organization: Samsung
     name: SamsungEnablingLayer
@@ -418,6 +529,7 @@ apps:
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   internalports: true
+  trusted: true
   defaultflavor:
     name: x1.medium
   annotations: version=7.1.1
@@ -487,7 +599,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: vm
-  accesstype: AccessTypeDirect
+  accesstype: AccessTypeLoadBalancer
 - key:
     organization: AcmeAppCo1
     name: vmapp2
@@ -500,7 +612,7 @@ apps:
   cluster:
     name: DefaultVMCluster
   deployment: vm
-  accesstype: AccessTypeDirect
+  accesstype: AccessTypeLoadBalancer
 - key:
     organization: AcmeAppCo
     name: NoPortsApp
@@ -529,7 +641,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
@@ -597,7 +709,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
     internalport: 9090
@@ -619,7 +731,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: LivenessDynamic
   flavor:
     name: x1.small
 - key:

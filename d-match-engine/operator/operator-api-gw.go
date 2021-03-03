@@ -15,6 +15,8 @@ type OperatorApiGwServers struct {
 type OperatorApiGw interface {
 	// GetOperator Returns the operator name
 	GetOperatorName() string
+	// GetVersionProperties returns properties related to the ApiGw version
+	GetVersionProperties() map[string]string
 	// Init is called once during startup.
 	Init(operatorName string, servers *OperatorApiGwServers) error
 	// VerifyLocation verifies a client's location against the coordinates provided

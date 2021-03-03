@@ -5,7 +5,9 @@ package edgeproto
 
 import (
 	context "context"
+	encoding_binary "encoding/binary"
 	"encoding/json"
+	"errors"
 	fmt "fmt"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -34,18 +36,57 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// VMResource
+//
+// VMResource specifies the resource requirement of a VM
+type VMResource struct {
+	// ClusterInstKey to track which cluster this VM resource belongs to
+	Key ClusterInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
+	// Flavor requirement of the VM required by the cluster
+	VmFlavor *FlavorInfo `protobuf:"bytes,2,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
+	// Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+	Type string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	// Access type for resource of type App VM
+	AppAccessType AccessType `protobuf:"varint,4,opt,name=app_access_type,json=appAccessType,proto3,enum=edgeproto.AccessType" json:"app_access_type,omitempty"`
+}
+
+func (m *VMResource) Reset()         { *m = VMResource{} }
+func (m *VMResource) String() string { return proto.CompactTextString(m) }
+func (*VMResource) ProtoMessage()    {}
+func (*VMResource) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6435a763ece979c6, []int{0}
+}
+func (m *VMResource) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VMResource) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VMResource.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VMResource) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VMResource.Merge(m, src)
+}
+func (m *VMResource) XXX_Size() int {
+	return m.Size()
+}
+func (m *VMResource) XXX_DiscardUnknown() {
+	xxx_messageInfo_VMResource.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VMResource proto.InternalMessageInfo
+
 // CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.
 type CloudletRefs struct {
 	// Cloudlet key
 	Key CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
-	// Clusters instantiated on the Cloudlet
-	Clusters []ClusterKey `protobuf:"bytes,2,rep,name=clusters,proto3" json:"clusters"`
-	// Used RAM in MB
-	UsedRam uint64 `protobuf:"varint,4,opt,name=used_ram,json=usedRam,proto3" json:"used_ram,omitempty"`
-	// Used VCPU cores
-	UsedVcores uint64 `protobuf:"varint,5,opt,name=used_vcores,json=usedVcores,proto3" json:"used_vcores,omitempty"`
-	// Used disk in GB
-	UsedDisk uint64 `protobuf:"varint,6,opt,name=used_disk,json=usedDisk,proto3" json:"used_disk,omitempty"`
 	// Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol
 	// bitmap: bit 0: tcp, bit 1: udp
 	RootLbPorts map[int32]int32 `protobuf:"bytes,8,rep,name=root_lb_ports,json=rootLbPorts,proto3" json:"root_lb_ports,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
@@ -55,13 +96,19 @@ type CloudletRefs struct {
 	UsedStaticIps string `protobuf:"bytes,10,opt,name=used_static_ips,json=usedStaticIps,proto3" json:"used_static_ips,omitempty"`
 	// Used Optional Resources
 	OptResUsedMap map[string]uint32 `protobuf:"bytes,11,rep,name=opt_res_used_map,json=optResUsedMap,proto3" json:"opt_res_used_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	// Track reservable autoclusterinsts ids in use. This is a bitmap.
+	ReservedAutoClusterIds uint64 `protobuf:"fixed64,12,opt,name=reserved_auto_cluster_ids,json=reservedAutoClusterIds,proto3" json:"reserved_auto_cluster_ids,omitempty"`
+	// Clusters instantiated on the Cloudlet
+	ClusterInsts []ClusterInstRefKey `protobuf:"bytes,13,rep,name=cluster_insts,json=clusterInsts,proto3" json:"cluster_insts"`
+	// VM apps instantiated on the Cloudlet
+	VmAppInsts []AppInstRefKey `protobuf:"bytes,14,rep,name=vm_app_insts,json=vmAppInsts,proto3" json:"vm_app_insts"`
 }
 
 func (m *CloudletRefs) Reset()         { *m = CloudletRefs{} }
 func (m *CloudletRefs) String() string { return proto.CompactTextString(m) }
 func (*CloudletRefs) ProtoMessage()    {}
 func (*CloudletRefs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6435a763ece979c6, []int{0}
+	return fileDescriptor_6435a763ece979c6, []int{1}
 }
 func (m *CloudletRefs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -108,7 +155,7 @@ func (m *ClusterRefs) Reset()         { *m = ClusterRefs{} }
 func (m *ClusterRefs) String() string { return proto.CompactTextString(m) }
 func (*ClusterRefs) ProtoMessage()    {}
 func (*ClusterRefs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6435a763ece979c6, []int{1}
+	return fileDescriptor_6435a763ece979c6, []int{2}
 }
 func (m *ClusterRefs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -148,7 +195,7 @@ func (m *AppInstRefs) Reset()         { *m = AppInstRefs{} }
 func (m *AppInstRefs) String() string { return proto.CompactTextString(m) }
 func (*AppInstRefs) ProtoMessage()    {}
 func (*AppInstRefs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6435a763ece979c6, []int{2}
+	return fileDescriptor_6435a763ece979c6, []int{3}
 }
 func (m *AppInstRefs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -178,6 +225,7 @@ func (m *AppInstRefs) XXX_DiscardUnknown() {
 var xxx_messageInfo_AppInstRefs proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*VMResource)(nil), "edgeproto.VMResource")
 	proto.RegisterType((*CloudletRefs)(nil), "edgeproto.CloudletRefs")
 	proto.RegisterMapType((map[string]uint32)(nil), "edgeproto.CloudletRefs.OptResUsedMapEntry")
 	proto.RegisterMapType((map[int32]int32)(nil), "edgeproto.CloudletRefs.RootLbPortsEntry")
@@ -189,53 +237,63 @@ func init() {
 func init() { proto.RegisterFile("refs.proto", fileDescriptor_6435a763ece979c6) }
 
 var fileDescriptor_6435a763ece979c6 = []byte{
-	// 733 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0xcf, 0x4f, 0x13, 0x5b,
-	0x14, 0xee, 0x85, 0x96, 0x47, 0x4f, 0x5f, 0x4b, 0x99, 0xf0, 0x78, 0x97, 0x3e, 0x52, 0xfa, 0x1a,
-	0x63, 0x46, 0x85, 0x29, 0xd4, 0x85, 0x84, 0x44, 0x63, 0x51, 0x17, 0x04, 0x0c, 0x66, 0x88, 0x6c,
-	0x9b, 0xe9, 0xf4, 0x52, 0x26, 0xb4, 0x73, 0x6f, 0xe6, 0xce, 0x80, 0xd5, 0x8d, 0x3b, 0x37, 0x2e,
-	0xf8, 0x13, 0xfc, 0x1b, 0xfc, 0x2b, 0xd8, 0xc9, 0xd2, 0x95, 0xe1, 0xc7, 0xc6, 0xb0, 0x32, 0xa1,
-	0x71, 0x6d, 0xee, 0x9d, 0x99, 0xce, 0x14, 0xa8, 0xc6, 0x85, 0x9b, 0xe6, 0xdc, 0xef, 0x7c, 0xe7,
-	0x9c, 0xef, 0xf4, 0x7c, 0x2d, 0x80, 0x43, 0x76, 0xb8, 0xc6, 0x1c, 0xea, 0x52, 0x25, 0x4d, 0x9a,
-	0x2d, 0x22, 0xc3, 0xc2, 0x72, 0xcb, 0x72, 0x77, 0xbd, 0x86, 0x66, 0xd2, 0x4e, 0xa5, 0x43, 0x1b,
-	0x56, 0x5b, 0xa4, 0x5e, 0x55, 0xc4, 0xe7, 0x82, 0xd9, 0xa6, 0x5e, 0xb3, 0x22, 0x79, 0x2d, 0x62,
-	0xf7, 0x03, 0xbf, 0x49, 0x21, 0x27, 0xd3, 0x6d, 0xe2, 0x06, 0xef, 0xac, 0xd9, 0xf6, 0xb8, 0x4b,
-	0x9c, 0xe0, 0x39, 0x19, 0x3c, 0x2d, 0x9b, 0x87, 0x8c, 0xb4, 0xc1, 0x58, 0x10, 0x4e, 0xb5, 0x68,
-	0x8b, 0xca, 0xb0, 0x22, 0x22, 0x1f, 0x2d, 0x9f, 0x26, 0xe1, 0xef, 0x27, 0x41, 0x57, 0x9d, 0xec,
-	0x70, 0x45, 0x83, 0xd1, 0x3d, 0xd2, 0xc5, 0xa8, 0x84, 0xd4, 0x4c, 0x75, 0x5a, 0xeb, 0xcb, 0xd6,
-	0x42, 0xd6, 0x3a, 0xe9, 0xae, 0x26, 0x8f, 0xbe, 0xcc, 0x25, 0x74, 0x41, 0x54, 0x1e, 0xc0, 0x78,
-	0x30, 0x96, 0xe3, 0x91, 0xd2, 0xa8, 0x9a, 0xa9, 0xfe, 0x33, 0x50, 0x24, 0x53, 0x51, 0x4d, 0x9f,
-	0xac, 0xcc, 0xc0, 0xb8, 0xc7, 0x49, 0xb3, 0xee, 0x18, 0x1d, 0x9c, 0x2c, 0x21, 0x35, 0xa9, 0xff,
-	0x25, 0xde, 0xba, 0xd1, 0x51, 0xe6, 0x20, 0x23, 0x53, 0xfb, 0x26, 0x75, 0x08, 0xc7, 0x29, 0x99,
-	0x05, 0x01, 0x6d, 0x4b, 0x44, 0xf9, 0x0f, 0xd2, 0x92, 0xd0, 0xb4, 0xf8, 0x1e, 0x1e, 0x93, 0x69,
-	0xd9, 0xec, 0xa9, 0xc5, 0xf7, 0x94, 0x0d, 0xc8, 0x3a, 0x94, 0xba, 0xf5, 0x76, 0xa3, 0xce, 0xa8,
-	0xe3, 0x72, 0x3c, 0x2e, 0x65, 0xa9, 0x37, 0xec, 0x22, 0x36, 0xd6, 0x74, 0x4a, 0xdd, 0x8d, 0xc6,
-	0x0b, 0x41, 0x7d, 0x66, 0xbb, 0x4e, 0x57, 0xcf, 0x38, 0x11, 0xa2, 0xa8, 0x90, 0xf7, 0x47, 0x75,
-	0x6d, 0xa3, 0x63, 0x99, 0x75, 0x8b, 0x71, 0x9c, 0x2e, 0x21, 0x35, 0xa5, 0xe7, 0xe4, 0x44, 0x1f,
-	0x5e, 0x63, 0x5c, 0xb9, 0x0d, 0x13, 0x92, 0xc9, 0x5d, 0xc3, 0x0d, 0x88, 0x50, 0x42, 0x6a, 0x5a,
-	0xcf, 0x0a, 0x78, 0x4b, 0xa2, 0x82, 0xb7, 0x05, 0x79, 0xca, 0xdc, 0xba, 0x43, 0x78, 0x5d, 0xf2,
-	0x3b, 0x06, 0xc3, 0x19, 0x29, 0xf1, 0xee, 0x30, 0x89, 0x9b, 0xcc, 0xd5, 0x09, 0x7f, 0xc9, 0x49,
-	0xf3, 0xb9, 0xc1, 0x7c, 0x91, 0x59, 0x1a, 0xc7, 0x0a, 0x8f, 0x20, 0x7f, 0x75, 0x0f, 0x25, 0x1f,
-	0x9d, 0x32, 0xe5, 0x1f, 0x6b, 0x0a, 0x52, 0xfb, 0x46, 0xdb, 0x23, 0x78, 0x44, 0x62, 0xfe, 0x63,
-	0x65, 0x64, 0x19, 0x15, 0x1e, 0x83, 0x72, 0x7d, 0x48, 0xbc, 0x43, 0xfa, 0x86, 0x0e, 0xd9, 0x58,
-	0x87, 0x15, 0xfc, 0xf5, 0x12, 0xa3, 0x6f, 0x97, 0x18, 0xbd, 0xed, 0x61, 0xf4, 0xa1, 0x87, 0xd1,
-	0xc7, 0xef, 0x38, 0x69, 0x53, 0x9b, 0x94, 0x4f, 0x10, 0x64, 0x02, 0x23, 0x48, 0x8b, 0x2d, 0xc5,
-	0x2d, 0x36, 0x73, 0xdd, 0x2d, 0x6b, 0x36, 0xbf, 0xea, 0xb2, 0x7b, 0x90, 0x34, 0x18, 0x0b, 0x1d,
-	0x36, 0x19, 0xab, 0xa9, 0x31, 0x16, 0x71, 0x25, 0xe9, 0x8f, 0x39, 0xeb, 0x27, 0x2b, 0x7e, 0x42,
-	0x90, 0xa9, 0x31, 0x26, 0x94, 0xcb, 0x15, 0xef, 0xc4, 0x57, 0x1c, 0x2a, 0x57, 0xae, 0xf6, 0x10,
-	0x52, 0xe2, 0x07, 0x1b, 0xee, 0xf6, 0xff, 0x20, 0x39, 0xec, 0xa8, 0x89, 0xc0, 0xbf, 0x6b, 0x50,
-	0xec, 0x57, 0x15, 0x96, 0x01, 0xa2, 0xd4, 0x6f, 0x1d, 0x6c, 0x36, 0xbe, 0xcd, 0xe1, 0x95, 0x8d,
-	0xaa, 0xef, 0x11, 0x4c, 0xc4, 0x3d, 0x58, 0x63, 0x96, 0xd2, 0x85, 0xfc, 0xd6, 0x2e, 0x3d, 0x18,
-	0xf8, 0xbf, 0xf8, 0x77, 0x88, 0x67, 0x0b, 0xc3, 0x12, 0xe5, 0xa5, 0x8b, 0x1e, 0x5e, 0xd0, 0x09,
-	0xa7, 0x9e, 0x63, 0x92, 0x30, 0xc3, 0xe7, 0x6b, 0xa6, 0x6b, 0x51, 0x7b, 0xdb, 0x22, 0x07, 0xf3,
-	0xeb, 0xa4, 0xab, 0x6d, 0x3a, 0x2d, 0xc3, 0xb6, 0x5e, 0x1b, 0x02, 0x5c, 0x44, 0xd5, 0x37, 0x90,
-	0x8b, 0x59, 0x48, 0x88, 0xb1, 0x60, 0xc2, 0x17, 0x13, 0x19, 0x6b, 0xfa, 0xba, 0x97, 0xa4, 0x94,
-	0x21, 0x78, 0xf9, 0xd6, 0x45, 0x0f, 0x97, 0x22, 0x25, 0x7d, 0xf3, 0x0d, 0x88, 0x59, 0x44, 0xd5,
-	0x77, 0x08, 0x72, 0xb1, 0x5b, 0x88, 0xe9, 0x9e, 0x3f, 0x3d, 0x7e, 0xf3, 0xe9, 0x9b, 0x2f, 0x57,
-	0x18, 0x82, 0x97, 0x17, 0x2f, 0x7a, 0x78, 0x3e, 0x9c, 0x1e, 0x24, 0x7e, 0xf1, 0x35, 0xac, 0xce,
-	0x1e, 0x9d, 0x16, 0x13, 0x47, 0x67, 0x45, 0x74, 0x7c, 0x56, 0x44, 0x27, 0x67, 0x45, 0x74, 0x78,
-	0x5e, 0x4c, 0x1c, 0x9f, 0x17, 0x13, 0x9f, 0xcf, 0x8b, 0x89, 0xc6, 0x98, 0x1c, 0x72, 0xff, 0x47,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0xb3, 0xb6, 0xba, 0x29, 0x79, 0x06, 0x00, 0x00,
+	// 883 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x41, 0x6f, 0x1b, 0x45,
+	0x14, 0xf6, 0x24, 0x76, 0x88, 0x9f, 0x63, 0xc7, 0x1d, 0x95, 0x30, 0x31, 0x91, 0x6b, 0x2c, 0x84,
+	0x0c, 0xa4, 0x4e, 0x6a, 0x2e, 0x21, 0x52, 0x51, 0xd3, 0x16, 0x50, 0xd4, 0x56, 0x45, 0x1b, 0xc8,
+	0x75, 0x35, 0x5e, 0x8f, 0xdd, 0x55, 0xbc, 0x3b, 0xa3, 0x99, 0x59, 0x97, 0x85, 0x0b, 0x37, 0x2e,
+	0x1c, 0x7a, 0xe1, 0xce, 0x6f, 0xe0, 0x47, 0xa0, 0xdc, 0xe8, 0x91, 0x13, 0x82, 0x84, 0x03, 0xca,
+	0x09, 0xa9, 0x16, 0x67, 0xb4, 0xb3, 0xbb, 0xd9, 0x4d, 0x62, 0x47, 0xa2, 0x97, 0xd5, 0xcc, 0xf7,
+	0xde, 0x7c, 0xf3, 0xbd, 0xf7, 0xbd, 0x59, 0x00, 0xc9, 0x86, 0xaa, 0x2b, 0x24, 0xd7, 0x1c, 0x97,
+	0xd9, 0x60, 0xc4, 0xcc, 0xb2, 0xb1, 0x33, 0x72, 0xf5, 0xb3, 0xa0, 0xdf, 0x75, 0xb8, 0xb7, 0xe5,
+	0xf1, 0xbe, 0x3b, 0x8e, 0x42, 0x5f, 0x6f, 0x45, 0xdf, 0xdb, 0xce, 0x98, 0x07, 0x83, 0x2d, 0x93,
+	0x37, 0x62, 0xfe, 0xf9, 0x22, 0x26, 0x69, 0xdc, 0x1c, 0xf1, 0x11, 0x37, 0xcb, 0xad, 0x68, 0x95,
+	0xa0, 0x35, 0x73, 0x68, 0xcc, 0x74, 0xb2, 0xbf, 0xe1, 0x8c, 0x03, 0xa5, 0x99, 0x74, 0x7d, 0x95,
+	0x42, 0x65, 0x2a, 0x44, 0xca, 0xe1, 0xfa, 0x43, 0x49, 0x25, 0x53, 0x3c, 0x90, 0x0e, 0x4b, 0xe4,
+	0xb5, 0x7f, 0x41, 0x00, 0x87, 0x4f, 0xac, 0x04, 0xc5, 0x77, 0x60, 0xf1, 0x88, 0x85, 0x04, 0xb5,
+	0x50, 0xa7, 0xd2, 0x5b, 0xef, 0x9e, 0x6b, 0xef, 0x3e, 0x88, 0xa9, 0xf7, 0x7d, 0xa5, 0x1f, 0xb1,
+	0xf0, 0x7e, 0xf1, 0xf8, 0xf7, 0x5b, 0x05, 0x2b, 0xca, 0xc5, 0x3d, 0x28, 0x4f, 0x3c, 0x7b, 0x38,
+	0xa6, 0x13, 0x2e, 0xc9, 0x82, 0x39, 0xf8, 0x66, 0xee, 0xe0, 0x67, 0x26, 0xb0, 0xef, 0x0f, 0xb9,
+	0xb5, 0x3c, 0xf1, 0xe2, 0x1d, 0xc6, 0x50, 0xd4, 0xa1, 0x60, 0x64, 0xb1, 0x85, 0x3a, 0x65, 0xcb,
+	0xac, 0xf1, 0x5d, 0x58, 0xa5, 0x42, 0xd8, 0xd4, 0x71, 0x98, 0x52, 0xb6, 0x09, 0x17, 0x5b, 0xa8,
+	0x53, 0xbb, 0xc0, 0xb6, 0x67, 0xa2, 0x5f, 0x86, 0x82, 0x59, 0x55, 0x2a, 0x44, 0xb6, 0x6d, 0xff,
+	0x58, 0x82, 0x95, 0x07, 0x49, 0x3f, 0x2c, 0x36, 0x54, 0xb8, 0x9b, 0x2f, 0x65, 0xed, 0x42, 0x29,
+	0x71, 0xd6, 0xa5, 0x3a, 0x1e, 0x43, 0x55, 0x72, 0xae, 0xed, 0x71, 0xdf, 0x16, 0x5c, 0x6a, 0x45,
+	0x96, 0x5b, 0x8b, 0x9d, 0x4a, 0xaf, 0x33, 0xe3, 0x64, 0xc4, 0xdf, 0xb5, 0x38, 0xd7, 0x8f, 0xfb,
+	0x5f, 0x44, 0xa9, 0x9f, 0xfa, 0x5a, 0x86, 0x56, 0x45, 0x66, 0x08, 0xee, 0x40, 0x3d, 0x50, 0x6c,
+	0x60, 0x0f, 0x42, 0x9f, 0x7a, 0xae, 0x63, 0xbb, 0x42, 0x91, 0x72, 0x0b, 0x75, 0x4a, 0x56, 0x2d,
+	0xc2, 0x1f, 0xc6, 0xf0, 0xbe, 0x50, 0xf8, 0x3d, 0x58, 0x35, 0x99, 0x4a, 0x53, 0x9d, 0x24, 0x82,
+	0x69, 0x4b, 0x35, 0x82, 0x0f, 0x0c, 0x1a, 0xe5, 0x1d, 0x40, 0x9d, 0x0b, 0x6d, 0x4b, 0xa6, 0x6c,
+	0x93, 0xef, 0x51, 0x41, 0x2a, 0x46, 0xe2, 0x07, 0xf3, 0x24, 0x3e, 0x15, 0xda, 0x62, 0xea, 0x2b,
+	0xc5, 0x06, 0x4f, 0xa8, 0x88, 0x45, 0x56, 0x79, 0x1e, 0xc3, 0x1f, 0xc3, 0xba, 0x64, 0x8a, 0xc9,
+	0x09, 0x1b, 0xd8, 0x34, 0xd0, 0xdc, 0x4e, 0x46, 0xc8, 0x76, 0x07, 0x8a, 0xac, 0xb4, 0x50, 0x67,
+	0xc9, 0x5a, 0x4b, 0x13, 0xf6, 0x02, 0xcd, 0xd3, 0x31, 0x18, 0x28, 0xfc, 0x39, 0x54, 0xcf, 0x93,
+	0x7d, 0xa5, 0x15, 0xa9, 0x1a, 0x31, 0x1b, 0xb3, 0x87, 0xc6, 0x62, 0xc3, 0xac, 0xdf, 0x2b, 0x4e,
+	0x16, 0x50, 0xf8, 0x1e, 0xac, 0x4c, 0x3c, 0x3b, 0xf2, 0x3e, 0xe6, 0xa9, 0x19, 0x1e, 0x92, 0x77,
+	0x5d, 0x88, 0x2b, 0x1c, 0x30, 0xf1, 0x12, 0x58, 0x35, 0x3e, 0x81, 0xfa, 0x65, 0x37, 0x70, 0x3d,
+	0xb3, 0xbf, 0x14, 0x1b, 0x7c, 0x13, 0x4a, 0x13, 0x3a, 0x0e, 0x98, 0x19, 0xd2, 0x92, 0x15, 0x6f,
+	0x76, 0x17, 0x76, 0x50, 0xe3, 0x1e, 0xe0, 0xab, 0xad, 0xca, 0x33, 0x94, 0x67, 0x30, 0x54, 0x73,
+	0x0c, 0xbb, 0xe4, 0xef, 0x57, 0x04, 0xfd, 0xf3, 0x8a, 0xa0, 0xef, 0xa6, 0x04, 0xfd, 0x34, 0x25,
+	0xe8, 0xe7, 0x7f, 0x49, 0xd1, 0xe7, 0x3e, 0x6b, 0xff, 0x85, 0xa0, 0x92, 0xf4, 0xc1, 0x8c, 0xe5,
+	0x6b, 0xbc, 0xb0, 0x0f, 0xa1, 0x48, 0x85, 0x50, 0x64, 0xc1, 0x34, 0xe6, 0xc6, 0xc5, 0xc6, 0x64,
+	0xb9, 0x26, 0x09, 0xaf, 0xc3, 0xb2, 0x19, 0x0f, 0x49, 0x3d, 0xf3, 0x7e, 0x8a, 0xd6, 0x1b, 0xd1,
+	0xde, 0xa2, 0x1e, 0xbe, 0x05, 0x15, 0x13, 0x9a, 0x38, 0x5c, 0x32, 0x45, 0x4a, 0x26, 0x0a, 0x11,
+	0x74, 0x68, 0x10, 0xfc, 0x36, 0x94, 0xe3, 0xa1, 0x75, 0xd5, 0x11, 0x59, 0x32, 0x61, 0x43, 0xf6,
+	0xd0, 0x55, 0x47, 0xbb, 0x1b, 0xf9, 0x12, 0x5f, 0x5c, 0x2e, 0xf3, 0x57, 0x04, 0x95, 0xcc, 0x26,
+	0x85, 0xdf, 0xcf, 0x97, 0x39, 0x57, 0xb2, 0x29, 0xef, 0x2e, 0x94, 0x62, 0xe3, 0xe3, 0xfa, 0xde,
+	0x99, 0x69, 0xbc, 0xea, 0x1a, 0xab, 0x8d, 0x33, 0xc9, 0xe1, 0xf8, 0x54, 0x63, 0x07, 0x20, 0x0b,
+	0xfd, 0x2f, 0xd3, 0xae, 0xad, 0xa8, 0xf7, 0x03, 0x82, 0xd5, 0xfc, 0x6b, 0xda, 0x13, 0x2e, 0x0e,
+	0xa1, 0x7e, 0xf0, 0x8c, 0x3f, 0xbf, 0xf0, 0x9f, 0x79, 0x6b, 0xce, 0xeb, 0x6b, 0xcc, 0x0b, 0xb4,
+	0xef, 0x9c, 0x4d, 0xc9, 0xed, 0xf4, 0x97, 0x9b, 0x46, 0xd4, 0xe6, 0x9e, 0xa3, 0x5d, 0xee, 0x1f,
+	0xba, 0xec, 0xf9, 0xe6, 0x23, 0x16, 0x76, 0x9f, 0xca, 0x11, 0xf5, 0xdd, 0x6f, 0x68, 0x04, 0x6e,
+	0xa3, 0xde, 0xb7, 0x50, 0xcb, 0x8d, 0x51, 0x24, 0xc6, 0x85, 0xd5, 0x58, 0x4c, 0x36, 0x5c, 0x6b,
+	0x57, 0xe7, 0xc9, 0x48, 0x99, 0x83, 0xb7, 0xdf, 0x3d, 0x9b, 0x92, 0x56, 0xa6, 0x24, 0x7b, 0x94,
+	0x79, 0x31, 0xdb, 0xa8, 0xf7, 0x3d, 0x82, 0x5a, 0xce, 0x8b, 0xe8, 0xf6, 0x20, 0xbe, 0x3d, 0xef,
+	0xf9, 0xda, 0x6c, 0xe7, 0x1a, 0x73, 0xf0, 0xf6, 0xf6, 0xd9, 0x94, 0x6c, 0xa6, 0xb7, 0xa7, 0x8f,
+	0xf9, 0xfa, 0x36, 0xdc, 0xdf, 0x38, 0xfe, 0xb3, 0x59, 0x38, 0x3e, 0x69, 0xa2, 0x97, 0x27, 0x4d,
+	0xf4, 0xc7, 0x49, 0x13, 0xbd, 0x38, 0x6d, 0x16, 0x5e, 0x9e, 0x36, 0x0b, 0xbf, 0x9d, 0x36, 0x0b,
+	0xfd, 0x25, 0x73, 0xc9, 0x47, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0x7e, 0x86, 0x0f, 0x3d, 0x81,
+	0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -549,6 +607,63 @@ var _AppInstRefsApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "refs.proto",
 }
 
+func (m *VMResource) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VMResource) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VMResource) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AppAccessType != 0 {
+		i = encodeVarintRefs(dAtA, i, uint64(m.AppAccessType))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.Type) > 0 {
+		i -= len(m.Type)
+		copy(dAtA[i:], m.Type)
+		i = encodeVarintRefs(dAtA, i, uint64(len(m.Type)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.VmFlavor != nil {
+		{
+			size, err := m.VmFlavor.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintRefs(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRefs(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func (m *CloudletRefs) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -569,6 +684,40 @@ func (m *CloudletRefs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.VmAppInsts) > 0 {
+		for iNdEx := len(m.VmAppInsts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VmAppInsts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRefs(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x72
+		}
+	}
+	if len(m.ClusterInsts) > 0 {
+		for iNdEx := len(m.ClusterInsts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ClusterInsts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRefs(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
+	if m.ReservedAutoClusterIds != 0 {
+		i -= 8
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ReservedAutoClusterIds))
+		i--
+		dAtA[i] = 0x61
+	}
 	if len(m.OptResUsedMap) > 0 {
 		for k := range m.OptResUsedMap {
 			v := m.OptResUsedMap[k]
@@ -611,35 +760,6 @@ func (m *CloudletRefs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintRefs(dAtA, i, uint64(baseI-i))
 			i--
 			dAtA[i] = 0x42
-		}
-	}
-	if m.UsedDisk != 0 {
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedDisk))
-		i--
-		dAtA[i] = 0x30
-	}
-	if m.UsedVcores != 0 {
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedVcores))
-		i--
-		dAtA[i] = 0x28
-	}
-	if m.UsedRam != 0 {
-		i = encodeVarintRefs(dAtA, i, uint64(m.UsedRam))
-		i--
-		dAtA[i] = 0x20
-	}
-	if len(m.Clusters) > 0 {
-		for iNdEx := len(m.Clusters) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Clusters[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintRefs(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
 		}
 	}
 	{
@@ -778,6 +898,113 @@ func encodeVarintRefs(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *VMResource) CopyInFields(src *VMResource) int {
+	changed := 0
+	if m.Key.ClusterKey.Name != src.Key.ClusterKey.Name {
+		m.Key.ClusterKey.Name = src.Key.ClusterKey.Name
+		changed++
+	}
+	if m.Key.CloudletKey.Organization != src.Key.CloudletKey.Organization {
+		m.Key.CloudletKey.Organization = src.Key.CloudletKey.Organization
+		changed++
+	}
+	if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
+		m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+		changed++
+	}
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
+		changed++
+	}
+	if src.VmFlavor != nil {
+		m.VmFlavor = &FlavorInfo{}
+		if m.VmFlavor.Name != src.VmFlavor.Name {
+			m.VmFlavor.Name = src.VmFlavor.Name
+			changed++
+		}
+		if m.VmFlavor.Vcpus != src.VmFlavor.Vcpus {
+			m.VmFlavor.Vcpus = src.VmFlavor.Vcpus
+			changed++
+		}
+		if m.VmFlavor.Ram != src.VmFlavor.Ram {
+			m.VmFlavor.Ram = src.VmFlavor.Ram
+			changed++
+		}
+		if m.VmFlavor.Disk != src.VmFlavor.Disk {
+			m.VmFlavor.Disk = src.VmFlavor.Disk
+			changed++
+		}
+		if src.VmFlavor.PropMap != nil {
+			m.VmFlavor.PropMap = make(map[string]string)
+			for k1, _ := range src.VmFlavor.PropMap {
+				m.VmFlavor.PropMap[k1] = src.VmFlavor.PropMap[k1]
+			}
+		} else if m.VmFlavor.PropMap != nil {
+			m.VmFlavor.PropMap = nil
+			changed++
+		}
+	} else if m.VmFlavor != nil {
+		m.VmFlavor = nil
+		changed++
+	}
+	if m.Type != src.Type {
+		m.Type = src.Type
+		changed++
+	}
+	if m.AppAccessType != src.AppAccessType {
+		m.AppAccessType = src.AppAccessType
+		changed++
+	}
+	return changed
+}
+
+func (m *VMResource) DeepCopyIn(src *VMResource) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.VmFlavor != nil {
+		var tmp_VmFlavor FlavorInfo
+		tmp_VmFlavor.DeepCopyIn(src.VmFlavor)
+		m.VmFlavor = &tmp_VmFlavor
+	} else {
+		m.VmFlavor = nil
+	}
+	m.Type = src.Type
+	m.AppAccessType = src.AppAccessType
+}
+
+func (m *VMResource) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *VMResource) GetKey() *ClusterInstKey {
+	return &m.Key
+}
+
+func (m *VMResource) GetKeyVal() ClusterInstKey {
+	return m.Key
+}
+
+func (m *VMResource) SetKey(key *ClusterInstKey) {
+	m.Key = *key
+}
+
+func CmpSortVMResource(a VMResource, b VMResource) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+func (m *VMResource) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.VmFlavor.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := AccessType_name[int32(m.AppAccessType)]; !ok {
+		return errors.New("invalid AppAccessType")
+	}
+	return nil
+}
+
 func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -790,45 +1017,8 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if !opts.Filter || o.Clusters != nil {
-		if m.Clusters == nil && o.Clusters != nil || m.Clusters != nil && o.Clusters == nil {
-			return false
-		} else if m.Clusters != nil && o.Clusters != nil {
-			if !opts.Filter && len(m.Clusters) != len(o.Clusters) {
-				return false
-			}
-			if opts.SortArrayedKeys {
-				sort.Slice(m.Clusters, func(i, j int) bool {
-					return m.Clusters[i].GetKeyString() < m.Clusters[j].GetKeyString()
-				})
-				sort.Slice(o.Clusters, func(i, j int) bool {
-					return o.Clusters[i].GetKeyString() < o.Clusters[j].GetKeyString()
-				})
-			}
-			for i := 0; i < len(m.Clusters); i++ {
-				if !m.Clusters[i].Matches(&o.Clusters[i], fopts...) {
-					return false
-				}
-			}
-		}
-	}
-	if !opts.Filter || o.UsedRam != 0 {
-		if o.UsedRam != m.UsedRam {
-			return false
-		}
-	}
-	if !opts.Filter || o.UsedVcores != 0 {
-		if o.UsedVcores != m.UsedVcores {
-			return false
-		}
-	}
-	if !opts.Filter || o.UsedDisk != 0 {
-		if o.UsedDisk != m.UsedDisk {
-			return false
-		}
-	}
 	if !opts.Filter || o.RootLbPorts != nil {
-		if m.RootLbPorts == nil && o.RootLbPorts != nil || m.RootLbPorts != nil && o.RootLbPorts == nil {
+		if len(m.RootLbPorts) == 0 && len(o.RootLbPorts) > 0 || len(m.RootLbPorts) > 0 && len(o.RootLbPorts) == 0 {
 			return false
 		} else if m.RootLbPorts != nil && o.RootLbPorts != nil {
 			if !opts.Filter && len(m.RootLbPorts) != len(o.RootLbPorts) {
@@ -856,7 +1046,7 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.OptResUsedMap != nil {
-		if m.OptResUsedMap == nil && o.OptResUsedMap != nil || m.OptResUsedMap != nil && o.OptResUsedMap == nil {
+		if len(m.OptResUsedMap) == 0 && len(o.OptResUsedMap) > 0 || len(m.OptResUsedMap) > 0 && len(o.OptResUsedMap) == 0 {
 			return false
 		} else if m.OptResUsedMap != nil && o.OptResUsedMap != nil {
 			if !opts.Filter && len(m.OptResUsedMap) != len(o.OptResUsedMap) {
@@ -873,6 +1063,49 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 			}
 		}
 	}
+	if !opts.Filter || o.ReservedAutoClusterIds != 0 {
+		if o.ReservedAutoClusterIds != m.ReservedAutoClusterIds {
+			return false
+		}
+	}
+	if !opts.Filter || o.ClusterInsts != nil {
+		if len(m.ClusterInsts) == 0 && len(o.ClusterInsts) > 0 || len(m.ClusterInsts) > 0 && len(o.ClusterInsts) == 0 {
+			return false
+		} else if m.ClusterInsts != nil && o.ClusterInsts != nil {
+			if !opts.Filter && len(m.ClusterInsts) != len(o.ClusterInsts) {
+				return false
+			}
+			if opts.SortArrayedKeys {
+				sort.Slice(m.ClusterInsts, func(i, j int) bool {
+					return m.ClusterInsts[i].GetKeyString() < m.ClusterInsts[j].GetKeyString()
+				})
+				sort.Slice(o.ClusterInsts, func(i, j int) bool {
+					return o.ClusterInsts[i].GetKeyString() < o.ClusterInsts[j].GetKeyString()
+				})
+			}
+			for i := 0; i < len(m.ClusterInsts); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.VmAppInsts != nil {
+		if len(m.VmAppInsts) == 0 && len(o.VmAppInsts) > 0 || len(m.VmAppInsts) > 0 && len(o.VmAppInsts) == 0 {
+			return false
+		} else if m.VmAppInsts != nil && o.VmAppInsts != nil {
+			if !opts.Filter && len(m.VmAppInsts) != len(o.VmAppInsts) {
+				return false
+			}
+			if opts.SortArrayedKeys {
+				sort.Slice(m.VmAppInsts, func(i, j int) bool {
+					return m.VmAppInsts[i].GetKeyString() < m.VmAppInsts[j].GetKeyString()
+				})
+				sort.Slice(o.VmAppInsts, func(i, j int) bool {
+					return o.VmAppInsts[i].GetKeyString() < o.VmAppInsts[j].GetKeyString()
+				})
+			}
+			for i := 0; i < len(m.VmAppInsts); i++ {
+			}
+		}
+	}
 	return true
 }
 
@@ -884,25 +1117,6 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 	}
 	if m.Key.Name != src.Key.Name {
 		m.Key.Name = src.Key.Name
-		changed++
-	}
-	if src.Clusters != nil {
-		m.Clusters = src.Clusters
-		changed++
-	} else if m.Clusters != nil {
-		m.Clusters = nil
-		changed++
-	}
-	if m.UsedRam != src.UsedRam {
-		m.UsedRam = src.UsedRam
-		changed++
-	}
-	if m.UsedVcores != src.UsedVcores {
-		m.UsedVcores = src.UsedVcores
-		changed++
-	}
-	if m.UsedDisk != src.UsedDisk {
-		m.UsedDisk = src.UsedDisk
 		changed++
 	}
 	if src.RootLbPorts != nil {
@@ -931,22 +1145,29 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		m.OptResUsedMap = nil
 		changed++
 	}
+	if m.ReservedAutoClusterIds != src.ReservedAutoClusterIds {
+		m.ReservedAutoClusterIds = src.ReservedAutoClusterIds
+		changed++
+	}
+	if src.ClusterInsts != nil {
+		m.ClusterInsts = src.ClusterInsts
+		changed++
+	} else if m.ClusterInsts != nil {
+		m.ClusterInsts = nil
+		changed++
+	}
+	if src.VmAppInsts != nil {
+		m.VmAppInsts = src.VmAppInsts
+		changed++
+	} else if m.VmAppInsts != nil {
+		m.VmAppInsts = nil
+		changed++
+	}
 	return changed
 }
 
 func (m *CloudletRefs) DeepCopyIn(src *CloudletRefs) {
 	m.Key.DeepCopyIn(&src.Key)
-	if src.Clusters != nil {
-		m.Clusters = make([]ClusterKey, len(src.Clusters), len(src.Clusters))
-		for ii, s := range src.Clusters {
-			m.Clusters[ii].DeepCopyIn(&s)
-		}
-	} else {
-		m.Clusters = nil
-	}
-	m.UsedRam = src.UsedRam
-	m.UsedVcores = src.UsedVcores
-	m.UsedDisk = src.UsedDisk
 	if src.RootLbPorts != nil {
 		m.RootLbPorts = make(map[int32]int32)
 		for k, v := range src.RootLbPorts {
@@ -964,6 +1185,23 @@ func (m *CloudletRefs) DeepCopyIn(src *CloudletRefs) {
 		}
 	} else {
 		m.OptResUsedMap = nil
+	}
+	m.ReservedAutoClusterIds = src.ReservedAutoClusterIds
+	if src.ClusterInsts != nil {
+		m.ClusterInsts = make([]ClusterInstRefKey, len(src.ClusterInsts), len(src.ClusterInsts))
+		for ii, s := range src.ClusterInsts {
+			m.ClusterInsts[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.ClusterInsts = nil
+	}
+	if src.VmAppInsts != nil {
+		m.VmAppInsts = make([]AppInstRefKey, len(src.VmAppInsts), len(src.VmAppInsts))
+		for ii, s := range src.VmAppInsts {
+			m.VmAppInsts[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.VmAppInsts = nil
 	}
 }
 
@@ -1283,15 +1521,12 @@ func (c *CloudletRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletRefs", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -1485,7 +1720,12 @@ func (m *CloudletRefs) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
-	for _, e := range m.Clusters {
+	for _, e := range m.ClusterInsts {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	for _, e := range m.VmAppInsts {
 		if err := e.ValidateEnums(); err != nil {
 			return err
 		}
@@ -1506,7 +1746,7 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Apps != nil {
-		if m.Apps == nil && o.Apps != nil || m.Apps != nil && o.Apps == nil {
+		if len(m.Apps) == 0 && len(o.Apps) > 0 || len(m.Apps) > 0 && len(o.Apps) == 0 {
 			return false
 		} else if m.Apps != nil && o.Apps != nil {
 			if !opts.Filter && len(m.Apps) != len(o.Apps) {
@@ -1916,15 +2156,12 @@ func (c *ClusterRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare ClusterRefs", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show ClusterRefs", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -2139,7 +2376,7 @@ func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Insts != nil {
-		if m.Insts == nil && o.Insts != nil || m.Insts != nil && o.Insts == nil {
+		if len(m.Insts) == 0 && len(o.Insts) > 0 || len(m.Insts) > 0 && len(o.Insts) == 0 {
 			return false
 		} else if m.Insts != nil && o.Insts != nil {
 			if !opts.Filter && len(m.Insts) != len(o.Insts) {
@@ -2513,15 +2750,12 @@ func (c *AppInstRefsCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppInstRefsCache) Show(filter *AppInstRefs, cb func(ret *AppInstRefs) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AppInstRefs", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AppInstRefs", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -2718,6 +2952,28 @@ func (m *AppInstRefs) ValidateEnums() error {
 	return nil
 }
 
+func (m *VMResource) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovRefs(uint64(l))
+	if m.VmFlavor != nil {
+		l = m.VmFlavor.Size()
+		n += 1 + l + sovRefs(uint64(l))
+	}
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovRefs(uint64(l))
+	}
+	if m.AppAccessType != 0 {
+		n += 1 + sovRefs(uint64(m.AppAccessType))
+	}
+	return n
+}
+
 func (m *CloudletRefs) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2726,21 +2982,6 @@ func (m *CloudletRefs) Size() (n int) {
 	_ = l
 	l = m.Key.Size()
 	n += 1 + l + sovRefs(uint64(l))
-	if len(m.Clusters) > 0 {
-		for _, e := range m.Clusters {
-			l = e.Size()
-			n += 1 + l + sovRefs(uint64(l))
-		}
-	}
-	if m.UsedRam != 0 {
-		n += 1 + sovRefs(uint64(m.UsedRam))
-	}
-	if m.UsedVcores != 0 {
-		n += 1 + sovRefs(uint64(m.UsedVcores))
-	}
-	if m.UsedDisk != 0 {
-		n += 1 + sovRefs(uint64(m.UsedDisk))
-	}
 	if len(m.RootLbPorts) > 0 {
 		for k, v := range m.RootLbPorts {
 			_ = k
@@ -2762,6 +3003,21 @@ func (m *CloudletRefs) Size() (n int) {
 			_ = v
 			mapEntrySize := 1 + len(k) + sovRefs(uint64(len(k))) + 1 + sovRefs(uint64(v))
 			n += mapEntrySize + 1 + sovRefs(uint64(mapEntrySize))
+		}
+	}
+	if m.ReservedAutoClusterIds != 0 {
+		n += 9
+	}
+	if len(m.ClusterInsts) > 0 {
+		for _, e := range m.ClusterInsts {
+			l = e.Size()
+			n += 1 + l + sovRefs(uint64(l))
+		}
+	}
+	if len(m.VmAppInsts) > 0 {
+		for _, e := range m.VmAppInsts {
+			l = e.Size()
+			n += 1 + l + sovRefs(uint64(l))
 		}
 	}
 	return n
@@ -2817,6 +3073,179 @@ func sovRefs(x uint64) (n int) {
 }
 func sozRefs(x uint64) (n int) {
 	return sovRefs(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *VMResource) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRefs
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VMResource: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VMResource: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VmFlavor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VmFlavor == nil {
+				m.VmFlavor = &FlavorInfo{}
+			}
+			if err := m.VmFlavor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppAccessType", wireType)
+			}
+			m.AppAccessType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AppAccessType |= AccessType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRefs(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -2880,97 +3309,6 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Clusters", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRefs
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRefs
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthRefs
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Clusters = append(m.Clusters, ClusterKey{})
-			if err := m.Clusters[len(m.Clusters)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UsedRam", wireType)
-			}
-			m.UsedRam = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRefs
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UsedRam |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UsedVcores", wireType)
-			}
-			m.UsedVcores = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRefs
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UsedVcores |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UsedDisk", wireType)
-			}
-			m.UsedDisk = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRefs
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UsedDisk |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RootLbPorts", wireType)
@@ -3233,6 +3571,84 @@ func (m *CloudletRefs) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.OptResUsedMap[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 12:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReservedAutoClusterIds", wireType)
+			}
+			m.ReservedAutoClusterIds = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReservedAutoClusterIds = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterInsts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClusterInsts = append(m.ClusterInsts, ClusterInstRefKey{})
+			if err := m.ClusterInsts[len(m.ClusterInsts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VmAppInsts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRefs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRefs
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRefs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VmAppInsts = append(m.VmAppInsts, AppInstRefKey{})
+			if err := m.VmAppInsts[len(m.VmAppInsts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

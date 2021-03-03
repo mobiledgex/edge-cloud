@@ -62,6 +62,9 @@ func NodeHideTags(in *edgeproto.Node) {
 		in.BuildAuthor = ""
 	}
 	if _, found := tags["nocmp"]; found {
+		in.BuildDate = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.Hostname = ""
 	}
 }
@@ -89,6 +92,9 @@ func NodeDataHideTags(in *edgeproto.NodeData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Nodes[i0].BuildAuthor = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Nodes[i0].BuildDate = ""
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Nodes[i0].Hostname = ""
@@ -208,9 +214,11 @@ var NodeOptionalArgs = []string{
 	"buildmaster",
 	"buildhead",
 	"buildauthor",
+	"builddate",
 	"hostname",
 	"containerversion",
 	"internalpki",
+	"properties",
 }
 var NodeAliasArgs = []string{
 	"name=key.name",
@@ -230,12 +238,15 @@ var NodeComments = map[string]string{
 	"buildmaster":      "Build Master Version",
 	"buildhead":        "Build Head Version",
 	"buildauthor":      "Build Author",
+	"builddate":        "Build Date",
 	"hostname":         "Hostname",
 	"containerversion": "Docker edge-cloud container version which node instance use",
 	"internalpki":      "Internal PKI Config",
+	"properties":       "Additional properties",
 }
 var NodeSpecialArgs = map[string]string{
-	"fields": "StringArray",
+	"fields":     "StringArray",
+	"properties": "StringToString",
 }
 var NodeDataRequiredArgs = []string{}
 var NodeDataOptionalArgs = []string{
@@ -249,9 +260,11 @@ var NodeDataOptionalArgs = []string{
 	"nodes:#.buildmaster",
 	"nodes:#.buildhead",
 	"nodes:#.buildauthor",
+	"nodes:#.builddate",
 	"nodes:#.hostname",
 	"nodes:#.containerversion",
 	"nodes:#.internalpki",
+	"nodes:#.properties",
 }
 var NodeDataAliasArgs = []string{}
 var NodeDataComments = map[string]string{
@@ -265,10 +278,13 @@ var NodeDataComments = map[string]string{
 	"nodes:#.buildmaster":                  "Build Master Version",
 	"nodes:#.buildhead":                    "Build Head Version",
 	"nodes:#.buildauthor":                  "Build Author",
+	"nodes:#.builddate":                    "Build Date",
 	"nodes:#.hostname":                     "Hostname",
 	"nodes:#.containerversion":             "Docker edge-cloud container version which node instance use",
 	"nodes:#.internalpki":                  "Internal PKI Config",
+	"nodes:#.properties":                   "Additional properties",
 }
 var NodeDataSpecialArgs = map[string]string{
-	"nodes:#.fields": "StringArray",
+	"nodes:#.fields":     "StringArray",
+	"nodes:#.properties": "StringToString",
 }

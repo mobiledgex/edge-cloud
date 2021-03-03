@@ -147,7 +147,7 @@ func CreateAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 					Name:         app,
 					Version:      ver,
 				},
-				ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterInstKey: edgeproto.VirtualClusterInstKey{
 					ClusterKey:   edgeproto.ClusterKey{Name: cluster},
 					Organization: clusterorg,
 					CloudletKey:  edgeproto.CloudletKey{Name: cloudlet, Organization: cloudletorg},
@@ -212,7 +212,7 @@ func CreateAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 				Name:         app,
 				Version:      ver,
 			},
-			ClusterInstKey: edgeproto.ClusterInstKey{
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
 				ClusterKey:   edgeproto.ClusterKey{Name: cluster},
 				Organization: clusterorg,
 				CloudletKey:  edgeproto.CloudletKey{Name: cloudlet, Organization: cloudletorg},
@@ -286,7 +286,7 @@ func GetAppCheckpoint(ctx context.Context, org string, timestamp time.Time) (*Ap
 				Name:         appname,
 				Version:      version,
 			},
-			ClusterInstKey: edgeproto.ClusterInstKey{
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
 				ClusterKey:   edgeproto.ClusterKey{Name: cluster},
 				Organization: clusterorg,
 				CloudletKey:  edgeproto.CloudletKey{Name: cloudlet, Organization: cloudletorg},

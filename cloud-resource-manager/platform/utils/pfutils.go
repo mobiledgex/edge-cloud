@@ -9,19 +9,22 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/dind"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/fake"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/kind"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
 var solib = ""
 var GetPlatformFunc func(plat string) (pf.Platform, error)
 
-func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
+func GetPlatform(ctx context.Context, plat string, setVersionProps func(context.Context, map[string]string)) (pf.Platform, error) {
 	// Building plugins is slow, so directly importable
 	// platforms are not built as plugins.
 	if plat == "PLATFORM_TYPE_DIND" {
 		return &dind.Platform{}, nil
 	} else if plat == "PLATFORM_TYPE_FAKE" {
 		return &fake.Platform{}, nil
+	} else if plat == "PLATFORM_TYPE_KIND" {
+		return &kind.Platform{}, nil
 	}
 	if GetPlatformFunc == nil {
 		plug, err := loadPlugin(ctx)
@@ -39,6 +42,12 @@ func GetPlatform(ctx context.Context, plat string) (pf.Platform, error) {
 			return nil, fmt.Errorf("failed to load plugin for platform: %s, err: GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", plat)
 		}
 		GetPlatformFunc = getPlatFunc
+		if setVersionProps != nil {
+			pf, err := getPlatFunc(plat)
+			if err == nil {
+				setVersionProps(ctx, pf.GetVersionProperties())
+			}
+		}
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "Creating platform")
 	return GetPlatformFunc(plat)

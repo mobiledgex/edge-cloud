@@ -1,0 +1,2 @@
+database: cloudlet_resource_usage
+cmd: select * from "fake-resource-usage","cloudlet-flavor-usage";

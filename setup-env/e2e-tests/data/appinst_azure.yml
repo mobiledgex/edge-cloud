@@ -10,4 +10,4 @@ appinstances:
       cloudletkey:
         organization: azure
         name: azure-cloud-4
-      organization: AcmeAppCo
+      organization: MobiledgeX

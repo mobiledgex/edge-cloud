@@ -14,9 +14,10 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
+	proxycerts "github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy/certs"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -97,7 +98,7 @@ func main() {
 	log.SpanLog(ctx, log.DebugLevelInfo, "Using cloudletKey", "key", myCloudletInfo.Key, "platform", *platformName, "physicalName", physicalName)
 
 	// Load platform implementation.
-	platform, err = pfutils.GetPlatform(ctx, *platformName)
+	platform, err = pfutils.GetPlatform(ctx, *platformName, nodeMgr.UpdateNodeProps)
 	if err != nil {
 		span.Finish()
 		log.FatalLog(err.Error())
@@ -118,7 +119,7 @@ func main() {
 
 	accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
 
-	controllerData = crmutil.NewControllerData(platform, &nodeMgr)
+	controllerData = crmutil.NewControllerData(platform, &myCloudletInfo.Key, &nodeMgr)
 
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
@@ -170,7 +171,7 @@ func main() {
 			cloudletContainerVersion = *containerVersion
 		}
 
-		myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_INIT
+		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 		myCloudletInfo.ContainerVersion = cloudletContainerVersion
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
@@ -189,15 +190,15 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		caches := pf.Caches{
-			FlavorCache:        &controllerData.FlavorCache,
-			PrivacyPolicyCache: &controllerData.PrivacyPolicyCache,
-			ClusterInstCache:   &controllerData.ClusterInstCache,
-			AppCache:           &controllerData.AppCache,
-			AppInstCache:       &controllerData.AppInstCache,
-			ResTagTableCache:   &controllerData.ResTagTableCache,
-			CloudletCache:      &controllerData.CloudletCache,
-			VMPoolCache:        &controllerData.VMPoolCache,
-			VMPoolInfoCache:    &controllerData.VMPoolInfoCache,
+			FlavorCache:      &controllerData.FlavorCache,
+			TrustPolicyCache: &controllerData.TrustPolicyCache,
+			ClusterInstCache: &controllerData.ClusterInstCache,
+			AppCache:         &controllerData.AppCache,
+			AppInstCache:     &controllerData.AppInstCache,
+			ResTagTableCache: &controllerData.ResTagTableCache,
+			CloudletCache:    &controllerData.CloudletCache,
+			VMPoolCache:      &controllerData.VMPoolCache,
+			VMPoolInfoCache:  &controllerData.VMPoolInfoCache,
 		}
 
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
@@ -222,7 +223,7 @@ func main() {
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, accessClient, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
-			myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
 			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
@@ -231,9 +232,9 @@ func main() {
 
 			if err != nil {
 				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
-				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 			} else {
-				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_NEED_SYNC
+				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 				controllerData.ControllerSyncInProgress = true
 				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
@@ -254,15 +255,26 @@ func main() {
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
-				myCloudletInfo.Errors = nil
-				myCloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
-				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-				resources, err := platform.GetCloudletInfraResources(ctx)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", myCloudletInfo.Key, "err", err)
-				} else {
-					myCloudletInfo.Resources = *resources
+				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
+				if resources != nil {
+					resMap := make(map[string]edgeproto.InfraResource)
+					for _, resInfo := range resources.Info {
+						resMap[resInfo.Name] = resInfo
+					}
+					err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
+					if err != nil {
+						log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
+					}
+					myCloudletInfo.ResourcesSnapshot = *resources
 				}
+				myCloudletInfo.Errors = nil
+				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+				if cloudlet.TrustPolicy == "" {
+					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
+				} else {
+					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
+				}
+				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 			}
 		}
 
@@ -292,7 +304,14 @@ func main() {
 			cloudcommon.ClientTypeRootLB,
 		)
 		if err == nil {
-			proxy.GetRootLbCerts(ctx, commonName, dedicatedCommonName, nodeMgr.VaultAddr, platform.GetType(), rootlb, *commercialCerts)
+			lbClients, err := platform.GetRootLBClients(ctx)
+			if err != nil {
+				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
+			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(accessClient))
+			pfType := pf.GetType(cloudlet.PlatformType.String())
+			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, rootlb, *commercialCerts)
 		}
 		tlsSpan.Finish()
 	}()
@@ -333,8 +352,10 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		DeploymentTag:       nodeMgr.DeploymentTag,
 		Upgrade:             *upgrade,
 		AccessApi:           accessApi,
+		TrustPolicy:         cloudlet.TrustPolicy,
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", platform.GetType())
+	pfType := pf.GetType(cloudlet.PlatformType.String())
+	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
 	err := platform.Init(ctx, &pc, caches, updateCallback)
 	return err
 }

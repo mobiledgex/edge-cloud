@@ -103,6 +103,7 @@ var MEXPrometheusApp = edgeproto.App{
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Trusted:       true,
 	Annotations:   "version=7.1.1",
 }
 
@@ -141,6 +142,7 @@ var NFSAutoProvisionApp = edgeproto.App{
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
+	Trusted:       true,
 	Annotations:   "version=1.2.8",
 }
 
@@ -220,6 +222,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 }
 
 func appInstCreateApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, appInst edgeproto.AppInst) (*edgeproto.Result, error) {
+	appInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 	stream, err := apiClient.CreateAppInst(ctx, &appInst)
 	var res *edgeproto.Result
 	if err == nil {
@@ -310,7 +313,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:         app.Key,
-			ClusterInstKey: clusterInst.Key,
+			ClusterInstKey: *clusterInst.Key.Virtual(""),
 		},
 		Flavor: clusterInst.Flavor,
 	}
@@ -447,7 +450,7 @@ func createAppCommon(ctx context.Context, dialOpts grpc.DialOption, app *edgepro
 			err = fmt.Errorf("CreateApp failed: %s", errstr)
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "create app", "app", app.String(), "result", res.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "create app", "app", app.String(), "result", res.String(), "err", err)
 	if err == nil {
 		nodeMgr.TimedEvent(ctx, "cluster-svc create App", app.Key.Organization, node.EventType, app.Key.GetTags(), err, eventStart, time.Now())
 	}
@@ -627,6 +630,9 @@ func main() {
 	clusterSvcPlugin, err = pfutils.GetClusterSvc(ctx, *pluginRequired)
 	if err != nil {
 		log.FatalLog("get cluster service", "err", err)
+	}
+	if clusterSvcPlugin != nil {
+		nodeMgr.UpdateNodeProps(ctx, clusterSvcPlugin.GetVersionProperties())
 	}
 
 	clientTlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,

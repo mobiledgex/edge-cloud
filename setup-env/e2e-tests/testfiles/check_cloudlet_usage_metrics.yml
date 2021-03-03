@@ -1,0 +1,43 @@
+##
+description: Checks to make sure controller has been logging instance events properly
+
+tests:
+
+- name: check influx events for resource usage
+  actions: [sleep=1,influxapi]
+  apifile: "{{datadir}}/influx_resource_usage_query.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_resource_usage_data.yml"
+    filetype: influxdata
+
+- name: verify provisioning is empty to start
+  actions: [sleep=1,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+- name: Add and show provisioning and verify it is there
+  apifile: "{{datadir}}/influx_appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_appdata_show.yml"
+    filetype: appdata
+
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/influx_appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+- name: check influx events for resource usage post clusterinst changes
+  actions: [sleep=1,influxapi]
+  apifile: "{{datadir}}/influx_resource_usage_query.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/influx_resource_usage_data_change.yml"
+    filetype: influxdata

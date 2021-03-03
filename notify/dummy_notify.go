@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -27,7 +28,7 @@ type DummyHandler struct {
 	NodeCache            edgeproto.NodeCache
 	AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 	AutoProvPolicyCache  edgeproto.AutoProvPolicyCache
-	PrivacyPolicyCache   edgeproto.PrivacyPolicyCache
+	TrustPolicyCache     edgeproto.TrustPolicyCache
 	DeviceCache          edgeproto.DeviceCache
 	frClusterInsts       edgeproto.FreeReservableClusterInstCache
 	SettingsCache        edgeproto.SettingsCache
@@ -50,7 +51,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitNodeCache(&h.NodeCache)
 	edgeproto.InitAutoScalePolicyCache(&h.AutoScalePolicyCache)
 	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
-	edgeproto.InitPrivacyPolicyCache(&h.PrivacyPolicyCache)
+	edgeproto.InitTrustPolicyCache(&h.TrustPolicyCache)
 	edgeproto.InitDeviceCache(&h.DeviceCache)
 	h.frClusterInsts.Init()
 	return h
@@ -60,11 +61,11 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendSettingsCache(&s.SettingsCache)
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
 	mgr.RegisterSendVMPoolCache(&s.VMPoolCache)
+	mgr.RegisterSendTrustPolicyCache(&s.TrustPolicyCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
 	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
-	mgr.RegisterSendPrivacyPolicyCache(&s.PrivacyPolicyCache)
 	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
 	mgr.RegisterSendAppCache(&s.AppCache)
 	mgr.RegisterSendAppInstCache(&s.AppInstCache)
@@ -257,18 +258,13 @@ func (s *DummyHandler) WaitForAlerts(count int) error {
 	return s.WaitFor(AlertType, count)
 }
 
-func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state edgeproto.CloudletState, version string) error {
-	lastState := edgeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
+func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state dmeproto.CloudletState) error {
+	lastState := dmeproto.CloudletState_CLOUDLET_STATE_UNKNOWN
 	for i := 0; i < 100; i++ {
 		cloudletInfo := edgeproto.CloudletInfo{}
 		if s.CloudletInfoCache.Get(key, &cloudletInfo) {
 			if cloudletInfo.State == state {
-				if cloudletInfo.ContainerVersion == version {
-					return nil
-				}
-				return fmt.Errorf("invalid cloudletInfo version: %s, should be %s",
-					cloudletInfo.ContainerVersion,
-					version)
+				return nil
 			}
 			lastState = cloudletInfo.State
 		}

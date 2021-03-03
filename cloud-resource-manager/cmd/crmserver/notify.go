@@ -30,7 +30,7 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	sendMetric = notify.NewMetricSend()
 	client.RegisterSend(sendMetric)
 	client.RegisterSendAlertCache(&cd.AlertCache)
-	client.RegisterRecvPrivacyPolicyCache(&cd.PrivacyPolicyCache)
+	client.RegisterRecvTrustPolicyCache(&cd.TrustPolicyCache)
 	client.RegisterRecvAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	client.RegisterSendAllRecv(cd)
 	nodeMgr.RegisterClient(client)

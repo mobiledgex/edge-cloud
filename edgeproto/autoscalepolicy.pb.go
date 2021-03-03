@@ -1148,15 +1148,12 @@ func (c *AutoScalePolicyCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AutoScalePolicyCache) Show(filter *AutoScalePolicy, cb func(ret *AutoScalePolicy) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AutoScalePolicy", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AutoScalePolicy", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AutoScalePolicy", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -1358,6 +1355,18 @@ func (m *AutoScalePolicy) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (m *AutoScalePolicy) IsValidArgsForCreateAutoScalePolicy() error {
+	return nil
+}
+
+func (m *AutoScalePolicy) IsValidArgsForDeleteAutoScalePolicy() error {
+	return nil
+}
+
+func (m *AutoScalePolicy) IsValidArgsForUpdateAutoScalePolicy() error {
 	return nil
 }
 

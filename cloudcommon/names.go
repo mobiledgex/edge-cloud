@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -38,6 +39,20 @@ var CloudletKindFake = "fake"
 var OperatingSystemMac = "mac"
 var OperatingSystemLinux = "linux"
 
+// cloudlet vm types
+var VMTypeAppVM = "appvm"
+var VMTypeRootLB = "rootlb"
+var VMTypePlatform = "platform"
+var VMTypePlatformClusterMaster = "platform-cluster-master"
+var VMTypePlatformClusterNode = "platform-cluster-node"
+var VMTypeClusterMaster = "cluster-master"
+var VMTypeClusterNode = "cluster-node"
+
+const AutoClusterPrefix = "autocluster"
+const ReservableClusterPrefix = "reservable"
+const ReserveClusterEvent = "Reserve ClusterInst"
+const FreeClusterEvent = "Free ClusterInst reservation"
+
 // network schemes for use by standalone deployments (e.g. DIND)
 var NetworkSchemePublicIP = "publicip"
 var NetworkSchemePrivateIP = "privateip"
@@ -62,6 +77,29 @@ var ClusterInstCheckpoints = "clusterinst-checkpoints"
 var AppInstEvent = "appinst"
 var AppInstCheckpoints = "appinst-checkpoints"
 var MonthlyInterval = "MONTH"
+
+// Persistent Influx variables
+var PersistentConnDbName = "persistent_metrics"
+var GpsLocationMetric = "gps-location"
+var AppInstLatencyMetric = "appinst-latency"
+var LatencyPerCarrierMetric = "latency-per-carrier"
+var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
+var LatencyPerLocationMetric = "latency-per-location"
+var CustomMetric = "custom-metrics"
+
+// Cloudlet resource usage
+var CloudletResourceUsageDbName = "cloudlet_resource_usage"
+var CloudletFlavorUsageMeasurement = "cloudlet-flavor-usage"
+
+// Map used to identify which metrics should go to persistent_metrics db
+var PersistentMetrics = map[string]struct{}{
+	GpsLocationMetric:           struct{}{},
+	AppInstLatencyMetric:        struct{}{},
+	LatencyPerCarrierMetric:     struct{}{},
+	LatencyPerDataNetworkMetric: struct{}{},
+	LatencyPerLocationMetric:    struct{}{},
+	CustomMetric:                struct{}{},
+}
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"
@@ -96,6 +134,10 @@ var MexNodePrefix = "mex-k8s-node-"
 
 // GCP limits to 40, Azure has issues above 54.  For consistency go with the lower limit
 const MaxClusterNameLength = 40
+
+// Common cert name. Cannot use common name as filename since envoy doesn't know if the app is dedicated or not
+const CertName = "envoyTlsCerts"
+const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
@@ -218,4 +260,17 @@ func GetAppClientType(app *edgeproto.App) string {
 		clientType = ClientTypeClusterVM
 	}
 	return clientType
+}
+
+// GetCertsDirAndFiles returns certsDir, certFile, keyFile
+func GetCertsDirAndFiles(pwd string) (string, string, string) {
+	pwd = strings.TrimSpace(pwd)
+	certsDir := pwd + "/envoy/certs"
+	certFile := certsDir + "/" + CertName + ".crt"
+	keyFile := certsDir + "/" + CertName + ".key"
+	return certsDir, certFile, keyFile
+}
+
+func GetCloudletResourceUsageMeasurement(pfType string) string {
+	return fmt.Sprintf("%s-resource-usage", pfType)
 }

@@ -44,6 +44,17 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 10,
 		Disk:  40,
 	},
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.tiny.gpu",
+		},
+		Ram:   1024,
+		Vcpus: 1,
+		Disk:  1,
+		OptResMap: map[string]string{
+			"gpu": "gpu:1",
+		},
+	},
 }
 
 var DevData = []string{
@@ -71,7 +82,7 @@ var ClusterKeys = []edgeproto.ClusterKey{
 }
 
 var AppData = []edgeproto.App{
-	edgeproto.App{
+	edgeproto.App{ // 0
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Pokemon Go!",
@@ -82,7 +93,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 1
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Pokemon Go!",
@@ -93,7 +104,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 2
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Harry Potter Go! Go!",
@@ -104,7 +115,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 3
 		Key: edgeproto.AppKey{
 			Organization: DevData[1],
 			Name:         "AI",
@@ -113,10 +124,10 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/ai/1.2.0#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "tcp:8080",
-		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 4
 		Key: edgeproto.AppKey{
 			Organization: DevData[2],
 			Name:         "my reality",
@@ -125,10 +136,10 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_QCOW,
 		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "udp:1024",
-		AccessType:    edgeproto.AccessType_ACCESS_TYPE_DIRECT,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[2].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 5
 		Key: edgeproto.AppKey{
 			Organization: DevData[3],
 			Name:         "helmApp",
@@ -140,7 +151,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[2].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 6
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Neon",
@@ -151,7 +162,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 7
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "NoPorts",
@@ -161,7 +172,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 8
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "PortRangeApp",
@@ -172,9 +183,9 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[0].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 9
 		Key: edgeproto.AppKey{
-			Organization: DevData[0],
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
 			Name:         "AutoDeleteApp",
 			Version:      "1.0.0",
 		},
@@ -183,7 +194,7 @@ var AppData = []edgeproto.App{
 		DefaultFlavor: FlavorData[0].Key,
 		DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 10
 		Key: edgeproto.AppKey{
 			Organization: DevData[1],
 			Name:         "Dev1App",
@@ -194,7 +205,7 @@ var AppData = []edgeproto.App{
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
 		DefaultFlavor: FlavorData[1].Key,
 	},
-	edgeproto.App{
+	edgeproto.App{ // 11
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "Pokemon Go!",
@@ -209,7 +220,7 @@ var AppData = []edgeproto.App{
 			AutoProvPolicyData[3].Key.Name,
 		},
 	},
-	edgeproto.App{
+	edgeproto.App{ // 12
 		Key: edgeproto.AppKey{
 			Organization: DevData[0],
 			Name:         "vm lb",
@@ -220,6 +231,17 @@ var AppData = []edgeproto.App{
 		ImagePath:     "http://somerepo/image/path/myreality/0.0.1#md5:7e9cfcb763e83573a4b9d9315f56cc5f",
 		AccessPorts:   "tcp:10003",
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor: FlavorData[0].Key,
+	},
+	edgeproto.App{ // 13 - MobiledgeX app
+		Key: edgeproto.AppKey{
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Name:         "SampleApp",
+			Version:      "1.0.0",
+		},
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		AccessPorts:   "tcp:889",
 		DefaultFlavor: FlavorData[0].Key,
 	},
 }
@@ -261,12 +283,32 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  37.338207,
 			Longitude: -121.886330,
 		},
-		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:        FlavorData[0].Key,
-		NotifySrvAddr: "127.0.0.1:51001",
-		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
-		PhysicalName:  "SanJoseSite",
-		Deployment:    "docker",
+		PlatformType:                  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		Flavor:                        FlavorData[0].Key,
+		NotifySrvAddr:                 "127.0.0.1:51001",
+		CrmOverride:                   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:                  "SanJoseSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
+		ResourceQuotas: []edgeproto.ResourceQuota{
+			edgeproto.ResourceQuota{
+				Name:           "GPUs",
+				Value:          10,
+				AlertThreshold: 10,
+			},
+			edgeproto.ResourceQuota{
+				Name:           "RAM",
+				AlertThreshold: 30,
+			},
+			edgeproto.ResourceQuota{
+				Name:           "vCPUs",
+				Value:          90,
+				AlertThreshold: 20,
+			},
+		},
+		ResTagMap: map[string]*edgeproto.ResTagTableKey{
+			"gpu": &Restblkeys[3],
+		},
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -279,12 +321,13 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  40.712776,
 			Longitude: -74.005974,
 		},
-		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		Flavor:        FlavorData[0].Key,
-		NotifySrvAddr: "127.0.0.1:51002",
-		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
-		PhysicalName:  "NewYorkSite",
-		Deployment:    "docker",
+		PlatformType:                  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		Flavor:                        FlavorData[0].Key,
+		NotifySrvAddr:                 "127.0.0.1:51002",
+		CrmOverride:                   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:                  "NewYorkSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -305,8 +348,9 @@ var CloudletData = []edgeproto.Cloudlet{
 			FlavorName:          FlavorData[0].Key.Name,
 			ExternalNetworkName: "testnet",
 		},
-		PhysicalName: "SanFranciscoSite",
-		Deployment:   "docker",
+		PhysicalName:                  "SanFranciscoSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -319,12 +363,13 @@ var CloudletData = []edgeproto.Cloudlet{
 			Latitude:  21.306944,
 			Longitude: -157.858337,
 		},
-		Flavor:        FlavorData[0].Key,
-		PlatformType:  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
-		NotifySrvAddr: "127.0.0.1:51004",
-		CrmOverride:   edgeproto.CRMOverride_IGNORE_CRM,
-		PhysicalName:  "HawaiiSite",
-		Deployment:    "docker",
+		Flavor:                        FlavorData[0].Key,
+		PlatformType:                  edgeproto.PlatformType_PLATFORM_TYPE_FAKE,
+		NotifySrvAddr:                 "127.0.0.1:51004",
+		CrmOverride:                   edgeproto.CRMOverride_IGNORE_CRM,
+		PhysicalName:                  "HawaiiSite",
+		Deployment:                    "docker",
+		DefaultResourceAlertThreshold: 80,
 	},
 }
 var ClusterInstData = []edgeproto.ClusterInst{
@@ -426,68 +471,90 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey: edgeproto.ClusterKey{
-				Name: util.K8SSanitize("AutoCluster" + AppData[1].Key.Name),
+				Name: "reservable0",
 			},
 			CloudletKey:  CloudletData[1].Key,
-			Organization: AppData[1].Key.Organization,
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
 		},
 		Flavor:     FlavorData[0].Key,
 		NumMasters: 1,
 		NumNodes:   1,
 		State:      edgeproto.TrackedState_READY,
 		Auto:       true,
+		Reservable: true,
+		ReservedBy: DevData[0],
 	},
 	// from AppInstData[4] -> AppData[2]
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey: edgeproto.ClusterKey{
-				Name: util.K8SSanitize("AutoCluster" + AppData[2].Key.Name),
+				Name: "reservable0",
 			},
 			CloudletKey:  CloudletData[2].Key,
-			Organization: AppData[2].Key.Organization,
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
 		},
 		Flavor:     FlavorData[1].Key,
 		NumMasters: 1,
 		NumNodes:   1,
 		State:      edgeproto.TrackedState_READY,
 		Auto:       true,
+		Reservable: true,
+		ReservedBy: DevData[0],
 	},
 	// from AppInstData[6] -> AppData[6]
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey: edgeproto.ClusterKey{
-				Name: util.K8SSanitize("AutoCluster" + AppData[6].Key.Name),
+				Name: "reservable1",
 			},
 			CloudletKey:  CloudletData[2].Key,
-			Organization: AppData[6].Key.Organization,
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
 		},
 		Flavor:     FlavorData[1].Key,
 		NumMasters: 1,
 		NumNodes:   1,
 		State:      edgeproto.TrackedState_READY,
 		Auto:       true,
-		IpAccess:   edgeproto.IpAccess_IP_ACCESS_DEDICATED,
+		Reservable: true,
+		ReservedBy: DevData[0],
+	},
+	// from AppInstData[12] -> AppData[13]
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey: edgeproto.ClusterKey{
+				Name: "reservable0",
+			},
+			CloudletKey:  CloudletData[3].Key,
+			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+		},
+		Flavor:     FlavorData[0].Key,
+		NumMasters: 1,
+		NumNodes:   1,
+		State:      edgeproto.TrackedState_READY,
+		Auto:       true,
+		Reservable: true,
+		ReservedBy: "MobiledgeX",
 	},
 }
 var AppInstData = []edgeproto.AppInst{
 	edgeproto.AppInst{ // 0
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
-			ClusterInstKey: ClusterInstData[0].Key,
+			ClusterInstKey: *ClusterInstData[0].Key.Virtual(""),
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
 	edgeproto.AppInst{ // 1
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
-			ClusterInstKey: ClusterInstData[3].Key,
+			ClusterInstKey: *ClusterInstData[3].Key.Virtual(""),
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
 	edgeproto.AppInst{ // 2
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
-			ClusterInstKey: ClusterInstData[1].Key,
+			ClusterInstKey: *ClusterInstData[1].Key.Virtual(""),
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
@@ -495,7 +562,7 @@ var AppInstData = []edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[1].Key,
 			// ClusterInst is ClusterInstAutoData[0]
-			ClusterInstKey: ClusterInstAutoData[0].Key,
+			ClusterInstKey: *ClusterInstAutoData[0].Key.Virtual(util.K8SSanitize("autocluster" + AppData[1].Key.Name)),
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
@@ -503,14 +570,14 @@ var AppInstData = []edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[2].Key,
 			// ClusterInst is ClusterInstAutoData[1]
-			ClusterInstKey: ClusterInstAutoData[1].Key,
+			ClusterInstKey: *ClusterInstAutoData[1].Key.Virtual(util.K8SSanitize("autocluster" + AppData[2].Key.Name)),
 		},
 		CloudletLoc: CloudletData[2].Location,
 	},
 	edgeproto.AppInst{ // 5
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[5].Key,
-			ClusterInstKey: ClusterInstData[2].Key,
+			ClusterInstKey: *ClusterInstData[2].Key.Virtual(""),
 		},
 		CloudletLoc: CloudletData[2].Location,
 	},
@@ -518,49 +585,57 @@ var AppInstData = []edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[6].Key,
 			// ClusterInst is ClusterInstAutoData[2]
-			ClusterInstKey: ClusterInstAutoData[2].Key,
+			ClusterInstKey: *ClusterInstAutoData[2].Key.Virtual(util.K8SSanitize("autocluster" + AppData[6].Key.Name)),
 		},
-		CloudletLoc:         CloudletData[2].Location,
-		AutoClusterIpAccess: edgeproto.IpAccess_IP_ACCESS_DEDICATED,
+		CloudletLoc: CloudletData[2].Location,
 	},
 	edgeproto.AppInst{ // 7
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[6].Key,
-			ClusterInstKey: ClusterInstData[0].Key,
+			ClusterInstKey: *ClusterInstData[0].Key.Virtual(""),
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
 	edgeproto.AppInst{ // 8
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[7].Key,
-			ClusterInstKey: ClusterInstData[0].Key,
+			ClusterInstKey: *ClusterInstData[0].Key.Virtual(""),
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
 	edgeproto.AppInst{ // 9
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[9].Key, //auto-delete app
-			ClusterInstKey: ClusterInstData[0].Key,
+			ClusterInstKey: *ClusterInstData[0].Key.Virtual(""),
 		},
-		CloudletLoc: CloudletData[0].Location,
+		CloudletLoc:     CloudletData[0].Location,
+		RealClusterName: ClusterInstData[0].Key.ClusterKey.Name,
 	},
 	edgeproto.AppInst{ // 10
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[9].Key, //auto-delete app
-			ClusterInstKey: ClusterInstAutoData[0].Key,
+			ClusterInstKey: *ClusterInstAutoData[0].Key.Virtual(""),
 		},
-		CloudletLoc: CloudletData[1].Location,
+		CloudletLoc:     CloudletData[1].Location,
+		RealClusterName: ClusterInstAutoData[0].Key.ClusterKey.Name,
 	},
 	edgeproto.AppInst{ // 11
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[12].Key, //vm app with lb
-			ClusterInstKey: edgeproto.ClusterInstKey{
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
 				ClusterKey:   edgeproto.ClusterKey{Name: "DefaultVMCluster"},
 				CloudletKey:  CloudletData[0].Key,
 				Organization: DevData[0],
 			},
 		},
 		CloudletLoc: CloudletData[1].Location,
+	},
+	edgeproto.AppInst{ // 12 - deploy MobiledgeX app to reservable autocluster
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[13].Key, // mobiledgex sample app
+			ClusterInstKey: *ClusterInstAutoData[3].Key.Virtual(util.K8SSanitize("autocluster" + AppData[13].Key.Name)),
+		},
+		CloudletLoc: CloudletData[3].Location,
 	},
 }
 
@@ -664,12 +739,18 @@ var AppInstRefsData = []edgeproto.AppInstRefs{
 			AppInstData[11].Key.GetKeyString(): 1,
 		},
 	},
+	edgeproto.AppInstRefs{
+		Key: AppData[13].Key,
+		Insts: map[string]uint32{
+			AppInstData[12].Key.GetKeyString(): 1,
+		},
+	},
 }
 
 var CloudletInfoData = []edgeproto.CloudletInfo{
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[0].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
@@ -741,10 +822,39 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				PropMap: map[string]string{"vmware": "vgpu=1"},
 			},
 		},
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
+			Info: []edgeproto.InfraResource{
+				edgeproto.InfraResource{
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(102400),
+				},
+				edgeproto.InfraResource{
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
+				},
+				edgeproto.InfraResource{
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:          "GPUs",
+					Value:         uint64(6),
+					InfraMaxValue: uint64(20),
+				},
+				edgeproto.InfraResource{
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
+				},
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[1].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
@@ -768,10 +878,34 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:  uint64(40),
 			},
 		},
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
+			Info: []edgeproto.InfraResource{
+				edgeproto.InfraResource{
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(61440),
+				},
+				edgeproto.InfraResource{
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
+				},
+				edgeproto.InfraResource{
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
+				},
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[2].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
@@ -795,10 +929,34 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:  uint64(20),
 			},
 		},
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
+			Info: []edgeproto.InfraResource{
+				edgeproto.InfraResource{
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(61440),
+				},
+				edgeproto.InfraResource{
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
+				},
+				edgeproto.InfraResource{
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
+				},
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[3].Key,
-		State:       edgeproto.CloudletState_CLOUDLET_STATE_READY,
+		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
@@ -816,6 +974,30 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:  uint64(1),
 			},
 		},
+		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
+			Info: []edgeproto.InfraResource{
+				edgeproto.InfraResource{
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(1024000),
+				},
+				edgeproto.InfraResource{
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
+				},
+				edgeproto.InfraResource{
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
+				},
+				edgeproto.InfraResource{
+					Name:          "External IPs",
+					Value:         uint64(2),
+					InfraMaxValue: uint64(10),
+				},
+			},
+		},
 	},
 }
 
@@ -825,48 +1007,60 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 	// ClusterInstData[0,3,7]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
-			ClusterKeys[4],
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[0].Key.ClusterKey,
+				Organization: ClusterInstData[0].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[3].Key.ClusterKey,
+				Organization: ClusterInstData[3].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[7].Key.ClusterKey,
+				Organization: ClusterInstData[7].Key.Organization,
+			},
 		},
-		UsedRam:        GetCloudletUsedRam(0, 3, 7),
-		UsedVcores:     GetCloudletUsedVcores(0, 3, 7),
-		UsedDisk:       GetCloudletUsedDisk(0, 3, 7),
 		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[1].Key.ClusterKey,
+				Organization: ClusterInstData[1].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[4].Key.ClusterKey,
+				Organization: ClusterInstData[4].Key.Organization,
+			},
 		},
-		UsedRam:    GetCloudletUsedRam(1, 4),
-		UsedVcores: GetCloudletUsedVcores(1, 4),
-		UsedDisk:   GetCloudletUsedDisk(1, 4),
 	},
 	// ClusterInstData[2,5]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[2],
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[2].Key.ClusterKey,
+				Organization: ClusterInstData[2].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[5].Key.ClusterKey,
+				Organization: ClusterInstData[5].Key.Organization,
+			},
 		},
-		UsedRam:        GetCloudletUsedRam(2, 5),
-		UsedVcores:     GetCloudletUsedVcores(2, 5),
-		UsedDisk:       GetCloudletUsedDisk(2, 5),
 		UsedDynamicIps: 1,
 	},
 	// ClusterInstData[6]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[3],
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[6].Key.ClusterKey,
+				Organization: ClusterInstData[6].Key.Organization,
+			},
 		},
-		UsedRam:    GetCloudletUsedRam(6),
-		UsedVcores: GetCloudletUsedVcores(6),
-		UsedDisk:   GetCloudletUsedDisk(6),
 	},
 }
 
@@ -878,55 +1072,95 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 	// AppInstData[0,1] -> ports[tcp:443;tcp:443]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
-			ClusterKeys[4],
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[0].Key.ClusterKey,
+				Organization: ClusterInstData[0].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[3].Key.ClusterKey,
+				Organization: ClusterInstData[3].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[7].Key.ClusterKey,
+				Organization: ClusterInstData[7].Key.Organization,
+			},
 		},
-		UsedRam:        GetCloudletUsedRam(0, 3, 7),
-		UsedVcores:     GetCloudletUsedVcores(0, 3, 7),
-		UsedDisk:       GetCloudletUsedDisk(0, 3, 7),
+		VmAppInsts: []edgeproto.AppInstRefKey{
+			edgeproto.AppInstRefKey{
+				AppKey: AppInstData[11].Key.AppKey,
+				ClusterInstKey: edgeproto.ClusterInstRefKey{
+					ClusterKey:   AppInstData[11].Key.ClusterInstKey.ClusterKey,
+					Organization: AppInstData[11].Key.ClusterInstKey.Organization,
+				},
+			},
+		},
 		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4], ClusterInstAutoData[0]: (shared,shared,shared)
 	// AppInstData[2,3] -> ports[tcp:443;tcp:80,tcp:443,tcp:81,udp:10002]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[1],
-			ClusterInstAutoData[0].Key.ClusterKey,
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[1].Key.ClusterKey,
+				Organization: ClusterInstData[1].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[4].Key.ClusterKey,
+				Organization: ClusterInstData[4].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstAutoData[0].Key.ClusterKey,
+				Organization: ClusterInstAutoData[0].Key.Organization,
+			},
 		},
-		UsedRam:     GetCloudletUsedRam(1, 4, -1, 0),
-		UsedVcores:  GetCloudletUsedVcores(1, 4, -1, 0),
-		UsedDisk:    GetCloudletUsedDisk(1, 4, -1, 0),
-		RootLbPorts: map[int32]int32{80: 1, 81: 1, 443: 1, 10000: 1, 10002: 3},
+		RootLbPorts:            map[int32]int32{80: 1, 81: 1, 443: 1, 10000: 1, 10002: 3},
+		ReservedAutoClusterIds: 1,
 	},
-	// ClusterInstData[2,5], ClusterInstAutoData[1,2]: (shared,dedicated,shared,dedicated)
-	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
+	// ClusterInstData[2,5], ClusterInstAutoData[1,2]: (shared,dedicated,shared,shared)
+	// AppInstData[4,5,6] -> ports[tcp:443,udp:11111;udp:2024;tcp:80,udp:8001,tcp:65535]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[0],
-			ClusterKeys[2],
-			ClusterInstAutoData[1].Key.ClusterKey,
-			ClusterInstAutoData[2].Key.ClusterKey,
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[2].Key.ClusterKey,
+				Organization: ClusterInstData[2].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[5].Key.ClusterKey,
+				Organization: ClusterInstData[5].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstAutoData[1].Key.ClusterKey,
+				Organization: ClusterInstAutoData[1].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstAutoData[2].Key.ClusterKey,
+				Organization: ClusterInstAutoData[2].Key.Organization,
+			},
 		},
-		UsedRam:        GetCloudletUsedRam(2, 5, -1, 1, 2),
-		UsedVcores:     GetCloudletUsedVcores(2, 5, -1, 1, 2),
-		UsedDisk:       GetCloudletUsedDisk(2, 5, -1, 1, 2),
-		UsedDynamicIps: 2,
-		RootLbPorts:    map[int32]int32{443: 1, 11111: 2, 2024: 2},
+		UsedDynamicIps:         1,
+		RootLbPorts:            map[int32]int32{443: 1, 11111: 2, 2024: 2, 80: 1, 8001: 2, 65535: 1},
+		ReservedAutoClusterIds: 3,
 	},
-	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
+	// ClusterInstData[6]: (no app insts on this clusterinst) (shared),
+	// ClusterInstAutoData[3]: (shared)
+	// AppInstData[12] -> ports[tcp:889]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
-		Clusters: []edgeproto.ClusterKey{
-			ClusterKeys[3],
+		ClusterInsts: []edgeproto.ClusterInstRefKey{
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[6].Key.ClusterKey,
+				Organization: ClusterInstData[6].Key.Organization,
+			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstAutoData[3].Key.ClusterKey,
+				Organization: ClusterInstAutoData[3].Key.Organization,
+			},
 		},
-		UsedRam:    GetCloudletUsedRam(6),
-		UsedVcores: GetCloudletUsedVcores(6),
-		UsedDisk:   GetCloudletUsedDisk(6),
+		RootLbPorts:            map[int32]int32{889: 1},
+		ReservedAutoClusterIds: 1,
 	},
 }
 
@@ -973,6 +1207,10 @@ var Restblkeys = []edgeproto.ResTagTableKey{
 		Name:         "nic",
 		Organization: "AT&T Inc.",
 	},
+	edgeproto.ResTagTableKey{
+		Name:         "gput4",
+		Organization: "AT&T Inc.",
+	},
 }
 
 var ResTagTableData = []edgeproto.ResTagTable{
@@ -991,54 +1229,10 @@ var ResTagTableData = []edgeproto.ResTagTable{
 		Key:  Restblkeys[2],
 		Tags: map[string]string{"vcpu": "nvidia-63", "pci-passthru": "T4:1"},
 	},
-}
-
-func GetCloudletUsedRam(indices ...int) uint64 {
-	var ram uint64
-	data := ClusterInstData
-	for _, idx := range indices {
-		if idx == -1 {
-			data = ClusterInstAutoData
-			continue
-		}
-		clinst := data[idx]
-		clflavor := data[idx].Flavor
-		flavor, _ := FindFlavorData(&clflavor, FlavorData)
-		ram += flavor.Ram * uint64(clinst.NumNodes+clinst.NumMasters)
-	}
-	return ram
-}
-
-func GetCloudletUsedVcores(indices ...int) uint64 {
-	var vcores uint64
-	data := ClusterInstData
-	for _, idx := range indices {
-		if idx == -1 {
-			data = ClusterInstAutoData
-			continue
-		}
-		clinst := data[idx]
-		clflavor := data[idx].Flavor
-		flavor, _ := FindFlavorData(&clflavor, FlavorData)
-		vcores += flavor.Vcpus * uint64(clinst.NumNodes+clinst.NumMasters)
-	}
-	return vcores
-}
-
-func GetCloudletUsedDisk(indices ...int) uint64 {
-	var disk uint64
-	data := ClusterInstData
-	for _, idx := range indices {
-		if idx == -1 {
-			data = ClusterInstAutoData
-			continue
-		}
-		clinst := data[idx]
-		clflavor := data[idx].Flavor
-		flavor, _ := FindFlavorData(&clflavor, FlavorData)
-		disk += flavor.Disk * uint64(clinst.NumNodes+clinst.NumMasters)
-	}
-	return disk
+	edgeproto.ResTagTable{
+		Key:  Restblkeys[3],
+		Tags: map[string]string{"pci": "t4:1"},
+	},
 }
 
 var AlertData = []edgeproto.Alert{
@@ -1208,20 +1402,20 @@ var AutoProvPolicyData = []edgeproto.AutoProvPolicy{
 	},
 }
 
-var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
-	edgeproto.PrivacyPolicy{
+var TrustPolicyData = []edgeproto.TrustPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy0",
-			Organization: DevData[0],
+			Name:         "trust-policy0",
+			Organization: CloudletData[2].Key.Organization,
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "8.100.0.0/16",
 				PortRangeMin: 443,
 				PortRangeMax: 443,
 			},
-			edgeproto.OutboundSecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "udp",
 				RemoteCidr:   "0.0.0.0/0",
 				PortRangeMin: 53,
@@ -1229,19 +1423,19 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 			},
 		},
 	},
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy1",
-			Organization: DevData[1],
+			Name:         "trust-policy1",
+			Organization: CloudletData[2].Key.Organization,
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "8.100.0.0/16",
 				PortRangeMin: 443,
 				PortRangeMax: 443,
 			},
-			edgeproto.OutboundSecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "udp",
 				RemoteCidr:   "0.0.0.0/0",
 				PortRangeMin: 53,
@@ -1249,17 +1443,17 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 			},
 		},
 	},
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy2",
-			Organization: DevData[2],
+			Name:         "trust-policy2",
+			Organization: CloudletData[2].Key.Organization,
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:   "icmp",
 				RemoteCidr: "0.0.0.0/0",
 			},
-			edgeproto.OutboundSecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "10.0.0.0/8",
 				PortRangeMin: 1,
@@ -1269,15 +1463,15 @@ var PrivacyPolicyData = []edgeproto.PrivacyPolicy{
 	},
 }
 
-var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
+var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 	// Failure case, max port > min port
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy3",
-			Organization: DevData[0],
+			Name:         "trust-policy3",
+			Organization: CloudletData[2].Key.Organization,
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "10.1.0.0/16",
 				PortRangeMin: 201,
@@ -1286,13 +1480,13 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 		},
 	},
 	// Failure case, bad CIDR
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy4",
-			Organization: DevData[1],
+			Name:         "trust-policy4",
+			Organization: CloudletData[2].Key.Organization,
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "10.0.0.0/50",
 				PortRangeMin: 22,
@@ -1301,13 +1495,13 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 		},
 	},
 	// Failure case, missing min port but max port present
-	edgeproto.PrivacyPolicy{
+	edgeproto.TrustPolicy{
 		Key: edgeproto.PolicyKey{
-			Name:         "privacy-policy5",
-			Organization: DevData[2],
+			Name:         "trust-policy5",
+			Organization: CloudletData[2].Key.Organization,
 		},
-		OutboundSecurityRules: []edgeproto.OutboundSecurityRule{
-			edgeproto.OutboundSecurityRule{
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
 				Protocol:     "tcp",
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMax: 22,
@@ -1318,10 +1512,10 @@ var PrivacyPolicyErrorData = []edgeproto.PrivacyPolicy{
 
 var AppInstClientKeyData = []edgeproto.AppInstClientKey{
 	edgeproto.AppInstClientKey{
-		Key: AppInstData[0].Key,
+		AppInstKey: AppInstData[0].Key,
 	},
 	edgeproto.AppInstClientKey{
-		Key: AppInstData[3].Key,
+		AppInstKey: AppInstData[3].Key,
 	},
 }
 
@@ -1563,7 +1757,7 @@ func GetTimestamp(t time.Time) *types.Timestamp {
 }
 
 func IsAutoClusterAutoDeleteApp(key *edgeproto.AppInstKey) bool {
-	if !strings.HasPrefix(key.ClusterInstKey.ClusterKey.Name, "autocluster") {
+	if !strings.HasPrefix(key.ClusterInstKey.ClusterKey.Name, "autocluster") && !strings.HasPrefix(key.ClusterInstKey.ClusterKey.Name, "reservable") {
 		return false
 	}
 	for _, app := range AppData {
@@ -1572,4 +1766,25 @@ func IsAutoClusterAutoDeleteApp(key *edgeproto.AppInstKey) bool {
 		}
 	}
 	panic(fmt.Sprintf("App definition not found for %v", key))
+}
+
+// Get the AppInst data after it has been created by the Controller.
+// This is for tests that are using data as if it has already been
+// created and processed by the Controller, given that the controller
+// may modify certain fields during create.
+func CreatedAppInstData() []edgeproto.AppInst {
+	insts := []edgeproto.AppInst{}
+	for ii, appInst := range AppInstData {
+		switch ii {
+		case 3:
+			// grab expected autocluster real name
+			appInst.RealClusterName = ClusterInstAutoData[0].Key.ClusterKey.Name
+		case 4:
+			appInst.RealClusterName = ClusterInstAutoData[1].Key.ClusterKey.Name
+		case 6:
+			appInst.RealClusterName = ClusterInstAutoData[2].Key.ClusterKey.Name
+		}
+		insts = append(insts, appInst)
+	}
+	return insts
 }

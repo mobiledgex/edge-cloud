@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"flag"
+	"sync"
 
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -38,6 +39,11 @@ type NodeMgr struct {
 	InternalPki        internalPki
 	InternalDomain     string
 	ESClient           *elasticsearch.Client
+	esEvents           [][]byte
+	esEventsMux        sync.Mutex
+	esWriteSignal      chan bool
+	esEventsDone       chan struct{}
+	ESWroteEvents      uint64
 	tlsClientIssuer    string
 	commonName         string
 	DeploymentTag      string
@@ -57,8 +63,7 @@ func (s *NodeMgr) InitFlags() {
 	flag.StringVar(&s.iTlsKeyFile, "itlsKey", "", "internal mTLS key file for communication between services")
 	flag.StringVar(&s.iTlsCAFile, "itlsCA", "", "internal mTLS CA file for communication between servcies")
 	flag.StringVar(&s.VaultAddr, "vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
-	flag.BoolVar(&s.InternalPki.UseVaultCAs, "useVaultCAs", false, "Include use of Vault CAs for internal mTLS authentication")
-	flag.BoolVar(&s.InternalPki.UseVaultCerts, "useVaultCerts", false, "Use Vault Certs for internal mTLS; implies useVaultCAs")
+	flag.BoolVar(&s.InternalPki.UseVaultPki, "useVaultPki", false, "Use Vault Certs and CAs for internal mTLS and public TLS")
 	flag.StringVar(&s.InternalDomain, "internalDomain", "mobiledgex.net", "domain name for internal PKI")
 	flag.StringVar(&s.commonName, "commonName", "", "common name to use for vault internal pki issued certificates")
 	flag.StringVar(&s.DeploymentTag, "deploymentTag", "", "Tag to indicate type of deployment setup. Ex: production, staging, etc")
@@ -84,6 +89,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.MyNode.BuildMaster = version.BuildMaster
 	s.MyNode.BuildHead = version.BuildHead
 	s.MyNode.BuildAuthor = version.BuildAuthor
+	s.MyNode.BuildDate = version.BuildDate
 	s.MyNode.Hostname = cloudcommon.Hostname()
 	s.MyNode.ContainerVersion = opts.containerVersion
 	s.Region = opts.region
@@ -164,7 +170,29 @@ func (s *NodeMgr) Name() string {
 }
 
 func (s *NodeMgr) Finish() {
+	close(s.esEventsDone)
 	log.FinishTracer()
+}
+
+func (s *NodeMgr) CommonName() string {
+	if s.commonName != "" {
+		return s.commonName
+	}
+	cn := s.MyNode.Key.Type
+	if cn == NodeTypeController {
+		cn = "ctrl"
+	}
+	return cn + "." + s.InternalDomain
+}
+
+func (s *NodeMgr) UpdateNodeProps(ctx context.Context, props map[string]string) {
+	for k, v := range props {
+		if s.MyNode.Properties == nil {
+			s.MyNode.Properties = make(map[string]string)
+		}
+		s.MyNode.Properties[k] = v
+	}
+	s.UpdateMyNode(ctx)
 }
 
 type NodeOptions struct {

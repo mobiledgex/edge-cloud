@@ -1,6 +1,7 @@
 package cloudcommon
 
 import (
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -20,7 +21,7 @@ const (
 
 func AutoProvCloudletInfoOnline(cloudletInfo *edgeproto.CloudletInfo) bool {
 	// Transitional states are considered "online".
-	if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+	if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_OFFLINE {
 		return false
 	}
 	return true
@@ -28,7 +29,7 @@ func AutoProvCloudletInfoOnline(cloudletInfo *edgeproto.CloudletInfo) bool {
 
 func AutoProvCloudletOnline(cloudlet *edgeproto.Cloudlet) bool {
 	// any maintenance state is considered offline
-	if cloudlet.MaintenanceState != edgeproto.MaintenanceState_NORMAL_OPERATION {
+	if cloudlet.MaintenanceState != dme.MaintenanceState_NORMAL_OPERATION {
 		return false
 	}
 	return true
@@ -38,8 +39,8 @@ func AutoProvAppInstOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.C
 	// Transitional states are considered "online"...but health check
 	// doesn't actually have transitional states, except perhaps unknown.
 	appInstOnline := false
-	if appInst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_UNKNOWN ||
-		appInst.HealthCheck == edgeproto.HealthCheck_HEALTH_CHECK_OK {
+	if appInst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_UNKNOWN ||
+		appInst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_OK {
 		appInstOnline = true
 	}
 	return appInstOnline && AutoProvCloudletInfoOnline(cloudletInfo) && AutoProvCloudletOnline(cloudlet)
@@ -51,3 +52,14 @@ func AppInstBeingDeleted(inst *edgeproto.AppInst) bool {
 	}
 	return false
 }
+
+// Cluster name to trigger using an existing free reservable ClusterInst
+// or creating a new one automatically.
+// Because this name is always part of the AppInstKey in etcd,
+// and because AutoProv will only ever instantiate once instance
+// of an App per cloudlet, there are really no uniqueness requirements
+// on this name.
+// Additionally any objects instantiated at the infra level that
+// are independent of the AppInst key should be using the
+// real cluster name from the ClusterInst object.
+var AutoProvClusterName = AutoClusterPrefix + "-autoprov"

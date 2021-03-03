@@ -53,10 +53,11 @@ var completionCmd = &cobra.Command{
 func connect(cmd *cobra.Command, args []string) error {
 	var err error
 
-	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile, false)
-	if err != nil {
-		return err
+	tlsMode := tls.NoTLS
+	if tlsCertFile != "" {
+		tlsMode = tls.MutualAuthTLS
 	}
+	dialOption, err := tls.GetTLSClientDialOption(tlsMode, addr, nil, tlsCertFile, false)
 	conn, err = grpc.Dial(addr, dialOption)
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
@@ -66,7 +67,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.FlavorApiCmd = edgeproto.NewFlavorApiClient(conn)
 	gencmd.AutoScalePolicyApiCmd = edgeproto.NewAutoScalePolicyApiClient(conn)
 	gencmd.AutoProvPolicyApiCmd = edgeproto.NewAutoProvPolicyApiClient(conn)
-	gencmd.PrivacyPolicyApiCmd = edgeproto.NewPrivacyPolicyApiClient(conn)
+	gencmd.TrustPolicyApiCmd = edgeproto.NewTrustPolicyApiClient(conn)
 	gencmd.ClusterInstApiCmd = edgeproto.NewClusterInstApiClient(conn)
 	gencmd.CloudletApiCmd = edgeproto.NewCloudletApiClient(conn)
 	gencmd.VMPoolApiCmd = edgeproto.NewVMPoolApiClient(conn)
@@ -90,6 +91,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.ClusterRefsApiCmd = edgeproto.NewClusterRefsApiClient(conn)
 	gencmd.AppInstRefsApiCmd = edgeproto.NewAppInstRefsApiClient(conn)
 	gencmd.StreamObjApiCmd = edgeproto.NewStreamObjApiClient(conn)
+	gencmd.AppInstLatencyApiCmd = edgeproto.NewAppInstLatencyApiClient(conn)
 	return nil
 }
 
@@ -117,7 +119,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.FlavorApiCmds...)
 	controllerCmd.AddCommand(gencmd.AutoScalePolicyApiCmds...)
 	controllerCmd.AddCommand(gencmd.AutoProvPolicyApiCmds...)
-	controllerCmd.AddCommand(gencmd.PrivacyPolicyApiCmds...)
+	controllerCmd.AddCommand(gencmd.TrustPolicyApiCmds...)
 	controllerCmd.AddCommand(gencmd.ClusterInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
 	controllerCmd.AddCommand(gencmd.VMPoolApiCmds...)
@@ -137,7 +139,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.ClusterRefsApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstRefsApiCmds...)
 	controllerCmd.AddCommand(gencmd.StreamObjApiCmds...)
-
+	controllerCmd.AddCommand(gencmd.AppInstLatencyApiCmds...)
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())
 	gencmd.RunCommandCmd.Run = runRunCommand

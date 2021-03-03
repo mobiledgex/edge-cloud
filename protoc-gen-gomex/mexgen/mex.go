@@ -359,10 +359,12 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	// ignore field if filter was specified and o.name is 0 or nil
 	nilval := "0"
 	nilCheck := true
+	repeated := false
 	name := generator.CamelCase(*field.Name)
 	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
 		nilval = "nil"
+		repeated = true
 	} else {
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -380,13 +382,16 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		m.P("if !opts.Filter || o.", name, " != ", nilval, " {")
 	}
 	if nilCheck && nilval == "nil" {
-		m.P("if m.", name, " == nil && o.", name, " != nil || m.", name, " != nil && o.", name, " == nil {")
+		if repeated {
+			m.P("if len(m.", name, ") == 0 && len(o.", name, ") > 0 || len(m.", name, ") > 0 && len(o.", name, ") == 0 {")
+		} else {
+			m.P("if m.", name, " == nil && o.", name, " != nil || m.", name, " != nil && o.", name, " == nil {")
+		}
 		m.P("return false")
 		m.P("} else if m.", name, " != nil && o.", name, "!= nil {")
 	}
 
 	mapType := m.support.GetMapType(m.gen, field)
-	repeated := false
 	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
 		m.P("if !opts.Filter && len(m.", name, ") != len(o.", name, ") {")
@@ -418,7 +423,6 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 			name = name + "[k]"
 			field = mapType.ValField
 		}
-		repeated = true
 	}
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -457,6 +461,86 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	}
 	if backend {
 		m.P("}")
+	}
+}
+
+func (m *mex) getInvalidMethodFields(names []string, subAllInvalidFields bool, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto) {
+	message := desc.DescriptorProto
+	noconfig := gensupport.GetNoConfig(message, method)
+	noconfigMap := make(map[string]string)
+	for _, nc := range strings.Split(noconfig, ",") {
+		if nc == "" {
+			continue
+		}
+		noconfigMap["."+nc] = "0"
+	}
+	for ii, field := range message.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		if keyField := gensupport.GetMessageKey(message); keyField != nil {
+			if *keyField.Name == *field.Name {
+				continue
+			}
+		}
+		nilval := "0"
+		nilcheck := true
+		name := generator.CamelCase(*field.Name)
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
+			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+			nilval = "nil"
+		} else {
+			switch *field.Type {
+			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+				nilval = "nil"
+				if !gogoproto.IsNullable(field) {
+					nilcheck = false
+				}
+			case descriptor.FieldDescriptorProto_TYPE_STRING:
+				nilval = "\"\""
+			case descriptor.FieldDescriptorProto_TYPE_BOOL:
+				nilval = "false"
+			}
+		}
+		fieldName := strings.Join(append(names, name), ".")
+		nullableMessage := false
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			if nilcheck {
+				if _, ok := noconfigMap[fieldName]; !ok {
+					for ncField, _ := range noconfigMap {
+						if strings.HasPrefix(ncField, fieldName) {
+							m.P("if m", fieldName, " != ", nilval, " {")
+							nullableMessage = true
+							break
+						}
+					}
+				}
+				if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
+					m.P("if m", fieldName, " != ", nilval, " {")
+					argStr := strings.TrimLeft(fieldName, ".")
+					m.P("return fmt.Errorf(\"Invalid field specified: ", argStr, ", this field is only for internal use\")")
+					m.P("}")
+					continue
+				}
+			}
+			subAllInvalidFields := false
+			if _, ok := noconfigMap[fieldName]; ok {
+				subAllInvalidFields = true
+			}
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.getInvalidMethodFields(append(names, name), subAllInvalidFields, subDesc, method)
+			if nullableMessage {
+				m.P("}")
+			}
+		default:
+			if _, ok := noconfigMap[fieldName]; ok || subAllInvalidFields {
+				m.P("if m", fieldName, " != ", nilval, " {")
+				argStr := strings.TrimLeft(fieldName, ".")
+				m.P("return fmt.Errorf(\"Invalid field specified: ", argStr, ", this field is only for internal use\")")
+				m.P("}")
+			}
+		}
 	}
 }
 
@@ -1317,17 +1401,14 @@ func (c *{{.Name}}Cache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
 {{- if .CudCache}}
-		log.DebugLog(log.DebugLevelApi, "Compare {{.Name}}", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
 {{- end}}
-		log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -1499,12 +1580,44 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 {{- end}}
 
 {{if ne (.WaitForState) ("")}}
-func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error) error {
+func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
-	done := make(chan bool, 1)
+	done := make(chan string, 1)
 	failed := make(chan bool, 1)
-	var lastMsg string
+	var lastMsgCnt int
 	var err error
+
+	var wSpec WaitStateSpec
+	for _, op := range opts {
+		if err := op(&wSpec); err != nil {
+		       return err
+		}
+	}
+
+	var streamCancel context.CancelFunc
+        if wSpec.StreamCache != nil {
+		checkStreamMsg := func() {
+			streamObj := StreamObj{}
+			if !wSpec.StreamCache.Get(wSpec.StreamKey, &streamObj) {
+				return
+			}
+			if len(streamObj.Status.Msgs) > 0 || streamObj.Status.MsgCount > 0 {
+				if lastMsgCnt < int(streamObj.Status.MsgCount) {
+					for ii := 0; ii < len(streamObj.Status.Msgs); ii++ {
+						send(&Result{Message: streamObj.Status.Msgs[ii]})
+						lastMsgCnt++
+					}
+				}
+			}
+		}
+
+                streamCancel = wSpec.StreamCache.WatchKey(wSpec.StreamKey, func(ctx context.Context) {
+			checkStreamMsg()
+                })
+
+		// After setting up watch, check if any status messages were received in the meantime
+		checkStreamMsg()
+        }
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := {{.Name}}{}
@@ -1513,42 +1626,16 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		} else {
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
-		if send != nil {
-			if curState == {{.WaitForState}}_NOT_PRESENT {
-				msg := {{.WaitForState}}_CamelName[int32(curState)]
-				if lastMsg != msg {
-					send(&Result{Message: msg})
-					lastMsg = msg
-				}
-			} else {
-				if len(info.Status.Msgs) > 0  || info.Status.MsgCount > 0 {
-					for ii := 0; ii < len(info.Status.Msgs); ii++ {
-						if lastMsg == info.Status.Msgs[ii] {
-							continue
-						}
-						send(&Result{Message: info.Status.Msgs[ii]})
-						lastMsg = info.Status.Msgs[ii]
-					}
-				} else {
-					// for backwards compatibility
-					statusString := info.Status.ToString()
-					var msg string
-					if statusString != "" {
-						msg = statusString
-					} else {
-						msg = {{.WaitForState}}_CamelName[int32(curState)]
-					}
-					lastMsg = msg
-					send(&Result{Message: msg})
-				}
-			}
-		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for {{.Name}}")
 		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)], "status", info.Status)
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
-			done <- true
+			msg := ""
+			if curState == {{.WaitForState}}_NOT_PRESENT {
+				msg = {{.WaitForState}}_CamelName[int32(curState)]
+			}
+			done <- msg
 		}
 	})
 	// After setting up watch, check current state,
@@ -1560,11 +1647,18 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		curState = {{.WaitForState}}_NOT_PRESENT
 	}
 	if curState == targetState {
-		done <- true
+		msg := ""
+		if curState == {{.WaitForState}}_NOT_PRESENT {
+			msg = {{.WaitForState}}_CamelName[int32(curState)]
+		}
+		done <- msg
 	}
 
 	select {
-	case <-done:
+	case doneMsg := <-done:
+		if doneMsg != "" {
+			send(&Result{Message: doneMsg})
+		}
 		err = nil
 		if successMsg != "" && send != nil {
 			send(&Result{Message: successMsg})
@@ -1601,6 +1695,9 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	}
 	cancel()
+	if streamCancel != nil {
+		streamCancel()
+	}
 	// note: do not close done/failed, garbage collector will deal with it.
 	return err
 }
@@ -2425,6 +2522,10 @@ func (m *mex) generateAllKeyTags() {
 				if tag == "" {
 					continue
 				}
+				if GetSkipKeyTagConflictCheck(field) {
+					continue
+				}
+
 				fname := generator.CamelCase(*field.Name)
 				tagLoc := *message.Name + "." + fname
 				if conflict, found := tags[tag]; found {
@@ -2512,7 +2613,14 @@ func (m *mex) generateService(file *generator.FileDescriptor, service *descripto
 }
 
 func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) {
-
+	in := gensupport.GetDesc(m.gen, method.GetInputType())
+	if !gensupport.IsShow(method) {
+		m.P("func (m *", *in.DescriptorProto.Name, ") IsValidArgsFor", *method.Name, "() error {")
+		m.getInvalidMethodFields([]string{""}, false, in, method)
+		m.P("return nil")
+		m.P("}")
+		m.P("")
+	}
 }
 
 func GetGenerateMatches(message *descriptor.DescriptorProto) bool {
@@ -2569,6 +2677,10 @@ func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 
 func GetKeyTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protogen.E_Keytag, "")
+}
+
+func GetSkipKeyTagConflictCheck(field *descriptor.FieldDescriptorProto) bool {
+	return proto.GetBoolExtension(field.Options, protogen.E_SkipKeytagConflictCheck, false)
 }
 
 func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {

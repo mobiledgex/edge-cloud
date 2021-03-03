@@ -8,6 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -17,32 +18,37 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform                 platform.Platform
-	AppCache                 edgeproto.AppCache
-	AppInstCache             edgeproto.AppInstCache
-	CloudletCache            edgeproto.CloudletCache
-	VMPoolCache              edgeproto.VMPoolCache
-	FlavorCache              edgeproto.FlavorCache
-	ClusterInstCache         edgeproto.ClusterInstCache
-	AppInstInfoCache         edgeproto.AppInstInfoCache
-	CloudletInfoCache        edgeproto.CloudletInfoCache
-	VMPoolInfoCache          edgeproto.VMPoolInfoCache
-	ClusterInstInfoCache     edgeproto.ClusterInstInfoCache
-	PrivacyPolicyCache       edgeproto.PrivacyPolicyCache
-	AutoProvPolicyCache      edgeproto.AutoProvPolicyCache
-	AlertCache               edgeproto.AlertCache
-	SettingsCache            edgeproto.SettingsCache
-	ResTagTableCache         edgeproto.ResTagTableCache
-	ExecReqHandler           *ExecReqHandler
-	ExecReqSend              *notify.ExecRequestSend
-	ControllerWait           chan bool
-	ControllerSyncInProgress bool
-	ControllerSyncDone       chan bool
-	settings                 edgeproto.Settings
-	NodeMgr                  *node.NodeMgr
-	VMPool                   edgeproto.VMPool
-	VMPoolMux                sync.Mutex
-	updateVMWorkers          tasks.KeyWorkers
+	platform                    platform.Platform
+	cloudletKey                 edgeproto.CloudletKey
+	AppCache                    edgeproto.AppCache
+	AppInstCache                edgeproto.AppInstCache
+	CloudletCache               edgeproto.CloudletCache
+	VMPoolCache                 edgeproto.VMPoolCache
+	FlavorCache                 edgeproto.FlavorCache
+	ClusterInstCache            edgeproto.ClusterInstCache
+	AppInstInfoCache            edgeproto.AppInstInfoCache
+	CloudletInfoCache           edgeproto.CloudletInfoCache
+	VMPoolInfoCache             edgeproto.VMPoolInfoCache
+	ClusterInstInfoCache        edgeproto.ClusterInstInfoCache
+	TrustPolicyCache            edgeproto.TrustPolicyCache
+	AutoProvPolicyCache         edgeproto.AutoProvPolicyCache
+	AlertCache                  edgeproto.AlertCache
+	SettingsCache               edgeproto.SettingsCache
+	ResTagTableCache            edgeproto.ResTagTableCache
+	ExecReqHandler              *ExecReqHandler
+	ExecReqSend                 *notify.ExecRequestSend
+	ControllerWait              chan bool
+	ControllerSyncInProgress    bool
+	ControllerSyncDone          chan bool
+	settings                    edgeproto.Settings
+	NodeMgr                     *node.NodeMgr
+	VMPool                      edgeproto.VMPool
+	VMPoolMux                   sync.Mutex
+	VMPoolUpdateMux             sync.Mutex
+	updateVMWorkers             tasks.KeyWorkers
+	updateTrustPolicyKeyworkers tasks.KeyWorkers
+	vmActionRefMux              sync.Mutex
+	vmActionRefAction           int
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -56,9 +62,10 @@ func (cd *ControllerData) RecvAllStart() {
 }
 
 // NewControllerData creates a new instance to track data from the controller
-func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerData {
+func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr *node.NodeMgr) *ControllerData {
 	cd := &ControllerData{}
 	cd.platform = pf
+	cd.cloudletKey = *key
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
@@ -70,7 +77,7 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitAlertCache(&cd.AlertCache)
-	edgeproto.InitPrivacyPolicyCache(&cd.PrivacyPolicyCache)
+	edgeproto.InitTrustPolicyCache(&cd.TrustPolicyCache)
 	edgeproto.InitAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
@@ -91,6 +98,8 @@ func NewControllerData(pf platform.Platform, nodeMgr *node.NodeMgr) *ControllerD
 	cd.NodeMgr = nodeMgr
 
 	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdateVMPool)
+	cd.updateTrustPolicyKeyworkers.Init("update-TrustPolicy", cd.UpdateTrustPolicy)
+
 	return cd
 }
 
@@ -149,8 +158,122 @@ func (cd *ControllerData) flavorChanged(ctx context.Context, old *edgeproto.Flav
 	// }
 }
 
+// GetCloudletTrustPolicy finds the policy from the cache.  If a blank policy name is specified, an empty policy is returned
+func GetCloudletTrustPolicy(ctx context.Context, name string, cloudletOrg string, privPolCache *edgeproto.TrustPolicyCache) (*edgeproto.TrustPolicy, error) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "GetCloudletTrustPolicy")
+	if name != "" {
+		pp := edgeproto.TrustPolicy{}
+		pk := edgeproto.PolicyKey{
+			Name:         name,
+			Organization: cloudletOrg,
+		}
+		if !privPolCache.Get(&pk, &pp) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find Trust Policy from cache", "pk", pk, "pp", pp)
+			return nil, fmt.Errorf("fail to find Trust Policy from cache: %s", pk)
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Found Trust Policy from cache", "pk", pk, "pp", pp)
+			return &pp, nil
+		}
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Returning empty trust policy for empty name")
+		emptyPol := &edgeproto.TrustPolicy{}
+		return emptyPol, nil
+	}
+}
+
+func (cd *ControllerData) vmResourceActionBegin() {
+	cd.vmActionRefMux.Lock()
+	defer cd.vmActionRefMux.Unlock()
+	cd.vmActionRefAction++
+}
+
+func (cd *ControllerData) CaptureResourcesSnapshot(ctx context.Context, cloudletKey *edgeproto.CloudletKey) *edgeproto.InfraResourcesSnapshot {
+	log.SpanLog(ctx, log.DebugLevelInfra, "update cloudlet resources snapshot", "key", cloudletKey)
+	// get all the cluster instances deployed on this cloudlet
+	deployedClusters := make(map[edgeproto.ClusterInstRefKey]struct{})
+	cd.ClusterInstInfoCache.Show(&edgeproto.ClusterInstInfo{State: edgeproto.TrackedState_READY}, func(clusterInstInfo *edgeproto.ClusterInstInfo) error {
+		refKey := edgeproto.ClusterInstRefKey{}
+		refKey.FromClusterInstKey(&clusterInstInfo.Key)
+		deployedClusters[refKey] = struct{}{}
+		return nil
+	})
+
+	// get all the vm app instances deployed on this cloudlet
+	deployedVMAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
+	cd.AppInstInfoCache.Show(&edgeproto.AppInstInfo{State: edgeproto.TrackedState_READY}, func(appInstInfo *edgeproto.AppInstInfo) error {
+		var app edgeproto.App
+		if !cd.AppCache.Get(&appInstInfo.Key.AppKey, &app) {
+			return nil
+		}
+		if app.Deployment != cloudcommon.DeploymentTypeVM {
+			return nil
+		}
+		refKey := edgeproto.AppInstRefKey{}
+		refKey.FromAppInstKey(&appInstInfo.Key)
+		deployedVMAppInsts[refKey] = struct{}{}
+		return nil
+	})
+
+	resources, err := cd.platform.GetCloudletInfraResources(ctx)
+	if err != nil {
+		errstr := fmt.Sprintf("Cloudlet resource update failed: %v", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "can't fetch cloudlet resources", "error", errstr, "key", cloudletKey)
+		cd.NodeMgr.Event(ctx, "Cloudlet infra resource update failure", cloudletKey.Organization, cloudletKey.GetTags(), err)
+		return nil
+	}
+	if resources == nil {
+		return nil
+	}
+	deployedClusterKeys := []edgeproto.ClusterInstRefKey{}
+	for k, _ := range deployedClusters {
+		deployedClusterKeys = append(deployedClusterKeys, k)
+	}
+	deployedVMAppKeys := []edgeproto.AppInstRefKey{}
+	for k, _ := range deployedVMAppInsts {
+		deployedVMAppKeys = append(deployedVMAppKeys, k)
+	}
+	resources.ClusterInsts = deployedClusterKeys
+	resources.VmAppInsts = deployedVMAppKeys
+	return resources
+}
+
+func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *edgeproto.CloudletKey) {
+	cd.vmActionRefMux.Lock()
+	defer cd.vmActionRefMux.Unlock()
+	cd.vmActionRefAction--
+	if cd.vmActionRefAction == 0 {
+		resources := cd.CaptureResourcesSnapshot(ctx, cloudletKey)
+
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found := cd.CloudletInfoCache.Get(cloudletKey, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", cloudletKey)
+			return
+		}
+		if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
+			// Cloudlet is not in READY state
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet is not online", "key", cloudletKey)
+			return
+		}
+		// fetch cloudletInfo again, as data might have changed by now
+		found = cd.CloudletInfoCache.Get(cloudletKey, &cloudletInfo)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", cloudletKey)
+			return
+		}
+		if resources != nil {
+			cloudletInfo.ResourcesSnapshot = *resources
+		}
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+}
+
 func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
 	var err error
+
+	if old != nil && old.State == new.State {
+		return
+	}
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
@@ -167,6 +290,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	// do request
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
+		// Marks start of clusterinst change and hence increases ref count
+		cd.vmResourceActionBegin()
 		// create
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst create", "ClusterInst", *new)
 		// reset status messages
@@ -174,6 +299,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		// create or update k8s cluster on this cloudlet
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateClusterCacheCallback)
 		if err != nil {
+			// Marks end of clusterinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 			return
 		}
 		go func() {
@@ -181,6 +308,10 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm create ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
+
+			// Marks end of clusterinst change and hence reduces ref count
+			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
+
 			if !cd.CloudletCache.Get(&new.Key.CloudletKey, &cloudlet) {
 				log.WarnLog("Could not find cloudlet in cache", "key", new.Key.CloudletKey)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey), updateClusterCacheCallback)
@@ -192,17 +323,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "create cluster inst", "ClusterInst", *new, "timeout", timeout)
 
-			policy := edgeproto.PrivacyPolicy{}
-			if new.PrivacyPolicy != "" {
-				policy.Key.Organization = new.Key.Organization
-				policy.Key.Name = new.PrivacyPolicy
-				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
-					log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
-					cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found", updateClusterCacheCallback)
-					return
-				}
-			}
-			err = cd.platform.CreateClusterInst(ctx, new, &policy, updateClusterCacheCallback, timeout)
+			err = cd.platform.CreateClusterInst(ctx, new, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err), updateClusterCacheCallback)
@@ -225,6 +346,10 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		// Marks start of clusterinst change and hence increases ref count
+		cd.vmResourceActionBegin()
+		// Marks end of clusterinst change and hence reduces ref count
+		defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
@@ -234,17 +359,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		}
 
 		log.SpanLog(ctx, log.DebugLevelInfra, "update cluster inst", "ClusterInst", *new)
-		policy := edgeproto.PrivacyPolicy{}
-		if new.PrivacyPolicy != "" {
-			policy.Key.Organization = new.Key.Organization
-			policy.Key.Name = new.PrivacyPolicy
-			if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
-				log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for ClusterInst", "policyName", policy.Key.Name)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, "Privacy Policy not found", updateClusterCacheCallback)
-				return
-			}
-		}
-		err = cd.platform.UpdateClusterInst(ctx, new, &policy, updateClusterCacheCallback)
+		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
 			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateClusterCacheCallback)
@@ -254,7 +369,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		log.SpanLog(ctx, log.DebugLevelInfra, "update appinst runtime info", "clusterkey", new.Key)
 		var app edgeproto.App
 		cd.AppInstCache.Show(&edgeproto.AppInst{}, func(obj *edgeproto.AppInst) error {
-			if obj.Key.ClusterInstKey.Matches(&new.Key) && cd.AppCache.Get(&obj.Key.AppKey, &app) {
+			if obj.ClusterInstKey().Matches(&new.Key) && cd.AppCache.Get(&obj.Key.AppKey, &app) {
 				if obj.State != edgeproto.TrackedState_READY {
 					return nil
 				}
@@ -285,18 +400,26 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
+		// Marks start of clusterinst change and hence increases ref count
+		cd.vmResourceActionBegin()
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst delete", "ClusterInst", *new)
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		// clusterInst was deleted
 		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback)
 		if err != nil {
+			// Marks end of clusterinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 			return
 		}
 		go func() {
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete ClusterInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
+
+			// Marks end of clusterinst change and hence reduces ref count
+			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
+
 			log.SpanLog(ctx, log.DebugLevelInfra, "delete cluster inst", "ClusterInst", *new)
 			err = cd.platform.DeleteClusterInst(ctx, new, updateClusterCacheCallback)
 			if err != nil {
@@ -332,6 +455,10 @@ func (cd *ControllerData) clusterInstDeleted(ctx context.Context, old *edgeproto
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
 	var err error
 
+	if old != nil && old.State == new.State {
+		return
+	}
+
 	log.SpanLog(ctx, log.DebugLevelInfra, "app inst changed", "key", new.Key)
 	app := edgeproto.App{}
 	found := cd.AppCache.Get(&new.Key.AppKey, &app)
@@ -354,6 +481,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	}
 
 	if new.State == edgeproto.TrackedState_CREATE_REQUESTED {
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			// Marks start of appinst change and hence increases ref count
+			cd.vmResourceActionBegin()
+		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		// create
@@ -363,21 +494,27 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			str := fmt.Sprintf("Flavor %s not found",
 				new.Flavor.Name)
 			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
+			// Marks end of appinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
-			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
+			clusterInstFound := cd.ClusterInstCache.Get(new.ClusterInstKey(), &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
-					new.Key.ClusterInstKey.ClusterKey.Name)
+					new.ClusterInstKey().ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
+				// Marks end of appinst change and hence reduces ref count
+				cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 				return
 			}
 		}
 
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateAppCacheCallback)
 		if err != nil {
+			// Marks end of appinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		go func() {
@@ -386,17 +523,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
-			policy := edgeproto.PrivacyPolicy{}
-			if new.PrivacyPolicy != "" {
-				policy.Key.Organization = new.Key.AppKey.Organization
-				policy.Key.Name = new.PrivacyPolicy
-				if !cd.PrivacyPolicyCache.Get(&policy.Key, &policy) {
-					log.SpanLog(ctx, log.DebugLevelInfra, "Privacy Policy not found for AppInst", "policyName", policy.Key.Name)
-					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, "Privacy Policy not found", updateAppCacheCallback)
-					return
-				}
+			if app.Deployment == cloudcommon.DeploymentTypeVM {
+				// Marks end of appinst change and hence reduces ref count
+				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			}
-			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, &policy, updateAppCacheCallback)
+
+			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr, updateAppCacheCallback)
@@ -419,6 +551,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			// Marks start of appinst change and hence increases ref count
+			cd.vmResourceActionBegin()
+			// Marks end of appinst change and hence reduces ref count
+			defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
@@ -444,10 +582,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		}
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
-			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
+			clusterInstFound := cd.ClusterInstCache.Get(new.ClusterInstKey(), &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
-					new.Key.ClusterInstKey.ClusterKey.Name)
+					new.ClusterInstKey().ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateAppCacheCallback)
 				return
 			}
@@ -468,21 +606,29 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			// Marks start of appinst change and hence increases ref count
+			cd.vmResourceActionBegin()
+		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
-			clusterInstFound := cd.ClusterInstCache.Get(&new.Key.ClusterInstKey, &clusterInst)
+			clusterInstFound := cd.ClusterInstCache.Get(new.ClusterInstKey(), &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
-					new.Key.ClusterInstKey.ClusterKey.Name)
+					new.ClusterInstKey().ClusterKey.Name)
 				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateAppCacheCallback)
+				// Marks end of appinst change and hence reduces ref count
+				cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 				return
 			}
 		}
 		// appInst was deleted
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateAppCacheCallback)
 		if err != nil {
+			// Marks end of appinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		go func() {
@@ -490,6 +636,11 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			cspan := log.StartSpan(log.DebugLevelInfra, "crm delete AppInst", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
+
+			if app.Deployment == cloudcommon.DeploymentTypeVM {
+				// Marks end of appinst change and hence reduces ref count
+				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+			}
 
 			err = cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
 			if err != nil {
@@ -663,7 +814,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	}
 
 	if new.State == edgeproto.TrackedState_CRM_INITOK {
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_INIT {
+		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_INIT {
 			cd.notifyControllerConnect()
 		}
 	}
@@ -671,7 +822,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	updateInfo := false
 	if old != nil && old.MaintenanceState != new.MaintenanceState {
 		switch new.MaintenanceState {
-		case edgeproto.MaintenanceState_CRM_REQUESTED:
+		case dme.MaintenanceState_CRM_REQUESTED:
 			// TODO: perhaps trigger LBs to reset tcp connections
 			// to gracefully force clients to move to another
 			// cloudlets - but we may need to add another phase
@@ -680,17 +831,32 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			// will just redirected back here.
 
 			// Acknowledge controller that CRM is in maintenance
-			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE
+			cloudletInfo.MaintenanceState = dme.MaintenanceState_CRM_UNDER_MAINTENANCE
 			updateInfo = true
-		case edgeproto.MaintenanceState_NORMAL_OPERATION_INIT:
+		case dme.MaintenanceState_NORMAL_OPERATION_INIT:
 			// Set state back to normal so DME will allow clients
 			// for this Cloudlet.
-			cloudletInfo.MaintenanceState = edgeproto.MaintenanceState_NORMAL_OPERATION
+			cloudletInfo.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 			updateInfo = true
 		}
 	}
 	if updateInfo {
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+	if old != nil && old.TrustPolicyState != new.TrustPolicyState {
+		switch new.TrustPolicyState {
+		case edgeproto.TrackedState_UPDATE_REQUESTED:
+			log.SpanLog(ctx, log.DebugLevelInfra, "Updating Trust Policy")
+			if new.State != edgeproto.TrackedState_READY {
+				log.SpanLog(ctx, log.DebugLevelInfra, "Update policy cannot be done until cloudlet is ready")
+				cloudletInfo.TrustPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			} else {
+				cloudletInfo.TrustPolicyState = edgeproto.TrackedState_UPDATING
+				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+				cd.updateTrustPolicyKeyworkers.NeedsWork(ctx, new.Key)
+			}
+		}
 	}
 
 	updateCloudletCallback := func(updateType edgeproto.CacheUpdateType, value string) {
@@ -716,14 +882,14 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_UPGRADE {
 			// Cloudlet is already upgrading
 			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet update already in progress", "key", new.Key)
 			return
 		}
 		// Reset old Status
 		cloudletInfo.Status.StatusReset()
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE
+		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UPGRADE
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 		err := cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
@@ -732,9 +898,13 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.InfoLog("can't update cloudlet", "error", errstr, "key", new.Key)
 
 			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
-			cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
+			cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			return
+		}
+		resources, err := cd.platform.GetCloudletInfraResources(ctx)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cloudlet resources not found for cloudlet", "key", new.Key, "err", err)
 		}
 		// fetch cloudletInfo again, as status might have changed as part of UpdateCloudlet
 		found = cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
@@ -742,7 +912,8 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 			return
 		}
-		cloudletInfo.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+		cloudletInfo.ResourcesSnapshot.PlatformVms = resources.PlatformVms
+		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	}
@@ -950,55 +1121,123 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 		err = cd.platform.VerifyVMs(ctx, validateVMs)
 	}
 
-	cd.VMPoolMux.Lock()
-	defer cd.VMPoolMux.Unlock()
+	// Update lock to update VMPool & gather new flavor list (cloudletinfo)
+	cd.VMPoolUpdateMux.Lock()
+	defer cd.VMPoolUpdateMux.Unlock()
 
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "failed to verify VMs", "vms", validateVMs, "err", err)
-		// revert intermediate states
-		revertVMs := []edgeproto.VM{}
+	// New function block so that we can call defer on VMPoolMux Unlock
+	fErr := func() error {
+		cd.VMPoolMux.Lock()
+		defer cd.VMPoolMux.Unlock()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to verify VMs", "vms", validateVMs, "err", err)
+			// revert intermediate states
+			revertVMs := []edgeproto.VM{}
+			for _, vm := range cd.VMPool.Vms {
+				switch vm.State {
+				case edgeproto.VMState_VM_ADD:
+					continue
+				case edgeproto.VMState_VM_REMOVE:
+					vm.State = edgeproto.VMState_VM_FREE
+				case edgeproto.VMState_VM_UPDATE:
+					if oVM, ok := oldVMs[vm.Name]; ok {
+						vm = oVM
+					}
+					vm.State = edgeproto.VMState_VM_FREE
+				}
+				revertVMs = append(revertVMs, vm)
+			}
+			cd.VMPool.Vms = revertVMs
+			cd.UpdateVMPoolInfo(
+				ctx,
+				edgeproto.TrackedState_UPDATE_ERROR,
+				fmt.Sprintf("%v", err))
+			return err
+		}
+
+		newVMs := []edgeproto.VM{}
 		for _, vm := range cd.VMPool.Vms {
 			switch vm.State {
 			case edgeproto.VMState_VM_ADD:
-				continue
+				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
 			case edgeproto.VMState_VM_REMOVE:
-				vm.State = edgeproto.VMState_VM_FREE
+				continue
 			case edgeproto.VMState_VM_UPDATE:
-				if oVM, ok := oldVMs[vm.Name]; ok {
-					vm = oVM
-				}
 				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
+			default:
+				newVMs = append(newVMs, vm)
 			}
-			revertVMs = append(revertVMs, vm)
 		}
-		cd.VMPool.Vms = revertVMs
-		cd.UpdateVMPoolInfo(
-			ctx,
-			edgeproto.TrackedState_UPDATE_ERROR,
-			fmt.Sprintf("%v", err))
+		// save VM to VM pool
+		cd.VMPool.Vms = newVMs
+		return nil
+	}()
+	if fErr != nil {
 		return
 	}
 
-	newVMs := []edgeproto.VM{}
-	for _, vm := range cd.VMPool.Vms {
-		switch vm.State {
-		case edgeproto.VMState_VM_ADD:
-			vm.State = edgeproto.VMState_VM_FREE
-			newVMs = append(newVMs, vm)
-		case edgeproto.VMState_VM_REMOVE:
-			continue
-		case edgeproto.VMState_VM_UPDATE:
-			vm.State = edgeproto.VMState_VM_FREE
-			newVMs = append(newVMs, vm)
-		default:
-			newVMs = append(newVMs, vm)
+	// calculate Flavor info and send CloudletInfo again
+	log.SpanLog(ctx, log.DebugLevelInfra, "gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey)
+	var cloudletInfo edgeproto.CloudletInfo
+	if !cd.CloudletInfoCache.Get(&cd.cloudletKey, &cloudletInfo) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to update vmpool flavors, missing cloudletinfo", "vmpool", key, "cloudlet", cd.cloudletKey)
+	} else {
+		err = cd.platform.GatherCloudletInfo(ctx, &cloudletInfo)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey, "err", err)
+		} else {
+			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 		}
 	}
-	// save VM to VM pool
-	cd.VMPool.Vms = newVMs
 
 	// notify controller
 	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_READY, "")
+}
 
-	// TODO calculate Flavor info and send CloudletInfo again
+func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) {
+	cloudletKey, ok := k.(edgeproto.CloudletKey)
+	if !ok {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Unexpected failure, key not CloudletKey", "cloudletKey", cloudletKey)
+		return
+	}
+	log.SetContextTags(ctx, cloudletKey.GetTags())
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateTrustPolicy", "cloudletKey", cloudletKey)
+
+	var cloudlet edgeproto.Cloudlet
+	if !cd.CloudletCache.Get(&cloudletKey, &cloudlet) {
+		log.FatalLog("failed to fetch cloudlet from cache")
+	}
+	var TrustPolicy edgeproto.TrustPolicy
+	if cloudlet.TrustPolicy != "" {
+		pkey := edgeproto.PolicyKey{
+			Organization: cloudlet.Key.Organization,
+			Name:         cloudlet.TrustPolicy,
+		}
+		if !cd.TrustPolicyCache.Get(&pkey, &TrustPolicy) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to fetch trust policy from cache")
+			return
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicy", "TrustPolicy", TrustPolicy)
+	err := cd.platform.UpdateTrustPolicy(ctx, &TrustPolicy)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Update Privacy Done", "err", err)
+	cloudletInfo := edgeproto.CloudletInfo{}
+	found := cd.CloudletInfoCache.Get(&cloudletKey, &cloudletInfo)
+	if !found {
+		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", cloudletKey)
+		return
+	}
+	if err != nil {
+		cloudletInfo.TrustPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+	} else {
+		if cloudlet.TrustPolicy == "" {
+			cloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
+		} else {
+			cloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
+		}
+	}
+	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+
 }

@@ -12,6 +12,7 @@ import (
 	_ "github.com/gogo/protobuf/types"
 	google_protobuf "github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cli"
+	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
@@ -511,7 +512,7 @@ var VMComments = map[string]string{
 	"netinfo.externalip": "External IP",
 	"netinfo.internalip": "Internal IP",
 	"groupname":          "VM Group Name",
-	"state":              "VM State, one of VmForceFree",
+	"state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate, VmForceFree",
 	"updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"internalname":       "VM Internal Name",
@@ -558,7 +559,7 @@ var VMPoolComments = map[string]string{
 	"vms:#.netinfo.externalip": "External IP",
 	"vms:#.netinfo.internalip": "Internal IP",
 	"vms:#.groupname":          "VM Group Name",
-	"vms:#.state":              "VM State, one of VmForceFree",
+	"vms:#.state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate, VmForceFree",
 	"vms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vms:#.internalname":       "VM Internal Name",
@@ -598,7 +599,7 @@ var VMPoolMemberComments = map[string]string{
 	"vm.netinfo.externalip": "External IP",
 	"vm.netinfo.internalip": "Internal IP",
 	"vm.groupname":          "VM Group Name",
-	"vm.state":              "VM State, one of VmForceFree",
+	"vm.state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate, VmForceFree",
 	"vm.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vm.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vm.internalname":       "VM Internal Name",
@@ -634,7 +635,7 @@ var VMSpecComments = map[string]string{
 	"flavor.ram":       "RAM in megabytes",
 	"flavor.vcpus":     "Number of virtual CPUs",
 	"flavor.disk":      "Amount of disk space in gigabytes",
-	"flavor.optresmap": "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1",
+	"flavor.optresmap": "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
 }
 var VMSpecSpecialArgs = map[string]string{
 	"flavor.fields":    "StringArray",
@@ -681,7 +682,7 @@ var VMPoolInfoComments = map[string]string{
 	"vms:#.netinfo.externalip": "External IP",
 	"vms:#.netinfo.internalip": "Internal IP",
 	"vms:#.groupname":          "VM Group Name",
-	"vms:#.state":              "VM State, one of VmForceFree",
+	"vms:#.state":              "VM State, one of VmFree, VmInProgress, VmInUse, VmAdd, VmRemove, VmUpdate, VmForceFree",
 	"vms:#.updatedat.seconds":  "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vms:#.updatedat.nanos":    "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vms:#.internalname":       "VM Internal Name",

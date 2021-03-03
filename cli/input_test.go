@@ -183,6 +183,7 @@ func TestConversion(t *testing.T) {
 		SpecialArgs: &map[string]string{
 			"fields":           "StringArray",
 			"autoprovpolicies": "StringArray",
+			"optresmap":        "StringToString",
 		},
 	}
 	for _, flavor := range testutil.FlavorData {
@@ -192,6 +193,8 @@ func TestConversion(t *testing.T) {
 		testConversion(t, input, &app, &edgeproto.App{}, &edgeproto.App{}, nil)
 	}
 	for _, cloudlet := range testutil.CloudletData {
+		// we don't support handling complex maps yet
+		cloudlet.ResTagMap = nil
 		testConversion(t, input, &cloudlet, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{}, nil)
 	}
 	for _, cinst := range testutil.ClusterInstData {
@@ -200,8 +203,8 @@ func TestConversion(t *testing.T) {
 	for _, appinst := range testutil.AppInstData {
 		testConversion(t, input, &appinst, &edgeproto.AppInst{}, &edgeproto.AppInst{}, nil)
 	}
-	for _, pp := range testutil.PrivacyPolicyData {
-		testConversion(t, input, &pp, &edgeproto.PrivacyPolicy{}, &edgeproto.PrivacyPolicy{}, nil)
+	for _, pp := range testutil.TrustPolicyData {
+		testConversion(t, input, &pp, &edgeproto.TrustPolicy{}, &edgeproto.TrustPolicy{}, nil)
 	}
 	settings := edgeproto.GetDefaultSettings()
 	settings.Fields = []string{"16", "4", "9", "2.2"}

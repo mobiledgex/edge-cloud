@@ -803,7 +803,7 @@ func (m *ResTagTable) Matches(o *ResTagTable, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Tags != nil {
-		if m.Tags == nil && o.Tags != nil || m.Tags != nil && o.Tags == nil {
+		if len(m.Tags) == 0 && len(o.Tags) > 0 || len(m.Tags) > 0 && len(o.Tags) == 0 {
 			return false
 		} else if m.Tags != nil && o.Tags != nil {
 			if !opts.Filter && len(m.Tags) != len(o.Tags) {
@@ -1306,15 +1306,12 @@ func (c *ResTagTableCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *ResTagTableCache) Show(filter *ResTagTable, cb func(ret *ResTagTable) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show ResTagTable", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare ResTagTable", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show ResTagTable", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -1599,6 +1596,30 @@ func (e *OptResNames) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *ResTagTable) IsValidArgsForCreateResTagTable() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForDeleteResTagTable() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForUpdateResTagTable() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForAddResTag() error {
+	return nil
+}
+
+func (m *ResTagTable) IsValidArgsForRemoveResTag() error {
+	return nil
+}
+
+func (m *ResTagTableKey) IsValidArgsForGetResTagTable() error {
+	return nil
+}
+
 func (m *ResTagTableKey) Size() (n int) {
 	if m == nil {
 		return 0

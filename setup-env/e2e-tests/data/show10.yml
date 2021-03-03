@@ -12,11 +12,17 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
+  updatetrustpolicytimeout: 10m
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   cloudletmaintenancetimeout: 5m
   updatevmpooltimeout: 20m0s
+  dmeapimetricscollectioninterval: 30s
+  persistentconnectionmetricscollectioninterval: 1h0m0s
+  influxdbmetricsretention: 672h0m0s
+  cleanupreservableautoclusteridletime: 30m0s
+  influxdbcloudletusagemetricsretention: 8760h0m0s
 flavors:
 - key:
     name: x1.tiny
@@ -33,300 +39,340 @@ flavors:
 clusterinsts:
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-8
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: gcp
       name: gcp-cloud-10
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-4
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-5
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-1
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-2
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-2
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-7
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: azure
       name: azure-cloud-9
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-4
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-5
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-6
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-6
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-7
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-1
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-3
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: tmus
       name: tmus-cloud-3
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: tmus
       name: tmus-cloud-8
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessShared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication2
+      name: reservable1
     cloudletkey:
       organization: azure
       name: azure-cloud-9
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: reservable0
     cloudletkey:
       organization: gcp
       name: gcp-cloud-10
-    organization: AcmeAppCo
+    organization: MobiledgeX
   flavor:
     name: x1.small
   liveness: LivenessDynamic
   auto: true
+  reservable: true
+  reservedby: AcmeAppCo
   ipaccess: IpAccessDedicated
   deployment: kubernetes
   nummasters: 1
@@ -351,6 +397,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-2
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-5
@@ -365,6 +412,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-5
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-6
@@ -379,6 +427,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-6
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: azure
     name: azure-cloud-9
@@ -393,6 +442,7 @@ cloudlets:
     name: x1.tiny
   physicalname: azure-cloud-9
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: gcp
     name: gcp-cloud-10
@@ -407,6 +457,7 @@ cloudlets:
     name: x1.tiny
   physicalname: gcp-cloud-10
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-1
@@ -421,6 +472,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-3
@@ -435,6 +487,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-3
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-4
@@ -449,6 +502,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-4
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-7
@@ -463,6 +517,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-7
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 - key:
     organization: tmus
     name: tmus-cloud-8
@@ -477,6 +532,7 @@ cloudlets:
     name: x1.tiny
   physicalname: tmus-cloud-8
   containerversion: 2019-10-24
+  defaultresourcealertthreshold: 80
 
 cloudletinfos:
 - key:
@@ -485,99 +541,177 @@ cloudletinfos:
   state: CloudletStateReady
   notifyid: 49
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 32768
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 16
+      inframaxvalue: 50
+    - name: Disk
+      value: 320
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 3
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: tmus
     name: tmus-cloud-2
   state: CloudletStateReady
   notifyid: 41
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: tmus
     name: tmus-cloud-3
   state: CloudletStateReady
   notifyid: 42
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 
 - key:
     organization: tmus
@@ -585,231 +719,413 @@ cloudletinfos:
   state: CloudletStateReady
   notifyid: 43
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: tmus
     name: tmus-cloud-5
   state: CloudletStateReady
   notifyid: 44
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: tmus
     name: tmus-cloud-6
   state: CloudletStateReady
   notifyid: 45
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: tmus
     name: tmus-cloud-7
   state: CloudletStateReady
   notifyid: 46
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: azure
     name: azure-cloud-9
   state: CloudletStateReady
   notifyid: 48
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 32768
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 16
+      inframaxvalue: 50
+    - name: Disk
+      value: 320
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 3
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: tmus
     name: tmus-cloud-1
   state: CloudletStateReady
   notifyid: 40
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: tmus
     name: tmus-cloud-8
   state: CloudletStateReady
   notifyid: 47
   controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 500
+  osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   - name: x1.small
-    vcpus: 10
-    ram: 101024
-    disk: 500
+    vcpus: 2
+    ram: 4096
+    disk: 40
   status:
     tasknumber: 3
     taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
-  resources:
-    vms:
+  resourcessnapshot:
+    platformvms:
     - name: fake-platform-vm
       type: platform
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
       type: rootlb
       status: ACTIVE
-      infraflavor: m4.small
+      infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: Disk
+      value: 240
+      inframaxvalue: 5000
+      units: GB
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 apps:
 - key:
     organization: Samsung
@@ -881,7 +1197,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-4
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 4
@@ -904,6 +1220,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -915,7 +1232,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-4
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 4
@@ -938,6 +1255,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -949,7 +1267,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-7
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 7
@@ -972,6 +1290,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -983,7 +1302,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-1
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 1
@@ -1006,6 +1325,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1017,7 +1337,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 2
@@ -1040,6 +1360,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1051,7 +1372,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-3
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 3
@@ -1074,6 +1395,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1085,7 +1407,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-6
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 6
@@ -1108,6 +1430,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1119,7 +1442,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-8
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 8
@@ -1142,6 +1465,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1153,7 +1477,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-3
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 3
@@ -1176,6 +1500,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1187,7 +1512,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-5
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 5
@@ -1210,6 +1535,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1221,7 +1547,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-6
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 6
@@ -1244,6 +1570,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1255,7 +1582,7 @@ appinstances:
       cloudletkey:
         organization: azure
         name: azure-cloud-9
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 9
@@ -1278,6 +1605,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1289,7 +1617,7 @@ appinstances:
       cloudletkey:
         organization: gcp
         name: gcp-cloud-10
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 10
@@ -1312,6 +1640,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1323,7 +1652,7 @@ appinstances:
       cloudletkey:
         organization: gcp
         name: gcp-cloud-10
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 10
@@ -1346,6 +1675,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1357,7 +1687,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-1
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 1
@@ -1380,6 +1710,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1391,7 +1722,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 2
@@ -1414,6 +1745,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1425,7 +1757,7 @@ appinstances:
       cloudletkey:
         organization: azure
         name: azure-cloud-9
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 9
@@ -1448,6 +1780,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1459,7 +1792,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-5
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 5
@@ -1482,6 +1815,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable0
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1493,7 +1827,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-7
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 7
@@ -1516,6 +1850,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1527,7 +1862,7 @@ appinstances:
       cloudletkey:
         organization: tmus
         name: tmus-cloud-8
-      organization: AcmeAppCo
+      organization: MobiledgeX
   cloudletloc:
     latitude: 1
     longitude: 8
@@ -1550,6 +1885,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  realclustername: reservable1
 
 appinstrefs:
 - key:
@@ -1561,48 +1897,48 @@ appinstrefs:
     name: someapplication1
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-3"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-3"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-4"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-4"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-5"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-5"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-6"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-6"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-7"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-7"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-8"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-8"},"organization":"MobiledgeX"}}'
     : 1
 - key:
     organization: AcmeAppCo
     name: someapplication2
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"azure","name":"azure-cloud-9"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"gcp","name":"gcp-cloud-10"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-3"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-3"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-4"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-4"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-5"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-5"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-6"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-6"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-7"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-7"},"organization":"MobiledgeX"}}'
     : 1
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-8"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-8"},"organization":"MobiledgeX"}}'
     : 1

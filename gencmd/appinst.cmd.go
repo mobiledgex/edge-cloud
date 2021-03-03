@@ -679,6 +679,84 @@ var AppInstMetricsApiCmds = []*cobra.Command{
 	ShowAppInstMetricsCmd.GenCmd(),
 }
 
+var AppInstLatencyApiCmd edgeproto.AppInstLatencyApiClient
+
+var RequestAppInstLatencyCmd = &cli.Command{
+	Use:          "RequestAppInstLatency",
+	RequiredArgs: strings.Join(AppInstLatencyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppInstLatencyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppInstLatencyAliasArgs, " "),
+	SpecialArgs:  &AppInstLatencySpecialArgs,
+	Comments:     AppInstLatencyComments,
+	ReqData:      &edgeproto.AppInstLatency{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRequestAppInstLatency,
+}
+
+func runRequestAppInstLatency(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.AppInstLatency)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RequestAppInstLatency(c, obj)
+}
+
+func RequestAppInstLatency(c *cli.Command, in *edgeproto.AppInstLatency) error {
+	if AppInstLatencyApiCmd == nil {
+		return fmt.Errorf("AppInstLatencyApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppInstLatencyApiCmd.RequestAppInstLatency(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RequestAppInstLatency failed: %s", errstr)
+	}
+	c.WriteOutput(obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RequestAppInstLatencys(c *cli.Command, data []edgeproto.AppInstLatency, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RequestAppInstLatency %v\n", data[ii])
+		myerr := RequestAppInstLatency(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var AppInstLatencyApiCmds = []*cobra.Command{
+	RequestAppInstLatencyCmd.GenCmd(),
+}
+
+var VirtualClusterInstKeyRequiredArgs = []string{}
+var VirtualClusterInstKeyOptionalArgs = []string{
+	"clusterkey.name",
+	"cloudletkey.organization",
+	"cloudletkey.name",
+	"organization",
+}
+var VirtualClusterInstKeyAliasArgs = []string{}
+var VirtualClusterInstKeyComments = map[string]string{
+	"clusterkey.name":          "Cluster name",
+	"cloudletkey.organization": "Organization of the cloudlet site",
+	"cloudletkey.name":         "Name of the cloudlet",
+	"organization":             "Name of Developer organization that this cluster belongs to",
+}
+var VirtualClusterInstKeySpecialArgs = map[string]string{}
 var AppInstKeyRequiredArgs = []string{}
 var AppInstKeyOptionalArgs = []string{
 	"appkey.organization",
@@ -712,17 +790,14 @@ var AppInstOptionalArgs = []string{
 	"cluster-org",
 	"flavor",
 	"crmoverride",
-	"autoclusteripaccess",
 	"forceupdate",
 	"updatemultiple",
 	"configs:#.kind",
 	"configs:#.config",
-	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
 	"powerstate",
-	"vmflavor",
-	"optres",
+	"realclustername",
 }
 var AppInstAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -764,20 +839,20 @@ var AppInstComments = map[string]string{
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names",
-	"autoclusteripaccess":            "IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
+	"autoclusteripaccess":            "(Deprecated) IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
 	"revision":                       "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
 	"configs:#.kind":                 "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"configs:#.config":               "config file contents or URI reference",
-	"sharedvolumesize":               "shared volume size when creating auto cluster",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
-	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"powerstate":                     "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
 	"optres":                         "Optional Resources required by OS flavor if any",
+	"realclustername":                "Real ClusterInst name",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -832,7 +907,7 @@ var AppInstInfoComments = map[string]string{
 	"state":                                       "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                    "List of container names",
-	"powerstate":                                  "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
+	"powerstate":                                  "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
 }
 var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -901,6 +976,37 @@ var AppInstLookup2Comments = map[string]string{
 	"cloudletkey.name":                            "Name of the cloudlet",
 }
 var AppInstLookup2SpecialArgs = map[string]string{}
+var AppInstLatencyRequiredArgs = []string{
+	"app-org",
+	"appname",
+	"appvers",
+	"cluster",
+	"cloudlet-org",
+	"cloudlet",
+	"cluster-org",
+}
+var AppInstLatencyOptionalArgs = []string{
+	"message",
+}
+var AppInstLatencyAliasArgs = []string{
+	"app-org=key.appkey.organization",
+	"appname=key.appkey.name",
+	"appvers=key.appkey.version",
+	"cluster=key.clusterinstkey.clusterkey.name",
+	"cloudlet-org=key.clusterinstkey.cloudletkey.organization",
+	"cloudlet=key.clusterinstkey.cloudletkey.name",
+	"cluster-org=key.clusterinstkey.organization",
+}
+var AppInstLatencyComments = map[string]string{
+	"app-org":      "App developer organization",
+	"appname":      "App name",
+	"appvers":      "App version",
+	"cluster":      "Cluster name",
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"cluster-org":  "Name of Developer organization that this cluster belongs to",
+}
+var AppInstLatencySpecialArgs = map[string]string{}
 var CreateAppInstRequiredArgs = []string{
 	"app-org",
 	"appname",
@@ -913,14 +1019,11 @@ var CreateAppInstOptionalArgs = []string{
 	"cluster-org",
 	"flavor",
 	"crmoverride",
-	"autoclusteripaccess",
 	"configs:#.kind",
 	"configs:#.config",
-	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
-	"vmflavor",
-	"optres",
+	"realclustername",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"app-org",
@@ -934,16 +1037,13 @@ var DeleteAppInstOptionalArgs = []string{
 	"cluster-org",
 	"flavor",
 	"crmoverride",
-	"autoclusteripaccess",
 	"forceupdate",
 	"updatemultiple",
 	"configs:#.kind",
 	"configs:#.config",
-	"sharedvolumesize",
 	"healthcheck",
 	"privacypolicy",
-	"vmflavor",
-	"optres",
+	"realclustername",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"app-org",
@@ -958,6 +1058,8 @@ var RefreshAppInstOptionalArgs = []string{
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
+	"privacypolicy",
+	"realclustername",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"app-org",
@@ -972,5 +1074,7 @@ var UpdateAppInstOptionalArgs = []string{
 	"crmoverride",
 	"configs:#.kind",
 	"configs:#.config",
+	"privacypolicy",
 	"powerstate",
+	"realclustername",
 }

@@ -57,6 +57,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // 8: `PLATFORM_TYPE_AWS_EKS`
 // 9: `PLATFORM_TYPE_VM_POOL`
 // 10: `PLATFORM_TYPE_AWS_EC2`
+// 11: `PLATFORM_TYPE_VCD`
+// 12: `PLATFORM_TYPE_ANTHOS`
+// 13: `PLATFORM_TYPE_KIND`
 type PlatformType int32
 
 const (
@@ -82,8 +85,12 @@ const (
 	PlatformType_PLATFORM_TYPE_VM_POOL PlatformType = 9
 	// AWS EC2 VM Cloudlet
 	PlatformType_PLATFORM_TYPE_AWS_EC2 PlatformType = 10
-	// VMWare vCloud Director
+	// VMWare vCloud Director Cloudlet
 	PlatformType_PLATFORM_TYPE_VCD PlatformType = 11
+	// Anthos on bare metal
+	PlatformType_PLATFORM_TYPE_ANTHOS PlatformType = 12
+	// KIND Cloudlet
+	PlatformType_PLATFORM_TYPE_KIND PlatformType = 13
 )
 
 var PlatformType_name = map[int32]string{
@@ -99,6 +106,8 @@ var PlatformType_name = map[int32]string{
 	9:  "PLATFORM_TYPE_VM_POOL",
 	10: "PLATFORM_TYPE_AWS_EC2",
 	11: "PLATFORM_TYPE_VCD",
+	12: "PLATFORM_TYPE_ANTHOS",
+	13: "PLATFORM_TYPE_KIND",
 }
 
 var PlatformType_value = map[string]int32{
@@ -114,6 +123,8 @@ var PlatformType_value = map[string]int32{
 	"PLATFORM_TYPE_VM_POOL":   9,
 	"PLATFORM_TYPE_AWS_EC2":   10,
 	"PLATFORM_TYPE_VCD":       11,
+	"PLATFORM_TYPE_ANTHOS":    12,
+	"PLATFORM_TYPE_KIND":      13,
 }
 
 func (x PlatformType) String() string {
@@ -155,69 +166,6 @@ func (x InfraApiAccess) String() string {
 
 func (InfraApiAccess) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_3aea31a648a25d86, []int{1}
-}
-
-// CloudletState
-//
-// CloudletState is the state of the Cloudlet.
-//
-//  0: `CLOUDLET_STATE_UNKNOWN`
-//  1: `CLOUDLET_STATE_ERRORS`
-//  2: `CLOUDLET_STATE_READY`
-//  3: `CLOUDLET_STATE_OFFLINE`
-//  4: `CLOUDLET_STATE_NOT_PRESENT`
-//  5: `CLOUDLET_STATE_INIT`
-//  6: `CLOUDLET_STATE_UPGRADE`
-//  7: `CLOUDLET_STATE_NEED_SYNC`
-type CloudletState int32
-
-const (
-	// Unknown
-	CloudletState_CLOUDLET_STATE_UNKNOWN CloudletState = 0
-	// Create/Delete/Update encountered errors (see Errors field of CloudletInfo)
-	CloudletState_CLOUDLET_STATE_ERRORS CloudletState = 1
-	// Cloudlet is created and ready
-	CloudletState_CLOUDLET_STATE_READY CloudletState = 2
-	// Cloudlet is offline (unreachable)
-	CloudletState_CLOUDLET_STATE_OFFLINE CloudletState = 3
-	// Cloudlet is not present
-	CloudletState_CLOUDLET_STATE_NOT_PRESENT CloudletState = 4
-	// Cloudlet is initializing
-	CloudletState_CLOUDLET_STATE_INIT CloudletState = 5
-	// Cloudlet is upgrading
-	CloudletState_CLOUDLET_STATE_UPGRADE CloudletState = 6
-	// Cloudlet needs data to synchronize
-	CloudletState_CLOUDLET_STATE_NEED_SYNC CloudletState = 7
-)
-
-var CloudletState_name = map[int32]string{
-	0: "CLOUDLET_STATE_UNKNOWN",
-	1: "CLOUDLET_STATE_ERRORS",
-	2: "CLOUDLET_STATE_READY",
-	3: "CLOUDLET_STATE_OFFLINE",
-	4: "CLOUDLET_STATE_NOT_PRESENT",
-	5: "CLOUDLET_STATE_INIT",
-	6: "CLOUDLET_STATE_UPGRADE",
-	7: "CLOUDLET_STATE_NEED_SYNC",
-}
-
-var CloudletState_value = map[string]int32{
-	"CLOUDLET_STATE_UNKNOWN":     0,
-	"CLOUDLET_STATE_ERRORS":      1,
-	"CLOUDLET_STATE_READY":       2,
-	"CLOUDLET_STATE_OFFLINE":     3,
-	"CLOUDLET_STATE_NOT_PRESENT": 4,
-	"CLOUDLET_STATE_INIT":        5,
-	"CLOUDLET_STATE_UPGRADE":     6,
-	"CLOUDLET_STATE_NEED_SYNC":   7,
-}
-
-func (x CloudletState) String() string {
-	return proto.EnumName(CloudletState_name, int32(x))
-}
-
-func (CloudletState) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{2}
 }
 
 // Cloudlet unique key
@@ -343,10 +291,8 @@ type PlatformConfig struct {
 	Region string `protobuf:"bytes,12,opt,name=region,proto3" json:"region,omitempty"`
 	// Get certs from vault or generate your own for the root load balancer
 	CommercialCerts bool `protobuf:"varint,13,opt,name=commercial_certs,json=commercialCerts,proto3" json:"commercial_certs,omitempty"`
-	// Use Vault certs for internal TLS communication
-	UseVaultCerts bool `protobuf:"varint,14,opt,name=use_vault_certs,json=useVaultCerts,proto3" json:"use_vault_certs,omitempty"`
-	// Use Vault CAs to authenticate TLS communication
-	UseVaultCas bool `protobuf:"varint,15,opt,name=use_vault_cas,json=useVaultCas,proto3" json:"use_vault_cas,omitempty"`
+	// Use Vault certs and CAs for internal TLS communication
+	UseVaultPki bool `protobuf:"varint,14,opt,name=use_vault_pki,json=useVaultPki,proto3" json:"use_vault_pki,omitempty"`
 	// App domain name root
 	AppDnsRoot string `protobuf:"bytes,16,opt,name=app_dns_root,json=appDnsRoot,proto3" json:"app_dns_root,omitempty"`
 	// Path to Chef Server
@@ -476,6 +422,49 @@ func (m *InfraConfig) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_InfraConfig proto.InternalMessageInfo
 
+// Resource Quota
+type ResourceQuota struct {
+	// Resource name on which to set quota
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Quota value of the resource
+	Value uint64 `protobuf:"varint,2,opt,name=value,proto3" json:"value,omitempty"`
+	// Generate alert when more than threshold percentage of resource is used
+	AlertThreshold int32 `protobuf:"varint,3,opt,name=alert_threshold,json=alertThreshold,proto3" json:"alert_threshold,omitempty"`
+}
+
+func (m *ResourceQuota) Reset()         { *m = ResourceQuota{} }
+func (m *ResourceQuota) String() string { return proto.CompactTextString(m) }
+func (*ResourceQuota) ProtoMessage()    {}
+func (*ResourceQuota) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{5}
+}
+func (m *ResourceQuota) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ResourceQuota) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ResourceQuota.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ResourceQuota) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResourceQuota.Merge(m, src)
+}
+func (m *ResourceQuota) XXX_Size() int {
+	return m.Size()
+}
+func (m *ResourceQuota) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResourceQuota.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ResourceQuota proto.InternalMessageInfo
+
 // Cloudlet
 //
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator.
@@ -534,7 +523,7 @@ type Cloudlet struct {
 	// Chef client key
 	ChefClientKey map[string]string `protobuf:"bytes,29,rep,name=chef_client_key,json=chefClientKey,proto3" json:"chef_client_key,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// State for maintenance
-	MaintenanceState MaintenanceState `protobuf:"varint,30,opt,name=maintenance_state,json=maintenanceState,proto3,enum=edgeproto.MaintenanceState" json:"maintenance_state,omitempty"`
+	MaintenanceState dme_proto.MaintenanceState `protobuf:"varint,30,opt,name=maintenance_state,json=maintenanceState,proto3,enum=distributed_match_engine.MaintenanceState" json:"maintenance_state,omitempty"`
 	// Override container version from policy file
 	OverridePolicyContainerVersion bool `protobuf:"varint,31,opt,name=override_policy_container_version,json=overridePolicyContainerVersion,proto3" json:"override_policy_container_version,omitempty"`
 	// VM Pool
@@ -547,13 +536,23 @@ type Cloudlet struct {
 	CreatedAt dme_proto.Timestamp `protobuf:"bytes,35,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
 	// Updated at time
 	UpdatedAt dme_proto.Timestamp `protobuf:"bytes,36,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at"`
+	// Optional Trust Policy
+	TrustPolicy string `protobuf:"bytes,37,opt,name=trust_policy,json=trustPolicy,proto3" json:"trust_policy,omitempty"`
+	// State of trust policy
+	TrustPolicyState TrackedState `protobuf:"varint,38,opt,name=trust_policy_state,json=trustPolicyState,proto3,enum=edgeproto.TrackedState" json:"trust_policy_state,omitempty"`
+	// Resource quotas
+	ResourceQuotas []ResourceQuota `protobuf:"bytes,39,rep,name=resource_quotas,json=resourceQuotas,proto3" json:"resource_quotas"`
+	// Default resource alert threshold percentage
+	DefaultResourceAlertThreshold int32 `protobuf:"varint,40,opt,name=default_resource_alert_threshold,json=defaultResourceAlertThreshold,proto3" json:"default_resource_alert_threshold,omitempty"`
+	// Addr of the controller hosting the cloudlet services if it is running locally
+	HostController string `protobuf:"bytes,41,opt,name=HostController,proto3" json:"HostController,omitempty"`
 }
 
 func (m *Cloudlet) Reset()         { *m = Cloudlet{} }
 func (m *Cloudlet) String() string { return proto.CompactTextString(m) }
 func (*Cloudlet) ProtoMessage()    {}
 func (*Cloudlet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{5}
+	return fileDescriptor_3aea31a648a25d86, []int{6}
 }
 func (m *Cloudlet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -593,7 +592,7 @@ func (m *FlavorMatch) Reset()         { *m = FlavorMatch{} }
 func (m *FlavorMatch) String() string { return proto.CompactTextString(m) }
 func (*FlavorMatch) ProtoMessage()    {}
 func (*FlavorMatch) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{6}
+	return fileDescriptor_3aea31a648a25d86, []int{7}
 }
 func (m *FlavorMatch) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -631,7 +630,7 @@ func (m *CloudletManifest) Reset()         { *m = CloudletManifest{} }
 func (m *CloudletManifest) String() string { return proto.CompactTextString(m) }
 func (*CloudletManifest) ProtoMessage()    {}
 func (*CloudletManifest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{7}
+	return fileDescriptor_3aea31a648a25d86, []int{8}
 }
 func (m *CloudletManifest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -679,7 +678,7 @@ func (m *PropertyInfo) Reset()         { *m = PropertyInfo{} }
 func (m *PropertyInfo) String() string { return proto.CompactTextString(m) }
 func (*PropertyInfo) ProtoMessage()    {}
 func (*PropertyInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{8}
+	return fileDescriptor_3aea31a648a25d86, []int{9}
 }
 func (m *PropertyInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -719,7 +718,7 @@ func (m *CloudletProps) Reset()         { *m = CloudletProps{} }
 func (m *CloudletProps) String() string { return proto.CompactTextString(m) }
 func (*CloudletProps) ProtoMessage()    {}
 func (*CloudletProps) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{9}
+	return fileDescriptor_3aea31a648a25d86, []int{10}
 }
 func (m *CloudletProps) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -748,6 +747,86 @@ func (m *CloudletProps) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CloudletProps proto.InternalMessageInfo
 
+type CloudletResourceQuotaProps struct {
+	// Platform type
+	PlatformType PlatformType `protobuf:"varint,1,opt,name=platform_type,json=platformType,proto3,enum=edgeproto.PlatformType" json:"platform_type,omitempty"`
+	// Cloudlet resource properties
+	Props []InfraResource `protobuf:"bytes,2,rep,name=props,proto3" json:"props"`
+}
+
+func (m *CloudletResourceQuotaProps) Reset()         { *m = CloudletResourceQuotaProps{} }
+func (m *CloudletResourceQuotaProps) String() string { return proto.CompactTextString(m) }
+func (*CloudletResourceQuotaProps) ProtoMessage()    {}
+func (*CloudletResourceQuotaProps) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{11}
+}
+func (m *CloudletResourceQuotaProps) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletResourceQuotaProps) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletResourceQuotaProps.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletResourceQuotaProps) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletResourceQuotaProps.Merge(m, src)
+}
+func (m *CloudletResourceQuotaProps) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletResourceQuotaProps) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletResourceQuotaProps.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletResourceQuotaProps proto.InternalMessageInfo
+
+type CloudletResourceUsage struct {
+	// Cloudlet Key
+	Key CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
+	// Show Infra based usage
+	InfraUsage bool `protobuf:"varint,2,opt,name=infra_usage,json=infraUsage,proto3" json:"infra_usage,omitempty"`
+}
+
+func (m *CloudletResourceUsage) Reset()         { *m = CloudletResourceUsage{} }
+func (m *CloudletResourceUsage) String() string { return proto.CompactTextString(m) }
+func (*CloudletResourceUsage) ProtoMessage()    {}
+func (*CloudletResourceUsage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{12}
+}
+func (m *CloudletResourceUsage) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CloudletResourceUsage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CloudletResourceUsage.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CloudletResourceUsage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CloudletResourceUsage.Merge(m, src)
+}
+func (m *CloudletResourceUsage) XXX_Size() int {
+	return m.Size()
+}
+func (m *CloudletResourceUsage) XXX_DiscardUnknown() {
+	xxx_messageInfo_CloudletResourceUsage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CloudletResourceUsage proto.InternalMessageInfo
+
 // Flavor details from the Cloudlet
 type FlavorInfo struct {
 	// Name of the flavor on the Cloudlet
@@ -766,7 +845,7 @@ func (m *FlavorInfo) Reset()         { *m = FlavorInfo{} }
 func (m *FlavorInfo) String() string { return proto.CompactTextString(m) }
 func (*FlavorInfo) ProtoMessage()    {}
 func (*FlavorInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{10}
+	return fileDescriptor_3aea31a648a25d86, []int{13}
 }
 func (m *FlavorInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -804,7 +883,7 @@ func (m *OSAZone) Reset()         { *m = OSAZone{} }
 func (m *OSAZone) String() string { return proto.CompactTextString(m) }
 func (*OSAZone) ProtoMessage()    {}
 func (*OSAZone) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{11}
+	return fileDescriptor_3aea31a648a25d86, []int{14}
 }
 func (m *OSAZone) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -848,7 +927,7 @@ func (m *OSImage) Reset()         { *m = OSImage{} }
 func (m *OSImage) String() string { return proto.CompactTextString(m) }
 func (*OSImage) ProtoMessage()    {}
 func (*OSImage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{12}
+	return fileDescriptor_3aea31a648a25d86, []int{15}
 }
 func (m *OSImage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -884,7 +963,7 @@ type CloudletInfo struct {
 	// Unique identifier key
 	Key CloudletKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// State of cloudlet
-	State CloudletState `protobuf:"varint,3,opt,name=state,proto3,enum=edgeproto.CloudletState" json:"state,omitempty"`
+	State dme_proto.CloudletState `protobuf:"varint,3,opt,name=state,proto3,enum=distributed_match_engine.CloudletState" json:"state,omitempty"`
 	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,4,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 	// Connected controller unique id
@@ -910,16 +989,18 @@ type CloudletInfo struct {
 	// Indicates all controller data has been sent to CRM
 	ControllerCacheReceived bool `protobuf:"varint,15,opt,name=controller_cache_received,json=controllerCacheReceived,proto3" json:"controller_cache_received,omitempty"`
 	// State for maintenance
-	MaintenanceState MaintenanceState `protobuf:"varint,16,opt,name=maintenance_state,json=maintenanceState,proto3,enum=edgeproto.MaintenanceState" json:"maintenance_state,omitempty"`
-	// Resources used by cloudlet
-	Resources InfraResources `protobuf:"bytes,17,opt,name=resources,proto3" json:"resources"`
+	MaintenanceState dme_proto.MaintenanceState `protobuf:"varint,16,opt,name=maintenance_state,json=maintenanceState,proto3,enum=distributed_match_engine.MaintenanceState" json:"maintenance_state,omitempty"`
+	// Snapshot of resources used by cloudlet
+	ResourcesSnapshot InfraResourcesSnapshot `protobuf:"bytes,17,opt,name=resources_snapshot,json=resourcesSnapshot,proto3" json:"resources_snapshot"`
+	// Trust Policy State
+	TrustPolicyState TrackedState `protobuf:"varint,18,opt,name=trust_policy_state,json=trustPolicyState,proto3,enum=edgeproto.TrackedState" json:"trust_policy_state,omitempty"`
 }
 
 func (m *CloudletInfo) Reset()         { *m = CloudletInfo{} }
 func (m *CloudletInfo) String() string { return proto.CompactTextString(m) }
 func (*CloudletInfo) ProtoMessage()    {}
 func (*CloudletInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{13}
+	return fileDescriptor_3aea31a648a25d86, []int{16}
 }
 func (m *CloudletInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -958,7 +1039,7 @@ func (m *CloudletMetrics) Reset()         { *m = CloudletMetrics{} }
 func (m *CloudletMetrics) String() string { return proto.CompactTextString(m) }
 func (*CloudletMetrics) ProtoMessage()    {}
 func (*CloudletMetrics) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{14}
+	return fileDescriptor_3aea31a648a25d86, []int{17}
 }
 func (m *CloudletMetrics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -990,7 +1071,6 @@ var xxx_messageInfo_CloudletMetrics proto.InternalMessageInfo
 func init() {
 	proto.RegisterEnum("edgeproto.PlatformType", PlatformType_name, PlatformType_value)
 	proto.RegisterEnum("edgeproto.InfraApiAccess", InfraApiAccess_name, InfraApiAccess_value)
-	proto.RegisterEnum("edgeproto.CloudletState", CloudletState_name, CloudletState_value)
 	proto.RegisterType((*CloudletKey)(nil), "edgeproto.CloudletKey")
 	proto.RegisterType((*OperationTimeLimits)(nil), "edgeproto.OperationTimeLimits")
 	proto.RegisterType((*PlatformConfig)(nil), "edgeproto.PlatformConfig")
@@ -998,6 +1078,7 @@ func init() {
 	proto.RegisterType((*CloudletResMap)(nil), "edgeproto.CloudletResMap")
 	proto.RegisterMapType((map[string]string)(nil), "edgeproto.CloudletResMap.MappingEntry")
 	proto.RegisterType((*InfraConfig)(nil), "edgeproto.InfraConfig")
+	proto.RegisterType((*ResourceQuota)(nil), "edgeproto.ResourceQuota")
 	proto.RegisterType((*Cloudlet)(nil), "edgeproto.Cloudlet")
 	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Cloudlet.AccessVarsEntry")
 	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Cloudlet.ChefClientKeyEntry")
@@ -1008,6 +1089,8 @@ func init() {
 	proto.RegisterType((*PropertyInfo)(nil), "edgeproto.PropertyInfo")
 	proto.RegisterType((*CloudletProps)(nil), "edgeproto.CloudletProps")
 	proto.RegisterMapType((map[string]*PropertyInfo)(nil), "edgeproto.CloudletProps.PropertiesEntry")
+	proto.RegisterType((*CloudletResourceQuotaProps)(nil), "edgeproto.CloudletResourceQuotaProps")
+	proto.RegisterType((*CloudletResourceUsage)(nil), "edgeproto.CloudletResourceUsage")
 	proto.RegisterType((*FlavorInfo)(nil), "edgeproto.FlavorInfo")
 	proto.RegisterMapType((map[string]string)(nil), "edgeproto.FlavorInfo.PropMapEntry")
 	proto.RegisterType((*OSAZone)(nil), "edgeproto.OSAZone")
@@ -1019,233 +1102,249 @@ func init() {
 func init() { proto.RegisterFile("cloudlet.proto", fileDescriptor_3aea31a648a25d86) }
 
 var fileDescriptor_3aea31a648a25d86 = []byte{
-	// 3609 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x39, 0x5b, 0x6c, 0xe3, 0x56,
-	0x76, 0x43, 0xbf, 0x75, 0xe4, 0x07, 0x7d, 0xfd, 0xe2, 0x68, 0x26, 0x1e, 0x47, 0xd3, 0xa4, 0xb3,
-	0xb3, 0x1a, 0xab, 0xf5, 0x60, 0xdb, 0xd4, 0x48, 0xb2, 0x91, 0x25, 0x79, 0x46, 0xf5, 0x4b, 0xa5,
-	0x34, 0x4e, 0xb3, 0x40, 0x4b, 0x5c, 0x93, 0xd7, 0x32, 0x3b, 0x24, 0x2f, 0xf7, 0x92, 0x52, 0xa2,
-	0x7c, 0x15, 0xfd, 0xc9, 0x6f, 0xfa, 0x58, 0xa0, 0x4d, 0x5f, 0xf9, 0x29, 0x90, 0x16, 0xfd, 0x08,
-	0xf6, 0x73, 0xbf, 0x8b, 0x22, 0x68, 0x51, 0x20, 0x68, 0x7f, 0x8a, 0x05, 0xba, 0xd8, 0x9d, 0x14,
-	0x45, 0x91, 0x9f, 0x16, 0x88, 0x1d, 0x14, 0xfd, 0x28, 0x8a, 0x7b, 0x2f, 0x29, 0x51, 0x12, 0x9d,
-	0xc4, 0x4e, 0xb0, 0x3f, 0x02, 0x79, 0x5e, 0x3c, 0xf7, 0xbc, 0xcf, 0x15, 0xcc, 0x9b, 0x0e, 0x6d,
-	0x5b, 0x0e, 0x09, 0x37, 0x7d, 0x46, 0x43, 0x8a, 0x32, 0xc4, 0x6a, 0x11, 0xf1, 0x98, 0xbb, 0xdd,
-	0xa2, 0xb4, 0xe5, 0x90, 0x22, 0xf6, 0xed, 0x22, 0xf6, 0x3c, 0x1a, 0xe2, 0xd0, 0xa6, 0x5e, 0x20,
-	0x09, 0x73, 0x2f, 0xb5, 0xec, 0xf0, 0xac, 0x7d, 0xb2, 0x69, 0x52, 0xb7, 0xe8, 0xd2, 0x13, 0xdb,
-	0xe1, 0x8c, 0x6f, 0x15, 0xf9, 0xef, 0x03, 0x21, 0xb3, 0x28, 0xe8, 0x5a, 0xc4, 0xeb, 0x3d, 0x44,
-	0x9c, 0xb3, 0xa7, 0x0e, 0xee, 0x50, 0x16, 0xbf, 0x31, 0x12, 0xb4, 0x9d, 0xe8, 0xf3, 0xb9, 0x45,
-	0x46, 0x82, 0x10, 0xb7, 0x42, 0x7c, 0xe2, 0x90, 0x98, 0xc0, 0xa4, 0xae, 0x4b, 0x63, 0xe6, 0x65,
-	0xdb, 0x3b, 0x65, 0x98, 0x91, 0x80, 0xb6, 0x99, 0x49, 0x62, 0x65, 0xca, 0x5f, 0xaa, 0x8c, 0xf5,
-	0xc0, 0xc5, 0xa1, 0x79, 0xf6, 0x80, 0x78, 0x2d, 0xdb, 0x23, 0x45, 0xcb, 0x25, 0x0f, 0x04, 0x6b,
-	0xd1, 0xa1, 0x66, 0x2c, 0xba, 0x45, 0x5b, 0x54, 0x02, 0xf9, 0x93, 0x84, 0xe6, 0xff, 0x5c, 0x81,
-	0x6c, 0x39, 0xb2, 0xd1, 0x1e, 0xe9, 0xa2, 0x87, 0x30, 0x4b, 0x59, 0x0b, 0x7b, 0xf6, 0xdb, 0xc2,
-	0x1c, 0x9a, 0xb2, 0xa1, 0xdc, 0xcb, 0xec, 0x2c, 0xfc, 0xe8, 0x73, 0x2d, 0x1b, 0x9b, 0x92, 0xb2,
-	0x96, 0x3e, 0x40, 0x84, 0x36, 0x60, 0xc2, 0xc3, 0x2e, 0xd1, 0xc6, 0x04, 0xf1, 0xec, 0x8f, 0x3e,
-	0xd7, 0x66, 0x62, 0x62, 0x5d, 0x60, 0xb6, 0x7f, 0xf5, 0x3f, 0x3f, 0xd3, 0x94, 0xff, 0xf9, 0x4c,
-	0x53, 0xde, 0xbb, 0xd0, 0x7e, 0x31, 0xc6, 0xbd, 0x72, 0x88, 0x5d, 0x52, 0x88, 0xdf, 0x1e, 0x50,
-	0xd6, 0x7a, 0xe5, 0x28, 0x21, 0xf6, 0xc3, 0xf7, 0xef, 0x28, 0xf9, 0x7f, 0x1c, 0x87, 0xa5, 0x23,
-	0x9f, 0x30, 0x01, 0x69, 0xda, 0x2e, 0xd9, 0xb7, 0x5d, 0x3b, 0x0c, 0xd0, 0x1e, 0xdc, 0x32, 0x19,
-	0xc1, 0x21, 0x31, 0x4c, 0xa7, 0x1d, 0x84, 0x84, 0x19, 0xb6, 0x17, 0x84, 0x46, 0x68, 0xbb, 0x84,
-	0xb6, 0x43, 0xa1, 0xf6, 0xf8, 0xce, 0xec, 0xff, 0xfe, 0xe4, 0xce, 0x4c, 0xa5, 0x2d, 0x99, 0x75,
-	0x4d, 0x32, 0x94, 0x25, 0x7d, 0xcd, 0x0b, 0xc2, 0xa6, 0xa4, 0xe6, 0xc2, 0xda, 0xbe, 0x75, 0xa9,
-	0xb0, 0xb1, 0x34, 0x61, 0x92, 0x21, 0x5d, 0x98, 0x45, 0x1c, 0x72, 0x99, 0xb0, 0xf1, 0x34, 0x61,
-	0x92, 0x21, 0x45, 0x58, 0x19, 0xd6, 0xa2, 0x63, 0x62, 0xdf, 0x1f, 0x14, 0x34, 0x91, 0x22, 0x68,
-	0x59, 0x12, 0x97, 0x7c, 0x7f, 0x48, 0x48, 0x74, 0xbc, 0x11, 0x21, 0x93, 0x69, 0x42, 0x24, 0xf1,
-	0xa8, 0x90, 0xe8, 0x58, 0x23, 0x42, 0xa6, 0xd2, 0x84, 0x48, 0xe2, 0x41, 0x21, 0xf9, 0xf7, 0xa7,
-	0x61, 0xbe, 0xee, 0xe0, 0xf0, 0x94, 0x32, 0xb7, 0x4c, 0xbd, 0x53, 0xbb, 0x85, 0x7e, 0x05, 0xd6,
-	0x4c, 0xea, 0x85, 0xd8, 0xf6, 0x08, 0x33, 0x18, 0x69, 0xd9, 0x41, 0xc8, 0xba, 0x86, 0x8f, 0xc3,
-	0x33, 0x19, 0x7b, 0xfa, 0x4a, 0x0f, 0xad, 0x47, 0xd8, 0x3a, 0x0e, 0xcf, 0xd0, 0x43, 0x58, 0x8d,
-	0x23, 0xc7, 0xe8, 0xb8, 0x86, 0xed, 0xe2, 0x16, 0x91, 0x6c, 0x22, 0x0a, 0xf5, 0xa5, 0x18, 0x7b,
-	0xec, 0xd6, 0x38, 0x4e, 0x30, 0xdd, 0x87, 0x45, 0x8f, 0x86, 0xf6, 0x69, 0xd7, 0x30, 0x43, 0xe6,
-	0x18, 0xd8, 0xb2, 0x58, 0x20, 0x3c, 0x92, 0xd1, 0x17, 0x24, 0xa2, 0x1c, 0x32, 0xa7, 0xc4, 0xc1,
-	0x28, 0x0f, 0x73, 0xa1, 0x13, 0x18, 0x26, 0x61, 0xa1, 0x71, 0x6a, 0x3b, 0x44, 0xd8, 0x2a, 0xa3,
-	0x67, 0x43, 0x27, 0x28, 0x13, 0x16, 0xee, 0xda, 0x0e, 0x41, 0x1b, 0x30, 0xcb, 0x69, 0x9e, 0x92,
-	0xae, 0x24, 0x59, 0x16, 0x24, 0x10, 0x3a, 0xc1, 0x1e, 0xe9, 0x0a, 0x8a, 0x75, 0xc8, 0x0a, 0x29,
-	0x58, 0x12, 0xac, 0x08, 0x82, 0x0c, 0x97, 0x81, 0x05, 0xfe, 0x55, 0x98, 0x26, 0x5e, 0xc7, 0xe8,
-	0x60, 0xa6, 0x4d, 0x6d, 0x8c, 0xdf, 0xcb, 0x6e, 0xbd, 0xb0, 0xd9, 0x2b, 0x51, 0x9b, 0x83, 0xa6,
-	0xda, 0xac, 0x7a, 0x9d, 0x63, 0xcc, 0xaa, 0x5e, 0xc8, 0xba, 0xfa, 0x14, 0x11, 0x2f, 0xe8, 0x79,
-	0x98, 0xf5, 0x23, 0x2a, 0x23, 0xc4, 0x2d, 0x6d, 0x46, 0x2a, 0x19, 0xc3, 0x9a, 0xb8, 0x85, 0x6e,
-	0x41, 0x26, 0x24, 0x41, 0x68, 0xb8, 0xd4, 0x22, 0x5a, 0x66, 0x43, 0xb9, 0x37, 0xa3, 0xcf, 0x70,
-	0xc0, 0x01, 0xb5, 0x08, 0x42, 0x30, 0x11, 0xf8, 0xd8, 0xd3, 0x40, 0xf0, 0x89, 0x67, 0x2e, 0xd3,
-	0x74, 0x08, 0xf6, 0xda, 0xbe, 0xe4, 0xc9, 0x0a, 0x9e, 0x6c, 0x04, 0x13, 0x6c, 0xab, 0x30, 0xc5,
-	0x7d, 0x45, 0x3d, 0x6d, 0x56, 0x30, 0x46, 0x6f, 0xe8, 0x5b, 0xa0, 0xf2, 0x7a, 0x46, 0x98, 0x69,
-	0x63, 0x47, 0xd8, 0x2e, 0xd0, 0xe6, 0x04, 0xfb, 0x42, 0x1f, 0xce, 0xcd, 0x17, 0xa0, 0x17, 0x61,
-	0xa1, 0x1d, 0x10, 0xa3, 0x83, 0xdb, 0x4e, 0x18, 0x51, 0xce, 0x0b, 0xca, 0xb9, 0x76, 0x40, 0x8e,
-	0x39, 0x54, 0xd2, 0xe5, 0x61, 0x2e, 0x41, 0x87, 0x03, 0x6d, 0x41, 0xaa, 0xd3, 0xa3, 0xc2, 0x01,
-	0xf7, 0x03, 0x8f, 0x4a, 0xcb, 0x0b, 0x0c, 0x46, 0x69, 0xa8, 0xa9, 0xd2, 0x0f, 0xd8, 0xf7, 0x2b,
-	0x5e, 0xa0, 0x53, 0x1a, 0xa2, 0x7b, 0xa0, 0x9a, 0x67, 0xe4, 0xd4, 0x08, 0x08, 0xeb, 0x10, 0x26,
-	0x03, 0x65, 0x51, 0x50, 0xcd, 0x73, 0x78, 0x43, 0x80, 0x45, 0x8c, 0xbc, 0x0a, 0xcb, 0x82, 0xd2,
-	0x74, 0x6c, 0xe2, 0x85, 0x86, 0xed, 0x85, 0x84, 0x75, 0xb0, 0xa3, 0xa1, 0x0d, 0xe5, 0xde, 0xe4,
-	0x50, 0x94, 0x23, 0x4e, 0x59, 0x16, 0x84, 0xb5, 0x88, 0x0e, 0xbd, 0x00, 0xf3, 0x16, 0xf1, 0x1d,
-	0xda, 0x75, 0x39, 0x3b, 0xf7, 0xc9, 0x92, 0xf8, 0xce, 0x5c, 0x1f, 0xca, 0xbd, 0xc2, 0xe3, 0x97,
-	0xb9, 0x06, 0x36, 0x4d, 0x12, 0x04, 0x86, 0xcf, 0xec, 0x0e, 0x4f, 0xd0, 0xa7, 0xa4, 0xab, 0xad,
-	0x46, 0xf1, 0xcb, 0xdc, 0x92, 0x40, 0xd6, 0x25, 0x8e, 0x57, 0xe7, 0x17, 0x61, 0x21, 0x62, 0xc0,
-	0xbe, 0x2d, 0xc2, 0x57, 0x5b, 0x93, 0xc2, 0x25, 0xb8, 0xe4, 0xdb, 0x3c, 0x78, 0x73, 0xbf, 0x06,
-	0xd9, 0x44, 0xb0, 0x20, 0x15, 0xc6, 0xb9, 0x60, 0x99, 0x4f, 0xfc, 0x11, 0x2d, 0xc3, 0x64, 0x07,
-	0x3b, 0xed, 0xa8, 0x64, 0xeb, 0xf2, 0x65, 0x7b, 0xec, 0x25, 0x25, 0xff, 0x7f, 0x0a, 0xcc, 0xc7,
-	0x0d, 0x41, 0x27, 0xc1, 0x01, 0xf6, 0xd1, 0x66, 0x9f, 0x3d, 0xbb, 0xb5, 0x9a, 0x88, 0xcf, 0x44,
-	0xe3, 0xd8, 0x99, 0xf8, 0xe8, 0x27, 0x77, 0x6e, 0x48, 0xe1, 0xaf, 0xc1, 0xb4, 0x8b, 0x7d, 0xdf,
-	0xf6, 0x5a, 0xda, 0x98, 0x88, 0xe9, 0x17, 0x53, 0x78, 0xa4, 0xec, 0xcd, 0x03, 0x49, 0x28, 0x83,
-	0x3a, 0x66, 0xcb, 0x6d, 0xc3, 0x6c, 0x12, 0x71, 0x95, 0x03, 0x6c, 0xbf, 0xfa, 0xde, 0x85, 0x56,
-	0xec, 0xb5, 0x98, 0x3d, 0xd2, 0xdd, 0x1c, 0x6d, 0x33, 0x1c, 0x9a, 0x6c, 0x35, 0xff, 0x70, 0xa1,
-	0x4d, 0x47, 0x1f, 0xcc, 0x9f, 0x40, 0xb6, 0xc6, 0x9b, 0x70, 0x54, 0x9f, 0xb6, 0x60, 0x85, 0xbc,
-	0x15, 0x12, 0xe6, 0x61, 0xc7, 0xf0, 0x48, 0xf8, 0x26, 0x65, 0x4f, 0x0d, 0xd1, 0xec, 0xa4, 0x32,
-	0x4b, 0x31, 0xf2, 0x50, 0xe2, 0xf8, 0xb7, 0xd0, 0x1d, 0xc8, 0xca, 0x21, 0xc0, 0xe8, 0xb7, 0x45,
-	0x1d, 0x24, 0x88, 0x13, 0xe4, 0xdf, 0x5d, 0x86, 0x99, 0xd8, 0x10, 0x3c, 0x97, 0x4e, 0x6d, 0xe2,
-	0x58, 0x81, 0xa6, 0x6c, 0x8c, 0xf3, 0x5c, 0x92, 0x6f, 0xb1, 0xd9, 0xc7, 0xbe, 0xaa, 0xd9, 0xbf,
-	0x0b, 0x33, 0x0e, 0x35, 0x65, 0xdb, 0x9e, 0x14, 0x4c, 0xcf, 0x6d, 0x5a, 0xbc, 0x60, 0xda, 0x27,
-	0xed, 0x90, 0x58, 0x86, 0x98, 0x10, 0x0c, 0x39, 0x21, 0x6c, 0xee, 0x53, 0x33, 0xe2, 0xed, 0x31,
-	0xa1, 0x87, 0x00, 0xb6, 0x6f, 0x04, 0x6d, 0xdf, 0xa7, 0x4c, 0x56, 0xf5, 0xf9, 0xad, 0xe5, 0xc4,
-	0x77, 0x6b, 0x7e, 0x43, 0xe2, 0xf4, 0x8c, 0x1d, 0x3f, 0xa2, 0xe7, 0x00, 0x02, 0x3e, 0x3a, 0x99,
-	0x86, 0xed, 0x07, 0xda, 0xb4, 0xac, 0x6f, 0x12, 0x52, 0xf3, 0x45, 0x96, 0x7b, 0x6d, 0xd7, 0xb0,
-	0xba, 0x1e, 0x76, 0x23, 0x1a, 0x5e, 0xa2, 0x26, 0xf5, 0x39, 0xaf, 0xed, 0x56, 0x24, 0x94, 0xd3,
-	0x55, 0x21, 0xcb, 0xdb, 0x89, 0xe1, 0x88, 0xf6, 0x2e, 0xca, 0x54, 0x76, 0x6b, 0x3d, 0xf1, 0xf1,
-	0x94, 0x21, 0x20, 0x3a, 0x00, 0x84, 0xfd, 0xb1, 0xe0, 0x05, 0x98, 0x22, 0x8c, 0x51, 0x16, 0x68,
-	0xc0, 0x6d, 0xb9, 0x33, 0xf7, 0xc1, 0xb9, 0xa6, 0xfc, 0xc1, 0x0f, 0x6f, 0x4e, 0x7a, 0xd4, 0x74,
-	0x7d, 0x3d, 0x42, 0xa2, 0xd7, 0x60, 0x8a, 0xab, 0xd8, 0x0e, 0x44, 0x6d, 0xcb, 0x6e, 0xad, 0x24,
-	0x3e, 0xd4, 0x10, 0x88, 0x9a, 0x77, 0x4a, 0x77, 0x16, 0x07, 0xb8, 0xc5, 0xc7, 0x22, 0x3e, 0xf4,
-	0x32, 0x4c, 0xf2, 0x27, 0x22, 0xea, 0xdf, 0xfc, 0xd6, 0x5a, 0x42, 0x40, 0x93, 0x61, 0xf3, 0x29,
-	0xb1, 0xb8, 0x1c, 0x32, 0xac, 0x80, 0x64, 0x42, 0x8f, 0x61, 0x96, 0x27, 0x3f, 0xed, 0x10, 0xc6,
-	0x6c, 0x8b, 0x88, 0x12, 0x39, 0x3f, 0xe8, 0x63, 0xfd, 0xe0, 0x28, 0xc2, 0x0e, 0xcb, 0xc8, 0x9a,
-	0xcc, 0x8d, 0x71, 0xe8, 0x25, 0x50, 0x13, 0xd5, 0x86, 0xbb, 0xd2, 0x91, 0x65, 0x74, 0x98, 0x6b,
-	0xa1, 0x4f, 0xb6, 0xcf, 0xa9, 0xd0, 0xcb, 0x30, 0xd7, 0xef, 0x1c, 0x5d, 0x9f, 0x88, 0xba, 0x3a,
-	0x78, 0x92, 0xb8, 0xff, 0x34, 0xbb, 0x3e, 0xd1, 0x7b, 0x7d, 0x86, 0xbf, 0xa1, 0x5f, 0x86, 0xa8,
-	0x61, 0x1a, 0x01, 0xeb, 0xc8, 0x4a, 0x24, 0x8a, 0xee, 0x4e, 0xa6, 0xff, 0xc9, 0x39, 0x49, 0xd1,
-	0x60, 0x1d, 0x5e, 0x94, 0xd0, 0x16, 0x4c, 0xc9, 0x14, 0x10, 0x85, 0x37, 0x3b, 0x10, 0x5a, 0xbb,
-	0x02, 0xd1, 0x0f, 0xe8, 0x88, 0x12, 0xdd, 0x85, 0x39, 0xff, 0xac, 0x1b, 0xd8, 0x26, 0xcf, 0x3e,
-	0x9e, 0x4b, 0x48, 0x04, 0xd8, 0x6c, 0x0c, 0x14, 0xe9, 0xf6, 0x52, 0xbf, 0x87, 0x2e, 0x89, 0x7a,
-	0x73, 0x27, 0x25, 0x59, 0x52, 0xbb, 0xe7, 0xb7, 0x61, 0xb1, 0x3f, 0x7c, 0x74, 0x08, 0x0b, 0x78,
-	0xee, 0xc8, 0x26, 0xae, 0xf6, 0x10, 0xc7, 0x12, 0x8e, 0x2a, 0x30, 0x65, 0x8a, 0x9a, 0x20, 0xba,
-	0x78, 0x76, 0xeb, 0xe6, 0xa5, 0x9d, 0x3a, 0x35, 0x70, 0x24, 0x2f, 0x7a, 0x0c, 0x59, 0x46, 0x02,
-	0xde, 0x17, 0x0c, 0x17, 0xfb, 0xda, 0xaa, 0x50, 0x38, 0x9f, 0xa6, 0xb0, 0x4e, 0x82, 0x26, 0x6e,
-	0x1d, 0x60, 0x5f, 0xe8, 0xbc, 0x33, 0xc1, 0x65, 0xea, 0x19, 0x16, 0x43, 0x51, 0x05, 0xb2, 0x51,
-	0x33, 0xe8, 0x60, 0x16, 0x68, 0x6b, 0x42, 0xd2, 0xdd, 0x34, 0x49, 0xb2, 0x8f, 0x1c, 0x63, 0x16,
-	0xc8, 0xe3, 0x03, 0xee, 0x01, 0x78, 0x63, 0xec, 0x8d, 0x4f, 0xb1, 0x05, 0x34, 0xd9, 0x18, 0x3b,
-	0x72, 0x72, 0x8a, 0xcf, 0xff, 0x2d, 0x80, 0x7e, 0x0c, 0x69, 0xb9, 0x61, 0x6f, 0x27, 0x90, 0xa8,
-	0x0c, 0xaa, 0x58, 0x64, 0x64, 0x9b, 0x12, 0x1f, 0xd3, 0x6e, 0x89, 0xf0, 0x4a, 0x1a, 0x4d, 0x94,
-	0x59, 0xde, 0xb2, 0x04, 0x81, 0x3e, 0x6f, 0x0f, 0xbc, 0xa3, 0xef, 0xc2, 0xac, 0x14, 0x12, 0x59,
-	0xfd, 0xf6, 0x48, 0x21, 0x4c, 0xd4, 0xe9, 0x28, 0x6e, 0xb2, 0x76, 0xa2, 0x74, 0x37, 0x61, 0x21,
-	0xd9, 0xc9, 0x79, 0x31, 0x7d, 0xee, 0xd2, 0x7e, 0xb4, 0x59, 0xee, 0xb5, 0xf2, 0x3d, 0xd2, 0x4d,
-	0x9a, 0x7c, 0xce, 0x4c, 0x62, 0xd0, 0x63, 0x58, 0x74, 0x31, 0x9f, 0x0a, 0x3c, 0xec, 0x99, 0xc4,
-	0x90, 0x55, 0x60, 0x5d, 0x1c, 0xee, 0x56, 0x42, 0xee, 0x41, 0x9f, 0x46, 0x54, 0x02, 0x5d, 0x75,
-	0x87, 0x20, 0xa8, 0x06, 0xcf, 0xc7, 0x15, 0xc0, 0xf0, 0xa9, 0x63, 0x9b, 0x5d, 0x63, 0x34, 0x1a,
-	0xef, 0x88, 0x69, 0x67, 0x3d, 0x26, 0xac, 0x0b, 0xba, 0xf2, 0x70, 0x6c, 0xae, 0xc1, 0x74, 0xc7,
-	0x35, 0x7c, 0x4a, 0x1d, 0x6d, 0x43, 0x0e, 0x64, 0x1d, 0xb7, 0x4e, 0xa9, 0x83, 0x5e, 0x83, 0x95,
-	0xe4, 0x98, 0xd1, 0x3e, 0x71, 0x6c, 0x53, 0x58, 0xe2, 0x79, 0xe1, 0xbf, 0xa1, 0x22, 0x81, 0xfa,
-	0x43, 0x87, 0xa0, 0xe4, 0xe7, 0xfd, 0x75, 0xb8, 0x93, 0x90, 0xc0, 0x47, 0xdd, 0xb6, 0xdf, 0x62,
-	0xd8, 0x22, 0x06, 0x23, 0xdf, 0x6f, 0xdb, 0x8c, 0x58, 0x5a, 0x5e, 0x14, 0x1c, 0x69, 0xad, 0x5b,
-	0x3d, 0x11, 0x7b, 0xa4, 0xfb, 0x44, 0x52, 0xea, 0x11, 0x21, 0x7a, 0x03, 0x40, 0x6e, 0x28, 0x96,
-	0x81, 0x43, 0xed, 0xae, 0x70, 0xe8, 0xdd, 0xcb, 0x9b, 0x14, 0x2f, 0xf5, 0x41, 0x88, 0x5d, 0x7f,
-	0x67, 0x25, 0xd2, 0x33, 0x13, 0xc6, 0x20, 0xe1, 0xee, 0x4c, 0x24, 0xad, 0x14, 0x72, 0xd1, 0x72,
-	0x6f, 0x11, 0xa2, 0x7f, 0xe1, 0xeb, 0x8b, 0x8e, 0xa4, 0x95, 0xc2, 0xaf, 0x31, 0x4d, 0xe5, 0x5e,
-	0x87, 0xf9, 0xc1, 0x34, 0x4e, 0xe1, 0x2e, 0x26, 0xb9, 0x07, 0xcb, 0x8a, 0xe4, 0x6d, 0xe2, 0x13,
-	0x87, 0x8f, 0x7f, 0x49, 0xc1, 0xaf, 0xc0, 0xc2, 0x50, 0x56, 0x5f, 0x49, 0xaf, 0xd7, 0x00, 0x8d,
-	0xc6, 0xfb, 0x95, 0xc6, 0xac, 0x7f, 0x1a, 0xe3, 0x2b, 0xfd, 0x7f, 0x7f, 0xa6, 0x29, 0xbf, 0x7b,
-	0xae, 0x29, 0xef, 0x9e, 0x6b, 0xca, 0x1f, 0x9f, 0x6b, 0xca, 0x87, 0xe7, 0x9a, 0xf2, 0xd1, 0xb9,
-	0xa6, 0x7c, 0xcc, 0x6d, 0x7a, 0xa1, 0xfd, 0x4c, 0xd9, 0x8f, 0x86, 0x8b, 0xcd, 0xc7, 0x94, 0xd9,
-	0x6f, 0xf3, 0xb0, 0x75, 0x4a, 0xa6, 0xd9, 0x66, 0xd8, 0xec, 0x16, 0x7a, 0xb8, 0x63, 0xc2, 0x42,
-	0x5e, 0xcd, 0x47, 0x31, 0x65, 0xda, 0x66, 0x01, 0xe9, 0xbf, 0x37, 0x7c, 0x42, 0xac, 0xfe, 0x6b,
-	0xcf, 0x8b, 0x05, 0xd9, 0xb5, 0x0b, 0x32, 0xf3, 0x0b, 0x87, 0xc9, 0xc6, 0x53, 0x18, 0x38, 0xa9,
-	0xa0, 0x24, 0x85, 0xaa, 0x18, 0x04, 0x0a, 0xe5, 0x91, 0x78, 0xef, 0x83, 0x46, 0xe3, 0xb7, 0x50,
-	0x8e, 0xc3, 0xad, 0xf0, 0x24, 0x8e, 0x8e, 0x6b, 0x4c, 0x9b, 0x3f, 0xfc, 0x5c, 0x53, 0x9f, 0x92,
-	0xee, 0xc0, 0x65, 0x47, 0xfe, 0x9f, 0x15, 0xc8, 0xca, 0x2e, 0x78, 0xc0, 0xe3, 0xf4, 0xca, 0x43,
-	0xf7, 0xd0, 0xcc, 0x39, 0x3e, 0x3c, 0x73, 0xf2, 0x5e, 0x87, 0x3b, 0xd8, 0x76, 0xf0, 0x89, 0xed,
-	0xd8, 0x61, 0xd7, 0x78, 0x9b, 0x7a, 0x44, 0x5c, 0x22, 0x64, 0x74, 0x35, 0x89, 0xf8, 0x1e, 0xf5,
-	0xc8, 0x76, 0xf5, 0xbd, 0x0b, 0xad, 0x74, 0xc5, 0x63, 0x15, 0xe4, 0xc7, 0x5e, 0xd9, 0xed, 0xcf,
-	0xb9, 0x9b, 0xa0, 0xc6, 0xea, 0x1e, 0x60, 0xcf, 0x3e, 0x25, 0x41, 0x88, 0x72, 0x30, 0xe3, 0x46,
-	0xcf, 0x51, 0x54, 0xf5, 0xde, 0xf3, 0x7f, 0xab, 0xc0, 0x6c, 0x9d, 0x51, 0x9f, 0xb0, 0xb0, 0xcb,
-	0x27, 0x30, 0xbe, 0x9e, 0x26, 0x86, 0x6d, 0xf1, 0x8c, 0x36, 0x20, 0x6b, 0x91, 0xc0, 0x64, 0xb6,
-	0x2f, 0x46, 0x5d, 0x29, 0x23, 0x09, 0xea, 0x47, 0xed, 0x78, 0x22, 0x6a, 0xf9, 0x9c, 0x1d, 0x10,
-	0x93, 0x11, 0x79, 0x75, 0x32, 0xa3, 0x47, 0x6f, 0xe8, 0x36, 0x64, 0x5c, 0xec, 0x59, 0x38, 0xa4,
-	0xac, 0x2b, 0x06, 0xe7, 0x19, 0xbd, 0x0f, 0xe0, 0xea, 0x8a, 0x15, 0xd0, 0xc3, 0x8e, 0x18, 0x89,
-	0x67, 0xf4, 0xde, 0x7b, 0xfe, 0xbf, 0x14, 0x98, 0x8b, 0xcf, 0xc7, 0xd5, 0x0e, 0x46, 0x87, 0x2a,
-	0xe5, 0x2a, 0x43, 0xd5, 0x63, 0x00, 0x5f, 0x9e, 0xde, 0x26, 0x41, 0xb4, 0x3b, 0xdd, 0x4b, 0x71,
-	0xbd, 0xf8, 0xd6, 0x66, 0xbd, 0x47, 0x1a, 0x75, 0xf5, 0x3e, 0x6f, 0xee, 0x18, 0x16, 0x86, 0xd0,
-	0x29, 0xc9, 0xfd, 0x60, 0xb0, 0xf0, 0x0c, 0x28, 0x99, 0x70, 0x42, 0x72, 0x3b, 0xfc, 0x37, 0x05,
-	0x40, 0xfa, 0xf7, 0x52, 0xf7, 0x70, 0xe3, 0x9b, 0x7e, 0x3b, 0x10, 0x52, 0x27, 0x74, 0xf9, 0xc2,
-	0xbf, 0xce, 0xb0, 0x2b, 0x1c, 0x32, 0xa1, 0xf3, 0x47, 0xce, 0x6b, 0xd9, 0xc1, 0x53, 0xe1, 0x8c,
-	0x09, 0x5d, 0x3c, 0xa3, 0x32, 0xcc, 0xf0, 0x43, 0x88, 0xc9, 0x68, 0x72, 0x64, 0x32, 0xea, 0x7f,
-	0x58, 0xe8, 0x37, 0x34, 0x19, 0x4d, 0xfb, 0x12, 0xc6, 0x97, 0xc7, 0x24, 0xfa, 0x4a, 0xdb, 0xef,
-	0x77, 0x60, 0xfa, 0xa8, 0x51, 0xe2, 0x29, 0x90, 0x7a, 0xb6, 0xd5, 0xde, 0xde, 0x20, 0x39, 0xa3,
-	0xb7, 0x3c, 0xe3, 0x6c, 0x62, 0x58, 0x4a, 0x65, 0x43, 0x30, 0x11, 0xe2, 0x56, 0xcc, 0x24, 0x9e,
-	0xd1, 0xfa, 0x80, 0xaf, 0xa3, 0x74, 0xed, 0x43, 0x78, 0x3e, 0x73, 0x93, 0x18, 0x3c, 0x38, 0x70,
-	0x18, 0x25, 0x2a, 0x70, 0xd0, 0xae, 0x80, 0xe4, 0x7f, 0x30, 0x0d, 0xb3, 0x71, 0x40, 0x08, 0x67,
-	0x7c, 0x53, 0x7b, 0xe4, 0x66, 0xbc, 0xda, 0x8c, 0x8b, 0xd8, 0xd5, 0x52, 0x38, 0xe4, 0x44, 0x13,
-	0x2d, 0x33, 0x2f, 0x42, 0x26, 0x5a, 0x05, 0x6c, 0x2b, 0xba, 0x95, 0x4c, 0x8c, 0x85, 0x33, 0x12,
-	0x57, 0xb3, 0xf8, 0xfc, 0xc8, 0xc7, 0x1b, 0x46, 0x1d, 0x87, 0x30, 0x79, 0x9b, 0x36, 0x30, 0x3f,
-	0xf6, 0x91, 0xe8, 0x36, 0x00, 0x0d, 0x0c, 0x17, 0xbf, 0x65, 0xf0, 0xa0, 0x99, 0x12, 0x11, 0x32,
-	0x43, 0x83, 0x03, 0xfc, 0x96, 0x8e, 0x5d, 0x94, 0x87, 0xb9, 0x08, 0xdb, 0x31, 0x29, 0x23, 0x72,
-	0xeb, 0x9c, 0xd0, 0xb3, 0x82, 0xe0, 0x58, 0x80, 0xd0, 0xf3, 0x7d, 0x1a, 0xea, 0x18, 0xad, 0x13,
-	0xb1, 0x75, 0x4e, 0xe8, 0x20, 0x69, 0xa8, 0xf3, 0xe8, 0x84, 0xdb, 0x2b, 0xda, 0x15, 0x33, 0xd2,
-	0x5e, 0xd1, 0x72, 0x58, 0x84, 0x69, 0x59, 0xc9, 0xe4, 0x12, 0x39, 0xb8, 0x1d, 0xf6, 0x63, 0x50,
-	0x8f, 0xa9, 0xd0, 0xcb, 0x5f, 0x6d, 0x9b, 0x9c, 0x4b, 0xdf, 0x24, 0x53, 0x77, 0x90, 0xd9, 0x4b,
-	0x76, 0x90, 0x12, 0xa0, 0x91, 0x22, 0x1e, 0x68, 0x73, 0x42, 0x4d, 0x94, 0xdc, 0x96, 0x65, 0x10,
-	0xeb, 0x8b, 0xc3, 0x95, 0x9d, 0x1f, 0x2f, 0x43, 0x03, 0x39, 0xf0, 0x07, 0xda, 0x7c, 0x0a, 0xa7,
-	0x88, 0x63, 0x6e, 0x6e, 0xf1, 0x10, 0xa0, 0x6d, 0xb8, 0xd9, 0x77, 0x8d, 0x61, 0x62, 0xf3, 0x8c,
-	0x8f, 0x7e, 0x26, 0xb1, 0x3b, 0xc4, 0x8a, 0x2e, 0xe3, 0xd6, 0xfa, 0x04, 0x65, 0x8e, 0xd7, 0x23,
-	0x74, 0xfa, 0xb0, 0xac, 0x5e, 0x67, 0x58, 0x2e, 0x41, 0xa6, 0xf7, 0xb7, 0x48, 0xb4, 0x40, 0x8e,
-	0xec, 0x12, 0x7a, 0x4c, 0xb0, 0x33, 0xc3, 0x4b, 0x82, 0x9c, 0xe3, 0x7a, 0x5c, 0xdb, 0xd6, 0xf0,
-	0xc4, 0xf2, 0x7e, 0x34, 0xa9, 0xfc, 0x54, 0x4e, 0x2b, 0x99, 0x1e, 0xff, 0xf5, 0x9a, 0xfa, 0x84,
-	0x47, 0x3d, 0x92, 0xbf, 0x0b, 0x0b, 0xbd, 0x9e, 0x47, 0x42, 0x66, 0x9b, 0xa2, 0xf8, 0x9d, 0x52,
-	0x2a, 0x42, 0x7e, 0x42, 0xe7, 0x8f, 0xf7, 0xff, 0x7e, 0x0c, 0x66, 0x93, 0x8d, 0x00, 0xad, 0x02,
-	0xaa, 0xef, 0x97, 0x9a, 0xbb, 0x47, 0xfa, 0x81, 0xd1, 0x7c, 0xa3, 0x5e, 0x35, 0x76, 0x4b, 0x7b,
-	0x55, 0xf5, 0xc6, 0x28, 0xbc, 0x52, 0x3b, 0xac, 0xa8, 0x0a, 0xba, 0x05, 0x6b, 0x83, 0xf0, 0xa3,
-	0x7a, 0xf5, 0xb0, 0xd1, 0x2c, 0x95, 0xf7, 0xd4, 0x31, 0xb4, 0x06, 0x4b, 0x83, 0xc8, 0xd2, 0xf7,
-	0x9e, 0xe8, 0x55, 0x75, 0x1c, 0xad, 0xc0, 0xe2, 0x20, 0xe2, 0x51, 0xb9, 0xae, 0x4e, 0xa0, 0x9b,
-	0xb0, 0x32, 0x08, 0xae, 0x56, 0x1e, 0x55, 0x77, 0x8e, 0x7e, 0x53, 0x9d, 0x1c, 0xfd, 0x0e, 0xd7,
-	0xab, 0x76, 0xb8, 0xab, 0x97, 0xd4, 0xa9, 0x51, 0xbe, 0xe3, 0x46, 0xfd, 0x71, 0x55, 0xaf, 0xaa,
-	0xd3, 0xa3, 0xa8, 0xd2, 0xeb, 0x0d, 0xa3, 0xba, 0xd7, 0x50, 0x67, 0x52, 0xb8, 0x0e, 0x8c, 0xfa,
-	0xd1, 0xd1, 0xbe, 0x9a, 0xb9, 0x84, 0xab, 0xbc, 0xa5, 0xc2, 0xa8, 0xea, 0xc7, 0xe5, 0x8a, 0x9a,
-	0xbd, 0xbf, 0x0d, 0xf3, 0x83, 0x6b, 0x24, 0x5a, 0x84, 0xb9, 0x4a, 0x4d, 0xaf, 0x96, 0x9b, 0x46,
-	0xa9, 0x5c, 0xae, 0x36, 0x1a, 0xea, 0x0d, 0xce, 0xab, 0x57, 0x1b, 0x4d, 0xbd, 0x56, 0x6e, 0x56,
-	0x2b, 0x31, 0x58, 0xb9, 0x9f, 0x6c, 0xdf, 0x32, 0xc8, 0x72, 0xb0, 0x5a, 0xde, 0x3f, 0x7a, 0x52,
-	0xd9, 0xaf, 0x36, 0x8d, 0x46, 0xb3, 0xd4, 0xac, 0x1a, 0x4f, 0x0e, 0xf7, 0x0e, 0x8f, 0x5e, 0x3f,
-	0x54, 0x6f, 0x70, 0xdd, 0x86, 0x70, 0x55, 0x5d, 0x3f, 0xd2, 0x1b, 0xaa, 0x82, 0x34, 0x58, 0x1e,
-	0x42, 0xe9, 0xd5, 0x52, 0xe5, 0x0d, 0x75, 0x2c, 0x45, 0xe0, 0xd1, 0xee, 0xee, 0x7e, 0xed, 0x90,
-	0x3b, 0x63, 0x1d, 0x72, 0x43, 0xb8, 0xc3, 0xa3, 0xa6, 0x51, 0xd7, 0xab, 0x8d, 0xea, 0x61, 0x53,
-	0x9d, 0xe0, 0x5e, 0x1c, 0xc2, 0xd7, 0x0e, 0x6b, 0x4d, 0x75, 0x32, 0x4d, 0xcb, 0xfa, 0x23, 0xbd,
-	0x54, 0xa9, 0xaa, 0x53, 0xe8, 0x36, 0x68, 0xc3, 0x42, 0xab, 0xd5, 0x8a, 0xd1, 0x78, 0xe3, 0xb0,
-	0xac, 0x4e, 0x6f, 0x7d, 0xb0, 0xd0, 0xff, 0xb7, 0xaf, 0xe4, 0xdb, 0xe8, 0x3f, 0x14, 0x98, 0x2f,
-	0x47, 0xff, 0x8a, 0x45, 0xb7, 0x91, 0x4b, 0x29, 0xe5, 0x3e, 0xb7, 0x38, 0xb8, 0x93, 0xb4, 0x9d,
-	0x30, 0xff, 0xd7, 0xca, 0xa7, 0xe7, 0x5a, 0x31, 0xce, 0x98, 0x98, 0x32, 0x28, 0x94, 0x4c, 0x9e,
-	0x0d, 0x07, 0xd8, 0xc3, 0x2d, 0x52, 0x18, 0x4e, 0x92, 0x0f, 0x2e, 0x34, 0xe5, 0xc7, 0x32, 0xd1,
-	0xe4, 0x4e, 0xf4, 0xec, 0x42, 0xdb, 0x3a, 0x4c, 0x5e, 0x04, 0xf6, 0x67, 0xfb, 0x7d, 0x1c, 0xda,
-	0x61, 0xdb, 0x4a, 0x0c, 0xff, 0xfb, 0xd4, 0x6b, 0x09, 0xd0, 0xdf, 0x7c, 0xae, 0xa9, 0xc3, 0xa2,
-	0x7f, 0xef, 0x5f, 0xfe, 0xfd, 0x0f, 0xc7, 0x56, 0xf2, 0x6a, 0x51, 0xae, 0x84, 0xbd, 0xf4, 0xdd,
-	0x56, 0xee, 0xff, 0x92, 0x82, 0xde, 0x53, 0x60, 0xbe, 0x12, 0xfd, 0xc9, 0x76, 0xc5, 0x83, 0xfe,
-	0xf6, 0x37, 0x71, 0x4e, 0xa1, 0xdd, 0x72, 0x7e, 0xa1, 0x28, 0xff, 0x16, 0x93, 0xda, 0xc5, 0xca,
-	0xfd, 0xdd, 0x18, 0xcc, 0x3f, 0x89, 0xfe, 0x4e, 0xbc, 0xa2, 0x72, 0xef, 0x8c, 0x5d, 0x5f, 0xbb,
-	0x0f, 0x95, 0x64, 0x05, 0x2a, 0x54, 0x06, 0xef, 0x07, 0x0b, 0xb2, 0xd3, 0x15, 0xea, 0x89, 0x9b,
-	0xb6, 0xc2, 0xf0, 0xbd, 0x43, 0xa1, 0x77, 0xc0, 0xc2, 0xf1, 0xc0, 0x65, 0x51, 0x42, 0x5a, 0x61,
-	0x30, 0x3f, 0x0b, 0x89, 0x4b, 0x9b, 0xc2, 0xd1, 0x17, 0xde, 0x6a, 0x14, 0x8e, 0xc5, 0x1d, 0x46,
-	0x61, 0xd0, 0x8a, 0xdc, 0xc7, 0x72, 0x37, 0x1f, 0xf2, 0xf1, 0x3b, 0x0a, 0xcc, 0x36, 0xce, 0xe8,
-	0x9b, 0x5f, 0x6c, 0xc4, 0x34, 0x60, 0x7e, 0xef, 0xd3, 0x73, 0xed, 0xb9, 0xcb, 0xac, 0x78, 0x6c,
-	0x93, 0x37, 0x0b, 0x1f, 0xa7, 0x7a, 0x74, 0x29, 0x3f, 0x5f, 0x0c, 0xce, 0xe8, 0x9b, 0x43, 0x9a,
-	0xfc, 0x99, 0x02, 0x4b, 0x8f, 0x48, 0x38, 0xb2, 0xfa, 0x5c, 0x32, 0x7c, 0xe5, 0x6e, 0xa5, 0xc0,
-	0x63, 0xa6, 0x7c, 0xfd, 0xd3, 0x73, 0xed, 0xdb, 0x5f, 0xe2, 0xe1, 0x91, 0x44, 0xb8, 0x95, 0x5f,
-	0x2d, 0xb6, 0x48, 0xd8, 0xd3, 0xab, 0x18, 0xaf, 0x58, 0xdb, 0xca, 0x7d, 0xf4, 0x57, 0x0a, 0xa8,
-	0x09, 0xf5, 0xe4, 0xe6, 0xa2, 0x5d, 0xb6, 0x67, 0xe4, 0x2e, 0xc5, 0xe4, 0x7f, 0xeb, 0x4b, 0xcd,
-	0xf6, 0xe3, 0x0b, 0x0d, 0xfa, 0x8b, 0xc8, 0xb3, 0x0b, 0x6d, 0xa0, 0xeb, 0x09, 0x55, 0xb5, 0xfc,
-	0xd2, 0xa0, 0xaa, 0x7c, 0x08, 0x0e, 0xb8, 0x9e, 0x7f, 0xa2, 0xc0, 0x4a, 0xc9, 0xb2, 0x06, 0xff,
-	0x31, 0xf2, 0x6d, 0xaf, 0x85, 0x6e, 0x5e, 0xfa, 0x87, 0x52, 0x5a, 0x92, 0xe8, 0xd7, 0xc8, 0x11,
-	0xa1, 0xda, 0xcd, 0xfc, 0x72, 0x11, 0x5b, 0x56, 0xf4, 0xaf, 0x54, 0xd2, 0xc9, 0xe8, 0x4f, 0x15,
-	0xd0, 0x74, 0xe2, 0xd2, 0x0e, 0xf9, 0xda, 0xea, 0xfd, 0xc6, 0x75, 0xd5, 0xe3, 0x96, 0x63, 0x6e,
-	0x9a, 0x76, 0x7f, 0xa4, 0xc0, 0xc2, 0xae, 0xed, 0x59, 0xc9, 0x0b, 0x85, 0xd5, 0x91, 0x29, 0x56,
-	0xc0, 0x73, 0x97, 0xc0, 0x85, 0x5a, 0x0f, 0xbe, 0xd0, 0xb9, 0xa9, 0x4a, 0xe5, 0xf2, 0x2b, 0xc5,
-	0x53, 0xdb, 0x4b, 0x35, 0xda, 0xef, 0x2b, 0xb0, 0xa0, 0x93, 0x0e, 0x7d, 0x4a, 0x7a, 0x37, 0x2c,
-	0x97, 0xe6, 0x44, 0x8a, 0xa1, 0x1a, 0xd7, 0xc9, 0x84, 0xf5, 0xfc, 0xcd, 0x22, 0x13, 0xdf, 0xec,
-	0xa9, 0x22, 0xaf, 0x32, 0x9f, 0x92, 0x2e, 0xd7, 0xe9, 0x07, 0x0a, 0x2c, 0x3e, 0x22, 0x1e, 0x61,
-	0x38, 0xbc, 0x9e, 0x56, 0x4f, 0xae, 0xa3, 0xd5, 0x46, 0xfe, 0x56, 0xb1, 0x15, 0x7d, 0x35, 0x55,
-	0xaf, 0xad, 0xbf, 0x1c, 0xef, 0xcf, 0x91, 0x7c, 0x7d, 0xe0, 0xed, 0xfa, 0x2f, 0x14, 0x50, 0x93,
-	0x15, 0x4e, 0xac, 0x7d, 0x6b, 0x29, 0xaa, 0x72, 0x44, 0xee, 0x32, 0x44, 0xfe, 0xf8, 0xd3, 0x73,
-	0xed, 0x3b, 0xc3, 0x1a, 0x97, 0x3c, 0xec, 0x74, 0x43, 0xdb, 0xfc, 0x72, 0x0f, 0xaf, 0xe5, 0xd1,
-	0x60, 0xd1, 0xb3, 0xbd, 0x53, 0x2a, 0x0b, 0x5f, 0x1b, 0x50, 0xcd, 0xfb, 0x1d, 0x62, 0x86, 0x5f,
-	0x4d, 0xc3, 0x14, 0x6b, 0x3e, 0xbc, 0x46, 0x32, 0xa0, 0x10, 0x16, 0xab, 0x1d, 0xfb, 0xe7, 0xfc,
-	0xd5, 0xad, 0x77, 0x14, 0x40, 0x43, 0x93, 0x3e, 0x77, 0xd2, 0xf7, 0x61, 0x29, 0xe9, 0xa3, 0x78,
-	0x07, 0xc8, 0xa5, 0xd5, 0x78, 0x89, 0xcb, 0x7d, 0x01, 0x2e, 0xbf, 0xd1, 0xcb, 0xaa, 0x01, 0x9b,
-	0xbb, 0x12, 0x2d, 0xcc, 0xbe, 0x73, 0xfb, 0xa3, 0x9f, 0xad, 0xdf, 0xf8, 0xe8, 0xd9, 0xba, 0xf2,
-	0xf1, 0xb3, 0x75, 0xe5, 0xa7, 0xcf, 0xd6, 0x95, 0x77, 0x3f, 0x59, 0xbf, 0xf1, 0xf1, 0x27, 0xeb,
-	0x37, 0xfe, 0xf5, 0x93, 0xf5, 0x1b, 0x27, 0x53, 0x42, 0xf0, 0xc3, 0xff, 0x0f, 0x00, 0x00, 0xff,
-	0xff, 0xbc, 0x18, 0xf9, 0xef, 0x0c, 0x27, 0x00, 0x00,
+
+	// 3838 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x39, 0x5d, 0x6c, 0x1b, 0x47,
+	0x7a, 0x5e, 0xfd, 0x99, 0xfc, 0x28, 0x51, 0xd4, 0xc8, 0x92, 0xd6, 0xb4, 0x2d, 0xcb, 0x9b, 0x3a,
+	0x71, 0x7c, 0xb4, 0x78, 0x95, 0x9b, 0x36, 0x15, 0xe2, 0x5c, 0x28, 0x8a, 0xb6, 0x55, 0x59, 0x96,
+	0x6e, 0x25, 0x2b, 0xbd, 0x00, 0xed, 0x62, 0xb4, 0x3b, 0xa2, 0xb6, 0xda, 0xdd, 0xd9, 0xcc, 0x2e,
+	0x99, 0x30, 0x4f, 0x6d, 0x51, 0x20, 0x2f, 0x7d, 0x48, 0xff, 0x80, 0x36, 0xed, 0x5d, 0xef, 0xa5,
+	0xc0, 0xb5, 0xe8, 0x43, 0x70, 0x8f, 0xd7, 0xd7, 0x3e, 0x04, 0xed, 0x4b, 0xd0, 0xa2, 0x40, 0x71,
+	0x40, 0x0f, 0x57, 0xa7, 0x28, 0x0e, 0x01, 0x8a, 0x16, 0x88, 0x1c, 0x04, 0x7d, 0x28, 0x8a, 0x99,
+	0xd9, 0x25, 0x77, 0xc9, 0xa5, 0x1d, 0x29, 0xc6, 0xbd, 0x10, 0x3b, 0xdf, 0xdf, 0x7c, 0xf3, 0xcd,
+	0x37, 0xdf, 0x1f, 0xa1, 0x68, 0x3a, 0xb4, 0x65, 0x39, 0x24, 0x5c, 0xf6, 0x19, 0x0d, 0x29, 0xca,
+	0x13, 0xab, 0x49, 0xc4, 0x67, 0xf9, 0x72, 0x93, 0xd2, 0xa6, 0x43, 0xaa, 0xd8, 0xb7, 0xab, 0xd8,
+	0xf3, 0x68, 0x88, 0x43, 0x9b, 0x7a, 0x81, 0x24, 0x2c, 0xbf, 0xda, 0xb4, 0xc3, 0xa3, 0xd6, 0xc1,
+	0xb2, 0x49, 0xdd, 0xaa, 0x4b, 0x0f, 0x6c, 0x87, 0x33, 0xbe, 0x5b, 0xe5, 0xbf, 0xb7, 0x84, 0xcc,
+	0xaa, 0xa0, 0x6b, 0x12, 0xaf, 0xfb, 0x11, 0x71, 0x4e, 0x1e, 0x3a, 0xb8, 0x4d, 0x59, 0xbc, 0x62,
+	0x24, 0x68, 0x39, 0xd1, 0xf6, 0xe5, 0x19, 0x46, 0x82, 0x10, 0x37, 0x43, 0x7c, 0xe0, 0x90, 0x98,
+	0xc0, 0xa4, 0xae, 0x4b, 0x63, 0xe6, 0x0b, 0xb6, 0x77, 0xc8, 0x30, 0x23, 0x01, 0x6d, 0x31, 0x93,
+	0xc4, 0xca, 0xd4, 0x9f, 0xa9, 0x8c, 0x75, 0xcb, 0xc5, 0xa1, 0x79, 0x74, 0x8b, 0x78, 0x4d, 0xdb,
+	0x23, 0x55, 0xcb, 0x25, 0xb7, 0x04, 0x6b, 0xd5, 0xa1, 0x66, 0x2c, 0xba, 0x49, 0x9b, 0x54, 0x02,
+	0xf9, 0x57, 0x04, 0xdd, 0x38, 0xbb, 0x68, 0xec, 0xfb, 0x49, 0xdd, 0xb5, 0xef, 0x2a, 0x50, 0xa8,
+	0x47, 0xe6, 0xde, 0x24, 0x1d, 0x74, 0x1b, 0x26, 0x29, 0x6b, 0x62, 0xcf, 0x7e, 0x4f, 0x58, 0x56,
+	0x55, 0x96, 0x94, 0x1b, 0xf9, 0xb5, 0xe9, 0x1f, 0x7d, 0xa1, 0x16, 0xe2, 0x5b, 0xa1, 0xac, 0xa9,
+	0xa7, 0x88, 0xd0, 0x12, 0x8c, 0x79, 0xd8, 0x25, 0xea, 0x88, 0x20, 0x9e, 0xfc, 0xd1, 0x17, 0x6a,
+	0x2e, 0x26, 0xd6, 0x05, 0x66, 0xf5, 0x57, 0x7e, 0xf6, 0xb9, 0xaa, 0x7c, 0xf9, 0xb9, 0xaa, 0x7c,
+	0xf8, 0x44, 0x7d, 0x29, 0xc6, 0xdd, 0x79, 0x88, 0x5d, 0x52, 0x89, 0x57, 0xb7, 0x28, 0x6b, 0xde,
+	0xd9, 0x4e, 0x88, 0xfd, 0xe8, 0xfb, 0x57, 0x15, 0xed, 0x1f, 0x47, 0x61, 0x76, 0xdb, 0x27, 0x4c,
+	0x40, 0xf6, 0x6c, 0x97, 0x3c, 0xb0, 0x5d, 0x3b, 0x0c, 0xd0, 0x26, 0x5c, 0x32, 0x19, 0xc1, 0x21,
+	0x31, 0x4c, 0xa7, 0x15, 0x84, 0x84, 0x19, 0xb6, 0x17, 0x84, 0x46, 0x68, 0xbb, 0x84, 0xb6, 0x42,
+	0xa1, 0xf6, 0xe8, 0xda, 0xe4, 0xff, 0xfe, 0xe4, 0x6a, 0x6e, 0xbd, 0x25, 0x99, 0x75, 0x55, 0x32,
+	0xd4, 0x25, 0xfd, 0x86, 0x17, 0x84, 0x7b, 0x92, 0x9a, 0x0b, 0x6b, 0xf9, 0xd6, 0x50, 0x61, 0x23,
+	0x59, 0xc2, 0x24, 0x43, 0xb6, 0x30, 0x8b, 0x38, 0x64, 0x98, 0xb0, 0xd1, 0x2c, 0x61, 0x92, 0x21,
+	0x43, 0x58, 0x1d, 0x16, 0xa2, 0x63, 0x62, 0xdf, 0x4f, 0x0b, 0x1a, 0xcb, 0x10, 0x74, 0x41, 0x12,
+	0xd7, 0x7c, 0xbf, 0x4f, 0x48, 0x74, 0xbc, 0x01, 0x21, 0xe3, 0x59, 0x42, 0x24, 0xf1, 0xa0, 0x90,
+	0xe8, 0x58, 0x03, 0x42, 0x26, 0xb2, 0x84, 0x48, 0xe2, 0xb4, 0x10, 0xed, 0xcb, 0x09, 0x28, 0xee,
+	0x38, 0x38, 0x3c, 0xa4, 0xcc, 0xad, 0x53, 0xef, 0xd0, 0x6e, 0xa2, 0x5f, 0x86, 0x05, 0x93, 0x7a,
+	0x21, 0xb6, 0x3d, 0xc2, 0x0c, 0x46, 0x9a, 0x76, 0x10, 0xb2, 0x8e, 0xe1, 0xe3, 0xf0, 0x48, 0xfa,
+	0x9e, 0x3e, 0xd7, 0x45, 0xeb, 0x11, 0x76, 0x07, 0x87, 0x47, 0xe8, 0x36, 0xcc, 0xc7, 0x9e, 0x63,
+	0xb4, 0x5d, 0xc3, 0x76, 0x71, 0x93, 0x48, 0x36, 0xe1, 0x85, 0xfa, 0x6c, 0x8c, 0xdd, 0x77, 0x37,
+	0x38, 0x4e, 0x30, 0xdd, 0x84, 0x19, 0x8f, 0x86, 0xf6, 0x61, 0xc7, 0x30, 0x43, 0xe6, 0x18, 0xd8,
+	0xb2, 0x58, 0x20, 0x6e, 0x24, 0xaf, 0x4f, 0x4b, 0x44, 0x3d, 0x64, 0x4e, 0x8d, 0x83, 0x91, 0x06,
+	0x53, 0xa1, 0x13, 0x18, 0x26, 0x61, 0xa1, 0x71, 0x68, 0x3b, 0x44, 0xd8, 0x2a, 0xaf, 0x17, 0x42,
+	0x27, 0xa8, 0x13, 0x16, 0xde, 0xb5, 0x1d, 0x82, 0x96, 0x60, 0x92, 0xd3, 0x1c, 0x93, 0x8e, 0x24,
+	0xb9, 0x20, 0x48, 0x20, 0x74, 0x82, 0x4d, 0xd2, 0x11, 0x14, 0x8b, 0x50, 0x10, 0x52, 0xb0, 0x24,
+	0x98, 0x13, 0x04, 0x79, 0x2e, 0x03, 0x0b, 0xfc, 0xeb, 0x70, 0x9e, 0x78, 0x6d, 0xa3, 0x8d, 0x99,
+	0x3a, 0xb1, 0x34, 0x7a, 0xa3, 0xb0, 0x72, 0x7d, 0xb9, 0x1b, 0xed, 0x96, 0xd3, 0xa6, 0x5a, 0x6e,
+	0x78, 0xed, 0x7d, 0xcc, 0x1a, 0x5e, 0xc8, 0x3a, 0xfa, 0x04, 0x11, 0x0b, 0x74, 0x0d, 0x26, 0xfd,
+	0x88, 0xca, 0x08, 0x71, 0x53, 0xcd, 0x49, 0x25, 0x63, 0xd8, 0x1e, 0x6e, 0xa2, 0x4b, 0x90, 0x0f,
+	0x49, 0x10, 0x1a, 0x2e, 0xb5, 0x88, 0x9a, 0x5f, 0x52, 0x6e, 0xe4, 0xf4, 0x1c, 0x07, 0x6c, 0x51,
+	0x8b, 0x20, 0x04, 0x63, 0x81, 0x8f, 0x3d, 0x15, 0x04, 0x9f, 0xf8, 0xe6, 0x32, 0x4d, 0x87, 0x60,
+	0xaf, 0xe5, 0x4b, 0x9e, 0x82, 0xe0, 0x29, 0x44, 0x30, 0xc1, 0x36, 0x0f, 0x13, 0xfc, 0xae, 0xa8,
+	0xa7, 0x4e, 0x0a, 0xc6, 0x68, 0x85, 0x5e, 0x86, 0x12, 0x0f, 0x2f, 0x84, 0x99, 0x36, 0x76, 0x84,
+	0xed, 0x02, 0x75, 0x4a, 0xb0, 0x4f, 0xf7, 0xe0, 0xdc, 0x7c, 0xc2, 0xbe, 0xad, 0x80, 0x18, 0x6d,
+	0xdc, 0x72, 0x42, 0xc3, 0x3f, 0xb6, 0xd5, 0xa2, 0xdc, 0xa6, 0x15, 0x90, 0x7d, 0x0e, 0xdb, 0x39,
+	0xb6, 0xb9, 0x7d, 0xb9, 0xb7, 0x59, 0x5e, 0x60, 0x30, 0x4a, 0x43, 0xb5, 0x24, 0xed, 0x8b, 0x7d,
+	0x7f, 0xdd, 0x0b, 0x74, 0x4a, 0x43, 0x74, 0x03, 0x4a, 0xe6, 0x11, 0x39, 0x34, 0x02, 0xc2, 0xda,
+	0x84, 0x49, 0x07, 0x98, 0x11, 0x54, 0x45, 0x0e, 0xdf, 0x15, 0x60, 0x71, 0xf7, 0xaf, 0xc3, 0x05,
+	0x41, 0x69, 0x3a, 0x36, 0xf1, 0x42, 0xc3, 0xf6, 0x42, 0xc2, 0xda, 0xd8, 0x51, 0xd1, 0x92, 0x72,
+	0x63, 0xbc, 0xcf, 0x7b, 0x11, 0xa7, 0xac, 0x0b, 0xc2, 0x8d, 0x88, 0x0e, 0x5d, 0x87, 0xa2, 0x45,
+	0x7c, 0x87, 0x76, 0x5c, 0xce, 0xce, 0x6d, 0x3d, 0x2b, 0xf6, 0x99, 0xea, 0x41, 0xb9, 0xb5, 0xb9,
+	0x5f, 0x32, 0xd7, 0xc0, 0xa6, 0x49, 0x82, 0xc0, 0xf0, 0x99, 0xdd, 0xe6, 0x0f, 0xef, 0x98, 0x74,
+	0xd4, 0xf9, 0xc8, 0x2f, 0x99, 0x5b, 0x13, 0xc8, 0x1d, 0x89, 0xe3, 0x51, 0xf7, 0x45, 0x98, 0x8e,
+	0x18, 0xb0, 0x6f, 0x0b, 0xb7, 0x54, 0x17, 0xa4, 0x70, 0x09, 0xae, 0xf9, 0x36, 0x77, 0xca, 0xf2,
+	0xaf, 0x42, 0x21, 0xe1, 0x04, 0xa8, 0x04, 0xa3, 0x5c, 0xb0, 0x7c, 0x27, 0xfc, 0x13, 0x5d, 0x80,
+	0xf1, 0x36, 0x76, 0x5a, 0x51, 0x28, 0xd6, 0xe5, 0x62, 0x75, 0xe4, 0x55, 0x45, 0xfb, 0x3f, 0x05,
+	0x8a, 0x71, 0xa0, 0xd7, 0x49, 0xb0, 0x85, 0x7d, 0xb4, 0xdc, 0x63, 0x2f, 0xac, 0xcc, 0x27, 0xfc,
+	0x2e, 0x91, 0x10, 0xd6, 0xc6, 0x3e, 0xfe, 0xc9, 0xd5, 0x73, 0x52, 0xf8, 0x1b, 0x70, 0xde, 0xc5,
+	0xbe, 0x6f, 0x7b, 0x4d, 0x75, 0x44, 0xf8, 0xea, 0x8b, 0x19, 0x3c, 0x52, 0xf6, 0xf2, 0x96, 0x24,
+	0x94, 0xce, 0x1a, 0xb3, 0x95, 0x57, 0x61, 0x32, 0x89, 0x38, 0xcd, 0x01, 0x56, 0x5f, 0xff, 0xf0,
+	0x89, 0x5a, 0xed, 0xa6, 0x8e, 0x4d, 0xd2, 0x59, 0x1e, 0x4c, 0x1f, 0x1c, 0x9a, 0x4c, 0x21, 0xff,
+	0xf0, 0x44, 0x3d, 0x1f, 0x6d, 0xa8, 0x1d, 0x40, 0x61, 0x83, 0xe7, 0xe9, 0x28, 0xee, 0xac, 0xc0,
+	0x1c, 0x79, 0x37, 0x24, 0xcc, 0xc3, 0x8e, 0xe1, 0x91, 0xf0, 0x1d, 0xca, 0x8e, 0x0d, 0x91, 0xc4,
+	0xa4, 0x32, 0xb3, 0x31, 0xf2, 0xa1, 0xc4, 0xf1, 0xbd, 0xd0, 0x55, 0x28, 0xc8, 0x3a, 0xc1, 0xe8,
+	0xa5, 0x3b, 0x1d, 0x24, 0x88, 0x13, 0x68, 0x07, 0x30, 0xa5, 0x47, 0x65, 0xc0, 0xb7, 0x5b, 0x34,
+	0xc4, 0xfc, 0x79, 0x25, 0x84, 0x8a, 0xef, 0xf4, 0x11, 0xc7, 0xa2, 0x23, 0xa2, 0x97, 0x60, 0x1a,
+	0x3b, 0x3c, 0xd6, 0x84, 0x47, 0x8c, 0x04, 0x47, 0xd4, 0xb1, 0x44, 0x60, 0x1a, 0xd7, 0x8b, 0x02,
+	0xbc, 0x17, 0x43, 0xb5, 0xdf, 0x5f, 0x80, 0x5c, 0x6c, 0x6c, 0xfe, 0x0e, 0x0f, 0x6d, 0xe2, 0x58,
+	0x81, 0xaa, 0x2c, 0x8d, 0xf2, 0x77, 0x28, 0x57, 0xf1, 0xd5, 0x8e, 0x7c, 0xd5, 0xab, 0xfd, 0x16,
+	0xe4, 0x1c, 0x6a, 0xca, 0x94, 0x3f, 0x2e, 0x98, 0xae, 0x2c, 0x5b, 0x3c, 0xd8, 0xda, 0x07, 0xad,
+	0x90, 0x58, 0x86, 0xa8, 0x26, 0x0c, 0x59, 0x4d, 0x2c, 0x3f, 0xa0, 0x66, 0xc4, 0xdb, 0x65, 0x42,
+	0xb7, 0x01, 0x6c, 0xdf, 0x08, 0x5a, 0xbe, 0x4f, 0x99, 0xcc, 0x08, 0xc5, 0x95, 0x0b, 0x89, 0x7d,
+	0x37, 0xfc, 0x5d, 0x89, 0xd3, 0xf3, 0x76, 0xfc, 0x89, 0xae, 0x00, 0x04, 0xbc, 0x82, 0x33, 0x0d,
+	0xdb, 0x0f, 0xd4, 0xf3, 0x32, 0x36, 0x4a, 0xc8, 0x86, 0x1f, 0xf0, 0x57, 0xe1, 0xb5, 0x5c, 0xc3,
+	0xea, 0x78, 0xd8, 0x8d, 0x68, 0x72, 0xc2, 0x24, 0x53, 0x5e, 0xcb, 0x5d, 0x97, 0x50, 0x4e, 0xd7,
+	0x80, 0x02, 0x4f, 0x45, 0x86, 0x23, 0x4a, 0x03, 0x11, 0xe2, 0x0a, 0x2b, 0x8b, 0x89, 0xcd, 0x33,
+	0x0a, 0x88, 0xe8, 0x00, 0x10, 0xf6, 0x4a, 0x8a, 0xeb, 0x30, 0x41, 0x18, 0xa3, 0x2c, 0x50, 0x81,
+	0xdb, 0x72, 0x6d, 0xea, 0x07, 0x27, 0xaa, 0xf2, 0x87, 0x3f, 0xbc, 0x38, 0xee, 0x51, 0xd3, 0xf5,
+	0xf5, 0x08, 0x89, 0xde, 0x80, 0x09, 0xae, 0x62, 0x2b, 0x10, 0x71, 0xb1, 0xb0, 0x32, 0x97, 0xd8,
+	0x68, 0x57, 0x20, 0x36, 0xbc, 0x43, 0xba, 0x36, 0x93, 0xe2, 0x16, 0x9b, 0x45, 0x7c, 0xe8, 0x35,
+	0x18, 0xe7, 0x5f, 0x44, 0xc4, 0xce, 0xe2, 0xca, 0x42, 0x42, 0xc0, 0x1e, 0xc3, 0xe6, 0x31, 0xb1,
+	0xb8, 0x1c, 0xd2, 0xaf, 0x80, 0x64, 0x42, 0xf7, 0x61, 0x92, 0x07, 0x18, 0xda, 0x26, 0x8c, 0xd9,
+	0x16, 0x11, 0xe1, 0xb5, 0x98, 0xbe, 0x63, 0x7d, 0x6b, 0x3b, 0xc2, 0xf6, 0xcb, 0x28, 0x98, 0xcc,
+	0x8d, 0x71, 0xe8, 0x55, 0x28, 0x25, 0x22, 0x1a, 0xbf, 0x4a, 0x47, 0x06, 0xe1, 0x7e, 0xae, 0xe9,
+	0x1e, 0xd9, 0x03, 0x4e, 0x85, 0x5e, 0x83, 0xa9, 0x5e, 0xd6, 0xe9, 0xf8, 0x44, 0x9d, 0x1e, 0x38,
+	0x49, 0x9c, 0xbb, 0xf6, 0x3a, 0x3e, 0xd1, 0xbb, 0x39, 0x8a, 0xaf, 0xd0, 0x2f, 0x42, 0x94, 0x6c,
+	0x8d, 0x80, 0xb5, 0x65, 0xb4, 0x13, 0x81, 0x7d, 0x2d, 0xdf, 0xdb, 0x72, 0x4a, 0x52, 0xec, 0xb2,
+	0x36, 0x0f, 0x7c, 0x68, 0x05, 0x26, 0xe4, 0x33, 0x13, 0xc1, 0xbd, 0x90, 0x72, 0xad, 0xbb, 0x02,
+	0xd1, 0x73, 0xe8, 0x88, 0x12, 0xbd, 0x00, 0x53, 0xfe, 0x51, 0x27, 0xb0, 0x4d, 0xfe, 0xc2, 0xf9,
+	0x23, 0x44, 0xc2, 0xc1, 0x26, 0x63, 0xa0, 0x78, 0xd2, 0xaf, 0xf6, 0xf2, 0xef, 0xac, 0x88, 0x69,
+	0x57, 0x33, 0x1e, 0x4b, 0x66, 0xe6, 0xfd, 0x06, 0xcc, 0xf4, 0x0a, 0x97, 0x36, 0x61, 0x01, 0x7f,
+	0x3b, 0xb2, 0x00, 0x28, 0x75, 0x11, 0xfb, 0x12, 0x8e, 0xd6, 0x61, 0xc2, 0x14, 0x71, 0x47, 0x54,
+	0x00, 0x85, 0x95, 0x8b, 0x43, 0xb3, 0x7c, 0xa6, 0xe3, 0x48, 0x5e, 0x74, 0x1f, 0x0a, 0x8c, 0x04,
+	0x3c, 0xf7, 0x18, 0x2e, 0xf6, 0xd5, 0x79, 0xa1, 0xb0, 0x96, 0xa5, 0xb0, 0x4e, 0x82, 0x3d, 0xdc,
+	0xdc, 0xc2, 0xbe, 0xd0, 0x79, 0x6d, 0x8c, 0xcb, 0xd4, 0xf3, 0x2c, 0x86, 0xa2, 0x75, 0x28, 0x44,
+	0x09, 0xa7, 0x8d, 0x59, 0xa0, 0x2e, 0x08, 0x49, 0x2f, 0x64, 0x49, 0x92, 0xb9, 0x6a, 0x1f, 0xb3,
+	0x40, 0x1e, 0x1f, 0x70, 0x17, 0xc0, 0x93, 0x6f, 0xb7, 0xf4, 0x8a, 0x2d, 0xa0, 0xca, 0xe4, 0xdb,
+	0x96, 0x55, 0x57, 0x7c, 0xfe, 0x97, 0x01, 0x7a, 0x3e, 0xa4, 0x96, 0xfb, 0x6f, 0x3b, 0x81, 0x44,
+	0x75, 0x28, 0x89, 0x7e, 0x4a, 0xa6, 0x42, 0xb1, 0x99, 0x7a, 0x49, 0xb8, 0x57, 0xd2, 0x68, 0x22,
+	0x94, 0xf3, 0xb4, 0x28, 0x08, 0xf4, 0xa2, 0x9d, 0x5a, 0xa3, 0x6f, 0xc1, 0xa4, 0x14, 0x12, 0x59,
+	0xfd, 0xf2, 0x40, 0x20, 0x4c, 0xe4, 0x82, 0xc8, 0x6f, 0x0a, 0x76, 0x22, 0x3d, 0xec, 0xc1, 0x74,
+	0xb2, 0x5a, 0xe0, 0xc1, 0xf4, 0xca, 0xd0, 0x9c, 0xb7, 0x5c, 0xef, 0x96, 0x0b, 0x9b, 0xa4, 0x93,
+	0x34, 0xf9, 0x94, 0x99, 0xc4, 0xa0, 0x37, 0x61, 0xc6, 0xc5, 0xbc, 0xf2, 0xf0, 0xb0, 0x67, 0x12,
+	0x43, 0x46, 0x81, 0x45, 0x71, 0xb8, 0x9b, 0xc3, 0xe3, 0xed, 0x56, 0x8f, 0x45, 0x04, 0x06, 0xbd,
+	0xe4, 0xf6, 0x41, 0xd0, 0x06, 0x5c, 0x8b, 0x03, 0x82, 0xe1, 0x53, 0xc7, 0x36, 0x3b, 0xc6, 0xa0,
+	0x73, 0x5e, 0x15, 0x05, 0xd6, 0x62, 0x4c, 0xb8, 0x23, 0xe8, 0xea, 0xfd, 0xae, 0xba, 0x00, 0xe7,
+	0xdb, 0xae, 0xe1, 0x53, 0xea, 0xa8, 0x4b, 0xb2, 0xb6, 0x6b, 0xbb, 0x3b, 0x94, 0x3a, 0xe8, 0x0d,
+	0x98, 0x4b, 0x56, 0x36, 0xad, 0x03, 0xc7, 0x36, 0x85, 0x61, 0xae, 0x89, 0xeb, 0xec, 0x8b, 0x19,
+	0xa8, 0x57, 0xe7, 0x08, 0x4a, 0x7e, 0xfc, 0x5f, 0x83, 0xab, 0x09, 0x09, 0xbc, 0x6a, 0x6e, 0xf9,
+	0x4d, 0x86, 0x2d, 0x62, 0x30, 0xf2, 0x76, 0xcb, 0x66, 0xc4, 0x52, 0x35, 0x11, 0x7f, 0xa4, 0xf1,
+	0x2e, 0x75, 0x45, 0x6c, 0x92, 0xce, 0x23, 0x49, 0xa9, 0x47, 0x84, 0xe8, 0x3b, 0x00, 0xb2, 0xd9,
+	0xb1, 0x0c, 0x1c, 0xaa, 0x2f, 0x88, 0xfb, 0x7d, 0x61, 0xb8, 0x0d, 0x79, 0xe4, 0x0f, 0x42, 0xec,
+	0xfa, 0x6b, 0x73, 0x91, 0x9e, 0xf9, 0x30, 0x06, 0x89, 0xdb, 0xcf, 0x47, 0xd2, 0x6a, 0x21, 0x17,
+	0x2d, 0x5b, 0x20, 0x21, 0xfa, 0x17, 0xbe, 0xbe, 0xe8, 0x48, 0x5a, 0x2d, 0xe4, 0xa5, 0x75, 0xc8,
+	0x5a, 0x41, 0x18, 0x5d, 0x92, 0x7a, 0x3d, 0xea, 0x29, 0x38, 0x4c, 0xde, 0x07, 0xda, 0x03, 0x94,
+	0x24, 0x89, 0x9c, 0xe4, 0xc5, 0x53, 0xa5, 0x8a, 0x52, 0x42, 0xa0, 0x74, 0x90, 0x7b, 0x30, 0x1d,
+	0x0f, 0x28, 0x8c, 0xb7, 0x79, 0x69, 0x12, 0xa8, 0x2f, 0x09, 0x7f, 0x56, 0x13, 0x22, 0x53, 0xb5,
+	0x4b, 0xf4, 0x2a, 0x8a, 0x2c, 0x09, 0x0c, 0x90, 0x0e, 0x4b, 0x16, 0x39, 0x14, 0x45, 0x7b, 0x57,
+	0x60, 0x7f, 0xe1, 0x72, 0x43, 0x94, 0xd4, 0x89, 0xf7, 0x7d, 0x25, 0x62, 0x89, 0x37, 0xa8, 0xa5,
+	0x4a, 0x1a, 0xf4, 0x0a, 0x14, 0xef, 0xd3, 0x20, 0xe4, 0xae, 0xc8, 0xa8, 0xe3, 0x10, 0xa6, 0xbe,
+	0x9c, 0xe5, 0x52, 0x7d, 0x44, 0x5f, 0xa3, 0x1a, 0x2e, 0xbf, 0x09, 0xc5, 0x74, 0x88, 0xcc, 0xe0,
+	0xae, 0x26, 0xb9, 0xd3, 0x21, 0x5b, 0xf2, 0xee, 0xe1, 0x03, 0x87, 0x97, 0xef, 0x49, 0xc1, 0x77,
+	0x60, 0xba, 0x2f, 0x62, 0x9e, 0x4a, 0xaf, 0x37, 0x00, 0x0d, 0xc6, 0x92, 0x53, 0x95, 0xc9, 0xff,
+	0x35, 0xf2, 0xb3, 0xcf, 0x55, 0xe5, 0x7f, 0x3e, 0x57, 0x95, 0xdf, 0x3e, 0x51, 0x95, 0x0f, 0x4e,
+	0x54, 0xe5, 0x4f, 0x4f, 0x54, 0xe5, 0xa3, 0x13, 0x55, 0xf9, 0xf8, 0x44, 0x55, 0x3e, 0xe1, 0x06,
+	0x7d, 0xa2, 0xfe, 0xce, 0xc8, 0x83, 0xa8, 0x70, 0x5b, 0xbe, 0x4f, 0x99, 0xfd, 0x1e, 0x8f, 0x01,
+	0x4e, 0xcd, 0x34, 0x5b, 0x0c, 0x9b, 0x9d, 0x4a, 0x17, 0xb7, 0x4f, 0x58, 0xc8, 0x33, 0xe5, 0x20,
+	0xa6, 0x4e, 0x5b, 0x2c, 0x20, 0xbd, 0xf5, 0xae, 0x4f, 0x88, 0xd5, 0x5b, 0x76, 0x9f, 0x44, 0x45,
+	0x56, 0x44, 0x15, 0x19, 0x55, 0x2b, 0x0f, 0x93, 0x49, 0xbd, 0x92, 0x3a, 0xa9, 0xa0, 0x24, 0x95,
+	0x86, 0x28, 0xb2, 0x2a, 0xf5, 0x81, 0xe0, 0xd1, 0x03, 0x0d, 0x06, 0x83, 0x4a, 0x3d, 0x7e, 0xbb,
+	0x95, 0x47, 0xf1, 0x53, 0xab, 0xec, 0xf5, 0x3d, 0x81, 0x4a, 0xda, 0x7b, 0xce, 0xd0, 0x4d, 0xfc,
+	0xf0, 0x0b, 0xb5, 0x74, 0x4c, 0x3a, 0xa9, 0x21, 0x95, 0xf6, 0x4f, 0x0a, 0x14, 0x64, 0x05, 0xb2,
+	0xc5, 0x83, 0xc2, 0xa9, 0x9b, 0xaa, 0xbe, 0x9e, 0x62, 0xb4, 0xbf, 0xa7, 0xe0, 0x75, 0x06, 0x6e,
+	0x63, 0xdb, 0xc1, 0x07, 0xb6, 0x63, 0x87, 0x1d, 0xe3, 0x3d, 0xea, 0x11, 0x31, 0xfc, 0xc9, 0xeb,
+	0xa5, 0x24, 0xe2, 0x2d, 0xea, 0x91, 0xd5, 0xc6, 0x87, 0x4f, 0xd4, 0xda, 0x29, 0x8f, 0x55, 0x91,
+	0x9b, 0xdd, 0xb9, 0xdb, 0xeb, 0x63, 0x96, 0xa1, 0x14, 0xab, 0xbb, 0x85, 0x3d, 0xfb, 0x90, 0x04,
+	0x21, 0x2a, 0x43, 0xce, 0x8d, 0xbe, 0x23, 0xaf, 0xeb, 0xae, 0xb5, 0xbf, 0x55, 0x60, 0x72, 0x87,
+	0x51, 0x9f, 0xb0, 0xb0, 0xc3, 0xab, 0xdf, 0xcc, 0xbe, 0x67, 0x09, 0x0a, 0x16, 0x09, 0x4c, 0x66,
+	0xfb, 0xa2, 0xcd, 0x90, 0x32, 0x92, 0xa0, 0x9e, 0x57, 0x8f, 0x26, 0xbc, 0x9a, 0xf7, 0x38, 0x01,
+	0x31, 0x19, 0x91, 0x23, 0xaf, 0x9c, 0x1e, 0xad, 0xd0, 0x65, 0xc8, 0xbb, 0xd8, 0xb3, 0x70, 0x48,
+	0x59, 0x47, 0x34, 0x2d, 0x39, 0xbd, 0x07, 0xe0, 0xea, 0x8a, 0x16, 0xdf, 0xc3, 0x8e, 0x68, 0x47,
+	0x72, 0x7a, 0x77, 0xad, 0xfd, 0xb7, 0x02, 0x53, 0xf1, 0xf9, 0xb8, 0xda, 0xc1, 0x60, 0x41, 0xab,
+	0x9c, 0xa6, 0xa0, 0xbd, 0x0f, 0xe0, 0xcb, 0xd3, 0xdb, 0x24, 0x88, 0x7a, 0xe3, 0x1b, 0x19, 0x57,
+	0x2f, 0xf6, 0x5a, 0xde, 0xe9, 0x92, 0x46, 0x15, 0x55, 0x8f, 0xb7, 0xbc, 0x0f, 0xd3, 0x7d, 0xe8,
+	0x8c, 0xc7, 0x7f, 0x2b, 0x1d, 0x98, 0x52, 0x4a, 0x26, 0x2e, 0x21, 0xd9, 0xfd, 0x7f, 0xa0, 0x40,
+	0x39, 0xd1, 0xa1, 0xf7, 0x02, 0xfa, 0xf3, 0x38, 0xfe, 0x2f, 0xc1, 0x38, 0x3f, 0x42, 0x7c, 0x72,
+	0xb5, 0xbf, 0xca, 0x8a, 0x37, 0x8c, 0xdc, 0x5e, 0x12, 0x6b, 0xdf, 0x55, 0x60, 0xae, 0x5f, 0xa5,
+	0x47, 0x01, 0x6e, 0x92, 0xb3, 0x3c, 0x21, 0x59, 0xec, 0xb5, 0x38, 0xbb, 0xb0, 0x4a, 0x4e, 0x07,
+	0x01, 0x12, 0x02, 0x57, 0x6f, 0x9f, 0xe1, 0xb1, 0x6b, 0xff, 0xa6, 0x00, 0xc8, 0x27, 0x31, 0xd4,
+	0xa3, 0xb9, 0xbf, 0x9a, 0x7e, 0x2b, 0xe8, 0x76, 0xf2, 0x7c, 0xc1, 0x2f, 0x8c, 0x61, 0x57, 0xf8,
+	0xf0, 0x98, 0xce, 0x3f, 0x39, 0xaf, 0x65, 0x07, 0xc7, 0xc2, 0x7f, 0xc7, 0x74, 0xf1, 0x8d, 0xea,
+	0x90, 0xe3, 0x76, 0x10, 0x85, 0xfc, 0xf8, 0x40, 0x21, 0xdf, 0xdb, 0x58, 0x5c, 0x69, 0x5f, 0x21,
+	0x7f, 0xde, 0x97, 0xb0, 0xf2, 0xaa, 0x7c, 0x76, 0x4f, 0x49, 0x62, 0xc3, 0x07, 0x42, 0xaf, 0xc0,
+	0xf9, 0xed, 0xdd, 0x1a, 0x8f, 0x1a, 0x99, 0x67, 0x9b, 0xef, 0xb6, 0xb9, 0x92, 0x33, 0x5a, 0x69,
+	0x8c, 0xb3, 0x89, 0xda, 0x3e, 0x93, 0x0d, 0xc1, 0x58, 0x88, 0x9b, 0x31, 0x93, 0xf8, 0x46, 0x8b,
+	0xa9, 0xe7, 0x11, 0x45, 0xb8, 0x1e, 0x84, 0xdf, 0x1f, 0x37, 0x89, 0xc1, 0x1d, 0x0a, 0x87, 0x51,
+	0x6c, 0x03, 0x0e, 0xba, 0x2b, 0x20, 0xda, 0xf7, 0x72, 0x30, 0x19, 0xdf, 0xbd, 0xb8, 0x8c, 0xe7,
+	0x35, 0xf6, 0xb8, 0x13, 0x77, 0xe2, 0xa3, 0xc2, 0xdf, 0x5f, 0x1a, 0x5e, 0xe4, 0xc5, 0x02, 0x64,
+	0x01, 0x1e, 0xb5, 0xe2, 0x2f, 0x42, 0x3e, 0x6a, 0x64, 0x6d, 0x2b, 0x9a, 0xc7, 0x27, 0x8a, 0x9e,
+	0x9c, 0xc4, 0x6d, 0x58, 0xbc, 0xfb, 0x31, 0x7b, 0xb5, 0xcd, 0xf8, 0x40, 0xf7, 0xd3, 0x43, 0xa2,
+	0xcb, 0x00, 0x34, 0x30, 0x5c, 0xfc, 0xae, 0xc1, 0x7d, 0x68, 0x42, 0x38, 0x4c, 0x8e, 0x06, 0x5b,
+	0xf8, 0x5d, 0x1d, 0xbb, 0x48, 0x83, 0xa9, 0x08, 0xdb, 0x36, 0x29, 0x23, 0x72, 0x66, 0x32, 0xa6,
+	0x17, 0x04, 0xc1, 0xbe, 0x00, 0xa1, 0x6b, 0x3d, 0x1a, 0xea, 0x18, 0xcd, 0x03, 0x31, 0x33, 0x19,
+	0xd3, 0x41, 0xd2, 0x50, 0xe7, 0xde, 0x01, 0x37, 0x5f, 0x34, 0xe9, 0xc8, 0x4b, 0xf3, 0x45, 0xa3,
+	0x8d, 0x2a, 0x9c, 0x97, 0xb9, 0x40, 0x8e, 0x40, 0xd2, 0xb3, 0x8d, 0x9e, 0x4b, 0xea, 0x31, 0x15,
+	0x7a, 0xed, 0xab, 0xcd, 0x42, 0xa6, 0xb2, 0xe7, 0x20, 0x99, 0x1d, 0xf4, 0xe4, 0x90, 0x0e, 0xba,
+	0x06, 0x68, 0x20, 0x0d, 0x06, 0xea, 0x94, 0x50, 0x13, 0x25, 0x67, 0x3d, 0xd2, 0xa7, 0xf5, 0x99,
+	0xfe, 0xdc, 0xc8, 0x8f, 0x97, 0xa7, 0x81, 0x6c, 0x57, 0x03, 0xb5, 0x98, 0xc1, 0x29, 0xdc, 0x9a,
+	0x9b, 0x5b, 0x7c, 0x04, 0x68, 0x15, 0x2e, 0xf6, 0xae, 0xc6, 0x30, 0xb1, 0x79, 0xc4, 0x3b, 0x15,
+	0x93, 0xd8, 0x6d, 0x62, 0x89, 0x91, 0x47, 0x4e, 0x5f, 0xe8, 0x11, 0xd4, 0x39, 0x5e, 0x8f, 0xd0,
+	0xd9, 0xad, 0x5e, 0xe9, 0x39, 0xb4, 0x7a, 0x6f, 0x01, 0xea, 0xfe, 0xd5, 0x68, 0x04, 0x1e, 0xf6,
+	0x83, 0x23, 0x1a, 0x46, 0x63, 0x91, 0x6b, 0xc3, 0x42, 0x6f, 0xb0, 0x1b, 0x11, 0xae, 0xe5, 0x78,
+	0x04, 0x11, 0xd7, 0x30, 0xc3, 0xfa, 0x91, 0x68, 0x27, 0xb3, 0xf7, 0x40, 0x4f, 0xef, 0x3d, 0xf2,
+	0x4f, 0xe9, 0x3b, 0x56, 0xad, 0xfe, 0x6a, 0xf4, 0xfb, 0x51, 0x15, 0xfa, 0x53, 0x59, 0x89, 0xe6,
+	0xbb, 0x1a, 0x9e, 0xad, 0x20, 0x1b, 0xf3, 0xa8, 0x47, 0xb4, 0x17, 0x60, 0xba, 0x5b, 0xaf, 0x90,
+	0x90, 0xd9, 0xa6, 0x88, 0xc2, 0x87, 0x94, 0x8a, 0xc7, 0x36, 0xa6, 0xf3, 0xcf, 0x9b, 0x5f, 0x8e,
+	0xc0, 0x64, 0x32, 0x8b, 0xa1, 0x79, 0x40, 0x3b, 0x0f, 0x6a, 0x7b, 0x77, 0xb7, 0xf5, 0x2d, 0x63,
+	0xef, 0x3b, 0x3b, 0x0d, 0xe3, 0x6e, 0x6d, 0xb3, 0x51, 0x3a, 0x37, 0x08, 0x5f, 0xdf, 0x78, 0xb8,
+	0x5e, 0x52, 0xd0, 0x25, 0x58, 0x48, 0xc3, 0xb7, 0x77, 0x1a, 0x0f, 0x77, 0xf7, 0x6a, 0xf5, 0xcd,
+	0xd2, 0x08, 0x5a, 0x80, 0xd9, 0x34, 0xb2, 0xf6, 0xd6, 0x23, 0xbd, 0x51, 0x1a, 0x45, 0x73, 0x30,
+	0x93, 0x46, 0xdc, 0xab, 0xef, 0x94, 0xc6, 0xd0, 0x45, 0x98, 0x4b, 0x83, 0x1b, 0xeb, 0xf7, 0x1a,
+	0x6b, 0xdb, 0xbf, 0x5e, 0x1a, 0x1f, 0xdc, 0x87, 0xeb, 0xb5, 0xf1, 0xf0, 0xae, 0x5e, 0x2b, 0x4d,
+	0x0c, 0xf2, 0xed, 0xef, 0xee, 0xdc, 0x6f, 0xe8, 0x8d, 0xd2, 0xf9, 0x41, 0x54, 0xed, 0xcd, 0x5d,
+	0xa3, 0xb1, 0xb9, 0x5b, 0xca, 0x65, 0x70, 0x6d, 0x19, 0x3b, 0xdb, 0xdb, 0x0f, 0x4a, 0xf9, 0x21,
+	0x5c, 0xf5, 0x95, 0x12, 0x0c, 0xaa, 0xbe, 0x5f, 0x5f, 0x2f, 0x15, 0x90, 0x0a, 0x17, 0xfa, 0x38,
+	0x1e, 0xee, 0xdd, 0xdf, 0xde, 0x2d, 0x4d, 0x0e, 0x5a, 0x6e, 0x93, 0x5b, 0x6e, 0xea, 0xe6, 0x2a,
+	0x14, 0xd3, 0x03, 0x1b, 0x34, 0x03, 0x53, 0xeb, 0x1b, 0x7a, 0xa3, 0xbe, 0x67, 0xd4, 0xea, 0xf5,
+	0xc6, 0xee, 0x6e, 0xe9, 0x1c, 0xdf, 0x4d, 0x6f, 0xec, 0xee, 0xe9, 0x1b, 0xf5, 0xbd, 0xc6, 0x7a,
+	0x0c, 0x56, 0x56, 0x7e, 0x6f, 0xb6, 0xf7, 0x0f, 0x75, 0xcd, 0xb7, 0xd1, 0x7f, 0x2a, 0x50, 0xac,
+	0x47, 0xff, 0xe4, 0x46, 0x53, 0xf0, 0xd9, 0x8c, 0x48, 0x5f, 0x9e, 0x49, 0xf7, 0x6b, 0x2d, 0x27,
+	0xd4, 0xfe, 0x5a, 0xf9, 0xec, 0x44, 0xad, 0xc6, 0x1e, 0x17, 0x53, 0x06, 0x95, 0x9a, 0xc9, 0xbd,
+	0x69, 0x0b, 0x7b, 0xb8, 0x49, 0x2a, 0xfd, 0x4e, 0xf6, 0x83, 0x27, 0xaa, 0xf2, 0x63, 0xe9, 0xa8,
+	0xb2, 0x5f, 0x7c, 0xfc, 0x44, 0x5d, 0x79, 0x98, 0x1c, 0x40, 0xf7, 0xfa, 0x9e, 0x07, 0x38, 0xb4,
+	0xc3, 0x96, 0x95, 0x68, 0x8c, 0x1e, 0x50, 0xaf, 0x29, 0x40, 0x7f, 0xf3, 0x85, 0x5a, 0xea, 0x17,
+	0xfd, 0xbb, 0xff, 0xfc, 0x1f, 0x7f, 0x34, 0x32, 0xa7, 0x95, 0xaa, 0x72, 0xf6, 0xd0, 0x75, 0xff,
+	0x55, 0xe5, 0xe6, 0x37, 0x15, 0xf4, 0xa1, 0x02, 0xc5, 0xf5, 0xe8, 0x8f, 0xe1, 0x53, 0x1e, 0xf4,
+	0x37, 0x9f, 0xc7, 0x39, 0x85, 0x76, 0x17, 0xb4, 0xe9, 0xaa, 0xfc, 0x2b, 0x57, 0x6a, 0x17, 0x2b,
+	0xf7, 0xf7, 0x23, 0x50, 0x7c, 0x14, 0xfd, 0x05, 0x7e, 0x4a, 0xe5, 0xde, 0x1f, 0x39, 0xbb, 0x76,
+	0x1f, 0x29, 0xc9, 0x17, 0x5c, 0x59, 0x4f, 0xcf, 0xa5, 0x2b, 0x32, 0x47, 0x55, 0x76, 0x12, 0x13,
+	0xde, 0x4a, 0xff, 0x80, 0xab, 0xd2, 0x3d, 0x60, 0x65, 0x3f, 0x35, 0xa4, 0x4c, 0x48, 0xab, 0xa4,
+	0xbd, 0xb5, 0x92, 0x18, 0x16, 0x56, 0xb6, 0x9f, 0x3a, 0x3e, 0xab, 0xec, 0x8b, 0x61, 0x59, 0x25,
+	0x6d, 0x45, 0x7e, 0xc7, 0x72, 0x08, 0xd4, 0x77, 0xc7, 0xef, 0x2b, 0x30, 0xb9, 0x7b, 0x44, 0xdf,
+	0x79, 0xba, 0x11, 0xb3, 0x80, 0xda, 0xe6, 0x67, 0x27, 0xea, 0x95, 0x61, 0x56, 0xdc, 0xb7, 0xc9,
+	0x3b, 0x95, 0x4f, 0x32, 0x6f, 0x74, 0x56, 0x2b, 0x56, 0x83, 0x23, 0xfa, 0x4e, 0x9f, 0x26, 0x7f,
+	0xa1, 0xc0, 0xec, 0x3d, 0x12, 0x0e, 0xb4, 0x7d, 0x43, 0xaa, 0xa8, 0xf2, 0xa5, 0x0c, 0x78, 0xcc,
+	0xa4, 0xed, 0x7c, 0x76, 0xa2, 0x7e, 0xe3, 0x19, 0x37, 0x3c, 0xf0, 0x10, 0x2e, 0x69, 0xf3, 0xd5,
+	0x26, 0x09, 0xbb, 0x7a, 0x55, 0xe3, 0xf6, 0x72, 0x55, 0xb9, 0x89, 0xfe, 0x4a, 0x81, 0x52, 0x42,
+	0x3d, 0xd9, 0xb6, 0xa8, 0xc3, 0x7a, 0xac, 0xf2, 0x50, 0x8c, 0xf6, 0x1b, 0xcf, 0x34, 0xdb, 0x8f,
+	0x9f, 0xa8, 0xd0, 0x6b, 0xc2, 0x1e, 0x3f, 0x51, 0x53, 0x59, 0x43, 0xa8, 0xaa, 0x6a, 0xb3, 0x69,
+	0x55, 0x45, 0x4b, 0xc3, 0xf5, 0xfc, 0x17, 0x05, 0xae, 0x24, 0xf4, 0xcc, 0xe8, 0xb5, 0xae, 0x67,
+	0xff, 0x69, 0xda, 0x47, 0x56, 0xfe, 0x6a, 0x64, 0xda, 0xe1, 0xf3, 0x38, 0xce, 0x35, 0xed, 0x72,
+	0xfa, 0x38, 0x71, 0x65, 0xd0, 0x3b, 0xd7, 0xdf, 0x29, 0xa0, 0x66, 0x9c, 0x4b, 0x36, 0x6c, 0x4b,
+	0x4f, 0xd1, 0x55, 0x50, 0x94, 0x9f, 0x5d, 0x98, 0x68, 0x6f, 0x9d, 0x21, 0x2a, 0x3c, 0x43, 0x7b,
+	0xd1, 0x0f, 0x72, 0xed, 0xff, 0x4c, 0x81, 0xb9, 0x9a, 0x65, 0xa5, 0xff, 0xa3, 0xf6, 0x6d, 0xaf,
+	0x89, 0x2e, 0x0e, 0xfd, 0x0b, 0x3b, 0x2b, 0x74, 0xe9, 0x67, 0xd5, 0xf1, 0xa2, 0x76, 0xa1, 0x8a,
+	0x2d, 0x2b, 0xfa, 0x1f, 0x3c, 0xf9, 0xf4, 0xd0, 0x9f, 0x2b, 0xa0, 0xea, 0xc4, 0xa5, 0x6d, 0xf2,
+	0xb5, 0xd5, 0xfb, 0xf6, 0x59, 0xd5, 0xe3, 0xfe, 0xcc, 0xdc, 0x2c, 0xed, 0xfe, 0x58, 0x81, 0xe9,
+	0xbb, 0xb6, 0x67, 0x25, 0x47, 0x5c, 0xf3, 0x03, 0x5d, 0x81, 0x80, 0x97, 0x87, 0xc0, 0x85, 0x5a,
+	0xb7, 0x9e, 0xea, 0xa3, 0x99, 0x4a, 0x95, 0xb5, 0xb9, 0xea, 0xa1, 0xed, 0x65, 0x1a, 0xed, 0x0f,
+	0x14, 0x98, 0xd6, 0x49, 0x9b, 0x1e, 0x93, 0xee, 0x4c, 0x70, 0x68, 0xa4, 0xca, 0x30, 0xd4, 0xee,
+	0x59, 0xe2, 0xd3, 0xa2, 0x76, 0xb1, 0xca, 0xc4, 0x9e, 0x5d, 0x55, 0xe4, 0x3f, 0x19, 0xc7, 0xa4,
+	0xc3, 0x75, 0xfa, 0x13, 0x05, 0x66, 0xee, 0x11, 0x8f, 0x30, 0x1c, 0x9e, 0x4d, 0xab, 0x47, 0x67,
+	0xd1, 0x6a, 0x49, 0xbb, 0x54, 0x6d, 0x46, 0xbb, 0x66, 0xeb, 0xb5, 0x0e, 0xf3, 0xf1, 0x8b, 0x3f,
+	0x63, 0x39, 0x71, 0xee, 0x9b, 0xca, 0xca, 0x5f, 0x8e, 0xf6, 0x6a, 0x6c, 0xde, 0xd4, 0xf1, 0x52,
+	0xec, 0x7b, 0x0a, 0x94, 0x92, 0xd9, 0x4b, 0xf4, 0xe6, 0x0b, 0x19, 0x42, 0x39, 0xa2, 0x3c, 0x0c,
+	0xa1, 0xed, 0x7f, 0x76, 0xa2, 0xbe, 0xd2, 0x7f, 0xee, 0x9a, 0x87, 0x9d, 0x4e, 0x68, 0x9b, 0xcf,
+	0xf6, 0x93, 0x05, 0x0d, 0xa5, 0x13, 0x9a, 0xed, 0x1d, 0x52, 0x99, 0xd4, 0x5a, 0x80, 0x36, 0xbc,
+	0xdf, 0x22, 0x66, 0xf8, 0xd5, 0x34, 0xcc, 0x38, 0xfa, 0xed, 0x33, 0x3c, 0x29, 0x14, 0xc2, 0x4c,
+	0xa3, 0x6d, 0xff, 0x9c, 0x77, 0x5d, 0x79, 0x5f, 0x01, 0xd4, 0xd7, 0x05, 0xf1, 0x4b, 0x7a, 0x1b,
+	0x66, 0x93, 0x77, 0x14, 0xf7, 0x47, 0xe5, 0xac, 0xfc, 0x2d, 0x71, 0xe5, 0xa7, 0xe0, 0xb4, 0xa5,
+	0xee, 0xdb, 0x4c, 0xd9, 0xdc, 0x95, 0x68, 0x61, 0xf6, 0xb5, 0xcb, 0x1f, 0xff, 0xfb, 0xe2, 0xb9,
+	0x8f, 0x1f, 0x2f, 0x2a, 0x9f, 0x3c, 0x5e, 0x54, 0x7e, 0xfa, 0x78, 0x51, 0xf9, 0xe0, 0xd3, 0xc5,
+	0x73, 0x9f, 0x7c, 0xba, 0x78, 0xee, 0x5f, 0x3f, 0x5d, 0x3c, 0x77, 0x30, 0x21, 0x04, 0xdf, 0xfe,
+	0xff, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x55, 0xaa, 0x4b, 0xe7, 0x2b, 0x00, 0x00,
+>>>>>>> master
 }
 
 func (this *CloudletKey) GoString() string {
@@ -1295,6 +1394,10 @@ type CloudletApiClient interface {
 	GetCloudletManifest(ctx context.Context, in *CloudletKey, opts ...grpc.CallOption) (*CloudletManifest, error)
 	// Get Cloudlet Properties. Shows all the infra properties used to setup cloudlet
 	GetCloudletProps(ctx context.Context, in *CloudletProps, opts ...grpc.CallOption) (*CloudletProps, error)
+	// Get Cloudlet Resource Quota Properties. Shows all the resource quota properties of the cloudlet
+	GetCloudletResourceQuotaProps(ctx context.Context, in *CloudletResourceQuotaProps, opts ...grpc.CallOption) (*CloudletResourceQuotaProps, error)
+	// Get Cloudlet resource information. Shows cloudlet resources used and their limits
+	GetCloudletResourceUsage(ctx context.Context, in *CloudletResourceUsage, opts ...grpc.CallOption) (*InfraResourcesSnapshot, error)
 	// Add Optional Resource tag table
 	AddCloudletResMapping(ctx context.Context, in *CloudletResMap, opts ...grpc.CallOption) (*Result, error)
 	// Add Optional Resource tag table
@@ -1305,6 +1408,8 @@ type CloudletApiClient interface {
 	RevokeAccessKey(ctx context.Context, in *CloudletKey, opts ...grpc.CallOption) (*Result, error)
 	// Generate new crm access key
 	GenerateAccessKey(ctx context.Context, in *CloudletKey, opts ...grpc.CallOption) (*Result, error)
+	// This is used internally to forward requests to other Controllers
+	PlatformDeleteCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_PlatformDeleteCloudletClient, error)
 }
 
 type cloudletApiClient struct {
@@ -1461,6 +1566,24 @@ func (c *cloudletApiClient) GetCloudletProps(ctx context.Context, in *CloudletPr
 	return out, nil
 }
 
+func (c *cloudletApiClient) GetCloudletResourceQuotaProps(ctx context.Context, in *CloudletResourceQuotaProps, opts ...grpc.CallOption) (*CloudletResourceQuotaProps, error) {
+	out := new(CloudletResourceQuotaProps)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/GetCloudletResourceQuotaProps", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cloudletApiClient) GetCloudletResourceUsage(ctx context.Context, in *CloudletResourceUsage, opts ...grpc.CallOption) (*InfraResourcesSnapshot, error) {
+	out := new(InfraResourcesSnapshot)
+	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/GetCloudletResourceUsage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *cloudletApiClient) AddCloudletResMapping(ctx context.Context, in *CloudletResMap, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
 	err := c.cc.Invoke(ctx, "/edgeproto.CloudletApi/AddCloudletResMapping", in, out, opts...)
@@ -1506,6 +1629,38 @@ func (c *cloudletApiClient) GenerateAccessKey(ctx context.Context, in *CloudletK
 	return out, nil
 }
 
+func (c *cloudletApiClient) PlatformDeleteCloudlet(ctx context.Context, in *Cloudlet, opts ...grpc.CallOption) (CloudletApi_PlatformDeleteCloudletClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_CloudletApi_serviceDesc.Streams[4], "/edgeproto.CloudletApi/PlatformDeleteCloudlet", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cloudletApiPlatformDeleteCloudletClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type CloudletApi_PlatformDeleteCloudletClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type cloudletApiPlatformDeleteCloudletClient struct {
+	grpc.ClientStream
+}
+
+func (x *cloudletApiPlatformDeleteCloudletClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CloudletApiServer is the server API for CloudletApi service.
 type CloudletApiServer interface {
 	// Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
@@ -1523,6 +1678,10 @@ type CloudletApiServer interface {
 	GetCloudletManifest(context.Context, *CloudletKey) (*CloudletManifest, error)
 	// Get Cloudlet Properties. Shows all the infra properties used to setup cloudlet
 	GetCloudletProps(context.Context, *CloudletProps) (*CloudletProps, error)
+	// Get Cloudlet Resource Quota Properties. Shows all the resource quota properties of the cloudlet
+	GetCloudletResourceQuotaProps(context.Context, *CloudletResourceQuotaProps) (*CloudletResourceQuotaProps, error)
+	// Get Cloudlet resource information. Shows cloudlet resources used and their limits
+	GetCloudletResourceUsage(context.Context, *CloudletResourceUsage) (*InfraResourcesSnapshot, error)
 	// Add Optional Resource tag table
 	AddCloudletResMapping(context.Context, *CloudletResMap) (*Result, error)
 	// Add Optional Resource tag table
@@ -1533,6 +1692,8 @@ type CloudletApiServer interface {
 	RevokeAccessKey(context.Context, *CloudletKey) (*Result, error)
 	// Generate new crm access key
 	GenerateAccessKey(context.Context, *CloudletKey) (*Result, error)
+	// This is used internally to forward requests to other Controllers
+	PlatformDeleteCloudlet(*Cloudlet, CloudletApi_PlatformDeleteCloudletServer) error
 }
 
 // UnimplementedCloudletApiServer can be embedded to have forward compatible implementations.
@@ -1557,6 +1718,12 @@ func (*UnimplementedCloudletApiServer) GetCloudletManifest(ctx context.Context, 
 func (*UnimplementedCloudletApiServer) GetCloudletProps(ctx context.Context, req *CloudletProps) (*CloudletProps, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCloudletProps not implemented")
 }
+func (*UnimplementedCloudletApiServer) GetCloudletResourceQuotaProps(ctx context.Context, req *CloudletResourceQuotaProps) (*CloudletResourceQuotaProps, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCloudletResourceQuotaProps not implemented")
+}
+func (*UnimplementedCloudletApiServer) GetCloudletResourceUsage(ctx context.Context, req *CloudletResourceUsage) (*InfraResourcesSnapshot, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCloudletResourceUsage not implemented")
+}
 func (*UnimplementedCloudletApiServer) AddCloudletResMapping(ctx context.Context, req *CloudletResMap) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCloudletResMapping not implemented")
 }
@@ -1571,6 +1738,9 @@ func (*UnimplementedCloudletApiServer) RevokeAccessKey(ctx context.Context, req 
 }
 func (*UnimplementedCloudletApiServer) GenerateAccessKey(ctx context.Context, req *CloudletKey) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateAccessKey not implemented")
+}
+func (*UnimplementedCloudletApiServer) PlatformDeleteCloudlet(req *Cloudlet, srv CloudletApi_PlatformDeleteCloudletServer) error {
+	return status.Errorf(codes.Unimplemented, "method PlatformDeleteCloudlet not implemented")
 }
 
 func RegisterCloudletApiServer(s *grpc.Server, srv CloudletApiServer) {
@@ -1697,6 +1867,42 @@ func _CloudletApi_GetCloudletProps_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CloudletApi_GetCloudletResourceQuotaProps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloudletResourceQuotaProps)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudletApiServer).GetCloudletResourceQuotaProps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.CloudletApi/GetCloudletResourceQuotaProps",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudletApiServer).GetCloudletResourceQuotaProps(ctx, req.(*CloudletResourceQuotaProps))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CloudletApi_GetCloudletResourceUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloudletResourceUsage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudletApiServer).GetCloudletResourceUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.CloudletApi/GetCloudletResourceUsage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudletApiServer).GetCloudletResourceUsage(ctx, req.(*CloudletResourceUsage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CloudletApi_AddCloudletResMapping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CloudletResMap)
 	if err := dec(in); err != nil {
@@ -1787,6 +1993,27 @@ func _CloudletApi_GenerateAccessKey_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CloudletApi_PlatformDeleteCloudlet_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Cloudlet)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CloudletApiServer).PlatformDeleteCloudlet(m, &cloudletApiPlatformDeleteCloudletServer{stream})
+}
+
+type CloudletApi_PlatformDeleteCloudletServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type cloudletApiPlatformDeleteCloudletServer struct {
+	grpc.ServerStream
+}
+
+func (x *cloudletApiPlatformDeleteCloudletServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _CloudletApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.CloudletApi",
 	HandlerType: (*CloudletApiServer)(nil),
@@ -1798,6 +2025,14 @@ var _CloudletApi_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCloudletProps",
 			Handler:    _CloudletApi_GetCloudletProps_Handler,
+		},
+		{
+			MethodName: "GetCloudletResourceQuotaProps",
+			Handler:    _CloudletApi_GetCloudletResourceQuotaProps_Handler,
+		},
+		{
+			MethodName: "GetCloudletResourceUsage",
+			Handler:    _CloudletApi_GetCloudletResourceUsage_Handler,
 		},
 		{
 			MethodName: "AddCloudletResMapping",
@@ -1839,6 +2074,11 @@ var _CloudletApi_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ShowCloudlet",
 			Handler:       _CloudletApi_ShowCloudlet_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "PlatformDeleteCloudlet",
+			Handler:       _CloudletApi_PlatformDeleteCloudlet_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -2304,19 +2544,9 @@ func (m *PlatformConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x82
 	}
-	if m.UseVaultCas {
+	if m.UseVaultPki {
 		i--
-		if m.UseVaultCas {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x78
-	}
-	if m.UseVaultCerts {
-		i--
-		if m.UseVaultCerts {
+		if m.UseVaultPki {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -2514,6 +2744,46 @@ func (m *InfraConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ResourceQuota) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ResourceQuota) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ResourceQuota) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AlertThreshold != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.AlertThreshold))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Value != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.Value))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *Cloudlet) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2534,6 +2804,54 @@ func (m *Cloudlet) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.HostController) > 0 {
+		i -= len(m.HostController)
+		copy(dAtA[i:], m.HostController)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.HostController)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xca
+	}
+	if m.DefaultResourceAlertThreshold != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.DefaultResourceAlertThreshold))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xc0
+	}
+	if len(m.ResourceQuotas) > 0 {
+		for iNdEx := len(m.ResourceQuotas) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ResourceQuotas[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCloudlet(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2
+			i--
+			dAtA[i] = 0xba
+		}
+	}
+	if m.TrustPolicyState != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.TrustPolicyState))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xb0
+	}
+	if len(m.TrustPolicy) > 0 {
+		i -= len(m.TrustPolicy)
+		copy(dAtA[i:], m.TrustPolicy)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.TrustPolicy)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xaa
+	}
 	{
 		size, err := m.UpdatedAt.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -3094,6 +3412,91 @@ func (m *CloudletProps) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *CloudletResourceQuotaProps) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CloudletResourceQuotaProps) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletResourceQuotaProps) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Props) > 0 {
+		for iNdEx := len(m.Props) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Props[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCloudlet(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.PlatformType != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.PlatformType))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CloudletResourceUsage) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CloudletResourceUsage) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CloudletResourceUsage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.InfraUsage {
+		i--
+		if m.InfraUsage {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func (m *FlavorInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3266,8 +3669,15 @@ func (m *CloudletInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.TrustPolicyState != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.TrustPolicyState))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x90
+	}
 	{
-		size, err := m.Resources.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.ResourcesSnapshot.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -3628,12 +4038,8 @@ func (m *PlatformConfig) CopyInFields(src *PlatformConfig) int {
 		m.CommercialCerts = src.CommercialCerts
 		changed++
 	}
-	if m.UseVaultCerts != src.UseVaultCerts {
-		m.UseVaultCerts = src.UseVaultCerts
-		changed++
-	}
-	if m.UseVaultCas != src.UseVaultCas {
-		m.UseVaultCas = src.UseVaultCas
+	if m.UseVaultPki != src.UseVaultPki {
+		m.UseVaultPki = src.UseVaultPki
 		changed++
 	}
 	if m.AppDnsRoot != src.AppDnsRoot {
@@ -3690,8 +4096,7 @@ func (m *PlatformConfig) DeepCopyIn(src *PlatformConfig) {
 	m.CleanupMode = src.CleanupMode
 	m.Region = src.Region
 	m.CommercialCerts = src.CommercialCerts
-	m.UseVaultCerts = src.UseVaultCerts
-	m.UseVaultCas = src.UseVaultCas
+	m.UseVaultPki = src.UseVaultPki
 	m.AppDnsRoot = src.AppDnsRoot
 	m.ChefServerPath = src.ChefServerPath
 	m.ChefClientInterval = src.ChefClientInterval
@@ -3792,6 +4197,34 @@ func (m *InfraConfig) ValidateEnums() error {
 	return nil
 }
 
+func (m *ResourceQuota) CopyInFields(src *ResourceQuota) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.Value != src.Value {
+		m.Value = src.Value
+		changed++
+	}
+	if m.AlertThreshold != src.AlertThreshold {
+		m.AlertThreshold = src.AlertThreshold
+		changed++
+	}
+	return changed
+}
+
+func (m *ResourceQuota) DeepCopyIn(src *ResourceQuota) {
+	m.Name = src.Name
+	m.Value = src.Value
+	m.AlertThreshold = src.AlertThreshold
+}
+
+// Helper method to check that enums have valid values
+func (m *ResourceQuota) ValidateEnums() error {
+	return nil
+}
+
 func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -3821,7 +4254,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.Errors != nil {
-			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+			if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -3877,7 +4310,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.EnvVar != nil {
-		if m.EnvVar == nil && o.EnvVar != nil || m.EnvVar != nil && o.EnvVar == nil {
+		if len(m.EnvVar) == 0 && len(o.EnvVar) > 0 || len(m.EnvVar) > 0 && len(o.EnvVar) == 0 {
 			return false
 		} else if m.EnvVar != nil && o.EnvVar != nil {
 			if !opts.Filter && len(m.EnvVar) != len(o.EnvVar) {
@@ -3903,7 +4336,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.ResTagMap != nil {
-			if m.ResTagMap == nil && o.ResTagMap != nil || m.ResTagMap != nil && o.ResTagMap == nil {
+			if len(m.ResTagMap) == 0 && len(o.ResTagMap) > 0 || len(m.ResTagMap) > 0 && len(o.ResTagMap) == 0 {
 				return false
 			} else if m.ResTagMap != nil && o.ResTagMap != nil {
 				if !opts.Filter && len(m.ResTagMap) != len(o.ResTagMap) {
@@ -3922,7 +4355,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.AccessVars != nil {
-		if m.AccessVars == nil && o.AccessVars != nil || m.AccessVars != nil && o.AccessVars == nil {
+		if len(m.AccessVars) == 0 && len(o.AccessVars) > 0 || len(m.AccessVars) > 0 && len(o.AccessVars) == 0 {
 			return false
 		} else if m.AccessVars != nil && o.AccessVars != nil {
 			if !opts.Filter && len(m.AccessVars) != len(o.AccessVars) {
@@ -3956,7 +4389,7 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.ChefClientKey != nil {
-			if m.ChefClientKey == nil && o.ChefClientKey != nil || m.ChefClientKey != nil && o.ChefClientKey == nil {
+			if len(m.ChefClientKey) == 0 && len(o.ChefClientKey) > 0 || len(m.ChefClientKey) > 0 && len(o.ChefClientKey) == 0 {
 				return false
 			} else if m.ChefClientKey != nil && o.ChefClientKey != nil {
 				if !opts.Filter && len(m.ChefClientKey) != len(o.ChefClientKey) {
@@ -4006,6 +4439,41 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	if !opts.IgnoreBackend {
 	}
 	if !opts.IgnoreBackend {
+	}
+	if !opts.Filter || o.TrustPolicy != "" {
+		if o.TrustPolicy != m.TrustPolicy {
+			return false
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.TrustPolicyState != 0 {
+			if o.TrustPolicyState != m.TrustPolicyState {
+				return false
+			}
+		}
+	}
+	if !opts.Filter || o.ResourceQuotas != nil {
+		if len(m.ResourceQuotas) == 0 && len(o.ResourceQuotas) > 0 || len(m.ResourceQuotas) > 0 && len(o.ResourceQuotas) == 0 {
+			return false
+		} else if m.ResourceQuotas != nil && o.ResourceQuotas != nil {
+			if !opts.Filter && len(m.ResourceQuotas) != len(o.ResourceQuotas) {
+				return false
+			}
+			for i := 0; i < len(m.ResourceQuotas); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.DefaultResourceAlertThreshold != 0 {
+		if o.DefaultResourceAlertThreshold != m.DefaultResourceAlertThreshold {
+			return false
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.HostController != "" {
+			if o.HostController != m.HostController {
+				return false
+			}
+		}
 	}
 	return true
 }
@@ -4068,8 +4536,7 @@ const CloudletFieldConfigSpan = "21.10"
 const CloudletFieldConfigCleanupMode = "21.11"
 const CloudletFieldConfigRegion = "21.12"
 const CloudletFieldConfigCommercialCerts = "21.13"
-const CloudletFieldConfigUseVaultCerts = "21.14"
-const CloudletFieldConfigUseVaultCas = "21.15"
+const CloudletFieldConfigUseVaultPki = "21.14"
 const CloudletFieldConfigAppDnsRoot = "21.16"
 const CloudletFieldConfigChefServerPath = "21.17"
 const CloudletFieldConfigChefClientInterval = "21.18"
@@ -4106,6 +4573,14 @@ const CloudletFieldCreatedAtNanos = "35.2"
 const CloudletFieldUpdatedAt = "36"
 const CloudletFieldUpdatedAtSeconds = "36.1"
 const CloudletFieldUpdatedAtNanos = "36.2"
+const CloudletFieldTrustPolicy = "37"
+const CloudletFieldTrustPolicyState = "38"
+const CloudletFieldResourceQuotas = "39"
+const CloudletFieldResourceQuotasName = "39.1"
+const CloudletFieldResourceQuotasValue = "39.2"
+const CloudletFieldResourceQuotasAlertThreshold = "39.3"
+const CloudletFieldDefaultResourceAlertThreshold = "40"
+const CloudletFieldHostController = "41"
 
 var CloudletAllFields = []string{
 	CloudletFieldKeyOrganization,
@@ -4157,8 +4632,7 @@ var CloudletAllFields = []string{
 	CloudletFieldConfigCleanupMode,
 	CloudletFieldConfigRegion,
 	CloudletFieldConfigCommercialCerts,
-	CloudletFieldConfigUseVaultCerts,
-	CloudletFieldConfigUseVaultCas,
+	CloudletFieldConfigUseVaultPki,
 	CloudletFieldConfigAppDnsRoot,
 	CloudletFieldConfigChefServerPath,
 	CloudletFieldConfigChefClientInterval,
@@ -4188,6 +4662,13 @@ var CloudletAllFields = []string{
 	CloudletFieldCreatedAtNanos,
 	CloudletFieldUpdatedAtSeconds,
 	CloudletFieldUpdatedAtNanos,
+	CloudletFieldTrustPolicy,
+	CloudletFieldTrustPolicyState,
+	CloudletFieldResourceQuotasName,
+	CloudletFieldResourceQuotasValue,
+	CloudletFieldResourceQuotasAlertThreshold,
+	CloudletFieldDefaultResourceAlertThreshold,
+	CloudletFieldHostController,
 }
 
 var CloudletAllFieldsMap = map[string]struct{}{
@@ -4240,8 +4721,7 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldConfigCleanupMode:                  struct{}{},
 	CloudletFieldConfigRegion:                       struct{}{},
 	CloudletFieldConfigCommercialCerts:              struct{}{},
-	CloudletFieldConfigUseVaultCerts:                struct{}{},
-	CloudletFieldConfigUseVaultCas:                  struct{}{},
+	CloudletFieldConfigUseVaultPki:                  struct{}{},
 	CloudletFieldConfigAppDnsRoot:                   struct{}{},
 	CloudletFieldConfigChefServerPath:               struct{}{},
 	CloudletFieldConfigChefClientInterval:           struct{}{},
@@ -4271,6 +4751,13 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldCreatedAtNanos:                     struct{}{},
 	CloudletFieldUpdatedAtSeconds:                   struct{}{},
 	CloudletFieldUpdatedAtNanos:                     struct{}{},
+	CloudletFieldTrustPolicy:                        struct{}{},
+	CloudletFieldTrustPolicyState:                   struct{}{},
+	CloudletFieldResourceQuotasName:                 struct{}{},
+	CloudletFieldResourceQuotasValue:                struct{}{},
+	CloudletFieldResourceQuotasAlertThreshold:       struct{}{},
+	CloudletFieldDefaultResourceAlertThreshold:      struct{}{},
+	CloudletFieldHostController:                     struct{}{},
 }
 
 var CloudletAllFieldsStringMap = map[string]string{
@@ -4323,8 +4810,7 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldConfigCleanupMode:                  "Config Cleanup Mode",
 	CloudletFieldConfigRegion:                       "Config Region",
 	CloudletFieldConfigCommercialCerts:              "Config Commercial Certs",
-	CloudletFieldConfigUseVaultCerts:                "Config Use Vault Certs",
-	CloudletFieldConfigUseVaultCas:                  "Config Use Vault Cas",
+	CloudletFieldConfigUseVaultPki:                  "Config Use Vault Pki",
 	CloudletFieldConfigAppDnsRoot:                   "Config App Dns Root",
 	CloudletFieldConfigChefServerPath:               "Config Chef Server Path",
 	CloudletFieldConfigChefClientInterval:           "Config Chef Client Interval",
@@ -4354,6 +4840,13 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldCreatedAtNanos:                     "Created At Nanos",
 	CloudletFieldUpdatedAtSeconds:                   "Updated At Seconds",
 	CloudletFieldUpdatedAtNanos:                     "Updated At Nanos",
+	CloudletFieldTrustPolicy:                        "Trust Policy",
+	CloudletFieldTrustPolicyState:                   "Trust Policy State",
+	CloudletFieldResourceQuotasName:                 "Resource Quotas Name",
+	CloudletFieldResourceQuotasValue:                "Resource Quotas Value",
+	CloudletFieldResourceQuotasAlertThreshold:       "Resource Quotas Alert Threshold",
+	CloudletFieldDefaultResourceAlertThreshold:      "Default Resource Alert Threshold",
+	CloudletFieldHostController:                     "Host Controller",
 }
 
 func (m *Cloudlet) IsKeyField(s string) bool {
@@ -4594,12 +5087,8 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 		fields[CloudletFieldConfigCommercialCerts] = struct{}{}
 		fields[CloudletFieldConfig] = struct{}{}
 	}
-	if m.Config.UseVaultCerts != o.Config.UseVaultCerts {
-		fields[CloudletFieldConfigUseVaultCerts] = struct{}{}
-		fields[CloudletFieldConfig] = struct{}{}
-	}
-	if m.Config.UseVaultCas != o.Config.UseVaultCas {
-		fields[CloudletFieldConfigUseVaultCas] = struct{}{}
+	if m.Config.UseVaultPki != o.Config.UseVaultPki {
+		fields[CloudletFieldConfigUseVaultPki] = struct{}{}
 		fields[CloudletFieldConfig] = struct{}{}
 	}
 	if m.Config.AppDnsRoot != o.Config.AppDnsRoot {
@@ -4745,6 +5234,36 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 		fields[CloudletFieldUpdatedAtNanos] = struct{}{}
 		fields[CloudletFieldUpdatedAt] = struct{}{}
 	}
+	if m.TrustPolicy != o.TrustPolicy {
+		fields[CloudletFieldTrustPolicy] = struct{}{}
+	}
+	if m.TrustPolicyState != o.TrustPolicyState {
+		fields[CloudletFieldTrustPolicyState] = struct{}{}
+	}
+	if len(m.ResourceQuotas) != len(o.ResourceQuotas) {
+		fields[CloudletFieldResourceQuotas] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.ResourceQuotas); i0++ {
+			if m.ResourceQuotas[i0].Name != o.ResourceQuotas[i0].Name {
+				fields[CloudletFieldResourceQuotasName] = struct{}{}
+				fields[CloudletFieldResourceQuotas] = struct{}{}
+			}
+			if m.ResourceQuotas[i0].Value != o.ResourceQuotas[i0].Value {
+				fields[CloudletFieldResourceQuotasValue] = struct{}{}
+				fields[CloudletFieldResourceQuotas] = struct{}{}
+			}
+			if m.ResourceQuotas[i0].AlertThreshold != o.ResourceQuotas[i0].AlertThreshold {
+				fields[CloudletFieldResourceQuotasAlertThreshold] = struct{}{}
+				fields[CloudletFieldResourceQuotas] = struct{}{}
+			}
+		}
+	}
+	if m.DefaultResourceAlertThreshold != o.DefaultResourceAlertThreshold {
+		fields[CloudletFieldDefaultResourceAlertThreshold] = struct{}{}
+	}
+	if m.HostController != o.HostController {
+		fields[CloudletFieldHostController] = struct{}{}
+	}
 }
 
 var UpdateCloudletFieldsMap = map[string]struct{}{
@@ -4768,6 +5287,12 @@ var UpdateCloudletFieldsMap = map[string]struct{}{
 	CloudletFieldAccessVars:                         struct{}{},
 	CloudletFieldAccessVarsValue:                    struct{}{},
 	CloudletFieldMaintenanceState:                   struct{}{},
+	CloudletFieldTrustPolicy:                        struct{}{},
+	CloudletFieldResourceQuotas:                     struct{}{},
+	CloudletFieldResourceQuotasName:                 struct{}{},
+	CloudletFieldResourceQuotasValue:                struct{}{},
+	CloudletFieldResourceQuotasAlertThreshold:       struct{}{},
+	CloudletFieldDefaultResourceAlertThreshold:      struct{}{},
 }
 
 func (m *Cloudlet) ValidateUpdateFields() error {
@@ -5114,14 +5639,8 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 			}
 		}
 		if _, set := fmap["21.14"]; set {
-			if m.Config.UseVaultCerts != src.Config.UseVaultCerts {
-				m.Config.UseVaultCerts = src.Config.UseVaultCerts
-				changed++
-			}
-		}
-		if _, set := fmap["21.15"]; set {
-			if m.Config.UseVaultCas != src.Config.UseVaultCas {
-				m.Config.UseVaultCas = src.Config.UseVaultCas
+			if m.Config.UseVaultPki != src.Config.UseVaultPki {
+				m.Config.UseVaultPki = src.Config.UseVaultPki
 				changed++
 			}
 		}
@@ -5309,6 +5828,39 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 			}
 		}
 	}
+	if _, set := fmap["37"]; set {
+		if m.TrustPolicy != src.TrustPolicy {
+			m.TrustPolicy = src.TrustPolicy
+			changed++
+		}
+	}
+	if _, set := fmap["38"]; set {
+		if m.TrustPolicyState != src.TrustPolicyState {
+			m.TrustPolicyState = src.TrustPolicyState
+			changed++
+		}
+	}
+	if _, set := fmap["39"]; set {
+		if src.ResourceQuotas != nil {
+			m.ResourceQuotas = src.ResourceQuotas
+			changed++
+		} else if m.ResourceQuotas != nil {
+			m.ResourceQuotas = nil
+			changed++
+		}
+	}
+	if _, set := fmap["40"]; set {
+		if m.DefaultResourceAlertThreshold != src.DefaultResourceAlertThreshold {
+			m.DefaultResourceAlertThreshold = src.DefaultResourceAlertThreshold
+			changed++
+		}
+	}
+	if _, set := fmap["41"]; set {
+		if m.HostController != src.HostController {
+			m.HostController = src.HostController
+			changed++
+		}
+	}
 	return changed
 }
 
@@ -5382,6 +5934,18 @@ func (m *Cloudlet) DeepCopyIn(src *Cloudlet) {
 	m.CrmAccessKeyUpgradeRequired = src.CrmAccessKeyUpgradeRequired
 	m.CreatedAt = src.CreatedAt
 	m.UpdatedAt = src.UpdatedAt
+	m.TrustPolicy = src.TrustPolicy
+	m.TrustPolicyState = src.TrustPolicyState
+	if src.ResourceQuotas != nil {
+		m.ResourceQuotas = make([]ResourceQuota, len(src.ResourceQuotas), len(src.ResourceQuotas))
+		for ii, s := range src.ResourceQuotas {
+			m.ResourceQuotas[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.ResourceQuotas = nil
+	}
+	m.DefaultResourceAlertThreshold = src.DefaultResourceAlertThreshold
+	m.HostController = src.HostController
 }
 
 func (s *Cloudlet) HasFields() bool {
@@ -5714,15 +6278,12 @@ func (c *CloudletCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Cloudlet", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -5954,8 +6515,16 @@ func (m *Cloudlet) ValidateEnums() error {
 	if err := m.InfraConfig.ValidateEnums(); err != nil {
 		return err
 	}
-	if _, ok := MaintenanceState_name[int32(m.MaintenanceState)]; !ok {
+	if _, ok := distributed_match_engine.MaintenanceState_name[int32(m.MaintenanceState)]; !ok {
 		return errors.New("invalid MaintenanceState")
+	}
+	if _, ok := TrackedState_name[int32(m.TrustPolicyState)]; !ok {
+		return errors.New("invalid TrustPolicyState")
+	}
+	for _, e := range m.ResourceQuotas {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -5998,6 +6567,15 @@ func IgnoreCloudletFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "UpdatedAt")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "TrustPolicyState")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "DefaultResourceAlertThreshold")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "HostController")
 	}
 	return cmpopts.IgnoreFields(Cloudlet{}, names...)
 }
@@ -6182,6 +6760,97 @@ func (m *CloudletProps) ValidateEnums() error {
 	return nil
 }
 
+func (m *CloudletResourceQuotaProps) CopyInFields(src *CloudletResourceQuotaProps) int {
+	changed := 0
+	if m.PlatformType != src.PlatformType {
+		m.PlatformType = src.PlatformType
+		changed++
+	}
+	if src.Props != nil {
+		m.Props = src.Props
+		changed++
+	} else if m.Props != nil {
+		m.Props = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *CloudletResourceQuotaProps) DeepCopyIn(src *CloudletResourceQuotaProps) {
+	m.PlatformType = src.PlatformType
+	if src.Props != nil {
+		m.Props = make([]InfraResource, len(src.Props), len(src.Props))
+		for ii, s := range src.Props {
+			m.Props[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Props = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *CloudletResourceQuotaProps) ValidateEnums() error {
+	if _, ok := PlatformType_name[int32(m.PlatformType)]; !ok {
+		return errors.New("invalid PlatformType")
+	}
+	for _, e := range m.Props {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *CloudletResourceUsage) CopyInFields(src *CloudletResourceUsage) int {
+	changed := 0
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
+		changed++
+	}
+	if m.Key.Name != src.Key.Name {
+		m.Key.Name = src.Key.Name
+		changed++
+	}
+	if m.InfraUsage != src.InfraUsage {
+		m.InfraUsage = src.InfraUsage
+		changed++
+	}
+	return changed
+}
+
+func (m *CloudletResourceUsage) DeepCopyIn(src *CloudletResourceUsage) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.InfraUsage = src.InfraUsage
+}
+
+func (m *CloudletResourceUsage) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *CloudletResourceUsage) GetKey() *CloudletKey {
+	return &m.Key
+}
+
+func (m *CloudletResourceUsage) GetKeyVal() CloudletKey {
+	return m.Key
+}
+
+func (m *CloudletResourceUsage) SetKey(key *CloudletKey) {
+	m.Key = *key
+}
+
+func CmpSortCloudletResourceUsage(a CloudletResourceUsage, b CloudletResourceUsage) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+func (m *CloudletResourceUsage) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *FlavorInfo) CopyInFields(src *FlavorInfo) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -6331,7 +7000,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Errors != nil {
-		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+		if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -6345,7 +7014,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Flavors != nil {
-		if m.Flavors == nil && o.Flavors != nil || m.Flavors != nil && o.Flavors == nil {
+		if len(m.Flavors) == 0 && len(o.Flavors) > 0 || len(m.Flavors) > 0 && len(o.Flavors) == 0 {
 			return false
 		} else if m.Flavors != nil && o.Flavors != nil {
 			if !opts.Filter && len(m.Flavors) != len(o.Flavors) {
@@ -6361,7 +7030,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.AvailabilityZones != nil {
-		if m.AvailabilityZones == nil && o.AvailabilityZones != nil || m.AvailabilityZones != nil && o.AvailabilityZones == nil {
+		if len(m.AvailabilityZones) == 0 && len(o.AvailabilityZones) > 0 || len(m.AvailabilityZones) > 0 && len(o.AvailabilityZones) == 0 {
 			return false
 		} else if m.AvailabilityZones != nil && o.AvailabilityZones != nil {
 			if !opts.Filter && len(m.AvailabilityZones) != len(o.AvailabilityZones) {
@@ -6372,7 +7041,7 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.OsImages != nil {
-		if m.OsImages == nil && o.OsImages != nil || m.OsImages != nil && o.OsImages == nil {
+		if len(m.OsImages) == 0 && len(o.OsImages) > 0 || len(m.OsImages) > 0 && len(o.OsImages) == 0 {
 			return false
 		} else if m.OsImages != nil && o.OsImages != nil {
 			if !opts.Filter && len(m.OsImages) != len(o.OsImages) {
@@ -6393,6 +7062,11 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.IgnoreBackend {
+	}
+	if !opts.Filter || o.TrustPolicyState != 0 {
+		if o.TrustPolicyState != m.TrustPolicyState {
+			return false
+		}
 	}
 	return true
 }
@@ -6433,21 +7107,43 @@ const CloudletInfoFieldOsImagesProperties = "14.3"
 const CloudletInfoFieldOsImagesDiskFormat = "14.4"
 const CloudletInfoFieldControllerCacheReceived = "15"
 const CloudletInfoFieldMaintenanceState = "16"
-const CloudletInfoFieldResources = "17"
-const CloudletInfoFieldResourcesVms = "17.1"
-const CloudletInfoFieldResourcesVmsName = "17.1.1"
-const CloudletInfoFieldResourcesVmsType = "17.1.2"
-const CloudletInfoFieldResourcesVmsStatus = "17.1.3"
-const CloudletInfoFieldResourcesVmsInfraFlavor = "17.1.4"
-const CloudletInfoFieldResourcesVmsIpaddresses = "17.1.5"
-const CloudletInfoFieldResourcesVmsIpaddressesExternalIp = "17.1.5.1"
-const CloudletInfoFieldResourcesVmsIpaddressesInternalIp = "17.1.5.2"
-const CloudletInfoFieldResourcesVmsContainers = "17.1.6"
-const CloudletInfoFieldResourcesVmsContainersName = "17.1.6.1"
-const CloudletInfoFieldResourcesVmsContainersType = "17.1.6.2"
-const CloudletInfoFieldResourcesVmsContainersStatus = "17.1.6.3"
-const CloudletInfoFieldResourcesVmsContainersClusterip = "17.1.6.4"
-const CloudletInfoFieldResourcesVmsContainersRestarts = "17.1.6.5"
+const CloudletInfoFieldResourcesSnapshot = "17"
+const CloudletInfoFieldResourcesSnapshotPlatformVms = "17.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsName = "17.1.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsType = "17.1.2"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsStatus = "17.1.3"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor = "17.1.4"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses = "17.1.5"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp = "17.1.5.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp = "17.1.5.2"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainers = "17.1.6"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName = "17.1.6.1"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType = "17.1.6.2"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus = "17.1.6.3"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip = "17.1.6.4"
+const CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts = "17.1.6.5"
+const CloudletInfoFieldResourcesSnapshotInfo = "17.2"
+const CloudletInfoFieldResourcesSnapshotInfoName = "17.2.1"
+const CloudletInfoFieldResourcesSnapshotInfoValue = "17.2.2"
+const CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue = "17.2.3"
+const CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue = "17.2.4"
+const CloudletInfoFieldResourcesSnapshotInfoDescription = "17.2.5"
+const CloudletInfoFieldResourcesSnapshotInfoUnits = "17.2.6"
+const CloudletInfoFieldResourcesSnapshotInfoAlertThreshold = "17.2.7"
+const CloudletInfoFieldResourcesSnapshotClusterInsts = "17.3"
+const CloudletInfoFieldResourcesSnapshotClusterInstsClusterKey = "17.3.1"
+const CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName = "17.3.1.1"
+const CloudletInfoFieldResourcesSnapshotClusterInstsOrganization = "17.3.2"
+const CloudletInfoFieldResourcesSnapshotVmAppInsts = "17.4"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsAppKey = "17.4.1"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization = "17.4.1.1"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName = "17.4.1.2"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion = "17.4.1.3"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKey = "17.4.2"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey = "17.4.2.1"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName = "17.4.2.1.1"
+const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization = "17.4.2.2"
+const CloudletInfoFieldTrustPolicyState = "18"
 
 var CloudletInfoAllFields = []string{
 	CloudletInfoFieldKeyOrganization,
@@ -6480,105 +7176,150 @@ var CloudletInfoAllFields = []string{
 	CloudletInfoFieldOsImagesDiskFormat,
 	CloudletInfoFieldControllerCacheReceived,
 	CloudletInfoFieldMaintenanceState,
-	CloudletInfoFieldResourcesVmsName,
-	CloudletInfoFieldResourcesVmsType,
-	CloudletInfoFieldResourcesVmsStatus,
-	CloudletInfoFieldResourcesVmsInfraFlavor,
-	CloudletInfoFieldResourcesVmsIpaddressesExternalIp,
-	CloudletInfoFieldResourcesVmsIpaddressesInternalIp,
-	CloudletInfoFieldResourcesVmsContainersName,
-	CloudletInfoFieldResourcesVmsContainersType,
-	CloudletInfoFieldResourcesVmsContainersStatus,
-	CloudletInfoFieldResourcesVmsContainersClusterip,
-	CloudletInfoFieldResourcesVmsContainersRestarts,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip,
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts,
+	CloudletInfoFieldResourcesSnapshotInfoName,
+	CloudletInfoFieldResourcesSnapshotInfoValue,
+	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue,
+	CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue,
+	CloudletInfoFieldResourcesSnapshotInfoDescription,
+	CloudletInfoFieldResourcesSnapshotInfoUnits,
+	CloudletInfoFieldResourcesSnapshotInfoAlertThreshold,
+	CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName,
+	CloudletInfoFieldResourcesSnapshotClusterInstsOrganization,
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization,
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName,
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion,
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName,
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization,
+	CloudletInfoFieldTrustPolicyState,
 }
 
 var CloudletInfoAllFieldsMap = map[string]struct{}{
-	CloudletInfoFieldKeyOrganization:                   struct{}{},
-	CloudletInfoFieldKeyName:                           struct{}{},
-	CloudletInfoFieldState:                             struct{}{},
-	CloudletInfoFieldNotifyId:                          struct{}{},
-	CloudletInfoFieldController:                        struct{}{},
-	CloudletInfoFieldOsMaxRam:                          struct{}{},
-	CloudletInfoFieldOsMaxVcores:                       struct{}{},
-	CloudletInfoFieldOsMaxVolGb:                        struct{}{},
-	CloudletInfoFieldErrors:                            struct{}{},
-	CloudletInfoFieldFlavorsName:                       struct{}{},
-	CloudletInfoFieldFlavorsVcpus:                      struct{}{},
-	CloudletInfoFieldFlavorsRam:                        struct{}{},
-	CloudletInfoFieldFlavorsDisk:                       struct{}{},
-	CloudletInfoFieldFlavorsPropMapKey:                 struct{}{},
-	CloudletInfoFieldFlavorsPropMapValue:               struct{}{},
-	CloudletInfoFieldStatusTaskNumber:                  struct{}{},
-	CloudletInfoFieldStatusMaxTasks:                    struct{}{},
-	CloudletInfoFieldStatusTaskName:                    struct{}{},
-	CloudletInfoFieldStatusStepName:                    struct{}{},
-	CloudletInfoFieldStatusMsgCount:                    struct{}{},
-	CloudletInfoFieldStatusMsgs:                        struct{}{},
-	CloudletInfoFieldContainerVersion:                  struct{}{},
-	CloudletInfoFieldAvailabilityZonesName:             struct{}{},
-	CloudletInfoFieldAvailabilityZonesStatus:           struct{}{},
-	CloudletInfoFieldOsImagesName:                      struct{}{},
-	CloudletInfoFieldOsImagesTags:                      struct{}{},
-	CloudletInfoFieldOsImagesProperties:                struct{}{},
-	CloudletInfoFieldOsImagesDiskFormat:                struct{}{},
-	CloudletInfoFieldControllerCacheReceived:           struct{}{},
-	CloudletInfoFieldMaintenanceState:                  struct{}{},
-	CloudletInfoFieldResourcesVmsName:                  struct{}{},
-	CloudletInfoFieldResourcesVmsType:                  struct{}{},
-	CloudletInfoFieldResourcesVmsStatus:                struct{}{},
-	CloudletInfoFieldResourcesVmsInfraFlavor:           struct{}{},
-	CloudletInfoFieldResourcesVmsIpaddressesExternalIp: struct{}{},
-	CloudletInfoFieldResourcesVmsIpaddressesInternalIp: struct{}{},
-	CloudletInfoFieldResourcesVmsContainersName:        struct{}{},
-	CloudletInfoFieldResourcesVmsContainersType:        struct{}{},
-	CloudletInfoFieldResourcesVmsContainersStatus:      struct{}{},
-	CloudletInfoFieldResourcesVmsContainersClusterip:   struct{}{},
-	CloudletInfoFieldResourcesVmsContainersRestarts:    struct{}{},
+	CloudletInfoFieldKeyOrganization:                                         struct{}{},
+	CloudletInfoFieldKeyName:                                                 struct{}{},
+	CloudletInfoFieldState:                                                   struct{}{},
+	CloudletInfoFieldNotifyId:                                                struct{}{},
+	CloudletInfoFieldController:                                              struct{}{},
+	CloudletInfoFieldOsMaxRam:                                                struct{}{},
+	CloudletInfoFieldOsMaxVcores:                                             struct{}{},
+	CloudletInfoFieldOsMaxVolGb:                                              struct{}{},
+	CloudletInfoFieldErrors:                                                  struct{}{},
+	CloudletInfoFieldFlavorsName:                                             struct{}{},
+	CloudletInfoFieldFlavorsVcpus:                                            struct{}{},
+	CloudletInfoFieldFlavorsRam:                                              struct{}{},
+	CloudletInfoFieldFlavorsDisk:                                             struct{}{},
+	CloudletInfoFieldFlavorsPropMapKey:                                       struct{}{},
+	CloudletInfoFieldFlavorsPropMapValue:                                     struct{}{},
+	CloudletInfoFieldStatusTaskNumber:                                        struct{}{},
+	CloudletInfoFieldStatusMaxTasks:                                          struct{}{},
+	CloudletInfoFieldStatusTaskName:                                          struct{}{},
+	CloudletInfoFieldStatusStepName:                                          struct{}{},
+	CloudletInfoFieldStatusMsgCount:                                          struct{}{},
+	CloudletInfoFieldStatusMsgs:                                              struct{}{},
+	CloudletInfoFieldContainerVersion:                                        struct{}{},
+	CloudletInfoFieldAvailabilityZonesName:                                   struct{}{},
+	CloudletInfoFieldAvailabilityZonesStatus:                                 struct{}{},
+	CloudletInfoFieldOsImagesName:                                            struct{}{},
+	CloudletInfoFieldOsImagesTags:                                            struct{}{},
+	CloudletInfoFieldOsImagesProperties:                                      struct{}{},
+	CloudletInfoFieldOsImagesDiskFormat:                                      struct{}{},
+	CloudletInfoFieldControllerCacheReceived:                                 struct{}{},
+	CloudletInfoFieldMaintenanceState:                                        struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                        struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                        struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                      struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                 struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:       struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:       struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:              struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:              struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:            struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:         struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:          struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoName:                               struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoValue:                              struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoDescription:                        struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoUnits:                              struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
+	CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName:             struct{}{},
+	CloudletInfoFieldResourcesSnapshotClusterInstsOrganization:               struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                   struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   struct{}{},
+	CloudletInfoFieldTrustPolicyState:                                        struct{}{},
 }
 
 var CloudletInfoAllFieldsStringMap = map[string]string{
-	CloudletInfoFieldKeyOrganization:                   "Key Organization",
-	CloudletInfoFieldKeyName:                           "Key Name",
-	CloudletInfoFieldState:                             "State",
-	CloudletInfoFieldNotifyId:                          "Notify Id",
-	CloudletInfoFieldController:                        "Controller",
-	CloudletInfoFieldOsMaxRam:                          "Os Max Ram",
-	CloudletInfoFieldOsMaxVcores:                       "Os Max Vcores",
-	CloudletInfoFieldOsMaxVolGb:                        "Os Max Vol Gb",
-	CloudletInfoFieldErrors:                            "Errors",
-	CloudletInfoFieldFlavorsName:                       "Flavors Name",
-	CloudletInfoFieldFlavorsVcpus:                      "Flavors Vcpus",
-	CloudletInfoFieldFlavorsRam:                        "Flavors Ram",
-	CloudletInfoFieldFlavorsDisk:                       "Flavors Disk",
-	CloudletInfoFieldFlavorsPropMapKey:                 "Flavors Prop Map Key",
-	CloudletInfoFieldFlavorsPropMapValue:               "Flavors Prop Map Value",
-	CloudletInfoFieldStatusTaskNumber:                  "Status Task Number",
-	CloudletInfoFieldStatusMaxTasks:                    "Status Max Tasks",
-	CloudletInfoFieldStatusTaskName:                    "Status Task Name",
-	CloudletInfoFieldStatusStepName:                    "Status Step Name",
-	CloudletInfoFieldStatusMsgCount:                    "Status Msg Count",
-	CloudletInfoFieldStatusMsgs:                        "Status Msgs",
-	CloudletInfoFieldContainerVersion:                  "Container Version",
-	CloudletInfoFieldAvailabilityZonesName:             "Availability Zones Name",
-	CloudletInfoFieldAvailabilityZonesStatus:           "Availability Zones Status",
-	CloudletInfoFieldOsImagesName:                      "Os Images Name",
-	CloudletInfoFieldOsImagesTags:                      "Os Images Tags",
-	CloudletInfoFieldOsImagesProperties:                "Os Images Properties",
-	CloudletInfoFieldOsImagesDiskFormat:                "Os Images Disk Format",
-	CloudletInfoFieldControllerCacheReceived:           "Controller Cache Received",
-	CloudletInfoFieldMaintenanceState:                  "Maintenance State",
-	CloudletInfoFieldResourcesVmsName:                  "Resources Vms Name",
-	CloudletInfoFieldResourcesVmsType:                  "Resources Vms Type",
-	CloudletInfoFieldResourcesVmsStatus:                "Resources Vms Status",
-	CloudletInfoFieldResourcesVmsInfraFlavor:           "Resources Vms Infra Flavor",
-	CloudletInfoFieldResourcesVmsIpaddressesExternalIp: "Resources Vms Ipaddresses External Ip",
-	CloudletInfoFieldResourcesVmsIpaddressesInternalIp: "Resources Vms Ipaddresses Internal Ip",
-	CloudletInfoFieldResourcesVmsContainersName:        "Resources Vms Containers Name",
-	CloudletInfoFieldResourcesVmsContainersType:        "Resources Vms Containers Type",
-	CloudletInfoFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
-	CloudletInfoFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
-	CloudletInfoFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
+	CloudletInfoFieldKeyOrganization:                                         "Key Organization",
+	CloudletInfoFieldKeyName:                                                 "Key Name",
+	CloudletInfoFieldState:                                                   "State",
+	CloudletInfoFieldNotifyId:                                                "Notify Id",
+	CloudletInfoFieldController:                                              "Controller",
+	CloudletInfoFieldOsMaxRam:                                                "Os Max Ram",
+	CloudletInfoFieldOsMaxVcores:                                             "Os Max Vcores",
+	CloudletInfoFieldOsMaxVolGb:                                              "Os Max Vol Gb",
+	CloudletInfoFieldErrors:                                                  "Errors",
+	CloudletInfoFieldFlavorsName:                                             "Flavors Name",
+	CloudletInfoFieldFlavorsVcpus:                                            "Flavors Vcpus",
+	CloudletInfoFieldFlavorsRam:                                              "Flavors Ram",
+	CloudletInfoFieldFlavorsDisk:                                             "Flavors Disk",
+	CloudletInfoFieldFlavorsPropMapKey:                                       "Flavors Prop Map Key",
+	CloudletInfoFieldFlavorsPropMapValue:                                     "Flavors Prop Map Value",
+	CloudletInfoFieldStatusTaskNumber:                                        "Status Task Number",
+	CloudletInfoFieldStatusMaxTasks:                                          "Status Max Tasks",
+	CloudletInfoFieldStatusTaskName:                                          "Status Task Name",
+	CloudletInfoFieldStatusStepName:                                          "Status Step Name",
+	CloudletInfoFieldStatusMsgCount:                                          "Status Msg Count",
+	CloudletInfoFieldStatusMsgs:                                              "Status Msgs",
+	CloudletInfoFieldContainerVersion:                                        "Container Version",
+	CloudletInfoFieldAvailabilityZonesName:                                   "Availability Zones Name",
+	CloudletInfoFieldAvailabilityZonesStatus:                                 "Availability Zones Status",
+	CloudletInfoFieldOsImagesName:                                            "Os Images Name",
+	CloudletInfoFieldOsImagesTags:                                            "Os Images Tags",
+	CloudletInfoFieldOsImagesProperties:                                      "Os Images Properties",
+	CloudletInfoFieldOsImagesDiskFormat:                                      "Os Images Disk Format",
+	CloudletInfoFieldControllerCacheReceived:                                 "Controller Cache Received",
+	CloudletInfoFieldMaintenanceState:                                        "Maintenance State",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                        "Resources Snapshot Platform Vms Name",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                        "Resources Snapshot Platform Vms Type",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                      "Resources Snapshot Platform Vms Status",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                 "Resources Snapshot Platform Vms Infra Flavor",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:       "Resources Snapshot Platform Vms Ipaddresses External Ip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:       "Resources Snapshot Platform Vms Ipaddresses Internal Ip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:              "Resources Snapshot Platform Vms Containers Name",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:              "Resources Snapshot Platform Vms Containers Type",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:            "Resources Snapshot Platform Vms Containers Status",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:         "Resources Snapshot Platform Vms Containers Clusterip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:          "Resources Snapshot Platform Vms Containers Restarts",
+	CloudletInfoFieldResourcesSnapshotInfoName:                               "Resources Snapshot Info Name",
+	CloudletInfoFieldResourcesSnapshotInfoValue:                              "Resources Snapshot Info Value",
+	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                      "Resources Snapshot Info Infra Max Value",
+	CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      "Resources Snapshot Info Quota Max Value",
+	CloudletInfoFieldResourcesSnapshotInfoDescription:                        "Resources Snapshot Info Description",
+	CloudletInfoFieldResourcesSnapshotInfoUnits:                              "Resources Snapshot Info Units",
+	CloudletInfoFieldResourcesSnapshotInfoAlertThreshold:                     "Resources Snapshot Info Alert Threshold",
+	CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName:             "Resources Snapshot Cluster Insts Cluster Key Name",
+	CloudletInfoFieldResourcesSnapshotClusterInstsOrganization:               "Resources Snapshot Cluster Insts Organization",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           "Resources Snapshot Vm App Insts App Key Organization",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                   "Resources Snapshot Vm App Insts App Key Name",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                "Resources Snapshot Vm App Insts App Key Version",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: "Resources Snapshot Vm App Insts Cluster Inst Key Cluster Key Name",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   "Resources Snapshot Vm App Insts Cluster Inst Key Organization",
+	CloudletInfoFieldTrustPolicyState:                                        "Trust Policy State",
 }
 
 func (m *CloudletInfo) IsKeyField(s string) bool {
@@ -6756,96 +7497,197 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 	if m.MaintenanceState != o.MaintenanceState {
 		fields[CloudletInfoFieldMaintenanceState] = struct{}{}
 	}
-	if len(m.Resources.Vms) != len(o.Resources.Vms) {
-		fields[CloudletInfoFieldResourcesVms] = struct{}{}
-		fields[CloudletInfoFieldResources] = struct{}{}
+	if len(m.ResourcesSnapshot.PlatformVms) != len(o.ResourcesSnapshot.PlatformVms) {
+		fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+		fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 	} else {
-		for i1 := 0; i1 < len(m.Resources.Vms); i1++ {
-			if m.Resources.Vms[i1].Name != o.Resources.Vms[i1].Name {
-				fields[CloudletInfoFieldResourcesVmsName] = struct{}{}
-				fields[CloudletInfoFieldResourcesVms] = struct{}{}
-				fields[CloudletInfoFieldResources] = struct{}{}
+		for i1 := 0; i1 < len(m.ResourcesSnapshot.PlatformVms); i1++ {
+			if m.ResourcesSnapshot.PlatformVms[i1].Name != o.ResourcesSnapshot.PlatformVms[i1].Name {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.Resources.Vms[i1].Type != o.Resources.Vms[i1].Type {
-				fields[CloudletInfoFieldResourcesVmsType] = struct{}{}
-				fields[CloudletInfoFieldResourcesVms] = struct{}{}
-				fields[CloudletInfoFieldResources] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].Type != o.ResourcesSnapshot.PlatformVms[i1].Type {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsType] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.Resources.Vms[i1].Status != o.Resources.Vms[i1].Status {
-				fields[CloudletInfoFieldResourcesVmsStatus] = struct{}{}
-				fields[CloudletInfoFieldResourcesVms] = struct{}{}
-				fields[CloudletInfoFieldResources] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].Status != o.ResourcesSnapshot.PlatformVms[i1].Status {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsStatus] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if m.Resources.Vms[i1].InfraFlavor != o.Resources.Vms[i1].InfraFlavor {
-				fields[CloudletInfoFieldResourcesVmsInfraFlavor] = struct{}{}
-				fields[CloudletInfoFieldResourcesVms] = struct{}{}
-				fields[CloudletInfoFieldResources] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].InfraFlavor != o.ResourcesSnapshot.PlatformVms[i1].InfraFlavor {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
-			if len(m.Resources.Vms[i1].Ipaddresses) != len(o.Resources.Vms[i1].Ipaddresses) {
-				fields[CloudletInfoFieldResourcesVmsIpaddresses] = struct{}{}
-				fields[CloudletInfoFieldResourcesVms] = struct{}{}
-				fields[CloudletInfoFieldResources] = struct{}{}
+			if len(m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses) != len(o.ResourcesSnapshot.PlatformVms[i1].Ipaddresses) {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			} else {
-				for i2 := 0; i2 < len(m.Resources.Vms[i1].Ipaddresses); i2++ {
-					if m.Resources.Vms[i1].Ipaddresses[i2].ExternalIp != o.Resources.Vms[i1].Ipaddresses[i2].ExternalIp {
-						fields[CloudletInfoFieldResourcesVmsIpaddressesExternalIp] = struct{}{}
-						fields[CloudletInfoFieldResourcesVmsIpaddresses] = struct{}{}
-						fields[CloudletInfoFieldResourcesVms] = struct{}{}
-						fields[CloudletInfoFieldResources] = struct{}{}
+				for i2 := 0; i2 < len(m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses); i2++ {
+					if m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].ExternalIp != o.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].ExternalIp {
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 					}
-					if m.Resources.Vms[i1].Ipaddresses[i2].InternalIp != o.Resources.Vms[i1].Ipaddresses[i2].InternalIp {
-						fields[CloudletInfoFieldResourcesVmsIpaddressesInternalIp] = struct{}{}
-						fields[CloudletInfoFieldResourcesVmsIpaddresses] = struct{}{}
-						fields[CloudletInfoFieldResourcesVms] = struct{}{}
-						fields[CloudletInfoFieldResources] = struct{}{}
+					if m.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].InternalIp != o.ResourcesSnapshot.PlatformVms[i1].Ipaddresses[i2].InternalIp {
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddresses] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+						fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 					}
 				}
 			}
-			if m.Resources.Vms[i1].Containers != nil && o.Resources.Vms[i1].Containers != nil {
-				if len(m.Resources.Vms[i1].Containers) != len(o.Resources.Vms[i1].Containers) {
-					fields[CloudletInfoFieldResourcesVmsContainers] = struct{}{}
-					fields[CloudletInfoFieldResourcesVms] = struct{}{}
-					fields[CloudletInfoFieldResources] = struct{}{}
+			if m.ResourcesSnapshot.PlatformVms[i1].Containers != nil && o.ResourcesSnapshot.PlatformVms[i1].Containers != nil {
+				if len(m.ResourcesSnapshot.PlatformVms[i1].Containers) != len(o.ResourcesSnapshot.PlatformVms[i1].Containers) {
+					fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+					fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+					fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 				} else {
-					for i2 := 0; i2 < len(m.Resources.Vms[i1].Containers); i2++ {
-						if m.Resources.Vms[i1].Containers[i2].Name != o.Resources.Vms[i1].Containers[i2].Name {
-							fields[CloudletInfoFieldResourcesVmsContainersName] = struct{}{}
-							fields[CloudletInfoFieldResourcesVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesVms] = struct{}{}
-							fields[CloudletInfoFieldResources] = struct{}{}
+					for i2 := 0; i2 < len(m.ResourcesSnapshot.PlatformVms[i1].Containers); i2++ {
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Name != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Name {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.Resources.Vms[i1].Containers[i2].Type != o.Resources.Vms[i1].Containers[i2].Type {
-							fields[CloudletInfoFieldResourcesVmsContainersType] = struct{}{}
-							fields[CloudletInfoFieldResourcesVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesVms] = struct{}{}
-							fields[CloudletInfoFieldResources] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Type != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Type {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.Resources.Vms[i1].Containers[i2].Status != o.Resources.Vms[i1].Containers[i2].Status {
-							fields[CloudletInfoFieldResourcesVmsContainersStatus] = struct{}{}
-							fields[CloudletInfoFieldResourcesVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesVms] = struct{}{}
-							fields[CloudletInfoFieldResources] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Status != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Status {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.Resources.Vms[i1].Containers[i2].Clusterip != o.Resources.Vms[i1].Containers[i2].Clusterip {
-							fields[CloudletInfoFieldResourcesVmsContainersClusterip] = struct{}{}
-							fields[CloudletInfoFieldResourcesVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesVms] = struct{}{}
-							fields[CloudletInfoFieldResources] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Clusterip != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Clusterip {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
-						if m.Resources.Vms[i1].Containers[i2].Restarts != o.Resources.Vms[i1].Containers[i2].Restarts {
-							fields[CloudletInfoFieldResourcesVmsContainersRestarts] = struct{}{}
-							fields[CloudletInfoFieldResourcesVmsContainers] = struct{}{}
-							fields[CloudletInfoFieldResourcesVms] = struct{}{}
-							fields[CloudletInfoFieldResources] = struct{}{}
+						if m.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Restarts != o.ResourcesSnapshot.PlatformVms[i1].Containers[i2].Restarts {
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+							fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 						}
 					}
 				}
-			} else if (m.Resources.Vms[i1].Containers != nil && o.Resources.Vms[i1].Containers == nil) || (m.Resources.Vms[i1].Containers == nil && o.Resources.Vms[i1].Containers != nil) {
-				fields[CloudletInfoFieldResourcesVmsContainers] = struct{}{}
-				fields[CloudletInfoFieldResourcesVms] = struct{}{}
-				fields[CloudletInfoFieldResources] = struct{}{}
+			} else if (m.ResourcesSnapshot.PlatformVms[i1].Containers != nil && o.ResourcesSnapshot.PlatformVms[i1].Containers == nil) || (m.ResourcesSnapshot.PlatformVms[i1].Containers == nil && o.ResourcesSnapshot.PlatformVms[i1].Containers != nil) {
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVmsContainers] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotPlatformVms] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
 			}
 		}
+	}
+	if len(m.ResourcesSnapshot.Info) != len(o.ResourcesSnapshot.Info) {
+		fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+		fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.ResourcesSnapshot.Info); i1++ {
+			if m.ResourcesSnapshot.Info[i1].Name != o.ResourcesSnapshot.Info[i1].Name {
+				fields[CloudletInfoFieldResourcesSnapshotInfoName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].Value != o.ResourcesSnapshot.Info[i1].Value {
+				fields[CloudletInfoFieldResourcesSnapshotInfoValue] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].InfraMaxValue != o.ResourcesSnapshot.Info[i1].InfraMaxValue {
+				fields[CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].QuotaMaxValue != o.ResourcesSnapshot.Info[i1].QuotaMaxValue {
+				fields[CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].Description != o.ResourcesSnapshot.Info[i1].Description {
+				fields[CloudletInfoFieldResourcesSnapshotInfoDescription] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].Units != o.ResourcesSnapshot.Info[i1].Units {
+				fields[CloudletInfoFieldResourcesSnapshotInfoUnits] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.Info[i1].AlertThreshold != o.ResourcesSnapshot.Info[i1].AlertThreshold {
+				fields[CloudletInfoFieldResourcesSnapshotInfoAlertThreshold] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotInfo] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+		}
+	}
+	if len(m.ResourcesSnapshot.ClusterInsts) != len(o.ResourcesSnapshot.ClusterInsts) {
+		fields[CloudletInfoFieldResourcesSnapshotClusterInsts] = struct{}{}
+		fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.ResourcesSnapshot.ClusterInsts); i1++ {
+			if m.ResourcesSnapshot.ClusterInsts[i1].ClusterKey.Name != o.ResourcesSnapshot.ClusterInsts[i1].ClusterKey.Name {
+				fields[CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotClusterInstsClusterKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotClusterInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.ClusterInsts[i1].Organization != o.ResourcesSnapshot.ClusterInsts[i1].Organization {
+				fields[CloudletInfoFieldResourcesSnapshotClusterInstsOrganization] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotClusterInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+		}
+	}
+	if len(m.ResourcesSnapshot.VmAppInsts) != len(o.ResourcesSnapshot.VmAppInsts) {
+		fields[CloudletInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
+		fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.ResourcesSnapshot.VmAppInsts); i1++ {
+			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Organization != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Organization {
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Name != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Name {
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.VmAppInsts[i1].AppKey.Version != o.ResourcesSnapshot.VmAppInsts[i1].AppKey.Version {
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsAppKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.ClusterKey.Name != o.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.ClusterKey.Name {
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.Organization != o.ResourcesSnapshot.VmAppInsts[i1].ClusterInstKey.Organization {
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotVmAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+		}
+	}
+	if m.TrustPolicyState != o.TrustPolicyState {
+		fields[CloudletInfoFieldTrustPolicyState] = struct{}{}
 	}
 }
 
@@ -6999,13 +7841,46 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 	}
 	if _, set := fmap["17"]; set {
 		if _, set := fmap["17.1"]; set {
-			if src.Resources.Vms != nil {
-				m.Resources.Vms = src.Resources.Vms
+			if src.ResourcesSnapshot.PlatformVms != nil {
+				m.ResourcesSnapshot.PlatformVms = src.ResourcesSnapshot.PlatformVms
 				changed++
-			} else if m.Resources.Vms != nil {
-				m.Resources.Vms = nil
+			} else if m.ResourcesSnapshot.PlatformVms != nil {
+				m.ResourcesSnapshot.PlatformVms = nil
 				changed++
 			}
+		}
+		if _, set := fmap["17.2"]; set {
+			if src.ResourcesSnapshot.Info != nil {
+				m.ResourcesSnapshot.Info = src.ResourcesSnapshot.Info
+				changed++
+			} else if m.ResourcesSnapshot.Info != nil {
+				m.ResourcesSnapshot.Info = nil
+				changed++
+			}
+		}
+		if _, set := fmap["17.3"]; set {
+			if src.ResourcesSnapshot.ClusterInsts != nil {
+				m.ResourcesSnapshot.ClusterInsts = src.ResourcesSnapshot.ClusterInsts
+				changed++
+			} else if m.ResourcesSnapshot.ClusterInsts != nil {
+				m.ResourcesSnapshot.ClusterInsts = nil
+				changed++
+			}
+		}
+		if _, set := fmap["17.4"]; set {
+			if src.ResourcesSnapshot.VmAppInsts != nil {
+				m.ResourcesSnapshot.VmAppInsts = src.ResourcesSnapshot.VmAppInsts
+				changed++
+			} else if m.ResourcesSnapshot.VmAppInsts != nil {
+				m.ResourcesSnapshot.VmAppInsts = nil
+				changed++
+			}
+		}
+	}
+	if _, set := fmap["18"]; set {
+		if m.TrustPolicyState != src.TrustPolicyState {
+			m.TrustPolicyState = src.TrustPolicyState
+			changed++
 		}
 	}
 	return changed
@@ -7061,7 +7936,8 @@ func (m *CloudletInfo) DeepCopyIn(src *CloudletInfo) {
 	}
 	m.ControllerCacheReceived = src.ControllerCacheReceived
 	m.MaintenanceState = src.MaintenanceState
-	m.Resources.DeepCopyIn(&src.Resources)
+	m.ResourcesSnapshot.DeepCopyIn(&src.ResourcesSnapshot)
+	m.TrustPolicyState = src.TrustPolicyState
 }
 
 func (s *CloudletInfo) HasFields() bool {
@@ -7424,15 +8300,12 @@ func (c *CloudletInfoCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletInfo", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -7627,7 +8500,7 @@ func (m *CloudletInfo) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
-	if _, ok := CloudletState_name[int32(m.State)]; !ok {
+	if _, ok := distributed_match_engine.CloudletState_name[int32(m.State)]; !ok {
 		return errors.New("invalid State")
 	}
 	for _, e := range m.Flavors {
@@ -7648,11 +8521,14 @@ func (m *CloudletInfo) ValidateEnums() error {
 			return err
 		}
 	}
-	if _, ok := MaintenanceState_name[int32(m.MaintenanceState)]; !ok {
+	if _, ok := distributed_match_engine.MaintenanceState_name[int32(m.MaintenanceState)]; !ok {
 		return errors.New("invalid MaintenanceState")
 	}
-	if err := m.Resources.ValidateEnums(); err != nil {
+	if err := m.ResourcesSnapshot.ValidateEnums(); err != nil {
 		return err
+	}
+	if _, ok := TrackedState_name[int32(m.TrustPolicyState)]; !ok {
+		return errors.New("invalid TrustPolicyState")
 	}
 	return nil
 }
@@ -7671,6 +8547,9 @@ func IgnoreCloudletInfoFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Status")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "TrustPolicyState")
 	}
 	return cmpopts.IgnoreFields(CloudletInfo{}, names...)
 }
@@ -7706,6 +8585,11 @@ var PlatformTypeStrings = []string{
 	"PLATFORM_TYPE_VM_POOL",
 	"PLATFORM_TYPE_AWS_EC2",
 	"PLATFORM_TYPE_VCD",
+<<<<<<< HEAD
+=======
+	"PLATFORM_TYPE_ANTHOS",
+	"PLATFORM_TYPE_KIND",
+>>>>>>> master
 }
 
 const (
@@ -7721,6 +8605,11 @@ const (
 	PlatformTypePLATFORM_TYPE_VM_POOL   uint64 = 1 << 9
 	PlatformTypePLATFORM_TYPE_AWS_EC2   uint64 = 1 << 10
 	PlatformTypePLATFORM_TYPE_VCD       uint64 = 1 << 11
+<<<<<<< HEAD
+=======
+	PlatformTypePLATFORM_TYPE_ANTHOS    uint64 = 1 << 12
+	PlatformTypePLATFORM_TYPE_KIND      uint64 = 1 << 13
+>>>>>>> master
 )
 
 var PlatformType_CamelName = map[int32]string{
@@ -7748,6 +8637,13 @@ var PlatformType_CamelName = map[int32]string{
 	10: "PlatformTypeAwsEc2",
 	// PLATFORM_TYPE_VCD -> PlatformTypeVcd
 	11: "PlatformTypeVcd",
+<<<<<<< HEAD
+=======
+	// PLATFORM_TYPE_ANTHOS -> PlatformTypeAnthos
+	12: "PlatformTypeAnthos",
+	// PLATFORM_TYPE_KIND -> PlatformTypeKind
+	13: "PlatformTypeKind",
+>>>>>>> master
 }
 var PlatformType_CamelValue = map[string]int32{
 	"PlatformTypeFake":      0,
@@ -7762,6 +8658,11 @@ var PlatformType_CamelValue = map[string]int32{
 	"PlatformTypeVmPool":    9,
 	"PlatformTypeAwsEc2":    10,
 	"PlatformTypeVcd":       11,
+<<<<<<< HEAD
+=======
+	"PlatformTypeAnthos":    12,
+	"PlatformTypeKind":      13,
+>>>>>>> master
 }
 
 func (e *PlatformType) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -7894,112 +8795,570 @@ func (e *InfraApiAccess) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-var CloudletStateStrings = []string{
-	"CLOUDLET_STATE_UNKNOWN",
-	"CLOUDLET_STATE_ERRORS",
-	"CLOUDLET_STATE_READY",
-	"CLOUDLET_STATE_OFFLINE",
-	"CLOUDLET_STATE_NOT_PRESENT",
-	"CLOUDLET_STATE_INIT",
-	"CLOUDLET_STATE_UPGRADE",
-	"CLOUDLET_STATE_NEED_SYNC",
-}
-
-const (
-	CloudletStateCLOUDLET_STATE_UNKNOWN     uint64 = 1 << 0
-	CloudletStateCLOUDLET_STATE_ERRORS      uint64 = 1 << 1
-	CloudletStateCLOUDLET_STATE_READY       uint64 = 1 << 2
-	CloudletStateCLOUDLET_STATE_OFFLINE     uint64 = 1 << 3
-	CloudletStateCLOUDLET_STATE_NOT_PRESENT uint64 = 1 << 4
-	CloudletStateCLOUDLET_STATE_INIT        uint64 = 1 << 5
-	CloudletStateCLOUDLET_STATE_UPGRADE     uint64 = 1 << 6
-	CloudletStateCLOUDLET_STATE_NEED_SYNC   uint64 = 1 << 7
-)
-
-var CloudletState_CamelName = map[int32]string{
-	// CLOUDLET_STATE_UNKNOWN -> CloudletStateUnknown
-	0: "CloudletStateUnknown",
-	// CLOUDLET_STATE_ERRORS -> CloudletStateErrors
-	1: "CloudletStateErrors",
-	// CLOUDLET_STATE_READY -> CloudletStateReady
-	2: "CloudletStateReady",
-	// CLOUDLET_STATE_OFFLINE -> CloudletStateOffline
-	3: "CloudletStateOffline",
-	// CLOUDLET_STATE_NOT_PRESENT -> CloudletStateNotPresent
-	4: "CloudletStateNotPresent",
-	// CLOUDLET_STATE_INIT -> CloudletStateInit
-	5: "CloudletStateInit",
-	// CLOUDLET_STATE_UPGRADE -> CloudletStateUpgrade
-	6: "CloudletStateUpgrade",
-	// CLOUDLET_STATE_NEED_SYNC -> CloudletStateNeedSync
-	7: "CloudletStateNeedSync",
-}
-var CloudletState_CamelValue = map[string]int32{
-	"CloudletStateUnknown":    0,
-	"CloudletStateErrors":     1,
-	"CloudletStateReady":      2,
-	"CloudletStateOffline":    3,
-	"CloudletStateNotPresent": 4,
-	"CloudletStateInit":       5,
-	"CloudletStateUpgrade":    6,
-	"CloudletStateNeedSync":   7,
-}
-
-func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
+func (m *Cloudlet) IsValidArgsForCreateCloudlet() error {
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
 	}
-	val, ok := CloudletState_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = CloudletState_CamelName[val]
-		}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
 	}
-	*e = CloudletState(val)
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.NotifySrvAddr != "" {
+		return fmt.Errorf("Invalid field specified: NotifySrvAddr, this field is only for internal use")
+	}
+	if m.Config.ContainerRegistryPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ContainerRegistryPath, this field is only for internal use")
+	}
+	if m.Config.CloudletVmImagePath != "" {
+		return fmt.Errorf("Invalid field specified: Config.CloudletVmImagePath, this field is only for internal use")
+	}
+	if m.Config.NotifyCtrlAddrs != "" {
+		return fmt.Errorf("Invalid field specified: Config.NotifyCtrlAddrs, this field is only for internal use")
+	}
+	if m.Config.TlsCertFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCertFile, this field is only for internal use")
+	}
+	if m.Config.EnvVar != nil {
+		return fmt.Errorf("Invalid field specified: Config.EnvVar, this field is only for internal use")
+	}
+	if m.Config.PlatformTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.PlatformTag, this field is only for internal use")
+	}
+	if m.Config.TestMode != false {
+		return fmt.Errorf("Invalid field specified: Config.TestMode, this field is only for internal use")
+	}
+	if m.Config.Span != "" {
+		return fmt.Errorf("Invalid field specified: Config.Span, this field is only for internal use")
+	}
+	if m.Config.CleanupMode != false {
+		return fmt.Errorf("Invalid field specified: Config.CleanupMode, this field is only for internal use")
+	}
+	if m.Config.Region != "" {
+		return fmt.Errorf("Invalid field specified: Config.Region, this field is only for internal use")
+	}
+	if m.Config.CommercialCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.CommercialCerts, this field is only for internal use")
+	}
+	if m.Config.UseVaultPki != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultPki, this field is only for internal use")
+	}
+	if m.Config.AppDnsRoot != "" {
+		return fmt.Errorf("Invalid field specified: Config.AppDnsRoot, this field is only for internal use")
+	}
+	if m.Config.ChefServerPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ChefServerPath, this field is only for internal use")
+	}
+	if m.Config.ChefClientInterval != 0 {
+		return fmt.Errorf("Invalid field specified: Config.ChefClientInterval, this field is only for internal use")
+	}
+	if m.Config.DeploymentTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.DeploymentTag, this field is only for internal use")
+	}
+	if m.Config.TlsKeyFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsKeyFile, this field is only for internal use")
+	}
+	if m.Config.TlsCaFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCaFile, this field is only for internal use")
+	}
+	if m.Config.CrmAccessPrivateKey != "" {
+		return fmt.Errorf("Invalid field specified: Config.CrmAccessPrivateKey, this field is only for internal use")
+	}
+	if m.Config.AccessApiAddr != "" {
+		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.ResTagMap != nil {
+		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
+	}
+	if m.ChefClientKey != nil {
+		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
+	}
+	if m.CrmAccessPublicKey != "" {
+		return fmt.Errorf("Invalid field specified: CrmAccessPublicKey, this field is only for internal use")
+	}
+	if m.CrmAccessKeyUpgradeRequired != false {
+		return fmt.Errorf("Invalid field specified: CrmAccessKeyUpgradeRequired, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.TrustPolicyState != 0 {
+		return fmt.Errorf("Invalid field specified: TrustPolicyState, this field is only for internal use")
+	}
+	if m.HostController != "" {
+		return fmt.Errorf("Invalid field specified: HostController, this field is only for internal use")
+	}
 	return nil
 }
 
-func (e CloudletState) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(CloudletState_CamelName, int32(e)), nil
+func (m *Cloudlet) IsValidArgsForDeleteCloudlet() error {
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.NotifySrvAddr != "" {
+		return fmt.Errorf("Invalid field specified: NotifySrvAddr, this field is only for internal use")
+	}
+	if m.Config.ContainerRegistryPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ContainerRegistryPath, this field is only for internal use")
+	}
+	if m.Config.CloudletVmImagePath != "" {
+		return fmt.Errorf("Invalid field specified: Config.CloudletVmImagePath, this field is only for internal use")
+	}
+	if m.Config.NotifyCtrlAddrs != "" {
+		return fmt.Errorf("Invalid field specified: Config.NotifyCtrlAddrs, this field is only for internal use")
+	}
+	if m.Config.TlsCertFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCertFile, this field is only for internal use")
+	}
+	if m.Config.EnvVar != nil {
+		return fmt.Errorf("Invalid field specified: Config.EnvVar, this field is only for internal use")
+	}
+	if m.Config.PlatformTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.PlatformTag, this field is only for internal use")
+	}
+	if m.Config.TestMode != false {
+		return fmt.Errorf("Invalid field specified: Config.TestMode, this field is only for internal use")
+	}
+	if m.Config.Span != "" {
+		return fmt.Errorf("Invalid field specified: Config.Span, this field is only for internal use")
+	}
+	if m.Config.CleanupMode != false {
+		return fmt.Errorf("Invalid field specified: Config.CleanupMode, this field is only for internal use")
+	}
+	if m.Config.Region != "" {
+		return fmt.Errorf("Invalid field specified: Config.Region, this field is only for internal use")
+	}
+	if m.Config.CommercialCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.CommercialCerts, this field is only for internal use")
+	}
+	if m.Config.UseVaultPki != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultPki, this field is only for internal use")
+	}
+	if m.Config.AppDnsRoot != "" {
+		return fmt.Errorf("Invalid field specified: Config.AppDnsRoot, this field is only for internal use")
+	}
+	if m.Config.ChefServerPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ChefServerPath, this field is only for internal use")
+	}
+	if m.Config.ChefClientInterval != 0 {
+		return fmt.Errorf("Invalid field specified: Config.ChefClientInterval, this field is only for internal use")
+	}
+	if m.Config.DeploymentTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.DeploymentTag, this field is only for internal use")
+	}
+	if m.Config.TlsKeyFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsKeyFile, this field is only for internal use")
+	}
+	if m.Config.TlsCaFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCaFile, this field is only for internal use")
+	}
+	if m.Config.CrmAccessPrivateKey != "" {
+		return fmt.Errorf("Invalid field specified: Config.CrmAccessPrivateKey, this field is only for internal use")
+	}
+	if m.Config.AccessApiAddr != "" {
+		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.ResTagMap != nil {
+		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
+	}
+	if m.ChefClientKey != nil {
+		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
+	}
+	if m.CrmAccessPublicKey != "" {
+		return fmt.Errorf("Invalid field specified: CrmAccessPublicKey, this field is only for internal use")
+	}
+	if m.CrmAccessKeyUpgradeRequired != false {
+		return fmt.Errorf("Invalid field specified: CrmAccessKeyUpgradeRequired, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.TrustPolicyState != 0 {
+		return fmt.Errorf("Invalid field specified: TrustPolicyState, this field is only for internal use")
+	}
+	if m.HostController != "" {
+		return fmt.Errorf("Invalid field specified: HostController, this field is only for internal use")
+	}
+	return nil
 }
 
-// custom JSON encoding/decoding
-func (e *CloudletState) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
-		val, ok := CloudletState_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = CloudletState_CamelName[val]
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
-		}
-		*e = CloudletState(val)
-		return nil
+func (m *Cloudlet) IsValidArgsForUpdateCloudlet() error {
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
-	if err == nil {
-		*e = CloudletState(val)
-		return nil
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.DeploymentLocal != false {
+		return fmt.Errorf("Invalid field specified: DeploymentLocal, this field is only for internal use")
+	}
+	if m.PlatformType != 0 {
+		return fmt.Errorf("Invalid field specified: PlatformType, this field is only for internal use")
+	}
+	if m.NotifySrvAddr != "" {
+		return fmt.Errorf("Invalid field specified: NotifySrvAddr, this field is only for internal use")
+	}
+	if m.Flavor.Name != "" {
+		return fmt.Errorf("Invalid field specified: Flavor.Name, this field is only for internal use")
+	}
+	if m.PhysicalName != "" {
+		return fmt.Errorf("Invalid field specified: PhysicalName, this field is only for internal use")
+	}
+	if m.ContainerVersion != "" {
+		return fmt.Errorf("Invalid field specified: ContainerVersion, this field is only for internal use")
+	}
+	if m.Config.ContainerRegistryPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ContainerRegistryPath, this field is only for internal use")
+	}
+	if m.Config.CloudletVmImagePath != "" {
+		return fmt.Errorf("Invalid field specified: Config.CloudletVmImagePath, this field is only for internal use")
+	}
+	if m.Config.NotifyCtrlAddrs != "" {
+		return fmt.Errorf("Invalid field specified: Config.NotifyCtrlAddrs, this field is only for internal use")
+	}
+	if m.Config.TlsCertFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCertFile, this field is only for internal use")
+	}
+	if m.Config.EnvVar != nil {
+		return fmt.Errorf("Invalid field specified: Config.EnvVar, this field is only for internal use")
+	}
+	if m.Config.PlatformTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.PlatformTag, this field is only for internal use")
+	}
+	if m.Config.TestMode != false {
+		return fmt.Errorf("Invalid field specified: Config.TestMode, this field is only for internal use")
+	}
+	if m.Config.Span != "" {
+		return fmt.Errorf("Invalid field specified: Config.Span, this field is only for internal use")
+	}
+	if m.Config.CleanupMode != false {
+		return fmt.Errorf("Invalid field specified: Config.CleanupMode, this field is only for internal use")
+	}
+	if m.Config.Region != "" {
+		return fmt.Errorf("Invalid field specified: Config.Region, this field is only for internal use")
+	}
+	if m.Config.CommercialCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.CommercialCerts, this field is only for internal use")
+	}
+	if m.Config.UseVaultPki != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultPki, this field is only for internal use")
+	}
+	if m.Config.AppDnsRoot != "" {
+		return fmt.Errorf("Invalid field specified: Config.AppDnsRoot, this field is only for internal use")
+	}
+	if m.Config.ChefServerPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ChefServerPath, this field is only for internal use")
+	}
+	if m.Config.ChefClientInterval != 0 {
+		return fmt.Errorf("Invalid field specified: Config.ChefClientInterval, this field is only for internal use")
+	}
+	if m.Config.DeploymentTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.DeploymentTag, this field is only for internal use")
+	}
+	if m.Config.TlsKeyFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsKeyFile, this field is only for internal use")
+	}
+	if m.Config.TlsCaFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCaFile, this field is only for internal use")
+	}
+	if m.Config.CrmAccessPrivateKey != "" {
+		return fmt.Errorf("Invalid field specified: Config.CrmAccessPrivateKey, this field is only for internal use")
+	}
+	if m.Config.AccessApiAddr != "" {
+		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.ResTagMap != nil {
+		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
+	}
+	if m.VmImageVersion != "" {
+		return fmt.Errorf("Invalid field specified: VmImageVersion, this field is only for internal use")
+	}
+	if m.Deployment != "" {
+		return fmt.Errorf("Invalid field specified: Deployment, this field is only for internal use")
+	}
+	if m.InfraApiAccess != 0 {
+		return fmt.Errorf("Invalid field specified: InfraApiAccess, this field is only for internal use")
+	}
+	if m.InfraConfig.ExternalNetworkName != "" {
+		return fmt.Errorf("Invalid field specified: InfraConfig.ExternalNetworkName, this field is only for internal use")
+	}
+	if m.InfraConfig.FlavorName != "" {
+		return fmt.Errorf("Invalid field specified: InfraConfig.FlavorName, this field is only for internal use")
+	}
+	if m.ChefClientKey != nil {
+		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
+	}
+	if m.OverridePolicyContainerVersion != false {
+		return fmt.Errorf("Invalid field specified: OverridePolicyContainerVersion, this field is only for internal use")
+	}
+	if m.VmPool != "" {
+		return fmt.Errorf("Invalid field specified: VmPool, this field is only for internal use")
+	}
+	if m.CrmAccessPublicKey != "" {
+		return fmt.Errorf("Invalid field specified: CrmAccessPublicKey, this field is only for internal use")
+	}
+	if m.CrmAccessKeyUpgradeRequired != false {
+		return fmt.Errorf("Invalid field specified: CrmAccessKeyUpgradeRequired, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.TrustPolicyState != 0 {
+		return fmt.Errorf("Invalid field specified: TrustPolicyState, this field is only for internal use")
+	}
+	if m.HostController != "" {
+		return fmt.Errorf("Invalid field specified: HostController, this field is only for internal use")
+	}
+	return nil
 }
+
+func (m *CloudletKey) IsValidArgsForGetCloudletManifest() error {
+	return nil
+}
+
+func (m *CloudletProps) IsValidArgsForGetCloudletProps() error {
+	if m.Properties != nil {
+		return fmt.Errorf("Invalid field specified: Properties, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletResourceQuotaProps) IsValidArgsForGetCloudletResourceQuotaProps() error {
+	return nil
+}
+
+func (m *CloudletResourceUsage) IsValidArgsForGetCloudletResourceUsage() error {
+	return nil
+}
+
+func (m *CloudletResMap) IsValidArgsForAddCloudletResMapping() error {
+	return nil
+}
+
+func (m *CloudletResMap) IsValidArgsForRemoveCloudletResMapping() error {
+	return nil
+}
+
+func (m *FlavorMatch) IsValidArgsForFindFlavorMatch() error {
+	return nil
+}
+
+func (m *CloudletKey) IsValidArgsForRevokeAccessKey() error {
+	return nil
+}
+
+func (m *CloudletKey) IsValidArgsForGenerateAccessKey() error {
+	return nil
+}
+
+func (m *Cloudlet) IsValidArgsForPlatformDeleteCloudlet() error {
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.NotifySrvAddr != "" {
+		return fmt.Errorf("Invalid field specified: NotifySrvAddr, this field is only for internal use")
+	}
+	if m.Config.ContainerRegistryPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ContainerRegistryPath, this field is only for internal use")
+	}
+	if m.Config.CloudletVmImagePath != "" {
+		return fmt.Errorf("Invalid field specified: Config.CloudletVmImagePath, this field is only for internal use")
+	}
+	if m.Config.NotifyCtrlAddrs != "" {
+		return fmt.Errorf("Invalid field specified: Config.NotifyCtrlAddrs, this field is only for internal use")
+	}
+	if m.Config.TlsCertFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCertFile, this field is only for internal use")
+	}
+	if m.Config.EnvVar != nil {
+		return fmt.Errorf("Invalid field specified: Config.EnvVar, this field is only for internal use")
+	}
+	if m.Config.PlatformTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.PlatformTag, this field is only for internal use")
+	}
+	if m.Config.TestMode != false {
+		return fmt.Errorf("Invalid field specified: Config.TestMode, this field is only for internal use")
+	}
+	if m.Config.Span != "" {
+		return fmt.Errorf("Invalid field specified: Config.Span, this field is only for internal use")
+	}
+	if m.Config.CleanupMode != false {
+		return fmt.Errorf("Invalid field specified: Config.CleanupMode, this field is only for internal use")
+	}
+	if m.Config.Region != "" {
+		return fmt.Errorf("Invalid field specified: Config.Region, this field is only for internal use")
+	}
+	if m.Config.CommercialCerts != false {
+		return fmt.Errorf("Invalid field specified: Config.CommercialCerts, this field is only for internal use")
+	}
+	if m.Config.UseVaultPki != false {
+		return fmt.Errorf("Invalid field specified: Config.UseVaultPki, this field is only for internal use")
+	}
+	if m.Config.AppDnsRoot != "" {
+		return fmt.Errorf("Invalid field specified: Config.AppDnsRoot, this field is only for internal use")
+	}
+	if m.Config.ChefServerPath != "" {
+		return fmt.Errorf("Invalid field specified: Config.ChefServerPath, this field is only for internal use")
+	}
+	if m.Config.ChefClientInterval != 0 {
+		return fmt.Errorf("Invalid field specified: Config.ChefClientInterval, this field is only for internal use")
+	}
+	if m.Config.DeploymentTag != "" {
+		return fmt.Errorf("Invalid field specified: Config.DeploymentTag, this field is only for internal use")
+	}
+	if m.Config.TlsKeyFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsKeyFile, this field is only for internal use")
+	}
+	if m.Config.TlsCaFile != "" {
+		return fmt.Errorf("Invalid field specified: Config.TlsCaFile, this field is only for internal use")
+	}
+	if m.Config.CrmAccessPrivateKey != "" {
+		return fmt.Errorf("Invalid field specified: Config.CrmAccessPrivateKey, this field is only for internal use")
+	}
+	if m.Config.AccessApiAddr != "" {
+		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.ChefClientKey != nil {
+		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
+	}
+	if m.CrmAccessPublicKey != "" {
+		return fmt.Errorf("Invalid field specified: CrmAccessPublicKey, this field is only for internal use")
+	}
+	if m.CrmAccessKeyUpgradeRequired != false {
+		return fmt.Errorf("Invalid field specified: CrmAccessKeyUpgradeRequired, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	if m.TrustPolicyState != 0 {
+		return fmt.Errorf("Invalid field specified: TrustPolicyState, this field is only for internal use")
+	}
+	if m.HostController != "" {
+		return fmt.Errorf("Invalid field specified: HostController, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletInfo) IsValidArgsForInjectCloudletInfo() error {
+	return nil
+}
+
+func (m *CloudletInfo) IsValidArgsForEvictCloudletInfo() error {
+	return nil
+}
+
 func (m *CloudletKey) Size() (n int) {
 	if m == nil {
 		return 0
@@ -8095,10 +9454,7 @@ func (m *PlatformConfig) Size() (n int) {
 	if m.CommercialCerts {
 		n += 2
 	}
-	if m.UseVaultCerts {
-		n += 2
-	}
-	if m.UseVaultCas {
+	if m.UseVaultPki {
 		n += 2
 	}
 	l = len(m.AppDnsRoot)
@@ -8167,6 +9523,25 @@ func (m *InfraConfig) Size() (n int) {
 	l = len(m.FlavorName)
 	if l > 0 {
 		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	return n
+}
+
+func (m *ResourceQuota) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if m.Value != 0 {
+		n += 1 + sovCloudlet(uint64(m.Value))
+	}
+	if m.AlertThreshold != 0 {
+		n += 1 + sovCloudlet(uint64(m.AlertThreshold))
 	}
 	return n
 }
@@ -8306,6 +9681,26 @@ func (m *Cloudlet) Size() (n int) {
 	n += 2 + l + sovCloudlet(uint64(l))
 	l = m.UpdatedAt.Size()
 	n += 2 + l + sovCloudlet(uint64(l))
+	l = len(m.TrustPolicy)
+	if l > 0 {
+		n += 2 + l + sovCloudlet(uint64(l))
+	}
+	if m.TrustPolicyState != 0 {
+		n += 2 + sovCloudlet(uint64(m.TrustPolicyState))
+	}
+	if len(m.ResourceQuotas) > 0 {
+		for _, e := range m.ResourceQuotas {
+			l = e.Size()
+			n += 2 + l + sovCloudlet(uint64(l))
+		}
+	}
+	if m.DefaultResourceAlertThreshold != 0 {
+		n += 2 + sovCloudlet(uint64(m.DefaultResourceAlertThreshold))
+	}
+	l = len(m.HostController)
+	if l > 0 {
+		n += 2 + l + sovCloudlet(uint64(l))
+	}
 	return n
 }
 
@@ -8392,6 +9787,38 @@ func (m *CloudletProps) Size() (n int) {
 			mapEntrySize := 1 + len(k) + sovCloudlet(uint64(len(k))) + l
 			n += mapEntrySize + 1 + sovCloudlet(uint64(mapEntrySize))
 		}
+	}
+	return n
+}
+
+func (m *CloudletResourceQuotaProps) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PlatformType != 0 {
+		n += 1 + sovCloudlet(uint64(m.PlatformType))
+	}
+	if len(m.Props) > 0 {
+		for _, e := range m.Props {
+			l = e.Size()
+			n += 1 + l + sovCloudlet(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CloudletResourceUsage) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovCloudlet(uint64(l))
+	if m.InfraUsage {
+		n += 2
 	}
 	return n
 }
@@ -8537,8 +9964,11 @@ func (m *CloudletInfo) Size() (n int) {
 	if m.MaintenanceState != 0 {
 		n += 2 + sovCloudlet(uint64(m.MaintenanceState))
 	}
-	l = m.Resources.Size()
+	l = m.ResourcesSnapshot.Size()
 	n += 2 + l + sovCloudlet(uint64(l))
+	if m.TrustPolicyState != 0 {
+		n += 2 + sovCloudlet(uint64(m.TrustPolicyState))
+	}
 	return n
 }
 
@@ -9286,7 +10716,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 			m.CommercialCerts = bool(v != 0)
 		case 14:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UseVaultCerts", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field UseVaultPki", wireType)
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
@@ -9303,27 +10733,7 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.UseVaultCerts = bool(v != 0)
-		case 15:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UseVaultCas", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCloudlet
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.UseVaultCas = bool(v != 0)
+			m.UseVaultPki = bool(v != 0)
 		case 16:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AppDnsRoot", wireType)
@@ -9897,6 +11307,129 @@ func (m *InfraConfig) Unmarshal(dAtA []byte) error {
 			}
 			m.FlavorName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ResourceQuota) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ResourceQuota: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ResourceQuota: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			m.Value = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Value |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AlertThreshold", wireType)
+			}
+			m.AlertThreshold = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AlertThreshold |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCloudlet(dAtA[iNdEx:])
@@ -11095,7 +12628,7 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaintenanceState |= MaintenanceState(b&0x7F) << shift
+				m.MaintenanceState |= dme_proto.MaintenanceState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -11269,6 +12802,142 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 			if err := m.UpdatedAt.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 37:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustPolicy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TrustPolicy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 38:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustPolicyState", wireType)
+			}
+			m.TrustPolicyState = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TrustPolicyState |= TrackedState(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 39:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ResourceQuotas", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ResourceQuotas = append(m.ResourceQuotas, ResourceQuota{})
+			if err := m.ResourceQuotas[len(m.ResourceQuotas)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 40:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultResourceAlertThreshold", wireType)
+			}
+			m.DefaultResourceAlertThreshold = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DefaultResourceAlertThreshold |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 41:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostController", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HostController = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -11915,6 +13584,218 @@ func (m *CloudletProps) Unmarshal(dAtA []byte) error {
 			}
 			m.Properties[mapkey] = mapvalue
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CloudletResourceQuotaProps) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CloudletResourceQuotaProps: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CloudletResourceQuotaProps: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlatformType", wireType)
+			}
+			m.PlatformType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PlatformType |= PlatformType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Props", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Props = append(m.Props, InfraResource{})
+			if err := m.Props[len(m.Props)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CloudletResourceUsage) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CloudletResourceUsage: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CloudletResourceUsage: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InfraUsage", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.InfraUsage = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCloudlet(dAtA[iNdEx:])
@@ -12614,7 +14495,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= CloudletState(b&0x7F) << shift
+				m.State |= dme_proto.CloudletState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -12960,14 +14841,14 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaintenanceState |= MaintenanceState(b&0x7F) << shift
+				m.MaintenanceState |= dme_proto.MaintenanceState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 17:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Resources", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ResourcesSnapshot", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -12994,10 +14875,29 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Resources.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ResourcesSnapshot.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustPolicyState", wireType)
+			}
+			m.TrustPolicyState = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TrustPolicyState |= TrackedState(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCloudlet(dAtA[iNdEx:])

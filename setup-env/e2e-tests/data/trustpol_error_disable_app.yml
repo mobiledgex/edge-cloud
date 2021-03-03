@@ -1,0 +1,4 @@
+errors:
+- desc: AppApi[0]
+  msg: 'rpc error: code = Unknown desc = Cannot set app to untrusted which has an
+    instance on a trusted cloudlet'

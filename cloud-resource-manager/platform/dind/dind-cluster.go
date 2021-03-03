@@ -23,7 +23,7 @@ type DindCluster struct {
 	KContext    string
 }
 
-func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
+func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	var err error
 
 	switch clusterInst.Deployment {
@@ -47,7 +47,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, privacyPolicy *edgeproto.PrivacyPolicy, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	return fmt.Errorf("update cluster not supported for DIND")
 }
 
@@ -139,20 +139,6 @@ func (s *Platform) DeleteDINDCluster(ctx context.Context, clusterInst *edgeproto
 	return nil
 }
 
-func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.InfraResources, error) {
-	resources := edgeproto.InfraResources{
-		Vms: []edgeproto.VmInfo{
-			{Name: "local-mac"},
-		},
-	}
-	return &resources, nil
-}
-
-func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edgeproto.ClusterInstKey) (*edgeproto.InfraResources, error) {
-	resources := edgeproto.InfraResources{}
-	return &resources, nil
-}
-
 func GetClusterID(id int) string {
 	return strconv.Itoa(id)
 }
@@ -203,4 +189,20 @@ func NewClusterFor(clusterName string, id int) DindCluster {
 
 func GetDockerNetworkName(cluster *DindCluster) string {
 	return "kubeadm-dind-net-" + cluster.ClusterName + "-" + GetClusterID(cluster.ClusterID)
+}
+
+func (s *Platform) GetMasterIp(ctx context.Context, names *k8smgmt.KubeNames) (string, error) {
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		return "", err
+	}
+	return cluster.MasterAddr, nil
+}
+
+func (s *Platform) GetDockerNetworkName(ctx context.Context, names *k8smgmt.KubeNames) (string, error) {
+	cluster, err := FindCluster(names.ClusterName)
+	if err != nil {
+		return "", err
+	}
+	return GetDockerNetworkName(cluster), nil
 }

@@ -1,0 +1,6 @@
+
+cloudlets:
+- key:
+    organization: tmus
+    name: cloudlet2
+  trustpolicy: TrustPolicy1

@@ -702,15 +702,12 @@ func (c *OperatorCodeCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *OperatorCodeCache) Show(filter *OperatorCode, cb func(ret *OperatorCode) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show OperatorCode", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare OperatorCode", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show OperatorCode", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -888,6 +885,14 @@ func (c *OperatorCodeCache) UsesOrg(org string) bool {
 
 // Helper method to check that enums have valid values
 func (m *OperatorCode) ValidateEnums() error {
+	return nil
+}
+
+func (m *OperatorCode) IsValidArgsForCreateOperatorCode() error {
+	return nil
+}
+
+func (m *OperatorCode) IsValidArgsForDeleteOperatorCode() error {
 	return nil
 }
 

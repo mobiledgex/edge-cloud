@@ -83,17 +83,19 @@ var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
 
 type Services struct {
-	etcdLocal           *process.Etcd
-	sync                *Sync
-	influxQ             *influxq.InfluxQ
-	events              *influxq.InfluxQ
-	notifyServerMgr     bool
-	grpcServer          *grpc.Server
-	httpServer          *http.Server
-	notifyClient        *notify.Client
-	accessKeyGrpcServer node.AccessKeyGrpcServer
-	listeners           []net.Listener
-	publicCertManager   *node.PublicCertManager
+	etcdLocal                *process.Etcd
+	sync                     *Sync
+	influxQ                  *influxq.InfluxQ
+	events                   *influxq.InfluxQ
+	persConnInfluxQ          *influxq.InfluxQ
+	cloudletResourcesInfluxQ *influxq.InfluxQ
+	notifyServerMgr          bool
+	grpcServer               *grpc.Server
+	httpServer               *http.Server
+	notifyClient             *notify.Client
+	accessKeyGrpcServer      node.AccessKeyGrpcServer
+	listeners                []net.Listener
+	publicCertManager        *node.PublicCertManager
 }
 
 func main() {
@@ -270,8 +272,25 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.events = events
+	// persistent stats influx
+	persConnInfluxQ := influxq.NewInfluxQ(cloudcommon.PersistentConnDbName, influxAuth.User, influxAuth.Pass)
+	err = persConnInfluxQ.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	services.persConnInfluxQ = persConnInfluxQ
+	// cloudlet resources influx
+	cloudletResourcesInfluxQ := influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, influxAuth.User, influxAuth.Pass)
+	err = cloudletResourcesInfluxQ.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	services.cloudletResourcesInfluxQ = cloudletResourcesInfluxQ
+	services.cloudletResourcesInfluxQ.UpdateDefaultRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration())
 
-	InitNotify(influxQ, &appInstClientApi)
+	InitNotify(influxQ, persConnInfluxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {
 		addrs := strings.Split(*notifyParentAddrs, ",")
 		tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
@@ -315,15 +334,24 @@ func startServices() error {
 	)
 	services.notifyServerMgr = true
 
-	// Get TLS config for access server
-	var getPublicCertApi node.GetPublicCertApi
-	getPublicCertApi = &node.VaultPublicCertApi{
-		VaultConfig: vaultConfig,
+	// VaultPublicCertClient implements GetPublicCertApi
+	// Allows controller to get public certs from vault
+	var getPublicCertApi cloudcommon.GetPublicCertApi
+	if nodeMgr.InternalPki.UseVaultPki {
+		if tls.IsTestTls() || *testMode {
+			getPublicCertApi = &cloudcommon.TestPublicCertApi{}
+		} else {
+			getPublicCertApi = &cloudcommon.VaultPublicCertApi{
+				VaultConfig: vaultConfig,
+			}
+		}
 	}
-	if e2e := os.Getenv("E2ETEST_TLS"); e2e != "" || *testMode {
-		getPublicCertApi = &node.TestPublicCertApi{}
+	publicCertManager, err := node.NewPublicCertManager(*publicAddr, getPublicCertApi, "", "")
+	if err != nil {
+		span.Finish()
+		log.FatalLog("unable to get public cert manager", "err", err)
 	}
-	services.publicCertManager = node.NewPublicCertManager(*publicAddr, getPublicCertApi)
+	services.publicCertManager = publicCertManager
 	accessServerTlsConfig, err := services.publicCertManager.GetServerTlsConfig(ctx)
 	if err != nil {
 		return err
@@ -371,12 +399,13 @@ func startServices() error {
 	edgeproto.RegisterAlertApiServer(server, &alertApi)
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
-	edgeproto.RegisterPrivacyPolicyApiServer(server, &privacyPolicyApi)
+	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
 	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
+	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -406,7 +435,7 @@ func startServices() error {
 			edgeproto.RegisterAutoScalePolicyApiHandler,
 			edgeproto.RegisterAutoProvPolicyApiHandler,
 			edgeproto.RegisterResTagTableApiHandler,
-			edgeproto.RegisterPrivacyPolicyApiHandler,
+			edgeproto.RegisterTrustPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
@@ -481,6 +510,12 @@ func stopServices() {
 	if services.events != nil {
 		services.events.Stop()
 	}
+	if services.persConnInfluxQ != nil {
+		services.persConnInfluxQ.Stop()
+	}
+	if services.cloudletResourcesInfluxQ != nil {
+		services.cloudletResourcesInfluxQ.Stop()
+	}
 	if services.sync != nil {
 		services.sync.Done()
 	}
@@ -526,6 +561,7 @@ func InitApis(sync *Sync) {
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
+	InitStreamObjApi(sync)
 	InitClusterInstApi(sync)
 	InitCloudletInfoApi(sync)
 	InitVMPoolApi(sync)
@@ -542,25 +578,26 @@ func InitApis(sync *Sync) {
 	InitAutoProvPolicyApi(sync)
 	InitAutoProvInfoApi(sync)
 	InitResTagTableApi(sync)
-	InitPrivacyPolicyApi(sync)
+	InitTrustPolicyApi(sync)
 	InitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
 	InitDeviceApi(sync)
 	InitOrganizationApi(sync)
+	InitAppInstLatencyApi(sync)
 }
 
-func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
+func InitNotify(metricsInflux *influxq.InfluxQ, persConnInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendVMPoolCache(&vmPoolApi.cache)
 	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
+	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendPrivacyPolicyCache(&privacyPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
@@ -575,12 +612,33 @@ func InitNotify(influxQ *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandle
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(&vmPoolInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
-	autoProvPolicyApi.SetInfluxQ(influxQ)
+	autoProvPolicyApi.SetInfluxQ(metricsInflux)
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(NewControllerMetricsReceiver(metricsInflux, persConnInflux)))
+}
+
+type ControllerMetricsReceiver struct {
+	metricsInflux  *influxq.InfluxQ
+	persConnInflux *influxq.InfluxQ
+}
+
+func NewControllerMetricsReceiver(metricsInflux *influxq.InfluxQ, persConnInflux *influxq.InfluxQ) *ControllerMetricsReceiver {
+	c := new(ControllerMetricsReceiver)
+	c.metricsInflux = metricsInflux
+	c.persConnInflux = persConnInflux
+	return c
+}
+
+// Send metric to correct influxdb
+func (c *ControllerMetricsReceiver) RecvMetric(ctx context.Context, metric *edgeproto.Metric) {
+	if _, ok := cloudcommon.PersistentMetrics[metric.Name]; ok {
+		c.persConnInflux.AddMetric(metric)
+	} else {
+		c.metricsInflux.AddMetric(metric)
+	}
 }

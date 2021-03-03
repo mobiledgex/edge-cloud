@@ -39,3 +39,11 @@ func (s *DummyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_Upg
 func (s *DummyServer) GetCloudletManifest(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error) {
 	return &edgeproto.CloudletManifest{}, nil
 }
+
+func (s *DummyServer) GetCloudletResourceUsage(ctx context.Context, usage *edgeproto.CloudletResourceUsage) (*edgeproto.InfraResourcesSnapshot, error) {
+	return &edgeproto.InfraResourcesSnapshot{}, nil
+}
+
+func (s *DummyServer) GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error) {
+	return &edgeproto.CloudletResourceQuotaProps{}, nil
+}

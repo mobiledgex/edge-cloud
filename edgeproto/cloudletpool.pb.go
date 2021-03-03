@@ -801,7 +801,7 @@ func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Cloudlets != nil {
-		if m.Cloudlets == nil && o.Cloudlets != nil || m.Cloudlets != nil && o.Cloudlets == nil {
+		if len(m.Cloudlets) == 0 && len(o.Cloudlets) > 0 || len(m.Cloudlets) > 0 && len(o.Cloudlets) == 0 {
 			return false
 		} else if m.Cloudlets != nil && o.Cloudlets != nil {
 			if !opts.Filter && len(m.Cloudlets) != len(o.Cloudlets) {
@@ -1331,15 +1331,12 @@ func (c *CloudletPoolCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *CloudletPoolCache) Show(filter *CloudletPool, cb func(ret *CloudletPool) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show CloudletPool", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare CloudletPool", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show CloudletPool", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -1713,6 +1710,62 @@ func (m *CloudletPoolMember) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (m *CloudletPool) IsValidArgsForCreateCloudletPool() error {
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletPool) IsValidArgsForDeleteCloudletPool() error {
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletPool) IsValidArgsForUpdateCloudletPool() error {
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *CloudletPoolMember) IsValidArgsForAddCloudletPoolMember() error {
+	return nil
+}
+
+func (m *CloudletPoolMember) IsValidArgsForRemoveCloudletPoolMember() error {
 	return nil
 }
 

@@ -41,11 +41,13 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		cloudlet := edgeproto.Cloudlet{}
 		cloudlet.Key.Organization = org
 		cloudlet.Key.Name = name
+		cloudlet.EnvVar = map[string]string{"key1": "val1"}
 		s.CloudletCache.Update(ctx, &cloudlet, int64(ii))
 
 		cloudletInfo := edgeproto.CloudletInfo{}
 		cloudletInfo.Key.Organization = org
 		cloudletInfo.Key.Name = name
+		cloudletInfo.ContainerVersion = "xyz"
 		s.CloudletInfoCache.Update(ctx, &cloudletInfo, int64(ii))
 
 		pool := edgeproto.CloudletPool{}
@@ -69,10 +71,10 @@ func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) 
 		autoscale.Key.Organization = org
 		s.AutoScalePolicyCache.Update(ctx, &autoscale, int64(ii))
 
-		priv := edgeproto.PrivacyPolicy{}
-		priv.Key.Name = name + "privacy"
+		priv := edgeproto.TrustPolicy{}
+		priv.Key.Name = name + "trust"
 		priv.Key.Organization = org
-		s.PrivacyPolicyCache.Update(ctx, &priv, int64(ii))
+		s.TrustPolicyCache.Update(ctx, &priv, int64(ii))
 	}
 }
 

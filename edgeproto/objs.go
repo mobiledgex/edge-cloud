@@ -39,6 +39,21 @@ var ReservedPlatformPorts = map[string]string{
 	"tcp:20800": "Kubernetes master join server",
 }
 
+type WaitStateSpec struct {
+	StreamCache *StreamObjCache
+	StreamKey   *AppInstKey
+}
+
+type WaitStateOps func(wSpec *WaitStateSpec) error
+
+func WithStreamObj(streamCache *StreamObjCache, streamKey *AppInstKey) WaitStateOps {
+	return func(wSpec *WaitStateSpec) error {
+		wSpec.StreamCache = streamCache
+		wSpec.StreamKey = streamKey
+		return nil
+	}
+}
+
 // sort each slice by key
 func (a *AllData) Sort() {
 	sort.Slice(a.AppInstances[:], func(i, j int) bool {
@@ -62,6 +77,14 @@ func (a *AllData) Sort() {
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
 	})
+	for i := range a.CloudletInfos {
+		sort.Slice(a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[:], func(ii, jj int) bool {
+			return a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[ii].GetKeyString() < a.CloudletInfos[i].ResourcesSnapshot.ClusterInsts[jj].GetKeyString()
+		})
+		sort.Slice(a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[:], func(ii, jj int) bool {
+			return a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[ii].GetKeyString() < a.CloudletInfos[i].ResourcesSnapshot.VmAppInsts[jj].GetKeyString()
+		})
+	}
 	sort.Slice(a.CloudletPools[:], func(i, j int) bool {
 		return a.CloudletPools[i].Key.GetKeyString() < a.CloudletPools[j].Key.GetKeyString()
 	})
@@ -71,8 +94,8 @@ func (a *AllData) Sort() {
 	sort.Slice(a.AutoProvPolicies[:], func(i, j int) bool {
 		return a.AutoProvPolicies[i].Key.GetKeyString() < a.AutoProvPolicies[j].Key.GetKeyString()
 	})
-	sort.Slice(a.PrivacyPolicies[:], func(i, j int) bool {
-		return a.PrivacyPolicies[i].Key.GetKeyString() < a.PrivacyPolicies[j].Key.GetKeyString()
+	sort.Slice(a.TrustPolicies[:], func(i, j int) bool {
+		return a.TrustPolicies[i].Key.GetKeyString() < a.TrustPolicies[j].Key.GetKeyString()
 	})
 	sort.Slice(a.AutoProvPolicyCloudlets[:], func(i, j int) bool {
 		if a.AutoProvPolicyCloudlets[i].Key.GetKeyString() == a.AutoProvPolicyCloudlets[j].Key.GetKeyString() {
@@ -129,6 +152,16 @@ func (key *ClusterKey) ValidateKey() error {
 }
 
 func (key *ClusterInstKey) ValidateKey() error {
+	if err := key.ClusterKey.ValidateKey(); err != nil {
+		return err
+	}
+	if err := key.CloudletKey.ValidateKey(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (key *VirtualClusterInstKey) ValidateKey() error {
 	if err := key.ClusterKey.ValidateKey(); err != nil {
 		return err
 	}
@@ -247,7 +280,7 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 		}
 	}
 	if _, found := fields[CloudletFieldMaintenanceState]; found {
-		if s.MaintenanceState != MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != MaintenanceState_MAINTENANCE_START && s.MaintenanceState != MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
+		if s.MaintenanceState != dme.MaintenanceState_NORMAL_OPERATION && s.MaintenanceState != dme.MaintenanceState_MAINTENANCE_START && s.MaintenanceState != dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
 			return errors.New("Invalid maintenance state, only normal operation and maintenance start states are allowed")
 		}
 	}
@@ -258,6 +291,20 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	}
 	if err := s.ValidateEnums(); err != nil {
 		return err
+	}
+
+	if _, found := fields[CloudletFieldDefaultResourceAlertThreshold]; found {
+		if s.DefaultResourceAlertThreshold < 0 || s.DefaultResourceAlertThreshold > 100 {
+			return fmt.Errorf("Invalid resource alert threshold %d specified, valid threshold is in the range of 0 to 100", s.DefaultResourceAlertThreshold)
+
+		}
+	}
+
+	for _, resQuota := range s.ResourceQuotas {
+		if resQuota.AlertThreshold < 0 || resQuota.AlertThreshold > 100 {
+			return fmt.Errorf("Invalid resource quota alert threshold %d specified for %s, valid threshold is in the range of 0 to 100", resQuota.AlertThreshold, resQuota.Name)
+
+		}
 	}
 
 	return nil
@@ -294,18 +341,31 @@ func (s *VM) ValidateName() error {
 	return nil
 }
 
+var invalidVMPoolIPs = map[string]struct{}{
+	"0.0.0.0":   struct{}{},
+	"127.0.0.1": struct{}{},
+}
+
 func (s *VM) Validate() error {
 	if err := s.ValidateName(); err != nil {
 		return err
 	}
-	if s.NetInfo.ExternalIp != "" && net.ParseIP(s.NetInfo.ExternalIp) == nil {
-		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+	if s.NetInfo.ExternalIp != "" {
+		if net.ParseIP(s.NetInfo.ExternalIp) == nil {
+			return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+		}
+		if _, ok := invalidVMPoolIPs[s.NetInfo.ExternalIp]; ok {
+			return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
+		}
 	}
 	if s.NetInfo.InternalIp == "" {
 		return fmt.Errorf("Missing internal IP for VM: %s", s.Name)
 	}
 	if net.ParseIP(s.NetInfo.InternalIp) == nil {
 		return fmt.Errorf("Invalid Address: %s", s.NetInfo.InternalIp)
+	}
+	if _, ok := invalidVMPoolIPs[s.NetInfo.InternalIp]; ok {
+		return fmt.Errorf("Invalid Address: %s", s.NetInfo.ExternalIp)
 	}
 	return nil
 }
@@ -466,8 +526,15 @@ func (key *PolicyKey) ValidateKey() error {
 	return nil
 }
 
+func (s *AppInstClientKey) ValidateKey() error {
+	if s.AppInstKey.Matches(&AppInstKey{}) && s.UniqueId == "" && s.UniqueIdType == "" {
+		return fmt.Errorf("At least one of the key fields must be non-empty %v", s)
+	}
+	return nil
+}
+
 func (s *AppInstClientKey) Validate(fields map[string]struct{}) error {
-	return s.Key.ValidateKey()
+	return s.ValidateKey()
 }
 
 // Validate fields. Note that specified fields is ignored, so this function
@@ -517,7 +584,7 @@ func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *PrivacyPolicy) Validate(fields map[string]struct{}) error {
+func (s *TrustPolicy) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
@@ -798,8 +865,8 @@ func (c *ClusterInstCache) UsesOrg(org string) bool {
 	return false
 }
 
-func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState CloudletState, timeout time.Duration) error {
-	curState := CloudletState_CLOUDLET_STATE_UNKNOWN
+func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState dme.CloudletState, timeout time.Duration) error {
+	curState := dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 	done := make(chan bool, 1)
 
 	checkState := func(key *CloudletKey) {
@@ -825,8 +892,8 @@ func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, 
 	case <-done:
 	case <-time.After(timeout):
 		return fmt.Errorf("Timed out; expected state %s buf is %s",
-			CloudletState_CamelName[int32(targetState)],
-			CloudletState_CamelName[int32(curState)])
+			dme.CloudletState_CamelName[int32(targetState)],
+			dme.CloudletState_CamelName[int32(curState)])
 	}
 	return nil
 }
@@ -881,18 +948,88 @@ func (s *CloudletPool) GetCloudletKeys() map[CloudletKey]struct{} {
 	return keys
 }
 
-// Status from info will always contain the full status update list,
-// changes we copy to status that is saved to etcd is only the diff
-// from the last update.
-func UpdateStatusDiff(infoStatus *StatusInfo, diffStatus *StatusInfo) {
-	lastMsgId := int(diffStatus.MsgCount)
-	if lastMsgId < len(infoStatus.Msgs) {
-		diffStatus.Msgs = []string{}
-		for ii := lastMsgId; ii < len(infoStatus.Msgs); ii++ {
-			diffStatus.Msgs = append(diffStatus.Msgs, infoStatus.Msgs[ii])
-		}
-		diffStatus.MsgCount += uint32(len(diffStatus.Msgs))
-	} else {
-		diffStatus.Msgs = []string{}
+func (s *AppInst) GetRealClusterName() string {
+	if s.RealClusterName != "" {
+		return s.RealClusterName
+	}
+	return s.Key.ClusterInstKey.ClusterKey.Name
+}
+
+// For vanity naming of reservable ClusterInsts, the actual ClusterInst
+// name may be on the AppInst object.
+func (s *AppInst) ClusterInstKey() *ClusterInstKey {
+	return s.Key.ClusterInstKey.Real(s.GetRealClusterName())
+}
+
+// Convert VirtualClusterInstKey to a real ClusterInstKey,
+// given the real cluster name (may be blank for no aliasing).
+func (s *VirtualClusterInstKey) Real(realClusterName string) *ClusterInstKey {
+	key := ClusterInstKey{
+		ClusterKey:   s.ClusterKey,
+		CloudletKey:  s.CloudletKey,
+		Organization: s.Organization,
+	}
+	if realClusterName != "" {
+		key.ClusterKey.Name = realClusterName
+	}
+	return &key
+}
+
+// Convert real ClusterInstKey to a VirtualClusterInstKey,
+// give the virtual cluster name (may be blank for no aliasing).
+func (s *ClusterInstKey) Virtual(virtualName string) *VirtualClusterInstKey {
+	key := VirtualClusterInstKey{
+		ClusterKey:   s.ClusterKey,
+		CloudletKey:  s.CloudletKey,
+		Organization: s.Organization,
+	}
+	if virtualName != "" {
+		key.ClusterKey.Name = virtualName
+	}
+	return &key
+}
+
+func (s *ClusterInstRefKey) FromClusterInstKey(key *ClusterInstKey) {
+	s.ClusterKey = key.ClusterKey
+	s.Organization = key.Organization
+}
+
+func (s *ClusterInstKey) FromClusterInstRefKey(key *ClusterInstRefKey, clKey *CloudletKey) {
+	s.ClusterKey = key.ClusterKey
+	s.Organization = key.Organization
+	s.CloudletKey = *clKey
+}
+
+func (s *AppInstRefKey) FromAppInstKey(key *AppInstKey) {
+	s.AppKey = key.AppKey
+	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
+	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
+}
+
+func (s *AppInstKey) FromAppInstRefKey(key *AppInstRefKey, clKey *CloudletKey) {
+	s.AppKey = key.AppKey
+	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
+	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
+	s.ClusterInstKey.CloudletKey = *clKey
+}
+
+func (s *StreamObj) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetStreamKeyFromClusterInstKey(key *VirtualClusterInstKey) AppInstKey {
+	return AppInstKey{
+		ClusterInstKey: *key,
+	}
+}
+
+func GetStreamKeyFromCloudletKey(key *CloudletKey) AppInstKey {
+	return AppInstKey{
+		ClusterInstKey: VirtualClusterInstKey{
+			CloudletKey: *key,
+		},
 	}
 }

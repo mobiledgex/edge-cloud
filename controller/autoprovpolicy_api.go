@@ -156,7 +156,7 @@ func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgepro
 		log.SpanLog(ctx, log.DebugLevelMetrics, "auto-prov count recv immedate", "target", target)
 		appInstKey := edgeproto.AppInstKey{
 			AppKey:         target.AppKey,
-			ClusterInstKey: target.DeployNowKey,
+			ClusterInstKey: *target.DeployNowKey.Virtual(""),
 		}
 		s.deployImmWorkers.NeedsWork(ctx, appInstKey)
 		return

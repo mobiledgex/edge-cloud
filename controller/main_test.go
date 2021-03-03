@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -75,7 +76,7 @@ func TestController(t *testing.T) {
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 	for ii, _ := range testutil.CloudletInfoData {
-		err := cloudletInfoApi.cache.WaitForState(ctx, &testutil.CloudletInfoData[ii].Key, edgeproto.CloudletState_CLOUDLET_STATE_READY, time.Second)
+		err := cloudletInfoApi.cache.WaitForState(ctx, &testutil.CloudletInfoData[ii].Key, dme.CloudletState_CLOUDLET_STATE_READY, time.Second)
 		require.Nil(t, err)
 	}
 
@@ -130,6 +131,9 @@ func TestController(t *testing.T) {
 		err = testutil.ClusterInstReadResultStream(stream, err)
 		require.Nil(t, err)
 	}
+	// cleanup unused reservable auto clusters
+	_, err = clusterInstClient.DeleteIdleReservableClusterInsts(ctx, &edgeproto.IdleReservableClusterInsts{})
+	require.Nil(t, err)
 	for _, obj := range testutil.AppData {
 		_, err = appClient.DeleteApp(ctx, &obj)
 		require.Nil(t, err)
@@ -140,7 +144,7 @@ func TestController(t *testing.T) {
 	}
 	for ii, _ := range testutil.CloudletInfoData {
 		obj := testutil.CloudletInfoData[ii]
-		obj.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
+		obj.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
 		crmNotify.CloudletInfoCache.Update(ctx, &obj, 0)
 	}
 	for _, obj := range testutil.CloudletData {

@@ -92,7 +92,7 @@ type Flavor struct {
 	// Amount of disk space in gigabytes
 	Disk uint64 `protobuf:"varint,5,opt,name=disk,proto3" json:"disk,omitempty"`
 	// Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci]
-	// form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpus:nvidia-63:1
+	// form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1
 	OptResMap map[string]string `protobuf:"bytes,6,rep,name=opt_res_map,json=optResMap,proto3" json:"opt_res_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
@@ -711,7 +711,7 @@ func (m *Flavor) Matches(o *Flavor, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.OptResMap != nil {
-		if m.OptResMap == nil && o.OptResMap != nil || m.OptResMap != nil && o.OptResMap == nil {
+		if len(m.OptResMap) == 0 && len(o.OptResMap) > 0 || len(m.OptResMap) > 0 && len(o.OptResMap) == 0 {
 			return false
 		} else if m.OptResMap != nil && o.OptResMap != nil {
 			if !opts.Filter && len(m.OptResMap) != len(o.OptResMap) {
@@ -1225,15 +1225,12 @@ func (c *FlavorCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Flavor", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Flavor", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Flavor", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -1428,6 +1425,26 @@ func (m *Flavor) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForCreateFlavor() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForDeleteFlavor() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForUpdateFlavor() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForAddFlavorRes() error {
+	return nil
+}
+
+func (m *Flavor) IsValidArgsForRemoveFlavorRes() error {
 	return nil
 }
 

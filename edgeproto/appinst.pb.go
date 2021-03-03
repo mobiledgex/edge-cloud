@@ -43,49 +43,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Health Check Status
-//
-// Health check status gets set by external, or rootLB health check.
-//
-// 0: `HEALTH_CHECK_UNKNOWN`
-// 1: `HEALTH_CHECK_FAIL_ROOTLB_OFFLINE`
-// 2: `HEALTH_CHECK_FAIL_SERVER_FAIL`
-// 3: `HEALTH_CHECK_OK`
-type HealthCheck int32
-
-const (
-	// Health Check is unknown
-	HealthCheck_HEALTH_CHECK_UNKNOWN HealthCheck = 0
-	// Health Check failure due to RootLB being offline
-	HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE HealthCheck = 1
-	// Health Check failure due to Backend server being unavailable
-	HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL HealthCheck = 2
-	// Health Check is ok
-	HealthCheck_HEALTH_CHECK_OK HealthCheck = 3
-)
-
-var HealthCheck_name = map[int32]string{
-	0: "HEALTH_CHECK_UNKNOWN",
-	1: "HEALTH_CHECK_FAIL_ROOTLB_OFFLINE",
-	2: "HEALTH_CHECK_FAIL_SERVER_FAIL",
-	3: "HEALTH_CHECK_OK",
-}
-
-var HealthCheck_value = map[string]int32{
-	"HEALTH_CHECK_UNKNOWN":             0,
-	"HEALTH_CHECK_FAIL_ROOTLB_OFFLINE": 1,
-	"HEALTH_CHECK_FAIL_SERVER_FAIL":    2,
-	"HEALTH_CHECK_OK":                  3,
-}
-
-func (x HealthCheck) String() string {
-	return proto.EnumName(HealthCheck_name, int32(x))
-}
-
-func (HealthCheck) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{0}
-}
-
 // Power State
 //
 // Power State of the AppInst
@@ -161,8 +118,51 @@ func (x PowerState) String() string {
 }
 
 func (PowerState) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{1}
+	return fileDescriptor_94c89dd623ab567d, []int{0}
 }
+
+// Virtual ClusterInstKey
+type VirtualClusterInstKey struct {
+	// Name of Cluster
+	ClusterKey ClusterKey `protobuf:"bytes,1,opt,name=cluster_key,json=clusterKey,proto3" json:"cluster_key"`
+	// Name of Cloudlet on which the Cluster is instantiated
+	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey,proto3" json:"cloudlet_key"`
+	// Name of Developer organization that this cluster belongs to
+	Organization string `protobuf:"bytes,3,opt,name=organization,proto3" json:"organization,omitempty"`
+}
+
+func (m *VirtualClusterInstKey) Reset()         { *m = VirtualClusterInstKey{} }
+func (m *VirtualClusterInstKey) String() string { return proto.CompactTextString(m) }
+func (*VirtualClusterInstKey) ProtoMessage()    {}
+func (*VirtualClusterInstKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_94c89dd623ab567d, []int{0}
+}
+func (m *VirtualClusterInstKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VirtualClusterInstKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VirtualClusterInstKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VirtualClusterInstKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VirtualClusterInstKey.Merge(m, src)
+}
+func (m *VirtualClusterInstKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *VirtualClusterInstKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_VirtualClusterInstKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VirtualClusterInstKey proto.InternalMessageInfo
 
 // App Instance Unique Key
 //
@@ -171,14 +171,14 @@ type AppInstKey struct {
 	// App key
 	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey,proto3" json:"app_key"`
 	// Cluster instance on which this is instantiated
-	ClusterInstKey ClusterInstKey `protobuf:"bytes,4,opt,name=cluster_inst_key,json=clusterInstKey,proto3" json:"cluster_inst_key"`
+	ClusterInstKey VirtualClusterInstKey `protobuf:"bytes,4,opt,name=cluster_inst_key,json=clusterInstKey,proto3" json:"cluster_inst_key"`
 }
 
 func (m *AppInstKey) Reset()         { *m = AppInstKey{} }
 func (m *AppInstKey) String() string { return proto.CompactTextString(m) }
 func (*AppInstKey) ProtoMessage()    {}
 func (*AppInstKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{0}
+	return fileDescriptor_94c89dd623ab567d, []int{1}
 }
 func (m *AppInstKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -239,7 +239,7 @@ type AppInst struct {
 	RuntimeInfo AppInstRuntime `protobuf:"bytes,17,opt,name=runtime_info,json=runtimeInfo,proto3" json:"runtime_info"`
 	// Created at time
 	CreatedAt dme_proto.Timestamp `protobuf:"bytes,21,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
-	// IpAccess for auto-clusters. Ignored otherwise.
+	// (Deprecated) IpAccess for auto-clusters. Ignored otherwise.
 	AutoClusterIpAccess IpAccess `protobuf:"varint,22,opt,name=auto_cluster_ip_access,json=autoClusterIpAccess,proto3,enum=edgeproto.IpAccess" json:"auto_cluster_ip_access,omitempty"`
 	// status is used to reflect progress of creation or other events
 	Status StatusInfo `protobuf:"bytes,23,opt,name=status,proto3" json:"status"`
@@ -251,10 +251,8 @@ type AppInst struct {
 	UpdateMultiple bool `protobuf:"varint,26,opt,name=update_multiple,json=updateMultiple,proto3" json:"update_multiple,omitempty"`
 	// Customization files passed through to implementing services
 	Configs []*ConfigFile `protobuf:"bytes,27,rep,name=configs,proto3" json:"configs,omitempty"`
-	// shared volume size when creating auto cluster
-	SharedVolumeSize uint64 `protobuf:"varint,28,opt,name=shared_volume_size,json=sharedVolumeSize,proto3" json:"shared_volume_size,omitempty"`
 	// Health Check status
-	HealthCheck HealthCheck `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=edgeproto.HealthCheck" json:"health_check,omitempty"`
+	HealthCheck dme_proto.HealthCheck `protobuf:"varint,29,opt,name=health_check,json=healthCheck,proto3,enum=distributed_match_engine.HealthCheck" json:"health_check,omitempty"`
 	// Optional privacy policy name
 	PrivacyPolicy string `protobuf:"bytes,30,opt,name=privacy_policy,json=privacyPolicy,proto3" json:"privacy_policy,omitempty"`
 	// Power State of the AppInst
@@ -269,13 +267,15 @@ type AppInst struct {
 	OptRes string `protobuf:"bytes,35,opt,name=opt_res,json=optRes,proto3" json:"opt_res,omitempty"`
 	// Updated at time
 	UpdatedAt dme_proto.Timestamp `protobuf:"bytes,36,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at"`
+	// Real ClusterInst name
+	RealClusterName string `protobuf:"bytes,37,opt,name=real_cluster_name,json=realClusterName,proto3" json:"real_cluster_name,omitempty"`
 }
 
 func (m *AppInst) Reset()         { *m = AppInst{} }
 func (m *AppInst) String() string { return proto.CompactTextString(m) }
 func (*AppInst) ProtoMessage()    {}
 func (*AppInst) Descriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{1}
+	return fileDescriptor_94c89dd623ab567d, []int{2}
 }
 func (m *AppInst) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -316,7 +316,7 @@ func (m *AppInstRuntime) Reset()         { *m = AppInstRuntime{} }
 func (m *AppInstRuntime) String() string { return proto.CompactTextString(m) }
 func (*AppInstRuntime) ProtoMessage()    {}
 func (*AppInstRuntime) Descriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{2}
+	return fileDescriptor_94c89dd623ab567d, []int{3}
 }
 func (m *AppInstRuntime) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -369,7 +369,7 @@ func (m *AppInstInfo) Reset()         { *m = AppInstInfo{} }
 func (m *AppInstInfo) String() string { return proto.CompactTextString(m) }
 func (*AppInstInfo) ProtoMessage()    {}
 func (*AppInstInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{3}
+	return fileDescriptor_94c89dd623ab567d, []int{4}
 }
 func (m *AppInstInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -411,7 +411,7 @@ func (m *AppInstMetrics) Reset()         { *m = AppInstMetrics{} }
 func (m *AppInstMetrics) String() string { return proto.CompactTextString(m) }
 func (*AppInstMetrics) ProtoMessage()    {}
 func (*AppInstMetrics) Descriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{4}
+	return fileDescriptor_94c89dd623ab567d, []int{5}
 }
 func (m *AppInstMetrics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -452,7 +452,7 @@ func (m *AppInstLookup) Reset()         { *m = AppInstLookup{} }
 func (m *AppInstLookup) String() string { return proto.CompactTextString(m) }
 func (*AppInstLookup) ProtoMessage()    {}
 func (*AppInstLookup) Descriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{5}
+	return fileDescriptor_94c89dd623ab567d, []int{6}
 }
 func (m *AppInstLookup) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -493,7 +493,7 @@ func (m *AppInstLookup2) Reset()         { *m = AppInstLookup2{} }
 func (m *AppInstLookup2) String() string { return proto.CompactTextString(m) }
 func (*AppInstLookup2) ProtoMessage()    {}
 func (*AppInstLookup2) Descriptor() ([]byte, []int) {
-	return fileDescriptor_94c89dd623ab567d, []int{6}
+	return fileDescriptor_94c89dd623ab567d, []int{7}
 }
 func (m *AppInstLookup2) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -522,9 +522,48 @@ func (m *AppInstLookup2) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AppInstLookup2 proto.InternalMessageInfo
 
+type AppInstLatency struct {
+	// Unique identifier key
+	Key     AppInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
+	Message string     `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+}
+
+func (m *AppInstLatency) Reset()         { *m = AppInstLatency{} }
+func (m *AppInstLatency) String() string { return proto.CompactTextString(m) }
+func (*AppInstLatency) ProtoMessage()    {}
+func (*AppInstLatency) Descriptor() ([]byte, []int) {
+	return fileDescriptor_94c89dd623ab567d, []int{8}
+}
+func (m *AppInstLatency) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppInstLatency) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppInstLatency.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppInstLatency) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppInstLatency.Merge(m, src)
+}
+func (m *AppInstLatency) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppInstLatency) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppInstLatency.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppInstLatency proto.InternalMessageInfo
+
 func init() {
-	proto.RegisterEnum("edgeproto.HealthCheck", HealthCheck_name, HealthCheck_value)
 	proto.RegisterEnum("edgeproto.PowerState", PowerState_name, PowerState_value)
+	proto.RegisterType((*VirtualClusterInstKey)(nil), "edgeproto.VirtualClusterInstKey")
 	proto.RegisterType((*AppInstKey)(nil), "edgeproto.AppInstKey")
 	proto.RegisterType((*AppInst)(nil), "edgeproto.AppInst")
 	proto.RegisterType((*AppInstRuntime)(nil), "edgeproto.AppInstRuntime")
@@ -532,143 +571,162 @@ func init() {
 	proto.RegisterType((*AppInstMetrics)(nil), "edgeproto.AppInstMetrics")
 	proto.RegisterType((*AppInstLookup)(nil), "edgeproto.AppInstLookup")
 	proto.RegisterType((*AppInstLookup2)(nil), "edgeproto.AppInstLookup2")
+	proto.RegisterType((*AppInstLatency)(nil), "edgeproto.AppInstLatency")
 }
 
 func init() { proto.RegisterFile("appinst.proto", fileDescriptor_94c89dd623ab567d) }
 
 var fileDescriptor_94c89dd623ab567d = []byte{
-	// 2056 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0x4d, 0x6c, 0x1b, 0xc7,
-	0x15, 0xd6, 0xe8, 0x87, 0x12, 0x87, 0xa4, 0x44, 0x8d, 0x25, 0x65, 0xcc, 0xc8, 0xb2, 0xcc, 0xc4,
-	0x81, 0x6a, 0xac, 0xc4, 0x40, 0x41, 0xd2, 0x56, 0xad, 0x91, 0x92, 0x32, 0x19, 0x13, 0x92, 0x48,
-	0x77, 0x25, 0x39, 0x68, 0x2f, 0x8b, 0xf5, 0x72, 0x44, 0x2e, 0xbc, 0xbb, 0x33, 0xd8, 0x5d, 0xd2,
-	0x91, 0x4f, 0x45, 0xd0, 0x16, 0x39, 0x15, 0x6e, 0x0b, 0x14, 0x45, 0x8a, 0xa2, 0x41, 0x4e, 0x39,
-	0x06, 0x3e, 0xb6, 0x87, 0x5e, 0x8d, 0xf4, 0x62, 0xa0, 0x97, 0xc0, 0x87, 0x22, 0xb5, 0x7b, 0x28,
-	0x7c, 0x2a, 0x60, 0x4a, 0xe8, 0xb1, 0xd8, 0x99, 0x59, 0x72, 0x97, 0x94, 0xe4, 0xda, 0xce, 0x45,
-	0x20, 0xdf, 0xf7, 0xde, 0x9b, 0xef, 0xbd, 0x79, 0xf3, 0xde, 0xa3, 0x60, 0x46, 0x67, 0xcc, 0x74,
-	0x3c, 0x7f, 0x8d, 0xb9, 0xd4, 0xa7, 0x28, 0x49, 0x1a, 0x4d, 0xc2, 0x3f, 0xe6, 0x16, 0x9b, 0x94,
-	0x36, 0x2d, 0x52, 0xd0, 0x99, 0x59, 0xd0, 0x1d, 0x87, 0xfa, 0xba, 0x6f, 0x52, 0xc7, 0x13, 0x8a,
-	0xb9, 0xb4, 0x4b, 0xbc, 0xb6, 0x25, 0xcd, 0x72, 0xdf, 0x6b, 0x9a, 0x7e, 0xab, 0x7d, 0x6b, 0xcd,
-	0xa0, 0x76, 0xc1, 0xa6, 0xb7, 0x4c, 0x2b, 0x70, 0xf3, 0x51, 0x21, 0xf8, 0xbb, 0x6a, 0x58, 0xb4,
-	0xdd, 0x28, 0x70, 0xbd, 0x26, 0x71, 0x7a, 0x1f, 0xa4, 0x65, 0x52, 0x67, 0x2c, 0x74, 0x79, 0x60,
-	0xe9, 0x1d, 0xea, 0xca, 0x6f, 0xb3, 0x86, 0xd5, 0xf6, 0x7c, 0xe2, 0xf6, 0xc9, 0xe5, 0xd2, 0x06,
-	0xb5, 0x6d, 0x1a, 0x5a, 0x4e, 0x73, 0xc7, 0x16, 0x09, 0xd1, 0x79, 0xbd, 0xed, 0x53, 0xcf, 0xd0,
-	0x2d, 0xc2, 0xa8, 0x65, 0x1a, 0x87, 0x52, 0xbc, 0xf9, 0x5c, 0x6a, 0x8d, 0x55, 0x5b, 0xf7, 0x8d,
-	0xd6, 0x2a, 0x71, 0x9a, 0xa6, 0x43, 0x0a, 0x0d, 0x9b, 0xac, 0x72, 0xd3, 0x82, 0x45, 0x0d, 0xe9,
-	0xa4, 0xfa, 0xf2, 0x4e, 0x74, 0xc6, 0x62, 0xb4, 0xe7, 0x9a, 0xb4, 0x49, 0x05, 0x14, 0x7c, 0x12,
-	0xd2, 0xfc, 0x1f, 0x00, 0x84, 0x45, 0xc6, 0xaa, 0x8e, 0xe7, 0x6f, 0x91, 0x43, 0xf4, 0x36, 0x9c,
-	0xd4, 0x19, 0xd3, 0x6e, 0x93, 0x43, 0x0c, 0x96, 0xc1, 0x4a, 0x6a, 0x7d, 0x76, 0xad, 0x77, 0x31,
-	0x6b, 0x45, 0xc6, 0xb6, 0xc8, 0x61, 0x69, 0xfc, 0xc1, 0x3f, 0x2e, 0x8e, 0xa8, 0x09, 0x9d, 0x7f,
-	0x43, 0x3b, 0x30, 0x2b, 0x13, 0xa6, 0x05, 0x19, 0xe3, 0xa6, 0xe3, 0xdc, 0xf4, 0x7c, 0xc4, 0x74,
-	0x53, 0xa8, 0xc8, 0x63, 0x4a, 0x53, 0x5f, 0x74, 0x31, 0xe0, 0x6e, 0xa6, 0x8d, 0x18, 0xb2, 0x91,
-	0xfe, 0xf7, 0x33, 0x0c, 0xfe, 0xfb, 0x0c, 0x83, 0x2f, 0x3f, 0xbb, 0x08, 0xf2, 0x8f, 0x66, 0xe1,
-	0xa4, 0x64, 0x87, 0x16, 0x60, 0xe2, 0xc0, 0x24, 0x56, 0xc3, 0xc3, 0x60, 0x79, 0x6c, 0x25, 0xa9,
-	0xca, 0x6f, 0x68, 0x15, 0x8e, 0x05, 0x67, 0x8e, 0xf2, 0x33, 0xe7, 0xe3, 0x74, 0xc3, 0xf3, 0x04,
-	0xe5, 0x40, 0x0f, 0x55, 0x60, 0x3a, 0xbc, 0x3f, 0xcd, 0xa2, 0x06, 0x1e, 0xe3, 0x76, 0x17, 0xd6,
-	0x1a, 0xa6, 0xe7, 0xbb, 0xe6, 0xad, 0xb6, 0x4f, 0x1a, 0x1a, 0xcf, 0xa8, 0x26, 0x32, 0xba, 0xb6,
-	0x4d, 0x0d, 0x69, 0x9f, 0x0a, 0x0d, 0xb7, 0xa9, 0x81, 0x2e, 0xc2, 0xb1, 0xb6, 0x6b, 0xf2, 0x50,
-	0x93, 0xa5, 0x4c, 0x10, 0xcf, 0x6f, 0xee, 0x9f, 0x9f, 0x70, 0xa8, 0x61, 0x33, 0x35, 0x40, 0xd0,
-	0xbb, 0x70, 0xca, 0x32, 0x3b, 0xc4, 0x21, 0x9e, 0x87, 0x13, 0xcb, 0x60, 0x65, 0x7a, 0xfd, 0x5c,
-	0x84, 0xdc, 0xb6, 0x84, 0x4a, 0xe3, 0x81, 0xa9, 0xda, 0x53, 0x45, 0x35, 0x98, 0xb6, 0x75, 0xc6,
-	0x48, 0x43, 0x63, 0xd4, 0xf5, 0x3d, 0x9c, 0x5c, 0x1e, 0x5b, 0x49, 0xad, 0x5f, 0x3a, 0x9d, 0x5f,
-	0x91, 0xb1, 0x1b, 0xd4, 0xf5, 0x23, 0x39, 0x4d, 0x09, 0x07, 0x81, 0xd4, 0x43, 0xef, 0xc1, 0x84,
-	0x28, 0x6f, 0x9c, 0xe6, 0x91, 0xce, 0x45, 0x48, 0x54, 0x38, 0x10, 0xbf, 0x10, 0xa9, 0x8d, 0x7e,
-	0x08, 0x27, 0x3c, 0x5f, 0xf7, 0x09, 0x9e, 0xe6, 0xdc, 0x5f, 0x8b, 0x98, 0xed, 0xb9, 0xba, 0x71,
-	0x9b, 0x34, 0x76, 0x03, 0x78, 0x30, 0x74, 0x61, 0x84, 0x2e, 0xc3, 0x04, 0x71, 0x5d, 0xea, 0x7a,
-	0x78, 0x26, 0xb8, 0xac, 0x41, 0x2d, 0x09, 0xa2, 0x6b, 0x30, 0x6d, 0xb8, 0xb6, 0x46, 0x3b, 0xc4,
-	0x75, 0xcd, 0x06, 0xc1, 0x59, 0x7e, 0xd6, 0x42, 0xb4, 0x70, 0xd4, 0x9d, 0xba, 0x44, 0x4b, 0xc9,
-	0xbe, 0x83, 0x94, 0xe1, 0xda, 0xa1, 0x1c, 0x95, 0x60, 0xda, 0x6d, 0x3b, 0xbe, 0x69, 0x13, 0xcd,
-	0x74, 0x0e, 0x28, 0x9e, 0x1d, 0x2a, 0x3f, 0x59, 0x0a, 0xaa, 0xd0, 0x0a, 0xaf, 0x53, 0x1a, 0x55,
-	0x9d, 0x03, 0x8a, 0x7e, 0x02, 0xa1, 0xe1, 0x12, 0x3d, 0xc8, 0xae, 0xee, 0xe3, 0x79, 0xee, 0xe1,
-	0x8d, 0xd3, 0x93, 0xbe, 0x67, 0xda, 0xc4, 0xf3, 0x75, 0x9b, 0x95, 0xe6, 0x65, 0x64, 0x49, 0x3f,
-	0x14, 0x71, 0xe7, 0x49, 0xe9, 0xad, 0xe8, 0xa3, 0x1a, 0x5c, 0x08, 0x3a, 0x84, 0xd6, 0x7b, 0x26,
-	0x4c, 0xd3, 0x0d, 0x23, 0x28, 0x8b, 0x85, 0xa1, 0xb2, 0xa8, 0xb2, 0x22, 0x87, 0x64, 0x59, 0x9c,
-	0x0b, 0x0c, 0xc3, 0xb7, 0x23, 0x21, 0xf4, 0x23, 0x98, 0x08, 0x92, 0xdc, 0xf6, 0xf0, 0x6b, 0x43,
-	0x35, 0xbf, 0xcb, 0x81, 0x20, 0xa2, 0xd2, 0x6c, 0x2c, 0xe5, 0xe2, 0x6e, 0x85, 0x1d, 0xba, 0x0c,
-	0xa7, 0x5c, 0xd2, 0x31, 0x3d, 0x93, 0x3a, 0x18, 0xf3, 0x02, 0x8e, 0xa4, 0xb6, 0x07, 0x21, 0x05,
-	0xa6, 0x0f, 0xa8, 0x6b, 0x10, 0xad, 0xcd, 0x1a, 0x41, 0x25, 0x9c, 0x5f, 0x06, 0x2b, 0x53, 0xb1,
-	0x5b, 0xe0, 0xf0, 0x3e, 0x47, 0xd1, 0x3a, 0x9c, 0x11, 0x7a, 0x9a, 0xdd, 0xb6, 0x7c, 0x93, 0x59,
-	0x04, 0xe7, 0x06, 0x0d, 0xa6, 0x85, 0xc6, 0x8e, 0x54, 0x40, 0x05, 0x38, 0x69, 0x50, 0xe7, 0xc0,
-	0x6c, 0x7a, 0xf8, 0x75, 0x5e, 0xe7, 0xd1, 0x58, 0x36, 0x39, 0x52, 0x31, 0x2d, 0xa2, 0x86, 0x5a,
-	0x48, 0x81, 0xc8, 0x6b, 0xe9, 0x2e, 0x69, 0x68, 0x1d, 0x6a, 0xb5, 0x6d, 0xa2, 0x79, 0xe6, 0x5d,
-	0x82, 0x17, 0x97, 0xc1, 0xca, 0xb8, 0x9a, 0x15, 0xc8, 0x4d, 0x0e, 0xec, 0x9a, 0x77, 0x09, 0xba,
-	0x0e, 0xd3, 0x2d, 0xa2, 0x5b, 0x7e, 0x4b, 0x33, 0x5a, 0xc4, 0xb8, 0x8d, 0x2f, 0x0c, 0x95, 0xd7,
-	0x75, 0x0e, 0x6f, 0x06, 0xe8, 0x60, 0x8d, 0xa6, 0x5a, 0x7d, 0x0c, 0x5d, 0x86, 0xd3, 0xcc, 0x35,
-	0x3b, 0xba, 0x71, 0xa8, 0x89, 0x26, 0x8f, 0x97, 0x82, 0xbc, 0xa9, 0x19, 0x29, 0xbd, 0xc1, 0x85,
-	0xa8, 0x08, 0x53, 0x8c, 0xde, 0x21, 0xae, 0x26, 0x9e, 0xce, 0x45, 0x7e, 0x5e, 0x34, 0xa6, 0x1b,
-	0x01, 0x2a, 0x1e, 0x4e, 0x24, 0x2d, 0x90, 0xf5, 0xc4, 0xe8, 0x7d, 0x38, 0x47, 0x3e, 0xf2, 0x89,
-	0xeb, 0xe8, 0x56, 0x2c, 0xc6, 0xe5, 0x20, 0xc6, 0x41, 0x8e, 0x28, 0x54, 0x8d, 0x04, 0xbd, 0x01,
-	0x67, 0xf5, 0x8e, 0x6e, 0x5a, 0xfa, 0x2d, 0xd3, 0x32, 0xfd, 0x43, 0xed, 0x2e, 0x75, 0x08, 0xbe,
-	0x74, 0x52, 0x9b, 0xca, 0x46, 0xf5, 0x7e, 0x4a, 0x1d, 0x82, 0xae, 0xc0, 0x64, 0xc7, 0xd6, 0x64,
-	0xbf, 0xc8, 0x9f, 0x64, 0x33, 0xd5, 0xb1, 0x45, 0xd7, 0x40, 0x6f, 0xc1, 0x49, 0xca, 0x7c, 0xcd,
-	0x25, 0x1e, 0x7e, 0xe3, 0x24, 0xcd, 0x04, 0x65, 0xbe, 0x4a, 0xbc, 0xe0, 0x65, 0x89, 0x5b, 0xe7,
-	0x2f, 0xeb, 0xcd, 0x57, 0x7f, 0x59, 0xd2, 0x5b, 0xd1, 0xdf, 0xf8, 0xcb, 0x44, 0x30, 0x2d, 0xfe,
-	0xf3, 0x0c, 0x83, 0x9f, 0x75, 0x31, 0xb8, 0xd7, 0xc5, 0xe0, 0xf7, 0x5d, 0x0c, 0xbe, 0xec, 0x62,
-	0xf0, 0xe7, 0x2e, 0x4e, 0x47, 0xdb, 0xd4, 0x83, 0x2e, 0x06, 0x5f, 0x07, 0xee, 0x8e, 0xf0, 0x3d,
-	0xb0, 0xd9, 0x6f, 0xe3, 0xca, 0xbe, 0x6b, 0x2a, 0x3b, 0xfd, 0x76, 0xa9, 0x84, 0x7d, 0x59, 0xd9,
-	0x0c, 0xdf, 0xaf, 0x22, 0xde, 0x94, 0xa2, 0xca, 0x67, 0xa1, 0x94, 0x79, 0xef, 0x52, 0xd4, 0x7e,
-	0xf7, 0x50, 0x6a, 0xb4, 0x41, 0x44, 0x5a, 0x94, 0xf2, 0xd0, 0x8d, 0x28, 0xc5, 0x81, 0x34, 0x73,
-	0x8f, 0x44, 0xd9, 0x0f, 0xe3, 0xf8, 0xf4, 0x08, 0x7f, 0x3e, 0xaa, 0x33, 0xe6, 0xe8, 0x36, 0xb9,
-	0xba, 0x45, 0x0e, 0xe5, 0xa0, 0x5d, 0xab, 0xe9, 0x36, 0x51, 0x74, 0xc6, 0x3a, 0xc4, 0xf5, 0xa2,
-	0xf2, 0x9b, 0xc4, 0xe5, 0x44, 0x74, 0xc6, 0x56, 0xa9, 0xdb, 0x8c, 0x42, 0x75, 0xb7, 0xa9, 0x3b,
-	0xe6, 0x5d, 0xbe, 0x31, 0x29, 0xb2, 0xe1, 0x70, 0x3c, 0x3e, 0x80, 0xc3, 0xaf, 0xbd, 0x53, 0xa4,
-	0x6a, 0xcf, 0xdd, 0x80, 0xfa, 0x80, 0x5b, 0x91, 0xbe, 0x93, 0xfd, 0x0a, 0x2c, 0xe2, 0x58, 0x08,
-	0x4e, 0xf3, 0x1c, 0x35, 0x88, 0x9d, 0x22, 0x8a, 0xf0, 0xaa, 0xc8, 0x2a, 0xf7, 0xf5, 0xf9, 0x11,
-	0x2e, 0x3d, 0x8f, 0xdb, 0xf3, 0x43, 0x7d, 0x74, 0x84, 0x97, 0xce, 0xe6, 0x71, 0xff, 0x18, 0x1b,
-	0xb7, 0xc9, 0xe1, 0xd5, 0x93, 0x52, 0x1a, 0xc8, 0xcf, 0x3a, 0xff, 0x04, 0xfc, 0xb4, 0x08, 0xf3,
-	0x3f, 0x80, 0xd3, 0xf1, 0xb9, 0x84, 0xbe, 0x03, 0x33, 0x06, 0x75, 0x7c, 0xdd, 0x74, 0x82, 0x31,
-	0x11, 0x6e, 0x3a, 0x72, 0x16, 0xa4, 0x7b, 0x50, 0xb5, 0xe1, 0xe5, 0x3f, 0x1d, 0x83, 0x29, 0x69,
-	0xcd, 0xe7, 0xd7, 0xb7, 0xb4, 0x1d, 0xbd, 0x05, 0x93, 0x0e, 0xf5, 0xcd, 0x83, 0x43, 0xcd, 0x6c,
-	0xf0, 0xd5, 0x68, 0x2c, 0x36, 0x1a, 0x04, 0x56, 0x6d, 0xa0, 0xd5, 0x70, 0x3b, 0x18, 0x3f, 0x73,
-	0x3b, 0x08, 0xd7, 0x81, 0x85, 0xde, 0x3a, 0x30, 0x21, 0xd8, 0xc9, 0xf9, 0x3f, 0x38, 0xb9, 0x13,
-	0x2f, 0x31, 0xb9, 0xbf, 0xdb, 0x1b, 0x87, 0x93, 0x67, 0x8d, 0xc3, 0xc8, 0x86, 0x23, 0xa7, 0xe0,
-	0x7b, 0xf1, 0x66, 0x3d, 0x75, 0x46, 0xb3, 0x8e, 0x76, 0xe8, 0x8d, 0xe5, 0xc1, 0xa6, 0xf3, 0x59,
-	0x17, 0x83, 0x6f, 0xba, 0x18, 0xdc, 0x3f, 0xc6, 0xe3, 0x0e, 0x75, 0x48, 0x7e, 0xad, 0x77, 0xb3,
-	0x3b, 0xc4, 0x77, 0x4d, 0xc3, 0x43, 0x8b, 0x30, 0xe9, 0x51, 0x9b, 0xf8, 0x2d, 0xd3, 0x69, 0xe2,
-	0x09, 0x3e, 0xae, 0xfa, 0x82, 0xfc, 0x27, 0x00, 0x66, 0xa4, 0xc1, 0x36, 0xa5, 0xb7, 0xdb, 0x2c,
-	0xbc, 0x36, 0xf0, 0x7f, 0x5e, 0xdb, 0xf7, 0x21, 0x14, 0x63, 0x49, 0xeb, 0x5f, 0xf6, 0x5c, 0x2c,
-	0x92, 0x00, 0xec, 0x1b, 0x25, 0x59, 0x28, 0xd8, 0xc8, 0x7c, 0x75, 0x8c, 0x93, 0x3d, 0x3c, 0xff,
-	0x6b, 0xd0, 0xe3, 0x2e, 0xa8, 0xac, 0xbf, 0x28, 0x97, 0xf7, 0x23, 0x0b, 0x76, 0x9f, 0x4d, 0x6c,
-	0xa7, 0xeb, 0xbf, 0x88, 0xc1, 0xcd, 0x3a, 0x60, 0x34, 0xf3, 0xd5, 0x31, 0x4e, 0x45, 0x74, 0xae,
-	0xfc, 0x02, 0xc0, 0x54, 0x64, 0x50, 0x23, 0x0c, 0xe7, 0xae, 0x97, 0x8b, 0xdb, 0x7b, 0xd7, 0xb5,
-	0xcd, 0xeb, 0xe5, 0xcd, 0x2d, 0x6d, 0xbf, 0xb6, 0x55, 0xab, 0x7f, 0x58, 0xcb, 0x8e, 0xa0, 0x37,
-	0xe1, 0x72, 0x0c, 0xa9, 0x14, 0xab, 0xdb, 0x9a, 0x5a, 0xaf, 0xef, 0x6d, 0x97, 0xb4, 0x7a, 0xa5,
-	0xb2, 0x5d, 0xad, 0x95, 0xb3, 0x00, 0x5d, 0x82, 0x17, 0x86, 0xb5, 0x76, 0xcb, 0xea, 0xcd, 0xb2,
-	0xca, 0x3f, 0x67, 0x47, 0xd1, 0x39, 0x38, 0x13, 0x53, 0xa9, 0x6f, 0x65, 0xc7, 0xae, 0xfc, 0x6a,
-	0x14, 0xc2, 0x7e, 0x4d, 0xa0, 0x0b, 0xf0, 0xdc, 0x8d, 0xfa, 0x87, 0x65, 0x55, 0xdb, 0xdd, 0x2b,
-	0xee, 0x95, 0xfb, 0x2c, 0x72, 0xe3, 0xf7, 0x8e, 0x31, 0x40, 0x8b, 0x10, 0x09, 0xb8, 0x5e, 0xd3,
-	0xd4, 0xf2, 0x8f, 0xf7, 0xcb, 0xbb, 0x7b, 0xe5, 0x6b, 0x59, 0x20, 0xd1, 0x79, 0x98, 0xe2, 0x68,
-	0xb5, 0xf6, 0x81, 0x56, 0xaf, 0x65, 0x47, 0xa5, 0x38, 0x0d, 0xa7, 0x42, 0xa3, 0xec, 0x58, 0xff,
-	0x84, 0x7a, 0xa5, 0x12, 0xf1, 0x31, 0x2e, 0x95, 0x17, 0x60, 0xba, 0xef, 0xa3, 0x52, 0xc9, 0x4e,
-	0x48, 0x79, 0x06, 0x26, 0x7b, 0x66, 0xd9, 0x04, 0xca, 0xc1, 0xac, 0x5a, 0x2e, 0xd5, 0xeb, 0x7b,
-	0x11, 0x17, 0x93, 0x52, 0xf5, 0x1c, 0x4c, 0x0a, 0xac, 0x5a, 0xfb, 0x20, 0x3b, 0x25, 0x85, 0x10,
-	0x26, 0x84, 0x30, 0x9b, 0x44, 0xaf, 0xc3, 0xd9, 0x68, 0x90, 0x65, 0x55, 0xad, 0xab, 0x59, 0x28,
-	0x14, 0xd7, 0xff, 0x38, 0xd5, 0xfb, 0xf1, 0x58, 0x64, 0x26, 0xfa, 0x2b, 0x80, 0x19, 0x31, 0x36,
-	0xc3, 0xdf, 0x6c, 0x68, 0xb8, 0x5a, 0x72, 0xd1, 0x5f, 0x94, 0x2a, 0xff, 0x2d, 0x9f, 0xff, 0x39,
-	0x78, 0xda, 0xc5, 0xef, 0xaa, 0xc4, 0xa3, 0x6d, 0xd7, 0x08, 0x8d, 0x3d, 0xa5, 0x68, 0x04, 0x7d,
-	0x72, 0x47, 0x77, 0xf4, 0x26, 0x51, 0x4e, 0x19, 0x72, 0x5f, 0x1c, 0x61, 0xf0, 0xf0, 0x08, 0x83,
-	0x47, 0x47, 0xf8, 0xf2, 0x7e, 0x6c, 0xb9, 0x54, 0x2a, 0xfd, 0xe5, 0x54, 0xe9, 0x5f, 0xdb, 0xc7,
-	0x7f, 0xff, 0xd7, 0x6f, 0x47, 0xe7, 0xf2, 0x33, 0x05, 0xb1, 0xa0, 0x17, 0xe4, 0xbf, 0x21, 0x36,
-	0xc0, 0x95, 0xb7, 0x01, 0xfa, 0x13, 0x80, 0x99, 0x6b, 0xc4, 0x22, 0x2f, 0x1c, 0x01, 0x79, 0xa5,
-	0x00, 0x1e, 0x1d, 0x61, 0x78, 0x02, 0xc3, 0x06, 0x67, 0x12, 0x67, 0xf8, 0xbb, 0x51, 0x38, 0xad,
-	0x92, 0x03, 0x97, 0x78, 0xad, 0x17, 0xa4, 0xf8, 0x08, 0xbc, 0x2a, 0xc7, 0x96, 0x5c, 0x71, 0x8a,
-	0xc3, 0x3f, 0x4a, 0x14, 0xb1, 0xac, 0x7b, 0x91, 0x44, 0x2b, 0x37, 0xa2, 0xab, 0xb1, 0x12, 0x79,
-	0xc0, 0xca, 0xee, 0xc0, 0xa2, 0xae, 0xdc, 0x94, 0x4b, 0xa5, 0x52, 0xe7, 0x3b, 0xe3, 0xd3, 0x23,
-	0x8c, 0x86, 0x67, 0x34, 0xcf, 0xcb, 0x7c, 0x3e, 0x5b, 0x70, 0x45, 0xfc, 0xf1, 0xc4, 0xfc, 0x72,
-	0x14, 0x66, 0xc4, 0x65, 0xbf, 0x60, 0x5e, 0xfe, 0xf6, 0xca, 0x79, 0x61, 0x67, 0xe4, 0xe5, 0xac,
-	0x9a, 0x7c, 0xe9, 0xfc, 0xf4, 0x2a, 0x44, 0xac, 0xc2, 0xf1, 0x44, 0x7c, 0x02, 0x60, 0x6a, 0xb7,
-	0x45, 0xef, 0x9c, 0x95, 0x86, 0x13, 0x64, 0xf9, 0xfa, 0xd3, 0x2e, 0x7e, 0xe7, 0x94, 0x34, 0xdc,
-	0x34, 0xc9, 0x9d, 0xd3, 0x92, 0xc0, 0xc9, 0xa0, 0x7c, 0xa6, 0xe0, 0xb5, 0xe8, 0x9d, 0x18, 0x95,
-	0x75, 0xaf, 0x37, 0x4b, 0x82, 0x11, 0x1c, 0xb4, 0x08, 0x1d, 0xce, 0x44, 0xb8, 0x89, 0xcd, 0x65,
-	0x98, 0x4b, 0x20, 0xcf, 0x9d, 0x22, 0xcf, 0x2f, 0xf2, 0x03, 0x17, 0xf2, 0xb3, 0xb1, 0x03, 0x83,
-	0xf5, 0x41, 0x1c, 0xfa, 0x31, 0x80, 0xb3, 0xf1, 0xe9, 0x1b, 0x1c, 0x6c, 0x43, 0x14, 0x39, 0x38,
-	0x1c, 0xcb, 0x27, 0x6c, 0x1a, 0x12, 0xca, 0x9d, 0x0e, 0xe5, 0x2f, 0x72, 0x06, 0xe7, 0xf3, 0x73,
-	0x31, 0x06, 0xb6, 0x40, 0x39, 0x89, 0xd2, 0xe2, 0x83, 0x7f, 0x2e, 0x8d, 0x3c, 0x78, 0xbc, 0x04,
-	0x1e, 0x3e, 0x5e, 0x02, 0xdf, 0x3c, 0x5e, 0x02, 0xf7, 0x9e, 0x2c, 0x8d, 0x3c, 0x7c, 0xb2, 0x34,
-	0xf2, 0xf5, 0x93, 0xa5, 0x91, 0x5b, 0x09, 0xee, 0xf6, 0x9d, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff,
-	0x21, 0xbd, 0xa4, 0xc4, 0x04, 0x15, 0x00, 0x00,
+	// 2148 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0x4d, 0x6c, 0x1b, 0x59,
+	0x1d, 0xcf, 0xcb, 0x87, 0x13, 0x3f, 0xdb, 0x89, 0xf3, 0x9a, 0x64, 0x5f, 0xb3, 0x69, 0x9a, 0xf5,
+	0x92, 0x55, 0xa8, 0x26, 0x71, 0x95, 0xd5, 0x16, 0x08, 0x5b, 0x2d, 0x76, 0x9b, 0x2c, 0xa1, 0x6d,
+	0x5c, 0x26, 0x49, 0x2b, 0xe0, 0x30, 0x9a, 0x8e, 0x5f, 0xec, 0x51, 0x67, 0xe6, 0x3d, 0x66, 0xc6,
+	0xe9, 0xa6, 0x27, 0x58, 0x38, 0xec, 0x09, 0x15, 0xb8, 0xa0, 0xbd, 0xb0, 0xea, 0x01, 0xf6, 0xb8,
+	0xf4, 0xc0, 0xa1, 0x42, 0xe2, 0x84, 0x54, 0xed, 0xa9, 0x12, 0x97, 0x55, 0x85, 0xd0, 0xd2, 0x82,
+	0x84, 0x7a, 0x02, 0xd5, 0x89, 0x38, 0xa2, 0xf7, 0x31, 0xf6, 0x8c, 0x63, 0xa7, 0x1f, 0xe1, 0xc8,
+	0xa5, 0x8a, 0xff, 0x5f, 0xef, 0xf7, 0xff, 0xfe, 0x4f, 0x61, 0xce, 0x64, 0xcc, 0xf6, 0x82, 0x70,
+	0x89, 0xf9, 0x34, 0xa4, 0x28, 0x4d, 0xaa, 0x35, 0x22, 0xfe, 0x9c, 0x9e, 0xa9, 0x51, 0x5a, 0x73,
+	0x48, 0xd1, 0x64, 0x76, 0xd1, 0xf4, 0x3c, 0x1a, 0x9a, 0xa1, 0x4d, 0xbd, 0x40, 0x0a, 0x4e, 0x67,
+	0x7d, 0x12, 0x34, 0x1c, 0xa5, 0x36, 0xfd, 0xf5, 0x9a, 0x1d, 0xd6, 0x1b, 0x37, 0x96, 0x2c, 0xea,
+	0x16, 0x5d, 0x7a, 0xc3, 0x76, 0xb8, 0x99, 0x0f, 0x8a, 0xfc, 0xdf, 0x45, 0xcb, 0xa1, 0x8d, 0x6a,
+	0x51, 0xc8, 0xd5, 0x88, 0xd7, 0xfa, 0x43, 0x69, 0xa6, 0x4d, 0xc6, 0x22, 0x93, 0x3b, 0x8e, 0xb9,
+	0x4b, 0xfd, 0xe8, 0x97, 0x45, 0x5d, 0x97, 0x46, 0x62, 0xa3, 0xc2, 0x8a, 0x43, 0xa2, 0x07, 0x27,
+	0xcd, 0x46, 0x48, 0x03, 0xcb, 0x74, 0x08, 0xa3, 0x8e, 0x6d, 0xed, 0x29, 0x72, 0xce, 0x72, 0x1a,
+	0x41, 0x48, 0x22, 0x1b, 0x17, 0x9e, 0x0b, 0xab, 0xba, 0xe8, 0x9a, 0xa1, 0x55, 0x5f, 0x24, 0x5e,
+	0xcd, 0xf6, 0x48, 0xb1, 0xea, 0x92, 0x45, 0xa1, 0x5a, 0x74, 0xa8, 0xa5, 0x8c, 0xac, 0xbf, 0xba,
+	0x11, 0x93, 0xb1, 0x84, 0x17, 0x13, 0x35, 0x5a, 0xa3, 0x92, 0xc5, 0xff, 0x92, 0xd4, 0xc2, 0x5f,
+	0x00, 0x9c, 0xbc, 0x66, 0xfb, 0x61, 0xc3, 0x74, 0x2e, 0x48, 0xf8, 0xeb, 0x5e, 0x10, 0x5e, 0x22,
+	0x7b, 0xe8, 0x5d, 0x98, 0x51, 0x0e, 0x19, 0x37, 0xc9, 0x1e, 0x06, 0x73, 0x60, 0x21, 0xb3, 0x3c,
+	0xb9, 0xd4, 0xca, 0xd1, 0x92, 0x92, 0xbf, 0x44, 0xf6, 0xca, 0x83, 0x0f, 0xfe, 0x7a, 0xba, 0x4f,
+	0x87, 0x56, 0x8b, 0x82, 0xde, 0x83, 0xd9, 0x28, 0x6a, 0x42, 0xbd, 0x5f, 0xa8, 0x4f, 0x25, 0xd4,
+	0x25, 0xbb, 0xad, 0x9f, 0xb1, 0xda, 0x24, 0x74, 0x0e, 0x66, 0xa9, 0x5f, 0x33, 0x3d, 0xfb, 0xb6,
+	0x48, 0x3d, 0x1e, 0x98, 0x03, 0x0b, 0xe9, 0x32, 0xba, 0x7f, 0x80, 0xa3, 0x67, 0xa8, 0x5f, 0x7b,
+	0x78, 0x80, 0x81, 0x9e, 0x90, 0x5b, 0xc9, 0xfe, 0xf3, 0x19, 0x06, 0xff, 0x79, 0x86, 0xc1, 0x67,
+	0x9f, 0x9c, 0x06, 0x85, 0xbb, 0x00, 0xc2, 0x12, 0x63, 0x91, 0x4f, 0x67, 0xe1, 0xb0, 0xc9, 0x58,
+	0xcc, 0x9f, 0xf1, 0x18, 0xa0, 0x12, 0x63, 0x6d, 0x2c, 0x29, 0x53, 0xfc, 0x42, 0x5b, 0x30, 0x1f,
+	0x45, 0x81, 0x57, 0xaa, 0x50, 0x1d, 0x14, 0xaa, 0x73, 0x31, 0xd5, 0xae, 0x11, 0x2c, 0x8f, 0x7c,
+	0xda, 0xc4, 0x40, 0x58, 0x1b, 0xb5, 0x12, 0x9c, 0x0e, 0x90, 0xbf, 0x43, 0x70, 0x58, 0x81, 0x44,
+	0x53, 0x30, 0xb5, 0x63, 0x13, 0xa7, 0x1a, 0x60, 0x30, 0x37, 0xb0, 0x90, 0xd6, 0xd5, 0x2f, 0xb4,
+	0x08, 0x07, 0xda, 0x61, 0x9c, 0x4c, 0xa2, 0x8e, 0xde, 0x93, 0xc8, 0xb9, 0x1c, 0x5a, 0x8b, 0x85,
+	0xdf, 0xa1, 0x96, 0x88, 0x5e, 0x66, 0xf9, 0xd4, 0x52, 0xd5, 0x0e, 0x42, 0xdf, 0xbe, 0xd1, 0x08,
+	0x49, 0xd5, 0x10, 0x75, 0x63, 0xc8, 0xba, 0x59, 0xba, 0x4c, 0xad, 0xce, 0x2c, 0x5c, 0xa6, 0x16,
+	0x3a, 0x0d, 0x07, 0x1a, 0xbe, 0x2d, 0x3c, 0x4e, 0x97, 0x73, 0xdc, 0x9f, 0x5f, 0xdc, 0x3b, 0x39,
+	0xe4, 0x51, 0xcb, 0x65, 0x3a, 0xe7, 0xa0, 0x77, 0xe0, 0x88, 0x63, 0xef, 0x12, 0x8f, 0x04, 0x01,
+	0x4e, 0xcd, 0x81, 0x85, 0xd1, 0xe5, 0x13, 0x31, 0x70, 0x97, 0x15, 0xab, 0x3c, 0xc8, 0x55, 0xf5,
+	0x96, 0x28, 0xda, 0x80, 0x59, 0xd7, 0x64, 0x8c, 0x54, 0x0d, 0x46, 0xfd, 0x30, 0xc0, 0xe9, 0xb9,
+	0x81, 0x85, 0xcc, 0xf2, 0x1b, 0xbd, 0xf1, 0x95, 0x18, 0xbb, 0x4a, 0xfd, 0x30, 0x16, 0xd3, 0x8c,
+	0x34, 0xc0, 0xa9, 0x01, 0x3a, 0x07, 0x53, 0xb2, 0x81, 0x71, 0x56, 0x78, 0x3a, 0x11, 0x03, 0xb1,
+	0x26, 0x18, 0xc9, 0x84, 0x28, 0x69, 0xf4, 0x2e, 0x1c, 0x0a, 0x42, 0x33, 0x24, 0x78, 0x54, 0x60,
+	0x7f, 0x2d, 0xa6, 0xb6, 0xe5, 0x9b, 0xd6, 0x4d, 0x52, 0xdd, 0xe4, 0xec, 0x4e, 0xd7, 0xa5, 0x12,
+	0x9a, 0x87, 0x29, 0xe2, 0xfb, 0xd4, 0x0f, 0xf0, 0x18, 0x4f, 0x56, 0xa7, 0x94, 0x62, 0xa2, 0x8b,
+	0x30, 0x6b, 0xf9, 0xae, 0x41, 0x77, 0x89, 0xef, 0xdb, 0x55, 0x82, 0xf3, 0xe2, 0xad, 0x44, 0x2f,
+	0xe8, 0x57, 0x2a, 0x8a, 0x5b, 0x4e, 0xb7, 0x0d, 0x64, 0x2c, 0xdf, 0x8d, 0xe8, 0xa8, 0x0c, 0xb3,
+	0x7e, 0xc3, 0x0b, 0x6d, 0x97, 0x18, 0xb6, 0xb7, 0x43, 0xf1, 0xb8, 0x70, 0xf4, 0xe4, 0xe1, 0x52,
+	0xd0, 0xa5, 0x54, 0x94, 0x4e, 0xa5, 0xb4, 0xee, 0xed, 0x50, 0xf4, 0x3d, 0x08, 0x2d, 0x9f, 0x98,
+	0x3c, 0xba, 0x66, 0x88, 0x27, 0x85, 0x85, 0x37, 0x7b, 0x07, 0x7d, 0xcb, 0x76, 0x49, 0x10, 0x9a,
+	0x2e, 0x2b, 0x4f, 0x2a, 0xcf, 0xd2, 0x61, 0x44, 0x12, 0xc6, 0xd3, 0xca, 0x5a, 0x29, 0x44, 0x1b,
+	0x70, 0x8a, 0x8f, 0x45, 0xa3, 0xd5, 0x2d, 0xcc, 0x30, 0x2d, 0x8b, 0x97, 0xc5, 0xd4, 0xa1, 0xb2,
+	0x58, 0x67, 0x25, 0xc1, 0x52, 0x65, 0x71, 0x82, 0x2b, 0x46, 0xbd, 0xa3, 0x58, 0xe8, 0x5b, 0x30,
+	0xc5, 0x83, 0xdc, 0x08, 0xf0, 0x6b, 0x87, 0x6a, 0x7e, 0x53, 0x30, 0xb8, 0x47, 0xe5, 0xf1, 0x44,
+	0xc8, 0x65, 0x6e, 0xa5, 0x1e, 0x9a, 0x87, 0x23, 0x3e, 0xd9, 0xb5, 0x03, 0x3e, 0x3d, 0xb0, 0x28,
+	0xe0, 0x58, 0x68, 0x5b, 0x2c, 0xa4, 0xc1, 0xec, 0x0e, 0xf5, 0x2d, 0x62, 0x34, 0x58, 0x95, 0x57,
+	0xc2, 0xc9, 0x39, 0xb0, 0x30, 0x92, 0xc8, 0x82, 0x60, 0x6f, 0x0b, 0x2e, 0x5a, 0x86, 0x63, 0x52,
+	0xce, 0x70, 0x1b, 0x4e, 0x68, 0x33, 0x87, 0xe0, 0xe9, 0x4e, 0x85, 0x51, 0x29, 0x71, 0x45, 0x09,
+	0xa0, 0x22, 0x1c, 0xb6, 0xa8, 0xb7, 0x63, 0xd7, 0x02, 0xfc, 0xba, 0xa8, 0xf3, 0xc4, 0x14, 0x15,
+	0x9c, 0x35, 0xdb, 0x21, 0x7a, 0x24, 0x85, 0xae, 0xc3, 0x6c, 0x9d, 0x98, 0x4e, 0x58, 0x37, 0xac,
+	0x3a, 0xb1, 0x6e, 0xe2, 0x53, 0x22, 0x82, 0xf3, 0xbd, 0x13, 0xf5, 0x6d, 0x21, 0x7d, 0x81, 0x0b,
+	0x77, 0x16, 0x61, 0xa6, 0xde, 0xe6, 0xa1, 0x79, 0x38, 0xca, 0x7c, 0x7b, 0xd7, 0xb4, 0xf6, 0x0c,
+	0xb9, 0xba, 0xf0, 0x2c, 0x0f, 0x8c, 0x9e, 0x53, 0xd4, 0xab, 0x82, 0x88, 0x4a, 0x30, 0xc3, 0xe8,
+	0x2d, 0xe2, 0x1b, 0xb2, 0x37, 0x4e, 0x8b, 0xe7, 0xe3, 0xa0, 0xaf, 0x72, 0xae, 0xec, 0x8c, 0x98,
+	0xdf, 0x90, 0xb5, 0xc8, 0xe8, 0x3d, 0x38, 0x41, 0x3e, 0x08, 0x89, 0xef, 0x99, 0x8e, 0xb1, 0x4b,
+	0x9d, 0x86, 0x4b, 0x8c, 0xc0, 0xbe, 0x4d, 0xf0, 0xdc, 0x1c, 0x58, 0x18, 0xec, 0xc4, 0x88, 0x22,
+	0xd1, 0x6b, 0x42, 0x72, 0xd3, 0xbe, 0x4d, 0xd0, 0x0a, 0x1c, 0x37, 0x77, 0x4d, 0xdb, 0x31, 0x6f,
+	0xd8, 0x8e, 0x1d, 0xee, 0x19, 0xb7, 0xa9, 0x47, 0xf0, 0x1b, 0xdd, 0xe6, 0x50, 0x3e, 0x2e, 0xf7,
+	0x7d, 0xea, 0x11, 0x74, 0x06, 0xa6, 0x77, 0x5d, 0x43, 0x0d, 0x84, 0x42, 0x37, 0x9d, 0x91, 0x5d,
+	0x57, 0x8e, 0x05, 0xf4, 0x16, 0x1c, 0xa6, 0x2c, 0x34, 0x7c, 0x12, 0xe0, 0x37, 0xbb, 0x49, 0xa6,
+	0x28, 0x0b, 0x75, 0x12, 0xf0, 0xd6, 0x91, 0x69, 0x15, 0xad, 0xf3, 0x95, 0xe3, 0xb7, 0x8e, 0xb2,
+	0x56, 0x0a, 0xd1, 0x59, 0x38, 0xee, 0x13, 0xd3, 0x69, 0xb5, 0x8e, 0x67, 0xba, 0x04, 0xcf, 0x0b,
+	0x30, 0xb2, 0x41, 0xc6, 0x38, 0x5b, 0x35, 0xc8, 0x86, 0xe9, 0x92, 0x95, 0x7f, 0x0c, 0xf1, 0x05,
+	0xf2, 0xaf, 0x67, 0x18, 0xfc, 0xa8, 0x89, 0xc1, 0x9d, 0x26, 0x06, 0xbf, 0x6a, 0x62, 0xf0, 0x59,
+	0x13, 0x83, 0xfb, 0x4d, 0x9c, 0x8d, 0x4f, 0xae, 0x07, 0x4d, 0x0c, 0xbe, 0xe0, 0x00, 0xf6, 0xf1,
+	0x7d, 0x70, 0xa1, 0x3d, 0xd9, 0xb5, 0x6d, 0xdf, 0xd6, 0xae, 0xb4, 0x27, 0xa8, 0x16, 0x8d, 0x6a,
+	0xed, 0x42, 0xd4, 0xd2, 0x9a, 0x6c, 0x33, 0x4d, 0x57, 0x9d, 0xa2, 0xad, 0x8a, 0x71, 0xa6, 0xe9,
+	0xed, 0x81, 0xa2, 0x5d, 0x53, 0x61, 0xd4, 0x56, 0x0f, 0x65, 0x50, 0x2b, 0x75, 0xa4, 0x45, 0xd8,
+	0x23, 0xda, 0x76, 0xe4, 0xb7, 0x56, 0x11, 0x91, 0xd5, 0x36, 0xeb, 0xa6, 0x4f, 0xaa, 0x71, 0xc5,
+	0xc3, 0xe3, 0xe0, 0xe3, 0x7d, 0x7c, 0xb7, 0xdf, 0x64, 0x8c, 0x87, 0xe6, 0xfc, 0x25, 0xb2, 0xa7,
+	0x96, 0xf5, 0x12, 0x8f, 0x86, 0x66, 0x32, 0xb6, 0x4b, 0xfc, 0x20, 0x4e, 0xbf, 0x46, 0x7c, 0x01,
+	0xd9, 0x64, 0x6c, 0x91, 0xfa, 0xb5, 0x38, 0xab, 0x12, 0xbb, 0x16, 0x34, 0x15, 0x72, 0xc1, 0x4f,
+	0x6e, 0xef, 0xd8, 0x79, 0x23, 0x5f, 0x51, 0xa2, 0x2d, 0x73, 0x1d, 0xe2, 0x1d, 0x66, 0x65, 0xa0,
+	0xbb, 0xdb, 0x6d, 0x1d, 0x39, 0x91, 0x61, 0x49, 0xe8, 0x65, 0x39, 0xae, 0x90, 0x78, 0x45, 0x16,
+	0xf8, 0x79, 0x99, 0x01, 0x61, 0xeb, 0xee, 0x3e, 0x2e, 0x3f, 0x0f, 0xdb, 0xf3, 0x5d, 0x7d, 0xb4,
+	0x8f, 0x67, 0x8f, 0xc6, 0x71, 0xef, 0x00, 0x5b, 0x37, 0xc9, 0xde, 0xf9, 0x6e, 0x21, 0xe5, 0xf4,
+	0xa3, 0xde, 0xef, 0xc2, 0xef, 0xe5, 0xe1, 0x77, 0x06, 0x47, 0x66, 0xf2, 0xa7, 0x74, 0x14, 0x88,
+	0x0a, 0x89, 0xcf, 0x91, 0xc2, 0x37, 0xe1, 0x68, 0x72, 0xdd, 0xa1, 0xaf, 0xc2, 0x9c, 0x45, 0xbd,
+	0xd0, 0xb4, 0x3d, 0xbe, 0x7d, 0xa2, 0x03, 0x4a, 0x75, 0x50, 0xb6, 0xc5, 0x5a, 0xaf, 0x06, 0x85,
+	0x8f, 0x07, 0x60, 0x46, 0x69, 0x8b, 0xb5, 0xf8, 0x3f, 0x3a, 0xba, 0xde, 0x82, 0x69, 0x8f, 0x86,
+	0xf6, 0xce, 0x9e, 0x61, 0x57, 0xc5, 0xc5, 0x35, 0x90, 0xd8, 0x38, 0x92, 0xb7, 0x5e, 0x45, 0x8b,
+	0xd1, 0xd1, 0x31, 0x78, 0xe4, 0xd1, 0x11, 0x5d, 0x19, 0x53, 0xad, 0x2b, 0x63, 0x48, 0xa2, 0x53,
+	0x67, 0x45, 0xe7, 0x41, 0x90, 0x7a, 0x85, 0x83, 0xe0, 0x6b, 0xad, 0x2d, 0x3b, 0x7c, 0xd4, 0x96,
+	0x8d, 0x1d, 0x4e, 0x6a, 0xb9, 0x9e, 0x4b, 0xae, 0x88, 0x91, 0x23, 0x56, 0x44, 0x7c, 0x2f, 0xac,
+	0xcc, 0x75, 0x0e, 0xae, 0x4f, 0x9a, 0x18, 0x7c, 0xd9, 0xc4, 0xe0, 0xde, 0x01, 0x1e, 0xf4, 0xa8,
+	0x47, 0x0a, 0x4b, 0xad, 0xcc, 0x5e, 0x21, 0xa1, 0x6f, 0x5b, 0x01, 0x9a, 0x81, 0xe9, 0x80, 0xba,
+	0x24, 0xac, 0xdb, 0x5e, 0x0d, 0x0f, 0xf1, 0x05, 0xa2, 0xb7, 0x09, 0x85, 0x8f, 0x00, 0xcc, 0x29,
+	0x85, 0xcb, 0x94, 0xde, 0x6c, 0xb0, 0x28, 0x6d, 0xe0, 0x05, 0xd3, 0xf6, 0x0d, 0x08, 0xe5, 0x32,
+	0x8c, 0x7d, 0xa8, 0x4c, 0x24, 0x3c, 0xe1, 0xcc, 0xb6, 0x52, 0x9a, 0x45, 0x84, 0x95, 0xdc, 0xe7,
+	0x07, 0x38, 0xdd, 0xe2, 0x17, 0x7e, 0x0e, 0x5a, 0xd8, 0x25, 0x94, 0xe5, 0x97, 0xc5, 0x72, 0xdc,
+	0xcf, 0xa6, 0x95, 0xb1, 0xcf, 0x0f, 0x70, 0x26, 0x26, 0x53, 0xf8, 0xc9, 0x40, 0x1b, 0x93, 0x19,
+	0x12, 0xcf, 0xda, 0x7b, 0x59, 0x4c, 0x18, 0x0e, 0xbb, 0x24, 0x08, 0xcc, 0x1a, 0x11, 0x70, 0xd2,
+	0x7a, 0xf4, 0x73, 0xe5, 0xb7, 0xfd, 0xff, 0x9f, 0xcb, 0x2f, 0x34, 0x97, 0xcf, 0xfc, 0xac, 0x1f,
+	0xc2, 0x76, 0x47, 0xa0, 0x53, 0xf0, 0xc4, 0xd5, 0xca, 0xf5, 0x55, 0xdd, 0xd8, 0xdc, 0x2a, 0x6d,
+	0xad, 0x1a, 0xdb, 0x1b, 0x97, 0x36, 0x2a, 0xd7, 0x37, 0xf2, 0x7d, 0xd3, 0x83, 0x77, 0x0e, 0x30,
+	0x40, 0x33, 0x10, 0x49, 0x76, 0x65, 0xc3, 0xd0, 0x57, 0xbf, 0xbb, 0xbd, 0xba, 0xb9, 0xb5, 0x7a,
+	0x31, 0x0f, 0x14, 0x77, 0x12, 0x66, 0x04, 0x77, 0x7d, 0xe3, 0x7d, 0xa3, 0xb2, 0x91, 0xef, 0x57,
+	0xe4, 0x2c, 0x1c, 0x89, 0x94, 0xf2, 0x03, 0xed, 0x17, 0x2a, 0x6b, 0x6b, 0x31, 0x1b, 0x83, 0x4a,
+	0x78, 0x0a, 0x66, 0xdb, 0x36, 0xd6, 0xd6, 0xf2, 0x43, 0x8a, 0x9e, 0x83, 0xe9, 0x96, 0x5a, 0x3e,
+	0x85, 0xa6, 0x61, 0x5e, 0x5f, 0x2d, 0x57, 0x2a, 0x5b, 0x31, 0x13, 0xc3, 0x4a, 0xf4, 0x04, 0x4c,
+	0x4b, 0xde, 0xfa, 0xc6, 0xfb, 0xf9, 0x11, 0x45, 0x84, 0x30, 0x25, 0x89, 0xf9, 0x34, 0x7a, 0x1d,
+	0x8e, 0xc7, 0x9d, 0x5c, 0xd5, 0xf5, 0x8a, 0x9e, 0x87, 0x52, 0x70, 0xf9, 0xd9, 0x70, 0xeb, 0xc3,
+	0xbc, 0xc4, 0x6c, 0xf4, 0x47, 0x00, 0x73, 0xf2, 0xf0, 0x88, 0x3e, 0x84, 0xd1, 0xe1, 0xba, 0x9c,
+	0x8e, 0x7f, 0xad, 0xeb, 0xe2, 0xbf, 0x80, 0x0a, 0x3f, 0x05, 0x4f, 0x9b, 0xf8, 0x1d, 0x9d, 0x04,
+	0xb4, 0xe1, 0x5b, 0x91, 0x72, 0xa0, 0x95, 0x2c, 0x9e, 0x89, 0x2b, 0xa6, 0x67, 0xd6, 0x88, 0xd6,
+	0xa3, 0xc8, 0x3e, 0xdd, 0xc7, 0xe0, 0xe1, 0x3e, 0x06, 0x8f, 0xf6, 0xf1, 0xfc, 0x76, 0xe2, 0x62,
+	0xd7, 0xd6, 0xda, 0x17, 0xbf, 0xd6, 0x4e, 0xdb, 0x87, 0x7f, 0xfe, 0xfb, 0x2f, 0xfb, 0x27, 0x0a,
+	0x63, 0x45, 0xf9, 0xd5, 0x53, 0x54, 0xff, 0x7b, 0xb5, 0x02, 0xce, 0x9c, 0x05, 0xe8, 0xd7, 0x00,
+	0xe6, 0x2e, 0x12, 0x87, 0xbc, 0xb4, 0x07, 0xe4, 0x58, 0x0e, 0x3c, 0xda, 0xc7, 0xb0, 0x0b, 0xc2,
+	0xaa, 0x40, 0x92, 0x44, 0xf8, 0xe3, 0x7e, 0x38, 0xaa, 0x93, 0x1d, 0x9f, 0x04, 0xf5, 0x97, 0x84,
+	0xf8, 0x27, 0x70, 0x5c, 0x8c, 0x9b, 0xea, 0x4c, 0xec, 0x72, 0xda, 0x69, 0xf2, 0x0b, 0x28, 0x88,
+	0x05, 0x5a, 0x8b, 0x7d, 0xcf, 0x1c, 0x3e, 0x0f, 0xa3, 0x9b, 0xf3, 0xe9, 0x3e, 0x46, 0x87, 0xdb,
+	0x52, 0x84, 0x60, 0xb2, 0x90, 0x2f, 0xfa, 0xd2, 0xd5, 0x64, 0x0c, 0xfe, 0x0d, 0x60, 0x4e, 0xe6,
+	0xf5, 0x25, 0x43, 0xf0, 0xfb, 0x63, 0x87, 0xe0, 0x07, 0x47, 0x84, 0xe0, 0x88, 0xf2, 0x7b, 0xa1,
+	0x50, 0xb4, 0xf2, 0x2e, 0x3f, 0x2a, 0x92, 0x3e, 0x7f, 0x04, 0x60, 0x66, 0xb3, 0x4e, 0x6f, 0x1d,
+	0xe5, 0x71, 0x17, 0x5a, 0xa1, 0xf2, 0xb4, 0x89, 0xdf, 0xee, 0xe1, 0xf1, 0x35, 0x9b, 0xdc, 0xea,
+	0xe5, 0xaf, 0x00, 0x83, 0x0a, 0xb9, 0x62, 0x50, 0xa7, 0xb7, 0x12, 0x50, 0x96, 0x83, 0xd6, 0x2e,
+	0xe2, 0x67, 0x05, 0x6f, 0x7c, 0x13, 0x8e, 0xc5, 0xb0, 0xc9, 0x6b, 0xec, 0x30, 0x16, 0x4e, 0x9f,
+	0xee, 0x41, 0x2f, 0xcc, 0x88, 0x07, 0xa7, 0x0a, 0xe3, 0x89, 0x07, 0xf9, 0x49, 0x24, 0x1f, 0xfd,
+	0x10, 0xc0, 0xf1, 0xe4, 0x45, 0xc1, 0x1f, 0x76, 0x21, 0x8a, 0x3d, 0x1c, 0x9d, 0x1a, 0x5d, 0xae,
+	0x27, 0xc5, 0x9a, 0xee, 0xcd, 0x2a, 0x9c, 0x16, 0x08, 0x4e, 0x16, 0x26, 0x12, 0x08, 0x5c, 0xc9,
+	0x95, 0x20, 0xfe, 0xd0, 0x06, 0xa1, 0xd6, 0x30, 0x07, 0xf1, 0x1b, 0x00, 0x27, 0x75, 0xf2, 0xc3,
+	0x06, 0xe1, 0x53, 0x30, 0xb1, 0xa3, 0xbb, 0xbc, 0xa6, 0x58, 0xdd, 0xaa, 0xd3, 0x78, 0xe5, 0xe2,
+	0xe4, 0xc3, 0x58, 0xa0, 0x9f, 0x29, 0xbc, 0x56, 0xf4, 0x25, 0x94, 0xc8, 0x01, 0x47, 0x3e, 0xb8,
+	0x02, 0xce, 0x94, 0x67, 0x1e, 0xfc, 0x6d, 0xb6, 0xef, 0xc1, 0xe3, 0x59, 0xf0, 0xf0, 0xf1, 0x2c,
+	0xf8, 0xf2, 0xf1, 0x2c, 0xb8, 0xf3, 0x64, 0xb6, 0xef, 0xe1, 0x93, 0xd9, 0xbe, 0x2f, 0x9e, 0xcc,
+	0xf6, 0xdd, 0x48, 0x09, 0x30, 0x6f, 0xff, 0x37, 0x00, 0x00, 0xff, 0xff, 0x54, 0xac, 0x23, 0x83,
+	0xd0, 0x17, 0x00, 0x00,
 }
 
+func (this *VirtualClusterInstKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&edgeproto.VirtualClusterInstKey{")
+	s = append(s, "ClusterKey: "+strings.Replace(this.ClusterKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "CloudletKey: "+strings.Replace(this.CloudletKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
 func (this *AppInstKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -1266,6 +1324,130 @@ var _AppInstMetricsApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "appinst.proto",
 }
 
+// AppInstLatencyApiClient is the client API for AppInstLatencyApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type AppInstLatencyApiClient interface {
+	// Request Latency measurements for clients connected to AppInst
+	RequestAppInstLatency(ctx context.Context, in *AppInstLatency, opts ...grpc.CallOption) (*Result, error)
+}
+
+type appInstLatencyApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewAppInstLatencyApiClient(cc *grpc.ClientConn) AppInstLatencyApiClient {
+	return &appInstLatencyApiClient{cc}
+}
+
+func (c *appInstLatencyApiClient) RequestAppInstLatency(ctx context.Context, in *AppInstLatency, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.AppInstLatencyApi/RequestAppInstLatency", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AppInstLatencyApiServer is the server API for AppInstLatencyApi service.
+type AppInstLatencyApiServer interface {
+	// Request Latency measurements for clients connected to AppInst
+	RequestAppInstLatency(context.Context, *AppInstLatency) (*Result, error)
+}
+
+// UnimplementedAppInstLatencyApiServer can be embedded to have forward compatible implementations.
+type UnimplementedAppInstLatencyApiServer struct {
+}
+
+func (*UnimplementedAppInstLatencyApiServer) RequestAppInstLatency(ctx context.Context, req *AppInstLatency) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestAppInstLatency not implemented")
+}
+
+func RegisterAppInstLatencyApiServer(s *grpc.Server, srv AppInstLatencyApiServer) {
+	s.RegisterService(&_AppInstLatencyApi_serviceDesc, srv)
+}
+
+func _AppInstLatencyApi_RequestAppInstLatency_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AppInstLatency)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AppInstLatencyApiServer).RequestAppInstLatency(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.AppInstLatencyApi/RequestAppInstLatency",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AppInstLatencyApiServer).RequestAppInstLatency(ctx, req.(*AppInstLatency))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _AppInstLatencyApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.AppInstLatencyApi",
+	HandlerType: (*AppInstLatencyApiServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RequestAppInstLatency",
+			Handler:    _AppInstLatencyApi_RequestAppInstLatency_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "appinst.proto",
+}
+
+func (m *VirtualClusterInstKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VirtualClusterInstKey) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VirtualClusterInstKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Organization) > 0 {
+		i -= len(m.Organization)
+		copy(dAtA[i:], m.Organization)
+		i = encodeVarintAppinst(dAtA, i, uint64(len(m.Organization)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.CloudletKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAppinst(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.ClusterKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAppinst(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func (m *AppInstKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1329,6 +1511,15 @@ func (m *AppInst) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.RealClusterName) > 0 {
+		i -= len(m.RealClusterName)
+		copy(dAtA[i:], m.RealClusterName)
+		i = encodeVarintAppinst(dAtA, i, uint64(len(m.RealClusterName)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xaa
+	}
 	{
 		size, err := m.UpdatedAt.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -1397,13 +1588,6 @@ func (m *AppInst) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xe8
-	}
-	if m.SharedVolumeSize != 0 {
-		i = encodeVarintAppinst(dAtA, i, uint64(m.SharedVolumeSize))
-		i--
-		dAtA[i] = 0x1
-		i--
-		dAtA[i] = 0xe0
 	}
 	if len(m.Configs) > 0 {
 		for iNdEx := len(m.Configs) - 1; iNdEx >= 0; iNdEx-- {
@@ -1818,6 +2002,46 @@ func (m *AppInstLookup2) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *AppInstLatency) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppInstLatency) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppInstLatency) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Message) > 0 {
+		i -= len(m.Message)
+		copy(dAtA[i:], m.Message)
+		i = encodeVarintAppinst(dAtA, i, uint64(len(m.Message)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAppinst(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintAppinst(dAtA []byte, offset int, v uint64) int {
 	offset -= sovAppinst(v)
 	base := offset
@@ -1829,6 +2053,101 @@ func encodeVarintAppinst(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *VirtualClusterInstKey) Matches(o *VirtualClusterInstKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.ClusterKey.Matches(&o.ClusterKey, fopts...) {
+		return false
+	}
+	if !m.CloudletKey.Matches(&o.CloudletKey, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.Organization != "" {
+		if o.Organization != m.Organization {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *VirtualClusterInstKey) CopyInFields(src *VirtualClusterInstKey) int {
+	changed := 0
+	if m.ClusterKey.Name != src.ClusterKey.Name {
+		m.ClusterKey.Name = src.ClusterKey.Name
+		changed++
+	}
+	if m.CloudletKey.Organization != src.CloudletKey.Organization {
+		m.CloudletKey.Organization = src.CloudletKey.Organization
+		changed++
+	}
+	if m.CloudletKey.Name != src.CloudletKey.Name {
+		m.CloudletKey.Name = src.CloudletKey.Name
+		changed++
+	}
+	if m.Organization != src.Organization {
+		m.Organization = src.Organization
+		changed++
+	}
+	return changed
+}
+
+func (m *VirtualClusterInstKey) DeepCopyIn(src *VirtualClusterInstKey) {
+	m.ClusterKey.DeepCopyIn(&src.ClusterKey)
+	m.CloudletKey.DeepCopyIn(&src.CloudletKey)
+	m.Organization = src.Organization
+}
+
+func (m *VirtualClusterInstKey) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal VirtualClusterInstKey key string", "obj", m)
+	}
+	return string(key)
+}
+
+func VirtualClusterInstKeyStringParse(str string, key *VirtualClusterInstKey) {
+	err := json.Unmarshal([]byte(str), key)
+	if err != nil {
+		log.FatalLog("Failed to unmarshal VirtualClusterInstKey key string", "str", str)
+	}
+}
+
+func (m *VirtualClusterInstKey) NotFoundError() error {
+	return fmt.Errorf("VirtualClusterInst key %s not found", m.GetKeyString())
+}
+
+func (m *VirtualClusterInstKey) ExistsError() error {
+	return fmt.Errorf("VirtualClusterInst key %s already exists", m.GetKeyString())
+}
+
+var VirtualClusterInstKeyTagOrganization = "clusterorg"
+
+func (m *VirtualClusterInstKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["cluster"] = m.ClusterKey.Name
+	tags["cloudletorg"] = m.CloudletKey.Organization
+	tags["cloudlet"] = m.CloudletKey.Name
+	tags["clusterorg"] = m.Organization
+	return tags
+}
+
+// Helper method to check that enums have valid values
+func (m *VirtualClusterInstKey) ValidateEnums() error {
+	if err := m.ClusterKey.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.CloudletKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *AppInstKey) Matches(o *AppInstKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1961,7 +2280,7 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.MappedPorts != nil {
-			if m.MappedPorts == nil && o.MappedPorts != nil || m.MappedPorts != nil && o.MappedPorts == nil {
+			if len(m.MappedPorts) == 0 && len(o.MappedPorts) > 0 || len(m.MappedPorts) > 0 && len(o.MappedPorts) == 0 {
 				return false
 			} else if m.MappedPorts != nil && o.MappedPorts != nil {
 				if !opts.Filter && len(m.MappedPorts) != len(o.MappedPorts) {
@@ -1986,7 +2305,7 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 	}
 	if !opts.IgnoreBackend {
 		if !opts.Filter || o.Errors != nil {
-			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+			if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 				return false
 			} else if m.Errors != nil && o.Errors != nil {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -2032,7 +2351,7 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Configs != nil {
-		if m.Configs == nil && o.Configs != nil || m.Configs != nil && o.Configs == nil {
+		if len(m.Configs) == 0 && len(o.Configs) > 0 || len(m.Configs) > 0 && len(o.Configs) == 0 {
 			return false
 		} else if m.Configs != nil && o.Configs != nil {
 			if !opts.Filter && len(m.Configs) != len(o.Configs) {
@@ -2040,11 +2359,6 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 			}
 			for i := 0; i < len(m.Configs); i++ {
 			}
-		}
-	}
-	if !opts.Filter || o.SharedVolumeSize != 0 {
-		if o.SharedVolumeSize != m.SharedVolumeSize {
-			return false
 		}
 	}
 	if !opts.IgnoreBackend {
@@ -2093,6 +2407,13 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.IgnoreBackend {
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.RealClusterName != "" {
+			if o.RealClusterName != m.RealClusterName {
+				return false
+			}
+		}
 	}
 	return true
 }
@@ -2154,7 +2475,6 @@ const AppInstFieldUpdateMultiple = "26"
 const AppInstFieldConfigs = "27"
 const AppInstFieldConfigsKind = "27.1"
 const AppInstFieldConfigsConfig = "27.2"
-const AppInstFieldSharedVolumeSize = "28"
 const AppInstFieldHealthCheck = "29"
 const AppInstFieldPrivacyPolicy = "30"
 const AppInstFieldPowerState = "31"
@@ -2165,6 +2485,7 @@ const AppInstFieldOptRes = "35"
 const AppInstFieldUpdatedAt = "36"
 const AppInstFieldUpdatedAtSeconds = "36.1"
 const AppInstFieldUpdatedAtNanos = "36.2"
+const AppInstFieldRealClusterName = "37"
 
 var AppInstAllFields = []string{
 	AppInstFieldKeyAppKeyOrganization,
@@ -2211,7 +2532,6 @@ var AppInstAllFields = []string{
 	AppInstFieldUpdateMultiple,
 	AppInstFieldConfigsKind,
 	AppInstFieldConfigsConfig,
-	AppInstFieldSharedVolumeSize,
 	AppInstFieldHealthCheck,
 	AppInstFieldPrivacyPolicy,
 	AppInstFieldPowerState,
@@ -2221,6 +2541,7 @@ var AppInstAllFields = []string{
 	AppInstFieldOptRes,
 	AppInstFieldUpdatedAtSeconds,
 	AppInstFieldUpdatedAtNanos,
+	AppInstFieldRealClusterName,
 }
 
 var AppInstAllFieldsMap = map[string]struct{}{
@@ -2268,7 +2589,6 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldUpdateMultiple:                           struct{}{},
 	AppInstFieldConfigsKind:                              struct{}{},
 	AppInstFieldConfigsConfig:                            struct{}{},
-	AppInstFieldSharedVolumeSize:                         struct{}{},
 	AppInstFieldHealthCheck:                              struct{}{},
 	AppInstFieldPrivacyPolicy:                            struct{}{},
 	AppInstFieldPowerState:                               struct{}{},
@@ -2278,6 +2598,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldOptRes:                                   struct{}{},
 	AppInstFieldUpdatedAtSeconds:                         struct{}{},
 	AppInstFieldUpdatedAtNanos:                           struct{}{},
+	AppInstFieldRealClusterName:                          struct{}{},
 }
 
 var AppInstAllFieldsStringMap = map[string]string{
@@ -2325,7 +2646,6 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldUpdateMultiple:                           "Update Multiple",
 	AppInstFieldConfigsKind:                              "Configs Kind",
 	AppInstFieldConfigsConfig:                            "Configs Config",
-	AppInstFieldSharedVolumeSize:                         "Shared Volume Size",
 	AppInstFieldHealthCheck:                              "Health Check",
 	AppInstFieldPrivacyPolicy:                            "Privacy Policy",
 	AppInstFieldPowerState:                               "Power State",
@@ -2335,6 +2655,7 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldOptRes:                                   "Opt Res",
 	AppInstFieldUpdatedAtSeconds:                         "Updated At Seconds",
 	AppInstFieldUpdatedAtNanos:                           "Updated At Nanos",
+	AppInstFieldRealClusterName:                          "Real Cluster Name",
 }
 
 func (m *AppInst) IsKeyField(s string) bool {
@@ -2565,9 +2886,6 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 	} else if (m.Configs != nil && o.Configs == nil) || (m.Configs == nil && o.Configs != nil) {
 		fields[AppInstFieldConfigs] = struct{}{}
 	}
-	if m.SharedVolumeSize != o.SharedVolumeSize {
-		fields[AppInstFieldSharedVolumeSize] = struct{}{}
-	}
 	if m.HealthCheck != o.HealthCheck {
 		fields[AppInstFieldHealthCheck] = struct{}{}
 	}
@@ -2597,14 +2915,19 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 		fields[AppInstFieldUpdatedAtNanos] = struct{}{}
 		fields[AppInstFieldUpdatedAt] = struct{}{}
 	}
+	if m.RealClusterName != o.RealClusterName {
+		fields[AppInstFieldRealClusterName] = struct{}{}
+	}
 }
 
 var UpdateAppInstFieldsMap = map[string]struct{}{
-	AppInstFieldCrmOverride:   struct{}{},
-	AppInstFieldConfigs:       struct{}{},
-	AppInstFieldConfigsKind:   struct{}{},
-	AppInstFieldConfigsConfig: struct{}{},
-	AppInstFieldPowerState:    struct{}{},
+	AppInstFieldCrmOverride:     struct{}{},
+	AppInstFieldConfigs:         struct{}{},
+	AppInstFieldConfigsKind:     struct{}{},
+	AppInstFieldConfigsConfig:   struct{}{},
+	AppInstFieldPrivacyPolicy:   struct{}{},
+	AppInstFieldPowerState:      struct{}{},
+	AppInstFieldRealClusterName: struct{}{},
 }
 
 func (m *AppInst) ValidateUpdateFields() error {
@@ -2898,12 +3221,6 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 			changed++
 		}
 	}
-	if _, set := fmap["28"]; set {
-		if m.SharedVolumeSize != src.SharedVolumeSize {
-			m.SharedVolumeSize = src.SharedVolumeSize
-			changed++
-		}
-	}
 	if _, set := fmap["29"]; set {
 		if m.HealthCheck != src.HealthCheck {
 			m.HealthCheck = src.HealthCheck
@@ -2960,6 +3277,12 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 			}
 		}
 	}
+	if _, set := fmap["37"]; set {
+		if m.RealClusterName != src.RealClusterName {
+			m.RealClusterName = src.RealClusterName
+			changed++
+		}
+	}
 	return changed
 }
 
@@ -3004,7 +3327,6 @@ func (m *AppInst) DeepCopyIn(src *AppInst) {
 	} else {
 		m.Configs = nil
 	}
-	m.SharedVolumeSize = src.SharedVolumeSize
 	m.HealthCheck = src.HealthCheck
 	m.PrivacyPolicy = src.PrivacyPolicy
 	m.PowerState = src.PowerState
@@ -3013,6 +3335,7 @@ func (m *AppInst) DeepCopyIn(src *AppInst) {
 	m.VmFlavor = src.VmFlavor
 	m.OptRes = src.OptRes
 	m.UpdatedAt = src.UpdatedAt
+	m.RealClusterName = src.RealClusterName
 }
 
 func (s *AppInst) HasFields() bool {
@@ -3345,15 +3668,12 @@ func (c *AppInstCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AppInst", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AppInst", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AppInst", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -3518,12 +3838,44 @@ func (c *AppInstCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error) error {
+func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
-	done := make(chan bool, 1)
+	done := make(chan string, 1)
 	failed := make(chan bool, 1)
-	var lastMsg string
+	var lastMsgCnt int
 	var err error
+
+	var wSpec WaitStateSpec
+	for _, op := range opts {
+		if err := op(&wSpec); err != nil {
+			return err
+		}
+	}
+
+	var streamCancel context.CancelFunc
+	if wSpec.StreamCache != nil {
+		checkStreamMsg := func() {
+			streamObj := StreamObj{}
+			if !wSpec.StreamCache.Get(wSpec.StreamKey, &streamObj) {
+				return
+			}
+			if len(streamObj.Status.Msgs) > 0 || streamObj.Status.MsgCount > 0 {
+				if lastMsgCnt < int(streamObj.Status.MsgCount) {
+					for ii := 0; ii < len(streamObj.Status.Msgs); ii++ {
+						send(&Result{Message: streamObj.Status.Msgs[ii]})
+						lastMsgCnt++
+					}
+				}
+			}
+		}
+
+		streamCancel = wSpec.StreamCache.WatchKey(wSpec.StreamKey, func(ctx context.Context) {
+			checkStreamMsg()
+		})
+
+		// After setting up watch, check if any status messages were received in the meantime
+		checkStreamMsg()
+	}
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := AppInst{}
@@ -3532,42 +3884,16 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		} else {
 			curState = TrackedState_NOT_PRESENT
 		}
-		if send != nil {
-			if curState == TrackedState_NOT_PRESENT {
-				msg := TrackedState_CamelName[int32(curState)]
-				if lastMsg != msg {
-					send(&Result{Message: msg})
-					lastMsg = msg
-				}
-			} else {
-				if len(info.Status.Msgs) > 0 || info.Status.MsgCount > 0 {
-					for ii := 0; ii < len(info.Status.Msgs); ii++ {
-						if lastMsg == info.Status.Msgs[ii] {
-							continue
-						}
-						send(&Result{Message: info.Status.Msgs[ii]})
-						lastMsg = info.Status.Msgs[ii]
-					}
-				} else {
-					// for backwards compatibility
-					statusString := info.Status.ToString()
-					var msg string
-					if statusString != "" {
-						msg = statusString
-					} else {
-						msg = TrackedState_CamelName[int32(curState)]
-					}
-					lastMsg = msg
-					send(&Result{Message: msg})
-				}
-			}
-		}
 		log.SpanLog(ctx, log.DebugLevelApi, "watch event for AppInst")
 		log.DebugLog(log.DebugLevelApi, "Watch event for AppInst", "key", key, "state", TrackedState_CamelName[int32(curState)], "status", info.Status)
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
-			done <- true
+			msg := ""
+			if curState == TrackedState_NOT_PRESENT {
+				msg = TrackedState_CamelName[int32(curState)]
+			}
+			done <- msg
 		}
 	})
 	// After setting up watch, check current state,
@@ -3579,11 +3905,18 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		curState = TrackedState_NOT_PRESENT
 	}
 	if curState == targetState {
-		done <- true
+		msg := ""
+		if curState == TrackedState_NOT_PRESENT {
+			msg = TrackedState_CamelName[int32(curState)]
+		}
+		done <- msg
 	}
 
 	select {
-	case <-done:
+	case doneMsg := <-done:
+		if doneMsg != "" {
+			send(&Result{Message: doneMsg})
+		}
 		err = nil
 		if successMsg != "" && send != nil {
 			send(&Result{Message: successMsg})
@@ -3620,6 +3953,9 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		}
 	}
 	cancel()
+	if streamCancel != nil {
+		streamCancel()
+	}
 	// note: do not close done/failed, garbage collector will deal with it.
 	return err
 }
@@ -3693,7 +4029,7 @@ func (m *AppInst) ValidateEnums() error {
 			return err
 		}
 	}
-	if _, ok := HealthCheck_name[int32(m.HealthCheck)]; !ok {
+	if _, ok := distributed_match_engine.HealthCheck_name[int32(m.HealthCheck)]; !ok {
 		return errors.New("invalid HealthCheck")
 	}
 	if _, ok := PowerState_name[int32(m.PowerState)]; !ok {
@@ -3810,7 +4146,7 @@ func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Errors != nil {
-		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+		if len(m.Errors) == 0 && len(o.Errors) > 0 || len(m.Errors) > 0 && len(o.Errors) == 0 {
 			return false
 		} else if m.Errors != nil && o.Errors != nil {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
@@ -4544,15 +4880,12 @@ func (c *AppInstInfoCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AppInstInfoCache) Show(filter *AppInstInfo, cb func(ret *AppInstInfo) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show AppInstInfo", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare AppInstInfo", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show AppInstInfo", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -5044,90 +5377,74 @@ func (m *AppInstLookup2) ValidateEnums() error {
 	return nil
 }
 
-var HealthCheckStrings = []string{
-	"HEALTH_CHECK_UNKNOWN",
-	"HEALTH_CHECK_FAIL_ROOTLB_OFFLINE",
-	"HEALTH_CHECK_FAIL_SERVER_FAIL",
-	"HEALTH_CHECK_OK",
+func (m *AppInstLatency) CopyInFields(src *AppInstLatency) int {
+	changed := 0
+	if m.Key.AppKey.Organization != src.Key.AppKey.Organization {
+		m.Key.AppKey.Organization = src.Key.AppKey.Organization
+		changed++
+	}
+	if m.Key.AppKey.Name != src.Key.AppKey.Name {
+		m.Key.AppKey.Name = src.Key.AppKey.Name
+		changed++
+	}
+	if m.Key.AppKey.Version != src.Key.AppKey.Version {
+		m.Key.AppKey.Version = src.Key.AppKey.Version
+		changed++
+	}
+	if m.Key.ClusterInstKey.ClusterKey.Name != src.Key.ClusterInstKey.ClusterKey.Name {
+		m.Key.ClusterInstKey.ClusterKey.Name = src.Key.ClusterInstKey.ClusterKey.Name
+		changed++
+	}
+	if m.Key.ClusterInstKey.CloudletKey.Organization != src.Key.ClusterInstKey.CloudletKey.Organization {
+		m.Key.ClusterInstKey.CloudletKey.Organization = src.Key.ClusterInstKey.CloudletKey.Organization
+		changed++
+	}
+	if m.Key.ClusterInstKey.CloudletKey.Name != src.Key.ClusterInstKey.CloudletKey.Name {
+		m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
+		changed++
+	}
+	if m.Key.ClusterInstKey.Organization != src.Key.ClusterInstKey.Organization {
+		m.Key.ClusterInstKey.Organization = src.Key.ClusterInstKey.Organization
+		changed++
+	}
+	if m.Message != src.Message {
+		m.Message = src.Message
+		changed++
+	}
+	return changed
 }
 
-const (
-	HealthCheckHEALTH_CHECK_UNKNOWN             uint64 = 1 << 0
-	HealthCheckHEALTH_CHECK_FAIL_ROOTLB_OFFLINE uint64 = 1 << 1
-	HealthCheckHEALTH_CHECK_FAIL_SERVER_FAIL    uint64 = 1 << 2
-	HealthCheckHEALTH_CHECK_OK                  uint64 = 1 << 3
-)
-
-var HealthCheck_CamelName = map[int32]string{
-	// HEALTH_CHECK_UNKNOWN -> HealthCheckUnknown
-	0: "HealthCheckUnknown",
-	// HEALTH_CHECK_FAIL_ROOTLB_OFFLINE -> HealthCheckFailRootlbOffline
-	1: "HealthCheckFailRootlbOffline",
-	// HEALTH_CHECK_FAIL_SERVER_FAIL -> HealthCheckFailServerFail
-	2: "HealthCheckFailServerFail",
-	// HEALTH_CHECK_OK -> HealthCheckOk
-	3: "HealthCheckOk",
-}
-var HealthCheck_CamelValue = map[string]int32{
-	"HealthCheckUnknown":           0,
-	"HealthCheckFailRootlbOffline": 1,
-	"HealthCheckFailServerFail":    2,
-	"HealthCheckOk":                3,
+func (m *AppInstLatency) DeepCopyIn(src *AppInstLatency) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.Message = src.Message
 }
 
-func (e *HealthCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
+func (m *AppInstLatency) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *AppInstLatency) GetKey() *AppInstKey {
+	return &m.Key
+}
+
+func (m *AppInstLatency) GetKeyVal() AppInstKey {
+	return m.Key
+}
+
+func (m *AppInstLatency) SetKey(key *AppInstKey) {
+	m.Key = *key
+}
+
+func CmpSortAppInstLatency(a AppInstLatency, b AppInstLatency) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+func (m *AppInstLatency) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
-	val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = HealthCheck_CamelName[val]
-		}
-	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = HealthCheck(val)
 	return nil
-}
-
-func (e HealthCheck) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(HealthCheck_CamelName, int32(e)), nil
-}
-
-// custom JSON encoding/decoding
-func (e *HealthCheck) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
-		val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = HealthCheck_CamelName[val]
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
-		}
-		*e = HealthCheck(val)
-		return nil
-	}
-	var val int32
-	err = json.Unmarshal(b, &val)
-	if err == nil {
-		*e = HealthCheck(val)
-		return nil
-	}
-	return fmt.Errorf("No enum value for %v", b)
 }
 
 var PowerStateStrings = []string{
@@ -5250,6 +5567,439 @@ func (e *PowerState) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *AppInst) IsValidArgsForCreateAppInst() error {
+	if m.CloudletLoc.Latitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Latitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Longitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Longitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.HorizontalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.HorizontalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.VerticalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.VerticalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.Altitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Altitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Course != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Course, this field is only for internal use")
+	}
+	if m.CloudletLoc.Speed != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Speed, this field is only for internal use")
+	}
+	if m.CloudletLoc.Timestamp != nil {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Timestamp, this field is only for internal use")
+	}
+	if m.Uri != "" {
+		return fmt.Errorf("Invalid field specified: Uri, this field is only for internal use")
+	}
+	if m.Liveness != 0 {
+		return fmt.Errorf("Invalid field specified: Liveness, this field is only for internal use")
+	}
+	if m.MappedPorts != nil {
+		return fmt.Errorf("Invalid field specified: MappedPorts, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.RuntimeInfo.ContainerIds != nil {
+		return fmt.Errorf("Invalid field specified: RuntimeInfo.ContainerIds, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.AutoClusterIpAccess != 0 {
+		return fmt.Errorf("Invalid field specified: AutoClusterIpAccess, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.Revision != "" {
+		return fmt.Errorf("Invalid field specified: Revision, this field is only for internal use")
+	}
+	if m.ForceUpdate != false {
+		return fmt.Errorf("Invalid field specified: ForceUpdate, this field is only for internal use")
+	}
+	if m.UpdateMultiple != false {
+		return fmt.Errorf("Invalid field specified: UpdateMultiple, this field is only for internal use")
+	}
+	if m.PowerState != 0 {
+		return fmt.Errorf("Invalid field specified: PowerState, this field is only for internal use")
+	}
+	if m.ExternalVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
+	}
+	if m.AvailabilityZone != "" {
+		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
+	}
+	if m.VmFlavor != "" {
+		return fmt.Errorf("Invalid field specified: VmFlavor, this field is only for internal use")
+	}
+	if m.OptRes != "" {
+		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *AppInst) IsValidArgsForDeleteAppInst() error {
+	if m.CloudletLoc.Latitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Latitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Longitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Longitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.HorizontalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.HorizontalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.VerticalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.VerticalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.Altitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Altitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Course != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Course, this field is only for internal use")
+	}
+	if m.CloudletLoc.Speed != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Speed, this field is only for internal use")
+	}
+	if m.CloudletLoc.Timestamp != nil {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Timestamp, this field is only for internal use")
+	}
+	if m.Uri != "" {
+		return fmt.Errorf("Invalid field specified: Uri, this field is only for internal use")
+	}
+	if m.Liveness != 0 {
+		return fmt.Errorf("Invalid field specified: Liveness, this field is only for internal use")
+	}
+	if m.MappedPorts != nil {
+		return fmt.Errorf("Invalid field specified: MappedPorts, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.RuntimeInfo.ContainerIds != nil {
+		return fmt.Errorf("Invalid field specified: RuntimeInfo.ContainerIds, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.AutoClusterIpAccess != 0 {
+		return fmt.Errorf("Invalid field specified: AutoClusterIpAccess, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.Revision != "" {
+		return fmt.Errorf("Invalid field specified: Revision, this field is only for internal use")
+	}
+	if m.PowerState != 0 {
+		return fmt.Errorf("Invalid field specified: PowerState, this field is only for internal use")
+	}
+	if m.ExternalVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
+	}
+	if m.AvailabilityZone != "" {
+		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
+	}
+	if m.VmFlavor != "" {
+		return fmt.Errorf("Invalid field specified: VmFlavor, this field is only for internal use")
+	}
+	if m.OptRes != "" {
+		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *AppInst) IsValidArgsForRefreshAppInst() error {
+	if m.CloudletLoc.Latitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Latitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Longitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Longitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.HorizontalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.HorizontalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.VerticalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.VerticalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.Altitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Altitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Course != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Course, this field is only for internal use")
+	}
+	if m.CloudletLoc.Speed != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Speed, this field is only for internal use")
+	}
+	if m.CloudletLoc.Timestamp != nil {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Timestamp, this field is only for internal use")
+	}
+	if m.Uri != "" {
+		return fmt.Errorf("Invalid field specified: Uri, this field is only for internal use")
+	}
+	if m.Liveness != 0 {
+		return fmt.Errorf("Invalid field specified: Liveness, this field is only for internal use")
+	}
+	if m.MappedPorts != nil {
+		return fmt.Errorf("Invalid field specified: MappedPorts, this field is only for internal use")
+	}
+	if m.Flavor.Name != "" {
+		return fmt.Errorf("Invalid field specified: Flavor.Name, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.RuntimeInfo.ContainerIds != nil {
+		return fmt.Errorf("Invalid field specified: RuntimeInfo.ContainerIds, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.AutoClusterIpAccess != 0 {
+		return fmt.Errorf("Invalid field specified: AutoClusterIpAccess, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.Revision != "" {
+		return fmt.Errorf("Invalid field specified: Revision, this field is only for internal use")
+	}
+	if m.Configs != nil {
+		return fmt.Errorf("Invalid field specified: Configs, this field is only for internal use")
+	}
+	if m.HealthCheck != 0 {
+		return fmt.Errorf("Invalid field specified: HealthCheck, this field is only for internal use")
+	}
+	if m.PowerState != 0 {
+		return fmt.Errorf("Invalid field specified: PowerState, this field is only for internal use")
+	}
+	if m.ExternalVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
+	}
+	if m.AvailabilityZone != "" {
+		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
+	}
+	if m.VmFlavor != "" {
+		return fmt.Errorf("Invalid field specified: VmFlavor, this field is only for internal use")
+	}
+	if m.OptRes != "" {
+		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *AppInst) IsValidArgsForUpdateAppInst() error {
+	if m.CloudletLoc.Latitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Latitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Longitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Longitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.HorizontalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.HorizontalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.VerticalAccuracy != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.VerticalAccuracy, this field is only for internal use")
+	}
+	if m.CloudletLoc.Altitude != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Altitude, this field is only for internal use")
+	}
+	if m.CloudletLoc.Course != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Course, this field is only for internal use")
+	}
+	if m.CloudletLoc.Speed != 0 {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Speed, this field is only for internal use")
+	}
+	if m.CloudletLoc.Timestamp != nil {
+		return fmt.Errorf("Invalid field specified: CloudletLoc.Timestamp, this field is only for internal use")
+	}
+	if m.Uri != "" {
+		return fmt.Errorf("Invalid field specified: Uri, this field is only for internal use")
+	}
+	if m.Liveness != 0 {
+		return fmt.Errorf("Invalid field specified: Liveness, this field is only for internal use")
+	}
+	if m.MappedPorts != nil {
+		return fmt.Errorf("Invalid field specified: MappedPorts, this field is only for internal use")
+	}
+	if m.Flavor.Name != "" {
+		return fmt.Errorf("Invalid field specified: Flavor.Name, this field is only for internal use")
+	}
+	if m.State != 0 {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	if m.Errors != nil {
+		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
+	}
+	if m.RuntimeInfo.ContainerIds != nil {
+		return fmt.Errorf("Invalid field specified: RuntimeInfo.ContainerIds, this field is only for internal use")
+	}
+	if m.CreatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Seconds, this field is only for internal use")
+	}
+	if m.CreatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: CreatedAt.Nanos, this field is only for internal use")
+	}
+	if m.AutoClusterIpAccess != 0 {
+		return fmt.Errorf("Invalid field specified: AutoClusterIpAccess, this field is only for internal use")
+	}
+	if m.Status.TaskNumber != 0 {
+		return fmt.Errorf("Invalid field specified: Status.TaskNumber, this field is only for internal use")
+	}
+	if m.Status.MaxTasks != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MaxTasks, this field is only for internal use")
+	}
+	if m.Status.TaskName != "" {
+		return fmt.Errorf("Invalid field specified: Status.TaskName, this field is only for internal use")
+	}
+	if m.Status.StepName != "" {
+		return fmt.Errorf("Invalid field specified: Status.StepName, this field is only for internal use")
+	}
+	if m.Status.MsgCount != 0 {
+		return fmt.Errorf("Invalid field specified: Status.MsgCount, this field is only for internal use")
+	}
+	if m.Status.Msgs != nil {
+		return fmt.Errorf("Invalid field specified: Status.Msgs, this field is only for internal use")
+	}
+	if m.Revision != "" {
+		return fmt.Errorf("Invalid field specified: Revision, this field is only for internal use")
+	}
+	if m.ForceUpdate != false {
+		return fmt.Errorf("Invalid field specified: ForceUpdate, this field is only for internal use")
+	}
+	if m.UpdateMultiple != false {
+		return fmt.Errorf("Invalid field specified: UpdateMultiple, this field is only for internal use")
+	}
+	if m.HealthCheck != 0 {
+		return fmt.Errorf("Invalid field specified: HealthCheck, this field is only for internal use")
+	}
+	if m.ExternalVolumeSize != 0 {
+		return fmt.Errorf("Invalid field specified: ExternalVolumeSize, this field is only for internal use")
+	}
+	if m.AvailabilityZone != "" {
+		return fmt.Errorf("Invalid field specified: AvailabilityZone, this field is only for internal use")
+	}
+	if m.VmFlavor != "" {
+		return fmt.Errorf("Invalid field specified: VmFlavor, this field is only for internal use")
+	}
+	if m.OptRes != "" {
+		return fmt.Errorf("Invalid field specified: OptRes, this field is only for internal use")
+	}
+	if m.UpdatedAt.Seconds != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Seconds, this field is only for internal use")
+	}
+	if m.UpdatedAt.Nanos != 0 {
+		return fmt.Errorf("Invalid field specified: UpdatedAt.Nanos, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *AppInstLatency) IsValidArgsForRequestAppInstLatency() error {
+	return nil
+}
+
+func (m *VirtualClusterInstKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ClusterKey.Size()
+	n += 1 + l + sovAppinst(uint64(l))
+	l = m.CloudletKey.Size()
+	n += 1 + l + sovAppinst(uint64(l))
+	l = len(m.Organization)
+	if l > 0 {
+		n += 1 + l + sovAppinst(uint64(l))
+	}
+	return n
+}
+
 func (m *AppInstKey) Size() (n int) {
 	if m == nil {
 		return 0
@@ -5331,9 +6081,6 @@ func (m *AppInst) Size() (n int) {
 			n += 2 + l + sovAppinst(uint64(l))
 		}
 	}
-	if m.SharedVolumeSize != 0 {
-		n += 2 + sovAppinst(uint64(m.SharedVolumeSize))
-	}
 	if m.HealthCheck != 0 {
 		n += 2 + sovAppinst(uint64(m.HealthCheck))
 	}
@@ -5361,6 +6108,10 @@ func (m *AppInst) Size() (n int) {
 	}
 	l = m.UpdatedAt.Size()
 	n += 2 + l + sovAppinst(uint64(l))
+	l = len(m.RealClusterName)
+	if l > 0 {
+		n += 2 + l + sovAppinst(uint64(l))
+	}
 	return n
 }
 
@@ -5453,11 +6204,177 @@ func (m *AppInstLookup2) Size() (n int) {
 	return n
 }
 
+func (m *AppInstLatency) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovAppinst(uint64(l))
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovAppinst(uint64(l))
+	}
+	return n
+}
+
 func sovAppinst(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozAppinst(x uint64) (n int) {
 	return sovAppinst(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *VirtualClusterInstKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppinst
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VirtualClusterInstKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VirtualClusterInstKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ClusterKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CloudletKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.CloudletKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Organization", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Organization = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppinst(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *AppInstKey) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -6117,25 +7034,6 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 28:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SharedVolumeSize", wireType)
-			}
-			m.SharedVolumeSize = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppinst
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.SharedVolumeSize |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		case 29:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field HealthCheck", wireType)
@@ -6150,7 +7048,7 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.HealthCheck |= HealthCheck(b&0x7F) << shift
+				m.HealthCheck |= dme_proto.HealthCheck(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6353,6 +7251,38 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 			if err := m.UpdatedAt.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 37:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RealClusterName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RealClusterName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -7021,6 +7951,124 @@ func (m *AppInstLookup2) Unmarshal(dAtA []byte) error {
 			if err := m.CloudletKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppinst(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppInstLatency) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppinst
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppInstLatency: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppInstLatency: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppinst
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

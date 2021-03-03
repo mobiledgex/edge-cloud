@@ -363,7 +363,7 @@ func (m *Alert) Matches(o *Alert, fopts ...MatchOpt) bool {
 		return false
 	}
 	if !opts.Filter || o.Labels != nil {
-		if m.Labels == nil && o.Labels != nil || m.Labels != nil && o.Labels == nil {
+		if len(m.Labels) == 0 && len(o.Labels) > 0 || len(m.Labels) > 0 && len(o.Labels) == 0 {
 			return false
 		} else if m.Labels != nil && o.Labels != nil {
 			if !opts.Filter && len(m.Labels) != len(o.Labels) {
@@ -381,7 +381,7 @@ func (m *Alert) Matches(o *Alert, fopts ...MatchOpt) bool {
 		}
 	}
 	if !opts.Filter || o.Annotations != nil {
-		if m.Annotations == nil && o.Annotations != nil || m.Annotations != nil && o.Annotations == nil {
+		if len(m.Annotations) == 0 && len(o.Annotations) > 0 || len(m.Annotations) > 0 && len(o.Annotations) == 0 {
 			return false
 		} else if m.Annotations != nil && o.Annotations != nil {
 			if !opts.Filter && len(m.Annotations) != len(o.Annotations) {
@@ -842,15 +842,12 @@ func (c *AlertCache) Flush(ctx context.Context, notifyId int64) {
 }
 
 func (c *AlertCache) Show(filter *Alert, cb func(ret *Alert) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Alert", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
-		log.DebugLog(log.DebugLevelApi, "Compare Alert", "filter", filter, "data", data)
 		if !data.Obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelApi, "Show Alert", "obj", data.Obj)
 		err := cb(data.Obj)
 		if err != nil {
 			return err
@@ -1107,30 +1104,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(MaintenanceState(0)):
-		if en, ok := MaintenanceState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(PlatformType(0)):
-		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(InfraApiAccess(0)):
-		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(CloudletState(0)):
-		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(VMState(0)):
-		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(VMAction(0)):
-		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
 	case reflect.TypeOf(ImageType(0)):
 		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1143,8 +1116,20 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(HealthCheck(0)):
-		if en, ok := HealthCheck_CamelValue[util.CamelCase(data.(string))]; ok {
+	case reflect.TypeOf(PlatformType(0)):
+		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(InfraApiAccess(0)):
+		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(VMState(0)):
+		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(VMAction(0)):
+		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(PowerState(0)):
@@ -1173,17 +1158,17 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowFlavor":          struct{}{},
 	"ShowOperatorCode":    struct{}{},
 	"ShowResTagTable":     struct{}{},
+	"ShowApp":             struct{}{},
 	"ShowCloudlet":        struct{}{},
 	"ShowCloudletInfo":    struct{}{},
 	"ShowCloudletMetrics": struct{}{},
 	"ShowCloudletPool":    struct{}{},
 	"ShowVMPool":          struct{}{},
 	"ShowAutoScalePolicy": struct{}{},
-	"ShowApp":             struct{}{},
 	"ShowClusterInst":     struct{}{},
 	"ShowClusterInstInfo": struct{}{},
 	"ShowAutoProvPolicy":  struct{}{},
-	"ShowPrivacyPolicy":   struct{}{},
+	"ShowTrustPolicy":     struct{}{},
 	"ShowAppInst":         struct{}{},
 	"ShowAppInstInfo":     struct{}{},
 	"ShowAppInstMetrics":  struct{}{},
@@ -1211,6 +1196,7 @@ var AllKeyTags = []string{
 	"cloudletpoolorg",
 	"cluster",
 	"clusterorg",
+	"clusterreforg",
 	"controlleraddr",
 	"deviceid",
 	"deviceidtype",
@@ -1222,6 +1208,8 @@ var AllKeyTags = []string{
 	"policyorg",
 	"restagtable",
 	"restagtableorg",
+	"uniqueid",
+	"uniqueidtype",
 	"vmpool",
 	"vmpoolorg",
 }
@@ -1236,6 +1224,7 @@ var AllKeyTagsMap = map[string]struct{}{
 	"cloudletpoolorg": struct{}{},
 	"cluster":         struct{}{},
 	"clusterorg":      struct{}{},
+	"clusterreforg":   struct{}{},
 	"controlleraddr":  struct{}{},
 	"deviceid":        struct{}{},
 	"deviceidtype":    struct{}{},
@@ -1247,6 +1236,8 @@ var AllKeyTagsMap = map[string]struct{}{
 	"policyorg":       struct{}{},
 	"restagtable":     struct{}{},
 	"restagtableorg":  struct{}{},
+	"uniqueid":        struct{}{},
+	"uniqueidtype":    struct{}{},
 	"vmpool":          struct{}{},
 	"vmpoolorg":       struct{}{},
 }

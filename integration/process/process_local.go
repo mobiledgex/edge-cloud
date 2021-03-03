@@ -141,11 +141,8 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.EdgeTurnAddr != "" {
 		args = append(args, "--edgeTurnAddr")
@@ -255,7 +252,7 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsConfig *tls.Config
 }
 
 func (p *Controller) GetTlsFile() string {
-	if p.UseVaultCerts && p.VaultAddr != "" {
+	if p.UseVaultPki && p.VaultAddr != "" {
 		region := p.Region
 		if region == "" {
 			region = "local"
@@ -266,7 +263,12 @@ func (p *Controller) GetTlsFile() string {
 }
 
 func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	tlsConfig, err := mextls.GetTLSClientConfig(p.ApiAddr, p.GetTlsFile(), "", false)
+	tlsMode := mextls.MutualAuthTLS
+	skipVerify := false
+	if p.TestMode {
+		skipVerify = true
+	}
+	tlsConfig, err := mextls.GetTLSClientConfig(tlsMode, p.ApiAddr, nil, p.GetTlsFile(), "", skipVerify)
 	if err != nil {
 		return nil, err
 	}
@@ -306,24 +308,12 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.CloudletKey)
 	}
 	args = p.TLS.AddInternalPkiArgs(args)
-	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
-		if p.TLS.ApiCert != "" {
-			args = append(args, "--tlsApiCertFile", p.TLS.ApiCert)
-			args = append(args, "--tlsApiKeyFile", p.TLS.ApiKey)
-		} else {
-			args = append(args, "--tlsApiCertFile", p.TLS.ServerCert)
-			args = append(args, "--tlsApiKeyFile", p.TLS.ServerKey)
-		}
-	}
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.CookieExpr != "" {
 		args = append(args, "--cookieExpiration")
@@ -376,15 +366,19 @@ func (p *Dme) GetExeName() string { return "dme-server" }
 func (p *Dme) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
 func (p *Dme) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr, p.getTlsConfig())
+	return connectAPIImpl(timeout, p.ApiAddr, p.getTlsConfig(p.ApiAddr))
 }
 
 func (p *Dme) GetRestClient(timeout time.Duration) (*http.Client, error) {
-	return getRestClientImpl(timeout, p.HttpAddr, p.getTlsConfig())
+	return getRestClientImpl(timeout, p.HttpAddr, p.getTlsConfig(p.HttpAddr))
 }
 
-func (p *Dme) getTlsConfig() *tls.Config {
-	if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
+func (p *Dme) getTlsConfig(addr string) *tls.Config {
+	if p.UseVaultPki && p.VaultAddr != "" {
+		return &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	} else if p.TLS.ServerCert != "" && p.TLS.ServerKey != "" {
 		// ServerAuth TLS. For real clients, they'll use
 		// their built-in trusted CAs to verify the cert.
 		// Since we're using self-signed certs here, add
@@ -398,9 +392,9 @@ func (p *Dme) getTlsConfig() *tls.Config {
 			RootCAs: certPool,
 		}
 		return config
+	} else {
+		return nil
 	}
-	// no TLS
-	return nil
 }
 
 // CrmLocal
@@ -459,11 +453,8 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--region")
 		args = append(args, p.Region)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.AppDNSRoot != "" {
 		args = append(args, "--appDNSRoot")
@@ -655,11 +646,8 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
@@ -1129,6 +1117,41 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 	return err
 }
 
+func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
+	args := p.getRunArgs()
+	// jaeger version should match "jaeger_version" in
+	// ansible/roles/jaeger/defaults/main.yaml
+	args = append(args,
+		"-p", "16686:16686",
+		"-p", "14268:14268",
+		"jaegertracing/all-in-one:1.17.1")
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	if err == nil {
+		// wait until up
+		url := "http://127.0.0.1:16686/"
+		var resp *http.Response
+		for ii := 0; ii < 30; ii++ {
+			client := http.Client{
+				Timeout: time.Second,
+			}
+			resp, err = client.Get(url)
+			if err != nil {
+				time.Sleep(time.Second)
+				log.Printf("jeager %s try %d: err %v\n", url, ii, err)
+				continue
+			}
+			log.Printf("jeager %s try %d: response %d\n", url, ii, resp.StatusCode)
+			if resp.StatusCode != http.StatusOK {
+				time.Sleep(time.Second)
+				continue
+			}
+			break
+		}
+	}
+	return err
+}
+
 func (p *DockerGeneric) getRunArgs() []string {
 	args := []string{
 		"run", "--rm", "--name", p.Name,
@@ -1247,7 +1270,7 @@ func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 
 	// combine all cas into one for nginx config
 	// Note we can remove p.TLS.CACert once we transition to all services
-	// using "useVaultCerts" instead of "useVaultCAs".
+	// using "useVaultPki"
 	err := writeAllCAs(p.TLS.CACert, configDir+"/allcas.pem")
 	if err != nil {
 		return err
@@ -1335,11 +1358,8 @@ func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, p.VaultAddr)
 	}
 	args = p.TLS.AddInternalPkiArgs(args)
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -1394,11 +1414,8 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 	if p.TestMode {
 		args = append(args, "--testMode")
 	}
-	if p.UseVaultCAs {
-		args = append(args, "--useVaultCAs")
-	}
-	if p.UseVaultCerts {
-		args = append(args, "--useVaultCerts")
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
 	}
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")

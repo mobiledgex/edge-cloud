@@ -51,18 +51,18 @@ RUN make doc
 RUN make external-doc
 RUN make -C d-match-engine/dme-proto external-swagger
 
-FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v1.2.3-30-g3ac7f563
+FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v1.2.4-38-gfd20fba6
 
 # Will be overridden during build from the command line
 ARG BUILD_TAG=latest
 
 ADD edge-cloud/docker/mex-docker.env /root/mex-docker.env
 ADD edge-cloud/docker/edge-cloud-entrypoint.sh /usr/local/bin
-ADD edge-cloud/docker/vault-cert /usr/local/bin
 ADD edge-cloud/docker/test-edgectl.sh /usr/local/bin
+ADD edge-cloud/docker/atomic-certs-update.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh \
 	     /usr/local/bin/test-edgectl.sh \
-	     /usr/local/bin/vault-cert
+	     /usr/local/bin/atomic-certs-update.sh
 
 COPY --from=build /go/bin/controller \
 		  /go/bin/crmserver \

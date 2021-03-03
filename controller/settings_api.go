@@ -48,6 +48,38 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.UpdateVmPoolTimeout = edgeproto.GetDefaultSettings().UpdateVmPoolTimeout
 			modified = true
 		}
+		if cur.UpdateTrustPolicyTimeout == 0 {
+			cur.UpdateTrustPolicyTimeout = edgeproto.GetDefaultSettings().UpdateTrustPolicyTimeout
+			modified = true
+		}
+		if cur.InfluxDbMetricsRetention == 0 {
+			cur.InfluxDbMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbMetricsRetention
+			modified = true
+		}
+		if cur.CleanupReservableAutoClusterIdletime == 0 {
+			cur.CleanupReservableAutoClusterIdletime = edgeproto.GetDefaultSettings().CleanupReservableAutoClusterIdletime
+			modified = true
+		}
+		if cur.InfluxDbCloudletUsageMetricsRetention == 0 {
+			cur.InfluxDbCloudletUsageMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbCloudletUsageMetricsRetention
+			modified = true
+		}
+		if cur.LoadBalancerMaxPortRange == 0 {
+			cur.LoadBalancerMaxPortRange = edgeproto.GetDefaultSettings().LoadBalancerMaxPortRange
+			modified = true
+		}
+		if cur.MaxTrackedDmeClients == 0 {
+			cur.MaxTrackedDmeClients = edgeproto.GetDefaultSettings().MaxTrackedDmeClients
+			modified = true
+		}
+		if cur.DmeApiMetricsCollectionInterval == 0 {
+			cur.DmeApiMetricsCollectionInterval = edgeproto.GetDefaultSettings().DmeApiMetricsCollectionInterval
+			modified = true
+		}
+		if cur.PersistentConnectionMetricsCollectionInterval == 0 {
+			cur.PersistentConnectionMetricsCollectionInterval = edgeproto.GetDefaultSettings().PersistentConnectionMetricsCollectionInterval
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}
@@ -80,7 +112,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 				if in.MasterNodeFlavor == "" {
 					// allow a 'clear setting' operation
 					s.store.STMPut(stm, &cur)
-					return nil
+					continue
 				}
 				// check the value used for MasterNodeFlavor currently
 				// exists as a flavor, error if not.
@@ -91,7 +123,14 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 					return fmt.Errorf("Flavor must preexist")
 				}
 			} else if field == edgeproto.SettingsFieldInfluxDbMetricsRetention {
+				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb retention policy", "timer", in.InfluxDbMetricsRetention)
 				err1 := services.influxQ.UpdateDefaultRetentionPolicy(in.InfluxDbMetricsRetention.TimeDuration())
+				if err1 != nil {
+					return err1
+				}
+			} else if field == edgeproto.SettingsFieldInfluxDbCloudletUsageMetricsRetention {
+				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb cloudlet usage metrics retention policy", "timer", in.InfluxDbCloudletUsageMetricsRetention)
+				err1 := services.cloudletResourcesInfluxQ.UpdateDefaultRetentionPolicy(in.InfluxDbCloudletUsageMetricsRetention.TimeDuration())
 				if err1 != nil {
 					return err1
 				}
@@ -105,7 +144,10 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 }
 
 func (s *SettingsApi) ResetSettings(ctx context.Context, in *edgeproto.Settings) (*edgeproto.Result, error) {
-	return s.store.Put(ctx, edgeproto.GetDefaultSettings(), s.sync.syncWait)
+	settings := edgeproto.GetDefaultSettings()
+	// Set all the fields
+	settings.Fields = edgeproto.SettingsAllFields
+	return s.UpdateSettings(ctx, settings)
 }
 
 func (s *SettingsApi) ShowSettings(ctx context.Context, in *edgeproto.Settings) (*edgeproto.Settings, error) {

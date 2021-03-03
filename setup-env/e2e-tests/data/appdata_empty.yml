@@ -12,11 +12,17 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
+  updatetrustpolicytimeout: 10m
   loadbalancermaxportrange: 50
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   cloudletmaintenancetimeout: 5m
   updatevmpooltimeout: 20m0s
+  dmeapimetricscollectioninterval: 30s
+  persistentconnectionmetricscollectioninterval: 1h0m0s
+  influxdbmetricsretention: 672h0m0s
+  cleanupreservableautoclusteridletime: 30m0s
+  influxdbcloudletusagemetricsretention: 8760h0m0s
 
 flavors:
 

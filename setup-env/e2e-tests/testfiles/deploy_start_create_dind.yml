@@ -3,6 +3,9 @@
 
 tests:
 
+- name: stop services and cleanup
+  actions: [stop,cleanup]
+
 - name: start 
   actions: [start]
 

@@ -8,10 +8,10 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "app.proto";
 import "flavor.proto";
-import "clusterinst.proto";
 import "common.proto";
 import "cloudlet.proto";
 import "autoscalepolicy.proto";
+import "cluster.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 import "gogoproto/gogo.proto";
@@ -20,6 +20,19 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+// Virtual ClusterInstKey
+message VirtualClusterInstKey {
+  // Name of Cluster
+  ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
+  // Name of Cloudlet on which the Cluster is instantiated
+  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  // Name of Developer organization that this cluster belongs to
+  string organization = 3 [(protogen.keytag) = "clusterorg", (protogen.skip_keytag_conflict_check) = true];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
 // App Instance Unique Key
 //
 // AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
@@ -27,29 +40,10 @@ message AppInstKey {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
   // Cluster instance on which this is instantiated
-  ClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  VirtualClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
-}
-
-// Health Check Status
-//
-// Health check status gets set by external, or rootLB health check.
-//
-// 0: `HEALTH_CHECK_UNKNOWN`
-// 1: `HEALTH_CHECK_FAIL_ROOTLB_OFFLINE`
-// 2: `HEALTH_CHECK_FAIL_SERVER_FAIL`
-// 3: `HEALTH_CHECK_OK`
-enum HealthCheck {
-  // Health Check is unknown
-  HEALTH_CHECK_UNKNOWN = 0;  
-  // Health Check failure due to RootLB being offline
-  HEALTH_CHECK_FAIL_ROOTLB_OFFLINE = 1;
-  // Health Check failure due to Backend server being unavailable
-  HEALTH_CHECK_FAIL_SERVER_FAIL = 2;
-  // Health Check is ok
-  HEALTH_CHECK_OK = 3;
 }
 
 // Power State
@@ -69,27 +63,27 @@ enum HealthCheck {
 // 10: `POWER_STATE_ERROR`
 enum PowerState {
   // Unknown
-  POWER_STATE_UNKNOWN = 0 [(protogen.enum_backend) = true];
+  POWER_STATE_UNKNOWN = 0 [(distributed_match_engine.enum_backend) = true];
   // Power On Requested
-  POWER_ON_REQUESTED = 1 [(protogen.enum_backend) = true];
+  POWER_ON_REQUESTED = 1 [(distributed_match_engine.enum_backend) = true];
   // Powering On
-  POWERING_ON = 2 [(protogen.enum_backend) = true];
+  POWERING_ON = 2 [(distributed_match_engine.enum_backend) = true];
   // Power On
   POWER_ON = 3;
   // Power Off Requested
-  POWER_OFF_REQUESTED = 4 [(protogen.enum_backend) = true];
+  POWER_OFF_REQUESTED = 4 [(distributed_match_engine.enum_backend) = true];
   // Powering Off
-  POWERING_OFF = 5 [(protogen.enum_backend) = true];
+  POWERING_OFF = 5 [(distributed_match_engine.enum_backend) = true];
   // Power Off
   POWER_OFF = 6;
   // Reboot Requested
-  REBOOT_REQUESTED = 7 [(protogen.enum_backend) = true];
+  REBOOT_REQUESTED = 7 [(distributed_match_engine.enum_backend) = true];
   // Rebooting
-  REBOOTING = 8 [(protogen.enum_backend) = true];
+  REBOOTING = 8 [(distributed_match_engine.enum_backend) = true];
   // Reboot
   REBOOT = 9;
   // Error
-  POWER_STATE_ERROR = 10 [(protogen.enum_backend) = true];
+  POWER_STATE_ERROR = 10 [(distributed_match_engine.enum_backend) = true];
 }
 
 // Application Instance
@@ -124,7 +118,7 @@ message AppInst {
   AppInstRuntime runtime_info = 17 [(gogoproto.nullable) = false];
   // Created at time
   distributed_match_engine.Timestamp created_at = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
-  // IpAccess for auto-clusters. Ignored otherwise.
+  // (Deprecated) IpAccess for auto-clusters. Ignored otherwise.
   IpAccess auto_cluster_ip_access = 22 [(protogen.backend) = true];
   // status is used to reflect progress of creation or other events
   StatusInfo status = 23 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
@@ -136,10 +130,11 @@ message AppInst {
   bool update_multiple = 26 [(protogen.hidetag) = "nocmp"];
   // Customization files passed through to implementing services
   repeated ConfigFile configs = 27;
-  // shared volume size when creating auto cluster
-  uint64 shared_volume_size = 28;
+  // (removed) shared volume size when creating auto cluster
+  reserved "shared_volume_size";
+  reserved 28;
   // Health Check status
-  HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
+  distributed_match_engine.HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
   // Optional privacy policy name
   string privacy_policy = 30;
   // Power State of the AppInst
@@ -154,6 +149,8 @@ message AppInst {
   string opt_res = 35 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
   // Updated at time
   distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // Real ClusterInst name
+  string real_cluster_name = 37 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -163,7 +160,7 @@ message AppInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,NodeFlavor,ExternalVolumeSize,AvailabilityZone,State,UpdatedAt";
+  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,VmFlavor,ExternalVolumeSize,AvailabilityZone,State,UpdatedAt,OptRes,SharedVolumeSize,AutoClusterIpAccess";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
   option (protogen.not_required) = "Key.ClusterInstKey.Organization,Key.ClusterInstKey.ClusterKey.Name";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
@@ -212,7 +209,7 @@ service AppInstApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
     option (protogen.method_not_required) = "Key.ClusterInstKey";
-    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,Configs,PowerState,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,Configs,PowerState,HealthCheck,SharedVolumeSize,VmFlavor";
   }
   // Update Application Instance. Updates an Application instance and then refreshes it.
   rpc UpdateAppInst(AppInst) returns (stream Result) {
@@ -222,7 +219,7 @@ service AppInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
-    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,UpdateMultiple,ForceUpdate,PrivacyPolicy,HealthCheck,SharedVolumeSize,VmFlavor,OptRes";
+    option (protogen.method_noconfig) = "Flavor,AutoClusterIpAccess,UpdateMultiple,ForceUpdate,HealthCheck,SharedVolumeSize,VmFlavor";
   }
   // Show Application Instances. Lists all the Application instances managed by the Edge Controller.
   // Any fields specified will be used to filter results.
@@ -307,4 +304,23 @@ message AppInstLookup2 {
   // lookup by AutoProvPolicy
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
   option (protogen.generate_lookup_by_subfield) = "CloudletKey";
+}
+
+message AppInstLatency {
+  // Unique identifier key
+  AppInstKey key = 1 [(gogoproto.nullable) = false];
+  string message = 2;
+  option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,flavor=Flavor.Name";
+}
+
+service AppInstLatencyApi {
+  // Request Latency measurements for clients connected to AppInst
+  rpc RequestAppInstLatency(AppInstLatency) returns (Result) {
+    option (google.api.http) = {
+      post: "/request/appinstlatency"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,Key.AppKey.Organization";
+    option (protogen.mc2_api_notifyroot) = true;
+  }
 }

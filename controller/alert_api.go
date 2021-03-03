@@ -6,6 +6,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -27,7 +28,7 @@ func InitAlertApi(sync *Sync) {
 }
 
 // AppInstDown alert needs to set the HealthCheck in AppInst
-func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state edgeproto.HealthCheck) {
+func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state dme.HealthCheck) {
 	appOrg, ok := alert.Labels[edgeproto.AppKeyTagOrganization]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find AppInst Org label in Alert", "alert", alert)
@@ -70,7 +71,7 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 				Name:         appName,
 				Version:      appVer,
 			},
-			ClusterInstKey: edgeproto.ClusterInstKey{
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
 				ClusterKey: edgeproto.ClusterKey{
 					Name: cluster,
 				},
@@ -104,7 +105,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	if name == cloudcommon.AlertAppInstDown {
 		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]
 		if !ok {
-			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck satus not found",
+			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck status not found",
 				"labels", in.Labels)
 			return
 		}
@@ -114,7 +115,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 				"state", state, "error", err)
 			return
 		}
-		appInstSetStateFromHealthCheckAlert(ctx, in, edgeproto.HealthCheck(hcState))
+		appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck(hcState))
 	}
 }
 
@@ -141,7 +142,7 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	// Reset HealthCheck state back to OK
 	name, ok := in.Labels["alertname"]
 	if ok && foundAlert && name == cloudcommon.AlertAppInstDown {
-		appInstSetStateFromHealthCheckAlert(ctx, in, edgeproto.HealthCheck_HEALTH_CHECK_OK)
+		appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck_HEALTH_CHECK_OK)
 	}
 }
 
@@ -183,4 +184,25 @@ func (s *AlertApi) ShowAlert(in *edgeproto.Alert, cb edgeproto.AlertApi_ShowAler
 		return err
 	})
 	return err
+}
+
+func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.CloudletKey) {
+	matches := []*edgeproto.Alert{}
+	s.cache.Mux.Lock()
+	for _, data := range s.cache.Objs {
+		val := data.Obj
+		if cloudletName, found := val.Labels[edgeproto.CloudletKeyTagName]; !found ||
+			cloudletName != key.Name {
+			continue
+		}
+		if cloudletOrg, found := val.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+			cloudletOrg != key.Organization {
+			continue
+		}
+		matches = append(matches, val)
+	}
+	s.cache.Mux.Unlock()
+	for _, val := range matches {
+		s.store.Delete(ctx, val, s.sync.syncWait)
+	}
 }

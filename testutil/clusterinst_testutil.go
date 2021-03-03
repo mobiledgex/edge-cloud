@@ -619,6 +619,26 @@ func (r *Run) ClusterInstApi(data *[]edgeproto.ClusterInst, dataMap interface{},
 	}
 }
 
+func (r *Run) ClusterInstApi_IdleReservableClusterInsts(obj *edgeproto.IdleReservableClusterInsts, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for IdleReservableClusterInsts", "mode", r.Mode)
+	if obj == nil {
+		return
+	}
+	switch r.Mode {
+	case "delete":
+		out, err := r.client.DeleteIdleReservableClusterInsts(r.ctx, obj)
+		if err != nil {
+			r.logErr("ClusterInstApi_IdleReservableClusterInsts", err)
+		} else {
+			outp, ok := dataOut.(**edgeproto.Result)
+			if !ok {
+				panic(fmt.Sprintf("RunClusterInstApi_IdleReservableClusterInsts expected dataOut type **edgeproto.Result, but was %T", dataOut))
+			}
+			*outp = out
+		}
+	}
+}
+
 func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	var err error
 	s.ClusterInstCache.Update(server.Context(), in, 0)
@@ -799,11 +819,24 @@ func (s *CliClient) ShowClusterInst(ctx context.Context, in *edgeproto.ClusterIn
 	return output, err
 }
 
+func (s *ApiClient) DeleteIdleReservableClusterInsts(ctx context.Context, in *edgeproto.IdleReservableClusterInsts) (*edgeproto.Result, error) {
+	api := edgeproto.NewClusterInstApiClient(s.Conn)
+	return api.DeleteIdleReservableClusterInsts(ctx, in)
+}
+
+func (s *CliClient) DeleteIdleReservableClusterInsts(ctx context.Context, in *edgeproto.IdleReservableClusterInsts) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteIdleReservableClusterInsts")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 type ClusterInstApiClient interface {
 	CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
 	DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
 	UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
 	ShowClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.ClusterInst, error)
+	DeleteIdleReservableClusterInsts(ctx context.Context, in *edgeproto.IdleReservableClusterInsts) (*edgeproto.Result, error)
 }
 
 type ClusterInstInfoStream interface {

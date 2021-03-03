@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -151,7 +153,7 @@ func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
 
 func testApiChecks(t *testing.T, ctx context.Context) {
 	var err error
-	flavor := testutil.FlavorData[0]
+	flavor := testutil.FlavorData[3]
 	app := edgeproto.App{}
 	app.Key.Name = "checkDemand"
 	app.Key.Organization = "org"
@@ -174,13 +176,6 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 	pt3.policy.MinActiveInstances = 0
 	pt3.policy.DeployClientCount = 1
 	pt3.policy.MaxInstances = 20
-	// Add extra reservable ClusterInsts on the Cloudlet
-	for ii := 0; ii < 3; ii++ {
-		// copy ClusterInst
-		cl := pt3.clusterInsts[0]
-		cl.Key.ClusterKey.Name = fmt.Sprintf("extra-%d", ii)
-		pt3.clusterInsts = append(pt3.clusterInsts, cl)
-	}
 
 	app.AutoProvPolicies = append(app.AutoProvPolicies,
 		pt1.policy.Key.Name,
@@ -306,11 +301,15 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 	pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
 	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
 	pt3.expectAppInsts(t, ctx, &app, 0)
-	// Manual create should not limit them.
+	// Manual create should not limit them (double cloudlets list so
+	// creates two per cloudlet)
+	pt3cloudletsSave := pt3.cloudlets
+	pt3.cloudlets = append(pt3.cloudlets, pt3.cloudlets...)
 	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
-	pt3.expectAppInsts(t, ctx, &app, len(pt3.clusterInsts))
+	pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
 	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
 	pt3.expectAppInsts(t, ctx, &app, 0)
+	pt3.cloudlets = pt3cloudletsSave
 
 	// cleanup all data
 	_, err = appApi.DeleteApp(ctx, &app)
@@ -324,7 +323,6 @@ type autoProvPolicyTest struct {
 	policy        edgeproto.AutoProvPolicy
 	cloudlets     []edgeproto.Cloudlet
 	cloudletInfos []edgeproto.CloudletInfo
-	clusterInsts  []edgeproto.ClusterInst
 }
 
 // AutoProvPolicy and supporting data for test
@@ -334,7 +332,6 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 	s.policy.Key.Organization = org
 	s.cloudlets = make([]edgeproto.Cloudlet, count, count)
 	s.cloudletInfos = make([]edgeproto.CloudletInfo, count, count)
-	s.clusterInsts = make([]edgeproto.ClusterInst, count, count)
 	for ii, _ := range s.cloudlets {
 		s.cloudlets[ii].Key.Name = fmt.Sprintf("%s-%d", name, ii)
 		s.cloudlets[ii].Key.Organization = "op"
@@ -348,7 +345,7 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 	}
 	for ii, _ := range s.cloudletInfos {
 		s.cloudletInfos[ii].Key = s.cloudlets[ii].Key
-		s.cloudletInfos[ii].State = edgeproto.CloudletState_CLOUDLET_STATE_READY
+		s.cloudletInfos[ii].State = dme.CloudletState_CLOUDLET_STATE_READY
 		s.cloudletInfos[ii].Flavors = []*edgeproto.FlavorInfo{
 			&edgeproto.FlavorInfo{
 				Name:  flavor.Key.Name,
@@ -357,14 +354,25 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 				Disk:  flavor.Disk,
 			},
 		}
-	}
-	for ii, _ := range s.clusterInsts {
-		s.clusterInsts[ii].Key.CloudletKey = s.cloudlets[ii].Key
-		s.clusterInsts[ii].Key.ClusterKey.Name = fmt.Sprintf("%s-%d", name, ii)
-		s.clusterInsts[ii].Key.Organization = org
-		s.clusterInsts[ii].Flavor = flavor.Key
-		s.clusterInsts[ii].NumMasters = 1
-		s.clusterInsts[ii].NumNodes = 1
+		s.cloudletInfos[ii].ResourcesSnapshot = edgeproto.InfraResourcesSnapshot{
+			Info: []edgeproto.InfraResource{
+				edgeproto.InfraResource{
+					Name:          "RAM",
+					Value:         uint64(1024),
+					InfraMaxValue: uint64(409600),
+				},
+				edgeproto.InfraResource{
+					Name:          "vCPUs",
+					Value:         uint64(10),
+					InfraMaxValue: uint64(100),
+				},
+				edgeproto.InfraResource{
+					Name:          "Disk",
+					Value:         uint64(20),
+					InfraMaxValue: uint64(5000),
+				},
+			},
+		}
 	}
 	return &s
 }
@@ -377,10 +385,6 @@ func (s *autoProvPolicyTest) create(t *testing.T, ctx context.Context) {
 	for ii, _ := range s.cloudletInfos {
 		cloudletInfoApi.Update(ctx, &s.cloudletInfos[ii], 0)
 	}
-	for ii, _ := range s.clusterInsts {
-		err := clusterInstApi.CreateClusterInst(&s.clusterInsts[ii], testutil.NewCudStreamoutClusterInst(ctx))
-		require.Nil(t, err)
-	}
 	_, err := autoProvPolicyApi.CreateAutoProvPolicy(ctx, &s.policy)
 	require.Nil(t, err)
 }
@@ -388,10 +392,7 @@ func (s *autoProvPolicyTest) create(t *testing.T, ctx context.Context) {
 func (s *autoProvPolicyTest) delete(t *testing.T, ctx context.Context) {
 	_, err := autoProvPolicyApi.DeleteAutoProvPolicy(ctx, &s.policy)
 	require.Nil(t, err)
-	for ii, _ := range s.clusterInsts {
-		err := clusterInstApi.DeleteClusterInst(&s.clusterInsts[ii], testutil.NewCudStreamoutClusterInst(ctx))
-		require.Nil(t, err)
-	}
+
 	for ii, _ := range s.cloudlets {
 		err := cloudletApi.DeleteCloudlet(&s.cloudlets[ii], testutil.NewCudStreamoutCloudlet(ctx))
 		require.Nil(t, err)
@@ -414,12 +415,14 @@ func (s *autoProvPolicyTest) goDoAppInsts(t *testing.T, ctx context.Context, app
 			cloudcommon.AutoProvPolicyName, s.policy.Key.Name)
 		ctx = metadata.NewIncomingContext(ctx, md)
 	}
-	for ii, _ := range s.clusterInsts {
+	for ii, _ := range s.cloudlets {
 		wg.Add(1)
 		go func(ii int) {
 			inst := edgeproto.AppInst{}
 			inst.Key.AppKey = app.Key
-			inst.Key.ClusterInstKey = s.clusterInsts[ii].Key
+			inst.Key.ClusterInstKey.CloudletKey = s.cloudlets[ii].Key
+			inst.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + strconv.Itoa(ii)
+			inst.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
 			var err error
 			if action == cloudcommon.Create {
 				err = appInstApi.CreateAppInst(&inst, testutil.NewCudStreamoutAppInst(ctx))
@@ -436,10 +439,12 @@ func (s *autoProvPolicyTest) goDoAppInsts(t *testing.T, ctx context.Context, app
 func (s *autoProvPolicyTest) expectAppInsts(t *testing.T, ctx context.Context, app *edgeproto.App, expected int) {
 	// Count the number of AppInsts on Cloudlets for this policy.
 	actual := 0
-	for ii, _ := range s.clusterInsts {
+	for ii, _ := range s.cloudlets {
 		instKey := edgeproto.AppInstKey{}
 		instKey.AppKey = app.Key
-		instKey.ClusterInstKey = s.clusterInsts[ii].Key
+		instKey.ClusterInstKey.CloudletKey = s.cloudlets[ii].Key
+		instKey.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + strconv.Itoa(ii)
+		instKey.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
 		if appInstApi.cache.HasKey(&instKey) {
 			actual++
 		}

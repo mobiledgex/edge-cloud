@@ -121,6 +121,7 @@ type SendRecv struct {
 	cloudletSend       *CloudletSend
 	clusterInstSend    *ClusterInstSend
 	appInstSend        *AppInstSend
+	TrustPolicySend    *TrustPolicySend
 	sendRunning        chan struct{}
 	recvRunning        chan struct{}
 	signal             chan bool
@@ -159,6 +160,8 @@ func (s *SendRecv) registerSend(send NotifySend) {
 		s.clusterInstSend = v
 	case *AppInstSend:
 		s.appInstSend = v
+	case *TrustPolicySend:
+		s.TrustPolicySend = v
 	}
 }
 

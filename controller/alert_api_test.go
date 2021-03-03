@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -22,9 +24,6 @@ func TestAlertApi(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	testinit()
-	cplookup := &node.CloudletPoolCache{}
-	cplookup.Init()
-	nodeMgr.CloudletPoolLookup = cplookup
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -38,6 +37,42 @@ func TestAlertApi(t *testing.T) {
 		alertApi.Update(ctx, &alert, 0)
 	}
 	testutil.InternalAlertTest(t, "show", &alertApi, testutil.AlertData)
+
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testCloudlet := testutil.CloudletData[0]
+	testCloudlet.Key.Name = "testcloudlet"
+	testutil.InternalCloudletCreate(t, &cloudletApi, []edgeproto.Cloudlet{testCloudlet})
+	testCloudletInfo := testutil.CloudletInfoData[0]
+	testCloudletInfo.Key.Name = testCloudlet.Key.Name
+	insertCloudletInfo(ctx, []edgeproto.CloudletInfo{testCloudletInfo})
+	getAlertsCount := func() (int, int) {
+		count := 0
+		totalCount := 0
+		for _, data := range alertApi.cache.Objs {
+			val := data.Obj
+			totalCount++
+			if cloudletName, found := val.Labels[edgeproto.CloudletKeyTagName]; !found ||
+				cloudletName != testCloudlet.Key.Name {
+				continue
+			}
+			if cloudletOrg, found := val.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+				cloudletOrg != testCloudlet.Key.Organization {
+				continue
+			}
+			count++
+		}
+		return count, totalCount
+	}
+	cloudletCount, totalCount := getAlertsCount()
+	require.Greater(t, cloudletCount, 0, "cloudlet alerts exists")
+	require.Greater(t, totalCount, 0, "alerts exists")
+	err := cloudletApi.DeleteCloudlet(&testCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err, "delete cloudlet")
+	expectedTotalCount := totalCount - cloudletCount
+	cloudletCount, totalCount = getAlertsCount()
+	require.Equal(t, cloudletCount, 0, "cloudlet alerts should not exist")
+	require.Equal(t, totalCount, expectedTotalCount, "expected alerts should exist")
 
 	dummy.Stop()
 }
@@ -74,7 +109,7 @@ func TestAppInstDownAlert(t *testing.T) {
 	streamOut := testutil.NewCudStreamoutAppInst(ctx)
 	appinst := edgeproto.AppInst{}
 	appinst.Key.AppKey = testutil.AppData[0].Key
-	appinst.Key.ClusterInstKey = cinst.Key
+	appinst.Key.ClusterInstKey = *cinst.Key.Virtual("")
 	err := appInstApi.CreateAppInst(&appinst, streamOut)
 	require.Nil(t, err, "create AppInst")
 	// Inject AppInst info check that all appInsts are Healthy
@@ -83,7 +118,7 @@ func TestAppInstDownAlert(t *testing.T) {
 		appInstInfoApi.Update(ctx, in, 0)
 	}
 	for _, val := range appInstApi.cache.Objs {
-		require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_OK, val.Obj.HealthCheck)
+		require.Equal(t, dme.HealthCheck_HEALTH_CHECK_OK, val.Obj.HealthCheck)
 	}
 	// Trigger Alerts
 	for _, alert := range testutil.AlertData {
@@ -93,15 +128,15 @@ func TestAppInstDownAlert(t *testing.T) {
 
 	found := appInstApi.Get(&appinst.Key, &appinst)
 	require.True(t, found)
-	require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE, appinst.HealthCheck)
+	require.Equal(t, dme.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE, appinst.HealthCheck)
 	// check other appInstances
 	for ii, testData := range testutil.AppInstData {
 		found = appInstApi.Get(&testData.Key, &appinst)
 		require.True(t, found)
 		if ii == 0 {
-			require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL, appinst.HealthCheck)
+			require.Equal(t, dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL, appinst.HealthCheck)
 		} else {
-			require.Equal(t, edgeproto.HealthCheck_HEALTH_CHECK_OK, appinst.HealthCheck)
+			require.Equal(t, dme.HealthCheck_HEALTH_CHECK_OK, appinst.HealthCheck)
 		}
 	}
 
@@ -117,6 +152,10 @@ func testinit() {
 	registryFQDN = &dockerRegistry
 	vaultConfig, _ = vault.BestConfig("")
 	services.events = influxq.NewInfluxQ("events", "user", "pass")
+	services.cloudletResourcesInfluxQ = influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, "user", "pass")
 	cleanupCloudletInfoTimeout = 100 * time.Millisecond
 	RequireAppInstPortConsistency = true
+	cplookup := &node.CloudletPoolCache{}
+	cplookup.Init()
+	nodeMgr.CloudletPoolLookup = cplookup
 }

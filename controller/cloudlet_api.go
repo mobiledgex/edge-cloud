@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +18,7 @@ import (
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vmspec"
@@ -51,7 +54,8 @@ var (
 )
 
 const (
-	PlatformInitTimeout = 20 * time.Minute
+	PlatformInitTimeout           = 20 * time.Minute
+	DefaultResourceAlertThreshold = 80 // percentage
 )
 
 type updateCloudletCallback struct {
@@ -76,6 +80,14 @@ func (s *updateCloudletCallback) cb(updateType edgeproto.CacheUpdateType, value 
 func ignoreCRMState(cctx *CallContext) bool {
 	if cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
+		return true
+	}
+	return false
+}
+
+func supportsTrustPolicy(platformType edgeproto.PlatformType) bool {
+	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK ||
+		platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
 		return true
 	}
 	return false
@@ -138,8 +150,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	pfConfig.TlsCertFile = nodeMgr.GetInternalTlsCertFile()
 	pfConfig.TlsKeyFile = nodeMgr.GetInternalTlsKeyFile()
 	pfConfig.TlsCaFile = nodeMgr.GetInternalTlsCAFile()
-	pfConfig.UseVaultCas = nodeMgr.InternalPki.UseVaultCAs
-	pfConfig.UseVaultCerts = nodeMgr.InternalPki.UseVaultCerts
+	pfConfig.UseVaultPki = nodeMgr.InternalPki.UseVaultPki
 	pfConfig.ContainerRegistryPath = *cloudletRegistryPath
 	pfConfig.CloudletVmImagePath = *cloudletVMImagePath
 	pfConfig.TestMode = *testMode
@@ -169,16 +180,9 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 	return &pfConfig, nil
 }
 
-func isOperatorInfraCloudlet(in *edgeproto.Cloudlet) bool {
-	if !in.DeploymentLocal && in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK {
-		return true
-	}
-	return false
-}
-
 func startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) (*streamSend, edgeproto.CloudletApi_CreateCloudletServer, error) {
-	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
-	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: *key}}
+	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb, DonotSaveOnStreamObj)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start Cloudlet stream", "err", err)
 		return nil, inCb, err
@@ -190,7 +194,7 @@ func startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb e
 }
 
 func stopCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, streamSendObj *streamSend, objErr error) {
-	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}
+	streamKey := &edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: *key}}
 	if err := streamObjApi.stopStream(ctx, streamKey, streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop Cloudlet stream", "err", err)
 	}
@@ -204,13 +208,13 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 		cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS ||
 		(cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS && cloudlet.State != edgeproto.TrackedState_READY) {
 		// If restricted scenario, then stream msgs only if either cloudlet obj was not created successfully or it is updating
-		return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.ClusterInstKey{CloudletKey: *key}}, cb)
+		return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: *key}}, cb)
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	if cloudletInfoApi.cache.Get(key, &cloudletInfo) {
-		if cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
-			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
-			cloudletInfo.State == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY ||
+			cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_ERRORS ||
+			cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_OFFLINE {
 			return nil
 		}
 	}
@@ -220,7 +224,7 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 	if err != nil {
 		return err
 	}
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return fmt.Errorf("Failed to get platform: %v", err)
 	}
@@ -250,13 +254,13 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 
 		curState := cloudletInfo.State
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS ||
-			curState == edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE {
+		if curState == dme.CloudletState_CLOUDLET_STATE_ERRORS ||
+			curState == dme.CloudletState_CLOUDLET_STATE_OFFLINE {
 			failed <- true
 			return
 		}
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+		if curState == dme.CloudletState_CLOUDLET_STATE_READY {
 			done <- true
 			return
 		}
@@ -331,6 +335,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		in.ContainerVersion = *versionTag
 	}
 
+	if in.DefaultResourceAlertThreshold == 0 {
+		in.DefaultResourceAlertThreshold = DefaultResourceAlertThreshold
+	}
+
 	if in.DeploymentLocal {
 		if in.AccessVars != nil {
 			return errors.New("Access vars is not supported for local deployment")
@@ -379,7 +387,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
 		}
 	}
-
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
@@ -403,6 +410,25 @@ func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
 
 	}
 	return &caches
+}
+
+func validateResourceQuotaProps(resProps *edgeproto.CloudletResourceQuotaProps, resourceQuotas []edgeproto.ResourceQuota) error {
+	resPropsMap := make(map[string]struct{})
+	resPropsNames := []string{}
+	for _, prop := range resProps.Props {
+		resPropsMap[prop.Name] = struct{}{}
+		resPropsNames = append(resPropsNames, prop.Name)
+	}
+	for _, clRes := range cloudcommon.CloudletResources {
+		resPropsMap[clRes.Name] = struct{}{}
+		resPropsNames = append(resPropsNames, clRes.Name)
+	}
+	for _, resQuota := range resourceQuotas {
+		if _, ok := resPropsMap[resQuota.Name]; !ok {
+			return fmt.Errorf("Invalid quota name: %s, valid names are %s", resQuota.Name, strings.Join(resPropsNames, ","))
+		}
+	}
+	return nil
 }
 
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
@@ -480,6 +506,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				return fmt.Errorf("VM Pool %s not found", in.VmPool)
 			}
 		}
+		if in.TrustPolicy != "" {
+			if !supportsTrustPolicy(in.PlatformType) {
+				platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+				return fmt.Errorf("Trust Policy not supported on %s", platName)
+			}
+			policy := edgeproto.TrustPolicy{}
+			if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
+				return err
+			}
+		}
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
 		if err != nil {
 			return err
@@ -492,7 +528,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		} else {
 			in.State = edgeproto.TrackedState_CREATING
 		}
-
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -512,10 +547,22 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
 		err = cloudcommon.StartCRMService(ctx, in, pfConfig)
 	} else {
-		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
+		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err == nil {
 			if len(accessVars) > 0 {
 				err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
+				if err != nil {
+					return err
+				}
+			}
+			var resProps *edgeproto.CloudletResourceQuotaProps
+			resProps, err = cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
+			if err != nil {
+				return err
+			}
+			err = validateResourceQuotaProps(resProps, in.ResourceQuotas)
+			if err != nil {
+				return err
 			}
 			if err == nil {
 				// Some platform types require caches
@@ -543,15 +590,23 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			saveCloudlet := false
 			if !s.store.STMGet(stm, &in.Key, &cloudlet) {
 				return in.Key.NotFoundError()
 			}
-			if in.ChefClientKey == nil && cloudlet.State == newState {
-				return nil
+			if in.ChefClientKey != nil || cloudlet.State != newState {
+				saveCloudlet = true
+			}
+			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
+				// Store controller address if crmserver is started locally
+				cloudlet.HostController = *externalApiAddr
+				saveCloudlet = true
 			}
 			cloudlet.ChefClientKey = in.ChefClientKey
 			cloudlet.State = newState
-			s.store.STMPut(stm, &cloudlet)
+			if saveCloudlet {
+				s.store.STMPut(stm, &cloudlet)
+			}
 			return nil
 		})
 		if err != nil {
@@ -628,6 +683,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 	fatal := make(chan bool, 1)
 	update := make(chan bool, 1)
 
+	var privPolState edgeproto.TrackedState
 	var err error
 
 	go func() {
@@ -661,19 +717,19 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if !cloudletInfoApi.cache.Get(key, &cloudletInfo) {
 			return
 		}
-
 		curState := cloudletInfo.State
 		localVersion := cloudlet.ContainerVersion
 		remoteVersion := cloudletInfo.ContainerVersion
+		privPolState = cloudletInfo.TrustPolicyState
 
-		if curState == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
+		if curState == dme.CloudletState_CLOUDLET_STATE_ERRORS {
 			failed <- true
 			return
 		}
 
 		if !isVersionConflict(ctx, localVersion, remoteVersion) {
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY &&
-				(cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED) {
+			if curState == dme.CloudletState_CLOUDLET_STATE_READY &&
+				cloudlet.State != edgeproto.TrackedState_UPDATE_REQUESTED {
 				done <- true
 				return
 			}
@@ -683,12 +739,12 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
 			// cloudletinfo starts out in "ready" state, so wait for crm to transition to
 			// upgrade before looking for ready state
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_UPGRADE {
+			if curState == dme.CloudletState_CLOUDLET_STATE_UPGRADE {
 				// transition cloudlet state to updating (next case below)
 				update <- true
 			}
 		case edgeproto.TrackedState_UPDATING:
-			if curState == edgeproto.CloudletState_CLOUDLET_STATE_READY {
+			if curState == dme.CloudletState_CLOUDLET_STATE_READY {
 				done <- true
 			}
 		}
@@ -701,7 +757,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			return
 		}
 		for ii := lastMsgId; ii < len(info.Status.Msgs); ii++ {
-			send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			if send != nil {
+				send(&edgeproto.Result{Message: info.Status.Msgs[ii]})
+			}
 			lastMsgId++
 		}
 		checkState(key)
@@ -716,7 +774,9 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		case <-done:
 			err = nil
 			if successMsg != "" {
-				send(&edgeproto.Result{Message: successMsg})
+				if send != nil {
+					send(&edgeproto.Result{Message: successMsg})
+				}
 			}
 		case <-failed:
 			if cloudletInfoApi.cache.Get(key, &info) {
@@ -726,7 +786,7 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 				err = fmt.Errorf("Unknown failure")
 			}
 		case <-update:
-			// transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
+			// * transition from UPDATE_REQUESTED -> UPDATING state, as crm is upgrading
 			err := updateCloudletState(edgeproto.TrackedState_UPDATING)
 			if err == nil {
 				// crm started upgrading, now wait for it to be Ready
@@ -741,11 +801,15 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 			} else {
 				out = fmt.Sprintf("Failure: %s", out)
 			}
-			send(&edgeproto.Result{Message: out})
+			if send != nil {
+				send(&edgeproto.Result{Message: out})
+			}
 			err = errors.New(out)
 		case <-time.After(timeout):
 			err = fmt.Errorf("Timed out waiting for cloudlet state to be Ready")
-			send(&edgeproto.Result{Message: "platform bringup timed out"})
+			if send != nil {
+				send(&edgeproto.Result{Message: "platform bringup timed out"})
+			}
 		}
 
 		cancel()
@@ -762,11 +826,11 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		if err == nil {
 			cloudlet.Errors = nil
 			cloudlet.State = edgeproto.TrackedState_READY
+			cloudlet.TrustPolicyState = privPolState
 		} else {
 			cloudlet.Errors = []string{err.Error()}
 			cloudlet.State = errorState
 		}
-
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})
@@ -774,6 +838,92 @@ func (s *CloudletApi) WaitForCloudlet(ctx context.Context, key *edgeproto.Cloudl
 		return err1
 	}
 
+	return err
+}
+
+func (s *CloudletApi) VerifyTrustPoliciesForAppInsts(app *edgeproto.App, appInsts map[edgeproto.AppInstKey]struct{}) error {
+	TrustPolicies := make(map[edgeproto.PolicyKey]*edgeproto.TrustPolicy)
+	trustPolicyApi.GetTrustPolicies(TrustPolicies)
+	s.cache.Mux.Lock()
+	trustedCloudlets := make(map[edgeproto.CloudletKey]*edgeproto.PolicyKey)
+	for key, data := range s.cache.Objs {
+		val := data.Obj
+		if val.TrustPolicy != "" {
+			pkey := edgeproto.PolicyKey{
+				Organization: val.Key.Organization,
+				Name:         val.TrustPolicy,
+			}
+			trustedCloudlets[key] = &pkey
+		}
+
+	}
+	s.cache.Mux.Unlock()
+	for akey := range appInsts {
+		pkey, cloudletFound := trustedCloudlets[akey.ClusterInstKey.CloudletKey]
+		if cloudletFound {
+			policy, policyFound := TrustPolicies[*pkey]
+			if !policyFound {
+				return fmt.Errorf("Unable to find trust policy in cache: %s", pkey.String())
+			}
+			err := CheckAppCompatibleWithTrustPolicy(app, policy)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// updateTrustPolicyInternal updates the TrustPolicyState to TrackedState_UPDATE_REQUESTED
+// and then waits for the update to complete.
+func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgeproto.CloudletKey, policyName string, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "updateTrustPolicyInternal", "policyName", policyName)
+
+	err := cb.Send(&edgeproto.Result{
+		Message: fmt.Sprintf("Doing TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String()),
+	})
+	if err != nil {
+		return err
+	}
+	cloudletInfo := edgeproto.CloudletInfo{}
+	cloudlet := &edgeproto.Cloudlet{}
+	var updateErr error
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, ckey, cloudlet) {
+			return ckey.NotFoundError()
+		}
+		if !cloudletInfoApi.cache.Get(ckey, &cloudletInfo) {
+			updateErr = fmt.Errorf("CloudletInfo not found for %s", ckey.String())
+		} else {
+			if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
+				updateErr = fmt.Errorf("Cannot modify trust policy for cloudlet in state: %s", cloudletInfo.State)
+			}
+		}
+		if updateErr != nil {
+			cloudlet.TrustPolicyState = edgeproto.TrackedState_UPDATE_ERROR
+		} else {
+			cloudlet.TrustPolicyState = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		cloudlet.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		s.store.STMPut(stm, cloudlet)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if updateErr != nil {
+		return updateErr
+	}
+	targetState := edgeproto.TrackedState_READY
+	if policyName == "" {
+		targetState = edgeproto.TrackedState_NOT_PRESENT
+	}
+	err = s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
+	if err == nil {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String())})
+	} else {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
+	}
 	return err
 }
 
@@ -840,7 +990,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	if !ignoreCRMState(cctx) {
 		var cloudletPlatform pf.Platform
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
+		cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err != nil {
 			return err
 		}
@@ -848,6 +998,18 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		if err != nil {
 			return err
 		}
+		if _, found := fmap[edgeproto.CloudletFieldResourceQuotas]; found {
+			resProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
+			if err != nil {
+				return err
+			}
+			err = validateResourceQuotaProps(resProps, in.ResourceQuotas)
+			if err != nil {
+				return err
+			}
+			crmUpdateReqd = true
+		}
+
 		if len(accessVars) > 0 {
 			err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
 			if err != nil {
@@ -856,13 +1018,42 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 	}
 
-	var newMaintenanceState edgeproto.MaintenanceState
+	var newMaintenanceState dme.MaintenanceState
 	maintenanceChanged := false
+	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldTrustPolicy]
+
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := &edgeproto.Cloudlet{}
+		cur = &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return in.Key.NotFoundError()
 		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key, &cloudletInfo) {
+			return fmt.Errorf("Missing cloudlet info: %v", in.Key)
+		}
+		cloudletRefs := edgeproto.CloudletRefs{}
+		cloudletRefsApi.store.STMGet(stm, &in.Key, &cloudletRefs)
+		if _, found := fmap[edgeproto.CloudletFieldResourceQuotas]; found {
+			// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
+			allVmResources, _, err := getAllCloudletResources(ctx, stm, cur, &cloudletInfo, &cloudletRefs)
+			if err != nil {
+				return err
+			}
+			infraResInfo := make(map[string]edgeproto.InfraResource)
+			for _, resInfo := range cloudletInfo.ResourcesSnapshot.Info {
+				infraResInfo[resInfo.Name] = resInfo
+			}
+
+			allResInfo, err := GetCloudletResourceInfo(ctx, stm, cur, allVmResources, infraResInfo)
+			if err != nil {
+				return err
+			}
+			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, allResInfo, in.ResourceQuotas)
+			if err != nil {
+				return err
+			}
+		}
+
 		oldmstate := cur.MaintenanceState
 		cur.CopyInFields(in)
 		newMaintenanceState = cur.MaintenanceState
@@ -871,8 +1062,40 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			// don't change maintenance here, we handle it below
 			cur.MaintenanceState = oldmstate
 		}
+		if privPolUpdateRequested {
+			if maintenanceChanged {
+				return fmt.Errorf("Cannot change both maintenance state and trust policy at the same time")
+			}
+			if !ignoreCRM(cctx) {
+				if cur.State != edgeproto.TrackedState_READY {
+					return fmt.Errorf("Trust policy cannot be changed while cloudlet is not ready")
+				}
+			}
+			if in.TrustPolicy != "" {
+				if !supportsTrustPolicy(cur.PlatformType) {
+					platName := edgeproto.PlatformType_name[int32(cur.PlatformType)]
+					return fmt.Errorf("Trust Policy not supported on %s", platName)
+				}
+				policy := edgeproto.TrustPolicy{}
+				if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
+					return err
+				}
+				if err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(&in.Key, &policy); err != nil {
+					return err
+				}
+			}
+		}
 		if crmUpdateReqd && !ignoreCRM(cctx) {
 			cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		if privPolUpdateRequested {
+			if ignoreCRM(cctx) {
+				if cur.TrustPolicy != "" {
+					cur.TrustPolicyState = edgeproto.TrackedState_READY
+				} else {
+					cur.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
+				}
+			}
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, cur)
@@ -897,35 +1120,41 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		)
 		return err
 	}
+	if privPolUpdateRequested && !ignoreCRM(cctx) {
+		// Wait for policy to update
+		return s.updateTrustPolicyInternal(ctx, &in.Key, in.TrustPolicy, cb)
+	}
 
 	// since default maintenance state is NORMAL_OPERATION, it is better to check
 	// if the field is set before handling maintenance state
 	if _, found := fmap[edgeproto.CloudletFieldMaintenanceState]; !found || !maintenanceChanged {
+		cb.Send(&edgeproto.Result{Message: "Cloudlet updated successfully"})
 		return nil
 	}
 	switch newMaintenanceState {
-	case edgeproto.MaintenanceState_NORMAL_OPERATION:
+	case dme.MaintenanceState_NORMAL_OPERATION:
 		log.SpanLog(ctx, log.DebugLevelApi, "Stop CRM maintenance")
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
-			err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION_INIT)
+			err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION_INIT)
 			if err != nil {
 				return err
 			}
 			cloudletInfo := edgeproto.CloudletInfo{}
-			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION, edgeproto.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
+			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION, dme.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
 			if err != nil {
 				return err
 			}
-			if cloudletInfo.MaintenanceState == edgeproto.MaintenanceState_CRM_ERROR {
+			if cloudletInfo.MaintenanceState == dme.MaintenanceState_CRM_ERROR {
 				return fmt.Errorf("CRM encountered some errors, aborting")
 			}
 		}
-		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
+		err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION)
 		if err != nil {
 			return err
 		}
-	case edgeproto.MaintenanceState_MAINTENANCE_START:
+		cb.Send(&edgeproto.Result{Message: "Cloudlet is back to normal operation"})
+	case dme.MaintenanceState_MAINTENANCE_START:
 		// This is a state machine to transition into cloudlet
 		// maintenance. Start by triggering AutoProv failovers.
 		log.SpanLog(ctx, log.DebugLevelApi, "Start AutoProv failover")
@@ -940,15 +1169,15 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		// first reset any old AutoProvInfo
 		autoProvInfo = edgeproto.AutoProvInfo{
 			Key:              in.Key,
-			MaintenanceState: edgeproto.MaintenanceState_NORMAL_OPERATION,
+			MaintenanceState: dme.MaintenanceState_NORMAL_OPERATION,
 		}
 		autoProvInfoApi.Update(ctx, &autoProvInfo, 0)
 
-		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_FAILOVER_REQUESTED)
+		err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_FAILOVER_REQUESTED)
 		if err != nil {
 			return err
 		}
-		err = autoProvInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_FAILOVER_DONE, edgeproto.MaintenanceState_FAILOVER_ERROR, timeout, &autoProvInfo)
+		err = autoProvInfoApi.waitForMaintenanceState(ctx, &in.Key, dme.MaintenanceState_FAILOVER_DONE, dme.MaintenanceState_FAILOVER_ERROR, timeout, &autoProvInfo)
 		if err != nil {
 			return err
 		}
@@ -969,7 +1198,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			}
 		}
 		if len(autoProvInfo.Errors) > 0 {
-			undoErr := s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
+			undoErr := s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION)
 			log.SpanLog(ctx, log.DebugLevelApi, "AutoProv maintenance failures", "err", err, "undoErr", undoErr)
 			return fmt.Errorf("AutoProv failover encountered some errors, aborting maintenance")
 		}
@@ -981,7 +1210,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 		// proceed to next state
 		fallthrough
-	case edgeproto.MaintenanceState_MAINTENANCE_START_NO_FAILOVER:
+	case dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER:
 		log.SpanLog(ctx, log.DebugLevelApi, "Start CRM maintenance")
 		cb.Send(&edgeproto.Result{
 			Message: "Starting CRM maintenance",
@@ -989,17 +1218,17 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		if !ignoreCRMState(cctx) {
 			timeout := settingsApi.Get().CloudletMaintenanceTimeout.TimeDuration()
 			// Tell CRM to go into maintenance mode
-			err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_CRM_REQUESTED)
+			err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_CRM_REQUESTED)
 			if err != nil {
 				return err
 			}
 			cloudletInfo := edgeproto.CloudletInfo{}
-			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_CRM_UNDER_MAINTENANCE, edgeproto.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
+			err = cloudletInfoApi.waitForMaintenanceState(ctx, &in.Key, dme.MaintenanceState_CRM_UNDER_MAINTENANCE, dme.MaintenanceState_CRM_ERROR, timeout, &cloudletInfo)
 			if err != nil {
 				return err
 			}
-			if cloudletInfo.MaintenanceState == edgeproto.MaintenanceState_CRM_ERROR {
-				undoErr := s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_NORMAL_OPERATION)
+			if cloudletInfo.MaintenanceState == dme.MaintenanceState_CRM_ERROR {
+				undoErr := s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_NORMAL_OPERATION)
 				log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance failures", "err", err, "undoErr", undoErr)
 				return fmt.Errorf("CRM encountered some errors, aborting maintenance")
 			}
@@ -1009,7 +1238,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		})
 		log.SpanLog(ctx, log.DebugLevelApi, "CRM maintenance started")
 		// transition to maintenance
-		err = s.setMaintenanceState(ctx, &in.Key, edgeproto.MaintenanceState_UNDER_MAINTENANCE)
+		err = s.setMaintenanceState(ctx, &in.Key, dme.MaintenanceState_UNDER_MAINTENANCE)
 		if err != nil {
 			return err
 		}
@@ -1020,7 +1249,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	return nil
 }
 
-func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state edgeproto.MaintenanceState) error {
+func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state dme.MaintenanceState) error {
 	changedState := false
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := &edgeproto.Cloudlet{}
@@ -1038,15 +1267,55 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 
 	msg := ""
 	switch state {
-	case edgeproto.MaintenanceState_UNDER_MAINTENANCE:
+	case dme.MaintenanceState_UNDER_MAINTENANCE:
 		msg = "Cloudlet maintenance start"
-	case edgeproto.MaintenanceState_NORMAL_OPERATION:
+	case dme.MaintenanceState_NORMAL_OPERATION:
 		msg = "Cloudlet maintenance done"
 	}
 	if msg != "" && changedState {
 		nodeMgr.Event(ctx, msg, key.Organization, key.GetTags(), nil, "maintenance-state", state.String())
 	}
 	return err
+}
+
+func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_PlatformDeleteCloudletServer) error {
+	ctx := cb.Context()
+	updatecb := updateCloudletCallback{in, cb}
+	if in.DeploymentLocal {
+		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
+		return cloudcommon.StopCRMService(ctx, in)
+	}
+	var pfConfig *edgeproto.PlatformConfig
+	vmPool := edgeproto.VMPool{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		var err error
+		pfConfig, err = getPlatformConfig(cb.Context(), in)
+		if err != nil {
+			return err
+		}
+		if in.VmPool != "" {
+			vmPoolKey := edgeproto.VMPoolKey{
+				Name:         in.VmPool,
+				Organization: in.Key.Organization,
+			}
+			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
+				return fmt.Errorf("VM Pool %s not found", in.VmPool)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	var cloudletPlatform pf.Platform
+	cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return err
+	}
+	// Some platform types require caches
+	caches := getCaches(ctx, &vmPool)
+	accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
+	return cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
@@ -1070,43 +1339,34 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}()
 
-	dynInsts := make(map[edgeproto.AppInstKey]struct{})
-	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
-		// disallow delete if static instances are present
-		return errors.New("Cloudlet in use by static AppInst")
-	}
-
-	clDynInsts := make(map[edgeproto.ClusterInstKey]struct{})
-	if clusterInstApi.UsesCloudlet(&in.Key, clDynInsts) {
-		return errors.New("Cloudlet in use by static ClusterInst")
-	}
+	var dynInsts map[edgeproto.AppInstKey]struct{}
+	var clDynInsts map[edgeproto.ClusterInstKey]struct{}
 
 	cctx.SetOverride(&in.CrmOverride)
 
-	var pfConfig *edgeproto.PlatformConfig
-	vmPool := edgeproto.VMPool{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		dynInsts = make(map[edgeproto.AppInstKey]struct{})
+		clDynInsts = make(map[edgeproto.ClusterInstKey]struct{})
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
 		var err error
-		pfConfig, err = getPlatformConfig(cb.Context(), in)
-		if err != nil {
-			return err
+		refs := edgeproto.CloudletRefs{}
+		if cloudletRefsApi.store.STMGet(stm, &in.Key, &refs) {
+			err = clusterInstApi.deleteCloudletOk(stm, &refs, clDynInsts)
+			if err != nil {
+				return err
+			}
+			err = appInstApi.deleteCloudletOk(stm, &refs, dynInsts)
+			if err != nil {
+				return err
+			}
 		}
 		if ignoreCRMState(cctx) {
 			// delete happens later, this STM just checks for existence
 			return nil
 		}
-		if in.VmPool != "" {
-			vmPoolKey := edgeproto.VMPoolKey{
-				Name:         in.VmPool,
-				Organization: in.Key.Organization,
-			}
-			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
-				return fmt.Errorf("VM Pool %s not found", in.VmPool)
-			}
-		}
+
 		if !cctx.Undo {
 			if in.State == edgeproto.TrackedState_CREATE_REQUESTED ||
 				in.State == edgeproto.TrackedState_CREATING ||
@@ -1133,20 +1393,66 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 
-	if !ignoreCRMState(cctx) {
-		updatecb := updateCloudletCallback{in, cb}
+	// Delete dynamic instances while Cloudlet is still in database
+	// and CRM is still up.
+	if len(dynInsts) > 0 {
+		// delete dynamic instances
+		for key, _ := range dynInsts {
+			appInst := edgeproto.AppInst{Key: key}
+			derr := appInstApi.deleteAppInstInternal(DefCallContext(), &appInst, cb)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic app inst",
+					"key", key, "err", derr)
+				return derr
+			}
+		}
+	}
+	if len(clDynInsts) > 0 {
+		for key, _ := range clDynInsts {
+			clInst := edgeproto.ClusterInst{Key: key}
+			derr := clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clInst, cb)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic ClusterInst",
+					"key", key, "err", derr)
+				return derr
+			}
+		}
+	}
 
-		if in.DeploymentLocal {
-			updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-			err = cloudcommon.StopCRMService(ctx, in)
+	if !ignoreCRMState(cctx) {
+		if in.HostController != "" && in.HostController != *externalApiAddr {
+			// connect to Controller where Cloudlet is running and do delete
+			conn, cErr := ControllerConnect(ctx, in.HostController)
+			if cErr != nil {
+				return cErr
+			}
+			cmd := edgeproto.NewCloudletApiClient(conn)
+			stream, sErr := cmd.PlatformDeleteCloudlet(ctx, in)
+			if sErr != nil {
+				return sErr
+			}
+			var sMsg *edgeproto.Result
+			for {
+				sMsg, sErr = stream.Recv()
+				if sErr == io.EOF {
+					sErr = nil
+					break
+				}
+				if sErr != nil {
+					break
+				}
+				cb.Send(sMsg)
+			}
+			if sErr != nil {
+				return sErr
+			}
 		} else {
-			var cloudletPlatform pf.Platform
-			cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String())
-			if err == nil {
-				// Some platform types require caches
-				caches := getCaches(ctx, &vmPool)
-				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
-				err = cloudletPlatform.DeleteCloudlet(ctx, in, pfConfig, caches, accessApi, updatecb.cb)
+			// run delete on this Controller
+			err = s.PlatformDeleteCloudlet(in, cb)
+			if err != nil {
+				return err
 			}
 		}
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
@@ -1156,6 +1462,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
+	// Delete cloudlet from database
 	updateCloudlet := edgeproto.Cloudlet{}
 	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &updateCloudlet) {
@@ -1183,32 +1490,10 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	// Note: don't delete cloudletinfo, that will get deleted once CRM
 	// disconnects. Otherwise if admin deletes/recreates Cloudlet with
 	// CRM connected the whole time, we will end up without cloudletInfo.
-	// also delete dynamic instances
-	if len(dynInsts) > 0 {
-		// delete dynamic instances
-		for key, _ := range dynInsts {
-			appInst := edgeproto.AppInst{Key: key}
-			derr := appInstApi.deleteAppInstInternal(DefCallContext(), &appInst, cb)
-			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
-					"Failed to delete dynamic app inst",
-					"key", key, "err", derr)
-			}
-		}
-	}
-	if len(clDynInsts) > 0 {
-		for key, _ := range clDynInsts {
-			clInst := edgeproto.ClusterInst{Key: key}
-			derr := clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clInst, cb)
-			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
-					"Failed to delete dynamic ClusterInst",
-					"key", key, "err", derr)
-			}
-		}
-	}
 	cloudletPoolApi.cloudletDeleted(ctx, &in.Key)
 	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
+	autoProvInfoApi.Delete(ctx, &edgeproto.AutoProvInfo{Key: in.Key}, 0)
+	alertApi.CleanupCloudletAlerts(ctx, &in.Key)
 	return nil
 }
 
@@ -1426,7 +1711,7 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, key *edgeproto.Cl
 		return nil, err
 	}
 	accessApi := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return nil, err
 	}
@@ -1478,7 +1763,7 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 
 func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
 
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String())
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return nil, err
 	}
@@ -1519,4 +1804,351 @@ func (s *CloudletApi) GenerateAccessKey(ctx context.Context, key *edgeproto.Clou
 	})
 	log.SpanLog(ctx, log.DebugLevelApi, "generated crm access key", "CloudletKey", *key, "err", err)
 	return &res, err
+}
+
+func (s *CloudletApi) UsesTrustPolicy(key *edgeproto.PolicyKey, stateMatch edgeproto.TrackedState) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		cloudlet := data.Obj
+		if cloudlet.TrustPolicy == key.Name && cloudlet.Key.Organization == key.Organization {
+			if stateMatch == edgeproto.TrackedState_TRACKED_STATE_UNKNOWN || stateMatch == cloudlet.State {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *CloudletApi) ValidateCloudletsUsingTrustPolicy(ctx context.Context, trustPolicy *edgeproto.TrustPolicy) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "ValidateCloudletsUsingTrustPolicy", "policy", trustPolicy)
+	cloudletKeys := make(map[*edgeproto.CloudletKey]struct{})
+	s.cache.Mux.Lock()
+	for ck, data := range s.cache.Objs {
+		val := data.Obj
+		if ck.Organization != trustPolicy.Key.Organization || val.TrustPolicy != trustPolicy.Key.Name {
+			continue
+		}
+		copyKey := edgeproto.CloudletKey{
+			Organization: ck.Organization,
+			Name:         ck.Name,
+		}
+		cloudletKeys[&copyKey] = struct{}{}
+	}
+	s.cache.Mux.Unlock()
+	for k := range cloudletKeys {
+		err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(k, trustPolicy)
+		if err != nil {
+			return fmt.Errorf("AppInst on cloudlet %s not compatible with trust policy - %s", strings.TrimSpace(k.String()), err.Error())
+		}
+	}
+	return nil
+}
+
+func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trustPolicy *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
+	s.cache.Mux.Lock()
+	type updateResult struct {
+		errString string
+	}
+
+	updateResults := make(map[edgeproto.CloudletKey]chan updateResult)
+	for k, data := range s.cache.Objs {
+		val := data.Obj
+		if k.Organization != trustPolicy.Key.Organization || val.TrustPolicy != trustPolicy.Key.Name {
+			continue
+		}
+
+		updateResults[k] = make(chan updateResult)
+		go func(k edgeproto.CloudletKey) {
+			log.SpanLog(ctx, log.DebugLevelApi, "updating trust policy for cloudlet", "key", k)
+			err := s.updateTrustPolicyInternal(ctx, &k, trustPolicy.Key.Name, cb)
+			if err == nil {
+				updateResults[k] <- updateResult{errString: ""}
+			} else {
+				updateResults[k] <- updateResult{errString: err.Error()}
+			}
+		}(k)
+	}
+	s.cache.Mux.Unlock()
+	if len(updateResults) == 0 {
+		log.SpanLog(ctx, log.DebugLevelApi, "no cloudlets matched", "key", trustPolicy.Key)
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Trust policy updated, no cloudlets affected")})
+		return nil
+	}
+
+	numPassed := 0
+	numFailed := 0
+	numTotal := 0
+	for k, r := range updateResults {
+		numTotal++
+		result := <-r
+		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
+		if result.errString == "" {
+			numPassed++
+		} else {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to update cloudlet: %s - %s", k, result.errString)})
+			numFailed++
+		}
+	}
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})
+	if numPassed == 0 {
+		return fmt.Errorf("Failed to update trust policy on any cloudlets")
+	}
+	return nil
+}
+
+func (s *CloudletApi) WaitForTrustPolicyState(ctx context.Context, key *edgeproto.CloudletKey, targetState edgeproto.TrackedState, errorState edgeproto.TrackedState, timeout time.Duration) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState", "target", targetState, "timeout", timeout)
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+	cloudlet := edgeproto.Cloudlet{}
+	check := func(ctx context.Context) {
+		if !s.cache.Get(key, &cloudlet) {
+			log.SpanLog(ctx, log.DebugLevelApi, "Error: WaitForTrustPolicyState cloudlet not found", "key", key)
+			failed <- true
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState initial get from cache", "curState", cloudlet.TrustPolicyState, "targetState", targetState)
+		if cloudlet.TrustPolicyState == targetState {
+			done <- true
+		} else if cloudlet.TrustPolicyState == errorState {
+			failed <- true
+		}
+	}
+	cancel := s.cache.WatchKey(key, check)
+	check(ctx)
+	var err error
+	select {
+	case <-done:
+	case <-failed:
+		err = fmt.Errorf("Error in updating Trust Policy")
+	case <-time.After(timeout):
+		err = fmt.Errorf("Timed out waiting for Trust Policy")
+	}
+	cancel()
+	log.SpanLog(ctx, log.DebugLevelApi, "WaitForTrustPolicyState state done", "target", targetState, "curState", cloudlet.TrustPolicyState)
+	return err
+}
+
+func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]edgeproto.InfraResource) (map[string]edgeproto.InfraResource, error) {
+	resQuotasInfo := make(map[string]edgeproto.InfraResource)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
+			Name:           resQuota.Name,
+			Value:          resQuota.Value,
+			AlertThreshold: resQuota.AlertThreshold,
+		}
+	}
+
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return nil, err
+	}
+	cloudletRes := map[string]string{
+		// Common Cloudlet Resources
+		cloudcommon.ResourceRamMb:  cloudcommon.ResourceRamUnits,
+		cloudcommon.ResourceVcpus:  "",
+		cloudcommon.ResourceDiskGb: cloudcommon.ResourceDiskUnits,
+		cloudcommon.ResourceGpus:   "",
+	}
+	resInfo := make(map[string]edgeproto.InfraResource)
+	for resName, resUnits := range cloudletRes {
+		infraResMax := uint64(0)
+		if infraRes, ok := infraResMap[resName]; ok {
+			infraResMax = infraRes.InfraMaxValue
+		}
+		thresh := cloudlet.DefaultResourceAlertThreshold
+		quotaMax := uint64(0)
+		// look up quota if any
+		if quota, found := resQuotasInfo[resName]; found {
+			if quota.Value != 0 {
+				quotaMax = quota.Value
+			}
+			if quota.AlertThreshold > 0 {
+				// Set threshold values from Resource quotas
+				thresh = quota.AlertThreshold
+			}
+		}
+		resInfo[resName] = edgeproto.InfraResource{
+			Name:           resName,
+			Units:          resUnits,
+			InfraMaxValue:  infraResMax,
+			QuotaMaxValue:  quotaMax,
+			AlertThreshold: thresh,
+		}
+	}
+
+	for _, vmRes := range vmResources {
+		if vmRes.VmFlavor != nil {
+			ramInfo, ok := resInfo[cloudcommon.ResourceRamMb]
+			if ok {
+				ramInfo.Value += vmRes.VmFlavor.Ram
+				resInfo[cloudcommon.ResourceRamMb] = ramInfo
+			}
+			vcpusInfo, ok := resInfo[cloudcommon.ResourceVcpus]
+			if ok {
+				vcpusInfo.Value += vmRes.VmFlavor.Vcpus
+				resInfo[cloudcommon.ResourceVcpus] = vcpusInfo
+			}
+			diskInfo, ok := resInfo[cloudcommon.ResourceDiskGb]
+			if ok {
+				diskInfo.Value += vmRes.VmFlavor.Disk
+				resInfo[cloudcommon.ResourceDiskGb] = diskInfo
+			}
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
+				gpusInfo, ok := resInfo[cloudcommon.ResourceGpus]
+				if ok {
+					diskInfo.Value += 1
+					resInfo[cloudcommon.ResourceGpus] = gpusInfo
+				}
+			}
+		}
+	}
+	addResInfo := cloudletPlatform.GetClusterAdditionalResources(ctx, cloudlet, vmResources, infraResMap)
+	for k, v := range addResInfo {
+		thresh := cloudlet.DefaultResourceAlertThreshold
+		quotaMax := uint64(0)
+		// look up quota if any
+		if quota, found := resQuotasInfo[k]; found {
+			if quota.Value != 0 {
+				quotaMax = quota.Value
+			}
+			if quota.AlertThreshold > 0 {
+				// Set threshold values from Resource quotas
+				thresh = quota.AlertThreshold
+			}
+		}
+		v.AlertThreshold = thresh
+		v.QuotaMaxValue = quotaMax
+		resInfo[k] = v
+	}
+	return resInfo, nil
+}
+
+// Get actual resource info used by the cloudlet
+func getResourceUsage(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResInfo []edgeproto.InfraResource, diffVmResources []edgeproto.VMResource, infraUsage bool) ([]edgeproto.InfraResource, error) {
+	resQuotasInfo := make(map[string]edgeproto.InfraResource)
+	for _, resQuota := range cloudlet.ResourceQuotas {
+		resQuotasInfo[resQuota.Name] = edgeproto.InfraResource{
+			Name:           resQuota.Name,
+			Value:          resQuota.Value,
+			AlertThreshold: resQuota.AlertThreshold,
+		}
+	}
+	defaultAlertThresh := cloudlet.DefaultResourceAlertThreshold
+	infraResInfoMap := make(map[string]edgeproto.InfraResource)
+	for _, resInfo := range infraResInfo {
+		thresh := defaultAlertThresh
+		// look up quota if any
+		if quota, found := resQuotasInfo[resInfo.Name]; found {
+			if quota.Value > 0 {
+				// Set max values from Resource quotas
+				resInfo.QuotaMaxValue = quota.Value
+			}
+			if quota.AlertThreshold > 0 {
+				// Set threshold values from Resource quotas
+				thresh = quota.AlertThreshold
+			}
+		}
+		if !infraUsage {
+			resInfo.Value = 0
+		}
+		resInfo.AlertThreshold = thresh
+		infraResInfoMap[resInfo.Name] = resInfo
+	}
+	diffResInfo, err := GetCloudletResourceInfo(ctx, stm, cloudlet, diffVmResources, infraResInfoMap)
+	if err != nil {
+		return nil, err
+	}
+	for resName, _ := range infraResInfoMap {
+		if diffResInfo, ok := diffResInfo[resName]; ok {
+			outInfo, ok := infraResInfoMap[resName]
+			if ok {
+				outInfo.Value += diffResInfo.Value
+				infraResInfoMap[resName] = outInfo
+			}
+		}
+	}
+	out := []edgeproto.InfraResource{}
+	for _, val := range infraResInfoMap {
+		out = append(out, val)
+	}
+	// sort keys for stable output order
+	sort.Slice(out[:], func(i, j int) bool {
+		return out[i].Name < out[j].Name
+	})
+
+	return out, nil
+}
+
+func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgeproto.CloudletResourceUsage) (*edgeproto.InfraResourcesSnapshot, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetCloudletResourceUsage", "key", usage.Key)
+	infraResources := edgeproto.InfraResourcesSnapshot{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cloudlet := edgeproto.Cloudlet{}
+		if !cloudletApi.store.STMGet(stm, &usage.Key, &cloudlet) {
+			return errors.New("Specified Cloudlet not found")
+		}
+		cloudletInfo := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, &usage.Key, &cloudletInfo) {
+			return fmt.Errorf("No resource information found for Cloudlet %s", usage.Key)
+		}
+		cloudletRefs := edgeproto.CloudletRefs{}
+		cloudletRefsApi.store.STMGet(stm, &usage.Key, &cloudletRefs)
+		allVmResources, diffVmResources, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
+		if err != nil {
+			return err
+		}
+		resInfo := []edgeproto.InfraResource{}
+		infraResources = edgeproto.InfraResourcesSnapshot{}
+		infraResources.Info = cloudletInfo.ResourcesSnapshot.Info
+		if !usage.InfraUsage {
+			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, allVmResources, usage.InfraUsage)
+		} else {
+			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, diffVmResources, usage.InfraUsage)
+		}
+		if err != nil {
+			return err
+		}
+		infraResources.Info = resInfo
+		return nil
+	})
+	return &infraResources, err
+}
+
+func GetPlatformVMsResources(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) ([]edgeproto.VMResource, error) {
+	resources := []edgeproto.VMResource{}
+	for _, vm := range cloudletInfo.ResourcesSnapshot.PlatformVms {
+		if vm.InfraFlavor == "" {
+			continue
+		}
+		for _, flavorInfo := range cloudletInfo.Flavors {
+			if flavorInfo.Name == vm.InfraFlavor {
+				resources = append(resources, edgeproto.VMResource{
+					VmFlavor: flavorInfo,
+					Type:     vm.Type,
+				})
+				break
+			}
+		}
+	}
+	return resources, nil
+}
+
+func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetCloudletResourceQuotaProps", "platformtype", in.PlatformType)
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return nil, err
+	}
+
+	quotaProps := edgeproto.CloudletResourceQuotaProps{}
+	quotaProps.Props = append(quotaProps.Props, cloudcommon.CloudletResources...)
+
+	pfQuotaProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
+	if err != nil {
+		return nil, err
+	}
+	quotaProps.Props = append(quotaProps.Props, pfQuotaProps.Props...)
+
+	return &quotaProps, nil
 }
