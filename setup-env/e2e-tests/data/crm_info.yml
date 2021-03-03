@@ -149,6 +149,7 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  hostcontroller: 127.0.0.1:55001
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -166,6 +167,7 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  hostcontroller: 127.0.0.1:55001
 
 cloudletinfos:
 - key:
