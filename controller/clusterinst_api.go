@@ -189,7 +189,7 @@ func validatePlatformForDeployment(ctx context.Context, platformType edgeproto.P
 		fallthrough
 	case edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
 		fallthrough
-	case edgeproto.PlatformType_PLATFORM_TYPE_BARE_METAL:
+	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
 		if deploymentType != cloudcommon.DeploymentTypeKubernetes {
 			return fmt.Errorf("Only kubernetes clusters can be deployed in cloudlet platform: %s", platformType.String())
 		}
@@ -209,7 +209,7 @@ func validateNumNodesForDeployment(ctx context.Context, platformType edgeproto.P
 		if numnodes == 0 {
 			return fmt.Errorf("NumNodes cannot be 0 for %s", platformType.String())
 		}
-	case edgeproto.PlatformType_PLATFORM_TYPE_BARE_METAL:
+	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
 		if numnodes != 0 {
 			return fmt.Errorf("NumNodes must be 0 for %s", platformType.String())
 		}
