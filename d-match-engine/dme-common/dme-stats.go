@@ -173,7 +173,7 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("cloudletorg", MyCloudletKey.Organization)
 	metric.AddTag("cloudlet", MyCloudletKey.Name)
 	metric.AddStringVal("id", *ScaleID)
-	metric.AddStringVal("method", key.Method)
+	metric.AddTag("method", key.Method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
 	metric.AddStringVal("foundCloudlet", key.CloudletFound.Name)
@@ -370,16 +370,6 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 				client.Location.Timestamp.Nanos = int32(ts.Nanosecond())
 				// Update list of clients on the side and if there is a listener, send it
 				go UpdateClientsBuffer(ctx, client)
-				// Update persistent stats influx db with gps locations
-				fcreq, ok := req.(*dme.FindCloudletRequest)
-				if ok {
-					deviceInfo := dme.DeviceInfo{}
-					if fcreq.DeviceInfo != nil {
-						deviceInfo = *fcreq.DeviceInfo
-					}
-					RecordGpsLocationStatCall(&client.Location, &client.ClientKey.AppInstKey, ckey, fcreq.CarrierName, deviceInfo)
-				}
-
 			}
 		}
 	}
