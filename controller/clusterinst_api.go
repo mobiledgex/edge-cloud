@@ -1273,6 +1273,7 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		if inst.Resources.UpdateResources(&in.Resources) {
+			inst.Resources = in.Resources
 			saveInst = true
 		}
 

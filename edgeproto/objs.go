@@ -1038,11 +1038,6 @@ func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
 	if inRes == nil || len(inRes.Vms) == 0 {
 		return false
 	}
-	defer func() {
-		if updated {
-			r.Vms = inRes.Vms
-		}
-	}()
 	if len(r.Vms) != len(inRes.Vms) {
 		return true
 	}
