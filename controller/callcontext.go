@@ -5,8 +5,9 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 // Generic caller context
 
 type CallContext struct {
-	Undo     bool
-	Override edgeproto.CRMOverride
+	Undo        bool
+	Override    edgeproto.CRMOverride
+	AutoCluster bool
 }
 
 func DefCallContext() *CallContext {
@@ -16,6 +17,12 @@ func DefCallContext() *CallContext {
 func (c *CallContext) WithUndo() *CallContext {
 	cc := *c
 	cc.Undo = true
+	return &cc
+}
+
+func (c *CallContext) WithAutoCluster() *CallContext {
+	cc := *c
+	cc.AutoCluster = true
 	return &cc
 }
 

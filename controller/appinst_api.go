@@ -807,7 +807,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		clusterInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 		createStart := time.Now()
-		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
+		cctxauto := cctx.WithAutoCluster()
+		err := clusterInstApi.createClusterInstInternal(cctxauto, &clusterInst, cb)
 		nodeMgr.TimedEvent(ctx, "AutoCluster create", in.Key.AppKey.Organization, node.EventType, in.Key.GetTags(), err, createStart, time.Now())
 		clusterInstReservationEvent(ctx, cloudcommon.ReserveClusterEvent, in)
 		if err != nil {
@@ -821,7 +822,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		defer func() {
 			if reterr != nil && !cctx.Undo {
 				cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst due to failure"})
-				undoErr := clusterInstApi.deleteClusterInstInternal(cctx.WithUndo(), &clusterInst, cb)
+				undoErr := clusterInstApi.deleteClusterInstInternal(cctxauto.WithUndo(), &clusterInst, cb)
 				if undoErr != nil {
 					log.SpanLog(ctx, log.DebugLevelApi,
 						"Undo create auto-ClusterInst failed",
@@ -1535,7 +1536,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	clusterInst := edgeproto.ClusterInst{}
 	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !appInstApi.UsesClusterInst(&clusterInstKey) && !clusterInst.Reservable {
 		cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst"})
-		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
+		cctxauto := cctx.WithAutoCluster()
+		autoerr := clusterInstApi.deleteClusterInstInternal(cctxauto, &clusterInst, cb)
 		if autoerr != nil {
 			log.InfoLog("Failed to delete auto-ClusterInst",
 				"clusterInst", clusterInst, "err", autoerr)

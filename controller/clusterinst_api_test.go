@@ -161,6 +161,39 @@ func TestClusterInstApi(t *testing.T) {
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "flavor not available")
 
+	// Create appInst with autocluster should fail as cluster create
+	// responder is set to fail. But post failure, clusterInst object
+	// created internally should be cleaned up
+	targetCloudletKey := testutil.CloudletData[1].Key
+	targetApp := testutil.AppData[11]
+	testReservableClusterInstExists := func(cloudletKey edgeproto.CloudletKey) {
+		foundCluster := false
+		for cKey, cCache := range clusterInstApi.cache.Objs {
+			if cKey.CloudletKey == cloudletKey &&
+				cCache.Obj.Reservable {
+				foundCluster = true
+			}
+		}
+		require.False(t, foundCluster, "no reservable cluster exists on this cloudlet")
+	}
+	// 1. Ensure no reservable clusterinst is there on our target cloudlet
+	testReservableClusterInstExists(targetCloudletKey)
+	// 2. Create AppInst and ensure it fails
+	_, err = appApi.CreateApp(ctx, &targetApp)
+	require.Nil(t, err, "create App")
+	appinstTest := edgeproto.AppInst{}
+	appinstTest.Key.AppKey = targetApp.Key
+	appinstTest.Key.ClusterInstKey.CloudletKey = targetCloudletKey
+	appinstTest.Key.ClusterInstKey.ClusterKey.Name = "autoclustertest"
+	appinstTest.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
+	err = appInstApi.CreateAppInst(&appinstTest, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err)
+	// 3. Ensure no reservable clusterinst exist on the target cloudlet
+	testReservableClusterInstExists(targetCloudletKey)
+	// 4. Clean up created app
+	_, err = appApi.DeleteApp(ctx, &targetApp)
+	require.Nil(t, err, "delete App")
+
 	responder.SetSimulateClusterCreateFailure(false)
 	responder.SetSimulateClusterDeleteFailure(false)
 
