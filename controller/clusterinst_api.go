@@ -179,6 +179,44 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	return clusterInst.IpAccess, nil
 }
 
+func validatePlatformForDeployment(ctx context.Context, platformType edgeproto.PlatformType, deploymentType string) error {
+	log.DebugLog(log.DebugLevelApi, "validatePlatformForDeployment", "platformType", platformType.String(), "deploymentType", deploymentType)
+
+	switch platformType {
+	case edgeproto.PlatformType_PLATFORM_TYPE_GCP:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AZURE:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
+		if deploymentType != cloudcommon.DeploymentTypeKubernetes {
+			return fmt.Errorf("Only kubernetes clusters can be deployed in cloudlet platform: %s", platformType.String())
+		}
+	}
+	return nil
+}
+
+func validateNumNodesForDeployment(ctx context.Context, platformType edgeproto.PlatformType, numnodes uint32) error {
+	log.DebugLog(log.DebugLevelApi, "validatePlatformForDeployment", "platformType", platformType.String(), "numnodes", numnodes)
+
+	switch platformType {
+	case edgeproto.PlatformType_PLATFORM_TYPE_GCP:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AZURE:
+		fallthrough
+	case edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
+		if numnodes == 0 {
+			return fmt.Errorf("NumNodes cannot be 0 for %s", platformType.String())
+		}
+	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
+		if numnodes != 0 {
+			return fmt.Errorf("NumNodes must be 0 for %s", platformType.String())
+		}
+	}
+	return nil
+}
+
 func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}
 	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb, SaveOnStreamObj)
@@ -723,14 +761,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
 			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
-		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE || cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP {
-			if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
-				return errors.New("Only kubernetes clusters can be deployed in Azure or GCP")
-			}
-			if in.NumNodes == 0 {
-				return errors.New("NumNodes cannot be 0 for Azure or GCP")
-			}
-
+		err = validatePlatformForDeployment(ctx, cloudlet.PlatformType, in.Deployment)
+		if err != nil {
+			return err
+		}
+		err = validateNumNodesForDeployment(ctx, cloudlet.PlatformType, in.NumNodes)
+		if err != nil {
+			return err
 		}
 		if err := validateClusterInstUpdates(ctx, stm, in); err != nil {
 			return err
@@ -1266,21 +1303,24 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 	streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		saveInst := false
 		inst := edgeproto.ClusterInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
-		inst.Resources = in.Resources
-
-		if inst.State == in.State {
-			log.SpanLog(ctx, log.DebugLevelApi, "no state change")
-			return nil
+		if inst.Resources.UpdateResources(&in.Resources) {
+			inst.Resources = in.Resources
+			saveInst = true
 		}
-		// please see state_transitions.md
-		if !crmTransitionOk(inst.State, in.State) {
-			log.SpanLog(ctx, log.DebugLevelApi, "invalid state transition", "cur", inst.State, "next", in.State)
-			return nil
+
+		if inst.State != in.State {
+			saveInst = true
+			// please see state_transitions.md
+			if !crmTransitionOk(inst.State, in.State) {
+				log.SpanLog(ctx, log.DebugLevelApi, "invalid state transition", "cur", inst.State, "next", in.State)
+				return nil
+			}
 		}
 		inst.State = in.State
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
@@ -1288,7 +1328,9 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 		} else {
 			inst.Errors = nil
 		}
-		s.store.STMPut(stm, &inst)
+		if saveInst {
+			s.store.STMPut(stm, &inst)
+		}
 		return nil
 	})
 	if in.State == edgeproto.TrackedState_DELETE_DONE {

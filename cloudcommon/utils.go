@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -84,4 +85,47 @@ func GetAvailablePort(ipaddr string) (string, error) {
 	port := l.Addr().(*net.TCPAddr).Port
 
 	return fmt.Sprintf("%s:%d", ipobj[0], port), nil
+}
+
+// round the given field denoted by digIdx, we mostly want seconds
+// rounded to two digits
+func FormatDuration(dur time.Duration, digIdx int) string {
+
+	var divisors = []time.Duration{
+		time.Duration(1),
+		time.Duration(10),
+		time.Duration(100),
+		time.Duration(1000),
+	}
+
+	if digIdx < 0 {
+		digIdx = 0
+	}
+	if digIdx >= len(divisors) {
+		digIdx = len(divisors) - 1
+	}
+
+	switch {
+	case dur > time.Second:
+		dur = dur.Round(time.Second / divisors[digIdx])
+	case dur > time.Millisecond:
+		dur = dur.Round(time.Millisecond / divisors[digIdx])
+	case dur > time.Microsecond:
+		dur = dur.Round(time.Microsecond / divisors[digIdx])
+	}
+	return dur.String()
+}
+
+func LookupDNS(name string) (string, error) {
+	ips, err := net.LookupIP(name)
+	if err != nil {
+		return "", fmt.Errorf("DNS lookup error, %s, %v", name, err)
+	}
+	if len(ips) == 0 {
+		return "", fmt.Errorf("no DNS records, %s", name)
+	}
+	for _, ip := range ips {
+		return ip.String(), nil //XXX return only first one
+	}
+	return "", fmt.Errorf("no IP in DNS record for %s", name)
 }
