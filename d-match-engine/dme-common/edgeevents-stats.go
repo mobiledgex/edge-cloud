@@ -237,7 +237,7 @@ func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *E
 	metric.AddTag("devicemodel", gpsInfo.DeviceModel)
 	metric.AddDoubleVal("longitude", gpsInfo.GpsLocation.Longitude)
 	metric.AddDoubleVal("latitude", gpsInfo.GpsLocation.Latitude)
-	metric.AddTag("uniqueid", gpsInfo.SessionCookieKey.UniqueId)
+	metric.AddStringVal("uniqueid", gpsInfo.SessionCookieKey.UniqueId)
 	return metric
 }
 
