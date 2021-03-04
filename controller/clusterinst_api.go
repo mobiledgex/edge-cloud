@@ -628,7 +628,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		flavorMetric.Timestamp = *ts
 		flavorMetric.AddTag("cloudletorg", cloudlet.Key.Organization)
 		flavorMetric.AddTag("cloudlet", cloudlet.Key.Name)
-		flavorMetric.AddTag("flavor", fName)
+		flavorMetric.AddStringVal("flavor", fName)
 		flavorMetric.AddIntVal("count", fCount)
 		metrics = append(metrics, &flavorMetric)
 	}
@@ -1415,7 +1415,7 @@ func RecordClusterInstEvent(ctx context.Context, clusterInstKey *edgeproto.Clust
 	if !flavorApi.cache.Get(&info.Flavor, &nodeFlavor) {
 		log.SpanLog(ctx, log.DebugLevelMetrics, "flavor not found for recording clusterInst lifecycle", "flavor name", info.Flavor.Name)
 	} else {
-		metric.AddTag("flavor", info.Flavor.Name)
+		metric.AddStringVal("flavor", info.Flavor.Name)
 		metric.AddIntVal("ram", nodeFlavor.Ram)
 		metric.AddIntVal("vcpu", nodeFlavor.Vcpus)
 		metric.AddIntVal("disk", nodeFlavor.Disk)
