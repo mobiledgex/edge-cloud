@@ -1075,7 +1075,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	// If it is autoClusterInst and creation had failed, then deletion should proceed
 	// even though clusterinst is in use by Application Instance
-	if !(cctx.Undo && strings.HasPrefix(in.Key.ClusterKey.Name, cloudcommon.AutoClusterPrefix)) {
+	if !(cctx.Undo && cctx.AutoCluster) {
 		if appInstApi.UsesClusterInst(&in.Key) {
 			return errors.New("ClusterInst in use by Application Instance")
 		}
