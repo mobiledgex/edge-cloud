@@ -93,10 +93,12 @@ func (s *DmeStats) Start() {
 
 func (s *DmeStats) Stop() {
 	s.mux.Lock()
-	defer s.mux.Unlock()
 	close(s.stop)
+	s.mux.Unlock()
 	s.waitGroup.Wait()
+	s.mux.Lock()
 	s.stop = nil
+	s.mux.Unlock()
 }
 
 func (s *DmeStats) UpdateSettings(interval time.Duration) {
