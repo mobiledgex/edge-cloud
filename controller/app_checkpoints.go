@@ -85,14 +85,14 @@ func createAppUsageMetric(appInst *edgeproto.AppInst, appInfo *edgeproto.App, st
 	metric.AddTag("org", appInst.Key.AppKey.Organization)
 	metric.AddTag("app", appInst.Key.AppKey.Name)
 	metric.AddTag("ver", appInst.Key.AppKey.Version)
-	metric.AddStringVal("deployment", appInfo.Deployment)
+	metric.AddTag("deployment", appInfo.Deployment)
 	metric.AddStringVal("start", startUTC.Format(time.RFC3339))
 	metric.AddStringVal("end", endUTC.Format(time.RFC3339))
 	metric.AddDoubleVal("uptime", runTime.Seconds())
-	metric.AddStringVal("status", status)
+	metric.AddTag("status", status)
 
 	if appInfo.Deployment == cloudcommon.DeploymentTypeVM {
-		metric.AddStringVal("flavor", appInst.Flavor.Name)
+		metric.AddTag("flavor", appInst.Flavor.Name)
 	}
 
 	return &metric
