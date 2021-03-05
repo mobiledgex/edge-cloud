@@ -64,10 +64,12 @@ func (s *AutoProvStats) Start() {
 
 func (s *AutoProvStats) Stop() {
 	s.mux.Lock()
-	defer s.mux.Unlock()
 	close(s.stop)
+	s.mux.Unlock()
 	s.waitGroup.Wait()
+	s.mux.Lock()
 	s.stop = nil
+	s.mux.Unlock()
 }
 
 func (s *AutoProvStats) UpdateSettings(intervalSec float64) {
