@@ -40,7 +40,6 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 
 	dir := pwd + "/envoy/" + name
 	log.SpanLog(ctx, log.DebugLevelInfra, "envoy remote dir", "name", name, "dir", dir)
-
 	err = pc.Run(client, "mkdir -p "+dir)
 	if err != nil {
 		return err
@@ -80,9 +79,11 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	cmdArgs = append(cmdArgs, []string{
 		"-v", certsDir + ":/etc/envoy/certs",
 		"-v", accesslogFile + ":/tmp/access.log",
-		"-v", eyamlName + ":/etc/envoy/envoy.yaml",
-		"-u", "1000:1000",
-		"docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@" + cloudcommon.EnvoyImageDigest}...)
+		"-v", eyamlName + ":/etc/envoy/envoy.yaml"}...)
+	if opts.DockerUser != "" {
+		cmdArgs = append(cmdArgs, []string{"-u", fmt.Sprintf("%s:%s", opts.DockerUser, opts.DockerUser)}...)
+	}
+	cmdArgs = append(cmdArgs, "docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@"+cloudcommon.EnvoyImageDigest)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
