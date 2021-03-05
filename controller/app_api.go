@@ -429,8 +429,8 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	start := time.Now()
-	log.SpanLog(ctx, log.DebugLevelApi, "CreateApp begin ApplySTMWait", "app", in.Key.String())
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		log.SpanLog(ctx, log.DebugLevelApi, "CreateApp begin ApplySTMWait", "app", in.Key.String())
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
@@ -443,10 +443,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, in)
+		elapsed := time.Since(start)
+		log.SpanLog(ctx, log.DebugLevelApi, "CreateApp finish ApplySTMWait", "app", in.Key.String(), "elapsed", elapsed, "err", err)
 		return nil
 	})
-	elapsed := time.Since(start)
-	log.SpanLog(ctx, log.DebugLevelApi, "CreateApp finish ApplySTMWait", "app", in.Key.String(), "elapsed", elapsed, "err", err)
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateApp done", "app", in.Key.String())
 	return &edgeproto.Result{}, err
 }
 
