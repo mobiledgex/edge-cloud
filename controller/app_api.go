@@ -241,6 +241,7 @@ func validateSkipHcPorts(app *edgeproto.App) error {
 
 // Configure and validate App. Common code for Create and Update.
 func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edgeproto.App, revision string) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "configureApp", "app", in.Key.String())
 	var err error
 	if s.AndroidPackageConflicts(in) {
 		return fmt.Errorf("AndroidPackageName: %s in use by another App", in.AndroidPackageName)
@@ -420,16 +421,20 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 }
 
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateApp", "app", in.Key.String())
 	var err error
 
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
 
+	start := time.Now()
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		log.SpanLog(ctx, log.DebugLevelApi, "CreateApp begin ApplySTMWait", "app", in.Key.String())
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
+
 		err = s.configureApp(ctx, stm, in, in.Revision)
 		if err != nil {
 			return err
@@ -438,8 +443,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, in)
+		elapsed := time.Since(start)
+		log.SpanLog(ctx, log.DebugLevelApi, "CreateApp finish ApplySTMWait", "app", in.Key.String(), "elapsed", elapsed, "err", err)
 		return nil
 	})
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateApp done", "app", in.Key.String())
 	return &edgeproto.Result{}, err
 }
 
@@ -685,6 +693,7 @@ func (s *AppApi) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppA
 }
 
 func validateAppConfigsForDeployment(ctx context.Context, configs []*edgeproto.ConfigFile, deployment string) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validateAppConfigsForDeployment")
 	for _, cfg := range configs {
 		invalid := false
 		switch cfg.Kind {
@@ -694,6 +703,7 @@ func validateAppConfigsForDeployment(ctx context.Context, configs []*edgeproto.C
 			}
 			// Validate that this is a valid url
 			_, err := cloudcommon.GetDeploymentManifest(ctx, nil, cfg.Config)
+			log.SpanLog(ctx, log.DebugLevelApi, "error getting deployment manifest for app", "err", err)
 			if err != nil {
 				return err
 			}
@@ -709,6 +719,7 @@ func validateAppConfigsForDeployment(ctx context.Context, configs []*edgeproto.C
 			return fmt.Errorf("Empty config for config kind %s", cfg.Kind)
 		}
 	}
+	log.SpanLog(ctx, log.DebugLevelApi, "validateAppConfigsForDeployment success")
 	return nil
 }
 
