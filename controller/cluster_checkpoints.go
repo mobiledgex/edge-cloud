@@ -81,7 +81,7 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 	metric.AddTag("cloudlet", cluster.Key.CloudletKey.Name)
 	metric.AddTag("cluster", cluster.Key.ClusterKey.Name)
 	metric.AddTag("clusterorg", cluster.Key.Organization)
-	metric.AddTag("flavor", cluster.Flavor.Name)
+	metric.AddStringVal("flavor", cluster.Flavor.Name)
 	metric.AddIntVal("nodecount", uint64(cluster.NumMasters+cluster.NumNodes))
 	metric.AddStringVal("ipaccess", cluster.IpAccess.String())
 	metric.AddStringVal("start", startUTC.Format(time.RFC3339))
@@ -92,7 +92,7 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 	} else {
 		metric.AddTag("org", cluster.Key.Organization)
 	}
-	metric.AddTag("status", status)
+	metric.AddStringVal("status", status)
 	return &metric
 }
 
