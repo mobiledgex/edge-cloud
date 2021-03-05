@@ -338,6 +338,7 @@ type Options struct {
 	DockerPublishPorts bool
 	DockerNetwork      string
 	Cert               *access.TLSCert
+	DockerUser         string
 }
 
 type Op func(opts *Options)
@@ -358,6 +359,12 @@ func WithTLSCert(cert *access.TLSCert) Op {
 	return func(opts *Options) {
 		opts.Cert = cert
 		opts.Cert.CommonName = strings.Replace(opts.Cert.CommonName, "*", "_", 1)
+	}
+}
+
+func WithDockerUser(user string) Op {
+	return func(opts *Options) {
+		opts.DockerUser = user
 	}
 }
 
