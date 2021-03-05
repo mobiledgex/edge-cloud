@@ -95,6 +95,7 @@ func Init(ctx context.Context, clients map[string]ssh.Client, inAccessApi *acces
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
 func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, platformType string, client ssh.Client, commercialCerts bool) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "GetRootLbCerts", "commonName", commonName)
 	_, found := noSudoMap[platformType]
 	if found {
 		sudoType = pc.NoSudo
@@ -193,7 +194,11 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls key file to rootlb", "err", err)
 			return fmt.Errorf("failed to write tls cert file to rootlb, %v", err)
 		}
-		err = pc.Run(client, fmt.Sprintf("bash %s -d %s -c %s -k %s -e %s", AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile), cloudcommon.EnvoyImageDigest))
+		sudoString := ""
+		if sudoType == pc.SudoOn {
+			sudoString = "sudo "
+		}
+		err = pc.Run(client, fmt.Sprintf("%sbash %s -d %s -c %s -k %s -e %s", sudoString, AtomicCertsUpdater, certsDir, filepath.Base(certFile), filepath.Base(keyFile), cloudcommon.EnvoyImageDigest))
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to write tls cert file to rootlb", "err", err)
 			return fmt.Errorf("failed to atomically update tls certs: %v", err)
@@ -278,6 +283,7 @@ func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonName
 }
 
 func NewDedicatedLB(ctx context.Context, key *edgeproto.CloudletKey, name string, client ssh.Client, nodeMgr *node.NodeMgr) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "NewDedicatedLB", "name", name)
 	out, err := client.Output("pwd")
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get pwd", "name", name, "err", err)
