@@ -429,7 +429,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	start := time.Now()
-	log.SpanLog(ctx, log.DebugLevelApi, "CreateApp, begin ApplySTMWait", "app", in.Key.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateApp begin ApplySTMWait", "app", in.Key.String())
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
