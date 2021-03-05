@@ -71,10 +71,12 @@ func (e *EdgeEventStats) Start() {
 
 func (e *EdgeEventStats) Stop() {
 	e.mux.Lock()
-	defer e.mux.Unlock()
 	close(e.stop)
+	e.mux.Unlock()
 	e.waitGroup.Wait()
+	e.mux.Lock()
 	e.stop = nil
+	e.mux.Unlock()
 }
 
 func (e *EdgeEventStats) UpdateSettings(interval time.Duration) {
