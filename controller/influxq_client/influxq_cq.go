@@ -44,11 +44,8 @@ func (q *InfluxQ) AddContinuousQuery(cq *ContinuousQuerySettings, numReceivers i
 	return done
 }
 
-func (q *InfluxQ) UpdateContinuousQuery(cq *ContinuousQuerySettings) {
-
-}
-
 // Create a continuous query
+// TODO: Update CQs by dropping unwanted cqs
 func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *ContinuousQueryCreationResult {
 	res := &ContinuousQueryCreationResult{}
 	if q.done {
@@ -101,5 +98,3 @@ func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *Continuous
 	}
 	return res
 }
-
-// TODO: Drop CQ on update settings
