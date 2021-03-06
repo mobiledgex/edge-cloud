@@ -358,6 +358,10 @@ func (s *AppInstApi) checkForAppinstCollisions(ctx context.Context, key *edgepro
 
 	for _, data := range s.cache.Objs {
 		val := data.Obj
+		if val.Key.Matches(key) {
+			// exactly the same
+			return key.ExistsError()
+		}
 		existingKeyString := val.Key.String()
 		existingSanitizedKey := util.DNSSanitize(existingKeyString)
 		if sanitizedKey == existingSanitizedKey && keyString != existingKeyString {
