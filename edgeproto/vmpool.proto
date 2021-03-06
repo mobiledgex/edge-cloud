@@ -104,6 +104,7 @@ message VMPool {
   option (protogen.generate_cache) = true;
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.notify_cache) = true;
+  option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Status,Vms:#.Flavor";
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
