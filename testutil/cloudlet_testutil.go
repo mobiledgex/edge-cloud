@@ -757,9 +757,9 @@ func (r *Run) CloudletApi_CloudletResourceUsage(data *[]edgeproto.CloudletResour
 				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
 				r.logErr(fmt.Sprintf("CloudletApi_CloudletResourceUsage[%d]", ii), err)
 			} else {
-				outp, ok := dataOut.(*[]edgeproto.InfraResourcesSnapshot)
+				outp, ok := dataOut.(*[]edgeproto.CloudletResourceUsage)
 				if !ok {
-					panic(fmt.Sprintf("RunCloudletApi_CloudletResourceUsage expected dataOut type *[]edgeproto.InfraResourcesSnapshot, but was %T", dataOut))
+					panic(fmt.Sprintf("RunCloudletApi_CloudletResourceUsage expected dataOut type *[]edgeproto.CloudletResourceUsage, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
 			}
@@ -1105,13 +1105,13 @@ func (s *CliClient) GetCloudletResourceQuotaProps(ctx context.Context, in *edgep
 	return &out, err
 }
 
-func (s *ApiClient) GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletResourceUsage) (*edgeproto.InfraResourcesSnapshot, error) {
+func (s *ApiClient) GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletResourceUsage) (*edgeproto.CloudletResourceUsage, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	return api.GetCloudletResourceUsage(ctx, in)
 }
 
-func (s *CliClient) GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletResourceUsage) (*edgeproto.InfraResourcesSnapshot, error) {
-	out := edgeproto.InfraResourcesSnapshot{}
+func (s *CliClient) GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletResourceUsage) (*edgeproto.CloudletResourceUsage, error) {
+	out := edgeproto.CloudletResourceUsage{}
 	args := append(s.BaseArgs, "controller", "GetCloudletResourceUsage")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
@@ -1201,7 +1201,7 @@ type CloudletApiClient interface {
 	GetCloudletManifest(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.CloudletManifest, error)
 	GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error)
 	GetCloudletResourceQuotaProps(ctx context.Context, in *edgeproto.CloudletResourceQuotaProps) (*edgeproto.CloudletResourceQuotaProps, error)
-	GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletResourceUsage) (*edgeproto.InfraResourcesSnapshot, error)
+	GetCloudletResourceUsage(ctx context.Context, in *edgeproto.CloudletResourceUsage) (*edgeproto.CloudletResourceUsage, error)
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)
