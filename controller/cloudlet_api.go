@@ -561,9 +561,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				return err
 			}
 			err = validateResourceQuotaProps(resProps, in.ResourceQuotas)
-			if err != nil {
-				return err
-			}
 			if err == nil {
 				// Some platform types require caches
 				caches := getCaches(ctx, &vmPool)
