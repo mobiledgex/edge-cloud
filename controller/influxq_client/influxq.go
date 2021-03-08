@@ -28,6 +28,7 @@ var InfluxQPushCountTrigger = 50
 var InfluxQPushCountMax = 5000
 var InfluxQPrecision = "us"
 var InfluxQReconnectDelay time.Duration = time.Second
+var InfluxQReconnectAttempts = 5
 
 type InfluxQ struct {
 	dbName                  string
@@ -68,6 +69,10 @@ func (q *InfluxQ) Start(addr string) error {
 	defer q.mux.Unlock()
 	q.client = cl
 	q.done = false
+	err = q.Initialize()
+	if err != nil {
+		return err
+	}
 	q.wg.Add(1)
 	go q.RunPush()
 	return nil
@@ -80,48 +85,57 @@ func (q *InfluxQ) Stop() {
 	q.client.Close()
 }
 
-func (q *InfluxQ) RunPush() {
-	for !q.done {
-		if !q.dbcreated {
+func (q *InfluxQ) Initialize() error {
+	if !q.dbcreated {
+		for i := 1; i <= InfluxQReconnectAttempts; i++ {
 			// make sure main db is created otherwise
 			// batch point writes will fail
 			_, err := q.QueryDB(fmt.Sprintf("create database %s", q.dbName))
 			if err != nil {
 				if _, ok := err.(net.Error); !ok {
 					// only log for non-network errors
-					log.DebugLog(log.DebugLevelMetrics,
-						"create database", "err", err)
+					log.DebugLog(log.DebugLevelMetrics, "create database", "err", err)
 				}
 				time.Sleep(InfluxQReconnectDelay)
+				if i == InfluxQReconnectAttempts {
+					return err
+				}
 				continue
-			}
-			q.dbcreated = true
-
-			// Create retention policies
-			for policy, done := range q.retentionPolicies {
-				res := q.UpdateDefaultRetentionPolicy(policy)
-				for i := 0; i < cap(done); i++ {
-					done <- res
-				}
-				if res != nil {
-					log.DebugLog(log.DebugLevelMetrics, "create retention policy", "policy", policy, "err", err)
-				}
-				close(done)
-			}
-
-			// Create continuous queries
-			for cqs, done := range q.continuousQuerySettings {
-				res := q.CreateContinuousQuery(cqs)
-				for i := 0; i < cap(done); i++ {
-					done <- res
-				}
-				if res.Err != nil {
-					log.DebugLog(log.DebugLevelMetrics, "create continuous query", "cq", cqs, "err", err)
-				}
-				close(done)
+			} else {
+				q.dbcreated = true
+				break
 			}
 		}
 
+		// Create retention policies
+		for policy, done := range q.retentionPolicies {
+			res := q.UpdateDefaultRetentionPolicy(policy)
+			for i := 0; i < cap(done); i++ {
+				done <- res
+			}
+			if res.Err != nil {
+				log.DebugLog(log.DebugLevelMetrics, "create retention policy", "policy", policy, "err", res.Err)
+			}
+			close(done)
+		}
+
+		// Create continuous queries
+		for cqs, done := range q.continuousQuerySettings {
+			res := q.CreateContinuousQuery(cqs)
+			for i := 0; i < cap(done); i++ {
+				done <- res
+			}
+			if res.Err != nil {
+				log.DebugLog(log.DebugLevelMetrics, "create continuous query", "cq", cqs, "err", res.Err)
+			}
+			close(done)
+		}
+	}
+	return nil
+}
+
+func (q *InfluxQ) RunPush() {
+	for !q.done {
 		select {
 		case <-q.doPush:
 		case <-time.After(InfluxQPushInterval):
@@ -271,11 +285,11 @@ func (q *InfluxQ) AddDefaultRetentionPolicy(retentionTime time.Duration, numRece
 func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) *RetentionPolicyCreationResult {
 	res := &RetentionPolicyCreationResult{}
 	if q.done {
-		res.Err = fmt.Errorf("%s db finished, so cannot create retention policy", q.dbName)
+		res.Err = fmt.Errorf("retention policy creation failed - %s db finished", q.dbName)
 		return res
 	}
 	if !q.dbcreated {
-		res.Err = fmt.Errorf("%s db not created yet, so cannot create retention policy", q.dbName)
+		res.Err = fmt.Errorf("retention policy creation failed - %s db not created yet, ", q.dbName)
 		return res
 	}
 	shard := time.Duration(24 * time.Hour)
