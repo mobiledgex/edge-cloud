@@ -264,6 +264,7 @@ func main() {
 					err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
 					if err != nil {
 						log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
+						err = nil
 					}
 					myCloudletInfo.ResourcesSnapshot = *resources
 				}
