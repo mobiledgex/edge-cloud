@@ -30,6 +30,7 @@ cloudlets:
 - key:
     organization: DMUUS
     name: cloud2
+  vmpool: vmpool1
 
 flavors:
 - key:
@@ -127,6 +128,14 @@ vmpools:
   - name: vm4
     netinfo:
       internalip: 192.168.100.104
+- key:
+    organization: DMUUS
+    name: vmpool2
+  vms:
+  - name: vm1
+    netinfo:
+      externalip: 192.168.2.101
+      internalip: 192.168.200.101
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
@@ -186,6 +195,12 @@ func TestCRM(t *testing.T) {
 	accessKeyFile := "/tmp/accesskey_crm_unittest"
 	err = ioutil.WriteFile(accessKeyFile, []byte(accessKey.PrivatePEM), 0600)
 	require.Nil(t, err)
+
+	// update VMPool object before creating cloudlet
+	for ii := range data.VmPools {
+		ctrlHandler.VMPoolCache.Update(ctx, &data.VmPools[ii], 0)
+	}
+
 	// set Cloudlet state to CRM_INIT to allow crm notify exchange to proceed
 	cdata := data.Cloudlets[0]
 	cdata.State = edgeproto.TrackedState_CRM_INITOK
@@ -222,15 +237,13 @@ func TestCRM(t *testing.T) {
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	}
-	for ii := range data.VmPools {
-		ctrlHandler.VMPoolCache.Update(ctx, &data.VmPools[ii], 0)
-	}
 	notify.WaitFor(&controllerData.FlavorCache, 3)
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
 	log.SpanLog(ctx, log.DebugLevelApi, "wait for instances")
 	notify.WaitFor(&controllerData.ClusterInstCache, 2)
 	notify.WaitFor(&controllerData.AppInstCache, 2)
+	// ensure that only vmpool object associated with cloudlet is received
 	notify.WaitFor(&controllerData.VMPoolCache, 1)
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
