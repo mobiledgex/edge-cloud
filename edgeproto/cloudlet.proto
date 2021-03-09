@@ -314,13 +314,17 @@ message CloudletProps {
   PlatformType platform_type = 1;
   // Single Key-Value pair of env var to be passed to CRM
   map<string, PropertyInfo> properties = 2;
+  // Organization
+  string organization = 3;
 }
 
 message CloudletResourceQuotaProps {
   // Platform type
   PlatformType platform_type = 1;
   // Cloudlet resource properties
-  repeated InfraResource props = 2 [(gogoproto.nullable) = false];
+  repeated InfraResource properties = 2 [(gogoproto.nullable) = false];
+  // Organization
+  string organization = 3;
 }
 
 message CloudletResourceUsage {
@@ -328,6 +332,8 @@ message CloudletResourceUsage {
   CloudletKey key = 1 [(gogoproto.nullable) = false];
   // Show Infra based usage
   bool infra_usage = 2;
+  // Infra Resource information
+  repeated InfraResource info = 3 [(gogoproto.nullable) = false];
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
 }
 
@@ -391,7 +397,7 @@ service CloudletApi {
       post: "/get/cloudlet/props"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
     option (protogen.method_noconfig) = "Properties";
     option (protogen.method_also_required) = "PlatformType";
   }
@@ -401,17 +407,18 @@ service CloudletApi {
       post: "/get/cloudlet/resource/props"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
     option (protogen.method_noconfig) = "Properties";
     option (protogen.method_also_required) = "PlatformType";
   }
   // Get Cloudlet resource information. Shows cloudlet resources used and their limits
-  rpc GetCloudletResourceUsage(CloudletResourceUsage) returns (InfraResourcesSnapshot) {
+  rpc GetCloudletResourceUsage(CloudletResourceUsage) returns (CloudletResourceUsage) {
     option (google.api.http) = {
       post: "/get/cloudlet/resource/usage"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.method_noconfig) = "Info";
   }
 
   // Add Optional Resource tag table
