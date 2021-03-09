@@ -415,7 +415,7 @@ func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
 func validateResourceQuotaProps(resProps *edgeproto.CloudletResourceQuotaProps, resourceQuotas []edgeproto.ResourceQuota) error {
 	resPropsMap := make(map[string]struct{})
 	resPropsNames := []string{}
-	for _, prop := range resProps.Props {
+	for _, prop := range resProps.Properties {
 		resPropsMap[prop.Name] = struct{}{}
 		resPropsNames = append(resPropsNames, prop.Name)
 	}
@@ -2077,9 +2077,9 @@ func getResourceUsage(ctx context.Context, stm concurrency.STM, cloudlet *edgepr
 	return out, nil
 }
 
-func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgeproto.CloudletResourceUsage) (*edgeproto.InfraResourcesSnapshot, error) {
+func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgeproto.CloudletResourceUsage) (*edgeproto.CloudletResourceUsage, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "GetCloudletResourceUsage", "key", usage.Key)
-	infraResources := edgeproto.InfraResourcesSnapshot{}
+	cloudletResUsage := edgeproto.CloudletResourceUsage{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &usage.Key, &cloudlet) {
@@ -2095,21 +2095,22 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 		if err != nil {
 			return err
 		}
+		cloudletResUsage.Key = usage.Key
+		cloudletResUsage.InfraUsage = usage.InfraUsage
+		cloudletResUsage.Info = cloudletInfo.ResourcesSnapshot.Info
 		resInfo := []edgeproto.InfraResource{}
-		infraResources = edgeproto.InfraResourcesSnapshot{}
-		infraResources.Info = cloudletInfo.ResourcesSnapshot.Info
 		if !usage.InfraUsage {
-			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, allVmResources, usage.InfraUsage)
+			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, cloudletInfo.ResourcesSnapshot.Info, allVmResources, usage.InfraUsage)
 		} else {
-			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, infraResources.Info, diffVmResources, usage.InfraUsage)
+			resInfo, err = getResourceUsage(ctx, stm, &cloudlet, cloudletInfo.ResourcesSnapshot.Info, diffVmResources, usage.InfraUsage)
 		}
 		if err != nil {
 			return err
 		}
-		infraResources.Info = resInfo
+		cloudletResUsage.Info = resInfo
 		return nil
 	})
-	return &infraResources, err
+	return &cloudletResUsage, err
 }
 
 func GetPlatformVMsResources(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) ([]edgeproto.VMResource, error) {
@@ -2139,13 +2140,13 @@ func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 	}
 
 	quotaProps := edgeproto.CloudletResourceQuotaProps{}
-	quotaProps.Props = append(quotaProps.Props, cloudcommon.CloudletResources...)
+	quotaProps.Properties = append(quotaProps.Properties, cloudcommon.CloudletResources...)
 
 	pfQuotaProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
 	if err != nil {
 		return nil, err
 	}
-	quotaProps.Props = append(quotaProps.Props, pfQuotaProps.Props...)
+	quotaProps.Properties = append(quotaProps.Properties, pfQuotaProps.Properties...)
 
 	return &quotaProps, nil
 }
