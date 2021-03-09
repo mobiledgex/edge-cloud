@@ -121,6 +121,7 @@ type SendRecv struct {
 	cloudletSend       *CloudletSend
 	clusterInstSend    *ClusterInstSend
 	appInstSend        *AppInstSend
+	vmPoolSend         *VMPoolSend
 	TrustPolicySend    *TrustPolicySend
 	sendRunning        chan struct{}
 	recvRunning        chan struct{}
@@ -154,6 +155,8 @@ func (s *SendRecv) registerSend(send NotifySend) {
 	switch v := send.(type) {
 	case *AppSend:
 		s.appSend = v
+	case *VMPoolSend:
+		s.vmPoolSend = v
 	case *CloudletSend:
 		s.cloudletSend = v
 	case *ClusterInstSend:
