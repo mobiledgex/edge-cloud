@@ -44,6 +44,15 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 		if !s.sendrecv.hasCloudletKey(key) {
 			return false
 		}
+		cloudlet := edgeproto.Cloudlet{}
+		var modRev int64
+		// also trigger send of vmpool object
+		if s.handler.GetWithRev(key, &cloudlet, &modRev) && cloudlet.VmPool != "" {
+			s.sendrecv.vmPoolSend.updateInternal(ctx, &edgeproto.VMPoolKey{
+				Name:         cloudlet.VmPool,
+				Organization: key.Organization,
+			}, 0)
+		}
 	}
 	return true
 }
@@ -72,6 +81,26 @@ func (s *ExecRequestSend) UpdateOk(ctx context.Context, msg *edgeproto.ExecReque
 	return true
 }
 
+func (s *VMPoolSend) UpdateOk(ctx context.Context, key *edgeproto.VMPoolKey) bool {
+	if s.sendrecv.filterCloudletKeys {
+		for cKey, _ := range s.sendrecv.cloudletKeys {
+			cloudlet := edgeproto.Cloudlet{}
+			var modRev int64
+			if cKey.Organization != key.Organization {
+				continue
+			}
+			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
+				if cloudlet.VmPool != key.Name {
+					continue
+				}
+				return true
+			}
+		}
+		return false
+	}
+	return true
+}
+
 func (s *AppSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
@@ -85,6 +114,10 @@ func (s *CloudletSend) UpdateAllOk() bool {
 }
 
 func (s *ClusterInstSend) UpdateAllOk() bool {
+	return !s.sendrecv.filterCloudletKeys
+}
+
+func (s *VMPoolSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
 

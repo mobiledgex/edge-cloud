@@ -68,6 +68,10 @@ type DmeStats struct {
 	stop      chan struct{}
 }
 
+func init() {
+	*ScaleID = cloudcommon.Hostname()
+}
+
 func NewDmeStats(interval time.Duration, numShards uint, send func(ctx context.Context, metric *edgeproto.Metric) bool) *DmeStats {
 	s := DmeStats{}
 	s.shards = make([]MapShard, numShards, numShards)
@@ -174,7 +178,7 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("ver", key.AppKey.Version)
 	metric.AddTag("cloudletorg", MyCloudletKey.Organization)
 	metric.AddTag("cloudlet", MyCloudletKey.Name)
-	metric.AddStringVal("id", *ScaleID)
+	metric.AddTag("dmeId", *ScaleID)
 	metric.AddTag("method", key.Method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)

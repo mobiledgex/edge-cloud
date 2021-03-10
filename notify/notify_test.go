@@ -158,7 +158,12 @@ func TestNotifyBasic(t *testing.T) {
 	require.Equal(t, 0, len(crmHandler.AppCache.Objs), "num apps")
 	require.Equal(t, 0, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	// crm must send cloudletinfo to receive clusterInsts and appInsts
-	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[0], 6)
+	serverHandler.VMPoolCache.Update(ctx, &testutil.VMPoolData[0], 0)
+	serverHandler.VMPoolCache.Update(ctx, &testutil.VMPoolData[1], 0)
+	// add vmpool for cloudlet
+	vmpoolCloudlet := testutil.CloudletData[0]
+	vmpoolCloudlet.VmPool = testutil.VMPoolData[0].Key.Name
+	serverHandler.CloudletCache.Update(ctx, &vmpoolCloudlet, 6)
 	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 7)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[0], 8)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[1], 9)
@@ -184,11 +189,13 @@ func TestNotifyBasic(t *testing.T) {
 	crmHandler.WaitForClusterInsts(2)
 	crmHandler.WaitForApps(1)
 	crmHandler.WaitForAppInsts(2)
+	crmHandler.WaitForVMPools(1)
 	require.Equal(t, 1, len(crmHandler.CloudletCache.Objs), "num cloudlets")
 	require.Equal(t, 3, len(crmHandler.FlavorCache.Objs), "num flavors")
 	require.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
 	require.Equal(t, 1, len(crmHandler.AppCache.Objs), "num apps")
 	require.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
+	require.Equal(t, 1, len(crmHandler.VMPoolCache.Objs), "num vmPools")
 	// verify modRef values
 	appBuf := edgeproto.App{}
 	flavorBuf := edgeproto.Flavor{}
