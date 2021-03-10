@@ -221,6 +221,9 @@ func (s *StreamObjApi) CleanupStreamObj(ctx context.Context, in *edgeproto.Strea
 // changes we copy to status that is saved to etcd is only the diff
 // from the last update.
 func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.StatusInfo, key *edgeproto.AppInstKey) {
+	if len(infoStatus.Msgs) <= 0 {
+		return
+	}
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		streamObj := edgeproto.StreamObj{}
 		if !s.store.STMGet(stm, key, &streamObj) {

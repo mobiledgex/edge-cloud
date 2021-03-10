@@ -12,6 +12,8 @@ settings:
   createclusterinsttimeout: 30m
   updateclusterinsttimeout: 20m
   deleteclusterinsttimeout: 20m
+  createcloudlettimeout: 30m
+  updatecloudlettimeout: 20m
   loadbalancermaxportrange: 100
   maxtrackeddmeclients: 100
   chefclientinterval: 10m

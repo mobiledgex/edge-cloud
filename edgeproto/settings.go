@@ -89,6 +89,10 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.UpdateClusterInstTimeout), 0)
 		case SettingsFieldDeleteClusterInstTimeout:
 			v.CheckGT(f, int64(s.DeleteClusterInstTimeout), 0)
+		case SettingsFieldCreateCloudletTimeout:
+			v.CheckGT(f, int64(s.CreateCloudletTimeout), 0)
+		case SettingsFieldUpdateCloudletTimeout:
+			v.CheckGT(f, int64(s.UpdateCloudletTimeout), 0)
 		case SettingsFieldMasterNodeFlavor:
 			// no validation
 		case SettingsFieldMaxTrackedDmeClients:
@@ -140,6 +144,8 @@ func GetDefaultSettings() *Settings {
 	s.CreateClusterInstTimeout = Duration(30 * time.Minute)
 	s.UpdateClusterInstTimeout = Duration(20 * time.Minute)
 	s.DeleteClusterInstTimeout = Duration(20 * time.Minute)
+	s.CreateCloudletTimeout = Duration(30 * time.Minute)
+	s.UpdateCloudletTimeout = Duration(20 * time.Minute)
 	s.MasterNodeFlavor = ""
 	s.MaxTrackedDmeClients = 100
 	s.ChefClientInterval = Duration(10 * time.Minute)
