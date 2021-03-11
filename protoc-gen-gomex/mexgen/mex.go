@@ -1626,8 +1626,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		} else {
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "watch event for {{.Name}}")
-		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)], "status", info.Status)
+		log.SpanLog(ctx, log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)])
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {

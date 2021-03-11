@@ -12,6 +12,8 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
+  createcloudlettimeout: 10s
+  updatecloudlettimeout: 2s
   updatetrustpolicytimeout: 5s
   masternodeflavor: x1.small
   loadbalancermaxportrange: 100

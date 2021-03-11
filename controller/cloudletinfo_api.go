@@ -86,10 +86,23 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		newState = edgeproto.TrackedState_READY
 	case dme.CloudletState_CLOUDLET_STATE_UPGRADE:
 		newState = edgeproto.TrackedState_UPDATING
+	case dme.CloudletState_CLOUDLET_STATE_ERRORS:
+		if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
+			cloudlet.State == edgeproto.TrackedState_UPDATING {
+			newState = edgeproto.TrackedState_UPDATE_ERROR
+		} else if cloudlet.State == edgeproto.TrackedState_CREATE_REQUESTED ||
+			cloudlet.State == edgeproto.TrackedState_CREATING {
+			newState = edgeproto.TrackedState_CREATE_ERROR
+		}
 	default:
 		log.SpanLog(ctx, log.DebugLevelNotify, "Skip cloudletInfo state handling", "key", in.Key, "state", in.State)
 		return
 	}
+
+	// update only diff of status msgs
+	streamKey := edgeproto.GetStreamKeyFromCloudletKey(&in.Key)
+	streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
+
 	newCloudlet := edgeproto.Cloudlet{}
 	key := &in.Key
 	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -103,6 +116,12 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		}
 		if newCloudlet.State != newState {
 			newCloudlet.State = newState
+			if in.Errors != nil {
+				newCloudlet.Errors = in.Errors
+			}
+			if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
+				newCloudlet.Errors = nil
+			}
 			updateObj = true
 		}
 		if newCloudlet.ContainerVersion != in.ContainerVersion {
