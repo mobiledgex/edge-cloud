@@ -827,12 +827,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		err = validateResources(ctx, stm, in, nil, &cloudlet, &info, &refs)
+		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
 		if err != nil {
 			return err
 		}
-
-		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
+		err = validateResources(ctx, stm, in, nil, &cloudlet, &info, &refs)
 		if err != nil {
 			return err
 		}
