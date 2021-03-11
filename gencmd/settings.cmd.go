@@ -221,6 +221,8 @@ var SettingsOptionalArgs = []string{
 	"persistentconnectionmetricscollectioninterval",
 	"cleanupreservableautoclusteridletime",
 	"influxdbcloudletusagemetricsretention",
+	"createcloudlettimeout",
+	"updatecloudlettimeout",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -250,6 +252,8 @@ var SettingsComments = map[string]string{
 	"persistentconnectionmetricscollectioninterval": "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
 	"cleanupreservableautoclusteridletime":          "Idle reservable ClusterInst clean up time",
 	"influxdbcloudletusagemetricsretention":         "Default influxDB cloudlet usage metrics retention policy (duration)",
+	"createcloudlettimeout":                         "Create Cloudlet timeout (duration)",
+	"updatecloudlettimeout":                         "Update Cloudlet timeout (duration)",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
