@@ -2582,8 +2582,7 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 		} else {
 			curState = TrackedState_NOT_PRESENT
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "watch event for VMPool")
-		log.DebugLog(log.DebugLevelApi, "Watch event for VMPool", "key", key, "state", TrackedState_CamelName[int32(curState)], "status", info.Status)
+		log.SpanLog(ctx, log.DebugLevelApi, "Watch event for VMPool", "key", key, "state", TrackedState_CamelName[int32(curState)])
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {

@@ -273,6 +273,7 @@ message Cloudlet {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
