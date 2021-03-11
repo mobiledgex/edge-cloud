@@ -80,6 +80,14 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.PersistentConnectionMetricsCollectionInterval = edgeproto.GetDefaultSettings().PersistentConnectionMetricsCollectionInterval
 			modified = true
 		}
+		if cur.CreateCloudletTimeout == 0 {
+			cur.CreateCloudletTimeout = edgeproto.GetDefaultSettings().CreateCloudletTimeout
+			modified = true
+		}
+		if cur.UpdateCloudletTimeout == 0 {
+			cur.UpdateCloudletTimeout = edgeproto.GetDefaultSettings().UpdateCloudletTimeout
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}
