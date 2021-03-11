@@ -71,6 +71,12 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 			if err := cur.Validate(nil); err != nil {
 				return err
 			}
+			for ii, vm := range cur.Vms {
+				if vm.State == edgeproto.VMState_VM_FORCE_FREE {
+					cur.Vms[ii].State = edgeproto.VMState_VM_FREE
+					changed += 1
+				}
+			}
 			if changed == 0 {
 				return nil
 			}
@@ -230,15 +236,16 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 		}
 		for ii, vm := range cur.Vms {
 			for updateVMName, updateVM := range vms {
-				if updateVM.State == edgeproto.VMState_VM_ADD || updateVM.State == edgeproto.VMState_VM_UPDATE {
-					err := validateVMNetInfo(&vm, &updateVM)
-					if err != nil {
-						return err
-					}
-				}
 				if vm.Name == updateVMName {
 					if updateVM.State == edgeproto.VMState_VM_ADD {
 						return fmt.Errorf("VM %s already exists as part of VM pool", vm.Name)
+					}
+				} else {
+					if updateVM.State == edgeproto.VMState_VM_ADD || updateVM.State == edgeproto.VMState_VM_UPDATE {
+						err := validateVMNetInfo(&vm, &updateVM)
+						if err != nil {
+							return err
+						}
 					}
 				}
 			}
