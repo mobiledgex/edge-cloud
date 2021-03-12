@@ -806,7 +806,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	if !ignoreCRMState(cctx) {
 		var cloudletPlatform pf.Platform
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+		cloudletPlatform, err := pfutils.GetPlatform(ctx, cur.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err != nil {
 			return err
 		}
@@ -1819,7 +1819,7 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
 				gpusInfo, ok := resInfo[cloudcommon.ResourceGpus]
 				if ok {
-					diskInfo.Value += 1
+					gpusInfo.Value += 1
 					resInfo[cloudcommon.ResourceGpus] = gpusInfo
 				}
 			}
@@ -1881,13 +1881,12 @@ func getResourceUsage(ctx context.Context, stm concurrency.STM, cloudlet *edgepr
 	if err != nil {
 		return nil, err
 	}
-	for resName, _ := range infraResInfoMap {
-		if diffResInfo, ok := diffResInfo[resName]; ok {
-			outInfo, ok := infraResInfoMap[resName]
-			if ok {
-				outInfo.Value += diffResInfo.Value
-				infraResInfoMap[resName] = outInfo
-			}
+	for resName, resInfo := range diffResInfo {
+		if infraResInfo, ok := infraResInfoMap[resName]; ok {
+			infraResInfo.Value += resInfo.Value
+			infraResInfoMap[resName] = infraResInfo
+		} else {
+			infraResInfoMap[resName] = resInfo
 		}
 	}
 	out := []edgeproto.InfraResource{}
