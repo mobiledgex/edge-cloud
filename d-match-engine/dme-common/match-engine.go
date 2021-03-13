@@ -1285,4 +1285,5 @@ func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeprot
 	autoProvStats.UpdateSettings(new.AutoDeployIntervalSec)
 	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
 	EEStats.UpdateSettings(time.Duration(new.PersistentConnectionMetricsCollectionInterval))
+	clientsMap.UpdateClientTimeout(new.AppinstClientCleanupInterval)
 }

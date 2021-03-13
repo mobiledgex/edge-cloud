@@ -223,6 +223,7 @@ var SettingsOptionalArgs = []string{
 	"influxdbcloudletusagemetricsretention",
 	"createcloudlettimeout",
 	"updatecloudlettimeout",
+	"appinstclientcleanupinterval",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -254,6 +255,7 @@ var SettingsComments = map[string]string{
 	"influxdbcloudletusagemetricsretention":         "Default influxDB cloudlet usage metrics retention policy (duration)",
 	"createcloudlettimeout":                         "Create Cloudlet timeout (duration)",
 	"updatecloudlettimeout":                         "Update Cloudlet timeout (duration)",
+	"appinstclientcleanupinterval":                  "AppInstClient cleanup thread run interval",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

@@ -115,6 +115,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.PersistentConnectionMetricsCollectionInterval), 0)
 		case SettingsFieldCleanupReservableAutoClusterIdletime:
 			v.CheckGT(f, int64(s.CleanupReservableAutoClusterIdletime), 0)
+		case SettingsFieldAppinstClientCleanupInterval:
+			v.CheckGT(f, int64(s.AppinstClientCleanupInterval), int64(Duration(2*time.Second)))
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -157,6 +159,7 @@ func GetDefaultSettings() *Settings {
 	s.InfluxDbMetricsRetention = Duration(672 * time.Hour) // 28 days is a default
 	s.CleanupReservableAutoClusterIdletime = Duration(30 * time.Minute)
 	s.InfluxDbCloudletUsageMetricsRetention = Duration(8760 * time.Hour) // 1 year
+	s.AppinstClientCleanupInterval = Duration(60 * time.Minute)
 	return &s
 }
 

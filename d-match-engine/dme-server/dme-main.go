@@ -535,6 +535,7 @@ func main() {
 	defer dmecommon.EEStats.Stop()
 
 	dmecommon.InitAppInstClients()
+	defer dmecommon.StopAppInstClients()
 
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
