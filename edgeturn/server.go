@@ -293,7 +293,7 @@ func (t *HttpTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 		return nil, fmt.Errorf("missing required details in proxy value")
 	}
 	if proxyVal.InitURL != nil && proxyVal.InitURL.Scheme != "" {
-		r.Header.Add("X-Forwarded-Proto", proxyVal.InitURL.Scheme)
+		r.Header.Set("X-Forwarded-Proto", proxyVal.InitURL.Scheme)
 	}
 
 	stream, err := proxyVal.ProxySess.OpenStream()
