@@ -292,6 +292,10 @@ func (t *HttpTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 		TurnProxy.Remove(token)
 		return nil, fmt.Errorf("missing required details in proxy value")
 	}
+	if proxyVal.InitURL != nil && proxyVal.InitURL.Scheme != "" {
+		r.Header.Set("X-Forwarded-Proto", proxyVal.InitURL.Scheme)
+	}
+
 	stream, err := proxyVal.ProxySess.OpenStream()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open smux stream: %v", err)
