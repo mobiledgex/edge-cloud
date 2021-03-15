@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
@@ -97,4 +98,45 @@ func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *Continuous
 		return res
 	}
 	return res
+}
+
+// Aggregation functions for EdgeEvents latency stats continuous queries
+var LatencyAggregationFunctions = map[string]string{
+	"0s":         "sum(\"0s\")",
+	"5ms":        "sum(\"5ms\")",
+	"10ms":       "sum(\"10ms\")",
+	"25ms":       "sum(\"25ms\")",
+	"50ms":       "sum(\"50ms\")",
+	"100ms":      "sum(\"100ms\")",
+	"min":        "min(\"min\")",
+	"max":        "max(\"max\")",
+	"avg":        "sum(\"total\") / sum(\"numsamples\")",
+	"numsamples": "sum(\"numsamples\")",
+}
+
+func CreateLatencyContinuousQuerySettings(collectionInterval time.Duration, newDbName string, rpDone <-chan *RetentionPolicyCreationResult) *ContinuousQuerySettings {
+	return &ContinuousQuerySettings{
+		Measurement:               cloudcommon.LatencyMetric,
+		AggregationFunctions:      LatencyAggregationFunctions,
+		NewDbName:                 newDbName,
+		CollectionInterval:        collectionInterval,
+		RetentionPolicyName:       "autogen",
+		NewRetentionPolicyCreated: rpDone,
+	}
+}
+
+// Aggregation functions for EdgeEvents device info stats continuous queries
+var DeviceInfoAggregationFunctions = map[string]string{
+	"numsessions": "sum(\"numsessions\")",
+}
+
+func CreateDeviceInfoContinuousQuerySettings(collectionInterval time.Duration, newDbName string, rpDone <-chan *RetentionPolicyCreationResult) *ContinuousQuerySettings {
+	return &ContinuousQuerySettings{
+		Measurement:               cloudcommon.DeviceMetric,
+		AggregationFunctions:      DeviceInfoAggregationFunctions,
+		NewDbName:                 newDbName,
+		CollectionInterval:        collectionInterval,
+		RetentionPolicyName:       "autogen",
+		NewRetentionPolicyCreated: rpDone,
+	}
 }

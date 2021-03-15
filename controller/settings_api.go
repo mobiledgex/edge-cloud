@@ -8,7 +8,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -177,12 +177,12 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals {
 				for _, collectioninterval := range in.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
 					interval := collectioninterval.Interval
-					latencyCqSettings := dmecommon.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+					latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
 					resl := services.edgeEventsInfluxQ.CreateContinuousQuery(latencyCqSettings)
 					if resl.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
 						return resl.Err
 					}
-					deviceCqSettings := dmecommon.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+					deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
 					resd := services.edgeEventsInfluxQ.CreateContinuousQuery(deviceCqSettings)
 					if resd.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
 						return resd.Err

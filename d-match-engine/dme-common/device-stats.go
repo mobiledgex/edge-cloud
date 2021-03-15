@@ -2,10 +2,7 @@ package dmecommon
 
 import (
 	"sync"
-	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -46,20 +43,4 @@ func NewDeviceStat() *DeviceStat {
 
 func (d *DeviceStat) Update() {
 	d.NumSessions++
-}
-
-// Aggregation functions for device info continuous queries
-var DeviceInfoAggregationFunctions = map[string]string{
-	"numsessions": "sum(\"numsessions\")",
-}
-
-func CreateDeviceInfoContinuousQuerySettings(collectionInterval time.Duration, newDbName string, rpDone <-chan *influxq.RetentionPolicyCreationResult) *influxq.ContinuousQuerySettings {
-	return &influxq.ContinuousQuerySettings{
-		Measurement:               cloudcommon.DeviceMetric,
-		AggregationFunctions:      DeviceInfoAggregationFunctions,
-		NewDbName:                 newDbName,
-		CollectionInterval:        collectionInterval,
-		RetentionPolicyName:       "autogen",
-		NewRetentionPolicyCreated: rpDone,
-	}
 }

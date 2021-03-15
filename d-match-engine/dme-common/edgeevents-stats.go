@@ -6,7 +6,6 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -262,29 +261,4 @@ func initMetric(metricName string, ts types.Timestamp, appInstKey edgeproto.AppI
 	metric.AddTag("cluster", appInstKey.ClusterInstKey.ClusterKey.Name)
 	metric.AddTag("clusterorg", appInstKey.ClusterInstKey.Organization)
 	return metric
-}
-
-// Aggregation functions for latency continuous queries
-var LatencyAggregationFunctions = map[string]string{
-	"0s":         "sum(\"0s\")",
-	"5ms":        "sum(\"5ms\")",
-	"10ms":       "sum(\"10ms\")",
-	"25ms":       "sum(\"25ms\")",
-	"50ms":       "sum(\"50ms\")",
-	"100ms":      "sum(\"100ms\")",
-	"min":        "min(\"min\")",
-	"max":        "max(\"max\")",
-	"avg":        "sum(\"total\") / sum(\"numsamples\")",
-	"numsamples": "sum(\"numsamples\")",
-}
-
-func CreateLatencyContinuousQuerySettings(collectionInterval time.Duration, newDbName string, rpDone <-chan *influxq.RetentionPolicyCreationResult) *influxq.ContinuousQuerySettings {
-	return &influxq.ContinuousQuerySettings{
-		Measurement:               cloudcommon.LatencyMetric,
-		AggregationFunctions:      LatencyAggregationFunctions,
-		NewDbName:                 newDbName,
-		CollectionInterval:        collectionInterval,
-		RetentionPolicyName:       "autogen",
-		NewRetentionPolicyCreated: rpDone,
-	}
 }

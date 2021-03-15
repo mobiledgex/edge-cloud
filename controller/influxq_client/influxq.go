@@ -69,10 +69,6 @@ func (q *InfluxQ) Start(addr string) error {
 	defer q.mux.Unlock()
 	q.client = cl
 	q.done = false
-	err = q.Initialize()
-	if err != nil {
-		return err
-	}
 	q.wg.Add(1)
 	go q.RunPush()
 	return nil
@@ -85,9 +81,9 @@ func (q *InfluxQ) Stop() {
 	q.client.Close()
 }
 
-func (q *InfluxQ) Initialize() error {
-	if !q.dbcreated {
-		for i := 1; i <= InfluxQReconnectAttempts; i++ {
+func (q *InfluxQ) RunPush() {
+	for !q.done {
+		if !q.dbcreated {
 			// make sure main db is created otherwise
 			// batch point writes will fail
 			_, err := q.QueryDB(fmt.Sprintf("create database %s", q.dbName))
@@ -97,45 +93,36 @@ func (q *InfluxQ) Initialize() error {
 					log.DebugLog(log.DebugLevelMetrics, "create database", "err", err)
 				}
 				time.Sleep(InfluxQReconnectDelay)
-				if i == InfluxQReconnectAttempts {
-					return err
-				}
 				continue
 			} else {
 				q.dbcreated = true
-				break
+			}
+
+			// Create retention policies
+			for policy, done := range q.retentionPolicies {
+				res := q.UpdateDefaultRetentionPolicy(policy)
+				for i := 0; i < cap(done); i++ {
+					done <- res
+				}
+				if res.Err != nil {
+					log.DebugLog(log.DebugLevelMetrics, "create retention policy", "policy", policy, "err", res.Err)
+				}
+				close(done)
+			}
+
+			// Create continuous queries
+			for cqs, done := range q.continuousQuerySettings {
+				res := q.CreateContinuousQuery(cqs)
+				for i := 0; i < cap(done); i++ {
+					done <- res
+				}
+				if res.Err != nil {
+					log.DebugLog(log.DebugLevelMetrics, "create continuous query", "cq", cqs, "err", res.Err)
+				}
+				close(done)
 			}
 		}
 
-		// Create retention policies
-		for policy, done := range q.retentionPolicies {
-			res := q.UpdateDefaultRetentionPolicy(policy)
-			for i := 0; i < cap(done); i++ {
-				done <- res
-			}
-			if res.Err != nil {
-				log.DebugLog(log.DebugLevelMetrics, "create retention policy", "policy", policy, "err", res.Err)
-			}
-			close(done)
-		}
-
-		// Create continuous queries
-		for cqs, done := range q.continuousQuerySettings {
-			res := q.CreateContinuousQuery(cqs)
-			for i := 0; i < cap(done); i++ {
-				done <- res
-			}
-			if res.Err != nil {
-				log.DebugLog(log.DebugLevelMetrics, "create continuous query", "cq", cqs, "err", res.Err)
-			}
-			close(done)
-		}
-	}
-	return nil
-}
-
-func (q *InfluxQ) RunPush() {
-	for !q.done {
 		select {
 		case <-q.doPush:
 		case <-time.After(InfluxQPushInterval):
@@ -299,8 +286,7 @@ func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) *Ret
 	rpName := fmt.Sprintf("%s_default", q.dbName)
 	res.RpName = rpName
 	res.RpTime = retentionTime
-	query := ""
-	query = fmt.Sprintf("create retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s default", rpName, q.dbName, retentionTime.String(), shard.String())
+	query := fmt.Sprintf("create retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s default", rpName, q.dbName, retentionTime.String(), shard.String())
 	_, err := q.QueryDB(query)
 	if err != nil {
 		if !strings.Contains(err.Error(), "already exists") {
