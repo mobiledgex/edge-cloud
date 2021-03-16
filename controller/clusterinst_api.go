@@ -490,6 +490,7 @@ func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *ed
 		staleAlerts[*k] = struct{}{}
 	})
 	for _, alert := range alerts {
+		alertApi.setAlertMetadata(&alert)
 		alertApi.store.STMPut(stm, &alert)
 		delete(staleAlerts, alert.GetKeyVal())
 	}
