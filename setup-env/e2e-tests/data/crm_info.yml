@@ -225,6 +225,7 @@ cloudletinfos:
     - clusterkey:
         name: reservable0
       organization: MobiledgeX
+  compatibilityversion: 1
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -281,6 +282,7 @@ cloudletinfos:
     - clusterkey:
         name: reservable1
       organization: MobiledgeX
+  compatibilityversion: 1
 apps:
 - key:
     organization: AcmeAppCo

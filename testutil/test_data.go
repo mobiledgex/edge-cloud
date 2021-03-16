@@ -851,6 +851,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
+		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[1].Key,
@@ -902,6 +903,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
+		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[2].Key,
@@ -953,6 +955,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
+		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[3].Key,
@@ -998,6 +1001,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
+		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
 	},
 }
 
