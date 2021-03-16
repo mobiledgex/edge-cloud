@@ -397,11 +397,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	freeClusterInsts := []edgeproto.ClusterInstKey{}
 	if in.RealClusterName == "" && autoClusterSpecified {
 		// gather free reservable ClusterInsts for the target Cloudlet
-		// reservable ClusterInsts are always owned by the system
-		if in.Key.ClusterInstKey.Organization != cloudcommon.OrganizationMobiledgeX {
-			return fmt.Errorf("ClusterInst organization must be %s for autoclusters", cloudcommon.OrganizationMobiledgeX)
-		}
-		// get list of free reservable ClusterInsts
 		clusterInstApi.cache.Mux.Lock()
 		for key, data := range clusterInstApi.cache.Objs {
 			if !in.Key.ClusterInstKey.CloudletKey.Matches(&data.Obj.Key.CloudletKey) {
@@ -456,6 +451,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	reservedAutoClusterId := -1
 	var reservedClusterInstKey *edgeproto.ClusterInstKey
 	realClusterName := in.RealClusterName
+	// For backwards compatibility with old CRMs that don't understand
+	// virtualized AppInst keys (where the real cluster name is
+	// AppInst.RealClusterName), we create the old-style dedicated
+	// auto-clusters instead of the new reservable auto-clusters
+	deprecatedAutoCluster := false
 
 	defer func() {
 		if reterr != nil {
@@ -474,6 +474,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		reservedAutoClusterId = -1
 		reservedClusterInstKey = nil
 		in.RealClusterName = realClusterName
+		deprecatedAutoCluster = false
 
 		// lookup App so we can get flavor for reservable ClusterInst
 		var app edgeproto.App
@@ -494,10 +495,24 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		info := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
+			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
+		}
 
 		if autoClusterSpecified {
 			if !cloudcommon.IsClusterInstReqd(&app) {
 				return fmt.Errorf("No cluster required for App deployment type %s, cannot use cluster name %s which attempts to use or create a ClusterInst", app.Deployment, cloudcommon.AutoClusterPrefix)
+			}
+			if info.CompatibilityVersion < cloudcommon.CRMCompatibilityAutoReservableCluster {
+				deprecatedAutoCluster = true
+			}
+			if !deprecatedAutoCluster {
+				// reservable ClusterInsts are always owned
+				// by the system
+				if in.Key.ClusterInstKey.Organization != cloudcommon.OrganizationMobiledgeX {
+					return fmt.Errorf("ClusterInst organization must be %s for autoclusters", cloudcommon.OrganizationMobiledgeX)
+				}
 			}
 		}
 		// Check for autocluster. All auto-clusters are reservable.
@@ -507,7 +522,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// AppInst.RealClusterName.
 		// If AppInst.RealClusterName is set, then the caller is
 		// targeting a specific reservable ClusterInst.
-		if in.RealClusterName == "" && autoClusterSpecified {
+		if in.RealClusterName == "" && autoClusterSpecified && !deprecatedAutoCluster {
 			// search for free reservable ClusterInst
 			log.SpanLog(ctx, log.DebugLevelInfo, "reservable auto-cluster search", "key", in.Key)
 			if sidecarApp {
@@ -544,7 +559,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				break
 			}
 		}
-		if in.RealClusterName == "" && autoClusterSpecified {
+		if in.RealClusterName == "" && autoClusterSpecified && !deprecatedAutoCluster {
 			// No free reservable cluster found, create new one.
 			cloudletKey := &in.Key.ClusterInstKey.CloudletKey
 			refs := edgeproto.CloudletRefs{}
@@ -570,6 +585,29 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.RealClusterName = fmt.Sprintf("%s%d", cloudcommon.ReservableClusterPrefix, reservedAutoClusterId)
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Creating new auto-cluster named %s to deploy AppInst", in.RealClusterName)})
 			log.SpanLog(ctx, log.DebugLevelApi, "Creating new auto-cluster", "key", in.ClusterInstKey())
+		}
+		if autoClusterSpecified && deprecatedAutoCluster {
+			// for backwards compatibility with old CRMs
+			log.SpanLog(ctx, log.DebugLevelInfo, "backwards compatible dedicated auto-cluster", "key", in.Key)
+			if err := validateAutoDeployApp(stm, &app); err != nil {
+				return err
+			}
+			if in.RealClusterName != "" {
+				return fmt.Errorf("Target cloudlet's CRM is an older version which does not support RealClusterName field; field must be left blank to create dedicated autocluster")
+			}
+			cibuf := edgeproto.ClusterInst{}
+			if clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &cibuf) {
+				// if it already exists, this means we just
+				// want to spawn more apps into it
+			} else {
+				if sidecarApp {
+					return fmt.Errorf("Sidecar App %s requires an existing ClusterInst", app.Key.Name)
+				}
+				if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization {
+					return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
+				}
+				autocluster = true
+			}
 		}
 
 		if s.store.STMGet(stm, &in.Key, in) {
@@ -622,10 +660,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
 			return in.Flavor.NotFoundError()
 		}
-		info := edgeproto.CloudletInfo{}
-		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
-			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
-		}
 		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, vmFlavor, cloudlet, info)
 		if verr != nil {
 			return verr
@@ -650,7 +684,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		// Check if specified ClusterInst exists
 		var clusterInst edgeproto.ClusterInst
-		if !autocluster && reservedClusterInstKey == nil && cloudcommon.IsClusterInstReqd(&app) {
+		if !autocluster && reservedClusterInstKey == nil && !deprecatedAutoCluster && cloudcommon.IsClusterInstReqd(&app) {
 			// caller-specified ClusterInst
 			found := clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &clusterInst)
 			if !found {
@@ -676,6 +710,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		if err := autoProvPolicyApi.appInstCheck(ctx, stm, cloudcommon.Create, &app, in); err != nil {
 			return err
+		}
+		if in.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV && deprecatedAutoCluster {
+			return fmt.Errorf("Target cloudlet running older version of CRM no longer supports auto-provisioning, please upgrade CRM")
 		}
 
 		if app.Deployment == cloudcommon.DeploymentTypeVM {
@@ -785,8 +822,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// auto-create cluster inst
 		clusterInst.Key = *in.ClusterInstKey()
 		clusterInst.Auto = true
-		clusterInst.Reservable = true
-		clusterInst.ReservedBy = in.Key.AppKey.Organization
+		if !deprecatedAutoCluster {
+			clusterInst.Reservable = true
+			clusterInst.ReservedBy = in.Key.AppKey.Organization
+		}
 		log.SpanLog(ctx, log.DebugLevelApi,
 			"Create auto-ClusterInst",
 			"key", clusterInst.Key,

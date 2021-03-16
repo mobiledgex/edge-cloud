@@ -117,6 +117,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.CloudletInfos[i0].TrustPolicyState = 0
 		}
+		if _, found := tags["nocmp"]; found {
+			in.CloudletInfos[i0].CompatibilityVersion = 0
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 		if _, found := tags["timestamp"]; found {
@@ -471,6 +474,7 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name",
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.organization",
 	"cloudletinfos:#.trustpolicystate",
+	"cloudletinfos:#.compatibilityversion",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -850,6 +854,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 	"cloudletinfos:#.trustpolicystate":                                              "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"cloudletinfos:#.compatibilityversion":                                          "Version for compatibility tracking",
 	"cloudletpools:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
