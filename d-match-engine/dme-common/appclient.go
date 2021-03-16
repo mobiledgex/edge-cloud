@@ -73,7 +73,7 @@ func (m *ClientsMap) timeoutAppInstClients() {
 				for _, client := range list {
 					// Check if this client needs to be timed out -
 					//   if last Valid time is later than the client timestamp
-					if client.Location.Timestamp != nil &&
+					if client.Location.Timestamp == nil ||
 						lastValidTime.After(cloudcommon.TimestampToTime(*client.Location.Timestamp)) {
 						continue
 					}

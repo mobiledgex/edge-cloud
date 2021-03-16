@@ -159,7 +159,7 @@ func GetDefaultSettings() *Settings {
 	s.InfluxDbMetricsRetention = Duration(672 * time.Hour) // 28 days is a default
 	s.CleanupReservableAutoClusterIdletime = Duration(30 * time.Minute)
 	s.InfluxDbCloudletUsageMetricsRetention = Duration(8760 * time.Hour) // 1 year
-	s.AppinstClientCleanupInterval = Duration(60 * time.Minute)
+	s.AppinstClientCleanupInterval = Duration(24 * time.Hour)            // 24 hours, dme's cookieExpiration
 	return &s
 }
 
