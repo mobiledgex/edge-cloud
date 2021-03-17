@@ -490,13 +490,15 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		for _, quota := range cloudlet.ResourceQuotas {
 			quotaMap[quota.Name] = quota
 		}
+		lbFlavor, err := GetRootLBFlavorInfo(ctx, stm, &cloudlet, &cloudletInfo)
+		require.Nil(t, err, "found rootlb flavor")
 		clusterInst := testutil.ClusterInstData[0]
 		clusterInst.NumMasters = 2
 		clusterInst.NumNodes = 2
 		clusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
 		clusterInst.Flavor = testutil.FlavorData[4].Key
 		clusterInst.NodeFlavor = "flavor.large"
-		ciResources, err := getClusterInstVMRequirements(ctx, stm, &clusterInst, &cloudlet, &cloudletInfo, &cloudletRefs)
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, cloudletInfo.Flavors, lbFlavor)
 		require.Nil(t, err, "get cluster inst vm requirements")
 		// number of vm resources = num_nodes + num_masters + num_of_rootLBs
 		require.Equal(t, 5, len(ciResources), "matches number of vm resources")
@@ -544,7 +546,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		appInst := testutil.AppInstData[11]
 		appInst.Flavor = testutil.FlavorData[4].Key
 		appInst.VmFlavor = "flavor.large"
-		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &testutil.AppData[12], &appInst, cloudletInfo.Flavors)
+		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &testutil.AppData[12], &appInst, cloudletInfo.Flavors, lbFlavor)
 		require.Nil(t, err, "get app inst vm requirements")
 		require.Equal(t, 1, len(vmAppResources), "matches number of vm resources")
 		require.Equal(t, cloudcommon.VMTypeAppVM, vmAppResources[0].Type, "resource type is app vm")

@@ -109,7 +109,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 	return vmResources, nil
 }
 
-func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, pfFlavorList []*edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
+func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, pfFlavorList []*edgeproto.FlavorInfo, rootLBFlavor *edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "GetVMAppRequirements", "appinst key", appInst.Key, "platform flavors", pfFlavorList)
 	vmResources := []edgeproto.VMResource{}
 	vmFlavor := &edgeproto.FlavorInfo{}
@@ -121,15 +121,21 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 			break
 		}
 	}
-
 	if !vmFlavorFound {
 		return nil, fmt.Errorf("VM flavor %s does not exist", appInst.VmFlavor)
+	}
+	if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
+		vmResources = append(vmResources, edgeproto.VMResource{
+			Key:      *appInst.ClusterInstKey(),
+			VmFlavor: rootLBFlavor,
+			Type:     VMTypeRootLB,
+		})
 	}
 	vmResources = append(vmResources, edgeproto.VMResource{
 		Key:           *appInst.ClusterInstKey(),
 		VmFlavor:      vmFlavor,
 		Type:          VMTypeAppVM,
-		AppAccessType: edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		AppAccessType: app.AccessType,
 	})
 	return vmResources, nil
 }

@@ -254,31 +254,6 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func getClusterInstVMRequirements(ctx context.Context, stm concurrency.STM, in *edgeproto.ClusterInst,
-	cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, error) {
-	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
-	if err != nil {
-		return nil, err
-	}
-	rootlbFlavor, err := cloudletPlatform.GetRootLBFlavor(ctx)
-	if err != nil {
-		return nil, err
-	}
-	lbFlavor := &edgeproto.FlavorInfo{}
-	if rootlbFlavor != nil {
-		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, *cloudlet, *cloudletInfo)
-		if err != nil {
-			return nil, err
-		}
-		lbFlavor = vmspec.FlavorInfo
-	}
-	res, err := cloudcommon.GetClusterInstVMRequirements(ctx, in, cloudletInfo.Flavors, lbFlavor)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
 // Validate resource requirements for the VMs on the cloudlet
 func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource) ([]string, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
@@ -401,6 +376,26 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	return warnings, err
 }
 
+func GetRootLBFlavorInfo(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo) (*edgeproto.FlavorInfo, error) {
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return nil, err
+	}
+	rootlbFlavor, err := cloudletPlatform.GetRootLBFlavor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	lbFlavor := &edgeproto.FlavorInfo{}
+	if rootlbFlavor != nil {
+		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, *rootlbFlavor, *cloudlet, *cloudletInfo)
+		if err != nil {
+			return nil, err
+		}
+		lbFlavor = vmspec.FlavorInfo
+	}
+	return lbFlavor, nil
+}
+
 // getAllCloudletResources
 // Returns (1) All the VM resources on the cloudlet (2) Diff of VM resources reported by CRM and seen by controller
 func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, []edgeproto.VMResource, error) {
@@ -423,6 +418,11 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		snapshotVmAppInsts[aiKey] = struct{}{}
 	}
 
+	lbFlavor, err := GetRootLBFlavorInfo(ctx, stm, cloudlet, cloudletInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
 	clusterInstKeys := cloudletRefs.ClusterInsts
 	for _, clusterInstRefKey := range clusterInstKeys {
@@ -435,7 +435,7 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if edgeproto.IsDeleteState(ci.State) {
 			continue
 		}
-		ciRes, err := getClusterInstVMRequirements(ctx, stm, &ci, cloudlet, cloudletInfo, cloudletRefs)
+		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, cloudletInfo.Flavors, lbFlavor)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -465,7 +465,7 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if !appApi.store.STMGet(stm, &appInstKey.AppKey, &app) {
 			return nil, nil, fmt.Errorf("App not found: %v", appInstKey.AppKey)
 		}
-		vmRes, err := cloudcommon.GetVMAppRequirements(ctx, &app, &appInst, cloudletInfo.Flavors)
+		vmRes, err := cloudcommon.GetVMAppRequirements(ctx, &app, &appInst, cloudletInfo.Flavors, lbFlavor)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -514,9 +514,13 @@ func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *ed
 
 func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, vmAppInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validate resources", "cloudlet", cloudlet.Key, "clusterinst", clusterInst, "vmappinst", vmAppInst)
+	lbFlavor, err := GetRootLBFlavorInfo(ctx, stm, cloudlet, cloudletInfo)
+	if err != nil {
+		return err
+	}
 	reqdVmResources := []edgeproto.VMResource{}
 	if clusterInst != nil {
-		ciResources, err := getClusterInstVMRequirements(ctx, stm, clusterInst, cloudlet, cloudletInfo, cloudletRefs)
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, clusterInst, cloudletInfo.Flavors, lbFlavor)
 		if err != nil {
 			return err
 		}
@@ -527,7 +531,7 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 		if !appApi.store.STMGet(stm, &vmAppInst.Key.AppKey, &app) {
 			return fmt.Errorf("App not found: %v", vmAppInst.Key.AppKey)
 		}
-		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &app, vmAppInst, cloudletInfo.Flavors)
+		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &app, vmAppInst, cloudletInfo.Flavors, lbFlavor)
 		if err != nil {
 			return err
 		}
