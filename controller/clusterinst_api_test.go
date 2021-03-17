@@ -464,7 +464,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		clusters := make(map[edgeproto.ClusterInstKey]struct{})
 		resTypeVMAppCount := 0
 		for _, res := range allRes {
-			if res.Type == cloudcommon.VMTypeAppVM {
+			if res.Key.ClusterKey.Name == cloudcommon.DefaultVMCluster {
 				resTypeVMAppCount++
 				continue
 			}
@@ -473,7 +473,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 			require.True(t, found, "cluster inst from resources exists")
 			clusters[res.Key] = struct{}{}
 		}
-		require.Equal(t, resTypeVMAppCount, 1, "one vm appinst resource exists")
+		require.Equal(t, resTypeVMAppCount, 2, "two vm appinst resource exists")
 		for _, ciRefKey := range cloudletRefs.ClusterInsts {
 			ciKey := edgeproto.ClusterInstKey{}
 			ciKey.FromClusterInstRefKey(&ciRefKey, &cloudletRefs.Key)
@@ -548,9 +548,19 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		appInst.VmFlavor = "flavor.large"
 		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &testutil.AppData[12], &appInst, cloudletInfo.Flavors, lbFlavor)
 		require.Nil(t, err, "get app inst vm requirements")
-		require.Equal(t, 1, len(vmAppResources), "matches number of vm resources")
-		require.Equal(t, cloudcommon.VMTypeAppVM, vmAppResources[0].Type, "resource type is app vm")
-		require.Equal(t, vmAppResources[0].Key, *appInst.ClusterInstKey(), "resource key matches appinst's clusterinst key")
+		require.Equal(t, 2, len(vmAppResources), "matches number of vm resources")
+		foundVMRes := false
+		foundVMRootLBRes := false
+		for _, vmRes := range vmAppResources {
+			if vmRes.Type == cloudcommon.VMTypeAppVM {
+				foundVMRes = true
+			} else if vmRes.Type == cloudcommon.VMTypeRootLB {
+				foundVMRootLBRes = true
+			}
+			require.Equal(t, vmAppResources[0].Key, *appInst.ClusterInstKey(), "resource key matches appinst's clusterinst key")
+		}
+		require.True(t, foundVMRes, "resource type app vm found")
+		require.True(t, foundVMRootLBRes, "resource type vm rootlb found")
 
 		warnings, err = validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, vmAppResources, diffRes)
 		require.Nil(t, err, "enough resource available")
