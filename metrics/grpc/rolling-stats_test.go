@@ -40,13 +40,12 @@ func TestRollingStatsCalculations(t *testing.T) {
 	now = time.Now()
 	r := NewRollingStatistics()
 	list2 := []float64{.53, 14.2, 21.3, 6.7, 8.8}
-	client1 := "123"
 	// Try adding no elements and 0
-	r.UpdateRollingStatistics(client1)
-	r.UpdateRollingStatistics(client1, 0)
+	r.UpdateRollingStatistics()
+	r.UpdateRollingStatistics(0)
 	// Add elements one by one
 	for _, elem := range list2 {
-		r.UpdateRollingStatistics(client1, elem)
+		r.UpdateRollingStatistics(elem)
 	}
 	require.Equal(t, .53, r.Statistics.Min)
 	require.Equal(t, 21.3, r.Statistics.Max)
@@ -54,32 +53,27 @@ func TestRollingStatsCalculations(t *testing.T) {
 	require.True(t, math.Abs(61.71818-r.Statistics.Variance) < errorThreshold)
 	require.True(t, math.Abs(7.8560919037394-r.Statistics.StdDev) < errorThreshold)
 	require.Equal(t, uint64(5), r.Statistics.NumSamples)
-	require.Equal(t, uint64(1), r.NumUniqueClients)
 
 	// Test UpdateRollingLatency: Adding Samples: rolling avg, min, max, stddev, variance, numsamples
 	// Update latency2 with samples1
-	client2 := "234"
 	// Add entire list1
-	r.UpdateRollingStatistics(client2, list1...)
+	r.UpdateRollingStatistics(list1...)
 	require.Equal(t, .53, r.Statistics.Min)
 	require.Equal(t, 21.3, r.Statistics.Max)
 	require.True(t, math.Abs(7.603-r.Statistics.Avg) < errorThreshold)
 	require.True(t, math.Abs(46.22609-r.Statistics.Variance) < errorThreshold)
 	require.True(t, math.Abs(6.7989771289511-r.Statistics.StdDev) < errorThreshold)
 	require.Equal(t, uint64(10), r.Statistics.NumSamples)
-	require.Equal(t, uint64(2), r.NumUniqueClients)
 
 	// Test UpdateRollingLatency: Removing Samples: rolling avg, min, max, stddev, variance, numsamples
 	time.Sleep(time.Second * 10)
 	now = time.Now()
 	list3 := []float64{.34, 33.21, 11.1, 4.2, 1.5}
-	client3 := "345"
-	r.UpdateRollingStatistics(client3, list3...)
+	r.UpdateRollingStatistics(list3...)
 	require.Equal(t, .34, r.Statistics.Min)
 	require.Equal(t, 33.21, r.Statistics.Max)
 	require.True(t, math.Abs(8.4253333333333-r.Statistics.Avg) < errorThreshold)
 	require.True(t, math.Abs(83.958355238095-r.Statistics.Variance) < errorThreshold)
 	require.True(t, math.Abs(9.1628792002348-r.Statistics.StdDev) < errorThreshold)
 	require.Equal(t, uint64(15), r.Statistics.NumSamples)
-	require.Equal(t, uint64(3), r.NumUniqueClients)
 }

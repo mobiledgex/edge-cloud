@@ -58,8 +58,8 @@ message Settings {
   int64 update_trust_policy_timeout = 22 [(gogoproto.casttype) = "Duration"];
   // Metrics collection interval for DME API counts (duration)
   int64 dme_api_metrics_collection_interval = 23 [(gogoproto.casttype) = "Duration"];
-  // Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)
-  int64 persistent_connection_metrics_collection_interval = 24 [(gogoproto.casttype) = "Duration"];
+  // Collection interval for edgeevents metrics (latency, device, and custom)
+  int64 edge_events_metrics_collection_interval = 24 [(gogoproto.casttype) = "Duration"];
   // Idle reservable ClusterInst clean up time
   int64 cleanup_reservable_auto_cluster_idletime = 25 [(gogoproto.casttype) = "Duration"];
   // Default influxDB cloudlet usage metrics retention policy (duration)
@@ -68,6 +68,14 @@ message Settings {
   int64 create_cloudlet_timeout = 27 [(gogoproto.casttype) = "Duration"];
   // Update Cloudlet timeout (duration)
   int64 update_cloudlet_timeout = 28 [(gogoproto.casttype) = "Duration"];
+  // Length of location tiles side for latency metrics (km)
+  int64 location_tile_side_length_km = 29;
+  // List of collection intervals for Continuous Queries for EdgeEvents metrics
+  repeated CollectionInterval edge_events_metrics_continuous_queries_collection_intervals = 30;
+  // Default retention policy for downsampled influx db (duration)
+  int64 influx_db_downsampled_metrics_retention = 31 [(gogoproto.casttype) = "Duration"];
+  // Default retention policy for edgeevents metrics influx db (duration)
+  int64 influx_db_edge_events_metrics_retention = 32 [(gogoproto.casttype) = "Duration"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
@@ -75,6 +83,11 @@ message Settings {
   option (protogen.custom_key_type) = "SettingsKey";
   option (protogen.singular_data) = true;
   option (protogen.uses_org) = "none";
+}
+
+// Collection interval for Influxdb (Specificially used for cq intervals, because cannot gogoproto.casttype to Duration for repeated fields otherwise)
+message CollectionInterval {
+  int64 interval = 1 [(gogoproto.casttype) = "Duration"];
 }
 
 service SettingsApi {

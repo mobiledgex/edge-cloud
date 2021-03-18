@@ -1,7 +1,6 @@
 package dmecommon
 
 import (
-	"strconv"
 	"sync"
 	"time"
 
@@ -16,24 +15,20 @@ import (
 var EEStats *EdgeEventStats
 
 type EdgeEventStatCall struct {
-	Key                EdgeEventStatKey
-	AppInstLatencyInfo *AppInstLatencyInfo // Latency samples for EdgeEvents
-	GpsLocationInfo    *GpsLocationInfo    // Gps Location update
-	CustomStatInfo     *CustomStatInfo     // Custom stat update
-}
-
-type EdgeEventStat struct {
-	AppInstLatencyStats *AppInstLatencyStats // Aggregated latency stats from persistent connection (resets every hour)
-	GpsLocationStats    *GpsLocationStats    // Gps Locations update
-	CustomStats         *CustomStats         // Application defined custom stats
-	Mux                 sync.Mutex
-	Changed             bool
+	Metric          string           // Either cloudcommon.LatencyMetric, cloudcommon.DeviceMetric, cloudcommon.CustomMetric
+	LatencyStatKey  LatencyStatKey   // Key needed if metric is cloudcommon.LatencyMetric
+	LatencyStatInfo *LatencyStatInfo // Latency stat info if metric is cloudcommon.LatencyMetric
+	DeviceStatKey   DeviceStatKey    // Key needed if metric is cloudcommon.DeviceStatKey
+	CustomStatKey   CustomStatKey    // Key needed if metric is cloudcommon.CustomMetric
+	CustomStatInfo  *CustomStatInfo  // Custom stat info if metric is cloudcommon.CustomMetric
 }
 
 type EdgeEventMapShard struct {
-	edgeEventStatMap map[EdgeEventStatKey]*EdgeEventStat
-	notify           bool
-	mux              sync.Mutex
+	latencyStatMap map[LatencyStatKey]*LatencyStat
+	customStatMap  map[CustomStatKey]*CustomStat
+	deviceStatMap  map[DeviceStatKey]*DeviceStat
+	notify         bool
+	mux            sync.Mutex
 }
 
 type EdgeEventStats struct {
@@ -51,7 +46,9 @@ func NewEdgeEventStats(interval time.Duration, numShards uint, send func(ctx con
 	e.shards = make([]EdgeEventMapShard, numShards, numShards)
 	e.numShards = numShards
 	for ii, _ := range e.shards {
-		e.shards[ii].edgeEventStatMap = make(map[EdgeEventStatKey]*EdgeEventStat)
+		e.shards[ii].latencyStatMap = make(map[LatencyStatKey]*LatencyStat)
+		e.shards[ii].deviceStatMap = make(map[DeviceStatKey]*DeviceStat)
+		e.shards[ii].customStatMap = make(map[CustomStatKey]*CustomStat)
 	}
 	e.interval = interval
 	e.send = send
@@ -79,61 +76,80 @@ func (e *EdgeEventStats) Stop() {
 	e.mux.Unlock()
 }
 
-func (e *EdgeEventStats) UpdateSettings(interval time.Duration) {
-	if e.interval == interval {
+func (e *EdgeEventStats) UpdateSettings(newinterval time.Duration) {
+	if e.interval == newinterval {
 		return
 	}
+
 	restart := false
 	if e.stop != nil {
 		e.Stop()
 		restart = true
 	}
 	e.mux.Lock()
-	e.interval = interval
+	e.interval = newinterval
 	e.mux.Unlock()
 	if restart {
 		e.Start()
 	}
 }
 
-func (e *EdgeEventStats) LookupEdgeEventStatCall(call *EdgeEventStatCall) (*EdgeEventStat, bool) {
-	idx := util.GetShardIndex(call.Key, e.numShards)
-
-	shard := &e.shards[idx]
-	shard.mux.Lock()
-	defer shard.mux.Unlock()
-	stat, found := shard.edgeEventStatMap[call.Key]
-	return stat, found
-}
-
 func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
-	idx := util.GetShardIndex(call.Key, e.numShards)
+	if call.Metric == cloudcommon.LatencyMetric {
+		key := call.LatencyStatKey
+		emptyStatKey := LatencyStatKey{}
+		if key == emptyStatKey {
+			return
+		}
+		idx := util.GetShardIndex(key, e.numShards)
 
-	shard := &e.shards[idx]
-	shard.mux.Lock()
-	stat, found := shard.edgeEventStatMap[call.Key]
-	if !found {
-		stat = &EdgeEventStat{}
-		shard.edgeEventStatMap[call.Key] = stat
+		shard := &e.shards[idx]
+		shard.mux.Lock()
+		defer shard.mux.Unlock()
+		stat, found := shard.latencyStatMap[key]
+		if !found {
+			stat = NewLatencyStat(LatencyTimes)
+		}
+		stat.Update(call.LatencyStatInfo)
+		stat.Changed = true
+		shard.latencyStatMap[key] = stat
+	} else if call.Metric == cloudcommon.DeviceMetric {
+		key := call.DeviceStatKey
+		emptyStatKey := DeviceStatKey{}
+		if key == emptyStatKey {
+			return
+		}
+		idx := util.GetShardIndex(key, e.numShards)
+
+		shard := &e.shards[idx]
+		shard.mux.Lock()
+		defer shard.mux.Unlock()
+		stat, found := shard.deviceStatMap[key]
+		if !found {
+			stat = NewDeviceStat()
+		}
+		stat.Update()
+		stat.Changed = true
+		shard.deviceStatMap[key] = stat
+	} else if call.Metric == cloudcommon.CustomMetric {
+		key := call.CustomStatKey
+		emptyStatKey := CustomStatKey{}
+		if key == emptyStatKey {
+			return
+		}
+		idx := util.GetShardIndex(call.CustomStatKey, e.numShards)
+
+		shard := &e.shards[idx]
+		shard.mux.Lock()
+		defer shard.mux.Unlock()
+		stat, found := shard.customStatMap[key]
+		if !found {
+			stat = NewCustomStat()
+		}
+		stat.Update(call.CustomStatInfo)
+		stat.Changed = true
+		shard.customStatMap[key] = stat
 	}
-	if call.Key.Metric == cloudcommon.AppInstLatencyMetric {
-		if stat.AppInstLatencyStats == nil {
-			stat.AppInstLatencyStats = NewAppInstLatencyStats(LatencyTimes)
-		}
-		stat.AppInstLatencyStats.Update(call.AppInstLatencyInfo)
-	} else if call.Key.Metric == cloudcommon.GpsLocationMetric {
-		if stat.GpsLocationStats == nil {
-			stat.GpsLocationStats = NewGpsLocationStats()
-		}
-		stat.GpsLocationStats.Stats = append(stat.GpsLocationStats.Stats, call.GpsLocationInfo)
-	} else if call.Key.Metric == cloudcommon.CustomMetric {
-		if stat.CustomStats == nil {
-			stat.CustomStats = NewCustomStats()
-		}
-		stat.CustomStats.Update(call.CustomStatInfo)
-	}
-	stat.Changed = true
-	shard.mux.Unlock()
 }
 
 func (e *EdgeEventStats) RunNotify() {
@@ -144,35 +160,29 @@ func (e *EdgeEventStats) RunNotify() {
 			span := log.StartSpan(log.DebugLevelMetrics, "edgeevents-stats")
 			ctx := log.ContextWithSpan(context.Background(), span)
 
-			ts, _ := types.TimestampProto(time.Now())
 			for ii, _ := range e.shards {
+				ts, _ := types.TimestampProto(time.Now())
 				e.shards[ii].mux.Lock()
-				for key, stat := range e.shards[ii].edgeEventStatMap {
+				for key, stat := range e.shards[ii].latencyStatMap {
 					if stat.Changed {
-						switch key.Metric {
-						case cloudcommon.AppInstLatencyMetric:
-							metrics := getAppInstLatencyStatsToMetrics(ts, &key, stat)
-							for _, metric := range metrics {
-								e.send(ctx, metric)
-							}
-							stat.AppInstLatencyStats = nil
-							stat.Changed = false
-						case cloudcommon.GpsLocationMetric:
-							for _, gpsStat := range stat.GpsLocationStats.Stats {
-								e.send(ctx, GpsLocationStatToMetric(ts, &key, stat, gpsStat))
-							}
-							stat.GpsLocationStats = nil
-							stat.Changed = false
-						case cloudcommon.CustomMetric:
-							cmetrics := getCustomStatsToMetrics(ts, &key, stat)
-							for _, cmetric := range cmetrics {
-								e.send(ctx, cmetric)
-							}
-							stat.CustomStats = nil
-							stat.Changed = false
-						default:
-							continue
-						}
+						metric := LatencyStatToMetric(ts, key, stat)
+						e.send(ctx, metric)
+						stat.ResetLatencyStat()
+						e.shards[ii].latencyStatMap[key] = stat
+					}
+				}
+				for key, stat := range e.shards[ii].deviceStatMap {
+					if stat.Changed && stat.NumSessions > 0 {
+						metric := DeviceStatToMetric(ts, key, stat)
+						e.send(ctx, metric)
+						e.shards[ii].deviceStatMap[key] = NewDeviceStat()
+					}
+				}
+				for key, stat := range e.shards[ii].customStatMap {
+					if stat.Changed {
+						metric := CustomStatToMetric(ts, key, stat)
+						e.send(ctx, metric)
+						e.shards[ii].customStatMap[key] = NewCustomStat()
 					}
 				}
 				e.shards[ii].mux.Unlock()
@@ -184,77 +194,54 @@ func (e *EdgeEventStats) RunNotify() {
 	e.waitGroup.Done()
 }
 
-// Compiles all of the AppInstLatencyStats fields into metrics, returns a slice of metrics
-func getAppInstLatencyStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat) []*edgeproto.Metric {
-	metrics := make([]*edgeproto.Metric, 0)
-	// Latency per Appinst (LatencyTotal) metric
-	metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, stat.AppInstLatencyStats.LatencyTotal, cloudcommon.AppInstLatencyMetric, nil))
-	// Latency per carrier metrics
-	for carrier, latencystats := range stat.AppInstLatencyStats.LatencyPerCarrier {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerCarrierMetric, map[string]string{"carrier": carrier}))
-	}
-	// Latency per data network type metrics
-	for netdatatype, latencystats := range stat.AppInstLatencyStats.LatencyPerNetDataType {
-		metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerDataNetworkMetric, map[string]string{"networkdatatype": netdatatype}))
-	}
-	// Latency per location metrics
-	for dist, dirmap := range stat.AppInstLatencyStats.LatencyPerLoc {
-		for orientation, latencystats := range dirmap {
-			metrics = append(metrics, AppInstLatencyStatToMetric(ts, key, stat, latencystats, cloudcommon.LatencyPerLocationMetric, map[string]string{"distance": strconv.Itoa(dist), "direction": orientation}))
-		}
-	}
-	return metrics
-}
-
-func getCustomStatsToMetrics(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat) []*edgeproto.Metric {
-	cmetrics := make([]*edgeproto.Metric, 0)
-	for name, cstat := range stat.CustomStats.Stats {
-		cmetrics = append(cmetrics, CustomStatToMetric(ts, key, stat.CustomStats, name, cstat))
-	}
-	return cmetrics
-}
-
-func AppInstLatencyStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, latencyStats *LatencyStats, metricName string, indVarMap map[string]string) *edgeproto.Metric {
-	metric := initMetric(metricName, *ts, key.AppInstKey)
+func LatencyStatToMetric(ts *types.Timestamp, key LatencyStatKey, stat *LatencyStat) *edgeproto.Metric {
+	metric := initMetric(cloudcommon.LatencyMetric, *ts, key.AppInstKey)
+	// Add tags (independent variables)
+	metric.AddTag("locationtile", key.LocationTile)
+	metric.AddTag("devicecarrier", key.DeviceCarrier)
+	metric.AddTag("datanetworktype", key.DataNetworkType)
+	metric.AddTag("deviceos", key.DeviceOs)
+	metric.AddTag("devicemodel", key.DeviceModel)
+	metric.AddIntVal("signalstrength", key.SignalStrength)
 	// Latency information
-	for indepVarName, indepVar := range indVarMap {
-		metric.AddTag(indepVarName, indepVar) // eg. "carrier" -> "GDDT"
-	}
-	elapsed := ts.Seconds - int64(stat.AppInstLatencyStats.StartTime.Second())
-	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	metric.AddIntVal("numclients", latencyStats.RollingStatistics.NumUniqueClients)
-	metric.AddDoubleVal("avg", latencyStats.RollingStatistics.Statistics.Avg)
-	metric.AddDoubleVal("stddev", latencyStats.RollingStatistics.Statistics.StdDev)
-	metric.AddDoubleVal("min", latencyStats.RollingStatistics.Statistics.Min)
-	metric.AddDoubleVal("max", latencyStats.RollingStatistics.Statistics.Max)
-	latencyStats.LatencyCounts.AddToMetric(metric)
+	metric.AddDoubleVal("avg", stat.RollingStatistics.Statistics.Avg)
+	metric.AddDoubleVal("variance", stat.RollingStatistics.Statistics.Variance)
+	metric.AddDoubleVal("stddev", stat.RollingStatistics.Statistics.StdDev)
+	metric.AddDoubleVal("min", stat.RollingStatistics.Statistics.Min)
+	metric.AddDoubleVal("max", stat.RollingStatistics.Statistics.Max)
+	stat.LatencyCounts.AddToMetric(metric)
+	// Additional latency information for calculations when downsampling/aggregating further
+	metric.AddIntVal("numsamples", stat.RollingStatistics.Statistics.NumSamples)
+	metric.AddDoubleVal("total", stat.RollingStatistics.Statistics.Avg*float64(stat.RollingStatistics.Statistics.NumSamples))
 	return metric
 }
 
-func GpsLocationStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, stat *EdgeEventStat, gpsInfo *GpsLocationInfo) *edgeproto.Metric {
-	metric := initMetric(cloudcommon.GpsLocationMetric, types.Timestamp(gpsInfo.Timestamp), key.AppInstKey)
-	// GpsLocation information
-	metric.AddTag("carrier", gpsInfo.Carrier)
-	metric.AddTag("deviceos", gpsInfo.DeviceOs)
-	metric.AddTag("devicemodel", gpsInfo.DeviceModel)
-	metric.AddDoubleVal("longitude", gpsInfo.GpsLocation.Longitude)
-	metric.AddDoubleVal("latitude", gpsInfo.GpsLocation.Latitude)
-	metric.AddStringVal("uniqueid", gpsInfo.SessionCookieKey.UniqueId)
+func DeviceStatToMetric(ts *types.Timestamp, key DeviceStatKey, stat *DeviceStat) *edgeproto.Metric {
+	metric := initMetric(cloudcommon.DeviceMetric, *ts, key.AppInstKey)
+	// Add tags (independent variables)
+	metric.AddTag("locationtile", key.LocationTile)
+	metric.AddTag("devicecarrier", key.DeviceCarrier)
+	metric.AddTag("datanetworktype", key.DataNetworkType)
+	metric.AddTag("deviceos", key.DeviceOs)
+	metric.AddTag("devicemodel", key.DeviceModel)
+	metric.AddIntVal("signalstrength", key.SignalStrength)
+	// Num session information
+	metric.AddIntVal("numsessions", stat.NumSessions)
 	return metric
 }
 
-func CustomStatToMetric(ts *types.Timestamp, key *EdgeEventStatKey, customStats *CustomStats, statName string, customStat *CustomStat) *edgeproto.Metric {
+func CustomStatToMetric(ts *types.Timestamp, key CustomStatKey, stat *CustomStat) *edgeproto.Metric {
 	metric := initMetric(cloudcommon.CustomMetric, *ts, key.AppInstKey)
 	// Custom Stats info
-	metric.AddTag("statname", statName)
-	elapsed := ts.Seconds - int64(customStats.StartTime.Second())
-	metric.AddIntVal("timeelapsed", uint64(elapsed))
-	metric.AddIntVal("count", customStat.Count)
-	metric.AddIntVal("numclients", customStat.RollingStatistics.NumUniqueClients)
-	metric.AddDoubleVal("avg", customStat.RollingStatistics.Statistics.Avg)
-	metric.AddDoubleVal("stddev", customStat.RollingStatistics.Statistics.StdDev)
-	metric.AddDoubleVal("min", customStat.RollingStatistics.Statistics.Min)
-	metric.AddDoubleVal("max", customStat.RollingStatistics.Statistics.Max)
+	metric.AddTag("statname", key.Name)
+	metric.AddIntVal("count", stat.Count)
+	metric.AddDoubleVal("avg", stat.RollingStatistics.Statistics.Avg)
+	metric.AddDoubleVal("variance", stat.RollingStatistics.Statistics.Variance)
+	metric.AddDoubleVal("stddev", stat.RollingStatistics.Statistics.StdDev)
+	metric.AddDoubleVal("min", stat.RollingStatistics.Statistics.Min)
+	metric.AddDoubleVal("max", stat.RollingStatistics.Statistics.Max)
+	metric.AddIntVal("numsamples", stat.RollingStatistics.Statistics.NumSamples)
+	metric.AddIntVal("numsessions", stat.NumSessions)
 	return metric
 }
 

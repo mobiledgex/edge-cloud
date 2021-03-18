@@ -307,7 +307,8 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			var findCloudlet findcloudlet
 			err := util.ReadYamlFile(outputDir+"/edgeeventfindcloudlet.yml", &findCloudlet)
 			if err != nil || findCloudlet.Req.CarrierName != apiRequest.Fcreq.CarrierName ||
-				findCloudlet.Req.GpsLocation != apiRequest.Fcreq.GpsLocation ||
+				findCloudlet.Req.GpsLocation.Latitude != apiRequest.Fcreq.GpsLocation.Latitude ||
+				findCloudlet.Req.GpsLocation.Longitude != apiRequest.Fcreq.GpsLocation.Longitude ||
 				findCloudlet.Req.CellId != apiRequest.Fcreq.CellId ||
 				time.Since(findCloudlet.At) > time.Hour {
 				log.Printf("Redoing findcloudlet for StreamEdgeEvent - %+v\n", apiRequest.Fcreq)
@@ -526,9 +527,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				Longitude: -91.00,
 			}
 			latencyEvent.CarrierName = "dmuus"
-			latencyEvent.DeviceInfo = &dmeproto.DeviceInfo{
-				DataNetworkType: "LTE",
-			}
+			latencyEvent.DeviceInfo = apiRequest.Eereq.DeviceInfo
 			samples := make([]*dmeproto.Sample, 0)
 			// Create dummy samples
 			list := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
@@ -576,10 +575,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				Longitude: -95.00,
 			}
 			gpsUpdateEvent.CarrierName = "dmuus"
-			gpsUpdateEvent.DeviceInfo = &dmeproto.DeviceInfo{
-				DeviceOs:    "Android",
-				DeviceModel: "SM-G920F",
-			}
+			gpsUpdateEvent.DeviceInfo = apiRequest.Eereq.DeviceInfo
 			err = resp.Send(gpsUpdateEvent)
 			// Receive processed latency samples
 			dmereply, err = resp.Recv()
