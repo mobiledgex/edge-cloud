@@ -32,6 +32,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
 	}
+	for i1 := 0; i1 < len(in.Settings.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i1++ {
+	}
 	for i0 := 0; i0 < len(in.OperatorCodes); i0++ {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
@@ -316,11 +318,15 @@ var AllDataOptionalArgs = []string{
 	"settings.updatevmpooltimeout",
 	"settings.updatetrustpolicytimeout",
 	"settings.dmeapimetricscollectioninterval",
-	"settings.persistentconnectionmetricscollectioninterval",
+	"settings.edgeeventsmetricscollectioninterval",
 	"settings.cleanupreservableautoclusteridletime",
 	"settings.influxdbcloudletusagemetricsretention",
 	"settings.createcloudlettimeout",
 	"settings.updatecloudlettimeout",
+	"settings.locationtilesidelengthkm",
+	"settings.edgeeventsmetricscontinuousqueriescollectionintervals:#.interval",
+	"settings.influxdbdownsampledmetricsretention",
+	"settings.influxdbedgeeventsmetricsretention",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -720,11 +726,14 @@ var AllDataComments = map[string]string{
 	"settings.updatevmpooltimeout":                                                  "Update VM pool timeout (duration)",
 	"settings.updatetrustpolicytimeout":                                             "Update Trust Policy timeout (duration)",
 	"settings.dmeapimetricscollectioninterval":                                      "Metrics collection interval for DME API counts (duration)",
-	"settings.persistentconnectionmetricscollectioninterval":                        "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
+	"settings.edgeeventsmetricscollectioninterval":                                  "Collection interval for edgeevents metrics (latency, device, and custom)",
 	"settings.cleanupreservableautoclusteridletime":                                 "Idle reservable ClusterInst clean up time",
 	"settings.influxdbcloudletusagemetricsretention":                                "Default influxDB cloudlet usage metrics retention policy (duration)",
 	"settings.createcloudlettimeout":                                                "Create Cloudlet timeout (duration)",
 	"settings.updatecloudlettimeout":                                                "Update Cloudlet timeout (duration)",
+	"settings.locationtilesidelengthkm":                                             "Length of location tiles side for latency metrics (km)",
+	"settings.influxdbdownsampledmetricsretention":                                  "Default retention policy for downsampled influx db (duration)",
+	"settings.influxdbedgeeventsmetricsretention":                                   "Default retention policy for edgeevents metrics influx db (duration)",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",

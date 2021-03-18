@@ -83,19 +83,20 @@ var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
 
 type Services struct {
-	etcdLocal                *process.Etcd
-	sync                     *Sync
-	influxQ                  *influxq.InfluxQ
-	events                   *influxq.InfluxQ
-	persConnInfluxQ          *influxq.InfluxQ
-	cloudletResourcesInfluxQ *influxq.InfluxQ
-	notifyServerMgr          bool
-	grpcServer               *grpc.Server
-	httpServer               *http.Server
-	notifyClient             *notify.Client
-	accessKeyGrpcServer      node.AccessKeyGrpcServer
-	listeners                []net.Listener
-	publicCertManager        *node.PublicCertManager
+	etcdLocal                 *process.Etcd
+	sync                      *Sync
+	influxQ                   *influxq.InfluxQ
+	events                    *influxq.InfluxQ
+	edgeEventsInfluxQ         *influxq.InfluxQ
+	cloudletResourcesInfluxQ  *influxq.InfluxQ
+	downsampledMetricsInfluxQ *influxq.InfluxQ
+	notifyServerMgr           bool
+	grpcServer                *grpc.Server
+	httpServer                *http.Server
+	notifyClient              *notify.Client
+	accessKeyGrpcServer       node.AccessKeyGrpcServer
+	listeners                 []net.Listener
+	publicCertManager         *node.PublicCertManager
 }
 
 func main() {
@@ -255,15 +256,27 @@ func startServices() error {
 	} else if err != nil {
 		return fmt.Errorf("Failed to get influxDB auth, %v", err)
 	}
+
+	// downsampled metrics influx
+	downsampledMetricsInfluxQ := influxq.NewInfluxQ(cloudcommon.DownsampledMetricsDbName, influxAuth.User, influxAuth.Pass)
+	done := downsampledMetricsInfluxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbDownsampledMetricsRetention.TimeDuration(), len(settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals)*2)
+	err = downsampledMetricsInfluxQ.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	services.downsampledMetricsInfluxQ = downsampledMetricsInfluxQ
+
 	// metrics influx
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
+	influxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration(), 0)
 	err = influxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
 	services.influxQ = influxQ
-	services.influxQ.UpdateDefaultRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration())
+
 	// events influx
 	events := influxq.NewInfluxQ(cloudcommon.EventsDbName, influxAuth.User, influxAuth.Pass)
 	err = events.Start(*influxAddr)
@@ -272,25 +285,35 @@ func startServices() error {
 			*influxAddr, err)
 	}
 	services.events = events
+
 	// persistent stats influx
-	persConnInfluxQ := influxq.NewInfluxQ(cloudcommon.PersistentConnDbName, influxAuth.User, influxAuth.Pass)
-	err = persConnInfluxQ.Start(*influxAddr)
+	edgeEventsInfluxQ := influxq.NewInfluxQ(cloudcommon.EdgeEventsMetricsDbName, influxAuth.User, influxAuth.Pass)
+	edgeEventsInfluxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration(), 0)
+	for _, collectioninterval := range settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+		interval := collectioninterval.Interval
+		latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, done)
+		edgeEventsInfluxQ.AddContinuousQuery(latencyCqSettings, 0)
+		deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, done)
+		edgeEventsInfluxQ.AddContinuousQuery(deviceCqSettings, 0)
+	}
+	err = edgeEventsInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
-	services.persConnInfluxQ = persConnInfluxQ
+	services.edgeEventsInfluxQ = edgeEventsInfluxQ
+
 	// cloudlet resources influx
 	cloudletResourcesInfluxQ := influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, influxAuth.User, influxAuth.Pass)
+	cloudletResourcesInfluxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration(), 0)
 	err = cloudletResourcesInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
 	services.cloudletResourcesInfluxQ = cloudletResourcesInfluxQ
-	services.cloudletResourcesInfluxQ.UpdateDefaultRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration())
 
-	InitNotify(influxQ, persConnInfluxQ, &appInstClientApi)
+	InitNotify(influxQ, edgeEventsInfluxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {
 		addrs := strings.Split(*notifyParentAddrs, ",")
 		tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
@@ -510,11 +533,14 @@ func stopServices() {
 	if services.events != nil {
 		services.events.Stop()
 	}
-	if services.persConnInfluxQ != nil {
-		services.persConnInfluxQ.Stop()
+	if services.edgeEventsInfluxQ != nil {
+		services.edgeEventsInfluxQ.Stop()
 	}
 	if services.cloudletResourcesInfluxQ != nil {
 		services.cloudletResourcesInfluxQ.Stop()
+	}
+	if services.downsampledMetricsInfluxQ != nil {
+		services.downsampledMetricsInfluxQ.Stop()
 	}
 	if services.sync != nil {
 		services.sync.Done()
@@ -587,7 +613,7 @@ func InitApis(sync *Sync) {
 	InitAppInstLatencyApi(sync)
 }
 
-func InitNotify(metricsInflux *influxq.InfluxQ, persConnInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
+func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
@@ -619,25 +645,25 @@ func InitNotify(metricsInflux *influxq.InfluxQ, persConnInflux *influxq.InfluxQ,
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(NewControllerMetricsReceiver(metricsInflux, persConnInflux)))
+	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(NewControllerMetricsReceiver(metricsInflux, edgeEventsInflux)))
 }
 
 type ControllerMetricsReceiver struct {
-	metricsInflux  *influxq.InfluxQ
-	persConnInflux *influxq.InfluxQ
+	metricsInflux    *influxq.InfluxQ
+	edgeEventsInflux *influxq.InfluxQ
 }
 
-func NewControllerMetricsReceiver(metricsInflux *influxq.InfluxQ, persConnInflux *influxq.InfluxQ) *ControllerMetricsReceiver {
+func NewControllerMetricsReceiver(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ) *ControllerMetricsReceiver {
 	c := new(ControllerMetricsReceiver)
 	c.metricsInflux = metricsInflux
-	c.persConnInflux = persConnInflux
+	c.edgeEventsInflux = edgeEventsInflux
 	return c
 }
 
 // Send metric to correct influxdb
 func (c *ControllerMetricsReceiver) RecvMetric(ctx context.Context, metric *edgeproto.Metric) {
-	if _, ok := cloudcommon.PersistentMetrics[metric.Name]; ok {
-		c.persConnInflux.AddMetric(metric)
+	if _, ok := cloudcommon.EdgeEventsMetrics[metric.Name]; ok {
+		c.edgeEventsInflux.AddMetric(metric)
 	} else {
 		c.metricsInflux.AddMetric(metric)
 	}

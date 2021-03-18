@@ -1,64 +1,112 @@
 package dmecommon
 
 import (
+	"math"
 	"testing"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGpsLocation(t *testing.T) {
-	// San Jose
-	sanjose := dme.Loc{
+	// Beacon (Quadrant I)
+	beacon := &dme.Loc{
+		Latitude:  52.5200,
+		Longitude: 13.4050,
+	}
+	// San Jose (Quadrant II)
+	sanjose := &dme.Loc{
 		Latitude:  37.3382,
 		Longitude: -121.8863,
 	}
-	// San Francisco
-	sanfran := dme.Loc{
-		Latitude:  37.7749,
-		Longitude: -122.4194,
+	// Sydney (Quadrant III)
+	sydney := &dme.Loc{
+		Latitude:  -33.8688,
+		Longitude: 151.2093,
 	}
-	// Palo Alto
-	paloalto := dme.Loc{
-		Latitude:  37.4419,
-		Longitude: -122.1430,
-	}
-	// Anchorage
-	anchorage := dme.Loc{
-		Latitude:  61.2181,
-		Longitude: -149.9003,
-	}
-	// Austin
-	austin := dme.Loc{
-		Latitude:  30.2672,
-		Longitude: -97.7431,
-	}
-	// New York city
-	newyork := dme.Loc{
-		Latitude:  40.7128,
-		Longitude: -74.0060,
+	// Rio De Janeiro (Quadrant IV)
+	rio := &dme.Loc{
+		Latitude:  -22.9068,
+		Longitude: -43.1729,
 	}
 
-	// Test Distance buckets
-	dist1 := GetDistanceBucket(sanjose, sanfran)
-	require.Equal(t, 50, dist1)
+	// tile length == 1 km
+	tl1 := 1
+	// tile length == 2 km
+	tl2 := 2
+	// tile length == 5 km
+	tl5 := 5
 
-	dist2 := GetDistanceBucket(sanjose, paloalto)
-	require.Equal(t, 10, dist2)
+	// Get location tile for Beacon with location tile length == 1km
+	tile1Beacon := GetLocationTileFromGpsLocation(beacon, tl1)
+	// Get Gps Location ranges for tile generated above
+	under, over, err := GetGpsLocationRangeFromLocationTile(tile1Beacon, tl1)
+	assert.Nil(t, err)
+	// Check to make sure lat, long of beacon is within the location ranges generated above
+	checkLocationRange(t, under, over, beacon)
 
-	dist3 := GetDistanceBucket(anchorage, austin)
-	require.Equal(t, 100, dist3)
+	// Get location tile for Beacon with location tile length == 2km
+	tile2Beacon := GetLocationTileFromGpsLocation(beacon, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Beacon, tl2)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, beacon)
 
-	// Test Bearings
-	bearing1 := GetBearingFrom(sanjose, sanfran)
-	require.Equal(t, "Northwest", string(bearing1))
+	// Get location tile for Beacon with location tile length == 5km
+	tile5Beacon := GetLocationTileFromGpsLocation(beacon, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Beacon, tl5)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, beacon)
 
-	bearing2 := GetBearingFrom(sanfran, sanjose)
-	require.Equal(t, "Southeast", string(bearing2))
+	tile1SanJose := GetLocationTileFromGpsLocation(sanjose, tl1)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile1SanJose, tl1)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, sanjose)
 
-	bearing3 := GetBearingFrom(newyork, austin)
-	require.Equal(t, "Southwest", string(bearing3))
+	tile2SanJose := GetLocationTileFromGpsLocation(sanjose, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2SanJose, tl2)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, sanjose)
 
-	bearing4 := GetBearingFrom(austin, newyork)
-	require.Equal(t, "Northeast", string(bearing4))
+	tile5SanJose := GetLocationTileFromGpsLocation(sanjose, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5SanJose, tl5)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, sanjose)
+
+	tile1Sydney := GetLocationTileFromGpsLocation(sydney, tl1)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Sydney, tl1)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, sydney)
+
+	tile2Sydney := GetLocationTileFromGpsLocation(sydney, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Sydney, tl2)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, sydney)
+
+	tile5Sydney := GetLocationTileFromGpsLocation(sydney, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Sydney, tl5)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, sydney)
+
+	tile1Rio := GetLocationTileFromGpsLocation(rio, tl1)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Rio, tl1)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, rio)
+
+	tile2Rio := GetLocationTileFromGpsLocation(rio, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Rio, tl2)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, rio)
+
+	tile5Rio := GetLocationTileFromGpsLocation(rio, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Rio, tl5)
+	assert.Nil(t, err)
+	checkLocationRange(t, under, over, rio)
+}
+
+func checkLocationRange(t *testing.T, under, over, actual *dme.Loc) {
+	assert.True(t, math.Abs(actual.Latitude) < math.Abs(over.Latitude))
+	assert.True(t, math.Abs(actual.Latitude) >= math.Abs(under.Latitude))
+
+	assert.True(t, math.Abs(actual.Longitude) < math.Abs(over.Longitude))
+	assert.True(t, math.Abs(actual.Longitude) >= math.Abs(under.Longitude))
 }

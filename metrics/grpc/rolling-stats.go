@@ -10,19 +10,17 @@ import (
 
 // Rolling avg, min, max, std dev, and number of clients
 type RollingStatistics struct {
-	Statistics       dme.Statistics
-	UniqueClients    map[string]int // Maps unique client to number of occurences of that unique client
-	NumUniqueClients uint64
+	Statistics dme.Statistics
 }
 
 func NewRollingStatistics() *RollingStatistics {
 	r := new(RollingStatistics)
-	r.UniqueClients = make(map[string]int)
+	r.Statistics = dme.Statistics{}
 	return r
 }
 
 // Add new samples to RollingStatistics struct and update RollingLatency statistics
-func (r *RollingStatistics) UpdateRollingStatistics(uniqueId string, samples ...float64) {
+func (r *RollingStatistics) UpdateRollingStatistics(samples ...float64) {
 	if len(samples) == 0 {
 		return
 	}
@@ -45,8 +43,6 @@ func (r *RollingStatistics) UpdateRollingStatistics(uniqueId string, samples ...
 		}
 		total += sample
 		r.Statistics.NumSamples++
-		// Add client to UniqueClients map
-		r.AddUniqueClient(uniqueId)
 	}
 	if r.Statistics.NumSamples == 0 {
 		return
@@ -66,17 +62,6 @@ func (r *RollingStatistics) UpdateRollingStatistics(uniqueId string, samples ...
 	}
 	r.Statistics.Variance = newSumSquared / float64(unbiasedNumSamples)
 	r.Statistics.StdDev = math.Sqrt(r.Statistics.Variance)
-}
-
-// Add client to map of UniqueClients, update NumUniqueClients
-func (r *RollingStatistics) AddUniqueClient(uniqueId string) {
-	num, ok := r.UniqueClients[uniqueId]
-	if !ok {
-		r.UniqueClients[uniqueId] = 1
-	} else {
-		r.UniqueClients[uniqueId] = num + 1
-	}
-	r.NumUniqueClients = uint64(len(r.UniqueClients))
 }
 
 // Utility function that returns Statistics struct with Avg, Min, Max, StdDev, and NumSamples
