@@ -21,10 +21,17 @@ settings:
   cloudletmaintenancetimeout: 5m
   updatevmpooltimeout: 20m0s
   dmeapimetricscollectioninterval: 30s
-  persistentconnectionmetricscollectioninterval: 1h0m0s
   influxdbmetricsretention: 672h0m0s
   cleanupreservableautoclusteridletime: 30m0s
   influxdbcloudletusagemetricsretention: 8760h0m0s
+  locationtilesidelengthkm: 2
+  edgeeventsmetricscollectioninterval: 1h0m0s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  influxdbdownsampledmetricsretention: 8760h0m0s
+  edgeeventsmetricscontinuousqueriescollectionintervals:
+  - interval: 24h0m0s
+  - interval: 168h0m0s
+  - interval: 672h0m0s
 flavors:
 - key:
     name: x1.tiny
