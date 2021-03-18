@@ -299,8 +299,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DeviceApiClient interface {
+	// Inject a device
 	InjectDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error)
+	// Show devices
 	ShowDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (DeviceApi_ShowDeviceClient, error)
+	// Evict a device
 	EvictDevice(ctx context.Context, in *Device, opts ...grpc.CallOption) (*Result, error)
 	// Device Reports API.
 	ShowDeviceReport(ctx context.Context, in *DeviceReport, opts ...grpc.CallOption) (DeviceApi_ShowDeviceReportClient, error)
@@ -398,8 +401,11 @@ func (x *deviceApiShowDeviceReportClient) Recv() (*Device, error) {
 
 // DeviceApiServer is the server API for DeviceApi service.
 type DeviceApiServer interface {
+	// Inject a device
 	InjectDevice(context.Context, *Device) (*Result, error)
+	// Show devices
 	ShowDevice(*Device, DeviceApi_ShowDeviceServer) error
+	// Evict a device
 	EvictDevice(context.Context, *Device) (*Result, error)
 	// Device Reports API.
 	ShowDeviceReport(*DeviceReport, DeviceApi_ShowDeviceReportServer) error
