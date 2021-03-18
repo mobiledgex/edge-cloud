@@ -142,7 +142,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "remove":
 			//run in reverse order to delete child keys
 			output := &testutil.AllDataOut{}
-			testutil.RunAllDataReverseApis(run, &appData, appDataMap, output)
+			testutil.RunAllDataReverseApis(run, &appData, appDataMap, output, testutil.NoApiCallback)
 			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		case "create":
 			fallthrough
@@ -152,7 +152,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			fallthrough
 		case "update":
 			output := &testutil.AllDataOut{}
-			testutil.RunAllDataApis(run, &appData, appDataMap, output)
+			testutil.RunAllDataApis(run, &appData, appDataMap, output, testutil.NoApiCallback)
 			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		case "stream":
 			output := &testutil.AllDataStreamOut{}
@@ -354,7 +354,7 @@ func runDebug(run *testutil.Run, api, apiFile, outputDir string) {
 		*run.Rc = false
 		return
 	}
-	testutil.RunDebugDataApis(run, &data, make(map[string]interface{}), &output)
+	testutil.RunDebugDataApis(run, &data, make(map[string]interface{}), &output, testutil.NoApiCallback)
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }
 
@@ -373,6 +373,6 @@ func runOrg(run *testutil.Run, api, apiFile, outputDir string) {
 	}
 
 	output := testutil.OrganizationDataOut{}
-	testutil.RunOrganizationDataApis(run, &data, make(map[string]interface{}), &output)
+	testutil.RunOrganizationDataApis(run, &data, make(map[string]interface{}), &output, testutil.NoApiCallback)
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }
