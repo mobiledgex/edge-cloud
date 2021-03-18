@@ -33,6 +33,15 @@ func (s *FieldValidator) CheckFloatGE(field string, val, gt float64) {
 	}
 }
 
+func (s *FieldValidator) CheckFloatGT(field string, val, gt float64) {
+	if s.err != nil {
+		return
+	}
+	if val <= gt {
+		s.err = fmt.Errorf("%s must be greater than %f", s.fieldDesc[field], gt)
+	}
+}
+
 func (s *FieldValidator) CheckLT(field string, val, lt int64) {
 	if s.err != nil {
 		return
