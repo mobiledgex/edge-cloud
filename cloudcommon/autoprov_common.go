@@ -1,6 +1,8 @@
 package cloudcommon
 
 import (
+	"fmt"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -18,6 +20,8 @@ const (
 	AccessKeySig           = "access-key-sig"
 	VaultKeySig            = "vault-key-sig"
 )
+
+var AutoProvMinAlreadyMetError = fmt.Errorf("Create to satisfy min already met, ignoring")
 
 func AutoProvCloudletInfoOnline(cloudletInfo *edgeproto.CloudletInfo) bool {
 	// Transitional states are considered "online".
