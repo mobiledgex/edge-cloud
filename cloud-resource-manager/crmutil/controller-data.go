@@ -3,6 +3,7 @@ package crmutil
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -228,10 +229,16 @@ func (cd *ControllerData) CaptureResourcesSnapshot(ctx context.Context, cloudlet
 	for k, _ := range deployedClusters {
 		deployedClusterKeys = append(deployedClusterKeys, k)
 	}
+	sort.Slice(deployedClusterKeys, func(ii, jj int) bool {
+		return deployedClusterKeys[ii].GetKeyString() < deployedClusterKeys[jj].GetKeyString()
+	})
 	deployedVMAppKeys := []edgeproto.AppInstRefKey{}
 	for k, _ := range deployedVMAppInsts {
 		deployedVMAppKeys = append(deployedVMAppKeys, k)
 	}
+	sort.Slice(deployedVMAppKeys, func(ii, jj int) bool {
+		return deployedVMAppKeys[ii].GetKeyString() < deployedVMAppKeys[jj].GetKeyString()
+	})
 	resources.ClusterInsts = deployedClusterKeys
 	resources.VmAppInsts = deployedVMAppKeys
 	return resources
