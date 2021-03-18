@@ -1624,24 +1624,33 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 }
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState)
+	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "uri", in.Uri)
 
 	// update only diff of status msgs
 	streamObjApi.UpdateStatus(ctx, &in.Status, &in.Key)
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		updateCrm := false
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
-		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
+		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN &&
+			inst.PowerState != in.PowerState {
 			inst.PowerState = in.PowerState
+			updateCrm = true
 		}
 		// If AppInst is ready and state has not been set yet by HealthCheckUpdate, default to Ok.
 		if in.State == edgeproto.TrackedState_READY &&
 			inst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_UNKNOWN {
 			inst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_OK
+			updateCrm = true
+		}
+
+		if in.Uri != "" && inst.Uri != in.Uri {
+			inst.Uri = in.Uri
+			updateCrm = true
 		}
 
 		if inst.State == in.State {
@@ -1649,24 +1658,27 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
-				s.store.STMPut(stm, &inst)
+				updateCrm = true
 			}
-			return nil
+		} else {
+			// please see state_transitions.md
+			if !crmTransitionOk(inst.State, in.State) {
+				log.DebugLog(log.DebugLevelApi, "Invalid state transition",
+					"key", &in.Key, "cur", inst.State, "next", in.State)
+				return nil
+			}
+			inst.State = in.State
+			updateCrm = true
 		}
-		// please see state_transitions.md
-		if !crmTransitionOk(inst.State, in.State) {
-			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
-				"key", &in.Key, "cur", inst.State, "next", in.State)
-			return nil
-		}
-		inst.State = in.State
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {
 			inst.Errors = nil
 		}
 		inst.RuntimeInfo = in.RuntimeInfo
-		s.store.STMPut(stm, &inst)
+		if updateCrm {
+			s.store.STMPut(stm, &inst)
+		}
 		return nil
 	})
 	if in.State == edgeproto.TrackedState_DELETE_DONE {
