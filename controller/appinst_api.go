@@ -1362,6 +1362,10 @@ func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	return s.deleteAppInstInternal(DefCallContext(), in, cb)
 }
 
+func verifyAppInstExists(in *edgeproto.AppInst) error {
+	return nil
+}
+
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, inCb edgeproto.AppInstApi_DeleteAppInstServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := inCb.Context()
