@@ -69,9 +69,9 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		case SettingsFieldShepherdHealthCheckInterval:
 			v.CheckGT(f, int64(s.ShepherdHealthCheckInterval), 0)
 		case SettingsFieldAutoDeployIntervalSec:
-			v.CheckGT(f, int64(s.AutoDeployIntervalSec), 0)
+			v.CheckFloatGT(f, s.AutoDeployIntervalSec, 0)
 		case SettingsFieldAutoDeployOffsetSec:
-			v.CheckFloatGE(f, float64(s.AutoDeployOffsetSec), 0)
+			v.CheckFloatGE(f, s.AutoDeployOffsetSec, 0)
 		case SettingsFieldAutoDeployMaxIntervals:
 			v.CheckGT(f, int64(s.AutoDeployMaxIntervals), 0)
 		case SettingsFieldLoadBalancerMaxPortRange:
