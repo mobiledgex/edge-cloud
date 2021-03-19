@@ -403,7 +403,3 @@ func AppInstToClusterDeployment(deployment string) string {
 	}
 	return deployment
 }
-
-func GetIPBasedDNSMap(ip, dnsRootPrefix, dnsRoot string) string {
-	return "local-" + strings.Replace(ip, ".", "-", -1) + "." + dnsRootPrefix + "." + dnsRoot
-}
