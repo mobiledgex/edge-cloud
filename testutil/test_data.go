@@ -623,9 +623,7 @@ var AppInstData = []edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[12].Key, //vm app with lb
 			ClusterInstKey: edgeproto.VirtualClusterInstKey{
-				//ClusterKey:   edgeproto.ClusterKey{Name: "DefaultVMCluster"},
 				CloudletKey: CloudletData[0].Key,
-				//Organization: DevData[0],
 			},
 		},
 		CloudletLoc: CloudletData[1].Location,

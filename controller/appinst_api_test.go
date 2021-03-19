@@ -145,10 +145,6 @@ func TestAppInstApi(t *testing.T) {
 	}
 	responder.SetSimulateAppCreateFailure(false)
 	RequireAppInstPortConsistency = true
-	for _, obj := range appInstApi.cache.Objs {
-		fmt.Printf("Cache key %s", obj.Obj.Key)
-	}
-
 	require.Equal(t, 0, len(appInstApi.cache.Objs))
 	require.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
