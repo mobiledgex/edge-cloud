@@ -228,9 +228,13 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DebugApiClient interface {
+	// Enable debug log levels
 	EnableDebugLevels(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (DebugApi_EnableDebugLevelsClient, error)
+	// Disable debug log levels
 	DisableDebugLevels(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (DebugApi_DisableDebugLevelsClient, error)
+	// Show debug log levels
 	ShowDebugLevels(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (DebugApi_ShowDebugLevelsClient, error)
+	// Run debug command
 	RunDebug(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (DebugApi_RunDebugClient, error)
 }
 
@@ -372,9 +376,13 @@ func (x *debugApiRunDebugClient) Recv() (*DebugReply, error) {
 
 // DebugApiServer is the server API for DebugApi service.
 type DebugApiServer interface {
+	// Enable debug log levels
 	EnableDebugLevels(*DebugRequest, DebugApi_EnableDebugLevelsServer) error
+	// Disable debug log levels
 	DisableDebugLevels(*DebugRequest, DebugApi_DisableDebugLevelsServer) error
+	// Show debug log levels
 	ShowDebugLevels(*DebugRequest, DebugApi_ShowDebugLevelsServer) error
+	// Run debug command
 	RunDebug(*DebugRequest, DebugApi_RunDebugServer) error
 }
 

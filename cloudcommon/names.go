@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -140,9 +139,6 @@ const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0
 var platformApps = map[string]bool{
 	Organizationplatos + ":" + PlatosEnablingLayer: true,
 }
-
-// Common regular expression for quoted strings parse
-var QuotedStringRegex = regexp.MustCompile(`"(.*?)"`)
 
 // IsPlatformApp true if the developer/app combo is a platform app
 func IsPlatformApp(devname string, appname string) bool {
