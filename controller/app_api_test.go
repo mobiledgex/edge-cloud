@@ -111,9 +111,24 @@ func TestAppApi(t *testing.T) {
 	_, err = appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 
+	// manifest must be empty if deployment is helm
+	app.Deployment = cloudcommon.DeploymentTypeHelm
+	app.DeploymentManifest = testK8SManifest1
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_HELM
+	_, err = appApi.CreateApp(ctx, &app)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Manifest is not used for Helm deployments")
+	// check that creation passes with empty manifest
+	app.DeploymentManifest = ""
+	_, err = appApi.CreateApp(ctx, &app)
+	require.Nil(t, err)
+	_, err = appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err)
+
 	// user-specified manifest parsing/consistency/checking
 	app.Deployment = "kubernetes"
 	app.DeploymentManifest = testK8SManifest1
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
 	app.AccessPorts = "tcp:80"
 	_, err = appApi.CreateApp(ctx, &app)
 	require.Nil(t, err)
