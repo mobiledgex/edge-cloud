@@ -226,27 +226,37 @@ func NewClientCloudletApi(api edgeproto.CloudletApiClient) *CloudletCommonApi {
 	return &apiWrap
 }
 
-func InternalCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
+type CloudletTestOptions struct {
+	createdData []edgeproto.Cloudlet
+}
+
+type CloudletTestOp func(opts *CloudletTestOptions)
+
+func WithCreatedCloudletTestData(createdData []edgeproto.Cloudlet) CloudletTestOp {
+	return func(opts *CloudletTestOptions) { opts.createdData = createdData }
+}
+
+func InternalCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet, ops ...CloudletTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicCloudletCudTest(t, ctx, NewInternalCloudletApi(api), testData)
+		basicCloudletCudTest(t, ctx, NewInternalCloudletApi(api), testData, ops...)
 	case "show":
 		basicCloudletShowTest(t, ctx, NewInternalCloudletApi(api), testData)
 	}
 }
 
-func ClientCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
+func ClientCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet, ops ...CloudletTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicCloudletCudTest(t, ctx, NewClientCloudletApi(api), testData)
+		basicCloudletCudTest(t, ctx, NewClientCloudletApi(api), testData, ops...)
 	case "show":
 		basicCloudletShowTest(t, ctx, NewClientCloudletApi(api), testData)
 	}
@@ -282,12 +292,20 @@ func GetCloudlet(t *testing.T, ctx context.Context, api *CloudletCommonApi, key 
 	return found
 }
 
-func basicCloudletCudTest(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+func basicCloudletCudTest(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet, ops ...CloudletTestOp) {
 	var err error
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
 		return
+	}
+	options := CloudletTestOptions{}
+	for _, op := range ops {
+		op(&options)
+	}
+	createdData := testData
+	if options.createdData != nil {
+		createdData = options.createdData
 	}
 
 	// test create
@@ -298,20 +316,20 @@ func basicCloudletCudTest(t *testing.T, ctx context.Context, api *CloudletCommon
 	require.NotNil(t, err, "Create duplicate Cloudlet")
 
 	// test show all items
-	basicCloudletShowTest(t, ctx, api, testData)
+	basicCloudletShowTest(t, ctx, api, createdData)
 
 	// test Delete
-	_, err = api.DeleteCloudlet(ctx, &testData[0])
+	_, err = api.DeleteCloudlet(ctx, &createdData[0])
 	require.Nil(t, err, "Delete Cloudlet %s", testData[0].GetKey().GetKeyString())
 	show := ShowCloudlet{}
 	show.Init()
 	filterNone := edgeproto.Cloudlet{}
 	err = api.ShowCloudlet(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1+CloudletShowExtraCount, len(show.Data), "Show count")
-	show.AssertNotFound(t, &testData[0])
+	require.Equal(t, len(createdData)-1+CloudletShowExtraCount, len(show.Data), "Show count")
+	show.AssertNotFound(t, &createdData[0])
 	// test update of missing object
-	_, err = api.UpdateCloudlet(ctx, &testData[0])
+	_, err = api.UpdateCloudlet(ctx, &createdData[0])
 	require.NotNil(t, err, "Update missing object")
 	// Create it back
 	_, err = api.CreateCloudlet(ctx, &testData[0])
@@ -479,7 +497,17 @@ func NewClientCloudletInfoApi(api edgeproto.CloudletInfoApiClient) *CloudletInfo
 	return &apiWrap
 }
 
-func InternalCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiServer, testData []edgeproto.CloudletInfo) {
+type CloudletInfoTestOptions struct {
+	createdData []edgeproto.CloudletInfo
+}
+
+type CloudletInfoTestOp func(opts *CloudletInfoTestOptions)
+
+func WithCreatedCloudletInfoTestData(createdData []edgeproto.CloudletInfo) CloudletInfoTestOp {
+	return func(opts *CloudletInfoTestOptions) { opts.createdData = createdData }
+}
+
+func InternalCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiServer, testData []edgeproto.CloudletInfo, ops ...CloudletInfoTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletInfoTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -490,7 +518,7 @@ func InternalCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletI
 	}
 }
 
-func ClientCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiClient, testData []edgeproto.CloudletInfo) {
+func ClientCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiClient, testData []edgeproto.CloudletInfo, ops ...CloudletInfoTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletInfoTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
