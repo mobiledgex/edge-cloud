@@ -597,7 +597,9 @@ type AppApiClient interface {
 	// Show Applications. Lists all Application definitions managed from the Edge Controller.
 	// Any fields specified will be used to filter results.
 	ShowApp(ctx context.Context, in *App, opts ...grpc.CallOption) (AppApi_ShowAppClient, error)
+	// Add an AutoProvPolicy to the App
 	AddAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error)
+	// Remove an AutoProvPolicy from the App
 	RemoveAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error)
 }
 
@@ -698,7 +700,9 @@ type AppApiServer interface {
 	// Show Applications. Lists all Application definitions managed from the Edge Controller.
 	// Any fields specified will be used to filter results.
 	ShowApp(*App, AppApi_ShowAppServer) error
+	// Add an AutoProvPolicy to the App
 	AddAppAutoProvPolicy(context.Context, *AppAutoProvPolicy) (*Result, error)
+	// Remove an AutoProvPolicy from the App
 	RemoveAppAutoProvPolicy(context.Context, *AppAutoProvPolicy) (*Result, error)
 }
 

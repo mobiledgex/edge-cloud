@@ -74,7 +74,7 @@ service ResTagTableApi {
     };
     option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
   }
-
+  // Update TagTable
   rpc UpdateResTagTable(ResTagTable) returns (Result) {
     option (google.api.http) = {
       post: "/update/gputagtbl"
@@ -82,7 +82,7 @@ service ResTagTableApi {
     };
     option (protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
   }
-  // show TagTable
+  // Show TagTable
   rpc ShowResTagTable(ResTagTable) returns (stream ResTagTable) {
       option (google.api.http) = {
         post: "/show/gputagtbl"
@@ -90,7 +90,7 @@ service ResTagTableApi {
       };
       option(protogen.mc2_api) = "ResourceResTagTable,ActionView,Key.Organization";
   }
-  // add new tag(s) to TagTable
+  // Add new tag(s) to TagTable
   rpc AddResTag(ResTagTable) returns (Result) {
       option(google.api.http) = {
         post: "/add/gputagtbl"
@@ -99,7 +99,7 @@ service ResTagTableApi {
       option(protogen.mc2_api) = "ResourceResTagTable,ActionManage,Key.Organization";
       option(protogen.input_required) = true;
   }
-  // remove existing tag(s) from TagTable
+  // Remove existing tag(s) from TagTable
   rpc RemoveResTag(ResTagTable) returns (Result) {
       option(google.api.http) = {
         post: "/rm/gputagtbl"

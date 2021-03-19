@@ -67,6 +67,7 @@ type Command struct {
 	StreamOutIncremental bool
 	CobraCmd             *cobra.Command
 	Run                  func(c *Command, args []string) error
+	PrintUsage           bool
 }
 
 func (c *Command) GenCmd() *cobra.Command {
@@ -90,6 +91,7 @@ func (c *Command) GenCmd() *cobra.Command {
 		Short: short,
 	}
 	cmd.SetUsageFunc(c.usageFunc)
+	cmd.SetHelpFunc(c.helpFunc)
 	c.CobraCmd = cmd
 
 	if c.Run != nil {
@@ -98,9 +100,28 @@ func (c *Command) GenCmd() *cobra.Command {
 	return cmd
 }
 
+func (c *Command) helpFunc(cmd *cobra.Command, args []string) {
+	// Help always prints the usage, regardless of if there
+	// were any args specified or not.
+	c.PrintUsage = true
+	c.usageFunc(cmd)
+}
+
 func (c *Command) usageFunc(cmd *cobra.Command) error {
+	// Usage is called on error. Normally, we'll skip printing
+	// the usage on error, because the error message is sufficient.
+	// However, we do want to print the usage when no arguments were
+	// given. This is why we have a check here, rather than a global
+	// setting to never print the usage.
+	if !c.PrintUsage {
+		return nil
+	}
 	out := cmd.OutOrStderr()
 	fmt.Fprintf(out, "Usage: %s [args]\n", cmd.UseLine())
+
+	if cmd.Short != "" {
+		fmt.Fprintf(out, "\n%s\n", cmd.Short)
+	}
 
 	pad := 0
 	allargs := append(strings.Split(c.RequiredArgs, " "), strings.Split(c.OptionalArgs, " ")...)
@@ -122,9 +143,6 @@ func (c *Command) usageFunc(cmd *cobra.Command) error {
 	if cmd.HasAvailableLocalFlags() {
 		fmt.Fprint(out, "\nFlags:\n", cmd.LocalFlags().FlagUsages())
 	}
-	if cmd.HasAvailableInheritedFlags() {
-		fmt.Fprint(out, "\nGlobal Flags:\n", cmd.InheritedFlags().FlagUsages())
-	}
 	return nil
 }
 
@@ -137,10 +155,10 @@ func usageArgs(str string) []string {
 }
 
 func (c *Command) requiredArgsHelp(pad int) string {
-	args := strings.Split(c.RequiredArgs, " ")
-	if len(args) == 0 {
+	if strings.TrimSpace(c.RequiredArgs) == "" {
 		return ""
 	}
+	args := strings.Split(c.RequiredArgs, " ")
 	buf := bytes.Buffer{}
 	fmt.Fprintf(&buf, "Required Args:\n")
 	fmt.Fprint(&buf, c.argsHelp(pad, args))
@@ -148,10 +166,10 @@ func (c *Command) requiredArgsHelp(pad int) string {
 }
 
 func (c *Command) optionalArgsHelp(pad int) string {
-	args := strings.Split(c.OptionalArgs, " ")
-	if len(args) == 0 {
+	if strings.TrimSpace(c.OptionalArgs) == "" {
 		return ""
 	}
+	args := strings.Split(c.OptionalArgs, " ")
 	buf := bytes.Buffer{}
 	fmt.Fprintf(&buf, "Optional Args:\n")
 	fmt.Fprint(&buf, c.argsHelp(pad, args))

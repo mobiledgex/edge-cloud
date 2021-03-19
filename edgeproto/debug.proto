@@ -41,6 +41,7 @@ message DebugReply {
 }
 
 service DebugApi {
+  // Enable debug log levels
   rpc EnableDebugLevels(DebugRequest) returns (stream DebugReply) {
     option (google.api.http) = {
       post: "/debug/enablelevels"
@@ -51,6 +52,7 @@ service DebugApi {
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
     option (protogen.mc2_api_notifyroot) = true;
   }
+  // Disable debug log levels
   rpc DisableDebugLevels(DebugRequest) returns (stream DebugReply) {
     option (google.api.http) = {
       post: "/debug/disablelevels"
@@ -61,6 +63,7 @@ service DebugApi {
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
     option (protogen.mc2_api_notifyroot) = true;
   }
+  // Show debug log levels
   rpc ShowDebugLevels(DebugRequest) returns (stream DebugReply) {
     option (google.api.http) = {
       post: "/debug/showlevels"
@@ -71,6 +74,7 @@ service DebugApi {
     option (protogen.mc2_api_notifyroot) = true;
     option (protogen.non_standard_show) = true;
   }
+  // Run debug command
   rpc RunDebug(DebugRequest) returns (stream DebugReply) {
     option (google.api.http) = {
       post: "/debug/run"
