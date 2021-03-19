@@ -1227,7 +1227,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	s.cache.Mux.Unlock()
 
 	if len(instances) == 0 {
-		log.DebugLog(log.DebugLevelApi, "no AppInsts matched", "key", in.Key)
+		log.SpanLog(ctx, log.DebugLevelApi, "no AppInsts matched", "key", in.Key)
 		return in.Key.NotFoundError()
 	}
 
@@ -1237,7 +1237,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
-			log.DebugLog(log.DebugLevelApi, "updating AppInst", "key", k)
+			log.SpanLog(ctx, log.DebugLevelApi, "updating AppInst", "key", k)
 			updated, err := s.refreshAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
 				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
@@ -1254,7 +1254,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	for k, r := range instanceUpdateResults {
 		numTotal++
 		result := <-r
-		log.DebugLog(log.DebugLevelApi, "instanceUpdateResult ", "key", k, "updated", result.revisionUpdated, "error", result.errString)
+		log.SpanLog(ctx, log.DebugLevelApi, "instanceUpdateResult ", "key", k, "updated", result.revisionUpdated, "error", result.errString)
 		if result.errString == "" {
 			if result.revisionUpdated {
 				numUpdated++
@@ -1403,7 +1403,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 	}()
 
-	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
+	log.SpanLog(ctx, log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Organization == "" {
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
@@ -1595,7 +1595,7 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 }
 
 func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppInst, state dme.HealthCheck) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst Health Check", "key", in.Key, "state", state)
+	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst Health Check", "key", in.Key, "state", state)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -1624,24 +1624,33 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 }
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState)
+	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "uri", in.Uri)
 
 	// update only diff of status msgs
 	streamObjApi.UpdateStatus(ctx, &in.Status, &in.Key)
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		applyUpdate := false
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
-		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
+		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN &&
+			inst.PowerState != in.PowerState {
 			inst.PowerState = in.PowerState
+			applyUpdate = true
 		}
 		// If AppInst is ready and state has not been set yet by HealthCheckUpdate, default to Ok.
 		if in.State == edgeproto.TrackedState_READY &&
 			inst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_UNKNOWN {
 			inst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_OK
+			applyUpdate = true
+		}
+
+		if in.Uri != "" && inst.Uri != in.Uri {
+			inst.Uri = in.Uri
+			applyUpdate = true
 		}
 
 		if inst.State == in.State {
@@ -1649,24 +1658,27 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
-				s.store.STMPut(stm, &inst)
+				applyUpdate = true
 			}
-			return nil
+		} else {
+			// please see state_transitions.md
+			if !crmTransitionOk(inst.State, in.State) {
+				log.SpanLog(ctx, log.DebugLevelApi, "Invalid state transition",
+					"key", &in.Key, "cur", inst.State, "next", in.State)
+				return nil
+			}
+			inst.State = in.State
+			applyUpdate = true
 		}
-		// please see state_transitions.md
-		if !crmTransitionOk(inst.State, in.State) {
-			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
-				"key", &in.Key, "cur", inst.State, "next", in.State)
-			return nil
-		}
-		inst.State = in.State
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {
 			inst.Errors = nil
 		}
 		inst.RuntimeInfo = in.RuntimeInfo
-		s.store.STMPut(stm, &inst)
+		if applyUpdate {
+			s.store.STMPut(stm, &inst)
+		}
 		return nil
 	})
 	if in.State == edgeproto.TrackedState_DELETE_DONE {
@@ -1675,7 +1687,7 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 }
 
 func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Delete AppInst from info", "key", in.Key, "state", in.State)
+	log.SpanLog(ctx, log.DebugLevelApi, "Delete AppInst from info", "key", in.Key, "state", in.State)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -1685,7 +1697,7 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		// please see state_transitions.md
 		if inst.State != edgeproto.TrackedState_DELETING && inst.State != edgeproto.TrackedState_DELETE_REQUESTED &&
 			inst.State != edgeproto.TrackedState_DELETE_DONE {
-			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
+			log.SpanLog(ctx, log.DebugLevelApi, "Invalid state transition",
 				"key", &in.Key, "cur", inst.State,
 				"next", edgeproto.TrackedState_DELETE_DONE)
 			return nil

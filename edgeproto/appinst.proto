@@ -250,6 +250,8 @@ message AppInstInfo {
   StatusInfo status = 7 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Power State of the AppInst
   PowerState power_state = 8;
+  // Base FQDN for the App based on the cloudlet platform
+  string uri = 9 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

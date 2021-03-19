@@ -312,6 +312,23 @@ func (s *AppInstInfoCache) SetState(ctx context.Context, key *AppInstKey, state 
 	return err
 }
 
+func (s *AppInstInfoCache) SetUri(ctx context.Context, key *AppInstKey, uri string) {
+	if uri == "" {
+		return
+	}
+	s.UpdateModFunc(ctx, key, 0, func(old *AppInstInfo) (newObj *AppInstInfo, changed bool) {
+		info := &AppInstInfo{}
+		if old == nil {
+			info.Key = *key
+		} else {
+			*info = *old
+		}
+		info.Uri = uri
+		return info, true
+	})
+	return
+}
+
 func (s *AppInstInfoCache) SetStateRuntime(ctx context.Context, key *AppInstKey, state TrackedState, rt *AppInstRuntime) {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
