@@ -62,6 +62,7 @@ message Device {
 }
 
 service DeviceApi {
+  // Inject a device
   rpc InjectDevice(Device) returns (Result) {
     option (google.api.http) = {
       post: "/create/device"
@@ -69,6 +70,7 @@ service DeviceApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
+  // Show devices
   rpc ShowDevice(Device) returns (stream Device) {
     option (google.api.http) = {
       post: "/show/device"
@@ -76,6 +78,7 @@ service DeviceApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
+  // Evict a device
   rpc EvictDevice(Device) returns (Result) {
     option (google.api.http) = {
       post: "/evict/device"

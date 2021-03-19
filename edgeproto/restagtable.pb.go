@@ -276,12 +276,13 @@ type ResTagTableApiClient interface {
 	CreateResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error)
 	// Delete TagTable
 	DeleteResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error)
+	// Update TagTable
 	UpdateResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error)
-	// show TagTable
+	// Show TagTable
 	ShowResTagTable(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (ResTagTableApi_ShowResTagTableClient, error)
-	// add new tag(s) to TagTable
+	// Add new tag(s) to TagTable
 	AddResTag(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error)
-	// remove existing tag(s) from TagTable
+	// Remove existing tag(s) from TagTable
 	RemoveResTag(ctx context.Context, in *ResTagTable, opts ...grpc.CallOption) (*Result, error)
 	// Fetch a copy of the TagTable
 	GetResTagTable(ctx context.Context, in *ResTagTableKey, opts ...grpc.CallOption) (*ResTagTable, error)
@@ -387,12 +388,13 @@ type ResTagTableApiServer interface {
 	CreateResTagTable(context.Context, *ResTagTable) (*Result, error)
 	// Delete TagTable
 	DeleteResTagTable(context.Context, *ResTagTable) (*Result, error)
+	// Update TagTable
 	UpdateResTagTable(context.Context, *ResTagTable) (*Result, error)
-	// show TagTable
+	// Show TagTable
 	ShowResTagTable(*ResTagTable, ResTagTableApi_ShowResTagTableServer) error
-	// add new tag(s) to TagTable
+	// Add new tag(s) to TagTable
 	AddResTag(context.Context, *ResTagTable) (*Result, error)
-	// remove existing tag(s) from TagTable
+	// Remove existing tag(s) from TagTable
 	RemoveResTag(context.Context, *ResTagTable) (*Result, error)
 	// Fetch a copy of the TagTable
 	GetResTagTable(context.Context, *ResTagTableKey) (*ResTagTable, error)
