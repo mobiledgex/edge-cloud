@@ -346,6 +346,7 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 	for ii, _ := range s.cloudletInfos {
 		s.cloudletInfos[ii].Key = s.cloudlets[ii].Key
 		s.cloudletInfos[ii].State = dme.CloudletState_CLOUDLET_STATE_READY
+		s.cloudletInfos[ii].CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 		s.cloudletInfos[ii].Flavors = []*edgeproto.FlavorInfo{
 			&edgeproto.FlavorInfo{
 				Name:  flavor.Key.Name,

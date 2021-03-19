@@ -410,7 +410,7 @@ func (s *AutoProvPolicyApi) checkMinMax(ctx context.Context, stm concurrency.STM
 	log.SpanLog(ctx, log.DebugLevelApi, "autoprov check minmax stats", "action", action.String(), "inst", inst.Key, "policy", policyName, "count", count, "min", policy.MinActiveInstances, "max", policy.MaxInstances)
 	if action == cloudcommon.Create && policy.MinActiveInstances > 0 {
 		if count >= int(policy.MinActiveInstances) {
-			return fmt.Errorf("Create to satisfy min already met, ignoring")
+			return cloudcommon.AutoProvMinAlreadyMetError
 		}
 	}
 	if action == cloudcommon.Delete && policy.MaxInstances > 0 {

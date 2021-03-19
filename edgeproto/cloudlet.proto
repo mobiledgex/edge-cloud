@@ -537,6 +537,8 @@ message CloudletInfo {
   InfraResourcesSnapshot resources_snapshot = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Trust Policy State
   TrackedState trust_policy_state = 18 [(protogen.hidetag) = "nocmp"];
+  // Version for compatibility tracking
+  uint32 compatibility_version = 19 [(protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

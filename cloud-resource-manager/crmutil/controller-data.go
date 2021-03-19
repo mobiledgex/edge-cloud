@@ -3,6 +3,7 @@ package crmutil
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
@@ -228,10 +229,16 @@ func (cd *ControllerData) CaptureResourcesSnapshot(ctx context.Context, cloudlet
 	for k, _ := range deployedClusters {
 		deployedClusterKeys = append(deployedClusterKeys, k)
 	}
+	sort.Slice(deployedClusterKeys, func(ii, jj int) bool {
+		return deployedClusterKeys[ii].GetKeyString() < deployedClusterKeys[jj].GetKeyString()
+	})
 	deployedVMAppKeys := []edgeproto.AppInstRefKey{}
 	for k, _ := range deployedVMAppInsts {
 		deployedVMAppKeys = append(deployedVMAppKeys, k)
 	}
+	sort.Slice(deployedVMAppKeys, func(ii, jj int) bool {
+		return deployedVMAppKeys[ii].GetKeyString() < deployedVMAppKeys[jj].GetKeyString()
+	})
 	resources.ClusterInsts = deployedClusterKeys
 	resources.VmAppInsts = deployedVMAppKeys
 	return resources
@@ -528,6 +535,8 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			}
 
+			// set URI empty, so that we can know if platform specific URI is being set
+			new.Uri = ""
 			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
@@ -539,7 +548,10 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				}
 				return
 			}
-			log.SpanLog(ctx, log.DebugLevelInfra, "created app inst", "appisnt", new, "ClusterInst", clusterInst)
+			if new.Uri != "" {
+				cd.AppInstInfoCache.SetUri(ctx, &new.Key, new.Uri)
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "created app inst", "appinst", new, "ClusterInst", clusterInst)
 
 			cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.PowerState_POWER_ON)
 			rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, new)

@@ -78,28 +78,24 @@ var AppInstEvent = "appinst"
 var AppInstCheckpoints = "appinst-checkpoints"
 var MonthlyInterval = "MONTH"
 
-// Persistent Influx variables
-var PersistentConnDbName = "persistent_metrics"
-var GpsLocationMetric = "gps-location"
-var AppInstLatencyMetric = "appinst-latency"
-var LatencyPerCarrierMetric = "latency-per-carrier"
-var LatencyPerDataNetworkMetric = "latency-per-datanetwork"
-var LatencyPerLocationMetric = "latency-per-location"
-var CustomMetric = "custom-metrics"
-
 // Cloudlet resource usage
 var CloudletResourceUsageDbName = "cloudlet_resource_usage"
 var CloudletFlavorUsageMeasurement = "cloudlet-flavor-usage"
 
-// Map used to identify which metrics should go to persistent_metrics db
-var PersistentMetrics = map[string]struct{}{
-	GpsLocationMetric:           struct{}{},
-	AppInstLatencyMetric:        struct{}{},
-	LatencyPerCarrierMetric:     struct{}{},
-	LatencyPerDataNetworkMetric: struct{}{},
-	LatencyPerLocationMetric:    struct{}{},
-	CustomMetric:                struct{}{},
+// EdgeEvents Metrics Influx variables
+var EdgeEventsMetricsDbName = "edgeevents_metrics"
+var LatencyMetric = "latency-metric"
+var DeviceMetric = "device-metric"
+var CustomMetric = "custom-metric"
+
+// Map used to identify which metrics should go to persistent_metrics db. Value represents the measurement creation status
+var EdgeEventsMetrics = map[string]struct{}{
+	LatencyMetric: struct{}{},
+	DeviceMetric:  struct{}{},
+	CustomMetric:  struct{}{},
 }
+
+var DownsampledMetricsDbName = "downsampled_metrics"
 
 var IPAddrAllInterfaces = "0.0.0.0"
 var IPAddrLocalHost = "127.0.0.1"

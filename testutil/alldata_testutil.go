@@ -38,43 +38,82 @@ type AllDataOut struct {
 	Errors                     []Err
 }
 
-func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut) {
+// used to intersperse other creates/deletes/checks
+// note the objs value is the previous one for create,
+// but the next one for delete
+type RunAllDataApiCallback func(objs string)
+
+func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut, apicb RunAllDataApiCallback) {
+	apicb("")
 	run.FlavorApi(&in.Flavors, inMap["flavors"], &out.Flavors)
+	apicb("flavors")
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
+	apicb("settings")
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
+	apicb("operatorcodes")
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
+	apicb("restagtables")
 	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
+	apicb("trustpolicies")
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
+	apicb("cloudlets")
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
+	apicb("cloudletinfos")
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
+	apicb("cloudletpools")
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)
+	apicb("autoprovpolicies")
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
+	apicb("autoprovpolicycloudlets")
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
+	apicb("autoscalepolicies")
 	run.ClusterInstApi_IdleReservableClusterInsts(in.IdleReservableClusterInsts, inMap["idlereservableclusterinsts"], &out.IdleReservableClusterInsts)
+	apicb("idlereservableclusterinsts")
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
+	apicb("clusterinsts")
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
+	apicb("apps")
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
+	apicb("appinstances")
 	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
+	apicb("vmpools")
 	out.Errors = run.Errs
 }
 
-func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut) {
+func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut, apicb RunAllDataApiCallback) {
+	apicb("vmpools")
 	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
+	apicb("appinstances")
 	run.AppInstApi(&in.AppInstances, inMap["appinstances"], &out.AppInstances)
+	apicb("apps")
 	run.AppApi(&in.Apps, inMap["apps"], &out.Apps)
+	apicb("clusterinsts")
 	run.ClusterInstApi(&in.ClusterInsts, inMap["clusterinsts"], &out.ClusterInsts)
+	apicb("idlereservableclusterinsts")
 	run.ClusterInstApi_IdleReservableClusterInsts(in.IdleReservableClusterInsts, inMap["idlereservableclusterinsts"], &out.IdleReservableClusterInsts)
+	apicb("autoscalepolicies")
 	run.AutoScalePolicyApi(&in.AutoScalePolicies, inMap["autoscalepolicies"], &out.AutoScalePolicies)
+	apicb("autoprovpolicycloudlets")
 	run.AutoProvPolicyApi_AutoProvPolicyCloudlet(&in.AutoProvPolicyCloudlets, inMap["autoprovpolicycloudlets"], &out.AutoProvPolicyCloudlets)
+	apicb("autoprovpolicies")
 	run.AutoProvPolicyApi(&in.AutoProvPolicies, inMap["autoprovpolicies"], &out.AutoProvPolicies)
+	apicb("cloudletpools")
 	run.CloudletPoolApi(&in.CloudletPools, inMap["cloudletpools"], &out.CloudletPools)
+	apicb("cloudletinfos")
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
+	apicb("cloudlets")
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
+	apicb("trustpolicies")
 	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
+	apicb("restagtables")
 	run.ResTagTableApi(&in.ResTagTables, inMap["restagtables"], &out.ResTagTables)
+	apicb("operatorcodes")
 	run.OperatorCodeApi(&in.OperatorCodes, inMap["operatorcodes"], &out.OperatorCodes)
+	apicb("settings")
 	run.SettingsApi(in.Settings, inMap["settings"], &out.Settings)
+	apicb("flavors")
 	run.FlavorApi(&in.Flavors, inMap["flavors"], &out.Flavors)
+	apicb("")
 	out.Errors = run.Errs
 }
 

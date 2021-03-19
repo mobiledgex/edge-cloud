@@ -495,7 +495,77 @@ func TestAutoClusterInst(t *testing.T) {
 	require.NotNil(t, err, "create autodelete appInst")
 	require.Contains(t, err.Error(), "Sidecar AppInst (AutoDelete App) must specify the RealClusterName field to deploy to the virtual cluster")
 
+	testDeprecatedAutoCluster(t, ctx)
 	dummy.Stop()
+}
+
+func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
+	// downgrade cloudlets to older crm compatibility version
+	cloudletInfos := []edgeproto.CloudletInfo{}
+	for _, info := range testutil.CloudletInfoData {
+		info.CompatibilityVersion = 0
+		cloudletInfos = append(cloudletInfos, info)
+	}
+	insertCloudletInfo(ctx, cloudletInfos)
+
+	// existing AppInst creates should fail because the ClusterInst org
+	// must match the AppInst org.
+	for ii, obj := range testutil.AppInstData {
+		if !strings.HasPrefix(obj.Key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix) {
+			continue
+		}
+		// there is one App that has dev org as MobiledgeX, which matches
+		// the Reservable auto-cluster's org, so skip it.
+		if obj.Key.AppKey.Organization == obj.Key.ClusterInstKey.Organization {
+			continue
+		}
+		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		require.NotNil(t, err, "Create autocluster appinst[%d]: %v", ii, obj.Key)
+		require.Contains(t, err.Error(), "Developer name mismatch")
+	}
+
+	appInsts := []edgeproto.AppInst{}
+	clusterInsts := []edgeproto.ClusterInst{}
+	for ii, obj := range testutil.AppInstData {
+		if !strings.HasPrefix(obj.Key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix) {
+			continue
+		}
+		obj.Key.ClusterInstKey.Organization = obj.Key.AppKey.Organization
+		appInsts = append(appInsts, obj)
+
+		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		require.Nil(t, err, "Create autocluster appinst[%d]: %v", ii, obj.Key)
+		// find app for AppInst
+		var app *edgeproto.App
+		for _, a := range testutil.AppData {
+			if a.Key.Matches(&obj.Key.AppKey) {
+				app = &a
+				break
+			}
+		}
+		require.NotNil(t, app, "find App for AppInst")
+		// build expected ClusterInst
+		cinst := edgeproto.ClusterInst{}
+		cinst.Key = *obj.Key.ClusterInstKey.Real("")
+		cinst.Flavor = app.DefaultFlavor
+		cinst.NumMasters = 1
+		cinst.NumNodes = 1
+		cinst.Auto = true
+		cinst.State = edgeproto.TrackedState_READY
+		clusterInsts = append(clusterInsts, cinst)
+	}
+	testutil.InternalClusterInstTest(t, "show", &clusterInstApi, clusterInsts)
+	// delete AppInsts should delete ClusterInsts
+	for _, obj := range appInsts {
+		err := appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		require.Nil(t, err, "Delete autocluster appinst %v", obj.Key)
+	}
+	testutil.InternalClusterInstTest(t, "show", &clusterInstApi, []edgeproto.ClusterInst{})
+	// restore CRM version
+	for ii := range cloudletInfos {
+		cloudletInfos[ii].CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
+	}
+	insertCloudletInfo(ctx, cloudletInfos)
 }
 
 func checkAppInstState(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, in *edgeproto.AppInst, state edgeproto.TrackedState) {

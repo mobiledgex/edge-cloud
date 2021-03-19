@@ -32,6 +32,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
 	}
+	for i1 := 0; i1 < len(in.Settings.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i1++ {
+	}
 	for i0 := 0; i0 < len(in.OperatorCodes); i0++ {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
@@ -116,6 +118,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.CloudletInfos[i0].TrustPolicyState = 0
+		}
+		if _, found := tags["nocmp"]; found {
+			in.CloudletInfos[i0].CompatibilityVersion = 0
 		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
@@ -313,11 +318,15 @@ var AllDataOptionalArgs = []string{
 	"settings.updatevmpooltimeout",
 	"settings.updatetrustpolicytimeout",
 	"settings.dmeapimetricscollectioninterval",
-	"settings.persistentconnectionmetricscollectioninterval",
+	"settings.edgeeventsmetricscollectioninterval",
 	"settings.cleanupreservableautoclusteridletime",
 	"settings.influxdbcloudletusagemetricsretention",
 	"settings.createcloudlettimeout",
 	"settings.updatecloudlettimeout",
+	"settings.locationtilesidelengthkm",
+	"settings.edgeeventsmetricscontinuousqueriescollectionintervals:#.interval",
+	"settings.influxdbdownsampledmetricsretention",
+	"settings.influxdbedgeeventsmetricsretention",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -471,6 +480,7 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name",
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.organization",
 	"cloudletinfos:#.trustpolicystate",
+	"cloudletinfos:#.compatibilityversion",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -716,11 +726,14 @@ var AllDataComments = map[string]string{
 	"settings.updatevmpooltimeout":                                                  "Update VM pool timeout (duration)",
 	"settings.updatetrustpolicytimeout":                                             "Update Trust Policy timeout (duration)",
 	"settings.dmeapimetricscollectioninterval":                                      "Metrics collection interval for DME API counts (duration)",
-	"settings.persistentconnectionmetricscollectioninterval":                        "Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)",
+	"settings.edgeeventsmetricscollectioninterval":                                  "Collection interval for edgeevents metrics (latency, device, and custom)",
 	"settings.cleanupreservableautoclusteridletime":                                 "Idle reservable ClusterInst clean up time",
 	"settings.influxdbcloudletusagemetricsretention":                                "Default influxDB cloudlet usage metrics retention policy (duration)",
 	"settings.createcloudlettimeout":                                                "Create Cloudlet timeout (duration)",
 	"settings.updatecloudlettimeout":                                                "Update Cloudlet timeout (duration)",
+	"settings.locationtilesidelengthkm":                                             "Length of location tiles side for latency metrics (km)",
+	"settings.influxdbdownsampledmetricsretention":                                  "Default retention policy for downsampled influx db (duration)",
+	"settings.influxdbedgeeventsmetricsretention":                                   "Default retention policy for edgeevents metrics influx db (duration)",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",
@@ -850,6 +863,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
 	"cloudletinfos:#.resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 	"cloudletinfos:#.trustpolicystate":                                              "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"cloudletinfos:#.compatibilityversion":                                          "Version for compatibility tracking",
 	"cloudletpools:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
