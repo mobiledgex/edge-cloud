@@ -257,6 +257,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 			return err
 		}
 	}
+	if in.Deployment == cloudcommon.DeploymentTypeHelm && in.DeploymentManifest != "" {
+		return fmt.Errorf("Manifest is not used for Helm deployments. Use config files for customizations")
+	}
 	if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidAppDeployments) {
 		return fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidAppDeployments)
 	}
