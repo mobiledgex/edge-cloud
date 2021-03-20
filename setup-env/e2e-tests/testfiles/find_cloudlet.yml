@@ -88,6 +88,32 @@ tests:
     yaml2: "{{datadir}}/show_appinstclient_app1_cloud2.yml"
     filetype: raw
 
+- name: Set setting for the client timeout to 3 sec
+  apifile: "{{datadir}}/appinstclient_cleanup_timer_short.yml"
+  actions: [ctrlapi-create]
+
+- name: wait timeout period
+  actions: [sleep=4]
+
+- name: start AppInstClients stream for app1 on dmuus-cloud-2
+  apifile: "{{datadir}}/appinstclientkey_app1_cloud2.yml"
+  actions: [clientshow-start=1]
+
+- name: Wait as sec for the client to be detected
+  actions: [sleep=1]
+
+- name: stop and check AppInstClients stream for app1 on dmuus-cloud-2
+  apifile: "{{datadir}}/appinstclientkey_app1_cloud2.yml"
+  actions: [clientshow-stop=1]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-appinstclients-1.yml"
+    yaml2: "{{datadir}}/empty_file.yml"
+    filetype: raw
+
+- name: Set setting for the client timeout to default
+  apifile: "{{datadir}}/appinstclient_cleanup_timer_short.yml"
+  actions: [ctrlapi-create]
+  
 - name: find cloudlet app1 carrier any
   apifile: "{{datadir}}/find_cloudlet_app1any.yml"
   actions: [dmeapi-findcloudlet]
