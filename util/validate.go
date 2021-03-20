@@ -136,17 +136,11 @@ func ValidObjName(name string) error {
 
 // IsLatitudeValid checks that the latitude is within accepted ranges
 func IsLatitudeValid(latitude float64) bool {
-	if latitude == 0 {
-		return false
-	}
 	return (latitude >= -90) && (latitude <= 90)
 }
 
 // IsLongitudeValid checks that the longitude is within accepted ranges
 func IsLongitudeValid(longitude float64) bool {
-	if longitude == 0 {
-		return false
-	}
 	return (longitude >= -180) && (longitude <= 180)
 }
 

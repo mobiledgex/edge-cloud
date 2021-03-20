@@ -161,8 +161,8 @@ func TestCloudletApi(t *testing.T) {
 	// test invalid location values
 	clbad := testutil.CloudletData[0]
 	clbad.Key.Name = "bad loc"
-	testBadLat(t, ctx, &clbad, []float64{0, 90.1, -90.1, -1323213, 1232334}, "create")
-	testBadLong(t, ctx, &clbad, []float64{0, 180.1, -180.1, -1323213, 1232334}, "create")
+	testBadLat(t, ctx, &clbad, []float64{90.1, -90.1, -1323213, 1232334}, "create")
+	testBadLong(t, ctx, &clbad, []float64{180.1, -180.1, -1323213, 1232334}, "create")
 
 	clbad = testutil.CloudletData[0]
 	clbad.Key.Name = "test num dyn ips"
@@ -177,8 +177,8 @@ func TestCloudletApi(t *testing.T) {
 	cl.Key.Name = "test invalid lat-long"
 	err = cloudletApi.CreateCloudlet(&cl, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
-	testBadLat(t, ctx, &cl, []float64{0, 90.1, -90.1, -1323213, 1232334}, "update")
-	testBadLong(t, ctx, &cl, []float64{0, 180.1, -180.1, -1323213, 1232334}, "update")
+	testBadLat(t, ctx, &cl, []float64{90.1, -90.1, -1323213, 1232334}, "update")
+	testBadLong(t, ctx, &cl, []float64{180.1, -180.1, -1323213, 1232334}, "update")
 
 	// Resource Mapping tests
 
