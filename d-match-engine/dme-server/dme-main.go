@@ -73,7 +73,7 @@ var nodeMgr node.NodeMgr
 var sigChan chan os.Signal
 
 func validateLocation(loc *dme.Loc) error {
-	if loc == nil || (loc.Latitude == 0 && loc.Longitude == 0) {
+	if loc == nil {
 		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
 	}
 	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
