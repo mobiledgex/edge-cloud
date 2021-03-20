@@ -108,6 +108,11 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.UpdateCloudletTimeout = edgeproto.GetDefaultSettings().UpdateCloudletTimeout
 			modified = true
 		}
+		if cur.AppinstClientCleanupInterval == 0 {
+			cur.AppinstClientCleanupInterval = edgeproto.GetDefaultSettings().AppinstClientCleanupInterval
+			modified = true
+		}
+
 		if modified {
 			s.store.STMPut(stm, cur)
 		}
