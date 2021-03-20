@@ -113,6 +113,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, int64(s.DmeApiMetricsCollectionInterval), 0)
 		case SettingsFieldCleanupReservableAutoClusterIdletime:
 			v.CheckGT(f, int64(s.CleanupReservableAutoClusterIdletime), 0)
+		case SettingsFieldAppinstClientCleanupInterval:
+			v.CheckGT(f, int64(s.AppinstClientCleanupInterval), int64(Duration(2*time.Second)))
 		case SettingsFieldEdgeEventsMetricsCollectionInterval:
 			v.CheckGT(f, int64(s.EdgeEventsMetricsCollectionInterval), 0)
 		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals:
@@ -168,6 +170,7 @@ func GetDefaultSettings() *Settings {
 	s.InfluxDbMetricsRetention = Duration(672 * time.Hour) // 28 days is a default
 	s.CleanupReservableAutoClusterIdletime = Duration(30 * time.Minute)
 	s.InfluxDbCloudletUsageMetricsRetention = Duration(8760 * time.Hour) // 1 year
+	s.AppinstClientCleanupInterval = Duration(24 * time.Hour)            // 24 hours, dme's cookieExpiration
 	s.LocationTileSideLengthKm = 2
 	s.EdgeEventsMetricsCollectionInterval = Duration(1 * time.Hour)  // Collect every hour
 	s.InfluxDbEdgeEventsMetricsRetention = Duration(672 * time.Hour) // 28 days

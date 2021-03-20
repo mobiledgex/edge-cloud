@@ -76,6 +76,8 @@ message Settings {
   int64 influx_db_downsampled_metrics_retention = 31 [(gogoproto.casttype) = "Duration"];
   // Default retention policy for edgeevents metrics influx db (duration)
   int64 influx_db_edge_events_metrics_retention = 32 [(gogoproto.casttype) = "Duration"];
+  // AppInstClient cleanup thread run interval
+  int64 appinst_client_cleanup_interval = 33 [(gogoproto.casttype) = "Duration"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
