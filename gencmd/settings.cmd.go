@@ -227,6 +227,7 @@ var SettingsOptionalArgs = []string{
 	"edgeeventsmetricscontinuousqueriescollectionintervals:#.interval",
 	"influxdbdownsampledmetricsretention",
 	"influxdbedgeeventsmetricsretention",
+	"appinstclientcleanupinterval",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -261,6 +262,7 @@ var SettingsComments = map[string]string{
 	"locationtilesidelengthkm":              "Length of location tiles side for latency metrics (km)",
 	"influxdbdownsampledmetricsretention":   "Default retention policy for downsampled influx db (duration)",
 	"influxdbedgeeventsmetricsretention":    "Default retention policy for edgeevents metrics influx db (duration)",
+	"appinstclientcleanupinterval":          "AppInstClient cleanup thread run interval",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

@@ -3,15 +3,22 @@ package dmecommon
 import (
 	"fmt"
 	"sync"
+	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"golang.org/x/net/context"
 )
 
 type ClientsMap struct {
 	sync.RWMutex
-	clientsByApp map[edgeproto.AppKey][]edgeproto.AppInstClient
+	clientsByApp               map[edgeproto.AppKey][]edgeproto.AppInstClient
+	cleanupTimeout             time.Duration
+	waitGrp                    sync.WaitGroup
+	stopCleanupThread          chan struct{}
+	updateAppinstClientTimeout chan bool
 }
 
 var clientsMap *ClientsMap
@@ -22,6 +29,67 @@ var AppInstClientKeyCache edgeproto.AppInstClientKeyCache
 func InitAppInstClients() {
 	clientsMap = new(ClientsMap)
 	clientsMap.clientsByApp = make(map[edgeproto.AppKey][]edgeproto.AppInstClient)
+	clientsMap.stopCleanupThread = make(chan struct{})
+	clientsMap.updateAppinstClientTimeout = make(chan bool)
+	clientsMap.cleanupTimeout = time.Duration(Settings.AppinstClientCleanupInterval)
+	clientsMap.waitGrp.Add(1)
+	go clientsMap.timeoutAppInstClients()
+}
+
+func StopAppInstClients() {
+	clientsMap.stop()
+}
+
+func (m *ClientsMap) stop() {
+	close(m.stopCleanupThread)
+	m.waitGrp.Wait()
+}
+
+func (m *ClientsMap) UpdateClientTimeout(new edgeproto.Duration) {
+	m.cleanupTimeout = time.Duration(new)
+	m.updateAppinstClientTimeout <- true
+}
+
+// Periodically timeout appInstClients from clientsMap and
+// send notifications to the controller to delete them
+func (m *ClientsMap) timeoutAppInstClients() {
+	done := false
+	for !done {
+		select {
+		case <-m.updateAppinstClientTimeout:
+			// This triggers the update of the timeout, so we need to restart the timer
+			continue
+		case <-time.After(m.cleanupTimeout):
+			span := log.StartSpan(log.DebugLevelSampled, "appinstclient-cleanup")
+			log.SetTags(span, MyCloudletKey.GetTags())
+			ctx := log.ContextWithSpan(context.Background(), span)
+			log.SpanLog(ctx, log.DebugLevelInfo, "Running timeoutAppInstClients", "timeout", Settings.AppinstClientCleanupInterval)
+			// Last valid timestamp was now-cleanupTimeout
+			lastValidTime := time.Now().Add(-m.cleanupTimeout)
+			// Walk the entire map to find all possible matches
+			clientsMap.Lock()
+			for k, list := range m.clientsByApp {
+				jj := 0
+				for _, client := range list {
+					// Check if this client needs to be timed out -
+					//   if last Valid time is later than the client timestamp
+					if client.Location.Timestamp == nil ||
+						lastValidTime.After(cloudcommon.TimestampToTime(*client.Location.Timestamp)) {
+						continue
+					}
+					m.clientsByApp[k][jj] = client
+					jj++
+				}
+				// truncate the list
+				m.clientsByApp[k] = m.clientsByApp[k][:jj]
+			}
+			clientsMap.Unlock()
+			span.Finish()
+		case <-m.stopCleanupThread:
+			done = true
+		}
+	}
+	m.waitGrp.Done()
 }
 
 // Add a new client to the list of clients
@@ -119,5 +187,3 @@ func SendCachedClients(ctx context.Context, old *edgeproto.AppInstClientKey, new
 		}
 	}
 }
-
-// TODO - function to periodically timeout the clients
