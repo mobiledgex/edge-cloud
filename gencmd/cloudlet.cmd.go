@@ -119,6 +119,9 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.TrustPolicyState = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.CompatibilityVersion = 0
+	}
 }
 
 var CloudletApiCmd edgeproto.CloudletApiClient
@@ -1809,6 +1812,7 @@ var CloudletInfoOptionalArgs = []string{
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name",
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization",
 	"trustpolicystate",
+	"compatibilityversion",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1860,7 +1864,8 @@ var CloudletInfoComments = map[string]string{
 	"resourcessnapshot.vmappinsts:#.appkey.version":                 "App version",
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
-	"trustpolicystate": "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"trustpolicystate":     "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"compatibilityversion": "Version for compatibility tracking",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",

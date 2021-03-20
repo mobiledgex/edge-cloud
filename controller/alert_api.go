@@ -87,6 +87,12 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 
 }
 
+func (s *AlertApi) setAlertMetadata(in *edgeproto.Alert) {
+	in.Controller = ControllerId
+	// Add a region label
+	in.Labels["region"] = *region
+}
+
 func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	// for now, only store needed alerts
 	name, ok := in.Labels["alertname"]
@@ -98,9 +104,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "ignoring alert", "name", name)
 		return
 	}
-	in.Controller = ControllerId
-	// Add a region label
-	in.Labels["region"] = *region
+	s.setAlertMetadata(in)
 	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
 	if name == cloudcommon.AlertAppInstDown {
 		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]

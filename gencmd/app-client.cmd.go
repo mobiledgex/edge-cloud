@@ -729,15 +729,23 @@ var PlatformFindCloudletRequestOptionalArgs = []string{
 	"sessioncookie",
 	"carriername",
 	"clienttoken",
+	"deviceinfo.datanetworktype",
+	"deviceinfo.deviceos",
+	"deviceinfo.devicemodel",
+	"deviceinfo.signalstrength",
 	"tags",
 }
 var PlatformFindCloudletRequestAliasArgs = []string{}
 var PlatformFindCloudletRequestComments = map[string]string{
-	"ver":           "API version _(hidden)_ Reserved for future use",
-	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":   "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any app instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
-	"clienttoken":   "Client Token Token with encoded client data",
-	"tags":          "Tags _(optional)_ Vendor specific data",
+	"ver":                        "API version _(hidden)_ Reserved for future use",
+	"sessioncookie":              "Session Cookie Session Cookie from RegisterClientRequest",
+	"carriername":                "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any app instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
+	"clienttoken":                "Client Token Token with encoded client data",
+	"deviceinfo.datanetworktype": "LTE, 5G, etc.",
+	"deviceinfo.deviceos":        "Android or iOS",
+	"deviceinfo.devicemodel":     "Device model",
+	"deviceinfo.signalstrength":  "Device signal strength (0-5)",
+	"tags":                       "Tags _(optional)_ Vendor specific data",
 }
 var PlatformFindCloudletRequestSpecialArgs = map[string]string{
 	"tags": "StringToString",

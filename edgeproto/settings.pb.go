@@ -84,8 +84,8 @@ type Settings struct {
 	UpdateTrustPolicyTimeout Duration `protobuf:"varint,22,opt,name=update_trust_policy_timeout,json=updateTrustPolicyTimeout,proto3,casttype=Duration" json:"update_trust_policy_timeout,omitempty"`
 	// Metrics collection interval for DME API counts (duration)
 	DmeApiMetricsCollectionInterval Duration `protobuf:"varint,23,opt,name=dme_api_metrics_collection_interval,json=dmeApiMetricsCollectionInterval,proto3,casttype=Duration" json:"dme_api_metrics_collection_interval,omitempty"`
-	// Metrics collection interval for persistent connection (appinstlatency and gps locations) (duration)
-	PersistentConnectionMetricsCollectionInterval Duration `protobuf:"varint,24,opt,name=persistent_connection_metrics_collection_interval,json=persistentConnectionMetricsCollectionInterval,proto3,casttype=Duration" json:"persistent_connection_metrics_collection_interval,omitempty"`
+	// Collection interval for edgeevents metrics (latency, device, and custom)
+	EdgeEventsMetricsCollectionInterval Duration `protobuf:"varint,24,opt,name=edge_events_metrics_collection_interval,json=edgeEventsMetricsCollectionInterval,proto3,casttype=Duration" json:"edge_events_metrics_collection_interval,omitempty"`
 	// Idle reservable ClusterInst clean up time
 	CleanupReservableAutoClusterIdletime Duration `protobuf:"varint,25,opt,name=cleanup_reservable_auto_cluster_idletime,json=cleanupReservableAutoClusterIdletime,proto3,casttype=Duration" json:"cleanup_reservable_auto_cluster_idletime,omitempty"`
 	// Default influxDB cloudlet usage metrics retention policy (duration)
@@ -94,8 +94,16 @@ type Settings struct {
 	CreateCloudletTimeout Duration `protobuf:"varint,27,opt,name=create_cloudlet_timeout,json=createCloudletTimeout,proto3,casttype=Duration" json:"create_cloudlet_timeout,omitempty"`
 	// Update Cloudlet timeout (duration)
 	UpdateCloudletTimeout Duration `protobuf:"varint,28,opt,name=update_cloudlet_timeout,json=updateCloudletTimeout,proto3,casttype=Duration" json:"update_cloudlet_timeout,omitempty"`
+	// Length of location tiles side for latency metrics (km)
+	LocationTileSideLengthKm int64 `protobuf:"varint,29,opt,name=location_tile_side_length_km,json=locationTileSideLengthKm,proto3" json:"location_tile_side_length_km,omitempty"`
+	// List of collection intervals for Continuous Queries for EdgeEvents metrics
+	EdgeEventsMetricsContinuousQueriesCollectionIntervals []*CollectionInterval `protobuf:"bytes,30,rep,name=edge_events_metrics_continuous_queries_collection_intervals,json=edgeEventsMetricsContinuousQueriesCollectionIntervals,proto3" json:"edge_events_metrics_continuous_queries_collection_intervals,omitempty"`
+	// Default retention policy for downsampled influx db (duration)
+	InfluxDbDownsampledMetricsRetention Duration `protobuf:"varint,31,opt,name=influx_db_downsampled_metrics_retention,json=influxDbDownsampledMetricsRetention,proto3,casttype=Duration" json:"influx_db_downsampled_metrics_retention,omitempty"`
+	// Default retention policy for edgeevents metrics influx db (duration)
+	InfluxDbEdgeEventsMetricsRetention Duration `protobuf:"varint,32,opt,name=influx_db_edge_events_metrics_retention,json=influxDbEdgeEventsMetricsRetention,proto3,casttype=Duration" json:"influx_db_edge_events_metrics_retention,omitempty"`
 	// AppInstClient cleanup thread run interval
-	AppinstClientCleanupInterval Duration `protobuf:"varint,29,opt,name=appinst_client_cleanup_interval,json=appinstClientCleanupInterval,proto3,casttype=Duration" json:"appinst_client_cleanup_interval,omitempty"`
+	AppinstClientCleanupInterval Duration `protobuf:"varint,33,opt,name=appinst_client_cleanup_interval,json=appinstClientCleanupInterval,proto3,casttype=Duration" json:"appinst_client_cleanup_interval,omitempty"`
 }
 
 func (m *Settings) Reset()         { *m = Settings{} }
@@ -131,84 +139,132 @@ func (m *Settings) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Settings proto.InternalMessageInfo
 
+// Collection interval for Influxdb (Specificially used for cq intervals, because cannot gogoproto.casttype to Duration for repeated fields otherwise)
+type CollectionInterval struct {
+	Interval Duration `protobuf:"varint,1,opt,name=interval,proto3,casttype=Duration" json:"interval,omitempty"`
+}
+
+func (m *CollectionInterval) Reset()         { *m = CollectionInterval{} }
+func (m *CollectionInterval) String() string { return proto.CompactTextString(m) }
+func (*CollectionInterval) ProtoMessage()    {}
+func (*CollectionInterval) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6c7cab62fa432213, []int{1}
+}
+func (m *CollectionInterval) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CollectionInterval) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CollectionInterval.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CollectionInterval) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CollectionInterval.Merge(m, src)
+}
+func (m *CollectionInterval) XXX_Size() int {
+	return m.Size()
+}
+func (m *CollectionInterval) XXX_DiscardUnknown() {
+	xxx_messageInfo_CollectionInterval.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CollectionInterval proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*Settings)(nil), "edgeproto.Settings")
+	proto.RegisterType((*CollectionInterval)(nil), "edgeproto.CollectionInterval")
 }
 
 func init() { proto.RegisterFile("settings.proto", fileDescriptor_6c7cab62fa432213) }
 
 var fileDescriptor_6c7cab62fa432213 = []byte{
-	// 1116 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x96, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xc7, 0xb3, 0x49, 0x1b, 0x92, 0x69, 0x92, 0x26, 0x1b, 0x27, 0x99, 0x3a, 0xae, 0x63, 0x4c,
-	0x91, 0xac, 0x92, 0xc6, 0x82, 0x0a, 0x15, 0x82, 0x54, 0xc9, 0xb1, 0x41, 0x54, 0x51, 0x4a, 0xd8,
-	0xa4, 0x95, 0x40, 0x42, 0xab, 0xf1, 0xee, 0xf3, 0x7a, 0xd5, 0xd9, 0x9d, 0x65, 0x77, 0x36, 0x71,
-	0x6e, 0x88, 0xbf, 0xa0, 0x12, 0xfc, 0x25, 0xfc, 0x15, 0x3d, 0x56, 0xe2, 0xc2, 0x09, 0x41, 0xc2,
-	0x01, 0x55, 0x1c, 0x10, 0x4d, 0x11, 0xe2, 0x84, 0x66, 0x67, 0x77, 0x9c, 0x1f, 0x93, 0x88, 0x5e,
-	0xac, 0xf5, 0xcc, 0xf7, 0xfb, 0x79, 0x6f, 0x66, 0xde, 0x3c, 0x0d, 0x9a, 0x49, 0x80, 0x73, 0x3f,
-	0xf4, 0x92, 0xb5, 0x28, 0x66, 0x9c, 0x99, 0x93, 0xe0, 0x7a, 0x90, 0x7d, 0x96, 0xa7, 0x62, 0x48,
-	0x52, 0xca, 0xe5, 0x44, 0xb9, 0xe2, 0x31, 0xe6, 0x51, 0x68, 0x92, 0xc8, 0x6f, 0x92, 0x30, 0x64,
-	0x9c, 0x70, 0x9f, 0x85, 0xb9, 0xad, 0xfc, 0x81, 0xe7, 0xf3, 0x7e, 0xda, 0x5d, 0x73, 0x58, 0xd0,
-	0x0c, 0x58, 0xd7, 0xa7, 0x02, 0x33, 0x68, 0x8a, 0xdf, 0x3b, 0x0e, 0x65, 0xa9, 0xdb, 0xcc, 0x74,
-	0x1e, 0x84, 0xea, 0x23, 0x77, 0x96, 0x3c, 0xe6, 0xb1, 0xec, 0xb3, 0x29, 0xbe, 0xe4, 0x68, 0xfd,
-	0xfb, 0x39, 0x34, 0xb1, 0x93, 0x67, 0x66, 0x2e, 0xa2, 0xf1, 0x9e, 0x0f, 0xd4, 0x4d, 0xb0, 0x51,
-	0x1b, 0x6b, 0x4c, 0x5a, 0xf9, 0x3f, 0xf3, 0x2b, 0x74, 0x2b, 0xe9, 0x43, 0xd4, 0x87, 0xd8, 0xb5,
-	0x03, 0xe0, 0xb1, 0xef, 0x24, 0xb6, 0xc3, 0x28, 0x05, 0x47, 0xa4, 0x66, 0xfb, 0x21, 0x87, 0x78,
-	0x8f, 0x50, 0x3c, 0x5a, 0x33, 0x1a, 0x63, 0x1b, 0x53, 0xff, 0xfe, 0xbc, 0x32, 0xd1, 0x49, 0xe3,
-	0x2c, 0x6f, 0xeb, 0xcd, 0xc2, 0xb9, 0x25, 0x8d, 0x6d, 0xe5, 0x7b, 0x90, 0xdb, 0xcc, 0x2f, 0x50,
-	0x5d, 0xe1, 0x09, 0x85, 0x98, 0xdb, 0xb0, 0x47, 0x68, 0x4a, 0x4e, 0xc3, 0x4b, 0x1a, 0xf8, 0x4a,
-	0xe1, 0x6b, 0x09, 0xdb, 0xc7, 0xca, 0xa5, 0xd0, 0x2d, 0x74, 0x53, 0xa1, 0xfb, 0x40, 0x28, 0xef,
-	0xdb, 0x4e, 0x1f, 0x9c, 0x27, 0x76, 0x2c, 0xb2, 0x81, 0x04, 0x8f, 0xd5, 0x8c, 0xc6, 0x55, 0xab,
-	0x5c, 0x88, 0x3e, 0xcd, 0x34, 0x6d, 0x21, 0xb1, 0xa4, 0xc2, 0xfc, 0x1c, 0x55, 0xf5, 0x08, 0x95,
-	0xd9, 0x15, 0x4d, 0x66, 0xcb, 0x1a, 0xa2, 0xca, 0xea, 0x1e, 0xc2, 0x24, 0xe5, 0xcc, 0x76, 0x21,
-	0xa2, 0xec, 0x40, 0x81, 0xec, 0x04, 0x1c, 0x7c, 0xb5, 0x66, 0x34, 0x0c, 0x6b, 0x41, 0xcc, 0x77,
-	0xb2, 0xe9, 0xc2, 0xb5, 0x03, 0x8e, 0x79, 0x17, 0x2d, 0x9e, 0x34, 0xb2, 0x5e, 0x2f, 0x01, 0x9e,
-	0xd9, 0xc6, 0x33, 0xdb, 0xfc, 0xd0, 0xf6, 0x59, 0x36, 0x27, 0x4c, 0x1f, 0xa2, 0x1b, 0x27, 0x4d,
-	0x01, 0x19, 0xa8, 0x88, 0x09, 0x7e, 0xa3, 0x66, 0x34, 0xa6, 0xad, 0xc5, 0xa1, 0x6f, 0x8b, 0x0c,
-	0x8a, 0x88, 0x89, 0xd9, 0x46, 0x4b, 0x4e, 0x0c, 0x84, 0x83, 0x4d, 0xa2, 0xc8, 0xf6, 0xc3, 0x84,
-	0xdb, 0xdc, 0x0f, 0x80, 0xa5, 0x1c, 0x4f, 0x68, 0x16, 0x5d, 0x92, 0xe2, 0x56, 0x14, 0x3d, 0x08,
-	0x13, 0xbe, 0x2b, 0x95, 0x02, 0x92, 0x46, 0xae, 0x16, 0x32, 0xa9, 0x83, 0x48, 0xf1, 0x79, 0x88,
-	0x0b, 0x14, 0x74, 0x10, 0xa4, 0x83, 0x48, 0xf1, 0x19, 0xc8, 0x26, 0x5a, 0xce, 0x97, 0xe3, 0xd0,
-	0x34, 0xe1, 0x10, 0x9f, 0x06, 0x5d, 0xd3, 0x80, 0xb0, 0x34, 0xb4, 0xa5, 0xfe, 0x0c, 0x2c, 0x5f,
-	0x96, 0x16, 0x36, 0xa5, 0x83, 0x49, 0x83, 0x1e, 0x96, 0x2f, 0x4f, 0x0b, 0x9b, 0xd6, 0xc1, 0xa4,
-	0x41, 0x03, 0x5b, 0x45, 0x66, 0x40, 0x32, 0x48, 0xc8, 0x5c, 0xb0, 0x7b, 0x94, 0xec, 0xb1, 0x18,
-	0xcf, 0xd4, 0x8c, 0xc6, 0xa4, 0x35, 0x2b, 0x67, 0x1e, 0x32, 0x17, 0x3e, 0xc9, 0xc6, 0xcd, 0xfb,
-	0xa8, 0x42, 0x19, 0x71, 0xed, 0x2e, 0xa1, 0x24, 0x74, 0x20, 0xce, 0x0a, 0x24, 0x62, 0x31, 0xb7,
-	0x63, 0x12, 0x7a, 0x80, 0xaf, 0x67, 0x37, 0x04, 0x0b, 0xcd, 0x46, 0x2e, 0xd9, 0x22, 0x83, 0x6d,
-	0x16, 0x73, 0x4b, 0xcc, 0x9b, 0xef, 0xa3, 0x25, 0xe1, 0xe0, 0x31, 0x71, 0x9e, 0x80, 0x6b, 0xbb,
-	0x81, 0x58, 0x83, 0x0f, 0x21, 0x4f, 0xf0, 0x6c, 0x66, 0x2d, 0x05, 0x64, 0xb0, 0x2b, 0x67, 0x3b,
-	0x01, 0xb4, 0xe5, 0x9c, 0x79, 0x1f, 0x95, 0x9c, 0x3e, 0xf4, 0x72, 0xed, 0xf0, 0x32, 0xcd, 0x09,
-	0xcf, 0x99, 0xa5, 0x9a, 0x42, 0x29, 0x8d, 0xea, 0x0e, 0x6d, 0xa2, 0x65, 0x3f, 0xec, 0xd1, 0x74,
-	0x60, 0xbb, 0x5d, 0xd5, 0x94, 0x62, 0xe0, 0x10, 0x0a, 0x0b, 0x36, 0x75, 0x3b, 0x26, 0x0d, 0x9d,
-	0x6e, 0xde, 0x8a, 0xac, 0x42, 0x6d, 0x3e, 0x44, 0x95, 0xac, 0x79, 0x52, 0xe0, 0x76, 0x40, 0x44,
-	0x2e, 0xa1, 0x58, 0xa8, 0xda, 0xff, 0x79, 0x4d, 0x52, 0xe5, 0xc2, 0xb1, 0x35, 0x34, 0x14, 0x27,
-	0xd0, 0x42, 0x8b, 0x79, 0x6d, 0xec, 0x05, 0x76, 0xc4, 0x18, 0x55, 0xa4, 0x05, 0x4d, 0x5e, 0xf3,
-	0x52, 0xfb, 0x38, 0xd8, 0x66, 0x8c, 0x9e, 0x2f, 0x2f, 0x1e, 0xa7, 0x09, 0xb7, 0x23, 0x46, 0x7d,
-	0xe7, 0x40, 0x71, 0x16, 0x2f, 0x2e, 0xaf, 0x5d, 0xa1, 0xdf, 0xce, 0xe4, 0x05, 0xec, 0x4b, 0xf4,
-	0x96, 0x38, 0x17, 0x12, 0xf9, 0x97, 0xf6, 0xef, 0x25, 0x5d, 0x8b, 0x75, 0x03, 0x68, 0x45, 0xfe,
-	0xc5, 0xdd, 0x7b, 0x0f, 0xbd, 0x1b, 0x41, 0x9c, 0xf8, 0x89, 0xd8, 0x4c, 0xdb, 0x61, 0x61, 0x98,
-	0x63, 0x2f, 0x8b, 0x84, 0x35, 0x91, 0xee, 0x0c, 0x31, 0x6d, 0x45, 0xb9, 0x38, 0xae, 0x8b, 0x1a,
-	0x0e, 0x05, 0x12, 0xa6, 0x91, 0x1d, 0x43, 0x22, 0xc6, 0xba, 0x14, 0xec, 0xac, 0xd3, 0xa9, 0x3b,
-	0x24, 0x8e, 0xc7, 0x0f, 0x00, 0xdf, 0xd0, 0x84, 0xbb, 0x95, 0xbb, 0x2d, 0x65, 0x6e, 0xa5, 0x9c,
-	0x15, 0xd7, 0x29, 0x77, 0x9a, 0x1e, 0xba, 0x3d, 0x2c, 0x33, 0x55, 0x23, 0x69, 0x42, 0x3c, 0xd0,
-	0x54, 0x5d, 0x59, 0x13, 0xe7, 0xed, 0xa2, 0xea, 0xda, 0xb9, 0xfb, 0x91, 0x30, 0x9f, 0x2b, 0xc1,
-	0x8e, 0x6a, 0xb5, 0x2a, 0x4a, 0x71, 0xd6, 0xcb, 0x1a, 0xea, 0x42, 0xd1, 0x97, 0xa4, 0xb6, 0x38,
-	0xe8, 0x8e, 0xea, 0xb5, 0xe7, 0x28, 0x15, 0x1d, 0xa5, 0x68, 0x48, 0xa7, 0x29, 0x3b, 0x68, 0x85,
-	0x44, 0x51, 0xd6, 0x81, 0xf2, 0xeb, 0x59, 0xec, 0xb4, 0x3a, 0xc0, 0x9b, 0x1a, 0x5a, 0x25, 0x37,
-	0xc9, 0x9b, 0xda, 0x96, 0x96, 0xe2, 0xbc, 0xd6, 0xdf, 0xf9, 0xfd, 0x25, 0x36, 0xfe, 0x7c, 0x89,
-	0x8d, 0x6f, 0x8e, 0xb1, 0xf1, 0xf4, 0x18, 0x1b, 0x7f, 0xbd, 0xc2, 0xd7, 0x8a, 0xa7, 0xc7, 0x26,
-	0x1c, 0xfc, 0xf3, 0x0a, 0x1b, 0x3f, 0xfc, 0x8d, 0xaf, 0x84, 0x2c, 0x84, 0xf7, 0xfe, 0x18, 0x45,
-	0x6a, 0xae, 0x15, 0xf9, 0x66, 0x8a, 0x66, 0x1e, 0x65, 0xa9, 0xaa, 0xb7, 0xca, 0xfc, 0x9a, 0x7a,
-	0x40, 0xad, 0x15, 0x83, 0xe5, 0xb9, 0x13, 0x83, 0x56, 0xf6, 0xa8, 0xaa, 0x7f, 0xf4, 0xe2, 0x18,
-	0x57, 0x2c, 0x48, 0x58, 0x1a, 0x3b, 0xd0, 0x66, 0x61, 0xcf, 0xf7, 0x56, 0x5b, 0xb2, 0xb4, 0x48,
-	0x48, 0x3c, 0x58, 0xfd, 0xf6, 0xc7, 0xdf, 0xbe, 0x1b, 0x5d, 0xa8, 0xcf, 0x36, 0xe5, 0x5e, 0x34,
-	0x8b, 0x77, 0xda, 0xba, 0x71, 0xdb, 0x4c, 0xd0, 0xb4, 0x28, 0x0f, 0xfe, 0xda, 0x51, 0xd7, 0xff,
-	0x57, 0xd4, 0x52, 0xfd, 0x7a, 0x53, 0xd4, 0x2e, 0x3f, 0x15, 0xf4, 0x6b, 0x34, 0xb5, 0xd3, 0x67,
-	0xfb, 0x97, 0xc7, 0xd4, 0x0d, 0xd6, 0xef, 0xbd, 0x38, 0xc6, 0x65, 0x6d, 0xd4, 0xc7, 0x3e, 0xec,
-	0xcb, 0x98, 0xf3, 0xf5, 0x99, 0x66, 0xd2, 0x67, 0xfb, 0x27, 0x43, 0x6e, 0x54, 0x9e, 0xfd, 0x5a,
-	0x1d, 0x79, 0x76, 0x58, 0x35, 0x9e, 0x1f, 0x56, 0x8d, 0x5f, 0x0e, 0xab, 0xc6, 0xd3, 0xa3, 0xea,
-	0xc8, 0xf3, 0xa3, 0xea, 0xc8, 0x4f, 0x47, 0xd5, 0x91, 0xee, 0x78, 0x16, 0xe6, 0xee, 0x7f, 0x01,
-	0x00, 0x00, 0xff, 0xff, 0xef, 0xd7, 0xb6, 0xb4, 0xc3, 0x0a, 0x00, 0x00,
+	// 1257 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x96, 0x41, 0x6f, 0x13, 0x47,
+	0x1b, 0xc7, 0xb3, 0x04, 0x78, 0x93, 0x21, 0x04, 0xd8, 0x38, 0x61, 0x70, 0x8c, 0x63, 0x0c, 0xaf,
+	0x5e, 0x8b, 0x97, 0xc6, 0x12, 0x08, 0xd1, 0x82, 0x84, 0x64, 0x6c, 0xaa, 0xa2, 0x34, 0x14, 0x9c,
+	0x80, 0xd4, 0x4a, 0xd5, 0x68, 0xbc, 0xfb, 0x78, 0xbd, 0x62, 0x76, 0x67, 0xd9, 0x99, 0x4d, 0xc2,
+	0xad, 0xea, 0x27, 0x40, 0xea, 0xa9, 0xe7, 0x7e, 0x83, 0x7e, 0x0a, 0x8e, 0x48, 0xbd, 0xf4, 0x54,
+	0xb5, 0xd0, 0x43, 0x85, 0x7a, 0xa8, 0x4a, 0xa8, 0xaa, 0x9e, 0xaa, 0xd9, 0xd9, 0x1d, 0x27, 0xf1,
+	0x80, 0xda, 0x4b, 0xe4, 0xcc, 0xfc, 0xff, 0xbf, 0xe7, 0x99, 0x7d, 0x9e, 0x79, 0x76, 0xd1, 0xbc,
+	0x00, 0x29, 0xc3, 0x38, 0x10, 0xab, 0x49, 0xca, 0x25, 0x77, 0x67, 0xc1, 0x0f, 0x20, 0xff, 0x59,
+	0x9d, 0x4b, 0x41, 0x64, 0x4c, 0xea, 0x8d, 0x6a, 0x2d, 0xe0, 0x3c, 0x60, 0xd0, 0xa6, 0x49, 0xd8,
+	0xa6, 0x71, 0xcc, 0x25, 0x95, 0x21, 0x8f, 0x0b, 0x5b, 0xf5, 0xfd, 0x20, 0x94, 0xa3, 0x6c, 0xb0,
+	0xea, 0xf1, 0xa8, 0x1d, 0xf1, 0x41, 0xc8, 0x14, 0x66, 0xa7, 0xad, 0xfe, 0xbe, 0xe7, 0x31, 0x9e,
+	0xf9, 0xed, 0x5c, 0x17, 0x40, 0x6c, 0x7e, 0x14, 0xce, 0x4a, 0xc0, 0x03, 0x9e, 0xff, 0x6c, 0xab,
+	0x5f, 0x7a, 0xb5, 0xf9, 0x4d, 0x05, 0xcd, 0x6c, 0x14, 0x99, 0xb9, 0x4b, 0xe8, 0xe8, 0x30, 0x04,
+	0xe6, 0x0b, 0xec, 0x34, 0xa6, 0x5b, 0xb3, 0xfd, 0xe2, 0x3f, 0xf7, 0x73, 0x74, 0x41, 0x8c, 0x20,
+	0x19, 0x41, 0xea, 0x93, 0x08, 0x64, 0x1a, 0x7a, 0x82, 0x78, 0x9c, 0x31, 0xf0, 0x54, 0x6a, 0x24,
+	0x8c, 0x25, 0xa4, 0x5b, 0x94, 0xe1, 0x43, 0x0d, 0xa7, 0x35, 0x7d, 0x6b, 0xee, 0xaf, 0x1f, 0x56,
+	0x66, 0x7a, 0x59, 0x9a, 0xe7, 0xdd, 0x3f, 0x57, 0x3a, 0xd7, 0xb5, 0xb1, 0x6b, 0x7c, 0x77, 0x0a,
+	0x9b, 0xfb, 0x29, 0x6a, 0x1a, 0x3c, 0x65, 0x90, 0x4a, 0x02, 0x5b, 0x94, 0x65, 0x74, 0x3f, 0xbc,
+	0x62, 0x81, 0xaf, 0x94, 0xbe, 0x8e, 0xb2, 0xdd, 0x36, 0x2e, 0x83, 0xee, 0xa0, 0xb3, 0x06, 0x3d,
+	0x02, 0xca, 0xe4, 0x88, 0x78, 0x23, 0xf0, 0x1e, 0x91, 0x54, 0x65, 0x03, 0x02, 0x4f, 0x37, 0x9c,
+	0xd6, 0x91, 0x7e, 0xb5, 0x14, 0x7d, 0x94, 0x6b, 0xba, 0x4a, 0xd2, 0xd7, 0x0a, 0xf7, 0x3e, 0xaa,
+	0xdb, 0x11, 0x26, 0xb3, 0xc3, 0x96, 0xcc, 0x96, 0x2d, 0x44, 0x93, 0xd5, 0x35, 0x84, 0x69, 0x26,
+	0x39, 0xf1, 0x21, 0x61, 0xfc, 0x89, 0x01, 0x11, 0x01, 0x1e, 0x3e, 0xd2, 0x70, 0x5a, 0x4e, 0x7f,
+	0x51, 0xed, 0xf7, 0xf2, 0xed, 0xd2, 0xb5, 0x01, 0x9e, 0x7b, 0x05, 0x2d, 0xed, 0x35, 0xf2, 0xe1,
+	0x50, 0x80, 0xcc, 0x6d, 0x47, 0x73, 0xdb, 0xc2, 0xd8, 0xf6, 0x49, 0xbe, 0xa7, 0x4c, 0x1f, 0xa0,
+	0x33, 0x7b, 0x4d, 0x11, 0xdd, 0x31, 0x11, 0x05, 0xfe, 0x4f, 0xc3, 0x69, 0x1d, 0xef, 0x2f, 0x8d,
+	0x7d, 0xeb, 0x74, 0xa7, 0x8c, 0x28, 0xdc, 0x2e, 0x3a, 0xed, 0xa5, 0x40, 0x25, 0x10, 0x9a, 0x24,
+	0x24, 0x8c, 0x85, 0x24, 0x32, 0x8c, 0x80, 0x67, 0x12, 0xcf, 0x58, 0x0e, 0x5d, 0xd1, 0xe2, 0x4e,
+	0x92, 0xdc, 0x89, 0x85, 0xdc, 0xd4, 0x4a, 0x05, 0xc9, 0x12, 0xdf, 0x0a, 0x99, 0xb5, 0x41, 0xb4,
+	0x78, 0x12, 0xe2, 0x03, 0x03, 0x1b, 0x04, 0xd9, 0x20, 0x5a, 0x7c, 0x00, 0xb2, 0x86, 0x96, 0x8b,
+	0xe3, 0x78, 0x2c, 0x13, 0x12, 0xd2, 0xfd, 0xa0, 0x63, 0x16, 0x10, 0xd6, 0x86, 0xae, 0xd6, 0x1f,
+	0x80, 0x15, 0xc7, 0xb2, 0xc2, 0xe6, 0x6c, 0x30, 0x6d, 0xb0, 0xc3, 0x8a, 0xe3, 0x59, 0x61, 0xc7,
+	0x6d, 0x30, 0x6d, 0xb0, 0xc0, 0x2e, 0x21, 0x37, 0xa2, 0x39, 0x24, 0xe6, 0x3e, 0x90, 0x21, 0xa3,
+	0x5b, 0x3c, 0xc5, 0xf3, 0x0d, 0xa7, 0x35, 0xdb, 0x3f, 0xa9, 0x77, 0xee, 0x72, 0x1f, 0x3e, 0xcc,
+	0xd7, 0xdd, 0x9b, 0xa8, 0xc6, 0x38, 0xf5, 0xc9, 0x80, 0x32, 0x1a, 0x7b, 0x90, 0xe6, 0x0d, 0x92,
+	0xf0, 0x54, 0x92, 0x94, 0xc6, 0x01, 0xe0, 0x13, 0xf9, 0x0d, 0xc1, 0x4a, 0x73, 0xab, 0x90, 0xac,
+	0xd3, 0x9d, 0x7b, 0x3c, 0x95, 0x7d, 0xb5, 0xef, 0x5e, 0x45, 0xa7, 0x95, 0x43, 0xa6, 0xd4, 0x7b,
+	0x04, 0x3e, 0xf1, 0x23, 0x75, 0x86, 0x10, 0x62, 0x29, 0xf0, 0xc9, 0xdc, 0x5a, 0x89, 0xe8, 0xce,
+	0xa6, 0xde, 0xed, 0x45, 0xd0, 0xd5, 0x7b, 0xee, 0x4d, 0x54, 0xf1, 0x46, 0x30, 0x2c, 0xb4, 0xe3,
+	0xcb, 0x74, 0x4a, 0x79, 0x0e, 0x1c, 0xd5, 0x55, 0x4a, 0x6d, 0x34, 0x77, 0x68, 0x0d, 0x2d, 0x87,
+	0xf1, 0x90, 0x65, 0x3b, 0xc4, 0x1f, 0x98, 0xa1, 0x94, 0x82, 0x84, 0x58, 0x59, 0xb0, 0x6b, 0x7b,
+	0x62, 0xda, 0xd0, 0x1b, 0x14, 0xa3, 0xa8, 0x5f, 0xaa, 0xdd, 0xbb, 0xa8, 0x96, 0x0f, 0x4f, 0x06,
+	0x92, 0x44, 0x54, 0xe5, 0x12, 0xab, 0x83, 0x9a, 0xe7, 0xbf, 0x60, 0x49, 0xaa, 0x5a, 0x3a, 0xd6,
+	0xc7, 0x86, 0xb2, 0x02, 0x1d, 0xb4, 0x54, 0xf4, 0xc6, 0x56, 0x44, 0x12, 0xce, 0x99, 0x21, 0x2d,
+	0x5a, 0xf2, 0x5a, 0xd0, 0xda, 0x87, 0xd1, 0x3d, 0xce, 0xd9, 0x64, 0x7b, 0xc9, 0x34, 0x13, 0x92,
+	0x24, 0x9c, 0x85, 0xde, 0x13, 0xc3, 0x59, 0x7a, 0x7b, 0x7b, 0x6d, 0x2a, 0xfd, 0xbd, 0x5c, 0x5e,
+	0xc2, 0x3e, 0x43, 0xe7, 0x55, 0x5d, 0x68, 0x12, 0xbe, 0x73, 0x7e, 0x9f, 0xb6, 0x8d, 0x58, 0x3f,
+	0x82, 0x4e, 0x12, 0xbe, 0x7d, 0x7a, 0x0f, 0xd0, 0xff, 0xd4, 0xdb, 0x87, 0xc0, 0x96, 0xaa, 0xeb,
+	0x3b, 0xf9, 0xd8, 0xc2, 0x3f, 0xaf, 0xcc, 0xb7, 0x73, 0xef, 0xdb, 0x63, 0xf8, 0xa8, 0xe5, 0x31,
+	0xa0, 0x71, 0x96, 0x90, 0x14, 0x84, 0x5a, 0x1b, 0x30, 0x20, 0xf9, 0x54, 0x33, 0xf7, 0x45, 0x95,
+	0x22, 0x8c, 0x00, 0x9f, 0xb1, 0x04, 0xb9, 0x50, 0xb8, 0xfb, 0xc6, 0xdc, 0xc9, 0x24, 0x2f, 0xaf,
+	0x4e, 0xe1, 0x74, 0x03, 0x74, 0x71, 0xdc, 0x52, 0xa6, 0x1f, 0x32, 0x41, 0x03, 0xb0, 0x74, 0x58,
+	0xd5, 0x12, 0xe7, 0xbf, 0x65, 0x87, 0x75, 0x0b, 0xf7, 0x03, 0x65, 0x9e, 0x68, 0xb7, 0x9e, 0x19,
+	0xab, 0x26, 0x4a, 0x59, 0xd7, 0x65, 0x0b, 0x75, 0xb1, 0x9c, 0x41, 0x5a, 0x5b, 0x16, 0xb5, 0x67,
+	0xe6, 0xea, 0x04, 0xa5, 0x66, 0xa3, 0x94, 0xc3, 0x67, 0x3f, 0x25, 0xbf, 0xfe, 0x9e, 0x7e, 0xd7,
+	0xca, 0x90, 0x01, 0x11, 0xa1, 0x0f, 0x84, 0x41, 0x1c, 0xc8, 0x11, 0x79, 0x14, 0xe1, 0xb3, 0x0a,
+	0xa5, 0xae, 0xbf, 0xd6, 0x6c, 0x86, 0x0c, 0x36, 0x42, 0x1f, 0x3e, 0xce, 0x05, 0x6b, 0x91, 0xfb,
+	0xb5, 0x83, 0x6e, 0xd8, 0xeb, 0x1f, 0xcb, 0x30, 0xce, 0x78, 0x26, 0xc8, 0xe3, 0x0c, 0xd4, 0x9b,
+	0xd4, 0xd6, 0x12, 0x02, 0xd7, 0x1b, 0xd3, 0xad, 0x63, 0x97, 0xcf, 0xae, 0x9a, 0xcf, 0xa1, 0xd5,
+	0xc9, 0xfa, 0xf7, 0xaf, 0x5a, 0x9a, 0xa4, 0xc4, 0xdf, 0xd7, 0xf4, 0x49, 0x97, 0x50, 0xad, 0x39,
+	0x2e, 0xa8, 0xcf, 0xb7, 0x63, 0x41, 0xa3, 0x84, 0x81, 0x6f, 0xa9, 0xe6, 0x8a, 0xad, 0x35, 0xcb,
+	0x6a, 0xf6, 0xc6, 0xd6, 0x89, 0x5a, 0xd2, 0xbd, 0x31, 0x6c, 0x0f, 0x62, 0x1c, 0xa3, 0x61, 0x89,
+	0xd1, 0x2c, 0x63, 0xdc, 0x3e, 0x78, 0xc2, 0x71, 0x88, 0x0d, 0xb4, 0x42, 0x93, 0x24, 0x7f, 0x21,
+	0x14, 0xd3, 0xb2, 0xbc, 0x0c, 0xe6, 0x66, 0x9d, 0xb3, 0xa0, 0x6b, 0x85, 0x49, 0x0f, 0xce, 0xae,
+	0xb6, 0x94, 0x0f, 0xe7, 0xfa, 0xff, 0x7f, 0x79, 0x8d, 0x9d, 0xdf, 0x5e, 0x63, 0xe7, 0x8b, 0x5d,
+	0xec, 0x3c, 0xdd, 0xc5, 0xce, 0xef, 0x6f, 0xf0, 0xb1, 0xf2, 0x4b, 0x70, 0x0d, 0x9e, 0xfc, 0xf9,
+	0x06, 0x3b, 0xdf, 0xfe, 0x81, 0x0f, 0xc7, 0x3c, 0x86, 0xe6, 0x4d, 0xe4, 0x5a, 0x6e, 0x65, 0x0b,
+	0xcd, 0x98, 0x04, 0x1c, 0x4b, 0x02, 0x66, 0xf7, 0xf2, 0xaf, 0x87, 0x90, 0x61, 0x77, 0x92, 0xd0,
+	0xcd, 0xd0, 0xfc, 0x83, 0xbc, 0x1b, 0xcd, 0xa7, 0xe7, 0xc2, 0x9e, 0x06, 0x28, 0x17, 0xab, 0xa7,
+	0xf6, 0x2c, 0xf6, 0xf3, 0x6f, 0xe4, 0xe6, 0x8d, 0x57, 0xbb, 0xb8, 0xd6, 0x07, 0xc1, 0xb3, 0xd4,
+	0x83, 0x2e, 0x8f, 0x87, 0x61, 0x70, 0xa9, 0x93, 0xa7, 0xb5, 0x4e, 0x63, 0x1a, 0xc0, 0xa5, 0x2f,
+	0xbf, 0xfb, 0xf9, 0xab, 0x43, 0x8b, 0xcd, 0x93, 0x6d, 0xdd, 0xee, 0xed, 0xf2, 0xb3, 0xfb, 0xba,
+	0x73, 0xd1, 0x15, 0xe8, 0xb8, 0x9a, 0x00, 0xf2, 0x5f, 0x47, 0xbd, 0xfe, 0x8f, 0xa2, 0x56, 0x9a,
+	0x27, 0xda, 0x6a, 0x3c, 0xc9, 0x7d, 0x41, 0x1f, 0xa3, 0xb9, 0x8d, 0x11, 0xdf, 0x7e, 0x77, 0x4c,
+	0xdb, 0x62, 0xf3, 0xda, 0xab, 0x5d, 0x5c, 0xb5, 0x46, 0x7d, 0x18, 0xc2, 0xb6, 0x8e, 0xb9, 0xd0,
+	0x9c, 0x6f, 0x8b, 0x11, 0xdf, 0xde, 0x1b, 0xf2, 0x56, 0xed, 0xd9, 0x4f, 0xf5, 0xa9, 0x67, 0x2f,
+	0xea, 0xce, 0xf3, 0x17, 0x75, 0xe7, 0xc7, 0x17, 0x75, 0xe7, 0xe9, 0xcb, 0xfa, 0xd4, 0xf3, 0x97,
+	0xf5, 0xa9, 0xef, 0x5f, 0xd6, 0xa7, 0x06, 0x47, 0xf3, 0x30, 0x57, 0xfe, 0x0e, 0x00, 0x00, 0xff,
+	0xff, 0xc4, 0xd7, 0xe5, 0xa3, 0x92, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -392,6 +448,43 @@ func (m *Settings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.AppinstClientCleanupInterval != 0 {
 		i = encodeVarintSettings(dAtA, i, uint64(m.AppinstClientCleanupInterval))
 		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0x88
+	}
+	if m.InfluxDbEdgeEventsMetricsRetention != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.InfluxDbEdgeEventsMetricsRetention))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0x80
+	}
+	if m.InfluxDbDownsampledMetricsRetention != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.InfluxDbDownsampledMetricsRetention))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xf8
+	}
+	if len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) > 0 {
+		for iNdEx := len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.EdgeEventsMetricsContinuousQueriesCollectionIntervals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintSettings(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xf2
+		}
+	}
+	if m.LocationTileSideLengthKm != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.LocationTileSideLengthKm))
+		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xe8
@@ -424,8 +517,8 @@ func (m *Settings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xc8
 	}
-	if m.PersistentConnectionMetricsCollectionInterval != 0 {
-		i = encodeVarintSettings(dAtA, i, uint64(m.PersistentConnectionMetricsCollectionInterval))
+	if m.EdgeEventsMetricsCollectionInterval != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.EdgeEventsMetricsCollectionInterval))
 		i--
 		dAtA[i] = 0x1
 		i--
@@ -573,6 +666,34 @@ func (m *Settings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *CollectionInterval) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CollectionInterval) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CollectionInterval) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Interval != 0 {
+		i = encodeVarintSettings(dAtA, i, uint64(m.Interval))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintSettings(dAtA []byte, offset int, v uint64) int {
 	offset -= sovSettings(v)
 	base := offset
@@ -703,8 +824,8 @@ func (m *Settings) Matches(o *Settings, fopts ...MatchOpt) bool {
 			return false
 		}
 	}
-	if !opts.Filter || o.PersistentConnectionMetricsCollectionInterval != 0 {
-		if o.PersistentConnectionMetricsCollectionInterval != m.PersistentConnectionMetricsCollectionInterval {
+	if !opts.Filter || o.EdgeEventsMetricsCollectionInterval != 0 {
+		if o.EdgeEventsMetricsCollectionInterval != m.EdgeEventsMetricsCollectionInterval {
 			return false
 		}
 	}
@@ -725,6 +846,32 @@ func (m *Settings) Matches(o *Settings, fopts ...MatchOpt) bool {
 	}
 	if !opts.Filter || o.UpdateCloudletTimeout != 0 {
 		if o.UpdateCloudletTimeout != m.UpdateCloudletTimeout {
+			return false
+		}
+	}
+	if !opts.Filter || o.LocationTileSideLengthKm != 0 {
+		if o.LocationTileSideLengthKm != m.LocationTileSideLengthKm {
+			return false
+		}
+	}
+	if !opts.Filter || o.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil {
+		if len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) == 0 && len(o.EdgeEventsMetricsContinuousQueriesCollectionIntervals) > 0 || len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) > 0 && len(o.EdgeEventsMetricsContinuousQueriesCollectionIntervals) == 0 {
+			return false
+		} else if m.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil && o.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil {
+			if !opts.Filter && len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) != len(o.EdgeEventsMetricsContinuousQueriesCollectionIntervals) {
+				return false
+			}
+			for i := 0; i < len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.InfluxDbDownsampledMetricsRetention != 0 {
+		if o.InfluxDbDownsampledMetricsRetention != m.InfluxDbDownsampledMetricsRetention {
+			return false
+		}
+	}
+	if !opts.Filter || o.InfluxDbEdgeEventsMetricsRetention != 0 {
+		if o.InfluxDbEdgeEventsMetricsRetention != m.InfluxDbEdgeEventsMetricsRetention {
 			return false
 		}
 	}
@@ -758,12 +905,17 @@ const SettingsFieldShepherdAlertEvaluationInterval = "20"
 const SettingsFieldUpdateVmPoolTimeout = "21"
 const SettingsFieldUpdateTrustPolicyTimeout = "22"
 const SettingsFieldDmeApiMetricsCollectionInterval = "23"
-const SettingsFieldPersistentConnectionMetricsCollectionInterval = "24"
+const SettingsFieldEdgeEventsMetricsCollectionInterval = "24"
 const SettingsFieldCleanupReservableAutoClusterIdletime = "25"
 const SettingsFieldInfluxDbCloudletUsageMetricsRetention = "26"
 const SettingsFieldCreateCloudletTimeout = "27"
 const SettingsFieldUpdateCloudletTimeout = "28"
-const SettingsFieldAppinstClientCleanupInterval = "29"
+const SettingsFieldLocationTileSideLengthKm = "29"
+const SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals = "30"
+const SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval = "30.1"
+const SettingsFieldInfluxDbDownsampledMetricsRetention = "31"
+const SettingsFieldInfluxDbEdgeEventsMetricsRetention = "32"
+const SettingsFieldAppinstClientCleanupInterval = "33"
 
 var SettingsAllFields = []string{
 	SettingsFieldShepherdMetricsCollectionInterval,
@@ -788,74 +940,86 @@ var SettingsAllFields = []string{
 	SettingsFieldUpdateVmPoolTimeout,
 	SettingsFieldUpdateTrustPolicyTimeout,
 	SettingsFieldDmeApiMetricsCollectionInterval,
-	SettingsFieldPersistentConnectionMetricsCollectionInterval,
+	SettingsFieldEdgeEventsMetricsCollectionInterval,
 	SettingsFieldCleanupReservableAutoClusterIdletime,
 	SettingsFieldInfluxDbCloudletUsageMetricsRetention,
 	SettingsFieldCreateCloudletTimeout,
 	SettingsFieldUpdateCloudletTimeout,
+	SettingsFieldLocationTileSideLengthKm,
+	SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval,
+	SettingsFieldInfluxDbDownsampledMetricsRetention,
+	SettingsFieldInfluxDbEdgeEventsMetricsRetention,
 	SettingsFieldAppinstClientCleanupInterval,
 }
 
 var SettingsAllFieldsMap = map[string]struct{}{
-	SettingsFieldShepherdMetricsCollectionInterval:             struct{}{},
-	SettingsFieldShepherdHealthCheckRetries:                    struct{}{},
-	SettingsFieldShepherdHealthCheckInterval:                   struct{}{},
-	SettingsFieldAutoDeployIntervalSec:                         struct{}{},
-	SettingsFieldAutoDeployOffsetSec:                           struct{}{},
-	SettingsFieldAutoDeployMaxIntervals:                        struct{}{},
-	SettingsFieldCreateAppInstTimeout:                          struct{}{},
-	SettingsFieldUpdateAppInstTimeout:                          struct{}{},
-	SettingsFieldDeleteAppInstTimeout:                          struct{}{},
-	SettingsFieldCreateClusterInstTimeout:                      struct{}{},
-	SettingsFieldUpdateClusterInstTimeout:                      struct{}{},
-	SettingsFieldDeleteClusterInstTimeout:                      struct{}{},
-	SettingsFieldMasterNodeFlavor:                              struct{}{},
-	SettingsFieldLoadBalancerMaxPortRange:                      struct{}{},
-	SettingsFieldMaxTrackedDmeClients:                          struct{}{},
-	SettingsFieldChefClientInterval:                            struct{}{},
-	SettingsFieldInfluxDbMetricsRetention:                      struct{}{},
-	SettingsFieldCloudletMaintenanceTimeout:                    struct{}{},
-	SettingsFieldShepherdAlertEvaluationInterval:               struct{}{},
-	SettingsFieldUpdateVmPoolTimeout:                           struct{}{},
-	SettingsFieldUpdateTrustPolicyTimeout:                      struct{}{},
-	SettingsFieldDmeApiMetricsCollectionInterval:               struct{}{},
-	SettingsFieldPersistentConnectionMetricsCollectionInterval: struct{}{},
-	SettingsFieldCleanupReservableAutoClusterIdletime:          struct{}{},
-	SettingsFieldInfluxDbCloudletUsageMetricsRetention:         struct{}{},
-	SettingsFieldCreateCloudletTimeout:                         struct{}{},
-	SettingsFieldUpdateCloudletTimeout:                         struct{}{},
-	SettingsFieldAppinstClientCleanupInterval:                  struct{}{},
+	SettingsFieldShepherdMetricsCollectionInterval:                             struct{}{},
+	SettingsFieldShepherdHealthCheckRetries:                                    struct{}{},
+	SettingsFieldShepherdHealthCheckInterval:                                   struct{}{},
+	SettingsFieldAutoDeployIntervalSec:                                         struct{}{},
+	SettingsFieldAutoDeployOffsetSec:                                           struct{}{},
+	SettingsFieldAutoDeployMaxIntervals:                                        struct{}{},
+	SettingsFieldCreateAppInstTimeout:                                          struct{}{},
+	SettingsFieldUpdateAppInstTimeout:                                          struct{}{},
+	SettingsFieldDeleteAppInstTimeout:                                          struct{}{},
+	SettingsFieldCreateClusterInstTimeout:                                      struct{}{},
+	SettingsFieldUpdateClusterInstTimeout:                                      struct{}{},
+	SettingsFieldDeleteClusterInstTimeout:                                      struct{}{},
+	SettingsFieldMasterNodeFlavor:                                              struct{}{},
+	SettingsFieldLoadBalancerMaxPortRange:                                      struct{}{},
+	SettingsFieldMaxTrackedDmeClients:                                          struct{}{},
+	SettingsFieldChefClientInterval:                                            struct{}{},
+	SettingsFieldInfluxDbMetricsRetention:                                      struct{}{},
+	SettingsFieldCloudletMaintenanceTimeout:                                    struct{}{},
+	SettingsFieldShepherdAlertEvaluationInterval:                               struct{}{},
+	SettingsFieldUpdateVmPoolTimeout:                                           struct{}{},
+	SettingsFieldUpdateTrustPolicyTimeout:                                      struct{}{},
+	SettingsFieldDmeApiMetricsCollectionInterval:                               struct{}{},
+	SettingsFieldEdgeEventsMetricsCollectionInterval:                           struct{}{},
+	SettingsFieldCleanupReservableAutoClusterIdletime:                          struct{}{},
+	SettingsFieldInfluxDbCloudletUsageMetricsRetention:                         struct{}{},
+	SettingsFieldCreateCloudletTimeout:                                         struct{}{},
+	SettingsFieldUpdateCloudletTimeout:                                         struct{}{},
+	SettingsFieldLocationTileSideLengthKm:                                      struct{}{},
+	SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval: struct{}{},
+	SettingsFieldInfluxDbDownsampledMetricsRetention:                           struct{}{},
+	SettingsFieldInfluxDbEdgeEventsMetricsRetention:                            struct{}{},
+	SettingsFieldAppinstClientCleanupInterval:                                  struct{}{},
 }
 
 var SettingsAllFieldsStringMap = map[string]string{
-	SettingsFieldShepherdMetricsCollectionInterval:             "Shepherd Metrics Collection Interval",
-	SettingsFieldShepherdHealthCheckRetries:                    "Shepherd Health Check Retries",
-	SettingsFieldShepherdHealthCheckInterval:                   "Shepherd Health Check Interval",
-	SettingsFieldAutoDeployIntervalSec:                         "Auto Deploy Interval Sec",
-	SettingsFieldAutoDeployOffsetSec:                           "Auto Deploy Offset Sec",
-	SettingsFieldAutoDeployMaxIntervals:                        "Auto Deploy Max Intervals",
-	SettingsFieldCreateAppInstTimeout:                          "Create App Inst Timeout",
-	SettingsFieldUpdateAppInstTimeout:                          "Update App Inst Timeout",
-	SettingsFieldDeleteAppInstTimeout:                          "Delete App Inst Timeout",
-	SettingsFieldCreateClusterInstTimeout:                      "Create Cluster Inst Timeout",
-	SettingsFieldUpdateClusterInstTimeout:                      "Update Cluster Inst Timeout",
-	SettingsFieldDeleteClusterInstTimeout:                      "Delete Cluster Inst Timeout",
-	SettingsFieldMasterNodeFlavor:                              "Master Node Flavor",
-	SettingsFieldLoadBalancerMaxPortRange:                      "Load Balancer Max Port Range",
-	SettingsFieldMaxTrackedDmeClients:                          "Max Tracked Dme Clients",
-	SettingsFieldChefClientInterval:                            "Chef Client Interval",
-	SettingsFieldInfluxDbMetricsRetention:                      "Influx Db Metrics Retention",
-	SettingsFieldCloudletMaintenanceTimeout:                    "Cloudlet Maintenance Timeout",
-	SettingsFieldShepherdAlertEvaluationInterval:               "Shepherd Alert Evaluation Interval",
-	SettingsFieldUpdateVmPoolTimeout:                           "Update Vm Pool Timeout",
-	SettingsFieldUpdateTrustPolicyTimeout:                      "Update Trust Policy Timeout",
-	SettingsFieldDmeApiMetricsCollectionInterval:               "Dme Api Metrics Collection Interval",
-	SettingsFieldPersistentConnectionMetricsCollectionInterval: "Persistent Connection Metrics Collection Interval",
-	SettingsFieldCleanupReservableAutoClusterIdletime:          "Cleanup Reservable Auto Cluster Idletime",
-	SettingsFieldInfluxDbCloudletUsageMetricsRetention:         "Influx Db Cloudlet Usage Metrics Retention",
-	SettingsFieldCreateCloudletTimeout:                         "Create Cloudlet Timeout",
-	SettingsFieldUpdateCloudletTimeout:                         "Update Cloudlet Timeout",
-	SettingsFieldAppinstClientCleanupInterval:                  "Appinst Client Cleanup Interval",
+	SettingsFieldShepherdMetricsCollectionInterval:                             "Shepherd Metrics Collection Interval",
+	SettingsFieldShepherdHealthCheckRetries:                                    "Shepherd Health Check Retries",
+	SettingsFieldShepherdHealthCheckInterval:                                   "Shepherd Health Check Interval",
+	SettingsFieldAutoDeployIntervalSec:                                         "Auto Deploy Interval Sec",
+	SettingsFieldAutoDeployOffsetSec:                                           "Auto Deploy Offset Sec",
+	SettingsFieldAutoDeployMaxIntervals:                                        "Auto Deploy Max Intervals",
+	SettingsFieldCreateAppInstTimeout:                                          "Create App Inst Timeout",
+	SettingsFieldUpdateAppInstTimeout:                                          "Update App Inst Timeout",
+	SettingsFieldDeleteAppInstTimeout:                                          "Delete App Inst Timeout",
+	SettingsFieldCreateClusterInstTimeout:                                      "Create Cluster Inst Timeout",
+	SettingsFieldUpdateClusterInstTimeout:                                      "Update Cluster Inst Timeout",
+	SettingsFieldDeleteClusterInstTimeout:                                      "Delete Cluster Inst Timeout",
+	SettingsFieldMasterNodeFlavor:                                              "Master Node Flavor",
+	SettingsFieldLoadBalancerMaxPortRange:                                      "Load Balancer Max Port Range",
+	SettingsFieldMaxTrackedDmeClients:                                          "Max Tracked Dme Clients",
+	SettingsFieldChefClientInterval:                                            "Chef Client Interval",
+	SettingsFieldInfluxDbMetricsRetention:                                      "Influx Db Metrics Retention",
+	SettingsFieldCloudletMaintenanceTimeout:                                    "Cloudlet Maintenance Timeout",
+	SettingsFieldShepherdAlertEvaluationInterval:                               "Shepherd Alert Evaluation Interval",
+	SettingsFieldUpdateVmPoolTimeout:                                           "Update Vm Pool Timeout",
+	SettingsFieldUpdateTrustPolicyTimeout:                                      "Update Trust Policy Timeout",
+	SettingsFieldDmeApiMetricsCollectionInterval:                               "Dme Api Metrics Collection Interval",
+	SettingsFieldEdgeEventsMetricsCollectionInterval:                           "Edge Events Metrics Collection Interval",
+	SettingsFieldCleanupReservableAutoClusterIdletime:                          "Cleanup Reservable Auto Cluster Idletime",
+	SettingsFieldInfluxDbCloudletUsageMetricsRetention:                         "Influx Db Cloudlet Usage Metrics Retention",
+	SettingsFieldCreateCloudletTimeout:                                         "Create Cloudlet Timeout",
+	SettingsFieldUpdateCloudletTimeout:                                         "Update Cloudlet Timeout",
+	SettingsFieldLocationTileSideLengthKm:                                      "Location Tile Side Length Km",
+	SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval: "Edge Events Metrics Continuous Queries Collection Intervals Interval",
+	SettingsFieldInfluxDbDownsampledMetricsRetention:                           "Influx Db Downsampled Metrics Retention",
+	SettingsFieldInfluxDbEdgeEventsMetricsRetention:                            "Influx Db Edge Events Metrics Retention",
+	SettingsFieldAppinstClientCleanupInterval:                                  "Appinst Client Cleanup Interval",
 }
 
 func (m *Settings) IsKeyField(s string) bool {
@@ -929,8 +1093,8 @@ func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
 	if m.DmeApiMetricsCollectionInterval != o.DmeApiMetricsCollectionInterval {
 		fields[SettingsFieldDmeApiMetricsCollectionInterval] = struct{}{}
 	}
-	if m.PersistentConnectionMetricsCollectionInterval != o.PersistentConnectionMetricsCollectionInterval {
-		fields[SettingsFieldPersistentConnectionMetricsCollectionInterval] = struct{}{}
+	if m.EdgeEventsMetricsCollectionInterval != o.EdgeEventsMetricsCollectionInterval {
+		fields[SettingsFieldEdgeEventsMetricsCollectionInterval] = struct{}{}
 	}
 	if m.CleanupReservableAutoClusterIdletime != o.CleanupReservableAutoClusterIdletime {
 		fields[SettingsFieldCleanupReservableAutoClusterIdletime] = struct{}{}
@@ -944,40 +1108,68 @@ func (m *Settings) DiffFields(o *Settings, fields map[string]struct{}) {
 	if m.UpdateCloudletTimeout != o.UpdateCloudletTimeout {
 		fields[SettingsFieldUpdateCloudletTimeout] = struct{}{}
 	}
+	if m.LocationTileSideLengthKm != o.LocationTileSideLengthKm {
+		fields[SettingsFieldLocationTileSideLengthKm] = struct{}{}
+	}
+	if m.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil && o.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil {
+		if len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) != len(o.EdgeEventsMetricsContinuousQueriesCollectionIntervals) {
+			fields[SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals] = struct{}{}
+		} else {
+			for i0 := 0; i0 < len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i0++ {
+				if m.EdgeEventsMetricsContinuousQueriesCollectionIntervals[i0].Interval != o.EdgeEventsMetricsContinuousQueriesCollectionIntervals[i0].Interval {
+					fields[SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval] = struct{}{}
+					fields[SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals] = struct{}{}
+				}
+			}
+		}
+	} else if (m.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil && o.EdgeEventsMetricsContinuousQueriesCollectionIntervals == nil) || (m.EdgeEventsMetricsContinuousQueriesCollectionIntervals == nil && o.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil) {
+		fields[SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals] = struct{}{}
+	}
+	if m.InfluxDbDownsampledMetricsRetention != o.InfluxDbDownsampledMetricsRetention {
+		fields[SettingsFieldInfluxDbDownsampledMetricsRetention] = struct{}{}
+	}
+	if m.InfluxDbEdgeEventsMetricsRetention != o.InfluxDbEdgeEventsMetricsRetention {
+		fields[SettingsFieldInfluxDbEdgeEventsMetricsRetention] = struct{}{}
+	}
 	if m.AppinstClientCleanupInterval != o.AppinstClientCleanupInterval {
 		fields[SettingsFieldAppinstClientCleanupInterval] = struct{}{}
 	}
 }
 
 var UpdateSettingsFieldsMap = map[string]struct{}{
-	SettingsFieldShepherdMetricsCollectionInterval:             struct{}{},
-	SettingsFieldShepherdHealthCheckRetries:                    struct{}{},
-	SettingsFieldShepherdHealthCheckInterval:                   struct{}{},
-	SettingsFieldAutoDeployIntervalSec:                         struct{}{},
-	SettingsFieldAutoDeployOffsetSec:                           struct{}{},
-	SettingsFieldAutoDeployMaxIntervals:                        struct{}{},
-	SettingsFieldCreateAppInstTimeout:                          struct{}{},
-	SettingsFieldUpdateAppInstTimeout:                          struct{}{},
-	SettingsFieldDeleteAppInstTimeout:                          struct{}{},
-	SettingsFieldCreateClusterInstTimeout:                      struct{}{},
-	SettingsFieldUpdateClusterInstTimeout:                      struct{}{},
-	SettingsFieldDeleteClusterInstTimeout:                      struct{}{},
-	SettingsFieldMasterNodeFlavor:                              struct{}{},
-	SettingsFieldLoadBalancerMaxPortRange:                      struct{}{},
-	SettingsFieldMaxTrackedDmeClients:                          struct{}{},
-	SettingsFieldChefClientInterval:                            struct{}{},
-	SettingsFieldInfluxDbMetricsRetention:                      struct{}{},
-	SettingsFieldCloudletMaintenanceTimeout:                    struct{}{},
-	SettingsFieldShepherdAlertEvaluationInterval:               struct{}{},
-	SettingsFieldUpdateVmPoolTimeout:                           struct{}{},
-	SettingsFieldUpdateTrustPolicyTimeout:                      struct{}{},
-	SettingsFieldDmeApiMetricsCollectionInterval:               struct{}{},
-	SettingsFieldPersistentConnectionMetricsCollectionInterval: struct{}{},
-	SettingsFieldCleanupReservableAutoClusterIdletime:          struct{}{},
-	SettingsFieldInfluxDbCloudletUsageMetricsRetention:         struct{}{},
-	SettingsFieldCreateCloudletTimeout:                         struct{}{},
-	SettingsFieldUpdateCloudletTimeout:                         struct{}{},
-	SettingsFieldAppinstClientCleanupInterval:                  struct{}{},
+	SettingsFieldShepherdMetricsCollectionInterval:                             struct{}{},
+	SettingsFieldShepherdHealthCheckRetries:                                    struct{}{},
+	SettingsFieldShepherdHealthCheckInterval:                                   struct{}{},
+	SettingsFieldAutoDeployIntervalSec:                                         struct{}{},
+	SettingsFieldAutoDeployOffsetSec:                                           struct{}{},
+	SettingsFieldAutoDeployMaxIntervals:                                        struct{}{},
+	SettingsFieldCreateAppInstTimeout:                                          struct{}{},
+	SettingsFieldUpdateAppInstTimeout:                                          struct{}{},
+	SettingsFieldDeleteAppInstTimeout:                                          struct{}{},
+	SettingsFieldCreateClusterInstTimeout:                                      struct{}{},
+	SettingsFieldUpdateClusterInstTimeout:                                      struct{}{},
+	SettingsFieldDeleteClusterInstTimeout:                                      struct{}{},
+	SettingsFieldMasterNodeFlavor:                                              struct{}{},
+	SettingsFieldLoadBalancerMaxPortRange:                                      struct{}{},
+	SettingsFieldMaxTrackedDmeClients:                                          struct{}{},
+	SettingsFieldChefClientInterval:                                            struct{}{},
+	SettingsFieldInfluxDbMetricsRetention:                                      struct{}{},
+	SettingsFieldCloudletMaintenanceTimeout:                                    struct{}{},
+	SettingsFieldShepherdAlertEvaluationInterval:                               struct{}{},
+	SettingsFieldUpdateVmPoolTimeout:                                           struct{}{},
+	SettingsFieldUpdateTrustPolicyTimeout:                                      struct{}{},
+	SettingsFieldDmeApiMetricsCollectionInterval:                               struct{}{},
+	SettingsFieldEdgeEventsMetricsCollectionInterval:                           struct{}{},
+	SettingsFieldCleanupReservableAutoClusterIdletime:                          struct{}{},
+	SettingsFieldInfluxDbCloudletUsageMetricsRetention:                         struct{}{},
+	SettingsFieldCreateCloudletTimeout:                                         struct{}{},
+	SettingsFieldUpdateCloudletTimeout:                                         struct{}{},
+	SettingsFieldLocationTileSideLengthKm:                                      struct{}{},
+	SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals:         struct{}{},
+	SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval: struct{}{},
+	SettingsFieldInfluxDbDownsampledMetricsRetention:                           struct{}{},
+	SettingsFieldInfluxDbEdgeEventsMetricsRetention:                            struct{}{},
+	SettingsFieldAppinstClientCleanupInterval:                                  struct{}{},
 }
 
 func (m *Settings) ValidateUpdateFields() error {
@@ -1139,8 +1331,8 @@ func (m *Settings) CopyInFields(src *Settings) int {
 		}
 	}
 	if _, set := fmap["24"]; set {
-		if m.PersistentConnectionMetricsCollectionInterval != src.PersistentConnectionMetricsCollectionInterval {
-			m.PersistentConnectionMetricsCollectionInterval = src.PersistentConnectionMetricsCollectionInterval
+		if m.EdgeEventsMetricsCollectionInterval != src.EdgeEventsMetricsCollectionInterval {
+			m.EdgeEventsMetricsCollectionInterval = src.EdgeEventsMetricsCollectionInterval
 			changed++
 		}
 	}
@@ -1169,6 +1361,33 @@ func (m *Settings) CopyInFields(src *Settings) int {
 		}
 	}
 	if _, set := fmap["29"]; set {
+		if m.LocationTileSideLengthKm != src.LocationTileSideLengthKm {
+			m.LocationTileSideLengthKm = src.LocationTileSideLengthKm
+			changed++
+		}
+	}
+	if _, set := fmap["30"]; set {
+		if src.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil {
+			m.EdgeEventsMetricsContinuousQueriesCollectionIntervals = src.EdgeEventsMetricsContinuousQueriesCollectionIntervals
+			changed++
+		} else if m.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil {
+			m.EdgeEventsMetricsContinuousQueriesCollectionIntervals = nil
+			changed++
+		}
+	}
+	if _, set := fmap["31"]; set {
+		if m.InfluxDbDownsampledMetricsRetention != src.InfluxDbDownsampledMetricsRetention {
+			m.InfluxDbDownsampledMetricsRetention = src.InfluxDbDownsampledMetricsRetention
+			changed++
+		}
+	}
+	if _, set := fmap["32"]; set {
+		if m.InfluxDbEdgeEventsMetricsRetention != src.InfluxDbEdgeEventsMetricsRetention {
+			m.InfluxDbEdgeEventsMetricsRetention = src.InfluxDbEdgeEventsMetricsRetention
+			changed++
+		}
+	}
+	if _, set := fmap["33"]; set {
 		if m.AppinstClientCleanupInterval != src.AppinstClientCleanupInterval {
 			m.AppinstClientCleanupInterval = src.AppinstClientCleanupInterval
 			changed++
@@ -1200,11 +1419,24 @@ func (m *Settings) DeepCopyIn(src *Settings) {
 	m.UpdateVmPoolTimeout = src.UpdateVmPoolTimeout
 	m.UpdateTrustPolicyTimeout = src.UpdateTrustPolicyTimeout
 	m.DmeApiMetricsCollectionInterval = src.DmeApiMetricsCollectionInterval
-	m.PersistentConnectionMetricsCollectionInterval = src.PersistentConnectionMetricsCollectionInterval
+	m.EdgeEventsMetricsCollectionInterval = src.EdgeEventsMetricsCollectionInterval
 	m.CleanupReservableAutoClusterIdletime = src.CleanupReservableAutoClusterIdletime
 	m.InfluxDbCloudletUsageMetricsRetention = src.InfluxDbCloudletUsageMetricsRetention
 	m.CreateCloudletTimeout = src.CreateCloudletTimeout
 	m.UpdateCloudletTimeout = src.UpdateCloudletTimeout
+	m.LocationTileSideLengthKm = src.LocationTileSideLengthKm
+	if src.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil {
+		m.EdgeEventsMetricsContinuousQueriesCollectionIntervals = make([]*CollectionInterval, len(src.EdgeEventsMetricsContinuousQueriesCollectionIntervals), len(src.EdgeEventsMetricsContinuousQueriesCollectionIntervals))
+		for ii, s := range src.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+			var tmp_s CollectionInterval
+			tmp_s.DeepCopyIn(s)
+			m.EdgeEventsMetricsContinuousQueriesCollectionIntervals[ii] = &tmp_s
+		}
+	} else {
+		m.EdgeEventsMetricsContinuousQueriesCollectionIntervals = nil
+	}
+	m.InfluxDbDownsampledMetricsRetention = src.InfluxDbDownsampledMetricsRetention
+	m.InfluxDbEdgeEventsMetricsRetention = src.InfluxDbEdgeEventsMetricsRetention
 	m.AppinstClientCleanupInterval = src.AppinstClientCleanupInterval
 }
 
@@ -1715,6 +1947,29 @@ func (c *SettingsCache) UsesOrg(org string) bool {
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Settings) ValidateEnums() error {
+	for _, e := range m.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *CollectionInterval) CopyInFields(src *CollectionInterval) int {
+	changed := 0
+	if m.Interval != src.Interval {
+		m.Interval = src.Interval
+		changed++
+	}
+	return changed
+}
+
+func (m *CollectionInterval) DeepCopyIn(src *CollectionInterval) {
+	m.Interval = src.Interval
+}
+
+// Helper method to check that enums have valid values
+func (m *CollectionInterval) ValidateEnums() error {
 	return nil
 }
 
@@ -1805,8 +2060,8 @@ func (m *Settings) Size() (n int) {
 	if m.DmeApiMetricsCollectionInterval != 0 {
 		n += 2 + sovSettings(uint64(m.DmeApiMetricsCollectionInterval))
 	}
-	if m.PersistentConnectionMetricsCollectionInterval != 0 {
-		n += 2 + sovSettings(uint64(m.PersistentConnectionMetricsCollectionInterval))
+	if m.EdgeEventsMetricsCollectionInterval != 0 {
+		n += 2 + sovSettings(uint64(m.EdgeEventsMetricsCollectionInterval))
 	}
 	if m.CleanupReservableAutoClusterIdletime != 0 {
 		n += 2 + sovSettings(uint64(m.CleanupReservableAutoClusterIdletime))
@@ -1820,8 +2075,35 @@ func (m *Settings) Size() (n int) {
 	if m.UpdateCloudletTimeout != 0 {
 		n += 2 + sovSettings(uint64(m.UpdateCloudletTimeout))
 	}
+	if m.LocationTileSideLengthKm != 0 {
+		n += 2 + sovSettings(uint64(m.LocationTileSideLengthKm))
+	}
+	if len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) > 0 {
+		for _, e := range m.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+			l = e.Size()
+			n += 2 + l + sovSettings(uint64(l))
+		}
+	}
+	if m.InfluxDbDownsampledMetricsRetention != 0 {
+		n += 2 + sovSettings(uint64(m.InfluxDbDownsampledMetricsRetention))
+	}
+	if m.InfluxDbEdgeEventsMetricsRetention != 0 {
+		n += 2 + sovSettings(uint64(m.InfluxDbEdgeEventsMetricsRetention))
+	}
 	if m.AppinstClientCleanupInterval != 0 {
 		n += 2 + sovSettings(uint64(m.AppinstClientCleanupInterval))
+	}
+	return n
+}
+
+func (m *CollectionInterval) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Interval != 0 {
+		n += 1 + sovSettings(uint64(m.Interval))
 	}
 	return n
 }
@@ -2310,9 +2592,9 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 			}
 		case 24:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PersistentConnectionMetricsCollectionInterval", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EdgeEventsMetricsCollectionInterval", wireType)
 			}
-			m.PersistentConnectionMetricsCollectionInterval = 0
+			m.EdgeEventsMetricsCollectionInterval = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSettings
@@ -2322,7 +2604,7 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PersistentConnectionMetricsCollectionInterval |= Duration(b&0x7F) << shift
+				m.EdgeEventsMetricsCollectionInterval |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2405,6 +2687,97 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 			}
 		case 29:
 			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LocationTileSideLengthKm", wireType)
+			}
+			m.LocationTileSideLengthKm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LocationTileSideLengthKm |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 30:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EdgeEventsMetricsContinuousQueriesCollectionIntervals", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSettings
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSettings
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EdgeEventsMetricsContinuousQueriesCollectionIntervals = append(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals, &CollectionInterval{})
+			if err := m.EdgeEventsMetricsContinuousQueriesCollectionIntervals[len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 31:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InfluxDbDownsampledMetricsRetention", wireType)
+			}
+			m.InfluxDbDownsampledMetricsRetention = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InfluxDbDownsampledMetricsRetention |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 32:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InfluxDbEdgeEventsMetricsRetention", wireType)
+			}
+			m.InfluxDbEdgeEventsMetricsRetention = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InfluxDbEdgeEventsMetricsRetention |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 33:
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AppinstClientCleanupInterval", wireType)
 			}
 			m.AppinstClientCleanupInterval = 0
@@ -2418,6 +2791,78 @@ func (m *Settings) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.AppinstClientCleanupInterval |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSettings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSettings
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSettings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CollectionInterval) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSettings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CollectionInterval: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CollectionInterval: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			}
+			m.Interval = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSettings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Interval |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

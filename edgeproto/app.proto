@@ -235,6 +235,7 @@ service AppApi {
     };
     option (protogen.mc2_api) = "ResourceApps,ActionView,Key.Organization";
   }
+  // Add an AutoProvPolicy to the App
   rpc AddAppAutoProvPolicy(AppAutoProvPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/add/appautoprovpolicy"
@@ -243,6 +244,7 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
+  // Remove an AutoProvPolicy from the App
   rpc RemoveAppAutoProvPolicy(AppAutoProvPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/remove/appautoprovpolicy"

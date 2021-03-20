@@ -10,6 +10,8 @@ import (
 
 const TagExpectErr = "expecterr"
 
+var NoApiCallback = func(string) {}
+
 type Run struct {
 	client Client
 	ctx    context.Context

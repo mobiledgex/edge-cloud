@@ -1093,19 +1093,32 @@ func (t *TestCud) genE2edata(desc *generator.Descriptor) {
 	t.P("}")
 	t.P()
 
-	t.P("func Run", message.Name, "Apis(run *Run, in *", pkg, message.Name, ", inMap map[string]interface{}, out *", outstruct, ") {")
+	t.P("// used to intersperse other creates/deletes/checks")
+	t.P("// note the objs value is the previous one for create,")
+	t.P("// but the next one for delete")
+	t.P("type Run", message.Name, "ApiCallback func(objs string)")
+	t.P()
+
+	t.P("func Run", message.Name, "Apis(run *Run, in *", pkg, message.Name, ", inMap map[string]interface{}, out *", outstruct, ", apicb Run", message.Name, "ApiCallback) {")
+	done := ""
 	for _, finfo := range fieldInfos {
+		t.P("apicb(\"", done, "\")")
 		t.P("run.", finfo.group.ApiName(), "(", finfo.ref, "in.", finfo.fieldName, ", inMap[\"", strings.ToLower(finfo.fieldName), "\"], &out.", finfo.fieldName, ")")
+		done = strings.ToLower(finfo.fieldName)
 	}
+	t.P("apicb(\"", done, "\")")
 	t.P("out.Errors = run.Errs")
 	t.P("}")
 	t.P()
 
-	t.P("func Run", message.Name, "ReverseApis(run *Run, in *", pkg, message.Name, ", inMap map[string]interface{}, out *", outstruct, ") {")
+	t.P("func Run", message.Name, "ReverseApis(run *Run, in *", pkg, message.Name, ", inMap map[string]interface{}, out *", outstruct, ", apicb Run", message.Name, "ApiCallback) {")
 	for ii := len(fieldInfos) - 1; ii >= 0; ii-- {
 		finfo := fieldInfos[ii]
+		next := strings.ToLower(finfo.fieldName)
+		t.P("apicb(\"", next, "\")")
 		t.P("run.", finfo.group.ApiName(), "(", finfo.ref, "in.", finfo.fieldName, ", inMap[\"", strings.ToLower(finfo.fieldName), "\"], &out.", finfo.fieldName, ")")
 	}
+	t.P("apicb(\"\")")
 	t.P("out.Errors = run.Errs")
 	t.P("}")
 	t.P()

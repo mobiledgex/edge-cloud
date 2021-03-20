@@ -41,7 +41,7 @@ func VerifyAuthToken(ctx context.Context, token string, pubkey string, devname s
 
 	//check that the values in the token match
 	if devname != authClaims.OrgName {
-		return errors.New("token developer mismatch")
+		return errors.New("token organization mismatch")
 	}
 	if appname != authClaims.AppName {
 		return errors.New("token appname mismatch")

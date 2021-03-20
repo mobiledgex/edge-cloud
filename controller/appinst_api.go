@@ -397,11 +397,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	freeClusterInsts := []edgeproto.ClusterInstKey{}
 	if in.RealClusterName == "" && autoClusterSpecified {
 		// gather free reservable ClusterInsts for the target Cloudlet
-		// reservable ClusterInsts are always owned by the system
-		if in.Key.ClusterInstKey.Organization != cloudcommon.OrganizationMobiledgeX {
-			return fmt.Errorf("ClusterInst organization must be %s for autoclusters", cloudcommon.OrganizationMobiledgeX)
-		}
-		// get list of free reservable ClusterInsts
 		clusterInstApi.cache.Mux.Lock()
 		for key, data := range clusterInstApi.cache.Objs {
 			if !in.Key.ClusterInstKey.CloudletKey.Matches(&data.Obj.Key.CloudletKey) {
@@ -456,6 +451,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	reservedAutoClusterId := -1
 	var reservedClusterInstKey *edgeproto.ClusterInstKey
 	realClusterName := in.RealClusterName
+	// For backwards compatibility with old CRMs that don't understand
+	// virtualized AppInst keys (where the real cluster name is
+	// AppInst.RealClusterName), we create the old-style dedicated
+	// auto-clusters instead of the new reservable auto-clusters
+	deprecatedAutoCluster := false
 
 	defer func() {
 		if reterr != nil {
@@ -474,6 +474,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		reservedAutoClusterId = -1
 		reservedClusterInstKey = nil
 		in.RealClusterName = realClusterName
+		deprecatedAutoCluster = false
 
 		// lookup App so we can get flavor for reservable ClusterInst
 		var app edgeproto.App
@@ -494,10 +495,24 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		info := edgeproto.CloudletInfo{}
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
+			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
+		}
 
 		if autoClusterSpecified {
 			if !cloudcommon.IsClusterInstReqd(&app) {
 				return fmt.Errorf("No cluster required for App deployment type %s, cannot use cluster name %s which attempts to use or create a ClusterInst", app.Deployment, cloudcommon.AutoClusterPrefix)
+			}
+			if info.CompatibilityVersion < cloudcommon.CRMCompatibilityAutoReservableCluster {
+				deprecatedAutoCluster = true
+			}
+			if !deprecatedAutoCluster {
+				// reservable ClusterInsts are always owned
+				// by the system
+				if in.Key.ClusterInstKey.Organization != cloudcommon.OrganizationMobiledgeX {
+					return fmt.Errorf("ClusterInst organization must be %s for autoclusters", cloudcommon.OrganizationMobiledgeX)
+				}
 			}
 		}
 		// Check for autocluster. All auto-clusters are reservable.
@@ -507,7 +522,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// AppInst.RealClusterName.
 		// If AppInst.RealClusterName is set, then the caller is
 		// targeting a specific reservable ClusterInst.
-		if in.RealClusterName == "" && autoClusterSpecified {
+		if in.RealClusterName == "" && autoClusterSpecified && !deprecatedAutoCluster {
 			// search for free reservable ClusterInst
 			log.SpanLog(ctx, log.DebugLevelInfo, "reservable auto-cluster search", "key", in.Key)
 			if sidecarApp {
@@ -544,7 +559,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				break
 			}
 		}
-		if in.RealClusterName == "" && autoClusterSpecified {
+		if in.RealClusterName == "" && autoClusterSpecified && !deprecatedAutoCluster {
 			// No free reservable cluster found, create new one.
 			cloudletKey := &in.Key.ClusterInstKey.CloudletKey
 			refs := edgeproto.CloudletRefs{}
@@ -570,6 +585,29 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.RealClusterName = fmt.Sprintf("%s%d", cloudcommon.ReservableClusterPrefix, reservedAutoClusterId)
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Creating new auto-cluster named %s to deploy AppInst", in.RealClusterName)})
 			log.SpanLog(ctx, log.DebugLevelApi, "Creating new auto-cluster", "key", in.ClusterInstKey())
+		}
+		if autoClusterSpecified && deprecatedAutoCluster {
+			// for backwards compatibility with old CRMs
+			log.SpanLog(ctx, log.DebugLevelInfo, "backwards compatible dedicated auto-cluster", "key", in.Key)
+			if err := validateAutoDeployApp(stm, &app); err != nil {
+				return err
+			}
+			if in.RealClusterName != "" {
+				return fmt.Errorf("Target cloudlet's CRM is an older version which does not support RealClusterName field; field must be left blank to create dedicated autocluster")
+			}
+			cibuf := edgeproto.ClusterInst{}
+			if clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &cibuf) {
+				// if it already exists, this means we just
+				// want to spawn more apps into it
+			} else {
+				if sidecarApp {
+					return fmt.Errorf("Sidecar App %s requires an existing ClusterInst", app.Key.Name)
+				}
+				if in.Key.AppKey.Organization != in.Key.ClusterInstKey.Organization {
+					return fmt.Errorf("Developer name mismatch between App: %s and ClusterInst: %s", in.Key.AppKey.Organization, in.Key.ClusterInstKey.Organization)
+				}
+				autocluster = true
+			}
 		}
 
 		if s.store.STMGet(stm, &in.Key, in) {
@@ -622,10 +660,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
 			return in.Flavor.NotFoundError()
 		}
-		info := edgeproto.CloudletInfo{}
-		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
-			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
-		}
 		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, vmFlavor, cloudlet, info)
 		if verr != nil {
 			return verr
@@ -650,7 +684,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		// Check if specified ClusterInst exists
 		var clusterInst edgeproto.ClusterInst
-		if !autocluster && reservedClusterInstKey == nil && cloudcommon.IsClusterInstReqd(&app) {
+		if !autocluster && reservedClusterInstKey == nil && !deprecatedAutoCluster && cloudcommon.IsClusterInstReqd(&app) {
 			// caller-specified ClusterInst
 			found := clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &clusterInst)
 			if !found {
@@ -676,6 +710,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		if err := autoProvPolicyApi.appInstCheck(ctx, stm, cloudcommon.Create, &app, in); err != nil {
 			return err
+		}
+		if in.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV && deprecatedAutoCluster {
+			return fmt.Errorf("Target cloudlet running older version of CRM no longer supports auto-provisioning, please upgrade CRM")
 		}
 
 		if app.Deployment == cloudcommon.DeploymentTypeVM {
@@ -785,8 +822,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// auto-create cluster inst
 		clusterInst.Key = *in.ClusterInstKey()
 		clusterInst.Auto = true
-		clusterInst.Reservable = true
-		clusterInst.ReservedBy = in.Key.AppKey.Organization
+		if !deprecatedAutoCluster {
+			clusterInst.Reservable = true
+			clusterInst.ReservedBy = in.Key.AppKey.Organization
+		}
 		log.SpanLog(ctx, log.DebugLevelApi,
 			"Create auto-ClusterInst",
 			"key", clusterInst.Key,
@@ -1188,7 +1227,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	s.cache.Mux.Unlock()
 
 	if len(instances) == 0 {
-		log.DebugLog(log.DebugLevelApi, "no AppInsts matched", "key", in.Key)
+		log.SpanLog(ctx, log.DebugLevelApi, "no AppInsts matched", "key", in.Key)
 		return in.Key.NotFoundError()
 	}
 
@@ -1198,7 +1237,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 
 	for instkey, _ := range instances {
 		go func(k edgeproto.AppInstKey) {
-			log.DebugLog(log.DebugLevelApi, "updating AppInst", "key", k)
+			log.SpanLog(ctx, log.DebugLevelApi, "updating AppInst", "key", k)
 			updated, err := s.refreshAppInstInternal(DefCallContext(), k, cb, in.ForceUpdate)
 			if err == nil {
 				instanceUpdateResults[k] <- updateResult{errString: "", revisionUpdated: updated}
@@ -1215,7 +1254,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 	for k, r := range instanceUpdateResults {
 		numTotal++
 		result := <-r
-		log.DebugLog(log.DebugLevelApi, "instanceUpdateResult ", "key", k, "updated", result.revisionUpdated, "error", result.errString)
+		log.SpanLog(ctx, log.DebugLevelApi, "instanceUpdateResult ", "key", k, "updated", result.revisionUpdated, "error", result.errString)
 		if result.errString == "" {
 			if result.revisionUpdated {
 				numUpdated++
@@ -1364,7 +1403,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 	}()
 
-	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
+	log.SpanLog(ctx, log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Organization == "" {
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
@@ -1556,7 +1595,7 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 }
 
 func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppInst, state dme.HealthCheck) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst Health Check", "key", in.Key, "state", state)
+	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst Health Check", "key", in.Key, "state", state)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -1585,24 +1624,33 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 }
 
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState)
+	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "uri", in.Uri)
 
 	// update only diff of status msgs
 	streamObjApi.UpdateStatus(ctx, &in.Status, &in.Key)
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		applyUpdate := false
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
 			// got deleted in the meantime
 			return nil
 		}
-		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN {
+		if in.PowerState != edgeproto.PowerState_POWER_STATE_UNKNOWN &&
+			inst.PowerState != in.PowerState {
 			inst.PowerState = in.PowerState
+			applyUpdate = true
 		}
 		// If AppInst is ready and state has not been set yet by HealthCheckUpdate, default to Ok.
 		if in.State == edgeproto.TrackedState_READY &&
 			inst.HealthCheck == dme.HealthCheck_HEALTH_CHECK_UNKNOWN {
 			inst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_OK
+			applyUpdate = true
+		}
+
+		if in.Uri != "" && inst.Uri != in.Uri {
+			inst.Uri = in.Uri
+			applyUpdate = true
 		}
 
 		if inst.State == in.State {
@@ -1610,24 +1658,27 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
 				inst.RuntimeInfo = in.RuntimeInfo
-				s.store.STMPut(stm, &inst)
+				applyUpdate = true
 			}
-			return nil
+		} else {
+			// please see state_transitions.md
+			if !crmTransitionOk(inst.State, in.State) {
+				log.SpanLog(ctx, log.DebugLevelApi, "Invalid state transition",
+					"key", &in.Key, "cur", inst.State, "next", in.State)
+				return nil
+			}
+			inst.State = in.State
+			applyUpdate = true
 		}
-		// please see state_transitions.md
-		if !crmTransitionOk(inst.State, in.State) {
-			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
-				"key", &in.Key, "cur", inst.State, "next", in.State)
-			return nil
-		}
-		inst.State = in.State
 		if in.State == edgeproto.TrackedState_CREATE_ERROR || in.State == edgeproto.TrackedState_DELETE_ERROR || in.State == edgeproto.TrackedState_UPDATE_ERROR {
 			inst.Errors = in.Errors
 		} else {
 			inst.Errors = nil
 		}
 		inst.RuntimeInfo = in.RuntimeInfo
-		s.store.STMPut(stm, &inst)
+		if applyUpdate {
+			s.store.STMPut(stm, &inst)
+		}
 		return nil
 	})
 	if in.State == edgeproto.TrackedState_DELETE_DONE {
@@ -1636,7 +1687,7 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 }
 
 func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
-	log.DebugLog(log.DebugLevelApi, "Delete AppInst from info", "key", in.Key, "state", in.State)
+	log.SpanLog(ctx, log.DebugLevelApi, "Delete AppInst from info", "key", in.Key, "state", in.State)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		inst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, &in.Key, &inst) {
@@ -1646,7 +1697,7 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		// please see state_transitions.md
 		if inst.State != edgeproto.TrackedState_DELETING && inst.State != edgeproto.TrackedState_DELETE_REQUESTED &&
 			inst.State != edgeproto.TrackedState_DELETE_DONE {
-			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
+			log.SpanLog(ctx, log.DebugLevelApi, "Invalid state transition",
 				"key", &in.Key, "cur", inst.State,
 				"next", edgeproto.TrackedState_DELETE_DONE)
 			return nil

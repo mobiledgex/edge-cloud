@@ -76,6 +76,7 @@ func main() {
 
 	standalone := false
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudletInfo.Key)
+	myCloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 	ctx, span, err := nodeMgr.Init(node.NodeTypeCRM, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region), node.WithParentSpan(*parentSpan))
 	if err != nil {
 		log.FatalLog(err.Error())
