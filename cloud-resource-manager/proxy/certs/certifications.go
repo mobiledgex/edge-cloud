@@ -99,6 +99,11 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName,
 	_, found := noSudoMap[platformType]
 	if found {
 		sudoType = pc.NoSudo
+		if commercialCerts {
+			// for devtest platforms, disable commercial certs
+			log.SpanLog(ctx, log.DebugLevelInfo, "GetRootLbCerts, disable commercial certs for devtest platforms")
+			commercialCerts = false
+		}
 	}
 	if strings.Contains(platformType, "fake") {
 		fixedCerts = true
