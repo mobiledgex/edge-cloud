@@ -535,8 +535,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			}
 
-			// set URI empty, so that we can know if platform specific URI is being set
-			new.Uri = ""
+			oldUri := new.Uri
 			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
@@ -548,7 +547,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				}
 				return
 			}
-			if new.Uri != "" {
+			if new.Uri != "" && oldUri != new.Uri {
 				cd.AppInstInfoCache.SetUri(ctx, &new.Key, new.Uri)
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "created app inst", "appinst", new, "ClusterInst", clusterInst)
