@@ -294,20 +294,14 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 	return protos & (^protocolToRemove)
 }
 
-func (s *AppInstApi) setDefaultVMClusterKey(ctx context.Context, key *edgeproto.AppInstKey) {
+func setDefaultVMClusterKey(ctx context.Context, key *edgeproto.AppInstKey) {
 	// If ClusterKey.Name already exists, then don't set
 	// any default value for it
 	if key.ClusterInstKey.ClusterKey.Name != "" {
 		return
 	}
 	var app edgeproto.App
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !appApi.store.STMGet(stm, &key.AppKey, &app) {
-			return key.AppKey.NotFoundError()
-		}
-		return nil
-	})
-	if err != nil {
+	if !appApi.cache.Get(&key.AppKey, &app) {
 		return
 	}
 	if app.Deployment == cloudcommon.DeploymentTypeVM {
@@ -338,7 +332,7 @@ func (s *StreamObjApi) StreamAppInst(key *edgeproto.AppInstKey, cb edgeproto.Str
 	if key.ClusterInstKey.Organization == "" {
 		key.ClusterInstKey.Organization = key.AppKey.Organization
 	}
-	appInstApi.setDefaultVMClusterKey(cb.Context(), key)
+	setDefaultVMClusterKey(cb.Context(), key)
 	if key.ClusterInstKey.ClusterKey.Name == "" {
 		// if cluster name is still empty, fill it with
 		// default vm cluster name
@@ -417,7 +411,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
 		setClusterOrg = true
 	}
-	s.setDefaultVMClusterKey(ctx, &in.Key)
+	setDefaultVMClusterKey(ctx, &in.Key)
 
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
@@ -1096,7 +1090,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	updatedRevision := false
 	crmUpdateRequired := false
 
-	s.setDefaultVMClusterKey(ctx, &key)
+	setDefaultVMClusterKey(ctx, &key)
 	if err := key.ValidateKey(); err != nil {
 		return false, err
 	}
@@ -1190,7 +1184,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		}
 
 		// the whole key must be present
-		s.setDefaultVMClusterKey(ctx, &in.Key)
+		setDefaultVMClusterKey(ctx, &in.Key)
 		if err := in.Key.ValidateKey(); err != nil {
 			return fmt.Errorf("cluster key needed without updatemultiple option: %v", err)
 		}
@@ -1370,7 +1364,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	var reservationFreed bool
 	clusterInstKey := edgeproto.ClusterInstKey{}
 
-	s.setDefaultVMClusterKey(ctx, &in.Key)
+	setDefaultVMClusterKey(ctx, &in.Key)
 	if err := in.Key.AppKey.ValidateKey(); err != nil {
 		return err
 	}

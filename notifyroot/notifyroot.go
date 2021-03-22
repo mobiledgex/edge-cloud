@@ -37,6 +37,7 @@ func main() {
 		edgeproto.RegisterDebugApiServer(s, &debugApi)
 		edgeproto.RegisterAppInstLatencyApiServer(s, &appInstLatencyApi)
 	})
+
 	tlsConfig, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
 		nodeMgr.CommonName(),
 		node.CertIssuerGlobal,
