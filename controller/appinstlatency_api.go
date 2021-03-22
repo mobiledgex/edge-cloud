@@ -21,15 +21,14 @@ func InitAppInstLatencyApi(sync *Sync) {
 func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgeproto.AppInstLatency) (*edgeproto.Result, error) {
 	setDefaultVMClusterKey(ctx, &in.Key)
 
+	err := in.Key.ValidateKey()
+	if err != nil {
+		return nil, err
+	}
 	// Check that appinst exists
 	appInstInfo := edgeproto.AppInst{}
 	if !appInstApi.cache.Get(&in.Key, &appInstInfo) {
 		return nil, in.Key.NotFoundError()
-	}
-
-	err := in.Key.ValidateKey()
-	if err != nil {
-		return nil, err
 	}
 	// populate the clusterinst developer from the app developer if not already present
 	if in.Key.ClusterInstKey.Organization == "" {
