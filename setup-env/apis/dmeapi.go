@@ -286,7 +286,11 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				registerStatus.Req.AppName != apiRequest.Rcreq.AppName ||
 				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers ||
 				time.Since(registerStatus.At) > time.Hour) {
-			log.Printf("Re-registering for api %s - %+v\n", api, apiRequest.Rcreq)
+			log.Printf("Re-registering for api %s - registerStatus: %+v, Rcreq: %+v, Orgname not equal: %v, Appname not equal: %v, Appvers not equal: %v, time past hour: %v\n", api, registerStatus, apiRequest.Rcreq,
+				registerStatus.Req.OrgName != apiRequest.Rcreq.OrgName,
+				registerStatus.Req.AppName != apiRequest.Rcreq.AppName,
+				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers,
+				time.Since(registerStatus.At) > time.Hour)
 			ok, reply := runDmeAPIiter(ctx, "register", apiFile, outputDir, apiRequest, client)
 			if !ok {
 				return false, nil
@@ -310,7 +314,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				findCloudlet.Req.GpsLocation.Latitude != apiRequest.Fcreq.GpsLocation.Latitude ||
 				findCloudlet.Req.GpsLocation.Longitude != apiRequest.Fcreq.GpsLocation.Longitude ||
 				findCloudlet.Req.CellId != apiRequest.Fcreq.CellId ||
-				time.Since(findCloudlet.At) > time.Hour {
+				time.Since(findCloudlet.At) > 10*time.Minute {
 				log.Printf("Redoing findcloudlet for StreamEdgeEvent - %+v\n", apiRequest.Fcreq)
 				ctx = context.WithValue(ctx, "edgeevents", true)
 				ok, reply := runDmeAPIiter(ctx, "findcloudlet", apiFile, outputDir, apiRequest, client)
@@ -498,6 +502,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Receive init confirmation
 			dmereply, err = resp.Recv()
 			if err != nil {
+				dmeerror = err
 				break
 			}
 			// Terminate persistent connection
@@ -517,6 +522,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Receive init confirmation
 			_, err = resp.Recv()
 			if err != nil {
+				dmeerror = err
 				break
 			}
 			// Send dummy latency samples as Latency Event
@@ -546,6 +552,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Receive processed latency samples
 			dmereply, err = resp.Recv()
 			if err != nil {
+				dmeerror = err
 				break
 			}
 			// Terminate persistent connection
@@ -565,6 +572,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Receive init confirmation
 			_, err = resp.Recv()
 			if err != nil {
+				dmeerror = err
 				break
 			}
 			// Send dummy latency samples as Latency Event
@@ -580,6 +588,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Receive processed latency samples
 			dmereply, err = resp.Recv()
 			if err != nil {
+				dmeerror = err
 				break
 			}
 			// Terminate persistent connection
