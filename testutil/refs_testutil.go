@@ -148,7 +148,17 @@ func NewClientCloudletRefsApi(api edgeproto.CloudletRefsApiClient) *CloudletRefs
 	return &apiWrap
 }
 
-func InternalCloudletRefsTest(t *testing.T, test string, api edgeproto.CloudletRefsApiServer, testData []edgeproto.CloudletRefs) {
+type CloudletRefsTestOptions struct {
+	createdData []edgeproto.CloudletRefs
+}
+
+type CloudletRefsTestOp func(opts *CloudletRefsTestOptions)
+
+func WithCreatedCloudletRefsTestData(createdData []edgeproto.CloudletRefs) CloudletRefsTestOp {
+	return func(opts *CloudletRefsTestOptions) { opts.createdData = createdData }
+}
+
+func InternalCloudletRefsTest(t *testing.T, test string, api edgeproto.CloudletRefsApiServer, testData []edgeproto.CloudletRefs, ops ...CloudletRefsTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -159,7 +169,7 @@ func InternalCloudletRefsTest(t *testing.T, test string, api edgeproto.CloudletR
 	}
 }
 
-func ClientCloudletRefsTest(t *testing.T, test string, api edgeproto.CloudletRefsApiClient, testData []edgeproto.CloudletRefs) {
+func ClientCloudletRefsTest(t *testing.T, test string, api edgeproto.CloudletRefsApiClient, testData []edgeproto.CloudletRefs, ops ...CloudletRefsTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -330,7 +340,17 @@ func NewClientClusterRefsApi(api edgeproto.ClusterRefsApiClient) *ClusterRefsCom
 	return &apiWrap
 }
 
-func InternalClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiServer, testData []edgeproto.ClusterRefs) {
+type ClusterRefsTestOptions struct {
+	createdData []edgeproto.ClusterRefs
+}
+
+type ClusterRefsTestOp func(opts *ClusterRefsTestOptions)
+
+func WithCreatedClusterRefsTestData(createdData []edgeproto.ClusterRefs) ClusterRefsTestOp {
+	return func(opts *ClusterRefsTestOptions) { opts.createdData = createdData }
+}
+
+func InternalClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiServer, testData []edgeproto.ClusterRefs, ops ...ClusterRefsTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalClusterRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -341,7 +361,7 @@ func InternalClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRef
 	}
 }
 
-func ClientClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiClient, testData []edgeproto.ClusterRefs) {
+func ClientClusterRefsTest(t *testing.T, test string, api edgeproto.ClusterRefsApiClient, testData []edgeproto.ClusterRefs, ops ...ClusterRefsTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientClusterRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -512,7 +532,17 @@ func NewClientAppInstRefsApi(api edgeproto.AppInstRefsApiClient) *AppInstRefsCom
 	return &apiWrap
 }
 
-func InternalAppInstRefsTest(t *testing.T, test string, api edgeproto.AppInstRefsApiServer, testData []edgeproto.AppInstRefs) {
+type AppInstRefsTestOptions struct {
+	createdData []edgeproto.AppInstRefs
+}
+
+type AppInstRefsTestOp func(opts *AppInstRefsTestOptions)
+
+func WithCreatedAppInstRefsTestData(createdData []edgeproto.AppInstRefs) AppInstRefsTestOp {
+	return func(opts *AppInstRefsTestOptions) { opts.createdData = createdData }
+}
+
+func InternalAppInstRefsTest(t *testing.T, test string, api edgeproto.AppInstRefsApiServer, testData []edgeproto.AppInstRefs, ops ...AppInstRefsTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalAppInstRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -523,7 +553,7 @@ func InternalAppInstRefsTest(t *testing.T, test string, api edgeproto.AppInstRef
 	}
 }
 
-func ClientAppInstRefsTest(t *testing.T, test string, api edgeproto.AppInstRefsApiClient, testData []edgeproto.AppInstRefs) {
+func ClientAppInstRefsTest(t *testing.T, test string, api edgeproto.AppInstRefsApiClient, testData []edgeproto.AppInstRefs, ops ...AppInstRefsTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientAppInstRefsTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)

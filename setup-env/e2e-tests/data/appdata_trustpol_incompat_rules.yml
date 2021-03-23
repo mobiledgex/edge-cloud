@@ -105,16 +105,3 @@ apps:
   - protocol: tcp
     remoteip: 35.247.68.151
     port: 2222 
-
-appinstances:
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: trustedapp
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: cluster1
-      cloudletkey:
-        organization: dmuus
-        name: cloudlet1

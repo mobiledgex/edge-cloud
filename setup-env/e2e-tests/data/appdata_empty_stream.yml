@@ -67,6 +67,7 @@ streamobjs:
         name: dmuus-cloud-1
       organization: AcmeAppCo1
   msgs:
+  - message: Setting ClusterInst name to default
   - message: Deleting
   - message: First Delete Task
   - message: Second Delete Task
@@ -84,6 +85,7 @@ streamobjs:
         name: dmuus-cloud-2
       organization: AcmeAppCo1
   msgs:
+  - message: Setting ClusterInst name to default
   - message: Deleting
   - message: First Delete Task
   - message: Second Delete Task

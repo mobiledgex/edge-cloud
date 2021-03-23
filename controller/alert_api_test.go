@@ -130,7 +130,7 @@ func TestAppInstDownAlert(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, dme.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE, appinst.HealthCheck)
 	// check other appInstances
-	for ii, testData := range testutil.AppInstData {
+	for ii, testData := range testutil.CreatedAppInstData() {
 		found = appInstApi.Get(&testData.Key, &appinst)
 		require.True(t, found)
 		if ii == 0 {

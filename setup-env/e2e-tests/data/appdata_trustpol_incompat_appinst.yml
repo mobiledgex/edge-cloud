@@ -1,0 +1,12 @@
+appinstances:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: trustedapp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: cluster1
+      cloudletkey:
+        organization: dmuus
+        name: cloudlet1
