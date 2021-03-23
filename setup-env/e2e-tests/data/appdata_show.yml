@@ -221,7 +221,7 @@ cloudletinfos:
         version: "1.0"
       clusterinstkey:
         clusterkey:
-          name: DefaultVMCluster
+          name: DefaultCluster
         organization: AcmeAppCo1
 - key:
     organization: dmuus
@@ -286,7 +286,7 @@ cloudletinfos:
         version: "1.0"
       clusterinstkey:
         clusterkey:
-          name: DefaultVMCluster
+          name: DefaultCluster
         organization: AcmeAppCo1
 - key:
     organization: dmuus
@@ -595,7 +595,7 @@ apps:
   defaultflavor:
     name: x1.small
   cluster:
-    name: DefaultVMCluster
+    name: DefaultCluster
   authpublickey: |
     -----BEGIN PUBLIC KEY-----
     MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij
@@ -618,7 +618,7 @@ apps:
   defaultflavor:
     name: x1.small
   cluster:
-    name: DefaultVMCluster
+    name: DefaultCluster
   deployment: vm
   accesstype: AccessTypeLoadBalancer
 - key:
@@ -816,7 +816,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: DefaultVMCluster
+        name: DefaultCluster
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
@@ -844,7 +844,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: DefaultVMCluster
+        name: DefaultCluster
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
@@ -914,14 +914,14 @@ appinstrefs:
     name: vmapp1
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo1"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo1"}}'
     : 1
 - key:
     organization: AcmeAppCo1
     name: vmapp2
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultVMCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo1"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo1"}}'
     : 1
 - key:
     organization: AcmeAppCo

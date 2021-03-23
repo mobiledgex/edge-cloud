@@ -61,6 +61,7 @@ streamobjs:
         name: dmuus-cloud-1
       organization: AcmeAppCo1
   msgs:
+  - message: Setting ClusterInst name to default
   - message: Creating
   - message: Creating App Inst
   - message: Ready
@@ -76,6 +77,7 @@ streamobjs:
         name: dmuus-cloud-2
       organization: AcmeAppCo1
   msgs:
+  - message: Setting ClusterInst name to default
   - message: Creating
   - message: Creating App Inst
   - message: Ready

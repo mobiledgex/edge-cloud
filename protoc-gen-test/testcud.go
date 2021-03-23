@@ -272,7 +272,17 @@ func NewClient{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiClient) *{{.Name}}CommonApi 
 	return &apiWrap
 }
 
-func Internal{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+type {{.Name}}TestOptions struct {
+	createdData []{{.Pkg}}.{{.Name}}
+}
+
+type {{.Name}}TestOp func(opts *{{.Name}}TestOptions)
+
+func WithCreated{{.Name}}TestData(createdData []{{.Pkg}}.{{.Name}}) {{.Name}}TestOp {
+	return func(opts *{{.Name}}TestOptions) { opts.createdData = createdData }
+}
+
+func Internal{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}, ops ...{{.Name}}TestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "Internal{{.Name}}Test")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -280,14 +290,14 @@ func Internal{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiS
 	switch test {
 {{- if not .ShowOnly}}
 	case "cud":
-		basic{{.Name}}CudTest(t, ctx, NewInternal{{.Name}}Api(api), testData)
+		basic{{.Name}}CudTest(t, ctx, NewInternal{{.Name}}Api(api), testData, ops...)
 {{- end}}
 	case "show":
 		basic{{.Name}}ShowTest(t, ctx, NewInternal{{.Name}}Api(api), testData)
 	}
 }
 
-func Client{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+func Client{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}, ops ...{{.Name}}TestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "Client{{.Name}}Test")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -295,7 +305,7 @@ func Client{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiCli
 	switch test {
 {{- if not .ShowOnly}}
 	case "cud":
-		basic{{.Name}}CudTest(t, ctx, NewClient{{.Name}}Api(api), testData)
+		basic{{.Name}}CudTest(t, ctx, NewClient{{.Name}}Api(api), testData, ops...)
 {{- end}}
 	case "show":
 		basic{{.Name}}ShowTest(t, ctx, NewClient{{.Name}}Api(api), testData)
@@ -333,12 +343,20 @@ func Get{{.Name}}(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, ke
 }
 
 {{ if not .ShowOnly}}
-func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}, ops ...{{.Name}}TestOp) {
 	var err error
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
 		return
+	}
+	options := {{.Name}}TestOptions{}
+	for _, op := range ops {
+		op(&options)
+	}
+	createdData := testData
+	if options.createdData != nil {
+		createdData = options.createdData
 	}
 
 	// test create
@@ -349,21 +367,21 @@ func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}Comm
 	require.NotNil(t, err, "{{.Create}} duplicate {{.Name}}")
 
 	// test show all items
-	basic{{.Name}}ShowTest(t, ctx, api, testData)
+	basic{{.Name}}ShowTest(t, ctx, api, createdData)
 
 	// test {{.Delete}}
-	_, err = api.{{.Delete}}{{.Name}}(ctx, &testData[0])
+	_, err = api.{{.Delete}}{{.Name}}(ctx, &createdData[0])
 	require.Nil(t, err, "{{.Delete}} {{.Name}} %s", testData[0].GetKey().GetKeyString())
 	show := Show{{.Name}}{}
 	show.Init()
 	filterNone := {{.Pkg}}.{{.Name}}{}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData) - 1 + {{.Name}}ShowExtraCount, len(show.Data), "Show count")
-	show.AssertNotFound(t, &testData[0])
+	require.Equal(t, len(createdData) - 1 + {{.Name}}ShowExtraCount, len(show.Data), "Show count")
+	show.AssertNotFound(t, &createdData[0])
 {{- if .HasUpdate}}
 	// test update of missing object
-	_, err = api.Update{{.Name}}(ctx, &testData[0])
+	_, err = api.Update{{.Name}}(ctx, &createdData[0])
 	require.NotNil(t, err, "Update missing object")
 {{- end}}
 	// {{.Create}} it back
@@ -378,22 +396,22 @@ func basic{{.Name}}CudTest(t *testing.T, ctx context.Context, api *{{.Name}}Comm
 {{if .UpdateField}}
 	// test update
 	updater := {{.Pkg}}.{{.Name}}{}
-	updater.Key = testData[0].Key
+	updater.Key = createdData[0].Key
 	updater.{{.UpdateField}} = {{.UpdateValue}}
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
 	_, err = api.Update{{.Name}}(ctx, &updater)
-	require.Nil(t, err, "Update {{.Name}} %s", testData[0].GetKey().GetKeyString())
+	require.Nil(t, err, "Update {{.Name}} %s", createdData[0].GetKey().GetKeyString())
 
 	show.Init()
-	updater = testData[0]
+	updater = createdData[0]
 	updater.{{.UpdateField}} = {{.UpdateValue}}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	require.Nil(t, err, "show {{.Name}}")
 	show.AssertFound(t, &updater)
 
 	// revert change
-	updater.{{.UpdateField}} = testData[0].{{.UpdateField}}
+	updater.{{.UpdateField}} = createdData[0].{{.UpdateField}}
 	_, err = api.Update{{.Name}}(ctx, &updater)
 	require.Nil(t, err, "Update back {{.Name}}")
 {{- end}}

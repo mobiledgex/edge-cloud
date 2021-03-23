@@ -86,7 +86,7 @@ func TestController(t *testing.T) {
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
-	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData)
+	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData, testutil.WithCreatedAppInstTestData(testutil.CreatedAppInstData()))
 
 	require.Nil(t, dmeNotify.WaitForAppInsts(len(testutil.AppInstData)))
 	require.Nil(t, crmNotify.WaitForFlavors(len(testutil.FlavorData)))

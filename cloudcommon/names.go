@@ -22,7 +22,7 @@ var Organizationplatos = "platos"
 var OrganizationMobiledgeX = "MobiledgeX"
 var OrganizationEdgeBox = "EdgeBox"
 
-const DefaultVMCluster string = "DefaultVMCluster"
+const DefaultCluster string = "DefaultCluster"
 
 // platform apps
 var PlatosEnablingLayer = "PlatosEnablingLayer"
@@ -265,4 +265,51 @@ func GetCertsDirAndFiles(pwd string) (string, string, string) {
 
 func GetCloudletResourceUsageMeasurement(pfType string) string {
 	return fmt.Sprintf("%s-resource-usage", pfType)
+}
+
+// Because of the streamAppInst feature, we cannot change the input
+// key based on the App definition. This is because streamAppInst objects
+// may exist even if the App definition does not. This is true in two cases,
+// 1) If the AppInst/App was deleted, stream object still remains,
+// 2) CreateAppInst was called on a missing App, then stream object is created
+// with the missing App key, and exists without App/AppInst present.
+//
+// Consider these use cases where user supplies an AppInst with no ClusterName,
+// where the App is a VM app, and we attempt to set the ClusterName based on the
+// App type.
+// 1) Create App, AppInst, set ClusterName to "VM". Stream object has "VM" set.
+// Now delete AppInst, App. Stream object still exists with "VM" set.
+// 2) Create same AppInst with missing App (fails). Cannot determine App type,
+// so Stream object remains with cluster name blank.
+// Now we want to search for the Stream object in both cases above. Neither the
+// App nor the AppInst exist. The search supplies the same AppInst key with
+// Cluster name blank. The search code cannot determine if the App was a VM app
+// or not. If it leaves the cluster name blank, then a lookup in case (1) fails.
+// If it assumes the App was a VM App and fills in the cluster name, then the
+// lookup in case (2) fails.
+// Because of the above, we always set defaults for missing key fields.
+// Whether these defaults are valid can be checked later by the code
+// (and possibly generate an error), but the important part is that what ends
+// up as the key is the database is not dependent on other database objects
+// that may or may not exist at the time.
+//
+// In general we need to be very careful about changing the key that is passed
+// in from the user. The key is what the user uses to find the object.
+// The user should always be able to pass in the same key to create/find/delete.
+// If we modify the key, it must be done in a way that is consistent in ALL
+// cases, regardless of the state of the database or which API they call or
+// anything else that may change over time. Otherwise, the result is the user
+// may not be able to find/delete their object later.
+func SetAppInstKeyDefaults(key *edgeproto.AppInstKey) (bool, bool) {
+	setClusterOrg := false
+	setClusterName := false
+	if key.ClusterInstKey.Organization == "" {
+		key.ClusterInstKey.Organization = key.AppKey.Organization
+		setClusterOrg = true
+	}
+	if key.ClusterInstKey.ClusterKey.Name == "" {
+		key.ClusterInstKey.ClusterKey.Name = DefaultCluster
+		setClusterName = true
+	}
+	return setClusterOrg, setClusterName
 }
