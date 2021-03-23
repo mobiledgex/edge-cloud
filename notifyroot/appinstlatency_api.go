@@ -14,14 +14,6 @@ type AppInstLatencyApi struct{}
 var appInstLatencyApi = AppInstLatencyApi{}
 
 func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgeproto.AppInstLatency) (*edgeproto.Result, error) {
-	err := in.Key.ValidateKey()
-	if err != nil {
-		return nil, err
-	}
-	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Organization == "" {
-		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
-	}
 	// Create args for DebugRequest (AppInstKey)
 	b, err := json.Marshal(in.Key)
 	if err != nil {

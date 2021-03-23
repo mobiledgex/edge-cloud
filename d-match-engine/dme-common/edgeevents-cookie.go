@@ -43,7 +43,7 @@ func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCook
 		log.InfoLog("error in verifyedgeeventscookie", "cookie", cookie, "err", err)
 		return nil, err
 	}
-	if claims.Key == nil {
+	if claims.Key == nil || !verifyEdgeEventsCookieKey(claims.Key) {
 		log.InfoLog("no key parsed", "eecookie", cookie, "err", err)
 		return nil, errors.New("No Key data in cookie")
 	}
@@ -51,9 +51,15 @@ func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCook
 		log.InfoLog("edgeevents cookie is invalid or expired", "eecookie", cookie, "claims", claims)
 		return nil, errors.New("invalid or expired cookie")
 	}
-
 	log.SpanLog(ctx, log.DebugLevelDmereq, "verified edgeevents cookie", "eecookie", cookie, "expires", claims.ExpiresAt)
 	return claims.Key, nil
+}
+
+func verifyEdgeEventsCookieKey(key *EdgeEventsCookieKey) bool {
+	if key.ClusterOrg == "" && key.ClusterName == "" && key.CloudletOrg == "" && key.CloudletName == "" {
+		return false
+	}
+	return true
 }
 
 func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {

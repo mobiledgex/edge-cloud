@@ -30,6 +30,7 @@ type KubeNames struct {
 	DeploymentType    string
 	ImagePullSecrets  []string
 	ImagePaths        []string
+	IsUriIPAddr       bool
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {

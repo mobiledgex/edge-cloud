@@ -100,6 +100,9 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.Uri = ""
+	}
 }
 
 var AppInstApiCmd edgeproto.AppInstApiClient
@@ -892,6 +895,7 @@ var AppInstInfoOptionalArgs = []string{
 	"status.msgcount",
 	"status.msgs",
 	"powerstate",
+	"uri",
 }
 var AppInstInfoAliasArgs = []string{}
 var AppInstInfoComments = map[string]string{
@@ -908,6 +912,7 @@ var AppInstInfoComments = map[string]string{
 	"errors":                                      "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
 	"runtimeinfo.containerids":                    "List of container names",
 	"powerstate":                                  "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
+	"uri":                                         "Base FQDN for the App based on the cloudlet platform",
 }
 var AppInstInfoSpecialArgs = map[string]string{
 	"errors":                   "StringArray",

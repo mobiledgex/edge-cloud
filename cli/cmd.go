@@ -67,29 +67,17 @@ type Command struct {
 	StreamOutIncremental bool
 	CobraCmd             *cobra.Command
 	Run                  func(c *Command, args []string) error
+	UsageIsHelp          bool
 }
 
 func (c *Command) GenCmd() *cobra.Command {
 	short := c.Short
-	if short == "" {
-		short := c.Use
-		args := usageArgs(c.RequiredArgs)
-		if len(args) > 0 {
-			short += " " + strings.Join(args, " ")
-		}
-		args = usageArgs(c.OptionalArgs)
-		if len(args) > 0 {
-			short += " [" + strings.Join(args, " ") + "]"
-		}
-		if len(short) > 60 {
-			short = short[:57] + "..."
-		}
-	}
 	cmd := &cobra.Command{
 		Use:   c.Use,
 		Short: short,
 	}
 	cmd.SetUsageFunc(c.usageFunc)
+	cmd.SetHelpFunc(c.helpFunc)
 	c.CobraCmd = cmd
 
 	if c.Run != nil {
@@ -98,8 +86,16 @@ func (c *Command) GenCmd() *cobra.Command {
 	return cmd
 }
 
+func (c *Command) helpFunc(cmd *cobra.Command, args []string) {
+	c.UsageIsHelp = true
+	c.usageFunc(cmd)
+}
+
 func (c *Command) usageFunc(cmd *cobra.Command) error {
 	out := cmd.OutOrStderr()
+	if c.UsageIsHelp {
+		fmt.Fprintf(out, "%s\n\n", cmd.Short)
+	}
 	fmt.Fprintf(out, "Usage: %s [args]\n", cmd.UseLine())
 
 	pad := 0
@@ -120,10 +116,11 @@ func (c *Command) usageFunc(cmd *cobra.Command) error {
 		fmt.Fprint(out, "\n", optional)
 	}
 	if cmd.HasAvailableLocalFlags() {
-		fmt.Fprint(out, "\nFlags:\n", cmd.LocalFlags().FlagUsages())
+		fmt.Fprint(out, "\nFlags:\n", LocalFlagsUsageNoNewline(cmd))
 	}
-	if cmd.HasAvailableInheritedFlags() {
-		fmt.Fprint(out, "\nGlobal Flags:\n", cmd.InheritedFlags().FlagUsages())
+	if c.UsageIsHelp {
+		// help needs the newline, but usage does not
+		fmt.Fprint(out, "\n")
 	}
 	return nil
 }
@@ -137,10 +134,10 @@ func usageArgs(str string) []string {
 }
 
 func (c *Command) requiredArgsHelp(pad int) string {
-	args := strings.Split(c.RequiredArgs, " ")
-	if len(args) == 0 {
+	if strings.TrimSpace(c.RequiredArgs) == "" {
 		return ""
 	}
+	args := strings.Split(c.RequiredArgs, " ")
 	buf := bytes.Buffer{}
 	fmt.Fprintf(&buf, "Required Args:\n")
 	fmt.Fprint(&buf, c.argsHelp(pad, args))
@@ -148,10 +145,10 @@ func (c *Command) requiredArgsHelp(pad int) string {
 }
 
 func (c *Command) optionalArgsHelp(pad int) string {
-	args := strings.Split(c.OptionalArgs, " ")
-	if len(args) == 0 {
+	if strings.TrimSpace(c.OptionalArgs) == "" {
 		return ""
 	}
+	args := strings.Split(c.OptionalArgs, " ")
 	buf := bytes.Buffer{}
 	fmt.Fprintf(&buf, "Optional Args:\n")
 	fmt.Fprint(&buf, c.argsHelp(pad, args))
@@ -260,13 +257,79 @@ func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
 }
 
 func GenGroup(use, short string, cmds []*Command) *cobra.Command {
+	if use == "" {
+		panic("Use (command name) cannot be empty")
+	}
+	if short == "" {
+		panic("Short description cannot be empty")
+	}
 	groupCmd := &cobra.Command{
 		Use:   use,
 		Short: short,
+		RunE:  GroupRunE,
 	}
 
 	for _, c := range cmds {
 		groupCmd.AddCommand(c.GenCmd())
 	}
+	gc := GroupCommand{}
+	groupCmd.SetUsageFunc(gc.groupUsageFunc)
+	groupCmd.SetHelpFunc(gc.groupHelpFunc)
+
 	return groupCmd
+}
+
+type GroupCommand struct {
+	UsageIsHelp bool
+}
+
+func (c *GroupCommand) groupHelpFunc(cmd *cobra.Command, args []string) {
+	c.UsageIsHelp = true
+	c.groupUsageFunc(cmd)
+}
+
+func (c *GroupCommand) groupUsageFunc(cmd *cobra.Command) error {
+	out := cmd.OutOrStderr()
+	if c.UsageIsHelp {
+		fmt.Fprintf(out, "%s\n\n", cmd.Short)
+	}
+	fmt.Fprintf(out, "Usage: %s [command]\n", cmd.UseLine())
+	fmt.Fprintf(out, "\nAvailable Commands:\n")
+	pad := 0
+	for _, sub := range cmd.Commands() {
+		if pad < len(sub.Use) {
+			pad = len(sub.Use)
+		}
+	}
+	pad += 2
+	if pad < 11 {
+		// matches default cobra behavior of min padding of 11
+		pad = 11
+	}
+	for _, sub := range cmd.Commands() {
+		fmt.Fprintf(out, "  %-*s%s\n", pad, sub.Use, sub.Short)
+	}
+	if cmd.HasAvailableLocalFlags() {
+		fmt.Fprint(out, "\nFlags:\n", LocalFlagsUsageNoNewline(cmd))
+	}
+	if c.UsageIsHelp {
+		// help needs the newline, but usage does not
+		fmt.Fprint(out, "\n")
+	}
+	return nil
+}
+
+// For group commands, if no subcommand is specified,
+// we want to return an error (unless help was specified).
+func GroupRunE(cmd *cobra.Command, args []string) error {
+	return fmt.Errorf("Please specify a command")
+}
+
+// For usage, the cobra code converts the entire usage to a string
+// and then calls Println on it. This ends up introducing an extra
+// unsightly newline in the output. Flags should be last, so this
+// gets the flags output without the final new line.
+func LocalFlagsUsageNoNewline(cmd *cobra.Command) string {
+	str := cmd.LocalFlags().FlagUsages()
+	return strings.TrimSuffix(str, "\n")
 }

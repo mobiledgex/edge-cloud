@@ -1,9 +1,8 @@
 package dmecommon
 
 import (
-	"time"
+	"sync"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
@@ -11,19 +10,30 @@ import (
 
 // Filled in by DME. Added to EdgeEventStatCall to update stats
 type CustomStatInfo struct {
-	Name             string
-	Samples          []*dme.Sample
-	SessionCookieKey *CookieKey // SessionCookie to identify unique clients for EdgeEvents
+	Samples            []*dme.Sample
+	FirstLatencyUpdate bool // Used to update NumSessions count. Set true in LatencyInfo from FindCloudlet when providing initial DeviceInfo for stats. Additional LatencyInfo from StreamEdgeEvents (which must come after FindCloudlet) would double count NumSessions
+}
+
+// Used to find corresponding CustomStat
+// Created using CustomStatInfo
+type CustomStatKey struct {
+	AppInstKey edgeproto.AppInstKey
+	Name       string
+}
+
+func GetCustomStatKey(appInstKey edgeproto.AppInstKey, statName string) CustomStatKey {
+	return CustomStatKey{
+		AppInstKey: appInstKey,
+		Name:       statName,
+	}
 }
 
 type CustomStat struct {
-	Count             uint64
+	Count             uint64 // number of times this custom stat has been updated
 	RollingStatistics *grpcstats.RollingStatistics
-}
-
-type CustomStats struct {
-	Stats     map[string]*CustomStat
-	StartTime time.Time
+	NumSessions       uint64 // number of sessions that send stats
+	Mux               sync.Mutex
+	Changed           bool
 }
 
 func NewCustomStat() *CustomStat {
@@ -32,35 +42,14 @@ func NewCustomStat() *CustomStat {
 	return c
 }
 
-func NewCustomStats() *CustomStats {
-	c := new(CustomStats)
-	c.Stats = make(map[string]*CustomStat)
-	c.StartTime = time.Now()
-	return c
-}
-
-func RecordCustomStatCall(appInstKey *edgeproto.AppInstKey, sessionCookieKey *CookieKey, eventName string, samples []*dme.Sample) {
-	if EEStats == nil {
-		return
+func (c *CustomStat) Update(info *CustomStatInfo) {
+	c.Count++
+	if info.FirstLatencyUpdate {
+		c.NumSessions++
 	}
-	call := EdgeEventStatCall{}
-	call.Key.AppInstKey = *appInstKey
-	call.Key.Metric = cloudcommon.CustomMetric // override method name
-	call.CustomStatInfo = &CustomStatInfo{
-		Name:             eventName,
-		Samples:          samples,
-		SessionCookieKey: sessionCookieKey,
+	if info.Samples != nil {
+		for _, sample := range info.Samples {
+			c.RollingStatistics.UpdateRollingStatistics(sample.Value)
+		}
 	}
-	EEStats.RecordEdgeEventStatCall(&call)
-}
-
-func (c *CustomStats) Update(info *CustomStatInfo) {
-	stat, ok := c.Stats[info.Name]
-	if !ok {
-		stat = NewCustomStat()
-	}
-	stat.Count++
-	statistics := grpcstats.CalculateStatistics(info.Samples)
-	stat.RollingStatistics.UpdateRollingStatistics(info.SessionCookieKey.UniqueId, statistics.Avg)
-	c.Stats[info.Name] = stat
 }
