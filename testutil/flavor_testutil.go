@@ -180,27 +180,37 @@ func NewClientFlavorApi(api edgeproto.FlavorApiClient) *FlavorCommonApi {
 	return &apiWrap
 }
 
-func InternalFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor) {
+type FlavorTestOptions struct {
+	createdData []edgeproto.Flavor
+}
+
+type FlavorTestOp func(opts *FlavorTestOptions)
+
+func WithCreatedFlavorTestData(createdData []edgeproto.Flavor) FlavorTestOp {
+	return func(opts *FlavorTestOptions) { opts.createdData = createdData }
+}
+
+func InternalFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor, ops ...FlavorTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalFlavorTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicFlavorCudTest(t, ctx, NewInternalFlavorApi(api), testData)
+		basicFlavorCudTest(t, ctx, NewInternalFlavorApi(api), testData, ops...)
 	case "show":
 		basicFlavorShowTest(t, ctx, NewInternalFlavorApi(api), testData)
 	}
 }
 
-func ClientFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
+func ClientFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor, ops ...FlavorTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientFlavorTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicFlavorCudTest(t, ctx, NewClientFlavorApi(api), testData)
+		basicFlavorCudTest(t, ctx, NewClientFlavorApi(api), testData, ops...)
 	case "show":
 		basicFlavorShowTest(t, ctx, NewClientFlavorApi(api), testData)
 	}
@@ -236,12 +246,20 @@ func GetFlavor(t *testing.T, ctx context.Context, api *FlavorCommonApi, key *edg
 	return found
 }
 
-func basicFlavorCudTest(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+func basicFlavorCudTest(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor, ops ...FlavorTestOp) {
 	var err error
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
 		return
+	}
+	options := FlavorTestOptions{}
+	for _, op := range ops {
+		op(&options)
+	}
+	createdData := testData
+	if options.createdData != nil {
+		createdData = options.createdData
 	}
 
 	// test create
@@ -252,20 +270,20 @@ func basicFlavorCudTest(t *testing.T, ctx context.Context, api *FlavorCommonApi,
 	require.NotNil(t, err, "Create duplicate Flavor")
 
 	// test show all items
-	basicFlavorShowTest(t, ctx, api, testData)
+	basicFlavorShowTest(t, ctx, api, createdData)
 
 	// test Delete
-	_, err = api.DeleteFlavor(ctx, &testData[0])
+	_, err = api.DeleteFlavor(ctx, &createdData[0])
 	require.Nil(t, err, "Delete Flavor %s", testData[0].GetKey().GetKeyString())
 	show := ShowFlavor{}
 	show.Init()
 	filterNone := edgeproto.Flavor{}
 	err = api.ShowFlavor(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1+FlavorShowExtraCount, len(show.Data), "Show count")
-	show.AssertNotFound(t, &testData[0])
+	require.Equal(t, len(createdData)-1+FlavorShowExtraCount, len(show.Data), "Show count")
+	show.AssertNotFound(t, &createdData[0])
 	// test update of missing object
-	_, err = api.UpdateFlavor(ctx, &testData[0])
+	_, err = api.UpdateFlavor(ctx, &createdData[0])
 	require.NotNil(t, err, "Update missing object")
 	// Create it back
 	_, err = api.CreateFlavor(ctx, &testData[0])

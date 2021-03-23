@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -19,7 +20,7 @@ func InitAppInstLatencyApi(sync *Sync) {
 }
 
 func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgeproto.AppInstLatency) (*edgeproto.Result, error) {
-	setDefaultVMClusterKey(ctx, &in.Key)
+	cloudcommon.SetAppInstKeyDefaults(&in.Key)
 
 	err := in.Key.ValidateKey()
 	if err != nil {

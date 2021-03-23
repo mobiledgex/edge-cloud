@@ -40,15 +40,9 @@ func InitExecApi() {
 }
 
 func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
-	if req.AppInstKey.ClusterInstKey.Organization == "" {
-		req.AppInstKey.ClusterInstKey.Organization = req.AppInstKey.AppKey.Organization
-	}
+	cloudcommon.SetAppInstKeyDefaults(&req.AppInstKey)
 	if !appApi.Get(&req.AppInstKey.AppKey, app) {
 		return req.AppInstKey.AppKey.NotFoundError()
-	}
-	if app.Deployment == cloudcommon.DeploymentTypeVM &&
-		req.AppInstKey.ClusterInstKey.ClusterKey.Name == "" {
-		req.AppInstKey.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
 	}
 	if !appInstApi.HasKey(&req.AppInstKey) {
 		return req.AppInstKey.NotFoundError()

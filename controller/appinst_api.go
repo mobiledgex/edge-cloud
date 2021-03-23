@@ -294,21 +294,6 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 	return protos & (^protocolToRemove)
 }
 
-func setDefaultVMClusterKey(ctx context.Context, key *edgeproto.AppInstKey) {
-	// If ClusterKey.Name already exists, then don't set
-	// any default value for it
-	if key.ClusterInstKey.ClusterKey.Name != "" {
-		return
-	}
-	var app edgeproto.App
-	if !appApi.cache.Get(&key.AppKey, &app) {
-		return
-	}
-	if app.Deployment == cloudcommon.DeploymentTypeVM {
-		key.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
-	}
-}
-
 func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
 	streamSendObj, err := streamObjApi.startStream(ctx, key, inCb, SaveOnStreamObj)
 	if err != nil {
@@ -329,15 +314,7 @@ func stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, streamSen
 
 func (s *StreamObjApi) StreamAppInst(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
 	// populate the clusterinst developer from the app developer if not already present
-	if key.ClusterInstKey.Organization == "" {
-		key.ClusterInstKey.Organization = key.AppKey.Organization
-	}
-	setDefaultVMClusterKey(cb.Context(), key)
-	if key.ClusterInstKey.ClusterKey.Name == "" {
-		// if cluster name is still empty, fill it with
-		// default vm cluster name
-		key.ClusterInstKey.ClusterKey.Name = cloudcommon.DefaultVMCluster
-	}
+	cloudcommon.SetAppInstKeyDefaults(key)
 	return s.StreamMsgs(key, cb)
 }
 
@@ -406,13 +383,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	// populate the clusterinst developer from the app developer if not already present
-	setClusterOrg := false
-	if in.Key.ClusterInstKey.Organization == "" {
-		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
-		setClusterOrg = true
-	}
-	setDefaultVMClusterKey(ctx, &in.Key)
-
+	setClusterOrg, setClusterName := cloudcommon.SetAppInstKeyDefaults(&in.Key)
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
 	sendObj, cb, err := startAppInstStream(ctx, &appInstKey, inCb)
@@ -425,7 +396,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if setClusterOrg {
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
-
+	if setClusterName {
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst name to default"})
+	}
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
@@ -474,6 +447,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return in.Key.AppKey.NotFoundError()
+		}
+		if cloudcommon.IsClusterInstReqd(&app) && in.Key.ClusterInstKey.ClusterKey.Name == cloudcommon.DefaultCluster {
+			return fmt.Errorf("Cannot use blank or default Cluster name when ClusterInst is required")
 		}
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
@@ -1090,7 +1066,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	updatedRevision := false
 	crmUpdateRequired := false
 
-	setDefaultVMClusterKey(ctx, &key)
+	cloudcommon.SetAppInstKeyDefaults(&key)
 	if err := key.ValidateKey(); err != nil {
 		return false, err
 	}
@@ -1184,7 +1160,7 @@ func (s *AppInstApi) RefreshAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstA
 		}
 
 		// the whole key must be present
-		setDefaultVMClusterKey(ctx, &in.Key)
+		cloudcommon.SetAppInstKeyDefaults(&in.Key)
 		if err := in.Key.ValidateKey(); err != nil {
 			return fmt.Errorf("cluster key needed without updatemultiple option: %v", err)
 		}
@@ -1364,8 +1340,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	var reservationFreed bool
 	clusterInstKey := edgeproto.ClusterInstKey{}
 
-	setDefaultVMClusterKey(ctx, &in.Key)
-	if err := in.Key.AppKey.ValidateKey(); err != nil {
+	setClusterOrg, setClusterName := cloudcommon.SetAppInstKeyDefaults(&in.Key)
+	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
 
@@ -1399,34 +1375,19 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	log.SpanLog(ctx, log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
 	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Organization == "" {
-		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
+	if setClusterOrg {
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 	}
-
-	// check if we are deleting an autocluster instance we need to set the key correctly.
-	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix) && in.Key.ClusterInstKey.Organization == "" {
-		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
+	if setClusterName {
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst name to default"})
 	}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// clear change tracking vars in case STM is rerun due to conflict.
 		reservationFreed = false
 
 		if !s.store.STMGet(stm, &in.Key, in) {
-			if in.Key.ClusterInstKey.Organization == "" {
-				// create still allows it be unset on input,
-				// but will set it internally. But it is required
-				// on delete just in case another ClusterInst
-				// exists without it set. So be nice and
-				// remind them they may have forgotten to
-				// specify it.
-				cb.Send(&edgeproto.Result{Message: "ClusterInstKey developer not specified, may need to specify it"})
-			}
 			// already deleted
 			return in.Key.NotFoundError()
-		}
-		if err := in.Key.ClusterInstKey.ValidateKey(); err != nil {
-			return err
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR &&
 			in.State != edgeproto.TrackedState_DELETE_DONE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
