@@ -181,27 +181,37 @@ func NewClientAppApi(api edgeproto.AppApiClient) *AppCommonApi {
 	return &apiWrap
 }
 
-func InternalAppTest(t *testing.T, test string, api edgeproto.AppApiServer, testData []edgeproto.App) {
+type AppTestOptions struct {
+	createdData []edgeproto.App
+}
+
+type AppTestOp func(opts *AppTestOptions)
+
+func WithCreatedAppTestData(createdData []edgeproto.App) AppTestOp {
+	return func(opts *AppTestOptions) { opts.createdData = createdData }
+}
+
+func InternalAppTest(t *testing.T, test string, api edgeproto.AppApiServer, testData []edgeproto.App, ops ...AppTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalAppTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicAppCudTest(t, ctx, NewInternalAppApi(api), testData)
+		basicAppCudTest(t, ctx, NewInternalAppApi(api), testData, ops...)
 	case "show":
 		basicAppShowTest(t, ctx, NewInternalAppApi(api), testData)
 	}
 }
 
-func ClientAppTest(t *testing.T, test string, api edgeproto.AppApiClient, testData []edgeproto.App) {
+func ClientAppTest(t *testing.T, test string, api edgeproto.AppApiClient, testData []edgeproto.App, ops ...AppTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientAppTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicAppCudTest(t, ctx, NewClientAppApi(api), testData)
+		basicAppCudTest(t, ctx, NewClientAppApi(api), testData, ops...)
 	case "show":
 		basicAppShowTest(t, ctx, NewClientAppApi(api), testData)
 	}
@@ -237,12 +247,20 @@ func GetApp(t *testing.T, ctx context.Context, api *AppCommonApi, key *edgeproto
 	return found
 }
 
-func basicAppCudTest(t *testing.T, ctx context.Context, api *AppCommonApi, testData []edgeproto.App) {
+func basicAppCudTest(t *testing.T, ctx context.Context, api *AppCommonApi, testData []edgeproto.App, ops ...AppTestOp) {
 	var err error
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
 		return
+	}
+	options := AppTestOptions{}
+	for _, op := range ops {
+		op(&options)
+	}
+	createdData := testData
+	if options.createdData != nil {
+		createdData = options.createdData
 	}
 
 	// test create
@@ -253,20 +271,20 @@ func basicAppCudTest(t *testing.T, ctx context.Context, api *AppCommonApi, testD
 	require.NotNil(t, err, "Create duplicate App")
 
 	// test show all items
-	basicAppShowTest(t, ctx, api, testData)
+	basicAppShowTest(t, ctx, api, createdData)
 
 	// test Delete
-	_, err = api.DeleteApp(ctx, &testData[0])
+	_, err = api.DeleteApp(ctx, &createdData[0])
 	require.Nil(t, err, "Delete App %s", testData[0].GetKey().GetKeyString())
 	show := ShowApp{}
 	show.Init()
 	filterNone := edgeproto.App{}
 	err = api.ShowApp(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1+AppShowExtraCount, len(show.Data), "Show count")
-	show.AssertNotFound(t, &testData[0])
+	require.Equal(t, len(createdData)-1+AppShowExtraCount, len(show.Data), "Show count")
+	show.AssertNotFound(t, &createdData[0])
 	// test update of missing object
-	_, err = api.UpdateApp(ctx, &testData[0])
+	_, err = api.UpdateApp(ctx, &createdData[0])
 	require.NotNil(t, err, "Update missing object")
 	// Create it back
 	_, err = api.CreateApp(ctx, &testData[0])

@@ -149,7 +149,7 @@ func TestAppInstApi(t *testing.T) {
 	require.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
 
-	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData)
+	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData, testutil.WithCreatedAppInstTestData(testutil.CreatedAppInstData()))
 	InternalAppInstCachedFieldsTest(t, ctx)
 	// check cluster insts created (includes explicit and auto)
 	testutil.InternalClusterInstTest(t, "show", &clusterInstApi,
@@ -159,7 +159,7 @@ func TestAppInstApi(t *testing.T) {
 	// after app insts create, check that cloudlet refs data is correct.
 	// Note this refs data is a second set after app insts were created.
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsWithAppInstsData)
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.GetAppInstRefsData())
 
 	commonApi := testutil.NewInternalAppInstApi(&appInstApi)
 
@@ -170,7 +170,7 @@ func TestAppInstApi(t *testing.T) {
 	require.NotNil(t, err, "Delete AppInst responder failure")
 	responder.SetSimulateAppDeleteFailure(false)
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.GetAppInstRefsData())
 	// As there was some progress, there should be some messages in stream
 	msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
 	require.Greater(t, len(msgs), 0, "some progress messages before failure")
@@ -183,7 +183,7 @@ func TestAppInstApi(t *testing.T) {
 	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create overrides delete error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.AppInstRefsData)
+	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.GetAppInstRefsData())
 	// As there was progress, there should be some messages in stream
 	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Pass)
 	require.Greater(t, len(msgs), 0, "progress messages")
@@ -196,9 +196,9 @@ func TestAppInstApi(t *testing.T) {
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
 	// create copy of refs without the deleted AppInst
-	appInstRefsDeleted := append([]edgeproto.AppInstRefs{}, testutil.AppInstRefsData...)
+	appInstRefsDeleted := append([]edgeproto.AppInstRefs{}, testutil.GetAppInstRefsData()...)
 	appInstRefsDeleted[0].Insts = make(map[string]uint32)
-	for k, v := range testutil.AppInstRefsData[0].Insts {
+	for k, v := range testutil.GetAppInstRefsData()[0].Insts {
 		if k == obj.Key.GetKeyString() {
 			continue
 		}
@@ -288,15 +288,16 @@ func TestAppInstApi(t *testing.T) {
 	}
 
 	// delete all AppInsts and Apps and check that refs are empty
-	for _, obj := range testutil.AppInstData {
+	for ii, obj := range testutil.AppInstData {
+		if ii == 0 {
+			// skip AppInst[0], it was deleted earlier in the test
+			continue
+		}
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
 		}
 		err := appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
-		if err != nil && err.Error() == obj.Key.NotFoundError().Error() {
-			continue
-		}
-		require.Nil(t, err, "Delete app inst failed")
+		require.Nil(t, err, "Delete app inst %d failed", ii)
 	}
 
 	testAppFlavorRequest(t, ctx, commonApi, responder)
@@ -305,12 +306,9 @@ func TestAppInstApi(t *testing.T) {
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
 	clusterInstApi.cleanupWorkers.WaitIdle()
 
-	for _, obj := range testutil.AppData {
+	for ii, obj := range testutil.AppData {
 		_, err := appApi.DeleteApp(ctx, &obj)
-		if err != nil && err.Error() == obj.Key.NotFoundError().Error() {
-			continue
-		}
-		require.Nil(t, err, "Delete app %s failed", obj.Key.GetKeyString())
+		require.Nil(t, err, "Delete app %d: %s failed", ii, obj.Key.GetKeyString())
 	}
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, []edgeproto.AppInstRefs{})
 

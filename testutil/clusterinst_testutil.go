@@ -226,27 +226,37 @@ func NewClientClusterInstApi(api edgeproto.ClusterInstApiClient) *ClusterInstCom
 	return &apiWrap
 }
 
-func InternalClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst) {
+type ClusterInstTestOptions struct {
+	createdData []edgeproto.ClusterInst
+}
+
+type ClusterInstTestOp func(opts *ClusterInstTestOptions)
+
+func WithCreatedClusterInstTestData(createdData []edgeproto.ClusterInst) ClusterInstTestOp {
+	return func(opts *ClusterInstTestOptions) { opts.createdData = createdData }
+}
+
+func InternalClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst, ops ...ClusterInstTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalClusterInstTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicClusterInstCudTest(t, ctx, NewInternalClusterInstApi(api), testData)
+		basicClusterInstCudTest(t, ctx, NewInternalClusterInstApi(api), testData, ops...)
 	case "show":
 		basicClusterInstShowTest(t, ctx, NewInternalClusterInstApi(api), testData)
 	}
 }
 
-func ClientClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
+func ClientClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst, ops ...ClusterInstTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientClusterInstTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
 
 	switch test {
 	case "cud":
-		basicClusterInstCudTest(t, ctx, NewClientClusterInstApi(api), testData)
+		basicClusterInstCudTest(t, ctx, NewClientClusterInstApi(api), testData, ops...)
 	case "show":
 		basicClusterInstShowTest(t, ctx, NewClientClusterInstApi(api), testData)
 	}
@@ -282,12 +292,20 @@ func GetClusterInst(t *testing.T, ctx context.Context, api *ClusterInstCommonApi
 	return found
 }
 
-func basicClusterInstCudTest(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+func basicClusterInstCudTest(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst, ops ...ClusterInstTestOp) {
 	var err error
 
 	if len(testData) < 3 {
 		require.True(t, false, "Need at least 3 test data objects")
 		return
+	}
+	options := ClusterInstTestOptions{}
+	for _, op := range ops {
+		op(&options)
+	}
+	createdData := testData
+	if options.createdData != nil {
+		createdData = options.createdData
 	}
 
 	// test create
@@ -298,20 +316,20 @@ func basicClusterInstCudTest(t *testing.T, ctx context.Context, api *ClusterInst
 	require.NotNil(t, err, "Create duplicate ClusterInst")
 
 	// test show all items
-	basicClusterInstShowTest(t, ctx, api, testData)
+	basicClusterInstShowTest(t, ctx, api, createdData)
 
 	// test Delete
-	_, err = api.DeleteClusterInst(ctx, &testData[0])
+	_, err = api.DeleteClusterInst(ctx, &createdData[0])
 	require.Nil(t, err, "Delete ClusterInst %s", testData[0].GetKey().GetKeyString())
 	show := ShowClusterInst{}
 	show.Init()
 	filterNone := edgeproto.ClusterInst{}
 	err = api.ShowClusterInst(ctx, &filterNone, &show)
 	require.Nil(t, err, "show data")
-	require.Equal(t, len(testData)-1+ClusterInstShowExtraCount, len(show.Data), "Show count")
-	show.AssertNotFound(t, &testData[0])
+	require.Equal(t, len(createdData)-1+ClusterInstShowExtraCount, len(show.Data), "Show count")
+	show.AssertNotFound(t, &createdData[0])
 	// test update of missing object
-	_, err = api.UpdateClusterInst(ctx, &testData[0])
+	_, err = api.UpdateClusterInst(ctx, &createdData[0])
 	require.NotNil(t, err, "Update missing object")
 	// Create it back
 	_, err = api.CreateClusterInst(ctx, &testData[0])
@@ -479,7 +497,17 @@ func NewClientClusterInstInfoApi(api edgeproto.ClusterInstInfoApiClient) *Cluste
 	return &apiWrap
 }
 
-func InternalClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiServer, testData []edgeproto.ClusterInstInfo) {
+type ClusterInstInfoTestOptions struct {
+	createdData []edgeproto.ClusterInstInfo
+}
+
+type ClusterInstInfoTestOp func(opts *ClusterInstInfoTestOptions)
+
+func WithCreatedClusterInstInfoTestData(createdData []edgeproto.ClusterInstInfo) ClusterInstInfoTestOp {
+	return func(opts *ClusterInstInfoTestOptions) { opts.createdData = createdData }
+}
+
+func InternalClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiServer, testData []edgeproto.ClusterInstInfo, ops ...ClusterInstInfoTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "InternalClusterInstInfoTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)
@@ -490,7 +518,7 @@ func InternalClusterInstInfoTest(t *testing.T, test string, api edgeproto.Cluste
 	}
 }
 
-func ClientClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiClient, testData []edgeproto.ClusterInstInfo) {
+func ClientClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiClient, testData []edgeproto.ClusterInstInfo, ops ...ClusterInstInfoTestOp) {
 	span := log.StartSpan(log.DebugLevelApi, "ClientClusterInstInfoTest")
 	defer span.Finish()
 	ctx := log.ContextWithSpan(context.Background(), span)

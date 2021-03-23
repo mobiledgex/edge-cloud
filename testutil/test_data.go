@@ -623,9 +623,7 @@ var AppInstData = []edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[12].Key, //vm app with lb
 			ClusterInstKey: edgeproto.VirtualClusterInstKey{
-				ClusterKey:   edgeproto.ClusterKey{Name: "DefaultVMCluster"},
-				CloudletKey:  CloudletData[0].Key,
-				Organization: DevData[0],
+				CloudletKey: CloudletData[0].Key,
 			},
 		},
 		CloudletLoc: CloudletData[1].Location,
@@ -666,85 +664,88 @@ var AppInstInfoData = []edgeproto.AppInstInfo{
 	},
 }
 
-var AppInstRefsData = []edgeproto.AppInstRefs{
-	edgeproto.AppInstRefs{
-		Key: AppData[0].Key,
-		Insts: map[string]uint32{
-			AppInstData[0].Key.GetKeyString(): 1,
-			AppInstData[1].Key.GetKeyString(): 1,
-			AppInstData[2].Key.GetKeyString(): 1,
+func GetAppInstRefsData() []edgeproto.AppInstRefs {
+	createdAppInsts := CreatedAppInstData()
+	return []edgeproto.AppInstRefs{
+		edgeproto.AppInstRefs{
+			Key: AppData[0].Key,
+			Insts: map[string]uint32{
+				AppInstData[0].Key.GetKeyString(): 1,
+				AppInstData[1].Key.GetKeyString(): 1,
+				AppInstData[2].Key.GetKeyString(): 1,
+			},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[1].Key,
-		Insts: map[string]uint32{
-			AppInstData[3].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key: AppData[1].Key,
+			Insts: map[string]uint32{
+				AppInstData[3].Key.GetKeyString(): 1,
+			},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[2].Key,
-		Insts: map[string]uint32{
-			AppInstData[4].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key: AppData[2].Key,
+			Insts: map[string]uint32{
+				AppInstData[4].Key.GetKeyString(): 1,
+			},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key:   AppData[3].Key,
-		Insts: map[string]uint32{},
-	},
-	edgeproto.AppInstRefs{
-		Key:   AppData[4].Key,
-		Insts: map[string]uint32{},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[5].Key,
-		Insts: map[string]uint32{
-			AppInstData[5].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key:   AppData[3].Key,
+			Insts: map[string]uint32{},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[6].Key,
-		Insts: map[string]uint32{
-			AppInstData[6].Key.GetKeyString(): 1,
-			AppInstData[7].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key:   AppData[4].Key,
+			Insts: map[string]uint32{},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[7].Key,
-		Insts: map[string]uint32{
-			AppInstData[8].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key: AppData[5].Key,
+			Insts: map[string]uint32{
+				AppInstData[5].Key.GetKeyString(): 1,
+			},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key:   AppData[8].Key,
-		Insts: map[string]uint32{},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[9].Key,
-		Insts: map[string]uint32{
-			AppInstData[9].Key.GetKeyString():  1,
-			AppInstData[10].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key: AppData[6].Key,
+			Insts: map[string]uint32{
+				AppInstData[6].Key.GetKeyString(): 1,
+				AppInstData[7].Key.GetKeyString(): 1,
+			},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key:   AppData[10].Key,
-		Insts: map[string]uint32{},
-	},
-	edgeproto.AppInstRefs{
-		Key:   AppData[11].Key,
-		Insts: map[string]uint32{},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[12].Key,
-		Insts: map[string]uint32{
-			AppInstData[11].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key: AppData[7].Key,
+			Insts: map[string]uint32{
+				AppInstData[8].Key.GetKeyString(): 1,
+			},
 		},
-	},
-	edgeproto.AppInstRefs{
-		Key: AppData[13].Key,
-		Insts: map[string]uint32{
-			AppInstData[12].Key.GetKeyString(): 1,
+		edgeproto.AppInstRefs{
+			Key:   AppData[8].Key,
+			Insts: map[string]uint32{},
 		},
-	},
+		edgeproto.AppInstRefs{
+			Key: AppData[9].Key,
+			Insts: map[string]uint32{
+				AppInstData[9].Key.GetKeyString():  1,
+				AppInstData[10].Key.GetKeyString(): 1,
+			},
+		},
+		edgeproto.AppInstRefs{
+			Key:   AppData[10].Key,
+			Insts: map[string]uint32{},
+		},
+		edgeproto.AppInstRefs{
+			Key:   AppData[11].Key,
+			Insts: map[string]uint32{},
+		},
+		edgeproto.AppInstRefs{
+			Key: AppData[12].Key,
+			Insts: map[string]uint32{
+				createdAppInsts[11].Key.GetKeyString(): 1,
+			},
+		},
+		edgeproto.AppInstRefs{
+			Key: AppData[13].Key,
+			Insts: map[string]uint32{
+				AppInstData[12].Key.GetKeyString(): 1,
+			},
+		},
+	}
 }
 
 var CloudletInfoData = []edgeproto.CloudletInfo{
@@ -1787,6 +1788,9 @@ func CreatedAppInstData() []edgeproto.AppInst {
 			appInst.RealClusterName = ClusterInstAutoData[1].Key.ClusterKey.Name
 		case 6:
 			appInst.RealClusterName = ClusterInstAutoData[2].Key.ClusterKey.Name
+		case 11:
+			appInst.Key.ClusterInstKey.Organization = appInst.Key.AppKey.Organization
+			appInst.Key.ClusterInstKey.ClusterKey.Name = "DefaultCluster"
 		}
 		insts = append(insts, appInst)
 	}
