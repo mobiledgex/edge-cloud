@@ -78,6 +78,9 @@ func (s *CloudletApi) GetAccessData(ctx context.Context, req *edgeproto.AccessDa
 	if !cloudletApi.cache.Get(&verified.Key, cloudlet) {
 		return nil, verified.Key.NotFoundError()
 	}
+	if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX {
+		return nil, fmt.Errorf("Not allowed to get access data for EDGEBOX platform")
+	}
 	vaultClient := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)
 	handler := accessapi.NewControllerHandler(vaultClient)
 	return handler.GetAccessData(ctx, req)
