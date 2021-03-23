@@ -158,6 +158,8 @@ extend google.protobuf.MethodOptions {
   bool mc2_api_notifyroot = 51042;
   // Specifies the org field path and requires to the org to exist
   string mc2_api_requires_org = 51045;
+  // Override CLI command name
+  string cli_cmd = 51050;
 }
 
 extend google.protobuf.ServiceOptions {
