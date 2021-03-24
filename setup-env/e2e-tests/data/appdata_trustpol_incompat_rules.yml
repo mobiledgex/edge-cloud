@@ -17,6 +17,8 @@ settings:
   chefclientinterval: 10m
   influxdbmetricsretention: 2h
   cloudletmaintenancetimeout: 2s
+  edgeeventsmetricscontinuousqueriescollectionintervals:
+  - interval: 2s
 
 flavors:
 - key:

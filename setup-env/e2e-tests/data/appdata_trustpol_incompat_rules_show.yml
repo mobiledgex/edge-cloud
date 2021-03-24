@@ -37,11 +37,17 @@ settings:
   updatevmpooltimeout: 20m0s
   updatetrustpolicytimeout: 5s
   dmeapimetricscollectioninterval: 30s
-  persistentconnectionmetricscollectioninterval: 1h0m0s
+  edgeeventsmetricscollectioninterval: 1h0m0s
   cleanupreservableautoclusteridletime: 30m0s
   influxdbcloudletusagemetricsretention: 8760h0m0s
   createcloudlettimeout: 10s
   updatecloudlettimeout: 2s
+  locationtilesidelengthkm: 2
+  edgeeventsmetricscontinuousqueriescollectionintervals:
+  - interval: 2s
+  influxdbdownsampledmetricsretention: 8760h0m0s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  appinstclientcleanupinterval: 24h0m0s
 trustpolicies:
 - key:
     organization: dmuus
