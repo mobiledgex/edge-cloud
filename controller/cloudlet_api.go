@@ -95,7 +95,8 @@ func ignoreCRMState(cctx *CallContext) bool {
 
 func supportsTrustPolicy(platformType edgeproto.PlatformType) bool {
 	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK ||
-		platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE {
+		platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE ||
+		platformType == edgeproto.PlatformType_PLATFORM_TYPE_VCD {
 		return true
 	}
 	return false
