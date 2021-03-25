@@ -38,6 +38,7 @@ func TestAccessClientServer(t *testing.T) {
 	vaultRole = ""
 	vaultSecret = ""
 	deploymentTag := ""
+	edgeboxCloudlet := true
 
 	ctx := log.StartTestSpan(context.Background())
 	// use initCtx to test that init call to controller works without span
@@ -94,7 +95,7 @@ func TestAccessClientServer(t *testing.T) {
 	// ----------------------------------------------------------------
 	log.SpanLog(ctx, log.DebugLevelInfo,
 		"---- client with valid access key ----")
-	tc1 := dc.CreateCloudlet(ctx, "tc1")
+	tc1 := dc.CreateCloudlet(ctx, "tc1", !edgeboxCloudlet)
 	// set up access key
 	err = dc.UpdateKey(ctx, tc1.Cloudlet.Key)
 	require.Nil(t, err)
@@ -135,7 +136,7 @@ func TestAccessClientServer(t *testing.T) {
 
 	// ----------------------------------------------------------------
 	log.SpanLog(ctx, log.DebugLevelInfo, "---- new crm upgrade ---")
-	tc2 := dc.CreateCloudlet(ctx, "tc2")
+	tc2 := dc.CreateCloudlet(ctx, "tc2", !edgeboxCloudlet)
 	// set up access key
 	err = dc.UpdateKey(ctx, tc2.Cloudlet.Key)
 	require.Nil(t, err)
@@ -158,12 +159,16 @@ func TestAccessClientServer(t *testing.T) {
 	// check that access works
 	clientConn = startClient(t, ctx, tc2.KeyClient)
 	EchoApisTest(t, ctx, clientConn, "")
+	// check that GetAccessData works
+	client := edgeproto.NewCloudletAccessApiClient(clientConn)
+	_, err = client.GetAccessData(ctx, &edgeproto.AccessDataRequest{})
+	require.Nil(t, err)
 	clientConn.Close()
 	tc2.Cleanup()
 
 	// ----------------------------------------------------------------
 	log.SpanLog(ctx, log.DebugLevelInfo, "---- old crm upgrade ----")
-	tc3 := dc.CreateCloudlet(ctx, "tc3")
+	tc3 := dc.CreateCloudlet(ctx, "tc3", !edgeboxCloudlet)
 	// access key should not exist
 	_, err = os.Stat(tc3.KeyClient.AccessKeyFile)
 	require.NotNil(t, err)
@@ -190,7 +195,7 @@ func TestAccessClientServer(t *testing.T) {
 
 	// ----------------------------------------------------------------
 	log.SpanLog(ctx, log.DebugLevelInfo, "---- non-crm verify only ----")
-	tc4 := dc.CreateCloudlet(ctx, "tc4")
+	tc4 := dc.CreateCloudlet(ctx, "tc4", !edgeboxCloudlet)
 	// set up access key
 	err = dc.UpdateKey(ctx, tc4.Cloudlet.Key)
 	require.Nil(t, err)
@@ -211,6 +216,24 @@ func TestAccessClientServer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, privKey, string(dat))
 	tc4.Cleanup()
+
+	// ----------------------------------------------------------------
+	log.SpanLog(ctx, log.DebugLevelInfo,
+		"---- disallow edgebox client to use getaccessdata method ----")
+	tc5 := dc.CreateCloudlet(ctx, "tc5", edgeboxCloudlet)
+	// set up access key
+	err = dc.UpdateKey(ctx, tc5.Cloudlet.Key)
+	require.Nil(t, err)
+	// init client
+	err = tc5.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc5.Cloudlet.Key, deploymentTag)
+	require.Nil(t, err)
+	// GetAccessData should fail
+	clientConn = startClient(t, ctx, tc5.KeyClient)
+	client = edgeproto.NewCloudletAccessApiClient(clientConn)
+	_, err = client.GetAccessData(ctx, &edgeproto.AccessDataRequest{})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Not allowed to get access data for EDGEBOX platform")
+	tc5.Cleanup()
 }
 
 func startClient(t *testing.T, ctx context.Context, keyClient *AccessKeyClient) *grpc.ClientConn {
@@ -309,6 +332,7 @@ func (s *DummyController) Start(ctx context.Context, addr string) {
 		panic(err.Error())
 	}
 	err = s.AccessKeyGrpcServer.Start(addr, s.KeyServer, tlsConfig, func(serv *grpc.Server) {
+		edgeproto.RegisterCloudletAccessApiServer(serv, s)
 		edgeproto.RegisterCloudletAccessKeyApiServer(serv, s)
 		if s.ApiRegisterCb != nil {
 			s.ApiRegisterCb(serv)
@@ -331,6 +355,18 @@ func (s *DummyController) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitKey)
 }
 
+func (s *DummyController) GetAccessData(ctx context.Context, req *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
+	return &edgeproto.AccessDataReply{}, nil
+}
+
+func (s *DummyController) GetCas(ctx context.Context, req *edgeproto.GetCasRequest) (*edgeproto.GetCasReply, error) {
+	return &edgeproto.GetCasReply{}, nil
+}
+
+func (s *DummyController) IssueCert(ctx context.Context, req *edgeproto.IssueCertRequest) (*edgeproto.IssueCertReply, error) {
+	return &edgeproto.IssueCertReply{}, nil
+}
+
 func (s *DummyController) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
 	tc, ok := s.Cloudlets[*key]
 	if !ok {
@@ -351,10 +387,13 @@ type TestCloudlet struct {
 }
 
 // CreateCloudlet creates test client data.
-func (s *DummyController) CreateCloudlet(ctx context.Context, name string) *TestCloudlet {
+func (s *DummyController) CreateCloudlet(ctx context.Context, name string, edgeboxCloudlet bool) *TestCloudlet {
 	tc := &TestCloudlet{}
 	tc.Cloudlet.Key.Name = name
 	tc.Cloudlet.Key.Organization = "testorg"
+	if edgeboxCloudlet {
+		tc.Cloudlet.PlatformType = edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX
+	}
 	tc.privateKeyFile = "/tmp/accesskey_unittest_" + name
 	s.Cloudlets[tc.Cloudlet.Key] = tc
 	s.Cache.Update(ctx, &tc.Cloudlet, 0)
