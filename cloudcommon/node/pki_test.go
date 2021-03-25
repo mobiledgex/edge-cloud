@@ -64,11 +64,12 @@ func TestInternalPki(t *testing.T) {
 	defer dcEU.Stop()
 
 	// create access key for US cloudlet
-	tc1 := dcUS.CreateCloudlet(ctx, "pkitc1")
+	edgeboxCloudlet := true
+	tc1 := dcUS.CreateCloudlet(ctx, "pkitc1", !edgeboxCloudlet)
 	err = dcUS.UpdateKey(ctx, tc1.Cloudlet.Key)
 	require.Nil(t, err)
 	// create access key for EU cloudlet
-	tc2 := dcEU.CreateCloudlet(ctx, "pkitc2")
+	tc2 := dcEU.CreateCloudlet(ctx, "pkitc2", !edgeboxCloudlet)
 	err = dcEU.UpdateKey(ctx, tc2.Cloudlet.Key)
 	require.Nil(t, err)
 

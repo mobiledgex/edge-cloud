@@ -27,6 +27,7 @@ import (
 
 var BadAuthDelay = 3 * time.Second
 var UpgradeAccessKeyMethod = "/edgeproto.CloudletAccessKeyApi/UpgradeAccessKey"
+var GetAccessDataMethod = "/edgeproto.CloudletAccessApi/GetAccessData"
 
 type accessKeyVerifiedTagType string
 
@@ -94,6 +95,10 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 	cloudlet := edgeproto.Cloudlet{}
 	if !s.cloudletCache.Get(&verified.Key, &cloudlet) {
 		return nil, fmt.Errorf("failed to find cloudlet %s to verify access key", data)
+	}
+
+	if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX && method == GetAccessDataMethod {
+		return nil, fmt.Errorf("Not allowed to get access data for EDGEBOX platform")
 	}
 
 	// look up key signature
