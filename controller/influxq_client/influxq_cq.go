@@ -120,7 +120,7 @@ func CreateLatencyContinuousQuerySettings(collectionInterval time.Duration, newD
 		AggregationFunctions:      LatencyAggregationFunctions,
 		NewDbName:                 newDbName,
 		CollectionInterval:        collectionInterval,
-		RetentionPolicyName:       fmt.Sprintf("%s_default", newDbName),
+		RetentionPolicyName:       getDefaultRetentionPolicyName(newDbName),
 		NewRetentionPolicyCreated: rpDone,
 	}
 }
@@ -136,7 +136,7 @@ func CreateDeviceInfoContinuousQuerySettings(collectionInterval time.Duration, n
 		AggregationFunctions:      DeviceInfoAggregationFunctions,
 		NewDbName:                 newDbName,
 		CollectionInterval:        collectionInterval,
-		RetentionPolicyName:       fmt.Sprintf("%s_default", newDbName),
+		RetentionPolicyName:       getDefaultRetentionPolicyName(newDbName),
 		NewRetentionPolicyCreated: rpDone,
 	}
 }
