@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"flag"
+	"fmt"
 	"sync"
 
 	"github.com/elastic/go-elasticsearch/v7"
@@ -13,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/mobiledgex/edge-cloud/version"
 	"github.com/opentracing/opentracing-go"
+	"google.golang.org/grpc"
 )
 
 var NodeTypeCRM = "crm"
@@ -48,6 +50,8 @@ type NodeMgr struct {
 	commonName         string
 	DeploymentTag      string
 	AccessKeyClient    AccessKeyClient
+	AccessApiClient    edgeproto.CloudletAccessApiClient
+	CtrlConn           *grpc.ClientConn // here so crm and cloudlet-dme can close it
 	CloudletPoolLookup CloudletPoolLookup
 	CloudletLookup     CloudletLookup
 
@@ -103,7 +107,12 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 		return initCtx, nil, err
 	}
 	if s.AccessKeyClient.enabled {
-		// no vault, Controller replaces Vault for issuing certs
+		log.SpanLog(initCtx, log.DebugLevelInfo, "Setup persistent access connection to Controller")
+		ctrlConn, err := s.AccessKeyClient.ConnectController(initCtx)
+		if err != nil {
+			return initCtx, nil, fmt.Errorf("Failed to connect to controller %v", err)
+		}
+		s.AccessApiClient = edgeproto.NewCloudletAccessApiClient(ctrlConn)
 	} else {
 		// init vault before pki
 		s.VaultConfig = opts.vaultConfig

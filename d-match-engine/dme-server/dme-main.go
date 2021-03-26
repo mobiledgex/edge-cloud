@@ -550,17 +550,10 @@ func main() {
 			span.Finish()
 			log.FatalLog("access key client is not enabled")
 		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "Setup persistent access connection to Controller")
-		ctrlConn, err := nodeMgr.AccessKeyClient.ConnectController(ctx)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to connect to controller", "err", err)
-			span.Finish()
-			log.FatalLog("Failed to connect to controller for access API", "err", err)
-		}
-		defer ctrlConn.Close()
+		defer nodeMgr.CtrlConn.Close()
 		// Create CloudletAccessApiClient
-		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
-		accessApi = accessapi.NewControllerClient(accessClient)
+		accessClient := &nodeMgr.AccessApiClient
+		accessApi = accessapi.NewControllerClient(*accessClient)
 	} else {
 		// DME has direct access to vault
 		cloudlet := &edgeproto.Cloudlet{

@@ -1596,25 +1596,10 @@ var CloudletComments = map[string]string{
 	"resourcequotas:#.value":              "Quota value of the resource",
 	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
 	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 	"hostcontroller":                      "Addr of the controller hosting the cloudlet services if it is running locally",
-=======
-=======
 	"kafkacluster":                        "operator provided kafka cluster endpoint to push events to",
-=======
-	"kafkacluster":                        "operator provided kafka cluster endpoint to push events to, specify REMOVE_KAFKA on a cloudletUpdate to stop pushing to kafka",
->>>>>>> cleanup
-	"kafkauser":                           "username for kafka SASL/PLAIN authentification",
-	"kafkapassword":                       "password for kafka SASL/PLAIN authentification",
->>>>>>> kafka bus
->>>>>>> kafka bus
-=======
-	"kafkacluster":                        "operator provided kafka cluster endpoint to push events to",
-	"kafkauser":                           "username for kafka SASL/PLAIN authentification",
-	"kafkapassword":                       "password for kafka SASL/PLAIN authentification",
->>>>>>> autogen files
+	"kafkauser":                           "username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
+	"kafkapassword":                       "password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",

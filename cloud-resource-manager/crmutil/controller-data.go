@@ -75,7 +75,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletInternalCache(&cd.CloudletInternalCache)
-	cd.CloudletCache = nodeMgr.CloudletLookup.GetCloudletCache("")
+	cd.CloudletCache = nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion)
 	edgeproto.InitVMPoolCache(&cd.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)

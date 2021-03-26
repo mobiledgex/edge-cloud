@@ -4,6 +4,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+const NoRegion = ""
+
 // CloudletLookup interface used by events to get the kafka cluster endpoint
 // for a cloudlet in order to send events out
 type CloudletLookup interface {

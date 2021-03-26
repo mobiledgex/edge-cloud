@@ -37,12 +37,15 @@ func GetData(config *Config, path string, version int, data interface{}) error {
 	return mapstructure.WeakDecode(vdat["data"], data)
 }
 
-func PutData(config *Config, path string, data map[string]interface{}) error {
+func PutData(config *Config, path string, data interface{}) error {
 	client, err := config.Login()
 	if err != nil {
 		return err
 	}
-	out, err := json.Marshal(data)
+	vdata := map[string]interface{}{
+		"data": data,
+	}
+	out, err := json.Marshal(vdata)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal data to json: %v", err)
 	}

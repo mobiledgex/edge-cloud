@@ -23,7 +23,7 @@ type KafkaCreds struct {
 }
 
 type producer struct {
-	producer *sarama.SyncProducer
+	producer *sarama.AsyncProducer
 	address  string
 }
 
@@ -115,37 +115,43 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 		Timestamp: event.Timestamp,
 	}
 
-	_, _, err = (*producer.producer).SendMessage(message)
-	if err != nil {
-		// repull the credentials from vault and try it again in case the creds got changed in an UpdateCloudlet
-		producer, err = s.newProducer(ctx, &cloudletKey)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to create new producer", "cloudlet", cloudletKey, "error", err)
+	go s.sendMessage(ctx, producer.producer, message, &cloudletKey)
+}
+
+func (s *NodeMgr) sendMessage(ctx context.Context, producer *sarama.AsyncProducer, message *sarama.ProducerMessage, cloudletKey *edgeproto.CloudletKey) {
+	(*producer).Input() <- message
+	for {
+		select {
+		case <-(*producer).Errors():
+			// repull the credentials from vault and try it again in case the creds got changed in an UpdateCloudlet
+			newProducer, err := s.newProducer(ctx, cloudletKey)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to create new producer", "cloudlet", cloudletKey, "error", err)
+				return
+			}
+			(*newProducer.producer).Input() <- message
+			for {
+				select {
+				case err := <-(*newProducer.producer).Errors():
+					log.SpanLog(ctx, log.DebugLevelInfo, "Failed to send event to operator kafka cluster", "cloudletKey", cloudletKey, "message", message, "error", err)
+				case <-(*newProducer.producer).Successes():
+					return
+				}
+			}
+		case <-(*producer).Successes():
 			return
 		}
-		_, _, err = (*producer.producer).SendMessage(message)
-		if err == nil {
-			return
-		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "Failed to send event to operator kafka cluster", "cloudletKey", cloudletKey, "message", message, "error", err)
 	}
 }
 
 func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (producer, error) {
 	kafkaCreds := KafkaCreds{}
-	if s.MyNode.Key.Type == NodeTypeCRM {
-		ctrlConn, err := s.AccessKeyClient.ConnectController(ctx)
-		if err != nil {
-			return producer{}, fmt.Errorf("Error connecting to controller: %v", err)
-		}
-		defer ctrlConn.Close()
-
-		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
-
+	// if youre connected to controller, go through controller
+	if s.MyNode.Key.Type == NodeTypeCRM || s.AccessKeyClient.enabled {
 		req := &edgeproto.AccessDataRequest{
 			Type: kafka_access_api_type,
 		}
-		reply, err := accessClient.GetAccessData(ctx, req)
+		reply, err := s.AccessApiClient.GetAccessData(ctx, req)
 		if err != nil {
 			return producer{}, err
 		}
@@ -181,7 +187,7 @@ func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (
 		config.Net.SASL.User = kafkaCreds.Username
 		config.Net.SASL.Password = kafkaCreds.Password
 	}
-	newProducer, err := sarama.NewSyncProducer([]string{kafkaCreds.Endpoint}, config)
+	newProducer, err := sarama.NewAsyncProducer([]string{kafkaCreds.Endpoint}, config)
 	if err != nil {
 		return producer{}, fmt.Errorf("Error creating producer: %v", err)
 	}
@@ -191,16 +197,21 @@ func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (
 	}
 	// close the current producer (if there is one) before putting in this one
 	producerLock.Lock()
-	removeProducer(key)
+	oldProducer, ok := producers[*key]
+	if ok {
+		(*oldProducer.producer).AsyncClose()
+	}
 	producers[*key] = producer
 	producerLock.Unlock()
 	return producer, nil
 }
 
 func removeProducer(key *edgeproto.CloudletKey) {
+	producerLock.Lock()
+	defer producerLock.Unlock()
 	producer, ok := producers[*key]
 	if ok {
-		(*producer.producer).Close()
+		(*producer.producer).AsyncClose()
 	}
 	delete(producers, *key)
 }
@@ -215,6 +226,6 @@ func buildMessageBody(event EventData) string {
 	return message
 }
 
-func GetKafkaVaultPath(region, name, org string) string {
-	return fmt.Sprintf("secret/data/%s/kafka/%s/%s", region, org, name)
+func GetKafkaVaultPath(region, cloudletName, org string) string {
+	return fmt.Sprintf("secret/data/%s/kafka/%s/%s", region, org, cloudletName)
 }

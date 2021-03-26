@@ -61,7 +61,6 @@ var CreateCloudletTransitions = map[edgeproto.TrackedState]struct{}{
 var UpdateCloudletTransitions = map[edgeproto.TrackedState]struct{}{
 	edgeproto.TrackedState_UPDATING: struct{}{},
 }
-var kafka_cluster_remove = "REMOVE_KAFKA"
 
 const (
 	PlatformInitTimeout           = 20 * time.Minute
@@ -107,7 +106,7 @@ func supportsTrustPolicy(platformType edgeproto.PlatformType) bool {
 func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
-	cloudletApi.cache = nodeMgr.CloudletLookup.GetCloudletCache("")
+	cloudletApi.cache = nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion)
 	sync.RegisterCache(cloudletApi.cache)
 	cloudletApi.accessKeyServer = node.NewAccessKeyServer(cloudletApi.cache, nodeMgr.VaultAddr)
 }
@@ -561,15 +560,13 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if ignoreCRMState(cctx) {
 		return nil
 	}
-
-	kafkaData := map[string]interface{}{
-		"data": kafkaDetails,
-	}
 	// store kafka details
-	path := node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization)
-	err = vault.PutData(vaultConfig, path, kafkaData)
-	if err != nil {
-		return fmt.Errorf("Unable to store kafka details: %s", err)
+	if kafkaDetails.Endpoint != "" {
+		path := node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization)
+		err = vault.PutData(vaultConfig, path, kafkaDetails)
+		if err != nil {
+			return fmt.Errorf("Unable to store kafka details: %s", err)
+		}
 	}
 
 	var cloudletPlatform pf.Platform
@@ -818,32 +815,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		in.AccessVars = nil
 	}
 
-	if in.KafkaCluster != kafka_cluster_remove {
-		kafkaDetails := node.KafkaCreds{}
-		kafkaChangeReqd := false
-		// must specify either just a new endpoint, or everything
-		if (in.KafkaUser != "") != (in.KafkaPassword != "") {
-			return errors.New("Must specify both kafka username and password, or neither")
-		}
-		if in.KafkaCluster != "" {
-			kafkaDetails.Endpoint = in.KafkaCluster
-			kafkaDetails.Username = in.KafkaUser
-			kafkaDetails.Password = in.KafkaPassword
-			kafkaChangeReqd = true
-		}
-		in.KafkaUser = ""
-		in.KafkaPassword = ""
-		if kafkaChangeReqd {
-			kafkaData := map[string]interface{}{
-				"data": kafkaDetails,
-			}
-			path := node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization)
-			err = vault.PutData(vaultConfig, path, kafkaData)
-			if err != nil {
-				return fmt.Errorf("Unable to store kafka details: %s", err)
-			}
-		}
-	} else {
+	_, kafkaClusterChanged := fmap[edgeproto.CloudletFieldKafkaCluster]
+	_, kafkaUserChanged := fmap[edgeproto.CloudletFieldKafkaUser]
+	_, kafkaPasswordChanged := fmap[edgeproto.CloudletFieldKafkaPassword]
+	if kafkaClusterChanged && in.KafkaCluster == "" {
 		in.KafkaCluster = ""
 		in.KafkaUser = ""
 		in.KafkaPassword = ""
@@ -853,7 +828,72 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		} else {
 			log.DebugLog(log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
 		}
+	} else if kafkaClusterChanged || kafkaUserChanged || kafkaPasswordChanged {
+		// get existing data
+		kafkaCreds := node.KafkaCreds{}
+		path := node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization)
+		err := vault.GetData(vaultConfig, path, 0, &kafkaCreds)
+		if kafkaClusterChanged {
+			kafkaCreds.Endpoint = in.KafkaCluster
+		}
+		if kafkaUserChanged {
+			kafkaCreds.Username = in.KafkaUser
+		}
+		if kafkaPasswordChanged {
+			kafkaCreds.Password = in.KafkaPassword
+		}
+		if kafkaUserChanged != kafkaPasswordChanged {
+			return errors.New("Must specify both kafka username and password, or neither")
+		}
+		// must specify either just a new endpoint, or everything
+		if !kafkaClusterChanged && kafkaUserChanged {
+			return errors.New("Please also specify endpoint when changing username and password")
+		}
+		// write back changes
+		err = vault.PutData(vaultConfig, path, kafkaCreds)
+		if err != nil {
+			return fmt.Errorf("Unable to store kafka details: %s", err)
+		}
 	}
+	in.KafkaUser = ""
+	in.KafkaPassword = ""
+
+	// if in.KafkaCluster != kafka_cluster_remove {
+	// 	kafkaDetails := node.KafkaCreds{}
+	// 	kafkaChangeReqd := false
+	// 	// must specify either just a new endpoint, or everything
+	// 	if (in.KafkaUser != "") != (in.KafkaPassword != "") {
+	// 		return errors.New("Must specify both kafka username and password, or neither")
+	// 	}
+	// 	if in.KafkaCluster != "" {
+	// 		kafkaDetails.Endpoint = in.KafkaCluster
+	// 		kafkaDetails.Username = in.KafkaUser
+	// 		kafkaDetails.Password = in.KafkaPassword
+	// 		kafkaChangeReqd = true
+	// 	}
+	// 	in.KafkaUser = ""
+	// 	in.KafkaPassword = ""
+	// 	if kafkaChangeReqd {
+	// 		kafkaData := map[string]interface{}{
+	// 			"data": kafkaDetails,
+	// 		}
+	// 		path := node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization)
+	// 		err = vault.PutData(vaultConfig, path, kafkaData)
+	// 		if err != nil {
+	// 			return fmt.Errorf("Unable to store kafka details: %s", err)
+	// 		}
+	// 	}
+	// } else {
+	// 	in.KafkaCluster = ""
+	// 	in.KafkaUser = ""
+	// 	in.KafkaPassword = ""
+	// 	client, err := vaultConfig.Login()
+	// 	if err == nil {
+	// 		vault.DeleteKV(client, node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization))
+	// 	} else {
+	// 		log.DebugLog(log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
+	// 	}
+	// }
 
 	crmUpdateReqd := false
 	if _, found := fmap[edgeproto.CloudletFieldEnvVar]; found {
@@ -1351,11 +1391,13 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	// disconnects. Otherwise if admin deletes/recreates Cloudlet with
 	// CRM connected the whole time, we will end up without cloudletInfo.
 	// also delete dynamic instances
-	client, err := vaultConfig.Login()
-	if err == nil {
-		vault.DeleteKV(client, node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization))
-	} else {
-		log.DebugLog(log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
+	if in.KafkaCluster != "" {
+		client, err := vaultConfig.Login()
+		if err == nil {
+			vault.DeleteKV(client, node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization))
+		} else {
+			log.DebugLog(log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
+		}
 	}
 	cloudletPoolApi.cloudletDeleted(ctx, &in.Key)
 	cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)

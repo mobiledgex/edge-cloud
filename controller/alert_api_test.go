@@ -158,4 +158,7 @@ func testinit() {
 	cplookup := &node.CloudletPoolCache{}
 	cplookup.Init()
 	nodeMgr.CloudletPoolLookup = cplookup
+	cloudletLookup := &node.CloudletCache{}
+	cloudletLookup.Init()
+	nodeMgr.CloudletLookup = cloudletLookup
 }
