@@ -31,10 +31,6 @@ func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgep
 	if !appInstApi.cache.Get(&in.Key, &appInstInfo) {
 		return nil, in.Key.NotFoundError()
 	}
-	// populate the clusterinst developer from the app developer if not already present
-	if in.Key.ClusterInstKey.Organization == "" {
-		in.Key.ClusterInstKey.Organization = in.Key.AppKey.Organization
-	}
 
 	conn, err := notifyRootConnect(ctx, *notifyRootAddrs)
 	if err != nil {
