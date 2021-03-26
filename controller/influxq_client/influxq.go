@@ -283,7 +283,7 @@ func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) *Ret
 	if retentionTime < shard {
 		shard = retentionTime
 	}
-	rpName := fmt.Sprintf("%s_default", q.dbName)
+	rpName := getDefaultRetentionPolicyName(q.dbName)
 	res.RpName = rpName
 	res.RpTime = retentionTime
 	query := fmt.Sprintf("create retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s default", rpName, q.dbName, retentionTime.String(), shard.String())
@@ -306,4 +306,8 @@ func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) *Ret
 		}
 	}
 	return res
+}
+
+func getDefaultRetentionPolicyName(dbName string) string {
+	return fmt.Sprintf("%s_default", dbName)
 }
