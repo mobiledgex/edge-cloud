@@ -985,12 +985,12 @@ var AppInstLatencyRequiredArgs = []string{
 	"app-org",
 	"appname",
 	"appvers",
-	"cluster",
 	"cloudlet-org",
 	"cloudlet",
-	"cluster-org",
 }
 var AppInstLatencyOptionalArgs = []string{
+	"cluster",
+	"cluster-org",
 	"message",
 }
 var AppInstLatencyAliasArgs = []string{
