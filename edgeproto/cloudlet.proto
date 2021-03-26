@@ -352,6 +352,7 @@ service CloudletApi {
     option (protogen.method_also_required) = "NumDynamicIps,Location.Latitude,Location.Longitude";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
     option (protogen.method_noconfig) = "ResTagMap";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Delete Cloudlet. Removes the Cloudlet services where they are no longer managed
   // from the Edge Controller.
