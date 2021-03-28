@@ -56,70 +56,70 @@ func (s *Settings) SetKey(key *SettingsKey) {}
 func SettingsKeyStringParse(str string, obj *Settings) {}
 
 func (s *Settings) Validate(fields map[string]struct{}) error {
-	// check durations
+	dur0 := Duration(0)
 	v := NewFieldValidator(SettingsAllFieldsStringMap)
 	for f, _ := range fields {
 		switch f {
 		case SettingsFieldShepherdMetricsCollectionInterval:
-			v.CheckGT(f, int64(s.ShepherdMetricsCollectionInterval), 0)
+			v.CheckGT(f, s.ShepherdMetricsCollectionInterval, dur0)
 		case SettingsFieldShepherdAlertEvaluationInterval:
-			v.CheckGT(f, int64(s.ShepherdAlertEvaluationInterval), 0)
+			v.CheckGT(f, s.ShepherdAlertEvaluationInterval, dur0)
 		case SettingsFieldShepherdHealthCheckRetries:
-			v.CheckGT(f, int64(s.ShepherdHealthCheckRetries), 0)
+			v.CheckGT(f, s.ShepherdHealthCheckRetries, int32(0))
 		case SettingsFieldShepherdHealthCheckInterval:
-			v.CheckGT(f, int64(s.ShepherdHealthCheckInterval), 0)
+			v.CheckGT(f, s.ShepherdHealthCheckInterval, dur0)
 		case SettingsFieldAutoDeployIntervalSec:
-			v.CheckFloatGT(f, s.AutoDeployIntervalSec, 0)
+			v.CheckGT(f, s.AutoDeployIntervalSec, float64(0))
 		case SettingsFieldAutoDeployOffsetSec:
-			v.CheckFloatGE(f, s.AutoDeployOffsetSec, 0)
+			v.CheckGTE(f, s.AutoDeployOffsetSec, float64(0))
 		case SettingsFieldAutoDeployMaxIntervals:
-			v.CheckGT(f, int64(s.AutoDeployMaxIntervals), 0)
+			v.CheckGT(f, s.AutoDeployMaxIntervals, uint32(0))
 		case SettingsFieldLoadBalancerMaxPortRange:
-			v.CheckGT(f, int64(s.LoadBalancerMaxPortRange), 0)
-			v.CheckLT(f, int64(s.LoadBalancerMaxPortRange), 65536)
+			v.CheckGT(f, s.LoadBalancerMaxPortRange, int32(0))
+			v.CheckLT(f, s.LoadBalancerMaxPortRange, int32(65536))
 		case SettingsFieldCreateAppInstTimeout:
-			v.CheckGT(f, int64(s.CreateAppInstTimeout), 0)
+			v.CheckGT(f, s.CreateAppInstTimeout, dur0)
 		case SettingsFieldUpdateAppInstTimeout:
-			v.CheckGT(f, int64(s.UpdateAppInstTimeout), 0)
+			v.CheckGT(f, s.UpdateAppInstTimeout, dur0)
 		case SettingsFieldDeleteAppInstTimeout:
-			v.CheckGT(f, int64(s.DeleteAppInstTimeout), 0)
+			v.CheckGT(f, s.DeleteAppInstTimeout, dur0)
 		case SettingsFieldCreateClusterInstTimeout:
-			v.CheckGT(f, int64(s.CreateClusterInstTimeout), 0)
+			v.CheckGT(f, s.CreateClusterInstTimeout, dur0)
 		case SettingsFieldUpdateClusterInstTimeout:
-			v.CheckGT(f, int64(s.UpdateClusterInstTimeout), 0)
+			v.CheckGT(f, s.UpdateClusterInstTimeout, dur0)
 		case SettingsFieldDeleteClusterInstTimeout:
-			v.CheckGT(f, int64(s.DeleteClusterInstTimeout), 0)
+			v.CheckGT(f, s.DeleteClusterInstTimeout, dur0)
 		case SettingsFieldCreateCloudletTimeout:
-			v.CheckGT(f, int64(s.CreateCloudletTimeout), 0)
+			v.CheckGT(f, s.CreateCloudletTimeout, dur0)
 		case SettingsFieldUpdateCloudletTimeout:
-			v.CheckGT(f, int64(s.UpdateCloudletTimeout), 0)
+			v.CheckGT(f, s.UpdateCloudletTimeout, dur0)
 		case SettingsFieldMasterNodeFlavor:
 			// no validation
 		case SettingsFieldMaxTrackedDmeClients:
-			v.CheckGT(f, int64(s.MaxTrackedDmeClients), 0)
+			v.CheckGT(f, s.MaxTrackedDmeClients, int32(0))
 		case SettingsFieldChefClientInterval:
-			v.CheckGT(f, int64(s.ChefClientInterval), 0)
+			v.CheckGT(f, s.ChefClientInterval, dur0)
 		case SettingsFieldCloudletMaintenanceTimeout:
-			v.CheckGT(f, int64(s.CloudletMaintenanceTimeout), 0)
+			v.CheckGT(f, s.CloudletMaintenanceTimeout, dur0)
 		case SettingsFieldInfluxDbMetricsRetention:
-			fallthrough
+			// no validation
 		case SettingsFieldInfluxDbCloudletUsageMetricsRetention:
 			// no validation
 		case SettingsFieldUpdateVmPoolTimeout:
-			v.CheckGT(f, int64(s.UpdateVmPoolTimeout), 0)
+			v.CheckGT(f, s.UpdateVmPoolTimeout, dur0)
 		case SettingsFieldUpdateTrustPolicyTimeout:
-			v.CheckGT(f, int64(s.UpdateTrustPolicyTimeout), 0)
+			v.CheckGT(f, s.UpdateTrustPolicyTimeout, dur0)
 		case SettingsFieldDmeApiMetricsCollectionInterval:
-			v.CheckGT(f, int64(s.DmeApiMetricsCollectionInterval), 0)
+			v.CheckGT(f, s.DmeApiMetricsCollectionInterval, dur0)
 		case SettingsFieldCleanupReservableAutoClusterIdletime:
-			v.CheckGT(f, int64(s.CleanupReservableAutoClusterIdletime), 0)
+			v.CheckGT(f, s.CleanupReservableAutoClusterIdletime, dur0)
 		case SettingsFieldAppinstClientCleanupInterval:
-			v.CheckGT(f, int64(s.AppinstClientCleanupInterval), int64(Duration(2*time.Second)))
+			v.CheckGT(f, s.AppinstClientCleanupInterval, Duration(2*time.Second))
 		case SettingsFieldEdgeEventsMetricsCollectionInterval:
-			v.CheckGT(f, int64(s.EdgeEventsMetricsCollectionInterval), 0)
+			v.CheckGT(f, s.EdgeEventsMetricsCollectionInterval, dur0)
 		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals:
 			for _, val := range s.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-				v.CheckGT(f, int64(val.Interval), 0)
+				v.CheckGT(f, val.Interval, dur0)
 			}
 		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval:
 			// no validation
@@ -128,7 +128,7 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		case SettingsFieldInfluxDbDownsampledMetricsRetention:
 			// no validation
 		case SettingsFieldLocationTileSideLengthKm:
-			v.CheckGT(f, int64(s.LocationTileSideLengthKm), 0)
+			v.CheckGT(f, s.LocationTileSideLengthKm, int64(0))
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry

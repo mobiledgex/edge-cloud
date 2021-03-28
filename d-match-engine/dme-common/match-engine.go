@@ -925,10 +925,10 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
 
 		key := &EdgeEventsCookieKey{
-			ClusterOrg:   best.appInst.clusterInstKey.Organization,
-			ClusterName:  best.appInst.clusterInstKey.ClusterKey.Name,
-			CloudletOrg:  best.appInst.clusterInstKey.CloudletKey.Organization,
-			CloudletName: best.appInst.clusterInstKey.CloudletKey.Name,
+			ClusterOrg:   best.appInst.virtualClusterInstKey.Organization,
+			ClusterName:  best.appInst.virtualClusterInstKey.ClusterKey.Name,
+			CloudletOrg:  best.appInst.virtualClusterInstKey.CloudletKey.Organization,
+			CloudletName: best.appInst.virtualClusterInstKey.CloudletKey.Name,
 		}
 		ctx = NewEdgeEventsCookieContext(ctx, key)
 		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
@@ -939,9 +939,9 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 			appInstKey := edgeproto.AppInstKey{
 				AppKey: *appkey,
 				ClusterInstKey: edgeproto.VirtualClusterInstKey{
-					ClusterKey:   best.appInst.clusterInstKey.ClusterKey,
-					CloudletKey:  best.appInst.clusterInstKey.CloudletKey,
-					Organization: best.appInst.clusterInstKey.Organization,
+					ClusterKey:   best.appInst.virtualClusterInstKey.ClusterKey,
+					CloudletKey:  best.appInst.virtualClusterInstKey.CloudletKey,
+					Organization: best.appInst.virtualClusterInstKey.Organization,
 				},
 			}
 			devinfo := &dme.DeviceInfo{}
