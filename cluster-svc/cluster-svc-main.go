@@ -96,7 +96,7 @@ var MEXPrometheusAppKey = edgeproto.AppKey{
 }
 
 // Define prometheus operator App.
-// Version 7.1.1 tested with helm 2.15 and kubernetes 1.16
+// Version 8.15.14 tested with helm 3.4.2 and kubernetes 1.16
 var MEXPrometheusApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
 	ImagePath:     "stable/prometheus-operator",
@@ -104,7 +104,7 @@ var MEXPrometheusApp = edgeproto.App{
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
 	Trusted:       true,
-	Annotations:   "version=7.1.1",
+	Annotations:   "version=8.15.14",
 }
 
 var dialOpts grpc.DialOption
