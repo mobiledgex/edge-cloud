@@ -449,7 +449,7 @@ apps:
   accessports: tcp:9090
   defaultflavor:
     name: x1.medium
-  annotations: version=7.1.1
+  annotations: version=8.15.14
   deployment: helm
   delopt: AutoDelete
   configs:
