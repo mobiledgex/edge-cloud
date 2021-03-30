@@ -152,14 +152,14 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 			return fmt.Errorf("error adding helm repo, %s, %s, %v", cmd, out, err)
 		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "added helm repository")
-		cmd = fmt.Sprintf("%s helm repo update", names.KconfEnv)
-		out, err = client.Output(cmd)
-		if err != nil {
-			return fmt.Errorf("updating helm repos, %s, %s, %v", cmd, out, err)
-		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "helm repos updated")
-
 	}
+	cmd = fmt.Sprintf("%s helm repo update", names.KconfEnv)
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("updating helm repos, %s, %s, %v", cmd, out, err)
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "helm repos updated")
+
 	helmArgs, err := getHelmInstallOptsString(app.Annotations)
 	if err != nil {
 		return err
