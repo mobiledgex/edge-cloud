@@ -109,10 +109,6 @@ func main() {
 		span.Finish()
 		log.FatalLog("access key client is not enabled")
 	}
-
-	defer nodeMgr.CtrlConn.Close()
-	accessClient := &nodeMgr.AccessApiClient
-
 	controllerData = crmutil.NewControllerData(platform, &myCloudletInfo.Key, &nodeMgr)
 
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
@@ -216,7 +212,7 @@ func main() {
 		}
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, *accessClient, updateCloudletStatus); err != nil {
+		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, nodeMgr.AccessApiClient, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -305,7 +301,7 @@ func main() {
 				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
-			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(*accessClient))
+			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
 			pfType := pf.GetType(cloudlet.PlatformType.String())
 			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, rootlb, *commercialCerts)
 		}

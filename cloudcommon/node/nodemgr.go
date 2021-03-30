@@ -51,7 +51,7 @@ type NodeMgr struct {
 	DeploymentTag      string
 	AccessKeyClient    AccessKeyClient
 	AccessApiClient    edgeproto.CloudletAccessApiClient
-	CtrlConn           *grpc.ClientConn // here so crm and cloudlet-dme can close it
+	accessApiConn      *grpc.ClientConn // here so crm and cloudlet-dme can close it
 	CloudletPoolLookup CloudletPoolLookup
 	CloudletLookup     CloudletLookup
 
@@ -106,18 +106,18 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
 		return initCtx, nil, err
 	}
+	var err error
 	if s.AccessKeyClient.enabled {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "Setup persistent access connection to Controller")
-		ctrlConn, err := s.AccessKeyClient.ConnectController(initCtx)
+		s.accessApiConn, err = s.AccessKeyClient.ConnectController(initCtx)
 		if err != nil {
 			return initCtx, nil, fmt.Errorf("Failed to connect to controller %v", err)
 		}
-		s.AccessApiClient = edgeproto.NewCloudletAccessApiClient(ctrlConn)
+		s.AccessApiClient = edgeproto.NewCloudletAccessApiClient(s.accessApiConn)
 	} else {
 		// init vault before pki
 		s.VaultConfig = opts.vaultConfig
 		if s.VaultConfig == nil {
-			var err error
 			s.VaultConfig, err = vault.BestConfig(s.VaultAddr)
 			if err != nil {
 				return initCtx, nil, err
@@ -128,7 +128,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 
 	// init pki before logging, because access to logger needs pki certs
 	log.SpanLog(initCtx, log.DebugLevelInfo, "init internal pki")
-	err := s.initInternalPki(initCtx)
+	err = s.initInternalPki(initCtx)
 	if err != nil {
 		return initCtx, nil, err
 	}
@@ -187,6 +187,9 @@ func (s *NodeMgr) Name() string {
 }
 
 func (s *NodeMgr) Finish() {
+	if s.accessApiConn != nil {
+		s.accessApiConn.Close()
+	}
 	close(s.esEventsDone)
 	log.FinishTracer()
 }
