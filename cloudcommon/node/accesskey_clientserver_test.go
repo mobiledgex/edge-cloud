@@ -306,17 +306,19 @@ func (s *EchoServer) BidirectionalStreamingEcho(stream echo.Echo_BidirectionalSt
 }
 
 type DummyController struct {
-	Cache               edgeproto.CloudletCache
-	Cloudlets           map[edgeproto.CloudletKey]*TestCloudlet
-	KeyServer           *AccessKeyServer
-	AccessKeyGrpcServer AccessKeyGrpcServer
-	ApiRegisterCb       func(server *grpc.Server)
+	Cache                  edgeproto.CloudletCache
+	Cloudlets              map[edgeproto.CloudletKey]*TestCloudlet
+	KeyServer              *AccessKeyServer
+	AccessKeyGrpcServer    AccessKeyGrpcServer
+	ApiRegisterCb          func(server *grpc.Server)
+	RegisterCloudletAccess bool
 }
 
 func (s *DummyController) Init(vaultAddr string) {
 	edgeproto.InitCloudletCache(&s.Cache)
 	s.Cloudlets = make(map[edgeproto.CloudletKey]*TestCloudlet)
 	s.KeyServer = NewAccessKeyServer(&s.Cache, vaultAddr)
+	s.RegisterCloudletAccess = true
 }
 
 // DummyController. The optional registerCb func allows the caller to register
@@ -332,7 +334,9 @@ func (s *DummyController) Start(ctx context.Context, addr string) {
 		panic(err.Error())
 	}
 	err = s.AccessKeyGrpcServer.Start(addr, s.KeyServer, tlsConfig, func(serv *grpc.Server) {
-		edgeproto.RegisterCloudletAccessApiServer(serv, s)
+		if s.RegisterCloudletAccess {
+			edgeproto.RegisterCloudletAccessApiServer(serv, s)
+		}
 		edgeproto.RegisterCloudletAccessKeyApiServer(serv, s)
 		if s.ApiRegisterCb != nil {
 			s.ApiRegisterCb(serv)
