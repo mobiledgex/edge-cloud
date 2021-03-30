@@ -11,7 +11,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type CloudletInfoApi struct {
@@ -34,7 +33,7 @@ func InitCloudletInfoApi(sync *Sync) {
 // and CRM suddenly go away, etcd will remove the stale CloudletInfo data.
 
 func (s *CloudletInfoApi) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
-	return s.store.Put(ctx, in, s.sync.syncWait, objstore.WithLease(controllerAliveLease))
+	return s.store.Put(ctx, in, s.sync.syncWait)
 }
 
 func (s *CloudletInfoApi) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
@@ -64,7 +63,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				changedToOnline = true
 			}
 		}
-		s.store.STMPut(stm, in, objstore.WithLease(controllerAliveLease))
+		s.store.STMPut(stm, in)
 		return nil
 	})
 	if changedToOnline {
@@ -205,7 +204,7 @@ func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo
 		}
 		buf.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
 		buf.Fields = []string{edgeproto.CloudletInfoFieldState}
-		s.store.STMPut(stm, &buf, objstore.WithLease(controllerAliveLease))
+		s.store.STMPut(stm, &buf)
 		return nil
 	})
 	if err != nil {
@@ -250,7 +249,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 			}
 			info.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
-			s.store.STMPut(stm, &info, objstore.WithLease(controllerAliveLease))
+			s.store.STMPut(stm, &info)
 			return nil
 		})
 		if err != nil {

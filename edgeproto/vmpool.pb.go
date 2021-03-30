@@ -2301,11 +2301,21 @@ func (c *VMPoolCache) UpdateModFunc(ctx context.Context, key *VMPoolKey, modRev 
 }
 
 func (c *VMPoolCache) Delete(ctx context.Context, in *VMPool, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *VMPool) bool {
+		return true
+	})
+}
+
+func (c *VMPoolCache) DeleteCondFunc(ctx context.Context, in *VMPool, modRev int64, condFunc func(old *VMPool) bool) {
 	c.Mux.Lock()
 	var old *VMPool
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -3633,11 +3643,21 @@ func (c *VMPoolInfoCache) UpdateModFunc(ctx context.Context, key *VMPoolKey, mod
 }
 
 func (c *VMPoolInfoCache) Delete(ctx context.Context, in *VMPoolInfo, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *VMPoolInfo) bool {
+		return true
+	})
+}
+
+func (c *VMPoolInfoCache) DeleteCondFunc(ctx context.Context, in *VMPoolInfo, modRev int64, condFunc func(old *VMPoolInfo) bool) {
 	c.Mux.Lock()
 	var old *VMPoolInfo
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

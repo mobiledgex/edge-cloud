@@ -63,6 +63,8 @@ type KVStore interface {
 	// To avoid that, the KeepAlive call must remain active.
 	// Grant creates a new lease
 	Grant(ctx context.Context, ttl int64) (int64, error)
+	// Revoke a lease
+	Revoke(ctx context.Context, lease int64) error
 	// KeepAlive keeps a lease alive. This call blocks.
 	KeepAlive(ctx context.Context, leaseID int64) error
 }

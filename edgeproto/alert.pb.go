@@ -747,11 +747,21 @@ func (c *AlertCache) UpdateModFunc(ctx context.Context, key *AlertKey, modRev in
 }
 
 func (c *AlertCache) Delete(ctx context.Context, in *Alert, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *Alert) bool {
+		return true
+	})
+}
+
+func (c *AlertCache) DeleteCondFunc(ctx context.Context, in *Alert, modRev int64, condFunc func(old *Alert) bool) {
 	c.Mux.Lock()
 	var old *Alert
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
