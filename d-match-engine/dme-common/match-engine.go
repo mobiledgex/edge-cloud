@@ -17,6 +17,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
@@ -1205,6 +1206,12 @@ loop:
 			if cupdate.DeviceInfo != nil {
 				deviceInfo = cupdate.DeviceInfo
 			}
+			err := ValidateLocation(cupdate.GpsLocation)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LOCATION_UPDATE, invalid location", "loc", cupdate.GpsLocation, "err", err)
+				reterr = err
+				break loop
+			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
 			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, deviceInfo, fcreply, EdgeEventsCookieExpiration, edgeEventsCookieKey)
@@ -1316,6 +1323,16 @@ func AppExists(orgname string, appname string, appvers string) bool {
 	defer tbl.RUnlock()
 	_, ok := tbl.Apps[key]
 	return ok
+}
+
+func ValidateLocation(loc *dme.Loc) error {
+	if loc == nil {
+		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	}
+	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
+		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	}
+	return nil
 }
 
 func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {
