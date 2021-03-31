@@ -25,7 +25,6 @@ type ControllerApi struct {
 
 var controllerApi = ControllerApi{}
 
-var leaseTimeoutSec int64 = 20
 var controllerAliveLease int64
 
 func InitControllerApi(sync *Sync) {
@@ -40,30 +39,16 @@ func InitControllerApi(sync *Sync) {
 // is shut-down/disappears, etcd will automatically remove it
 // from the database after the ttl time.
 // We use this mechanism to keep track of the controllers that are online.
-func (s *ControllerApi) registerController(ctx context.Context) error {
-	lease, err := s.sync.store.Grant(context.Background(), leaseTimeoutSec)
-	if err != nil {
-		return err
-	}
-	controllerAliveLease = lease
-
+// Note that the calls to etcd will block if etcd is not reachable.
+func (s *ControllerApi) registerController(ctx context.Context, lease int64) error {
 	ctrl := edgeproto.Controller{}
 	ctrl.Key.Addr = *externalApiAddr
 	ctrl.BuildMaster = version.BuildMaster
 	ctrl.BuildHead = version.BuildHead
 	ctrl.BuildAuthor = version.BuildAuthor
 	ctrl.Hostname = cloudcommon.Hostname()
-	_, err = s.store.Put(ctx, &ctrl, s.sync.syncWait, objstore.WithLease(lease))
-	if err != nil {
-		return err
-	}
-	go func() {
-		kperr := s.sync.store.KeepAlive(context.Background(), lease)
-		if kperr != nil {
-			log.FatalLog("KeepAlive failed", "err", kperr)
-		}
-	}()
-	return nil
+	_, err := s.store.Put(ctx, &ctrl, s.sync.syncWait, objstore.WithLease(lease))
+	return err
 }
 
 func (s *ControllerApi) ShowController(in *edgeproto.Controller, cb edgeproto.ControllerApi_ShowControllerServer) error {

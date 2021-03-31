@@ -637,11 +637,21 @@ func (c *OperatorCodeCache) UpdateModFunc(ctx context.Context, key *OperatorCode
 }
 
 func (c *OperatorCodeCache) Delete(ctx context.Context, in *OperatorCode, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *OperatorCode) bool {
+		return true
+	})
+}
+
+func (c *OperatorCodeCache) DeleteCondFunc(ctx context.Context, in *OperatorCode, modRev int64, condFunc func(old *OperatorCode) bool) {
 	c.Mux.Lock()
 	var old *OperatorCode
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

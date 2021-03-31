@@ -1266,11 +1266,21 @@ func (c *CloudletPoolCache) UpdateModFunc(ctx context.Context, key *CloudletPool
 }
 
 func (c *CloudletPoolCache) Delete(ctx context.Context, in *CloudletPool, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *CloudletPool) bool {
+		return true
+	})
+}
+
+func (c *CloudletPoolCache) DeleteCondFunc(ctx context.Context, in *CloudletPool, modRev int64, condFunc func(old *CloudletPool) bool) {
 	c.Mux.Lock()
 	var old *CloudletPool
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

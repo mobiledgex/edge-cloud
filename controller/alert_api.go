@@ -13,9 +13,10 @@ import (
 )
 
 type AlertApi struct {
-	sync  *Sync
-	store edgeproto.AlertStore
-	cache edgeproto.AlertCache
+	sync        *Sync
+	store       edgeproto.AlertStore
+	cache       edgeproto.AlertCache
+	sourceCache edgeproto.AlertCache // source of truth from crm/etc
 }
 
 var alertApi = AlertApi{}
@@ -24,6 +25,9 @@ func InitAlertApi(sync *Sync) {
 	alertApi.sync = sync
 	alertApi.store = edgeproto.NewAlertStore(sync.store)
 	edgeproto.InitAlertCache(&alertApi.cache)
+	edgeproto.InitAlertCache(&alertApi.sourceCache)
+	alertApi.sourceCache.SetUpdatedCb(alertApi.StoreUpdate)
+	alertApi.sourceCache.SetDeletedCb(alertApi.StoreDelete)
 	sync.RegisterCache(&alertApi.cache)
 }
 
@@ -105,12 +109,30 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		return
 	}
 	s.setAlertMetadata(in)
-	s.store.Put(ctx, in, nil, objstore.WithLease(controllerAliveLease))
+	// The CRM is the source of truth for Alerts.
+	// We keep a local copy (sourceCache) of all alerts sent by the CRM.
+	// If we lose the keep-alive lease with etcd and it deletes all these
+	// alerts, we can push them back again from the source cache once the
+	// keep-alive lease is reestablished.
+	// All alert changes must pass through the source cache before going
+	// to etcd.
+	s.sourceCache.Update(ctx, in, rev)
+	// Note that any further actions should done as part of StoreUpdate.
+	// This is because if the keep-alive is lost and we resync, then
+	// these additional actions should be performed again as part of StoreUpdate.
+}
+
+func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
+	s.store.Put(ctx, new, nil, objstore.WithLease(ControllerAliveLease()))
+	name, ok := new.Labels["alertname"]
+	if !ok {
+		return
+	}
 	if name == cloudcommon.AlertAppInstDown {
-		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]
+		state, ok := new.Labels[cloudcommon.AlertHealthCheckStatus]
 		if !ok {
 			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck status not found",
-				"labels", in.Labels)
+				"labels", new.Labels)
 			return
 		}
 		hcState, err := strconv.Atoi(state)
@@ -119,15 +141,26 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 				"state", state, "error", err)
 			return
 		}
-		appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck(hcState))
+		appInstSetStateFromHealthCheckAlert(ctx, new, dme.HealthCheck(hcState))
 	}
 }
 
 func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
-	buf := edgeproto.Alert{}
-	var foundAlert bool
 	// Add a region label
 	in.Labels["region"] = *region
+	s.sourceCache.DeleteCondFunc(ctx, in, rev, func(old *edgeproto.Alert) bool {
+		if old.NotifyId != in.NotifyId {
+			// already updated by another thread, don't delete
+			return false
+		}
+		return true
+	})
+	// Note that any further actions should done as part of StoreDelete.
+}
+
+func (s *AlertApi) StoreDelete(ctx context.Context, in *edgeproto.Alert) {
+	buf := edgeproto.Alert{}
+	var foundAlert bool
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, in.GetKey(), &buf) {
 			return nil
@@ -151,33 +184,9 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 }
 
 func (s *AlertApi) Flush(ctx context.Context, notifyId int64) {
-	matches := make([]edgeproto.AlertKey, 0)
-	s.cache.Mux.Lock()
-	for _, data := range s.cache.Objs {
-		val := data.Obj
-		if val.NotifyId != notifyId || val.Controller != ControllerId {
-			continue
-		}
-		matches = append(matches, val.GetKeyVal())
-	}
-	s.cache.Mux.Unlock()
-
-	info := edgeproto.Alert{}
-	for _, key := range matches {
-		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if s.store.STMGet(stm, &key, &info) {
-				if info.NotifyId != notifyId || info.Controller != ControllerId {
-					// updated by another thread or controller
-					return nil
-				}
-			}
-			s.store.STMDel(stm, &key)
-			return nil
-		})
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelNotify, "flush alert", "key", key, "err", err)
-		}
-	}
+	// Delete all data from sourceCache. This will trigger StoreDelete calls
+	// for every item.
+	s.sourceCache.Flush(ctx, notifyId)
 }
 
 func (s *AlertApi) Prune(ctx context.Context, keys map[edgeproto.AlertKey]struct{}) {}
@@ -207,6 +216,25 @@ func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.Clo
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
+		s.sourceCache.Delete(ctx, val, 0)
 		s.store.Delete(ctx, val, s.sync.syncWait)
 	}
+}
+
+func (s *AlertApi) syncSourceData(ctx context.Context, lease int64) error {
+	// Note that we don't need to delete "stale" data, because
+	// if the lease expired, it will be deleted automatically.
+	alerts := make([]*edgeproto.Alert, 0)
+	s.sourceCache.Mux.Lock()
+	for _, data := range s.sourceCache.Objs {
+		alert := edgeproto.Alert{}
+		alert.DeepCopyIn(data.Obj)
+		alerts = append(alerts, &alert)
+	}
+	s.sourceCache.Mux.Unlock()
+
+	for _, alert := range alerts {
+		s.StoreUpdate(ctx, nil, alert)
+	}
+	return nil
 }

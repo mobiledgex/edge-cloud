@@ -2636,11 +2636,21 @@ func (c *ClusterInstCache) UpdateModFunc(ctx context.Context, key *ClusterInstKe
 }
 
 func (c *ClusterInstCache) Delete(ctx context.Context, in *ClusterInst, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *ClusterInst) bool {
+		return true
+	})
+}
+
+func (c *ClusterInstCache) DeleteCondFunc(ctx context.Context, in *ClusterInst, modRev int64, condFunc func(old *ClusterInst) bool) {
 	c.Mux.Lock()
 	var old *ClusterInst
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -3826,11 +3836,21 @@ func (c *ClusterInstInfoCache) UpdateModFunc(ctx context.Context, key *ClusterIn
 }
 
 func (c *ClusterInstInfoCache) Delete(ctx context.Context, in *ClusterInstInfo, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *ClusterInstInfo) bool {
+		return true
+	})
+}
+
+func (c *ClusterInstInfoCache) DeleteCondFunc(ctx context.Context, in *ClusterInstInfo, modRev int64, condFunc func(old *ClusterInstInfo) bool) {
 	c.Mux.Lock()
 	var old *ClusterInstInfo
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

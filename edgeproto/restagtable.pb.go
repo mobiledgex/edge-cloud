@@ -1243,11 +1243,21 @@ func (c *ResTagTableCache) UpdateModFunc(ctx context.Context, key *ResTagTableKe
 }
 
 func (c *ResTagTableCache) Delete(ctx context.Context, in *ResTagTable, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *ResTagTable) bool {
+		return true
+	})
+}
+
+func (c *ResTagTableCache) DeleteCondFunc(ctx context.Context, in *ResTagTable, modRev int64, condFunc func(old *ResTagTable) bool) {
 	c.Mux.Lock()
 	var old *ResTagTable
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

@@ -855,11 +855,21 @@ func (c *StreamObjCache) UpdateModFunc(ctx context.Context, key *AppInstKey, mod
 }
 
 func (c *StreamObjCache) Delete(ctx context.Context, in *StreamObj, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *StreamObj) bool {
+		return true
+	})
+}
+
+func (c *StreamObjCache) DeleteCondFunc(ctx context.Context, in *StreamObj, modRev int64, condFunc func(old *StreamObj) bool) {
 	c.Mux.Lock()
 	var old *StreamObj
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

@@ -1705,11 +1705,21 @@ func (c *SettingsCache) UpdateModFunc(ctx context.Context, key *SettingsKey, mod
 }
 
 func (c *SettingsCache) Delete(ctx context.Context, in *Settings, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *Settings) bool {
+		return true
+	})
+}
+
+func (c *SettingsCache) DeleteCondFunc(ctx context.Context, in *Settings, modRev int64, condFunc func(old *Settings) bool) {
 	c.Mux.Lock()
 	var old *Settings
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
