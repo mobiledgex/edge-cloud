@@ -903,7 +903,7 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
-func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, deviceInfo *dme.DeviceInfo, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration *time.Duration) error {
+func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, deviceInfo *dme.DeviceInfo, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration *time.Duration, prevEdgeEventsCookie *EdgeEventsCookieKey) error {
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
@@ -934,26 +934,30 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
 		mreply.EdgeEventsCookie = eecookie
 
-		// Update edgeevents stats influx db with gps locations
+		// Update deviceinfo stats influx db
+		// This will update on every client FindCloudlet call or
+		// Gps location updates from StreamEdgeEvents where a new cloudlet is returned to the client (ie. significant location change)
 		if EEStats != nil {
-			appInstKey := edgeproto.AppInstKey{
-				AppKey: *appkey,
-				ClusterInstKey: edgeproto.VirtualClusterInstKey{
-					ClusterKey:   best.appInst.virtualClusterInstKey.ClusterKey,
-					CloudletKey:  best.appInst.virtualClusterInstKey.CloudletKey,
-					Organization: best.appInst.virtualClusterInstKey.Organization,
-				},
+			if prevEdgeEventsCookie == nil || !IsTheSameCluster(key, prevEdgeEventsCookie) {
+				appInstKey := edgeproto.AppInstKey{
+					AppKey: *appkey,
+					ClusterInstKey: edgeproto.VirtualClusterInstKey{
+						ClusterKey:   best.appInst.virtualClusterInstKey.ClusterKey,
+						CloudletKey:  best.appInst.virtualClusterInstKey.CloudletKey,
+						Organization: best.appInst.virtualClusterInstKey.Organization,
+					},
+				}
+				devinfo := &dme.DeviceInfo{}
+				if deviceInfo != nil {
+					devinfo = deviceInfo
+				}
+				deviceStatKey := GetDeviceStatKey(appInstKey, devinfo, carrier, loc, int(Settings.LocationTileSideLengthKm))
+				edgeEventStatCall := &EdgeEventStatCall{
+					Metric:        cloudcommon.DeviceMetric,
+					DeviceStatKey: deviceStatKey,
+				}
+				EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 			}
-			devinfo := &dme.DeviceInfo{}
-			if deviceInfo != nil {
-				devinfo = deviceInfo
-			}
-			deviceStatKey := GetDeviceStatKey(appInstKey, devinfo, carrier, loc, int(Settings.LocationTileSideLengthKm))
-			edgeEventStatCall := &EdgeEventStatCall{
-				Metric:        cloudcommon.DeviceMetric,
-				DeviceStatKey: deviceStatKey,
-			}
-			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 		}
 
 		// Update Context variable if passed
@@ -1193,6 +1197,7 @@ loop:
 				LatencyStatInfo: latencyStatInfo,
 			}
 			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
+			fallthrough
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			// Gps location stats update
@@ -1202,7 +1207,7 @@ loop:
 			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
-			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, deviceInfo, fcreply, EdgeEventsCookieExpiration)
+			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, deviceInfo, fcreply, EdgeEventsCookieExpiration, edgeEventsCookieKey)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
 				continue
