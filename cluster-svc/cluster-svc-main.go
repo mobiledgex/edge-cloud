@@ -138,7 +138,7 @@ var NFSAutoProvAppKey = edgeproto.AppKey{
 
 var NFSAutoProvisionApp = edgeproto.App{
 	Key:           NFSAutoProvAppKey,
-	ImagePath:     "stable/nfs-client-provisioner",
+	ImagePath:     "https://charts.helm.sh/stable:stable/nfs-client-provisioner",
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
