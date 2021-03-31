@@ -1150,9 +1150,16 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
+	timer := time.After(*EdgeEventsCookieExpiration)
 	// Loop while persistent connection is up
 loop:
 	for {
+		select {
+		case <-timer:
+			log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEventsCookie has expired. Terminating connection.")
+			break loop
+		default:
+		}
 		// Receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
