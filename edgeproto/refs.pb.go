@@ -1456,11 +1456,21 @@ func (c *CloudletRefsCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 }
 
 func (c *CloudletRefsCache) Delete(ctx context.Context, in *CloudletRefs, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *CloudletRefs) bool {
+		return true
+	})
+}
+
+func (c *CloudletRefsCache) DeleteCondFunc(ctx context.Context, in *CloudletRefs, modRev int64, condFunc func(old *CloudletRefs) bool) {
 	c.Mux.Lock()
 	var old *CloudletRefs
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -2091,11 +2101,21 @@ func (c *ClusterRefsCache) UpdateModFunc(ctx context.Context, key *ClusterInstKe
 }
 
 func (c *ClusterRefsCache) Delete(ctx context.Context, in *ClusterRefs, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *ClusterRefs) bool {
+		return true
+	})
+}
+
+func (c *ClusterRefsCache) DeleteCondFunc(ctx context.Context, in *ClusterRefs, modRev int64, condFunc func(old *ClusterRefs) bool) {
 	c.Mux.Lock()
 	var old *ClusterRefs
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -2685,11 +2705,21 @@ func (c *AppInstRefsCache) UpdateModFunc(ctx context.Context, key *AppKey, modRe
 }
 
 func (c *AppInstRefsCache) Delete(ctx context.Context, in *AppInstRefs, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AppInstRefs) bool {
+		return true
+	})
+}
+
+func (c *AppInstRefsCache) DeleteCondFunc(ctx context.Context, in *AppInstRefs, modRev int64, condFunc func(old *AppInstRefs) bool) {
 	c.Mux.Lock()
 	var old *AppInstRefs
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

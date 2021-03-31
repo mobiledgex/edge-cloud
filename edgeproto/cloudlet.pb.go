@@ -6261,11 +6261,21 @@ func (c *CloudletCache) UpdateModFunc(ctx context.Context, key *CloudletKey, mod
 }
 
 func (c *CloudletCache) Delete(ctx context.Context, in *Cloudlet, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *Cloudlet) bool {
+		return true
+	})
+}
+
+func (c *CloudletCache) DeleteCondFunc(ctx context.Context, in *Cloudlet, modRev int64, condFunc func(old *Cloudlet) bool) {
 	c.Mux.Lock()
 	var old *Cloudlet
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -8423,11 +8433,21 @@ func (c *CloudletInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 }
 
 func (c *CloudletInfoCache) Delete(ctx context.Context, in *CloudletInfo, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *CloudletInfo) bool {
+		return true
+	})
+}
+
+func (c *CloudletInfoCache) DeleteCondFunc(ctx context.Context, in *CloudletInfo, modRev int64, condFunc func(old *CloudletInfo) bool) {
 	c.Mux.Lock()
 	var old *CloudletInfo
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

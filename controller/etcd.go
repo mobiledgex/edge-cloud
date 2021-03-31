@@ -333,6 +333,14 @@ func (e *EtcdClient) Grant(ctx context.Context, ttl int64) (int64, error) {
 	return int64(resp.ID), nil
 }
 
+func (e *EtcdClient) Revoke(ctx context.Context, lease int64) error {
+	_, err := e.client.Revoke(ctx, clientv3.LeaseID(lease))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (e *EtcdClient) KeepAlive(ctx context.Context, leaseID int64) error {
 	for {
 		ch, err := e.client.KeepAlive(ctx, clientv3.LeaseID(leaseID))
@@ -357,7 +365,7 @@ func (e *EtcdClient) KeepAlive(ctx context.Context, leaseID int64) error {
 			break
 		}
 	}
-	return nil
+	return fmt.Errorf("keep alive finished unexpectedly")
 }
 
 func (e *EtcdClient) spanForRev(rev int64, spanName string) opentracing.Span {
