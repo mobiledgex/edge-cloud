@@ -1112,20 +1112,20 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		return nil
 	})
 	clusterInstKey := in.Key
-	if len(errMsgs) > 0 {
-		// start stream only if there are some error messages to stream
-		sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
-		if err == nil {
-			defer func() {
-				stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
-			}()
-		}
-		for _, msg := range errMsgs {
-			cb.Send(&edgeproto.Result{Message: msg})
-		}
-
-	}
 	if err != nil {
+		if len(errMsgs) > 0 {
+			// start stream only if there are some error messages to stream
+			sendObj, cb, sErr := startClusterInstStream(ctx, &clusterInstKey, inCb)
+			if sErr == nil {
+				defer func() {
+					stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+				}()
+			}
+			for _, msg := range errMsgs {
+				cb.Send(&edgeproto.Result{Message: msg})
+			}
+
+		}
 		return err
 	}
 

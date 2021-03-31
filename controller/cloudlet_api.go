@@ -1205,8 +1205,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	})
 	if err != nil {
 		// start stream only if there are err msgs to be streamed
-		sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
-		if err == nil {
+		sendObj, cb, sErr := startCloudletStream(ctx, &cloudletKey, inCb)
+		if sErr == nil {
 			defer func() {
 				stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
 			}()
