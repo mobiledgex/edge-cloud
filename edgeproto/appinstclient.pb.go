@@ -818,11 +818,21 @@ func (c *AppInstClientKeyCache) UpdateModFunc(ctx context.Context, key *AppInstC
 }
 
 func (c *AppInstClientKeyCache) Delete(ctx context.Context, in *AppInstClientKey, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AppInstClientKey) bool {
+		return true
+	})
+}
+
+func (c *AppInstClientKeyCache) DeleteCondFunc(ctx context.Context, in *AppInstClientKey, modRev int64, condFunc func(old *AppInstClientKey) bool) {
 	c.Mux.Lock()
 	var old *AppInstClientKey
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

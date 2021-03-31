@@ -3612,11 +3612,21 @@ func (c *AppInstCache) UpdateModFunc(ctx context.Context, key *AppInstKey, modRe
 }
 
 func (c *AppInstCache) Delete(ctx context.Context, in *AppInst, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AppInst) bool {
+		return true
+	})
+}
+
+func (c *AppInstCache) DeleteCondFunc(ctx context.Context, in *AppInst, modRev int64, condFunc func(old *AppInst) bool) {
 	c.Mux.Lock()
 	var old *AppInst
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -4814,11 +4824,21 @@ func (c *AppInstInfoCache) UpdateModFunc(ctx context.Context, key *AppInstKey, m
 }
 
 func (c *AppInstInfoCache) Delete(ctx context.Context, in *AppInstInfo, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AppInstInfo) bool {
+		return true
+	})
+}
+
+func (c *AppInstInfoCache) DeleteCondFunc(ctx context.Context, in *AppInstInfo, modRev int64, condFunc func(old *AppInstInfo) bool) {
 	c.Mux.Lock()
 	var old *AppInstInfo
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

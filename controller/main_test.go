@@ -33,6 +33,8 @@ func TestController(t *testing.T) {
 	*localEtcd = true
 	*initLocalEtcd = true
 	testinit()
+	leaseTimeoutSec = 3
+	syncLeaseDataRetry = 0
 
 	err := startServices()
 	require.Nil(t, err, "start")
@@ -108,6 +110,7 @@ func TestController(t *testing.T) {
 	if false {
 		CheckCloudletInfo(t, cloudletInfoClient, testutil.CloudletInfoData)
 	}
+	testKeepAliveRecovery(t, ctx)
 
 	// test that delete checks disallow deletes of dependent objects
 	stream, err := cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
@@ -302,4 +305,64 @@ func CheckCloudletInfo(t *testing.T, client edgeproto.CloudletInfoApiClient, dat
 		show.AssertFound(t, &obj)
 	}
 	require.Equal(t, len(data), len(show.Data), "show count")
+}
+
+func testKeepAliveRecovery(t *testing.T, ctx context.Context) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "testKeepAliveRecovery")
+	// already some alerts from non-crm sources
+	numPrevAlerts := len(alertApi.cache.Objs)
+	require.Equal(t, 0, len(alertApi.sourceCache.Objs))
+
+	// add some alerts from crm, will go into source cache
+	for _, alert := range testutil.AlertData {
+		alertApi.Update(ctx, &alert, 0)
+	}
+	numCrmAlerts := len(testutil.AlertData)
+	totalAlerts := numPrevAlerts + numCrmAlerts
+	WaitForAlerts(t, totalAlerts)
+	require.Equal(t, numCrmAlerts, len(alertApi.sourceCache.Objs))
+	leaseID := ControllerAliveLease()
+
+	log.SpanLog(ctx, log.DebugLevelInfo, "grab sync lease data lock")
+	// grab syncLeaseData lock to prevent it restoring any
+	// source data, so that we can verify data was flushed from etcd
+	syncLeaseData.mux.Lock()
+
+	log.SpanLog(ctx, log.DebugLevelInfo, "revoke lease")
+	// revoke lease to simulate timed out keepalives
+	err := syncLeaseData.sync.store.Revoke(ctx, syncLeaseData.leaseID)
+	require.Nil(t, err)
+	// wait for lease timeout (so etcd KeepAlive function returns)
+	time.Sleep(time.Duration(leaseTimeoutSec) * time.Second)
+
+	// data should have been flushed from etcd
+	WaitForAlerts(t, numPrevAlerts)
+	// data should still be in source cache
+	require.Equal(t, numCrmAlerts, len(alertApi.sourceCache.Objs))
+
+	log.SpanLog(ctx, log.DebugLevelInfo, "release sync lease data lock")
+	// release sync lock
+	syncLeaseData.mux.Unlock()
+	// alerts should be re-sync'd
+	WaitForAlerts(t, totalAlerts)
+	// make sure there is a new lease ID
+	require.NotEqual(t, leaseID, syncLeaseData.leaseID)
+
+	log.SpanLog(ctx, log.DebugLevelInfo, "delete alerts")
+	// delete alerts
+	for _, alert := range testutil.AlertData {
+		alertApi.Delete(ctx, &alert, 0)
+	}
+	WaitForAlerts(t, numPrevAlerts)
+	require.Equal(t, 0, len(alertApi.sourceCache.Objs))
+}
+
+func WaitForAlerts(t *testing.T, count int) {
+	for i := 0; i < 10; i++ {
+		if len(alertApi.cache.Objs) == count {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	require.Equal(t, count, len(alertApi.cache.Objs), "timed out waiting for alerts")
 }

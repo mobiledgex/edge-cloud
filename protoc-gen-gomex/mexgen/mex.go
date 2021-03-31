@@ -1304,11 +1304,21 @@ func (c *{{.Name}}Cache) UpdateModFunc(ctx context.Context, key *{{.KeyType}}, m
 }
 
 func (c *{{.Name}}Cache) Delete(ctx context.Context, in *{{.Name}}, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *{{.Name}}) bool {
+		return true
+	})
+}
+
+func (c *{{.Name}}Cache) DeleteCondFunc(ctx context.Context, in *{{.Name}}, modRev int64, condFunc func(old *{{.Name}}) bool) {
 	c.Mux.Lock()
 	var old *{{.Name}}
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
