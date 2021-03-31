@@ -1340,18 +1340,10 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	var reservationFreed bool
 	clusterInstKey := edgeproto.ClusterInstKey{}
 
+	// populate the clusterinst developer from the app developer if not already present
 	setClusterOrg, setClusterName := cloudcommon.SetAppInstKeyDefaults(&in.Key)
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
-	}
-
-	appInstKey := in.Key
-	// create stream once AppInstKey is formed correctly
-	sendObj, cb, err := startAppInstStream(ctx, &appInstKey, inCb)
-	if err == nil {
-		defer func() {
-			stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
-		}()
 	}
 
 	// get appinst info for flavor
@@ -1374,14 +1366,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}()
 
 	log.SpanLog(ctx, log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
-	// populate the clusterinst developer from the app developer if not already present
-	if setClusterOrg {
-		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
-	}
-	if setClusterName {
-		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst name to default"})
-	}
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// clear change tracking vars in case STM is rerun due to conflict.
 		reservationFreed = false
 
@@ -1493,6 +1478,24 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
+
+	// setup stream obj only if basic appInst validation passes
+	appInstKey := in.Key
+	// create stream once AppInstKey is formed correctly
+	sendObj, cb, err := startAppInstStream(ctx, &appInstKey, inCb)
+	if err == nil {
+		defer func() {
+			stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
+		}()
+	}
+
+	if setClusterOrg {
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
+	}
+	if setClusterName {
+		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst name to default"})
+	}
+
 	if reservationFreed {
 		clusterInstReservationEvent(ctx, cloudcommon.FreeClusterEvent, in)
 	}
