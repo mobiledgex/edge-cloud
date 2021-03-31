@@ -229,6 +229,10 @@ func (e *dummyEtcd) Grant(ctx context.Context, ttl int64) (int64, error) {
 	return 0, errors.New("dummy etcd grant unsupported")
 }
 
+func (e *dummyEtcd) Revoke(ctx context.Context, lease int64) error {
+	return errors.New("dummy etcd revoke unsupported")
+}
+
 func (e *dummyEtcd) KeepAlive(ctx context.Context, leaseID int64) error {
 	return errors.New("dummy etcd keepalive unsupported")
 }

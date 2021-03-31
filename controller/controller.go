@@ -236,12 +236,9 @@ func startServices() error {
 	// an access key (as long as pki internal cert is verified).
 	cloudletApi.accessKeyServer.SetRequireTlsAccessKey(*requireNotifyAccessKey)
 
-	// register controller must be called before starting Notify protocol
-	// to set up controllerAliveLease.
-	err = controllerApi.registerController(ctx)
-	if err != nil {
-		return fmt.Errorf("Failed to register controller, %v", err)
-	}
+	InitSyncLeaseData(sync)
+	syncLeaseData.Start(ctx)
+
 	err = settingsApi.initDefaults(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to init settings, %v", err)
@@ -542,6 +539,7 @@ func stopServices() {
 	if services.downsampledMetricsInfluxQ != nil {
 		services.downsampledMetricsInfluxQ.Stop()
 	}
+	syncLeaseData.Stop()
 	if services.sync != nil {
 		services.sync.Done()
 	}

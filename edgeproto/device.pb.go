@@ -1523,11 +1523,21 @@ func (c *DeviceCache) UpdateModFunc(ctx context.Context, key *DeviceKey, modRev 
 }
 
 func (c *DeviceCache) Delete(ctx context.Context, in *Device, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *Device) bool {
+		return true
+	})
+}
+
+func (c *DeviceCache) DeleteCondFunc(ctx context.Context, in *Device, modRev int64, condFunc func(old *Device) bool) {
 	c.Mux.Lock()
 	var old *Device
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

@@ -1160,11 +1160,21 @@ func (c *FlavorCache) UpdateModFunc(ctx context.Context, key *FlavorKey, modRev 
 }
 
 func (c *FlavorCache) Delete(ctx context.Context, in *Flavor, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *Flavor) bool {
+		return true
+	})
+}
+
+func (c *FlavorCache) DeleteCondFunc(ctx context.Context, in *Flavor, modRev int64, condFunc func(old *Flavor) bool) {
 	c.Mux.Lock()
 	var old *Flavor
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
