@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -22,6 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/examples/features/proto/echo"
+	"google.golang.org/grpc/grpclog"
 )
 
 // Note file package is not node, so avoids node package having
@@ -32,6 +35,8 @@ func TestInternalPki(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
+	// grcp logs not showing up in unit tests for some reason.
+	grpclog.SetLoggerV2(grpclog.NewLoggerV2(ioutil.Discard, ioutil.Discard, os.Stderr))
 	// Set up local Vault process.
 	// Note that this test depends on the approles and
 	// pki configuration done by the vault setup scripts
@@ -810,6 +815,7 @@ type DummyController struct {
 
 func (s *DummyController) Init(ctx context.Context, region string, vroles *process.VaultRoles, vaultAddr string) error {
 	s.DummyController.Init(vaultAddr)
+	s.DummyController.RegisterCloudletAccess = false // register it here
 	s.DummyController.ApiRegisterCb = func(serv *grpc.Server) {
 		// add APIs to issue certs to CRM/etc
 		edgeproto.RegisterCloudletAccessApiServer(serv, s)
