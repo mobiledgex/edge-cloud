@@ -159,6 +159,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Cleanup Reservable Cluster Instances. Deletes reservable cluster instances that are not in use.
   rpc DeleteIdleReservableClusterInsts(IdleReservableClusterInsts) returns (Result) {
