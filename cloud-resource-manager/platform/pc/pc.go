@@ -33,6 +33,12 @@ type SSHOptions struct {
 	CachedIP bool
 }
 
+// Most of the systems have a limit of 128KB for arg size
+// But since we encode our data to base64, leave some room for
+// command name and other arguments, everything except data.
+// Hence 8KB is left out: 128 - 8 = 120 KB
+var minDataArgLimitBytes = (120 * 1024)
+
 // Some utility functions
 
 // WriteFile writes the file contents optionally in sudo mode
@@ -43,6 +49,40 @@ func WriteFile(client ssh.Client, file string, contents string, kind string, sud
 	// evaluation of $vars.
 	dat := base64.StdEncoding.EncodeToString([]byte(contents))
 
+	var b64File string
+	var err error
+	if len(dat) > minDataArgLimitBytes {
+		// data is more than min sys supported arg limit
+		// split the data and store it in file and then decode it
+
+		// open new file
+		b64File, err = client.Output(fmt.Sprintf("mktemp %s-XXXXXX", file))
+		if err != nil {
+			return fmt.Errorf("failed to create temp file: %s, %v", b64File, err)
+		}
+		defer func() {
+			// cleanup temp file created, ignore err
+			client.Output(fmt.Sprintf("rm %s", b64File))
+		}()
+		ii := 0
+		for count := len(dat); count > 0; {
+			var datSlice string
+			if count > minDataArgLimitBytes {
+				datSlice = dat[ii : ii+minDataArgLimitBytes]
+				count -= minDataArgLimitBytes
+				ii += minDataArgLimitBytes
+			} else {
+				datSlice = dat[ii : ii+count]
+				count = 0
+			}
+			// write encoded data to temp file
+			out, err := client.Output(fmt.Sprintf("echo -n '%s' >> %s", datSlice, b64File))
+			if err != nil {
+				return fmt.Errorf("failed to write '%s' to temp file: %s, %s, %v", datSlice, b64File, out, err)
+			}
+		}
+	}
+
 	// On a mac base64 command "-d" option is "-D"
 	// If we are running on a mac and we are trying to run base64 decode replace "-d" with "-D"
 	decodeCmd := "base64 -d"
@@ -51,7 +91,12 @@ func WriteFile(client ssh.Client, file string, contents string, kind string, sud
 			decodeCmd = "base64 -D"
 		}
 	}
-	cmd := fmt.Sprintf("%s <<< %s > %s", decodeCmd, dat, file)
+	cmd := ""
+	if b64File != "" {
+		cmd = fmt.Sprintf("cat %s | %s > %s", b64File, decodeCmd, file)
+	} else {
+		cmd = fmt.Sprintf("%s <<< %s > %s", decodeCmd, dat, file)
+	}
 	if sudo {
 		cmd = fmt.Sprintf("sudo bash -c '%s'", cmd)
 	}
