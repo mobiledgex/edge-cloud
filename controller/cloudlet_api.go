@@ -1144,21 +1144,26 @@ func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
 	ctx := inCb.Context()
 
+	cloudletKey := in.Key
+	sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
+	if err == nil {
+		defer func() {
+			stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
+		}()
+	}
+
 	defer func() {
 		if reterr == nil {
 			RecordCloudletEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
 	}()
 
-	cloudletKey := in.Key
-
 	var dynInsts map[edgeproto.AppInstKey]struct{}
 	var clDynInsts map[edgeproto.ClusterInstKey]struct{}
 
 	cctx.SetOverride(&in.CrmOverride)
 
-	errMsgs := []string{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
 		clDynInsts = make(map[edgeproto.ClusterInstKey]struct{})
 		if !s.store.STMGet(stm, &in.Key, in) {
@@ -1190,8 +1195,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			if in.State == edgeproto.TrackedState_DELETE_ERROR &&
 				cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
-				errMsgs = append(errMsgs, fmt.Sprintf("Previous delete failed, %v", in.Errors))
-				errMsgs = append(errMsgs, "Use CreateCloudlet to rebuild, and try again")
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
+				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
 			}
 			if in.State == edgeproto.TrackedState_DELETE_REQUESTED ||
 				in.State == edgeproto.TrackedState_DELETING ||
@@ -1204,27 +1209,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return nil
 	})
 	if err != nil {
-		// start stream only if there are err msgs to be streamed
-		sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
-		if err == nil {
-			defer func() {
-				stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
-			}()
-		}
-		if len(errMsgs) > 0 {
-			for _, msg := range errMsgs {
-				cb.Send(&edgeproto.Result{Message: msg})
-			}
-		}
 		return err
-	}
-
-	// start stream only after basic cloudlet validation passes
-	sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
-	if err == nil {
-		defer func() {
-			stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
-		}()
 	}
 
 	// Delete dynamic instances while Cloudlet is still in database
