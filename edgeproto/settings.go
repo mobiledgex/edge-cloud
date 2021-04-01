@@ -112,7 +112,7 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		case SettingsFieldDmeApiMetricsCollectionInterval:
 			v.CheckGT(f, s.DmeApiMetricsCollectionInterval, dur0)
 		case SettingsFieldCleanupReservableAutoClusterIdletime:
-			v.CheckGT(f, s.CleanupReservableAutoClusterIdletime, dur0)
+			v.CheckGT(f, s.CleanupReservableAutoClusterIdletime, Duration(30*time.Second))
 		case SettingsFieldAppinstClientCleanupInterval:
 			v.CheckGT(f, s.AppinstClientCleanupInterval, Duration(2*time.Second))
 		case SettingsFieldEdgeEventsMetricsCollectionInterval:

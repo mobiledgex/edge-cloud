@@ -1197,6 +1197,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
+				return fmt.Errorf("Cloudlet busy (%s), cannot delete", in.State.String())
 			}
 			if in.State == edgeproto.TrackedState_DELETE_REQUESTED ||
 				in.State == edgeproto.TrackedState_DELETING ||
