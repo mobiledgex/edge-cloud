@@ -1087,11 +1087,17 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := inCb.Context()
 
+	clusterInstKey := in.Key
+	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
+	if err == nil {
+		defer func() {
+			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		}()
+	}
+
 	var prevState edgeproto.TrackedState
-	var errMsgs []string
 	// Set state to prevent other apps from being created on ClusterInst
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		errMsgs = []string{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
@@ -1100,8 +1106,8 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DELETE_ERROR {
-				errMsgs = append(errMsgs, fmt.Sprintf("Previous delete failed, %v", in.Errors))
-				errMsgs = append(errMsgs, "Use CreateClusterInst to rebuild, and try again")
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
+				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})
 			}
 			return fmt.Errorf("ClusterInst busy (%s), cannot delete", in.State.String())
 		}
@@ -1111,29 +1117,8 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		s.store.STMPut(stm, in)
 		return nil
 	})
-	clusterInstKey := in.Key
-	if len(errMsgs) > 0 {
-		// start stream only if there are some error messages to stream
-		sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
-		if err == nil {
-			defer func() {
-				stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
-			}()
-		}
-		for _, msg := range errMsgs {
-			cb.Send(&edgeproto.Result{Message: msg})
-		}
-
-	}
 	if err != nil {
 		return err
-	}
-
-	sendObj, cb, err := startClusterInstStream(ctx, &clusterInstKey, inCb)
-	if err == nil {
-		defer func() {
-			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
-		}()
 	}
 
 	defer func() {
