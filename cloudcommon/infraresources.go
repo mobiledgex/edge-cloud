@@ -69,7 +69,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 		vmResources = append(vmResources, edgeproto.VMResource{
 			Key:      clusterInst.Key,
 			VmFlavor: nodeFlavor,
-			Type:     VMTypeClusterNode,
+			Type:     VMTypeClusterDockerNode,
 		})
 	} else {
 		for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
@@ -91,7 +91,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			vmResources = append(vmResources, edgeproto.VMResource{
 				Key:      clusterInst.Key,
 				VmFlavor: nodeFlavor,
-				Type:     VMTypeClusterNode,
+				Type:     VMTypeClusterK8sNode,
 			})
 		}
 	}

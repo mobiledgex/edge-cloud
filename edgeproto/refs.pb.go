@@ -44,7 +44,7 @@ type VMResource struct {
 	Key ClusterInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Flavor requirement of the VM required by the cluster
 	VmFlavor *FlavorInfo `protobuf:"bytes,2,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
-	// Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+	// Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm
 	Type string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
 	// Access type for resource of type App VM
 	AppAccessType AccessType `protobuf:"varint,4,opt,name=app_access_type,json=appAccessType,proto3,enum=edgeproto.AccessType" json:"app_access_type,omitempty"`
