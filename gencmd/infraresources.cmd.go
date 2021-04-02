@@ -59,7 +59,7 @@ var VmInfoOptionalArgs = []string{
 var VmInfoAliasArgs = []string{}
 var VmInfoComments = map[string]string{
 	"name":                   "Virtual machine name",
-	"type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"type":                   "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"status":                 "Runtime status of the VM",
 	"infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
 	"containers:#.name":      "Name of the container",
@@ -135,7 +135,7 @@ var InfraResourcesOptionalArgs = []string{
 var InfraResourcesAliasArgs = []string{}
 var InfraResourcesComments = map[string]string{
 	"vms:#.name":                   "Virtual machine name",
-	"vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"vms:#.status":                 "Runtime status of the VM",
 	"vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
 	"vms:#.containers:#.name":      "Name of the container",
@@ -176,7 +176,7 @@ var InfraResourcesSnapshotOptionalArgs = []string{
 var InfraResourcesSnapshotAliasArgs = []string{}
 var InfraResourcesSnapshotComments = map[string]string{
 	"platformvms:#.name":                          "Virtual machine name",
-	"platformvms:#.type":                          "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"platformvms:#.type":                          "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"platformvms:#.status":                        "Runtime status of the VM",
 	"platformvms:#.infraflavor":                   "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
 	"platformvms:#.containers:#.name":             "Name of the container",
