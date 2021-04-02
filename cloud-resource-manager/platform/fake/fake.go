@@ -189,7 +189,7 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 		return fmt.Errorf("missing cluster vms for %v", clusterInst.Key)
 	}
 	for _, vmInfo := range cVMs {
-		if vmInfo.Type == cloudcommon.VMTypeClusterNode {
+		if vmInfo.Type == cloudcommon.VMTypeClusterK8sNode {
 			if _, ok := fakeNodes[vmInfo.Name]; ok {
 				delete(fakeNodes, vmInfo.Name)
 			}
@@ -202,7 +202,7 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 	for vmName, _ := range fakeNodes {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
-			Type:        cloudcommon.VMTypeClusterNode,
+			Type:        cloudcommon.VMTypeClusterK8sNode,
 			InfraFlavor: clusterInst.NodeFlavor,
 			Status:      "ACTIVE",
 		})
@@ -240,7 +240,7 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix),
-			Type:        cloudcommon.VMTypeClusterNode,
+			Type:        cloudcommon.VMTypeClusterK8sNode,
 			InfraFlavor: clusterInst.NodeFlavor,
 			Status:      "ACTIVE",
 		})

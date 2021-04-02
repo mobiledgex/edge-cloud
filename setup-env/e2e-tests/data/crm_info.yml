@@ -78,7 +78,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-1-reservable0-mobiledgex
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
 - key:
@@ -108,7 +108,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-2-reservable0-mobiledgex
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
 - key:
@@ -138,7 +138,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-2-reservable1-mobiledgex
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
 cloudlets:

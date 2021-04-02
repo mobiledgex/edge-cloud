@@ -508,7 +508,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		for _, res := range ciResources {
 			if res.Type == cloudcommon.VMTypeClusterMaster {
 				numMasters++
-			} else if res.Type == cloudcommon.VMTypeClusterNode {
+			} else if res.Type == cloudcommon.VMTypeClusterK8sNode {
 				numNodes++
 			} else if res.Type == cloudcommon.VMTypeRootLB {
 				numRootLB++

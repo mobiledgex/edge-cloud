@@ -251,11 +251,11 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-cloudlet1-cluster1-acmeappco
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-2-cloudlet1-cluster1-acmeappco
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
   createdat:
