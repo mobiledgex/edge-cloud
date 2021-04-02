@@ -22,7 +22,7 @@ message VMResource {
   ClusterInstKey key = 1 [(gogoproto.nullable) = false];
   // Flavor requirement of the VM required by the cluster
   FlavorInfo vm_flavor = 2;
-  // Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+  // Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm
   string type = 3;
   // Access type for resource of type App VM
   AccessType app_access_type = 4;
