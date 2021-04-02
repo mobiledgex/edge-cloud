@@ -831,7 +831,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		defer func() {
 			if reterr != nil && !cctx.Undo {
 				cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst due to failure"})
-				undoErr := clusterInstApi.deleteClusterInstInternal(cctxauto.WithUndo(), &clusterInst, cb)
+				undoErr := clusterInstApi.deleteClusterInstInternal(cctxauto.WithUndo().WithCRMUndo(), &clusterInst, cb)
 				if undoErr != nil {
 					log.SpanLog(ctx, log.DebugLevelApi,
 						"Undo create auto-ClusterInst failed",
