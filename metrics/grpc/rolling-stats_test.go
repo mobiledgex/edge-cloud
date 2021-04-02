@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/stretchr/testify/require"
 )
@@ -14,17 +13,12 @@ var errorThreshold = .00001
 
 func TestRollingStatsCalculations(t *testing.T) {
 	// Expected values confirmed using Average and Standard Deviation Calculators
-	now := time.Now()
-
 	// Test CalculateLatency: min, max, avg, variance, stddev, numsamples calculation
 	samples1 := make([]*dme.Sample, 0)
-	list1 := []float64{3.1, 2.3, 4.5, 1.2, 13.4}
-	times1 := []time.Time{now.Add(-55 * time.Second), now.Add(-58 * time.Second), now.Add(-21 * time.Second), now.Add(-30 * time.Second), now.Add(-52 * time.Second)}
-	for i, val := range list1 {
-		ts := cloudcommon.TimeToTimestamp(times1[i])
+	list1 := []float64{3.1, 0, 2.3, 4.5, -4.5, 1.2, 13.4}
+	for _, val := range list1 {
 		s := &dme.Sample{
-			Value:     val,
-			Timestamp: &ts,
+			Value: val,
 		}
 		samples1 = append(samples1, s)
 	}
@@ -37,12 +31,12 @@ func TestRollingStatsCalculations(t *testing.T) {
 	require.Equal(t, uint64(5), latency1.NumSamples)
 
 	// Test UpdateRollingLatency: min, max, avg, variance, stddev, numsamples calculation
-	now = time.Now()
 	r := NewRollingStatistics()
-	list2 := []float64{.53, 14.2, 21.3, 6.7, 8.8}
-	// Try adding no elements and 0
+	list2 := []float64{.53, 14.2, 21.3, 0, -4.5, 6.7, 8.8}
+	// Try adding no elements, 0, and a negative number
 	r.UpdateRollingStatistics()
 	r.UpdateRollingStatistics(0)
+	r.UpdateRollingStatistics(-3.2)
 	// Add elements one by one
 	for _, elem := range list2 {
 		r.UpdateRollingStatistics(elem)
@@ -67,8 +61,7 @@ func TestRollingStatsCalculations(t *testing.T) {
 
 	// Test UpdateRollingLatency: Removing Samples: rolling avg, min, max, stddev, variance, numsamples
 	time.Sleep(time.Second * 10)
-	now = time.Now()
-	list3 := []float64{.34, 33.21, 11.1, 4.2, 1.5}
+	list3 := []float64{.34, 33.21, 11.1, 4.2, 1.5, 0, -1.2}
 	r.UpdateRollingStatistics(list3...)
 	require.Equal(t, .34, r.Statistics.Min)
 	require.Equal(t, 33.21, r.Statistics.Max)

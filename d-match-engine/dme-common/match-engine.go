@@ -1178,15 +1178,15 @@ loop:
 			break loop
 		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
 			// Client sent latency samples to be processed
-			_, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LATENCY_SAMPLES, invalid location", "err", err)
 				reterr = err
 				break loop
 			}
-			err = ValidateLocation(cupdate.GpsLocation)
+			_, err = EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LATENCY_SAMPLES, invalid location", err, err)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
 				reterr = err
 				break loop
 			}
@@ -1207,16 +1207,16 @@ loop:
 			fallthrough
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
-			// Gps location stats update
-			deviceInfo := &dme.DeviceInfo{}
-			if cupdate.DeviceInfo != nil {
-				deviceInfo = cupdate.DeviceInfo
-			}
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LOCATION_UPDATE, invalid location", "err", err)
 				reterr = err
 				break loop
+			}
+			// Gps location stats update
+			deviceInfo := &dme.DeviceInfo{}
+			if cupdate.DeviceInfo != nil {
+				deviceInfo = cupdate.DeviceInfo
 			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
