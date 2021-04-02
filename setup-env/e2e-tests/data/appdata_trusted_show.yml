@@ -260,7 +260,7 @@ clusterinsts:
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -300,7 +300,7 @@ clusterinsts:
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:

@@ -1842,7 +1842,7 @@ var CloudletInfoComments = map[string]string{
 	"controllercachereceived":                "Indicates all controller data has been sent to CRM",
 	"maintenancestate":                       "State for maintenance, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
 	"resourcessnapshot.platformvms:#.name":   "Virtual machine name",
-	"resourcessnapshot.platformvms:#.type":   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"resourcessnapshot.platformvms:#.type":   "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"resourcessnapshot.platformvms:#.status": "Runtime status of the VM",
 	"resourcessnapshot.platformvms:#.infraflavor":                   "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
 	"resourcessnapshot.platformvms:#.containers:#.name":             "Name of the container",
