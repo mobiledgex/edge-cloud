@@ -1181,14 +1181,12 @@ loop:
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LATENCY_SAMPLES, invalid location", "err", err)
-				reterr = err
-				break loop
+				continue
 			}
 			_, err = EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
-				reterr = err
-				break loop
+				continue
 			}
 			deviceInfo := &dme.DeviceInfo{}
 			if cupdate.DeviceInfo != nil {
@@ -1210,8 +1208,7 @@ loop:
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LOCATION_UPDATE, invalid location", "err", err)
-				reterr = err
-				break loop
+				continue
 			}
 			// Gps location stats update
 			deviceInfo := &dme.DeviceInfo{}
