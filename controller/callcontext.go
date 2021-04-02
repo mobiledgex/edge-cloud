@@ -6,6 +6,7 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 
 type CallContext struct {
 	Undo        bool
+	CRMUndo     bool
 	Override    edgeproto.CRMOverride
 	AutoCluster bool
 }
@@ -17,6 +18,19 @@ func DefCallContext() *CallContext {
 func (c *CallContext) WithUndo() *CallContext {
 	cc := *c
 	cc.Undo = true
+	return &cc
+}
+
+// Normally, the CRM change is the last change in the API call,
+// and if it fails, CRM will clean up after itself. Thus the
+// undo function should skip any CRM changes. However, in some
+// cases (like autocluster), the CRM change is not the last
+// change, and we may hit other failures after the CRM change succeeds.
+// In that case, we need to have the undo function apply the
+// CRM changes.
+func (c *CallContext) WithCRMUndo() *CallContext {
+	cc := *c
+	cc.CRMUndo = true
 	return &cc
 }
 

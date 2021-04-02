@@ -1292,7 +1292,7 @@ func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
 }
 
 func ignoreCRM(cctx *CallContext) bool {
-	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
+	if (cctx.Undo && !cctx.CRMUndo) || cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
 		return true
 	}
