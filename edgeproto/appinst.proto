@@ -229,6 +229,7 @@ service AppInstApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,Key.AppKey.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
 }
 
