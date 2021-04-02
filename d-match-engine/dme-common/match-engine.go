@@ -1150,7 +1150,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
-	// Loop while persistent connection is up and edgeevents cookie has not expired
+	// Loop while persistent connection is up
 loop:
 	for {
 		// Receive data from stream
