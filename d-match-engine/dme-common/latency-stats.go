@@ -71,6 +71,7 @@ func (l *LatencyStat) Update(info *LatencyStatInfo) {
 		// Update Latency counts and rolling statistics
 		for _, sample := range info.Samples {
 			if sample.Value > 0 {
+				l.Changed = true
 				l.LatencyCounts.AddLatency(time.Duration(sample.Value) * time.Millisecond)
 				l.RollingStatistics.UpdateRollingStatistics(sample.Value)
 			}
