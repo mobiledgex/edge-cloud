@@ -1150,16 +1150,9 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
-	timer := time.After(*EdgeEventsCookieExpiration)
-	// Loop while persistent connection is up
+	// Loop while persistent connection is up and edgeevents cookie has not expired
 loop:
 	for {
-		select {
-		case <-timer:
-			log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEventsCookie has expired. Terminating connection.")
-			break loop
-		default:
-		}
 		// Receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
@@ -1191,6 +1184,12 @@ loop:
 				reterr = err
 				break loop
 			}
+			err = ValidateLocation(cupdate.GpsLocation)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LATENCY_SAMPLES, invalid location", err, err)
+				reterr = err
+				break loop
+			}
 			deviceInfo := &dme.DeviceInfo{}
 			if cupdate.DeviceInfo != nil {
 				deviceInfo = cupdate.DeviceInfo
@@ -1215,7 +1214,7 @@ loop:
 			}
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LOCATION_UPDATE, invalid location", "loc", cupdate.GpsLocation, "err", err)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LOCATION_UPDATE, invalid location", "err", err)
 				reterr = err
 				break loop
 			}

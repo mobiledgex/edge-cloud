@@ -67,7 +67,7 @@ func (l *LatencyStat) ResetLatencyStat() {
 }
 
 func (l *LatencyStat) Update(info *LatencyStatInfo) {
-	if info != nil && info.Samples != nil {
+	if info != nil && info.Samples != nil && len(info.Samples) > 0 {
 		// Update Latency counts and rolling statistics
 		for _, sample := range info.Samples {
 			if sample.Value > 0 {

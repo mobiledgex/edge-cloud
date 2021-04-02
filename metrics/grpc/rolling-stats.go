@@ -68,6 +68,11 @@ func (r *RollingStatistics) UpdateRollingStatistics(samples ...float64) {
 func CalculateStatistics(samples []*dme.Sample) dme.Statistics {
 	// Create statistics struct
 	statistics := new(dme.Statistics)
+	ts := cloudcommon.TimeToTimestamp(time.Now())
+	statistics.Timestamp = &ts
+	if samples == nil {
+		return *statistics
+	}
 	statistics.NumSamples = uint64(len(samples))
 	if statistics.NumSamples == 0 {
 		return *statistics
@@ -75,6 +80,9 @@ func CalculateStatistics(samples []*dme.Sample) dme.Statistics {
 	// calculate Min, Max, and Avg
 	sum := 0.0
 	for _, sample := range samples {
+		if sample.Value <= 0 {
+			continue
+		}
 		sum += sample.Value
 		if statistics.Min == 0.0 || sample.Value < statistics.Min {
 			statistics.Min = sample.Value
@@ -92,7 +100,5 @@ func CalculateStatistics(samples []*dme.Sample) dme.Statistics {
 	}
 	statistics.Variance = diffSquared / float64(statistics.NumSamples-1)
 	statistics.StdDev = math.Sqrt(statistics.Variance)
-	ts := cloudcommon.TimeToTimestamp(time.Now())
-	statistics.Timestamp = &ts
 	return *statistics
 }
