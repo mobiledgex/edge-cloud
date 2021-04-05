@@ -72,16 +72,6 @@ var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 
-func validateLocation(loc *dme.Loc) error {
-	if loc == nil {
-		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
-	}
-	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
-		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
-	}
-	return nil
-}
-
 func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest) (*dme.FindCloudletReply, error) {
 	reply := new(dme.FindCloudletReply)
 	var appkey edgeproto.AppKey
@@ -93,12 +83,12 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	appkey.Name = ckey.AppName
 	appkey.Version = ckey.AppVers
 
-	err := validateLocation(req.GpsLocation)
+	err := dmecommon.ValidateLocation(req.GpsLocation)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, req.DeviceInfo, reply, dmecommon.EdgeEventsCookieExpiration)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, req.DeviceInfo, reply, dmecommon.EdgeEventsCookieExpiration, nil)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -139,12 +129,12 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Requested app does not exist", "requestedAppKey", tokdata.AppKey)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Requested app does not exist")
 	}
-	err = validateLocation(&tokdata.Location)
+	err = dmecommon.ValidateLocation(&tokdata.Location)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
-	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, req.DeviceInfo, reply, cookieExpiration)
+	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, req.DeviceInfo, reply, cookieExpiration, nil)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -192,7 +182,7 @@ func (s *server) GetAppOfficialFqdn(ctx context.Context, req *dme.AppOfficialFqd
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn", "ckey", ckey, "loc", req.GpsLocation)
-	err := validateLocation(req.GpsLocation)
+	err := dmecommon.ValidateLocation(req.GpsLocation)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
