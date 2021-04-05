@@ -1180,8 +1180,7 @@ loop:
 			// Client sent latency samples to be processed
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LATENCY_SAMPLES, invalid location", "err", err)
-				continue
+				log.SpanLog(ctx, log.DebugLevelDmereq, "No location in EVENT_LATENCY_SAMPLES", "err", err)
 			}
 			_, err = EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {

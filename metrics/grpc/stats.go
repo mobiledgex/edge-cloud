@@ -24,7 +24,7 @@ func (m *LatencyMetric) AddLatency(d time.Duration) {
 			break
 		}
 	}
-	if ii >= 0 {
+	if ii > 0 {
 		m.buckets[ii]++
 	}
 }

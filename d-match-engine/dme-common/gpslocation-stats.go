@@ -15,6 +15,9 @@ const kmPerDegLat = 110.57
 
 func GetLocationTileFromGpsLocation(loc *dme.Loc, locationTileSideLengthKm int) string {
 	var quadrant string
+	if loc == nil {
+		return fmt.Sprintf("0-0,0-%s", strconv.Itoa(locationTileSideLengthKm))
+	}
 	if loc.Latitude >= 0 && loc.Longitude >= 0 {
 		quadrant = "1-"
 	} else if loc.Latitude >= 0 && loc.Longitude < 0 {
@@ -35,7 +38,9 @@ func GetLocationTileFromGpsLocation(loc *dme.Loc, locationTileSideLengthKm int) 
 	longIndex := int(longKm / float64(locationTileSideLengthKm))
 	// Append lat long to string for metrics
 	pair := strconv.Itoa(latIndex) + "," + strconv.Itoa(longIndex)
-	return quadrant + pair
+	// Append location tile side length for easy conversion
+	sideLengthStr := strconv.Itoa(locationTileSideLengthKm)
+	return quadrant + pair + sideLengthStr
 }
 
 func GetGpsLocationRangeFromLocationTile(locationTile string, locationTileSideLengthKm int) (under *dme.Loc, over *dme.Loc, err error) {
