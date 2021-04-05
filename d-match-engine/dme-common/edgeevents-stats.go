@@ -111,7 +111,6 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 			stat = NewLatencyStat(LatencyTimes)
 		}
 		stat.Update(call.LatencyStatInfo)
-		stat.Changed = true
 		shard.latencyStatMap[key] = stat
 	} else if call.Metric == cloudcommon.DeviceMetric {
 		key := call.DeviceStatKey
@@ -129,7 +128,6 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 			stat = NewDeviceStat()
 		}
 		stat.Update()
-		stat.Changed = true
 		shard.deviceStatMap[key] = stat
 	} else if call.Metric == cloudcommon.CustomMetric {
 		key := call.CustomStatKey
@@ -147,7 +145,6 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 			stat = NewCustomStat()
 		}
 		stat.Update(call.CustomStatInfo)
-		stat.Changed = true
 		shard.customStatMap[key] = stat
 	}
 }
@@ -241,7 +238,6 @@ func CustomStatToMetric(ts *types.Timestamp, key CustomStatKey, stat *CustomStat
 	metric.AddDoubleVal("min", stat.RollingStatistics.Statistics.Min)
 	metric.AddDoubleVal("max", stat.RollingStatistics.Statistics.Max)
 	metric.AddIntVal("numsamples", stat.RollingStatistics.Statistics.NumSamples)
-	metric.AddIntVal("numsessions", stat.NumSessions)
 	return metric
 }
 
