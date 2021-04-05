@@ -1178,8 +1178,10 @@ loop:
 			break loop
 		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
 			// Client sent latency samples to be processed
+			doEventLocationUpdate := true
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
+				doEventLocationUpdate = false
 				log.SpanLog(ctx, log.DebugLevelDmereq, "No location in EVENT_LATENCY_SAMPLES", "err", err)
 			}
 			_, err = EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
@@ -1201,6 +1203,9 @@ loop:
 				LatencyStatInfo: latencyStatInfo,
 			}
 			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
+			if !doEventLocationUpdate {
+				continue
+			}
 			fallthrough
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
