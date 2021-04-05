@@ -10,8 +10,7 @@ import (
 
 // Filled in by DME. Added to EdgeEventStatCall to update stats
 type CustomStatInfo struct {
-	Samples            []*dme.Sample
-	FirstLatencyUpdate bool // Used to update NumSessions count. Set true in LatencyInfo from FindCloudlet when providing initial DeviceInfo for stats. Additional LatencyInfo from StreamEdgeEvents (which must come after FindCloudlet) would double count NumSessions
+	Samples []*dme.Sample
 }
 
 // Used to find corresponding CustomStat
@@ -31,7 +30,6 @@ func GetCustomStatKey(appInstKey edgeproto.AppInstKey, statName string) CustomSt
 type CustomStat struct {
 	Count             uint64 // number of times this custom stat has been updated
 	RollingStatistics *grpcstats.RollingStatistics
-	NumSessions       uint64 // number of sessions that send stats
 	Mux               sync.Mutex
 	Changed           bool
 }
@@ -43,10 +41,8 @@ func NewCustomStat() *CustomStat {
 }
 
 func (c *CustomStat) Update(info *CustomStatInfo) {
+	c.Changed = true
 	c.Count++
-	if info.FirstLatencyUpdate {
-		c.NumSessions++
-	}
 	if info.Samples != nil {
 		for _, sample := range info.Samples {
 			c.RollingStatistics.UpdateRollingStatistics(sample.Value)
