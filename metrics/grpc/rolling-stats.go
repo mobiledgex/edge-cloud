@@ -32,8 +32,8 @@ func (r *RollingStatistics) UpdateRollingStatistics(samples ...float64) {
 	// Update Min, Max, and Avg
 	total := r.Statistics.Avg * float64(r.Statistics.NumSamples)
 	for _, sample := range samples {
-		// Don't add 0 or negative numbers
-		if sample <= 0 {
+		// Don't add negative numbers
+		if sample < 0 {
 			continue
 		}
 		if sample < r.Statistics.Min || r.Statistics.Min == 0 {
@@ -56,8 +56,8 @@ func (r *RollingStatistics) UpdateRollingStatistics(samples ...float64) {
 	prevSumSquared := prevVariance * float64(unbiasedPrevNumSamples)
 	newSumSquared := prevSumSquared
 	for _, sample := range samples {
-		// Don't add 0 or negative numbers
-		if sample <= 0 {
+		// Don't add negative numbers
+		if sample < 0 {
 			continue
 		}
 		newSumSquared += (sample - prevAvg) * (sample - r.Statistics.Avg)
@@ -87,8 +87,8 @@ func CalculateStatistics(samples []*dme.Sample) dme.Statistics {
 	// calculate Min, Max, and Avg
 	sum := 0.0
 	for _, sample := range samples {
-		// Don't add 0 or negative numbers
-		if sample.Value <= 0 {
+		// Don't add negative numbers
+		if sample.Value < 0 {
 			continue
 		}
 		statistics.NumSamples++
@@ -113,8 +113,8 @@ func CalculateStatistics(samples []*dme.Sample) dme.Statistics {
 	// calculate StdDev
 	diffSquared := 0.0
 	for _, sample := range samples {
-		// Don't add 0 or negative numbers
-		if sample.Value <= 0 {
+		// Don't add negative numbers
+		if sample.Value < 0 {
 			continue
 		}
 		diff := sample.Value - statistics.Avg
