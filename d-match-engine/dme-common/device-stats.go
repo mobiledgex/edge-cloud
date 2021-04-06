@@ -42,5 +42,6 @@ func NewDeviceStat() *DeviceStat {
 }
 
 func (d *DeviceStat) Update() {
+	d.Changed = true
 	d.NumSessions++
 }
