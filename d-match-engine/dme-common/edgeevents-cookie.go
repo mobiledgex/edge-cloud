@@ -15,6 +15,7 @@ type EdgeEventsCookieKey struct {
 	ClusterName  string `json:"clustername,omitempty"`
 	CloudletOrg  string `json:"cloudletorg,omitempty"`
 	CloudletName string `json:"cloudletname,omitempty"`
+	UpdatedStats bool   `json:"updatedstats,omitempty"`
 	Kid          int    `json:"kid,omitempty"`
 }
 

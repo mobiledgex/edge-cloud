@@ -959,6 +959,7 @@ var AppinstanceOptionalArgs = []string{
 	"ports:#.tls",
 	"ports:#.nginx",
 	"orgname",
+	"edgeeventscookie",
 }
 var AppinstanceAliasArgs = []string{}
 var AppinstanceComments = map[string]string{
@@ -973,6 +974,7 @@ var AppinstanceComments = map[string]string{
 	"ports:#.tls":          "TLS termination for this port",
 	"ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"orgname":              "App Organization Name",
+	"edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
 }
 var AppinstanceSpecialArgs = map[string]string{}
 var CloudletLocationRequiredArgs = []string{}
@@ -1000,6 +1002,7 @@ var CloudletLocationOptionalArgs = []string{
 	"appinstances:#.ports:#.tls",
 	"appinstances:#.ports:#.nginx",
 	"appinstances:#.orgname",
+	"appinstances:#.edgeeventscookie",
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
@@ -1024,6 +1027,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances:#.ports:#.tls":          "TLS termination for this port",
 	"appinstances:#.ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"appinstances:#.orgname":              "App Organization Name",
+	"appinstances:#.edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
 }
 var CloudletLocationSpecialArgs = map[string]string{}
 var AppInstListReplyRequiredArgs = []string{}
@@ -1053,6 +1057,7 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets:#.appinstances:#.ports:#.tls",
 	"cloudlets:#.appinstances:#.ports:#.nginx",
 	"cloudlets:#.appinstances:#.orgname",
+	"cloudlets:#.appinstances:#.edgeeventscookie",
 	"tags",
 }
 var AppInstListReplyAliasArgs = []string{}
@@ -1080,7 +1085,8 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets:#.appinstances:#.ports:#.tls":          "TLS termination for this port",
 	"cloudlets:#.appinstances:#.ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"cloudlets:#.appinstances:#.orgname":              "App Organization Name",
-	"tags":                                            "_(optional)_ Vendor specific data",
+	"cloudlets:#.appinstances:#.edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
+	"tags": "_(optional)_ Vendor specific data",
 }
 var AppInstListReplySpecialArgs = map[string]string{
 	"tags": "StringToString",
