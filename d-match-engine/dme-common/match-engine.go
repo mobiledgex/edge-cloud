@@ -1198,10 +1198,12 @@ loop:
 			if err != nil {
 				validLocation = false
 				log.SpanLog(ctx, log.DebugLevelDmereq, "No location in EVENT_LATENCY_SAMPLES", "err", err)
+				sendErrorEventToClient(fmt.Sprintf("No location in EVENT_LATENCY_SAMPLES, error is: %s", err))
 			}
 			_, err = EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
+				sendErrorEventToClient(fmt.Sprintf("ClientEdgeEvent latency unable to process latency samples, error is: %s", err))
 				continue
 			}
 			deviceInfo := &dme.DeviceInfo{}
@@ -1238,6 +1240,7 @@ loop:
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LOCATION_UPDATE, invalid location", "err", err)
+				sendErrorEventToClient(fmt.Sprintf("Invalid EVENT_LOCATION_UPDATE, invalid location: %s", err))
 				continue
 			}
 			// Gps location stats update
@@ -1250,11 +1253,13 @@ loop:
 			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, deviceInfo, fcreply, edgeEventsCookieExpiration, edgeEventsCookieKey)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
+				sendErrorEventToClient(fmt.Sprintf("Error trying to find closer cloudlet: %s", err))
 				continue
 			}
 			newEECookieKey, err := VerifyEdgeEventsCookie(ctx, fcreply.EdgeEventsCookie)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying verify new cloudlet edgeeventscookie", "err", err)
+				sendErrorEventToClient(fmt.Sprintf("Error trying verify new cloudlet edgeeventscookie: %s", err))
 				continue
 			}
 			// Check if new appinst is different from current
@@ -1289,11 +1294,18 @@ loop:
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
+			sendErrorEventToClient(fmt.Sprintf("Received unknown event type: %s", cupdate.EventType))
 		}
 	}
 	// Remove Client from edgeevents plugin
 	EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 	return reterr
+}
+
+func sendErrorEventToClient(msg string) {
+	errorEdgeEvent := new(dme.ServerEdgeEvent)
+	errorEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_ERROR
+	errorEdgeEvent.ErrorMsg = msg
 }
 
 func ListAppinstTbl(ctx context.Context) {

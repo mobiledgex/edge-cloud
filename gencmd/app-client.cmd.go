@@ -1512,11 +1512,12 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.cloudletlocation.timestamp.nanos",
 	"newcloudlet.edgeeventscookie",
 	"newcloudlet.tags",
+	"errormsg",
 	"tags",
 }
 var ServerEdgeEventAliasArgs = []string{}
 var ServerEdgeEventComments = map[string]string{
-	"eventtype":                                       ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth, EventCloudletUpdate",
+	"eventtype":                                       ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth, EventCloudletUpdate, EventError",
 	"cloudletstate":                                   "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
 	"maintenancestate":                                "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
 	"healthcheck":                                     "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
@@ -1545,6 +1546,7 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"newcloudlet.edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
+	"errormsg":                                        "Error message if event_type is EVENT_ERROR",
 	"tags":                                            "_(optional)_ Vendor specific data",
 }
 var ServerEdgeEventSpecialArgs = map[string]string{
