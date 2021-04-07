@@ -28,12 +28,12 @@ func InitResTagTableApi(sync *Sync) {
 	sync.RegisterCache(&resTagTableApi.cache)
 }
 
-func (s *ResTagTableApi) ValidateResName(in string) (error, bool) {
-
+func (s *ResTagTableApi) ValidateResName(ctx context.Context, in string) (error, bool) {
 	// check if the given name is one of our resource enum values
 	if _, ok := edgeproto.OptResNames_value[(strings.ToUpper(in))]; !ok {
 		var valids []string
 		for k, _ := range edgeproto.OptResNames_value {
+			log.SpanLog(ctx, log.DebugLevelApi, "ValidateResName", "next valid resname", k)
 			valids = append(valids, strings.ToLower(k))
 		}
 		return fmt.Errorf("Invalid resource name %s found, must be one of %s ", in, valids), false
@@ -44,6 +44,7 @@ func (s *ResTagTableApi) ValidateResName(in string) (error, bool) {
 func (s *ResTagTableApi) CreateResTagTable(ctx context.Context, in *edgeproto.ResTagTable) (*edgeproto.Result, error) {
 
 	if err := in.Validate(edgeproto.ResTagTableAllFieldsMap); err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "CreateResTagTable in.Validate failed all Fields map")
 		return &edgeproto.Result{}, err
 	}
 	in.Key.Name = strings.ToLower(in.Key.Name)
@@ -247,6 +248,7 @@ func (s *ResTagTableApi) GetResTablesForCloudlet(ctx context.Context, stm concur
 			tabs[k] = &t
 		}
 	}
+	log.SpanLog(ctx, log.DebugLevelApi, "GetResTablesForCloudlet", "tbl count", len(tabs))
 	return tabs, nil
 }
 
@@ -279,13 +281,10 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 	var err error
 	var count string
 	for k, v := range resmap {
-		if k == "gpu" {
+		if k == "gpu" || k == "vgpu" || k == "nas" {
 			values := strings.Split(v, ":")
 			if len(values) == 1 {
 				return false, fmt.Errorf("Missing manditory resource count, ex: optresmap=gpu=gpu:1")
-			}
-			if values[0] != "pci" && values[0] != "vgpu" && values[0] != "gpu" {
-				return false, fmt.Errorf("GPU resource type selector must be one of [gpu, pci, vgpu] found %s", values[0])
 			}
 			if len(values) == 2 {
 				count = values[1]
@@ -300,7 +299,7 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 
 		} else {
 			// if k == "nas" etc
-			return false, fmt.Errorf("Only GPU resources currently supported, use optresmap=gpu=$resource:$count found %s", k)
+			return false, fmt.Errorf("Only GPU resources currently supported, use optresmap=[gpu|vgpu]=$resource:$count found %s", k)
 		}
 	}
 	return true, nil

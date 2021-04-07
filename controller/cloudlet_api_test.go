@@ -601,7 +601,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Key: edgeproto.ResTagTableKey{
 			Name: "gpumap",
 		},
-		Tags: map[string]string{"vgpu": "nvidia-63:1", "pci": "t4:1", "gpu": "T4:1", "vmware": "vgpu=1"},
+		Tags: map[string]string{"vgpu": "nvidia-63:1", "pci": "t4:1", "gpu": "T4:1", "vmware": "vgpu=1", "resources": "VGPU=1", "pci_": "alias=t4gpu:1"},
 	}
 
 	var nastab = edgeproto.ResTagTable{
@@ -621,7 +621,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	// which it so happens we have in the testutils.CloudletInfoData.Flavors array
 	tbl1, err := resTagTableApi.GetResTagTable(ctx, &gputab.Key)
 	require.Nil(t, err, "GetResTagTable")
-	require.Equal(t, 4, len(tbl1.Tags), "tag count mismatch")
+	require.Equal(t, 6, len(tbl1.Tags), "tag count mismatch")
 
 	// specify a pci pass_throuh, don't care what kind
 	// should match flavor.large-pci
@@ -719,6 +719,29 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		OptResMap: map[string]string{"gpu": "vgpu:1"},
 	}
 
+	// Two mex flavors differing only in GPU vs VGPU
+	var flavorT4VGPUMatch = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "mex.large-vgpuT48Q",
+		},
+		Ram:   4096,
+		Vcpus: 12,
+		Disk:  20,
+		// This requests a vgpu
+		OptResMap: map[string]string{"gpu": "resources:VGPU:1"},
+	}
+
+	var flavorT4GPUMatch = edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "mex.large-gpuT48Q",
+		},
+		Ram:   4096,
+		Vcpus: 12,
+		Disk:  20,
+		// This requests a vgpu
+		OptResMap: map[string]string{"gpu": "pci_:alias=t4gpu:1"},
+	}
+
 	taz := edgeproto.OSAZone{Name: "AZ1_GPU", Status: "available"}
 	timg := edgeproto.OSImage{Name: "gpu_image"}
 	cli.AvailabilityZones = append(cli.AvailabilityZones, &taz)
@@ -783,6 +806,14 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
 		require.Nil(t, err, "GetVMSpec")
 		require.Equal(t, "flavor.large2", spec.FlavorName)
+
+		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorT4VGPUMatch, *cl, cli)
+		require.Nil(t, err, "GetVMSpec")
+		require.Equal(t, "flavor.m4.large-vgpu", spec.FlavorName)
+
+		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorT4GPUMatch, *cl, cli)
+		require.Nil(t, err, "GetVMSpec")
+		require.Equal(t, "flavor.m4.large-gpu", spec.FlavorName)
 
 		// Non-nominal: ask for nas only, should reject testflavor2 as there are no
 		// os flavors with only a nas resource
