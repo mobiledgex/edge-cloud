@@ -56,7 +56,6 @@ func (s *ResTagTableApi) CreateResTagTable(ctx context.Context, in *edgeproto.Re
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("\n\nCreateResTagTable err %s\n\n", err.Error())
 		return &edgeproto.Result{}, err
 	}
 	return &edgeproto.Result{}, err
