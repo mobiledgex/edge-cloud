@@ -3,17 +3,23 @@ package cloudcommon
 import (
 	"context"
 	ctls "crypto/tls"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gogo/gateway"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 )
 
 func ParseGrpcMethod(method string) (path string, cmd string) {
@@ -108,5 +114,99 @@ func GrpcCreds(cfg *ctls.Config) grpc.ServerOption {
 		return grpc.Creds(nil)
 	} else {
 		return grpc.Creds(credentials.NewTLS(cfg))
+	}
+}
+
+// TODO: Move these interceptors into ratelimit folder
+// TODO: Add grpc metatdata with rate limit information (limit, reqs remaining, limit restart)
+
+// TODO: Implement one of these in DME, Controller, and MC depending on API (or just pass in a RateLimitManager from those??)
+// Grpc unary server interceptor that does rate limiting per user, org, and/or ip
+func GetUnaryApiLimiterInterceptor(apiRateLimitMgr *ratelimit.ApiRateLimitManager) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		api := info.FullMethod
+		usr := ""
+		if apiRateLimitMgr.LimitByUser(api) {
+			// get usr
+			if u, ok := ctx.Value("username").(string); ok {
+				usr = u
+			}
+		}
+		org := ""
+		if apiRateLimitMgr.LimitByOrg(api) {
+			// get org
+			org = edgeproto.GetOrg(req)
+		}
+		ip := ""
+		if apiRateLimitMgr.LimitByIp(api) {
+			// get ip
+			pr, ok := peer.FromContext(ctx)
+			ip = "unknown"
+			if ok {
+				ip = pr.Addr.String()
+			}
+		}
+		limit, err := apiRateLimitMgr.Limit(ctx, api, usr, org, ip)
+		if limit {
+			errMsg := fmt.Sprintf("%s is rejected by grpc_ratelimit middleware, please retry later.", api)
+			if err != nil {
+				errMsg += fmt.Sprintf(" error is %s.", err.Error())
+			}
+			return nil, status.Errorf(codes.ResourceExhausted, errMsg)
+
+		}
+		return handler(ctx, req)
+	}
+}
+
+// Grpc unary server interceptor that does rate limit throttling
+func GetUnaryThrottleLimiterInterceptor(limiter ratelimit.Limiter) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		limit, err := limiter.Limit(ctx)
+		if limit {
+			errMsg := fmt.Sprintf("%s is rejected by grpc_ratelimit middleware, please retry later.", info.FullMethod)
+			if err != nil {
+				errMsg += fmt.Sprintf(" error is %s.", err.Error())
+			}
+			return nil, status.Errorf(codes.ResourceExhausted, errMsg)
+
+		}
+		return handler(ctx, req)
+	}
+}
+
+type LimiterStreamWrapper struct {
+	grpc.ServerStream
+	limiter ratelimit.Limiter
+	ctx     context.Context
+}
+
+func (s *LimiterStreamWrapper) Context() context.Context {
+	return s.ctx
+}
+
+func (s *LimiterStreamWrapper) Limit() (bool, error) {
+	return s.limiter.Limit(s.Context())
+}
+
+// Return a grpc stream server interceptor that does rate limit throttling
+func GetStreamThrottleLimiterInterceptor(limiter ratelimit.Limiter) grpc.StreamServerInterceptor {
+	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		// Set up a child span for the stream interceptor
+		span := log.StartSpan(log.DebugLevelDmereq, "stream limiter interceptor")
+		defer span.Finish()
+		cctx := log.ContextWithSpan(ss.Context(), span)
+
+		wrapper := &LimiterStreamWrapper{ServerStream: ss, limiter: limiter, ctx: cctx}
+		limit, err := wrapper.Limit()
+		if limit {
+			errMsg := fmt.Sprintf("%s is rejected by grpc_ratelimit middleware, please retry later.", info.FullMethod)
+			if err != nil {
+				errMsg += fmt.Sprintf(" error is %s.", err.Error())
+			}
+			return status.Errorf(codes.ResourceExhausted, errMsg)
+
+		}
+		return handler(srv, wrapper)
 	}
 }

@@ -532,9 +532,13 @@ func main() {
 	dmecommon.InitAppInstClients()
 	defer dmecommon.StopAppInstClients()
 
+	// Setup rate limiters
+	unaryLimiter := cloudcommon.NewLeakyBucketLimiter(2)
+	streamLimiter := cloudcommon.NewLeakyBucketLimiter(2)
+
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.GetUnaryLimiterInterceptor(unaryLimiter), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.GetStreamLimiterInterceptor(streamLimiter), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
