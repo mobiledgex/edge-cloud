@@ -114,7 +114,7 @@ func (s *FlavorApi) AddFlavorRes(ctx context.Context, in *edgeproto.Flavor) (*ed
 		}
 		for res, val := range in.OptResMap {
 			// validate the resname(s)
-			if err, ok := resTagTableApi.ValidateResName(res); !ok {
+			if err, ok := resTagTableApi.ValidateResName(ctx, res); !ok {
 				return err
 			}
 			in.Key.Name = strings.ToLower(in.Key.Name)

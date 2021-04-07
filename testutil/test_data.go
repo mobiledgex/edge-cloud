@@ -822,6 +822,23 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:    uint64(80),
 				PropMap: map[string]string{"vmware": "vgpu=1"},
 			},
+			// A typical case where two flavors are identical in their
+			// nominal resources, and differ only by gpu vs vgpu
+			// These cases require a fully qualifed request in the mex flavors optresmap
+			&edgeproto.FlavorInfo{
+				Name:    "flavor.m4.large-gpu",
+				Vcpus:   uint64(12),
+				Ram:     uint64(4096),
+				Disk:    uint64(20),
+				PropMap: map[string]string{"pci_passthrough": "alias=t4gpu:1"},
+			},
+			&edgeproto.FlavorInfo{
+				Name:    "flavor.m4.large-vgpu",
+				Vcpus:   uint64(12),
+				Ram:     uint64(4096),
+				Disk:    uint64(20),
+				PropMap: map[string]string{"resources": "VGPU=1"},
+			},
 		},
 		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{
