@@ -34,6 +34,8 @@ settings:
   - interval: 2s
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
+  disabledmeratelimit: true
+  maxnumperipratelimiters: 10000
 flavors:
 - key:
     name: x1.tiny

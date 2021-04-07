@@ -1,0 +1,22 @@
+settings:
+- key:
+    apiname: Global
+    apiendpointtype: Dme
+    ratelimittarget: AllRequests
+- key:
+    apiname: VerifyLocation
+    apiendpointtype: Dme
+    ratelimittarget: AllRequests
+- key:
+    apiname: Global
+    apiendpointtype: Dme
+    ratelimittarget: PerIp
+- key:
+    apiname: VerifyLocation
+    apiendpointtype: Dme
+    ratelimittarget: PerIp
+- key:
+    apiname: FindCloudlet
+    apiendpointtype: Dme
+    ratelimittarget: AllRequests
+
