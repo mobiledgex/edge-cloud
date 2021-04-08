@@ -37,6 +37,17 @@ func (e *edgeEventsClaims) SetKid(kid int) {
 	e.Key.Kid = kid
 }
 
+func CreateEdgeEventsCookieKey(appInst *DmeAppInst) *EdgeEventsCookieKey {
+	key := &EdgeEventsCookieKey{
+		ClusterOrg:   appInst.virtualClusterInstKey.Organization,
+		ClusterName:  appInst.virtualClusterInstKey.ClusterKey.Name,
+		CloudletOrg:  appInst.virtualClusterInstKey.CloudletKey.Organization,
+		CloudletName: appInst.virtualClusterInstKey.CloudletKey.Name,
+		UpdatedStats: false,
+	}
+	return key
+}
+
 func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCookieKey, error) {
 	claims := edgeEventsClaims{}
 	token, err := Jwks.VerifyCookie(cookie, &claims)
@@ -63,11 +74,11 @@ func verifyEdgeEventsCookieKey(key *EdgeEventsCookieKey) bool {
 	return true
 }
 
-func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {
+func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration time.Duration) (string, error) {
 	claims := edgeEventsClaims{
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(*cookieExpiration).Unix(),
+			ExpiresAt: time.Now().Add(cookieExpiration).Unix(),
 		},
 		Key: key,
 	}
