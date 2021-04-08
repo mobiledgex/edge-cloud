@@ -40,65 +40,65 @@ func TestGpsLocation(t *testing.T) {
 	// Get location tile for Berlin with location tile length == 1km
 	tile1Berlin := GetLocationTileFromGpsLocation(berlin, tl1)
 	// Get Gps Location ranges for tile generated above
-	under, over, err := GetGpsLocationRangeFromLocationTile(tile1Berlin, tl1)
+	under, over, err := GetGpsLocationRangeFromLocationTile(tile1Berlin)
 	assert.Nil(t, err)
 	// Check to make sure lat, long of berlin is within the location ranges generated above
 	checkLocationRange(t, under, over, berlin)
 
 	// Get location tile for Berlin with location tile length == 2km
 	tile2Berlin := GetLocationTileFromGpsLocation(berlin, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Berlin, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Berlin)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, berlin)
 
 	// Get location tile for Berlin with location tile length == 5km
 	tile5Berlin := GetLocationTileFromGpsLocation(berlin, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Berlin, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Berlin)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, berlin)
 
 	tile1SanJose := GetLocationTileFromGpsLocation(sanjose, tl1)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile1SanJose, tl1)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile1SanJose)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, sanjose)
 
 	tile2SanJose := GetLocationTileFromGpsLocation(sanjose, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2SanJose, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2SanJose)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, sanjose)
 
 	tile5SanJose := GetLocationTileFromGpsLocation(sanjose, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5SanJose, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5SanJose)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, sanjose)
 
 	tile1Sydney := GetLocationTileFromGpsLocation(sydney, tl1)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Sydney, tl1)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Sydney)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, sydney)
 
 	tile2Sydney := GetLocationTileFromGpsLocation(sydney, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Sydney, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Sydney)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, sydney)
 
 	tile5Sydney := GetLocationTileFromGpsLocation(sydney, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Sydney, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Sydney)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, sydney)
 
 	tile1Rio := GetLocationTileFromGpsLocation(rio, tl1)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Rio, tl1)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Rio)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, rio)
 
 	tile2Rio := GetLocationTileFromGpsLocation(rio, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Rio, tl2)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Rio)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, rio)
 
 	tile5Rio := GetLocationTileFromGpsLocation(rio, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Rio, tl5)
+	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Rio)
 	assert.Nil(t, err)
 	checkLocationRange(t, under, over, rio)
 }

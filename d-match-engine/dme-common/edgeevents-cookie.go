@@ -15,6 +15,7 @@ type EdgeEventsCookieKey struct {
 	ClusterName  string `json:"clustername,omitempty"`
 	CloudletOrg  string `json:"cloudletorg,omitempty"`
 	CloudletName string `json:"cloudletname,omitempty"`
+	UpdatedStats bool   `json:"updatedstats,omitempty"`
 	Kid          int    `json:"kid,omitempty"`
 }
 
@@ -34,6 +35,17 @@ func (e *edgeEventsClaims) GetKid() (int, error) {
 
 func (e *edgeEventsClaims) SetKid(kid int) {
 	e.Key.Kid = kid
+}
+
+func CreateEdgeEventsCookieKey(appInst *DmeAppInst) *EdgeEventsCookieKey {
+	key := &EdgeEventsCookieKey{
+		ClusterOrg:   appInst.virtualClusterInstKey.Organization,
+		ClusterName:  appInst.virtualClusterInstKey.ClusterKey.Name,
+		CloudletOrg:  appInst.virtualClusterInstKey.CloudletKey.Organization,
+		CloudletName: appInst.virtualClusterInstKey.CloudletKey.Name,
+		UpdatedStats: false,
+	}
+	return key
 }
 
 func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCookieKey, error) {
@@ -62,11 +74,11 @@ func verifyEdgeEventsCookieKey(key *EdgeEventsCookieKey) bool {
 	return true
 }
 
-func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {
+func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration time.Duration) (string, error) {
 	claims := edgeEventsClaims{
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(*cookieExpiration).Unix(),
+			ExpiresAt: time.Now().Add(cookieExpiration).Unix(),
 		},
 		Key: key,
 	}

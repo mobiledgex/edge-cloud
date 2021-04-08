@@ -36,10 +36,10 @@ func (r *RollingStatistics) UpdateRollingStatistics(samples ...float64) {
 		if sample < 0 {
 			continue
 		}
-		if sample < r.Statistics.Min || r.Statistics.Min == 0 {
+		if sample < r.Statistics.Min || r.Statistics.NumSamples == 0 {
 			r.Statistics.Min = sample
 		}
-		if sample > r.Statistics.Max || r.Statistics.Max == 0 {
+		if sample > r.Statistics.Max || r.Statistics.NumSamples == 0 {
 			r.Statistics.Max = sample
 		}
 		total += sample
@@ -91,14 +91,14 @@ func CalculateStatistics(samples []*dme.Sample) dme.Statistics {
 		if sample.Value < 0 {
 			continue
 		}
-		statistics.NumSamples++
-		sum += sample.Value
-		if statistics.Min == 0.0 || sample.Value < statistics.Min {
+		if sample.Value < statistics.Min || statistics.NumSamples == 0 {
 			statistics.Min = sample.Value
 		}
-		if statistics.Max == 0.0 || sample.Value > statistics.Max {
+		if sample.Value > statistics.Max || statistics.NumSamples == 0 {
 			statistics.Max = sample.Value
 		}
+		sum += sample.Value
+		statistics.NumSamples++
 	}
 	// return if no valid samples
 	if statistics.NumSamples == 0 {

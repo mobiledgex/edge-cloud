@@ -1369,7 +1369,7 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 	}
 
 	for resource, tblname := range in.Mapping {
-		if valerr, ok := resTagTableApi.ValidateResName(resource); !ok {
+		if valerr, ok := resTagTableApi.ValidateResName(ctx, resource); !ok {
 			return &edgeproto.Result{}, valerr
 		}
 		resource = strings.ToLower(resource)
