@@ -41,6 +41,7 @@ tests:
   compareyaml:
      yaml1: "{{outputdir}}/getappinstlist.yml"
      yaml2: "{{datadir}}/get_appinstlist_result_app1.yml"
+     filetype: getappinstlist
 
  
 - name: delete provisioning, verify it is empty
