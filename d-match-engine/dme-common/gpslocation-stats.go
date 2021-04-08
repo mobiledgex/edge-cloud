@@ -19,13 +19,13 @@ func GetLocationTileFromGpsLocation(loc *dme.Loc, locationTileSideLengthKm int) 
 		return fmt.Sprintf("0-0,0-%s", strconv.Itoa(locationTileSideLengthKm))
 	}
 	if loc.Latitude >= 0 && loc.Longitude >= 0 {
-		quadrant = "1-"
+		quadrant = "1"
 	} else if loc.Latitude >= 0 && loc.Longitude < 0 {
-		quadrant = "2-"
+		quadrant = "2"
 	} else if loc.Latitude < 0 && loc.Longitude < 0 {
-		quadrant = "3-"
+		quadrant = "3"
 	} else {
-		quadrant = "4-"
+		quadrant = "4"
 	}
 	// Convert lat, long to positive
 	lat := math.Abs(loc.Latitude)
@@ -40,10 +40,10 @@ func GetLocationTileFromGpsLocation(loc *dme.Loc, locationTileSideLengthKm int) 
 	pair := strconv.Itoa(latIndex) + "," + strconv.Itoa(longIndex)
 	// Append location tile side length for easy conversion
 	sideLengthStr := strconv.Itoa(locationTileSideLengthKm)
-	return quadrant + pair + sideLengthStr
+	return quadrant + "-" + pair + "-" + sideLengthStr
 }
 
-func GetGpsLocationRangeFromLocationTile(locationTile string, locationTileSideLengthKm int) (under *dme.Loc, over *dme.Loc, err error) {
+func GetGpsLocationRangeFromLocationTile(locationTile string) (under *dme.Loc, over *dme.Loc, err error) {
 	s := strings.Split(locationTile, "-")
 	indeces := strings.Split(s[1], ",")
 	quadrant := s[0]
@@ -52,6 +52,10 @@ func GetGpsLocationRangeFromLocationTile(locationTile string, locationTileSideLe
 		return nil, nil, err
 	}
 	longIndex, err := strconv.Atoi(indeces[1])
+	if err != nil {
+		return nil, nil, err
+	}
+	locationTileSideLengthKm, err := strconv.Atoi(s[2])
 	if err != nil {
 		return nil, nil, err
 	}

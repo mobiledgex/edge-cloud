@@ -558,6 +558,18 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = f1
 		y2 = f2
+	} else if fileType == "getappinstlist" {
+		var a1 *dmeproto.AppInstListReply
+		var a2 *dmeproto.AppInstListReply
+
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
+
+		clearAppInstEdgeEventsCookies(a1)
+		clearAppInstEdgeEventsCookies(a2)
+
+		y1 = a1
+		y2 = a2
 	} else if fileType == "getqospositionkpi" {
 		var q1 dmeproto.QosPositionKpiReply
 		var q2 dmeproto.QosPositionKpiReply
@@ -794,6 +806,15 @@ func clearFindCloudletPorts(reply *dmeproto.FindCloudletReply) {
 	for _, p := range reply.Ports {
 		p.PublicPort = 0
 	}
+}
+
+func clearAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
+	for _, cloudlet := range appInstReply.Cloudlets {
+		for _, appinst := range cloudlet.Appinstances {
+			appinst.EdgeEventsCookie = ""
+		}
+	}
+
 }
 
 func ClearAppDataOutputStatus(output *testutil.AllDataOut) {
