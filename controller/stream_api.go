@@ -19,9 +19,6 @@ var (
 	streamObjApi = StreamObjApi{}
 
 	StreamTimeout = 30 * time.Minute
-
-	SaveOnStreamObj      = true
-	DonotSaveOnStreamObj = false
 )
 
 type streamSend struct {
@@ -144,7 +141,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	return err
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb, saveOnStreamObj bool) (*streamSend, error) {
+func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) (*streamSend, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", key)
 	streamer := streamObjs.Get(*key)
 	if streamer != nil {
@@ -154,18 +151,16 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		}
 	}
 
-	if saveOnStreamObj {
-		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			streamObj := edgeproto.StreamObj{}
-			streamObj.Key = *key
-			streamObj.Status = edgeproto.StatusInfo{}
-			// Init stream obj regardless of it being present or not
-			s.store.STMPut(stm, &streamObj)
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		streamObj := edgeproto.StreamObj{}
+		streamObj.Key = *key
+		streamObj.Status = edgeproto.StatusInfo{}
+		// Init stream obj regardless of it being present or not
+		s.store.STMPut(stm, &streamObj)
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	streamer = cloudcommon.NewStreamer()
@@ -195,6 +190,13 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 		if !s.store.STMGet(stm, key, &streamObj) {
 			// if stream obj is deleted, then ignore emptying
 			// the status obj
+			return nil
+		}
+		// If either AppInst/ClusterInst/Cloudlet doesn't exist then delete associated streamObj
+		if objErr != nil && (objErr.Error() == key.NotFoundError().Error() ||
+			objErr.Error() == key.ClusterInstKey.NotFoundError().Error() ||
+			objErr.Error() == key.ClusterInstKey.CloudletKey.NotFoundError().Error()) {
+			s.store.STMDel(stm, key)
 			return nil
 		}
 		streamObj.Status = edgeproto.StatusInfo{}
@@ -227,8 +229,7 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.S
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		streamObj := edgeproto.StreamObj{}
 		if !s.store.STMGet(stm, key, &streamObj) {
-			streamObj.Key = *key
-			streamObj.Status = edgeproto.StatusInfo{}
+			return key.NotFoundError()
 		}
 		lastMsgId := int(streamObj.Status.MsgCount)
 		if lastMsgId < len(infoStatus.Msgs) {

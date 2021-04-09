@@ -191,7 +191,7 @@ func getPlatformConfig(ctx context.Context, cloudlet *edgeproto.Cloudlet) (*edge
 
 func startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) (*streamSend, edgeproto.CloudletApi_CreateCloudletServer, error) {
 	streamKey := edgeproto.GetStreamKeyFromCloudletKey(key)
-	streamSendObj, err := streamObjApi.startStream(ctx, &streamKey, inCb, DonotSaveOnStreamObj)
+	streamSendObj, err := streamObjApi.startStream(ctx, &streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start Cloudlet stream", "err", err)
 		return nil, inCb, err
@@ -1181,29 +1181,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				return err
 			}
 		}
-		if ignoreCRMState(cctx) {
-			// delete happens later, this STM just checks for existence
-			return nil
-		}
-
-		if !cctx.Undo {
-			if in.State == edgeproto.TrackedState_CREATE_REQUESTED ||
-				in.State == edgeproto.TrackedState_CREATING ||
-				in.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
-				in.State == edgeproto.TrackedState_UPDATING {
-				return errors.New("Cloudlet busy, cannot be deleted")
-			}
-			if in.State == edgeproto.TrackedState_DELETE_ERROR &&
-				cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
-				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
-				cb.Send(&edgeproto.Result{Message: "Use CreateCloudlet to rebuild, and try again"})
-				return fmt.Errorf("Cloudlet busy (%s), cannot delete", in.State.String())
-			}
-			if in.State == edgeproto.TrackedState_DELETE_REQUESTED ||
-				in.State == edgeproto.TrackedState_DELETING ||
-				in.State == edgeproto.TrackedState_DELETE_PREPARE {
-				return errors.New("Cloudlet busy, already under deletion")
-			}
+		if err := validateDeleteState(cctx, "Cloudlet", in.State, in.Errors, cb.Send); err != nil {
+			return err
 		}
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
