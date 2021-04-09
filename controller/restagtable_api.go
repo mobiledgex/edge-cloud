@@ -281,7 +281,7 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 	var err error
 	var count string
 	for k, v := range resmap {
-		if k == "gpu" || k == "vgpu" || k == "nas" {
+		if k == "gpu" {
 			values := strings.Split(v, ":")
 			if len(values) == 1 {
 				return false, fmt.Errorf("Missing manditory resource count, ex: optresmap=gpu=gpu:1")
