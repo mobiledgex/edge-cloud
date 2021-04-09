@@ -299,7 +299,7 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 
 		} else {
 			// if k == "nas" etc
-			return false, fmt.Errorf("Only GPU resources currently supported, use optresmap=[gpu|vgpu]=$resource:$count found %s", k)
+			return false, fmt.Errorf("Only GPU resources currently supported, use optresmap=gpu=$resource:[$specifier:]$count found %s", k)
 		}
 	}
 	return true, nil
