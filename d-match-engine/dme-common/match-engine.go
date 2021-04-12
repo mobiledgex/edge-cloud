@@ -940,7 +940,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 				if deviceInfo != nil {
 					devinfo = deviceInfo
 				}
-				updateDeviceInfoStats(appInstKey, devinfo, carrier, loc, "findcloudlet")
+				updateDeviceInfoStats(ctx, appInstKey, devinfo, carrier, loc, "findcloudlet")
 				key.UpdatedStats = true
 			}
 		}
@@ -1205,7 +1205,7 @@ loop:
 			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 			// If we havn't updated deviceinfo stats, do it now
 			if !updatedDeviceStats && validLocation {
-				updateDeviceInfoStats(appInstKey, deviceInfo, cupdate.CarrierName, cupdate.GpsLocation, "event latency samples")
+				updateDeviceInfoStats(ctx, appInstKey, deviceInfo, cupdate.CarrierName, cupdate.GpsLocation, "event latency samples")
 				updatedDeviceStats = true
 			}
 			// If there is a valid location, fallthrough to next case and check if there is a better cloudlet
@@ -1250,7 +1250,7 @@ loop:
 			}
 			// If we havn't updated deviceinfo stats, do it now
 			if !updatedDeviceStats {
-				updateDeviceInfoStats(appInstKey, deviceInfo, cupdate.CarrierName, cupdate.GpsLocation, "event location update")
+				updateDeviceInfoStats(ctx, appInstKey, deviceInfo, cupdate.CarrierName, cupdate.GpsLocation, "event location update")
 				updatedDeviceStats = true
 			}
 		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
@@ -1284,12 +1284,13 @@ func sendErrorEventToClient(ctx context.Context, msg string, appInstKey edgeprot
 }
 
 // helper function that updates deviceinfo stats
-func updateDeviceInfoStats(appInstKey *edgeproto.AppInstKey, deviceInfo *dme.DeviceInfo, carrier string, loc *dme.Loc, callerMethod string) {
+func updateDeviceInfoStats(ctx context.Context, appInstKey *edgeproto.AppInstKey, deviceInfo *dme.DeviceInfo, carrier string, loc *dme.Loc, callerMethod string) {
 	deviceStatKey := GetDeviceStatKey(*appInstKey, deviceInfo, carrier, loc, int(Settings.LocationTileSideLengthKm))
 	edgeEventStatCall := &EdgeEventStatCall{
 		Metric:        cloudcommon.DeviceMetric,
 		DeviceStatKey: deviceStatKey,
 	}
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Updating deviceinfo stats", "appinst", appInstKey, "callermethod", callerMethod)
 	EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 }
 
