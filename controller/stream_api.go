@@ -151,16 +151,19 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		}
 	}
 
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		streamObj := edgeproto.StreamObj{}
-		streamObj.Key = *key
-		streamObj.Status = edgeproto.StatusInfo{}
-		// Init stream obj regardless of it being present or not
-		s.store.STMPut(stm, &streamObj)
-		return nil
-	})
-	if err != nil {
-		return nil, err
+	streamOk, ok := ctx.Value("streamok").(bool)
+	if !ok || streamOk {
+		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			streamObj := edgeproto.StreamObj{}
+			streamObj.Key = *key
+			streamObj.Status = edgeproto.StatusInfo{}
+			// Init stream obj regardless of it being present or not
+			s.store.STMPut(stm, &streamObj)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	streamer = cloudcommon.NewStreamer()
@@ -185,24 +188,20 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 		}
 	}
 
-	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		streamObj := edgeproto.StreamObj{}
-		if !s.store.STMGet(stm, key, &streamObj) {
-			// if stream obj is deleted, then ignore emptying
-			// the status obj
+	streamOk, ok := ctx.Value("streamok").(bool)
+	if !ok || streamOk {
+		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			streamObj := edgeproto.StreamObj{}
+			if !s.store.STMGet(stm, key, &streamObj) {
+				// if stream obj is deleted, then ignore emptying
+				// the status obj
+				return nil
+			}
+			streamObj.Status = edgeproto.StatusInfo{}
+			s.store.STMPut(stm, &streamObj)
 			return nil
-		}
-		// If either AppInst/ClusterInst/Cloudlet doesn't exist then delete associated streamObj
-		if objErr != nil && (objErr.Error() == key.NotFoundError().Error() ||
-			objErr.Error() == key.ClusterInstKey.NotFoundError().Error() ||
-			objErr.Error() == key.ClusterInstKey.CloudletKey.NotFoundError().Error()) {
-			s.store.STMDel(stm, key)
-			return nil
-		}
-		streamObj.Status = edgeproto.StatusInfo{}
-		s.store.STMPut(stm, &streamObj)
-		return nil
-	})
+		})
+	}
 
 	return nil
 }

@@ -1212,6 +1212,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			// delete associated streamobj as well
+			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+			streamObjApi.store.STMDel(stm, &streamKey)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			s.store.STMPut(stm, in)
@@ -1371,10 +1374,6 @@ func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.Clust
 
 		// delete associated streamobj as well
 		streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
-		if !streamObjApi.store.STMGet(stm, &streamKey, &edgeproto.StreamObj{}) {
-			// already removed
-			return nil
-		}
 		streamObjApi.store.STMDel(stm, &streamKey)
 		return nil
 	})
@@ -1475,7 +1474,8 @@ func (s *ClusterInstApi) cleanupClusterInst(ctx context.Context, k interface{}) 
 	}
 	startTime := time.Now()
 	cb := &DummyStreamout{}
-	cb.ctx = ctx
+	// disable stream for cleanup of Idle reservable auto-clusterinsts
+	cb.ctx = context.WithValue(ctx, "streamok", false)
 	err := s.DeleteClusterInst(&clusterInst, cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst cleanup", "ClusterInst", key, "err", err)
 	if err != nil && err.Error() == key.NotFoundError().Error() {

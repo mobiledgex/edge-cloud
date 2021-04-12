@@ -1478,6 +1478,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
 			appInstRefsApi.removeRef(stm, &in.Key)
+			// delete associated streamobj as well
+			streamObjApi.store.STMDel(stm, &in.Key)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			in.Status = edgeproto.StatusInfo{}
@@ -1656,10 +1658,6 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		appInstRefsApi.removeRef(stm, &in.Key)
 
 		// delete associated streamobj as well
-		if !streamObjApi.store.STMGet(stm, &in.Key, &edgeproto.StreamObj{}) {
-			// already removed
-			return nil
-		}
 		streamObjApi.store.STMDel(stm, &in.Key)
 		return nil
 	})
