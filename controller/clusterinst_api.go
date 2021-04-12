@@ -14,7 +14,6 @@ import (
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util/tasks"
@@ -1158,9 +1157,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			log.WarnLog("Delete ClusterInst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
-		}
-		if cloudlet.MaintenanceState != dme.MaintenanceState_NORMAL_OPERATION {
-			return errors.New("Cloudlet under maintenance, please try again later")
 		}
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
