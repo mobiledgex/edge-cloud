@@ -218,7 +218,7 @@ func validateNumNodesForDeployment(ctx context.Context, platformType edgeproto.P
 
 func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}
-	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb, SaveOnStreamObj)
+	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
 		return nil, inCb, err
@@ -1071,6 +1071,30 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 	return nil
 }
 
+func validateDeleteState(cctx *CallContext, objName string, state edgeproto.TrackedState, prevErrs []string, send func(*edgeproto.Result) error) error {
+	if cctx.Undo {
+		// ignore any validation if deletion is done as part of undo
+		return nil
+	}
+	if cctx.Override != edgeproto.CRMOverride_IGNORE_TRANSIENT_STATE &&
+		cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
+		if edgeproto.IsDeleteState(state) {
+			return fmt.Errorf("%s busy, already under deletion", objName)
+		}
+		if edgeproto.IsTransientState(state) {
+			return fmt.Errorf("%s busy, cannot be deleted", objName)
+		}
+	}
+	if cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+		if state == edgeproto.TrackedState_DELETE_ERROR {
+			send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", prevErrs)})
+			send(&edgeproto.Result{Message: fmt.Sprintf("Use Create%s to rebuild, and try again", objName)})
+			return fmt.Errorf("%s busy (%s), cannot delete", objName, state.String())
+		}
+	}
+	return nil
+}
+
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	log.SpanLog(inCb.Context(), log.DebugLevelApi, "delete ClusterInst internal", "key", in.Key)
 	if err := in.Key.ValidateKey(); err != nil {
@@ -1091,6 +1115,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err == nil {
 		defer func() {
 			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+			if reterr == nil {
+				RecordClusterInstEvent(context.WithValue(ctx, clusterInstKey, *in), &clusterInstKey, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			}
 		}()
 	}
 
@@ -1103,12 +1130,8 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Delete); err != nil {
 			return err
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
-			if in.State == edgeproto.TrackedState_DELETE_ERROR {
-				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
-				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})
-			}
-			return fmt.Errorf("ClusterInst busy (%s), cannot delete", in.State.String())
+		if err := validateDeleteState(cctx, "ClusterInst", in.State, in.Errors, cb.Send); err != nil {
+			return err
 		}
 		prevState = in.State
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
@@ -1119,17 +1142,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if reterr == nil {
-			RecordClusterInstEvent(context.WithValue(ctx, in.Key, *in), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
-			streamObj := edgeproto.StreamObj{}
-			streamObj.Key = edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
-			if cErr := streamObjApi.CleanupStreamObj(ctx, &streamObj); cErr != nil {
-				log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup streamobj", "key", streamObj.Key, "err", cErr)
-			}
-		}
-	}()
 
 	// Delete appInsts that are set for autodelete
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
@@ -1196,6 +1208,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			// delete associated streamobj as well
+			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+			streamObjApi.store.STMDel(stm, &streamKey)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			s.store.STMPut(stm, in)
@@ -1227,7 +1242,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		undoErr := s.createClusterInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst deletion: %v", undoErr)})
-			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
+			log.SpanLog(ctx, log.DebugLevelApi, "Undo delete ClusterInst", "name", in.Key, "undoErr", undoErr)
 			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETE_ERROR, cloudcommon.InstanceDown)
 		}
 	}
@@ -1352,6 +1367,10 @@ func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+
+		// delete associated streamobj as well
+		streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+		streamObjApi.store.STMDel(stm, &streamKey)
 		return nil
 	})
 }
@@ -1451,7 +1470,8 @@ func (s *ClusterInstApi) cleanupClusterInst(ctx context.Context, k interface{}) 
 	}
 	startTime := time.Now()
 	cb := &DummyStreamout{}
-	cb.ctx = ctx
+	// disable stream for cleanup of Idle reservable auto-clusterinsts
+	cb.ctx = context.WithValue(ctx, streamOkKey, false)
 	err := s.DeleteClusterInst(&clusterInst, cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst cleanup", "ClusterInst", key, "err", err)
 	if err != nil && err.Error() == key.NotFoundError().Error() {
