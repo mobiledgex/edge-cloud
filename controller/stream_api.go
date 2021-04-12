@@ -21,6 +21,12 @@ var (
 	StreamTimeout = 30 * time.Minute
 )
 
+type StreamCtxKey string
+
+const (
+	streamOkKey = StreamCtxKey("streamok")
+)
+
 type streamSend struct {
 	cb       GenericCb
 	mux      sync.Mutex
@@ -151,7 +157,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		}
 	}
 
-	streamOk, ok := ctx.Value("streamok").(bool)
+	streamOk, ok := ctx.Value(streamOkKey).(bool)
 	if !ok || streamOk {
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			streamObj := edgeproto.StreamObj{}
@@ -188,7 +194,7 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 		}
 	}
 
-	streamOk, ok := ctx.Value("streamok").(bool)
+	streamOk, ok := ctx.Value(streamOkKey).(bool)
 	if !ok || streamOk {
 		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			streamObj := edgeproto.StreamObj{}

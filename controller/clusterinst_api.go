@@ -1475,7 +1475,7 @@ func (s *ClusterInstApi) cleanupClusterInst(ctx context.Context, k interface{}) 
 	startTime := time.Now()
 	cb := &DummyStreamout{}
 	// disable stream for cleanup of Idle reservable auto-clusterinsts
-	cb.ctx = context.WithValue(ctx, "streamok", false)
+	cb.ctx = context.WithValue(ctx, streamOkKey, false)
 	err := s.DeleteClusterInst(&clusterInst, cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst cleanup", "ClusterInst", key, "err", err)
 	if err != nil && err.Error() == key.NotFoundError().Error() {
