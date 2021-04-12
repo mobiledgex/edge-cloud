@@ -295,7 +295,7 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 }
 
 func startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
-	streamSendObj, err := streamObjApi.startStream(ctx, key, inCb, SaveOnStreamObj)
+	streamSendObj, err := streamObjApi.startStream(ctx, key, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
 		return nil, inCb, err
@@ -1368,9 +1368,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if reservationFreed {
 			RecordClusterInstEvent(ctx, &clusterInstKey, cloudcommon.UNRESERVED, cloudcommon.InstanceDown)
 		}
-		if cErr := streamObjApi.CleanupStreamObj(ctx, &edgeproto.StreamObj{Key: in.Key}); cErr != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup streamobj", "key", in.Key, "err", cErr)
-		}
 	}()
 
 	log.SpanLog(ctx, log.DebugLevelApi, "deleteAppInstInternal", "AppInst", in)
@@ -1389,10 +1386,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// already deleted
 			return in.Key.NotFoundError()
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_ERROR &&
-			in.State != edgeproto.TrackedState_DELETE_DONE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
-			log.SpanLog(ctx, log.DebugLevelApi, "AppInst busy, cannot delete", "state", in.State)
-			return errors.New("AppInst busy, cannot delete")
+		if err := validateDeleteState(cctx, "AppInst", in.State, in.Errors, cb.Send); err != nil {
+			return err
 		}
 		if err := checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey, cloudcommon.Delete); err != nil {
 			return err
@@ -1483,6 +1478,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
 			appInstRefsApi.removeRef(stm, &in.Key)
+			// delete associated streamobj as well
+			streamObjApi.store.STMDel(stm, &in.Key)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			in.Status = edgeproto.StatusInfo{}
@@ -1659,6 +1656,9 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		}
 		s.store.STMDel(stm, &in.Key)
 		appInstRefsApi.removeRef(stm, &in.Key)
+
+		// delete associated streamobj as well
+		streamObjApi.store.STMDel(stm, &in.Key)
 		return nil
 	})
 }
