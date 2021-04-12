@@ -19,9 +19,12 @@ var (
 	streamObjApi = StreamObjApi{}
 
 	StreamTimeout = 30 * time.Minute
+)
 
-	SaveOnStreamObj      = true
-	DonotSaveOnStreamObj = false
+type StreamCtxKey string
+
+const (
+	streamOkKey = StreamCtxKey("streamok")
 )
 
 type streamSend struct {
@@ -144,7 +147,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	return err
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb, saveOnStreamObj bool) (*streamSend, error) {
+func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) (*streamSend, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", key)
 	streamer := streamObjs.Get(*key)
 	if streamer != nil {
@@ -154,7 +157,8 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		}
 	}
 
-	if saveOnStreamObj {
+	streamOk, ok := ctx.Value(streamOkKey).(bool)
+	if !ok || streamOk {
 		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			streamObj := edgeproto.StreamObj{}
 			streamObj.Key = *key
@@ -190,17 +194,20 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 		}
 	}
 
-	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		streamObj := edgeproto.StreamObj{}
-		if !s.store.STMGet(stm, key, &streamObj) {
-			// if stream obj is deleted, then ignore emptying
-			// the status obj
+	streamOk, ok := ctx.Value(streamOkKey).(bool)
+	if !ok || streamOk {
+		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			streamObj := edgeproto.StreamObj{}
+			if !s.store.STMGet(stm, key, &streamObj) {
+				// if stream obj is deleted, then ignore emptying
+				// the status obj
+				return nil
+			}
+			streamObj.Status = edgeproto.StatusInfo{}
+			s.store.STMPut(stm, &streamObj)
 			return nil
-		}
-		streamObj.Status = edgeproto.StatusInfo{}
-		s.store.STMPut(stm, &streamObj)
-		return nil
-	})
+		})
+	}
 
 	return nil
 }
@@ -227,8 +234,7 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.S
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		streamObj := edgeproto.StreamObj{}
 		if !s.store.STMGet(stm, key, &streamObj) {
-			streamObj.Key = *key
-			streamObj.Status = edgeproto.StatusInfo{}
+			return key.NotFoundError()
 		}
 		lastMsgId := int(streamObj.Status.MsgCount)
 		if lastMsgId < len(infoStatus.Msgs) {
