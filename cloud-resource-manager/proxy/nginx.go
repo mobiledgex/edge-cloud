@@ -341,7 +341,7 @@ type Options struct {
 	DockerNetwork      string
 	Cert               *access.TLSCert
 	DockerUser         string
-	MetricsIP          string
+	MetricIP           string
 }
 
 type Op func(opts *Options)
@@ -371,9 +371,9 @@ func WithDockerUser(user string) Op {
 	}
 }
 
-func WithMetricsIP(addr string) Op {
+func WithMetricIP(addr string) Op {
 	return func(opts *Options) {
-		opts.MetricsIP = addr
+		opts.MetricIP = addr
 	}
 }
 

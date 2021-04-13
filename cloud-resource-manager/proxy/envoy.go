@@ -53,11 +53,11 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	}
 	eyamlName := dir + "/envoy.yaml"
 	syamlName := dir + "/sds.yaml"
-	metricsIP := cloudcommon.ProxyMetricsDefaultListenIP
-	if opts.MetricsIP != "" {
-		metricsIP = opts.MetricsIP
+	metricIP := cloudcommon.ProxyMetricsDefaultListenIP
+	if opts.MetricIP != "" {
+		metricIP = opts.MetricIP
 	}
-	isTLS, err := createEnvoyYaml(ctx, client, dir, name, listenIP, backendIP, metricsIP, ports, skipHcPorts)
+	isTLS, err := createEnvoyYaml(ctx, client, dir, name, listenIP, backendIP, metricIP, ports, skipHcPorts)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
@@ -87,9 +87,9 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	if opts.DockerUser != "" {
 		cmdArgs = append(cmdArgs, []string{"-u", fmt.Sprintf("%s:%s", opts.DockerUser, opts.DockerUser)}...)
 	}
-	//startArgs := " envoy -c /etc/envoy/envoy.yaml --use-dynamic-base-id"
 	cmdArgs = append(cmdArgs, "docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@"+cloudcommon.EnvoyImageDigest)
-	cmdArgs = append(cmdArgs, []string{"envoy", "-c", "/etc/envoy/envoy.yaml", "--use-dynamic-base-id"}...)
+	cmdArgs = append(cmdArgs, []string{"envoy", "-c", "/etc/envoy/envoy.yaml --use-dynamic-base-id"}...)
+
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)

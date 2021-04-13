@@ -29,7 +29,7 @@ settings:
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
   masternodeflavor: x1.small
-  loadbalancermaxportrange: 100
+
   maxtrackeddmeclients: 100
   chefclientinterval: 10m0s
   influxdbmetricsretention: 2h0m0s

@@ -42,8 +42,9 @@ message Settings {
   int64 delete_cluster_inst_timeout = 13 [(gogoproto.casttype) = "Duration"];
   // Default flavor for k8s master VM and > 0  workers
   string master_node_flavor = 14;
-  // Max IP Port range when using a load balancer
-  int32 load_balancer_max_port_range = 15;
+  // (removed) Max IP Port range when using a load balancer
+  reserved "load_balancer_max_port_range";
+  reserved 15;
   // Max DME clients to be tracked at the same time.
   int32 max_tracked_dme_clients = 16;
   // Default chef client interval (duration)
