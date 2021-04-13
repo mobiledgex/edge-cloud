@@ -200,6 +200,7 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 	spec := ProxySpec{
 		Name:       name,
 		UsesTLS:    usesTLS,
+		MetricIP:   listenIP,
 		MetricPort: cloudcommon.ProxyMetricsPort,
 	}
 
@@ -259,6 +260,7 @@ type ProxySpec struct {
 	UDPSpec    []*UDPSpecDetail
 	TCPSpec    []*TCPSpecDetail
 	UsesTLS    bool // To be removed
+	MetricIP   string
 	MetricPort int32
 	CertName   string
 }
@@ -339,6 +341,7 @@ type Options struct {
 	DockerNetwork      string
 	Cert               *access.TLSCert
 	DockerUser         string
+	MetricIP           string
 }
 
 type Op func(opts *Options)
@@ -365,6 +368,12 @@ func WithTLSCert(cert *access.TLSCert) Op {
 func WithDockerUser(user string) Op {
 	return func(opts *Options) {
 		opts.DockerUser = user
+	}
+}
+
+func WithMetricIP(addr string) Op {
+	return func(opts *Options) {
+		opts.MetricIP = addr
 	}
 }
 

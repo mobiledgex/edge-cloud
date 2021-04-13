@@ -15,7 +15,7 @@ settings:
   createcloudlettimeout: 30m
   updatecloudlettimeout: 20m
   updatetrustpolicytimeout: 10m
-  loadbalancermaxportrange: 50
+
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   cloudletmaintenancetimeout: 5m
