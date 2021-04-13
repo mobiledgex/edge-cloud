@@ -74,9 +74,6 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGTE(f, s.AutoDeployOffsetSec, float64(0))
 		case SettingsFieldAutoDeployMaxIntervals:
 			v.CheckGT(f, s.AutoDeployMaxIntervals, uint32(0))
-		case SettingsFieldLoadBalancerMaxPortRange:
-			v.CheckGT(f, s.LoadBalancerMaxPortRange, int32(0))
-			v.CheckLT(f, s.LoadBalancerMaxPortRange, int32(65536))
 		case SettingsFieldCreateAppInstTimeout:
 			v.CheckGT(f, s.CreateAppInstTimeout, dur0)
 		case SettingsFieldUpdateAppInstTimeout:
@@ -151,7 +148,6 @@ func GetDefaultSettings() *Settings {
 	s.AutoDeployIntervalSec = 300
 	s.AutoDeployOffsetSec = 20
 	s.AutoDeployMaxIntervals = 10
-	s.LoadBalancerMaxPortRange = 50
 	s.CreateAppInstTimeout = Duration(30 * time.Minute)
 	s.UpdateAppInstTimeout = Duration(30 * time.Minute)
 	s.DeleteAppInstTimeout = Duration(20 * time.Minute)

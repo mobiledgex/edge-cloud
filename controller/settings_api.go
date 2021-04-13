@@ -68,10 +68,6 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.InfluxDbCloudletUsageMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbCloudletUsageMetricsRetention
 			modified = true
 		}
-		if cur.LoadBalancerMaxPortRange == 0 {
-			cur.LoadBalancerMaxPortRange = edgeproto.GetDefaultSettings().LoadBalancerMaxPortRange
-			modified = true
-		}
 		if cur.MaxTrackedDmeClients == 0 {
 			cur.MaxTrackedDmeClients = edgeproto.GetDefaultSettings().MaxTrackedDmeClients
 			modified = true

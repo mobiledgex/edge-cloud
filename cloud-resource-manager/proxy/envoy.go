@@ -53,7 +53,11 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	}
 	eyamlName := dir + "/envoy.yaml"
 	syamlName := dir + "/sds.yaml"
-	isTLS, err := createEnvoyYaml(ctx, client, dir, name, listenIP, backendIP, ports, skipHcPorts)
+	metricIP := cloudcommon.ProxyMetricsDefaultListenIP
+	if opts.MetricIP != "" {
+		metricIP = opts.MetricIP
+	}
+	isTLS, err := createEnvoyYaml(ctx, client, dir, name, listenIP, backendIP, metricIP, ports, skipHcPorts)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
@@ -84,6 +88,8 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 		cmdArgs = append(cmdArgs, []string{"-u", fmt.Sprintf("%s:%s", opts.DockerUser, opts.DockerUser)}...)
 	}
 	cmdArgs = append(cmdArgs, "docker.mobiledgex.net/mobiledgex/mobiledgex_public/envoy-with-curl@"+cloudcommon.EnvoyImageDigest)
+	cmdArgs = append(cmdArgs, []string{"envoy", "-c", "/etc/envoy/envoy.yaml --use-dynamic-base-id"}...)
+
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.SpanLog(ctx, log.DebugLevelInfra, "envoy docker command", "name", "envoy"+name,
 		"cmd", cmd)
@@ -122,13 +128,14 @@ func buildPortsMapFromString(portsString string) (map[string]struct{}, error) {
 	return portMap, nil
 }
 
-func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, listenIP, backendIP string, ports []dme.AppPort, skipHcPorts string) (bool, error) {
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, listenIP, backendIP, metricIP string, ports []dme.AppPort, skipHcPorts string) (bool, error) {
 	var skipHcAll = false
 	var skipHcPortsMap map[string]struct{}
 	var err error
 
 	spec := ProxySpec{
 		Name:       name,
+		MetricIP:   metricIP,
 		MetricPort: cloudcommon.ProxyMetricsPort,
 		CertName:   cloudcommon.CertName,
 	}
@@ -238,16 +245,16 @@ static_resources:
   {{- range .TCPSpec}}
   - address:
       socket_address:
-        address: 0.0.0.0
+        address: {{.ListenIP}}
         port_value: {{.ListenPort}}
     filter_chains:
     - filters:
-      - name: envoy.tcp_proxy
+      - name: envoy.filters.network.tcp_proxy
         config:
           stat_prefix: ingress_tcp
           cluster: backend{{.BackendPort}}
           access_log:
-            - name: envoy.file_access_log
+            - name: envoy.access_loggers.file
               config:
                 path: /tmp/access.log
                 json_format: {
@@ -274,7 +281,7 @@ static_resources:
     address:
       socket_address:
         protocol: UDP
-        address: 0.0.0.0
+        address: {{.ListenIP}}
         port_value: {{.ListenPort}}
     listener_filters:
       name: envoy.filters.udp_listener.udp_proxy
@@ -330,7 +337,7 @@ admin:
   access_log_path: "/tmp/admin.log"
   address:
     socket_address:
-      address: 0.0.0.0
+      address: {{.MetricIP}}
       port_value: {{.MetricPort}}
 `
 
