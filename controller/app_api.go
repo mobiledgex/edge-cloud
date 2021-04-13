@@ -175,21 +175,6 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
-func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType, deploymentType string) error {
-	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
-	for ii, _ := range ports {
-		ports[ii].PublicPort = ports[ii].InternalPort
-		if ports[ii].EndPort != 0 {
-			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort + 1
-			// this is checked in app_api also, but this in case there are pre-existing apps which violate this new restriction
-			if accessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > maxPorts {
-				return fmt.Errorf("Port range greater than max of %d for load balanced application", maxPorts)
-			}
-		}
-	}
-	return nil
-}
-
 func validateSkipHcPorts(app *edgeproto.App) error {
 	if app.SkipHcPorts == "" {
 		return nil
@@ -398,10 +383,6 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		if err != nil {
 			return fmt.Errorf("Invalid deployment manifest, %v", err)
 		}
-	}
-	err = validatePortRangeForAccessType(ports, in.AccessType, in.Deployment)
-	if err != nil {
-		return err
 	}
 
 	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {

@@ -964,12 +964,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				for ii, _ := range ports {
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
-				// port range is validated on app create, but checked again here in case there were
-				// pre-existing apps which violate the supported range
-				err = validatePortRangeForAccessType(ports, app.AccessType, app.Deployment)
-				if err != nil {
-					return err
-				}
 			}
 		}
 		if len(ports) > 0 {
