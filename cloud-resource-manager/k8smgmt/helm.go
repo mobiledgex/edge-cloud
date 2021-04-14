@@ -202,7 +202,11 @@ func DeleteHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 	cmd := fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, names.HelmAppName)
 	out, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error deleting helm chart, %s, %s, %v", cmd, out, err)
+		if !strings.Contains(out, "not found") {
+			return fmt.Errorf("error deleting helm chart, %s, %s, %v", cmd, out, err)
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "Unable to find the chart, continue", "cmd", cmd,
+			"out", out, "err", err)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "removed helm chart")
 	return nil
