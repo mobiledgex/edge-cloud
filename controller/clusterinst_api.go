@@ -31,6 +31,7 @@ var clusterInstApi = ClusterInstApi{}
 
 var AutoClusterPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
 	cloudcommon.AutoClusterPrefix)
+var ObjBusyDeletionMsg = "busy, cannot be deleted"
 
 // Transition states indicate states in which the CRM is still busy.
 var CreateClusterInstTransitions = map[edgeproto.TrackedState]struct{}{
@@ -1082,7 +1083,7 @@ func validateDeleteState(cctx *CallContext, objName string, state edgeproto.Trac
 			return fmt.Errorf("%s busy, already under deletion", objName)
 		}
 		if edgeproto.IsTransientState(state) {
-			return fmt.Errorf("%s busy, cannot be deleted", objName)
+			return fmt.Errorf("%s %s", objName, ObjBusyDeletionMsg)
 		}
 	}
 	if cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
@@ -1147,6 +1148,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
 		// restore previous state since we failed pre-delete actions
 		in.State = prevState
+		in.Fields = []string{edgeproto.ClusterInstFieldState}
 		s.store.Update(ctx, in, s.sync.syncWait)
 		return fmt.Errorf("Failed to auto-delete applications from ClusterInst %s, %s",
 			in.Key.ClusterKey.Name, err.Error())
