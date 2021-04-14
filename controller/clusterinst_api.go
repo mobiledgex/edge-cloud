@@ -1147,6 +1147,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
 		// restore previous state since we failed pre-delete actions
 		in.State = prevState
+		in.Fields = []string{edgeproto.ClusterInstFieldState}
 		s.store.Update(ctx, in, s.sync.syncWait)
 		return fmt.Errorf("Failed to auto-delete applications from ClusterInst %s, %s",
 			in.Key.ClusterKey.Name, err.Error())

@@ -200,7 +200,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 				err = nil
 				break
 			}
-			if err != nil && err.Error() == "AppInst busy, cannot delete" {
+			if err != nil && err.Error() == "AppInst busy, cannot be deleted" {
 				spinTime = time.Since(start)
 				if spinTime > settingsApi.Get().DeleteAppInstTimeout.TimeDuration() {
 					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for App", "appName", val.Key.AppKey.Name)
