@@ -58,6 +58,12 @@ func connect(cmd *cobra.Command, args []string) error {
 		tlsMode = tls.MutualAuthTLS
 	}
 	dialOption, err := tls.GetTLSClientDialOption(tlsMode, addr, nil, tlsCertFile, false)
+	if err != nil {
+		return fmt.Errorf("Unable to get dial option for server: %s. error is: %s", addr, err.Error())
+	}
+	if dialOption == nil {
+		return fmt.Errorf("Nil dial option for server: %s.", addr)
+	}
 	conn, err = grpc.Dial(addr, dialOption)
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
