@@ -244,6 +244,7 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 		}
 	}
+	// need to have more worker connections than ports otherwise nginx will crash
 	if portCount > 1000 {
 		spec.WorkerConns = int(float64(portCount) * 1.2)
 	}
