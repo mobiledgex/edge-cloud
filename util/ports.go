@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+var maxTcpPorts int = 1000
+var maxUdpPorts int = 10000
+var maxEnvoyUdpPorts int = 1000
+
 type PortSpec struct {
 	Proto   string
 	Port    string
@@ -18,6 +22,9 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 	var baseport int64
 	var endport int64
 	var err error
+
+	tcpPortCount := 0
+	udpPortCount := 0
 
 	ports := []PortSpec{}
 	pstrs := strings.Split(accessPorts, ",")
@@ -78,6 +85,16 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			return nil, fmt.Errorf("Unsupported protocol: %s", pp[0])
 		}
 
+		portCount := 1
+		if endport != 0 {
+			portCount = int(endport-baseport) + 1
+		}
+		if proto == "tcp" {
+			tcpPortCount = tcpPortCount + portCount
+		} else { // udp
+			udpPortCount = udpPortCount + portCount
+		}
+
 		portSpec := PortSpec{
 			Proto:   proto,
 			Port:    strconv.FormatInt(baseport, 10),
@@ -100,6 +117,19 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 			}
 		}
 		ports = append(ports, portSpec)
+	}
+	if tcpPortCount > maxTcpPorts {
+		return nil, fmt.Errorf("Not allowed to specify more than %d tcp ports", maxTcpPorts)
+	}
+	if udpPortCount > maxUdpPorts {
+		return nil, fmt.Errorf("Not allowed to specify more than %d udp ports", maxUdpPorts)
+	}
+	if udpPortCount > maxEnvoyUdpPorts {
+		for i, _ := range ports {
+			if ports[i].Proto == "udp" {
+				ports[i].Nginx = true
+			}
+		}
 	}
 
 	return ports, nil
