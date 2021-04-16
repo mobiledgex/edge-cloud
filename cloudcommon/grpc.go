@@ -3,6 +3,7 @@ package cloudcommon
 import (
 	"context"
 	ctls "crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
@@ -122,7 +122,7 @@ func GrpcCreds(cfg *ctls.Config) grpc.ServerOption {
 
 // TODO: Implement one of these in DME, Controller, and MC depending on API (or just pass in a RateLimitManager from those??)
 // Grpc unary server interceptor that does rate limiting per user, org, and/or ip
-func GetUnaryApiLimiterInterceptor(apiRateLimitMgr *ratelimit.ApiRateLimitManager) grpc.UnaryServerInterceptor {
+/*func GetUnaryApiLimiterInterceptor(apiRateLimitMgr *ratelimit.ApiRateLimitManager) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		api := info.FullMethod
 		usr := ""
@@ -157,16 +157,24 @@ func GetUnaryApiLimiterInterceptor(apiRateLimitMgr *ratelimit.ApiRateLimitManage
 		}
 		return handler(ctx, req)
 	}
-}
+}*/
 
 // Grpc unary server interceptor that does rate limit throttling
-func GetUnaryThrottleLimiterInterceptor(limiter ratelimit.Limiter) grpc.UnaryServerInterceptor {
+func GetUnaryRateLimiterInterceptor(limiter ratelimit.Limiter) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		limit, err := limiter.Limit(ctx)
+		rateLimitCtx := ratelimit.Context{Context: ctx}
+		_, method := ParseGrpcMethod(info.FullMethod)
+		rateLimitCtx.Api = method
+		p, ok := peer.FromContext(ctx)
+		if !ok {
+			return nil, errors.New("unable to get peer IP info")
+		}
+		rateLimitCtx.Ip = p.Addr.String()
+		limit, err := limiter.Limit(rateLimitCtx)
 		if limit {
-			errMsg := fmt.Sprintf("%s is rejected by grpc_ratelimit middleware, please retry later.", info.FullMethod)
+			errMsg := fmt.Sprintf("%s is rejected by grpc ratelimit middleware, please retry later.", info.FullMethod)
 			if err != nil {
-				errMsg += fmt.Sprintf(" error is %s.", err.Error())
+				errMsg += fmt.Sprintf(" Error is: %s.", err.Error())
 			}
 			return nil, status.Errorf(codes.ResourceExhausted, errMsg)
 
@@ -178,26 +186,30 @@ func GetUnaryThrottleLimiterInterceptor(limiter ratelimit.Limiter) grpc.UnarySer
 type LimiterStreamWrapper struct {
 	grpc.ServerStream
 	limiter ratelimit.Limiter
-	ctx     context.Context
+	ctx     ratelimit.Context
 }
 
 func (s *LimiterStreamWrapper) Context() context.Context {
-	return s.ctx
+	return s.ctx.Context
 }
 
 func (s *LimiterStreamWrapper) Limit() (bool, error) {
-	return s.limiter.Limit(s.Context())
+	return s.limiter.Limit(s.ctx)
 }
 
 // Return a grpc stream server interceptor that does rate limit throttling
-func GetStreamThrottleLimiterInterceptor(limiter ratelimit.Limiter) grpc.StreamServerInterceptor {
+func GetStreamRateLimiterInterceptor(limiter ratelimit.Limiter) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		// Set up a child span for the stream interceptor
 		span := log.StartSpan(log.DebugLevelDmereq, "stream limiter interceptor")
 		defer span.Finish()
 		cctx := log.ContextWithSpan(ss.Context(), span)
 
-		wrapper := &LimiterStreamWrapper{ServerStream: ss, limiter: limiter, ctx: cctx}
+		rateLimitCtx, ok := cctx.(ratelimit.Context)
+		if !ok {
+			// return error
+		}
+		wrapper := &LimiterStreamWrapper{ServerStream: ss, limiter: limiter, ctx: rateLimitCtx}
 		limit, err := wrapper.Limit()
 		if limit {
 			errMsg := fmt.Sprintf("%s is rejected by grpc_ratelimit middleware, please retry later.", info.FullMethod)

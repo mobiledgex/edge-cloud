@@ -1,7 +1,6 @@
 package ratelimit
 
 import (
-	"context"
 	"fmt"
 
 	"golang.org/x/time/rate"
@@ -22,11 +21,11 @@ func NewLeakyBucketLimiter(reqsPerSecond int) *LeakyBucketLimiter {
 	return l
 }
 
-func (l *LeakyBucketLimiter) Limit(ctx context.Context) (bool, error) {
+func (l *LeakyBucketLimiter) Limit(ctx Context) (bool, error) {
 	err := l.limiter.Wait(ctx)
 	if err != nil {
 		// log
-		return true, fmt.Errorf("")
+		return true, fmt.Errorf("error during leakybucker rate limiting: %s", err)
 	}
 	return false, nil
 }

@@ -13,7 +13,15 @@ import (
 // If Limit returns true, check the error for additional information
 // Current implementations in: fixedwindow.go, leakybucket.go, tokenbucket.go
 type Limiter interface {
-	Limit(ctx context.Context) (bool, error)
+	Limit(ctx Context) (bool, error)
+}
+
+type Context struct {
+	context.Context
+	Api  string
+	User string
+	Org  string
+	Ip   string
 }
 
 // Helper function that returns an error when rate limit is exceede. 429???

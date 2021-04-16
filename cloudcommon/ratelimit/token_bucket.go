@@ -1,7 +1,6 @@
 package ratelimit
 
 import (
-	"context"
 	"fmt"
 
 	"golang.org/x/time/rate"
@@ -26,7 +25,7 @@ func NewTokenBucketLimiter(tokensPerSecond int, bucketSize int) *TokenBucketLimi
 	return t
 }
 
-func (t *TokenBucketLimiter) Limit(ctx context.Context) (bool, error) {
+func (t *TokenBucketLimiter) Limit(ctx Context) (bool, error) {
 	tokenAvailable := t.limiter.Allow()
 	if !tokenAvailable {
 		return true, fmt.Errorf("")

@@ -229,6 +229,11 @@ func startServices() error {
 	}
 	services.listeners = append(services.listeners, lis)
 
+	// Intialize ApiRateLimitManager
+	// TODO: INIT API RATE LIMIT IN INITAPIS
+	// TODO: init each init function for each api, look up method names (using reflect) and add to dict
+	//services.apiRateLimitManager = ratelimit.NewRateLimitManager()
+
 	sync := InitSync(objStore)
 	InitApis(sync)
 	sync.Start()

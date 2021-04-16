@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
+	"reflect"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
@@ -533,12 +535,22 @@ func main() {
 	defer dmecommon.StopAppInstClients()
 
 	// Setup rate limiters
-	unaryLimiter := cloudcommon.NewLeakyBucketLimiter(2)
-	streamLimiter := cloudcommon.NewLeakyBucketLimiter(2)
+	unaryApiRateLimitMgr := ratelimit.NewApiRateLimitManager()
+	streamApiRateLimitMgr := ratelimit.NewApiRateLimitManager()
+	serverType := reflect.TypeOf(&server{})
+	for i := 0; i < serverType.NumMethod(); i++ {
+		method := serverType.Method(i)
+		flowLimiter := ratelimit.NewLeakyBucketLimiter(ratelimit.DefaultReqsPerSecond)
+		if strings.Contains(method.Name, "Stream") || strings.Contains(method.Name, "Qos") {
+			streamApiRateLimitMgr.AddRateLimitPerApi(method.Name, ratelimit.TestDmeApiRateLimitMaxReqs, nil, flowLimiter)
+		} else {
+			unaryApiRateLimitMgr.AddRateLimitPerApi(method.Name, ratelimit.TestDmeApiRateLimitMaxReqs, nil, flowLimiter)
+		}
+	}
 
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.GetUnaryLimiterInterceptor(unaryLimiter), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.GetStreamLimiterInterceptor(streamLimiter), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, cloudcommon.GetUnaryRateLimiterInterceptor(unaryApiRateLimitMgr), dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), cloudcommon.GetStreamRateLimiterInterceptor(streamApiRateLimitMgr), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
