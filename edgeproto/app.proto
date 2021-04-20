@@ -94,9 +94,9 @@ enum AccessType {
 
 // ConfigFile
 message ConfigFile {
-  // kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml
+  // Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml
   string kind = 1;
-  // config file contents or URI reference
+  // Config file contents or URI reference
   string config = 2;
 }
 
@@ -119,7 +119,7 @@ message App {
   string access_ports = 7;
   // Default flavor for the App, which may be overridden by the AppInst
   FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
-  // public key used for authentication
+  // Public key used for authentication
   string auth_public_key = 12;
   // Command that the container runs to start service 
   string command = 13;
@@ -128,9 +128,9 @@ message App {
   string annotations = 14;
   // Deployment type (kubernetes, docker, or vm)
   string deployment = 15 [(protogen.backend) = true];
-  // Deployment manifest is the deployment specific manifest file/config
-  // For docker deployment, this can be a docker-compose or docker run file
-  // For kubernetes deployment, this can be a kubernetes yaml or helm chart file
+  // Deployment manifest is the deployment specific manifest file/config.
+  // For docker deployment, this can be a docker-compose or docker run file.
+  // For kubernetes deployment, this can be a kubernetes yaml or helm chart file.
   string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Deployment generator target to generate a basic deployment manifest
   string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
@@ -163,15 +163,15 @@ message App {
   repeated string auto_prov_policies = 32;
   // Delimiter to be used for template parsing, defaults to "[[ ]]"
   string template_delimiter = 33;
-  // Comma separated list of protocol:port pairs that we should not run health check on
-  // Should be configured in case app does not always listen on these ports
-  // "all" can be specified if no health check to be run for this app
+  // Comma separated list of protocol:port pairs that we should not run health check on.
+  // Should be configured in case app does not always listen on these ports.
+  // "all" can be specified if no health check to be run for this app.
   // Numerical values must be decimal format.
-  // i.e. tcp:80,udp:10002,http:443
+  // i.e. tcp:80,udp:10002,http:443.
   string skip_hc_ports = 34;
-    // Created at time
+  // Created at time
   distributed_match_engine.Timestamp created_at = 35 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
-    // Updated at time
+  // Updated at time
   distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Indicates that an instance of this app can be started on a trusted cloudlet
   bool trusted = 37;

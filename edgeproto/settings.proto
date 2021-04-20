@@ -88,8 +88,9 @@ message Settings {
   option (protogen.uses_org) = "none";
 }
 
-// Collection interval for Influxdb (Specificially used for cq intervals, because cannot gogoproto.casttype to Duration for repeated fields otherwise)
+// Collection interval for Influxdb (Specifically used for cq intervals, because cannot gogoproto.casttype to Duration for repeated fields otherwise)
 message CollectionInterval {
+  // Collection interval for Influxdb (Specifically used for continuous query intervals)
   int64 interval = 1 [(gogoproto.casttype) = "Duration"];
 }
 
