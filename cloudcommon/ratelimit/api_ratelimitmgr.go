@@ -4,6 +4,8 @@ import "fmt"
 
 // TODO: MUTEX
 // TODO: Allow unlimited for admin
+// TODO: rate limit before auth or vice versa??
+// TODO: Add time until next request available
 
 type ApiRateLimitManager struct {
 	limitsPerApi map[string]*rateLimitPerApi

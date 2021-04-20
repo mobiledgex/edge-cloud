@@ -4,7 +4,12 @@ type ApiRateLimitMaxReqs struct {
 	maxReqsPerMinutePerConsumer int
 	maxReqsPerHourPerConsumer   int
 	maxReqsPerDayPerConsumer    int
-	maxReqsPerMonthPerConsumer  int
+}
+
+func (a *ApiRateLimitMaxReqs) Scale(scaleFactor int) {
+	a.maxReqsPerDayPerConsumer *= scaleFactor
+	a.maxReqsPerHourPerConsumer *= scaleFactor
+	a.maxReqsPerMinutePerConsumer *= scaleFactor
 }
 
 // TODO: Get rid of perMonth limit?
@@ -21,36 +26,26 @@ const (
 
 var DefaultReqsPerSecond = 100
 
-var DefaultTokenBucketSize = 10
+var DefaultTokenBucketSize = 10 // equivalent to burst size
 
 // TODO: GROUP rates BY INDIVIDUAL RPCs or SERVICES??? (answer: lets do services)
 
-var DefaultDeveloperApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
+var DefaultIpApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
 	maxReqsPerMinutePerConsumer: 5,
 	maxReqsPerHourPerConsumer:   100,
 	maxReqsPerDayPerConsumer:    1000,
-	maxReqsPerMonthPerConsumer:  10000,
 }
 
-var DefaultOperatorApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
-	maxReqsPerMinutePerConsumer: 10,
-	maxReqsPerHourPerConsumer:   200,
-	maxReqsPerDayPerConsumer:    2000,
-	maxReqsPerMonthPerConsumer:  20000,
+var DefaultUserApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
+	maxReqsPerMinutePerConsumer: 5,
+	maxReqsPerHourPerConsumer:   100,
+	maxReqsPerDayPerConsumer:    1000,
 }
 
-var DefaultDeveloperOrgApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
+var DefaultOrgApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
 	maxReqsPerMinutePerConsumer: 50,
 	maxReqsPerHourPerConsumer:   1000,
 	maxReqsPerDayPerConsumer:    10000,
-	maxReqsPerMonthPerConsumer:  100000,
-}
-
-var DefaultOperatorOrgApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
-	maxReqsPerMinutePerConsumer: 100,
-	maxReqsPerHourPerConsumer:   2000,
-	maxReqsPerDayPerConsumer:    20000,
-	maxReqsPerMonthPerConsumer:  200000,
 }
 
 var DefaultDmeApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{

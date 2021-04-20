@@ -3,6 +3,7 @@ package ratelimit
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -11,7 +12,6 @@ type FixedWindowLimiter struct {
 	limiterPerMinute *IntervalLimiter
 	limiterPerHour   *IntervalLimiter
 	limiterPerDay    *IntervalLimiter
-	limiterPerMonth  *IntervalLimiter
 }
 
 // TODO: Default reqsPer[Interval], Handle unlimited reqs (-1??)
@@ -20,7 +20,6 @@ func NewFixedWindowLimiter(maxReqs *ApiRateLimitMaxReqs) *FixedWindowLimiter {
 	f.limiterPerMinute = NewIntervalLimiter(maxReqs.maxReqsPerMinutePerConsumer, time.Minute)
 	f.limiterPerHour = NewIntervalLimiter(maxReqs.maxReqsPerHourPerConsumer, time.Hour)
 	f.limiterPerDay = NewIntervalLimiter(maxReqs.maxReqsPerDayPerConsumer, 24*time.Hour)
-	f.limiterPerMonth = NewIntervalLimiter(maxReqs.maxReqsPerMonthPerConsumer, 30*24*time.Hour)
 	return f
 }
 
@@ -41,11 +40,6 @@ func (f *FixedWindowLimiter) Limit(ctx context.Context) (bool, error) {
 		// log
 		return true, fmt.Errorf("reached limit per day - %s", err.Error())
 	}
-	limit, err = f.limiterPerMonth.Limit(ctx)
-	if limit {
-		// log
-		return true, fmt.Errorf("reached limit per month - %s", err.Error())
-	}
 	return false, nil
 }
 
@@ -56,6 +50,7 @@ type IntervalLimiter struct {
 	currentNumberOfRequests int
 	interval                time.Duration
 	intervalStartTime       time.Time
+	mux                     sync.Mutex
 }
 
 func NewIntervalLimiter(reqLimit int, interval time.Duration) *IntervalLimiter {
@@ -67,16 +62,18 @@ func NewIntervalLimiter(reqLimit int, interval time.Duration) *IntervalLimiter {
 	}
 }
 
-// TODO: Limit only successful requests???
 // TODO: Charge once surpass api limit???
 func (i *IntervalLimiter) Limit(ctx context.Context) (bool, error) {
+	i.mux.Lock()
+	defer i.mux.Unlock()
 	// Check start of interval
 	if time.Since(i.intervalStartTime) > i.interval {
 		i.intervalStartTime = time.Now().Truncate(i.interval)
 		i.currentNumberOfRequests = 0
 	}
 	if i.currentNumberOfRequests >= i.requestLimit && i.requestLimit != 0 {
-		return true, fmt.Errorf("exceeded limit of %d", i.requestLimit)
+		waitTime := i.interval - (time.Now().Sub(i.intervalStartTime))
+		return true, fmt.Errorf("exceeded limit of %d, retry again in %v", i.requestLimit, waitTime)
 	} else {
 		i.currentNumberOfRequests++
 		return false, nil
