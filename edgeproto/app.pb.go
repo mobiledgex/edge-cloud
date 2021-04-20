@@ -244,9 +244,9 @@ var xxx_messageInfo_AppKey proto.InternalMessageInfo
 
 // ConfigFile
 type ConfigFile struct {
-	// kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml
+	// Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml
 	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
-	// config file contents or URI reference
+	// Config file contents or URI reference
 	Config string `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
@@ -302,7 +302,7 @@ type App struct {
 	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
 	// Default flavor for the App, which may be overridden by the AppInst
 	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor,proto3" json:"default_flavor"`
-	// public key used for authentication
+	// Public key used for authentication
 	AuthPublicKey string `protobuf:"bytes,12,opt,name=auth_public_key,json=authPublicKey,proto3" json:"auth_public_key,omitempty"`
 	// Command that the container runs to start service
 	Command string `protobuf:"bytes,13,opt,name=command,proto3" json:"command,omitempty"`
@@ -311,9 +311,9 @@ type App struct {
 	Annotations string `protobuf:"bytes,14,opt,name=annotations,proto3" json:"annotations,omitempty"`
 	// Deployment type (kubernetes, docker, or vm)
 	Deployment string `protobuf:"bytes,15,opt,name=deployment,proto3" json:"deployment,omitempty"`
-	// Deployment manifest is the deployment specific manifest file/config
-	// For docker deployment, this can be a docker-compose or docker run file
-	// For kubernetes deployment, this can be a kubernetes yaml or helm chart file
+	// Deployment manifest is the deployment specific manifest file/config.
+	// For docker deployment, this can be a docker-compose or docker run file.
+	// For kubernetes deployment, this can be a kubernetes yaml or helm chart file.
 	DeploymentManifest string `protobuf:"bytes,16,opt,name=deployment_manifest,json=deploymentManifest,proto3" json:"deployment_manifest,omitempty"`
 	// Deployment generator target to generate a basic deployment manifest
 	DeploymentGenerator string `protobuf:"bytes,17,opt,name=deployment_generator,json=deploymentGenerator,proto3" json:"deployment_generator,omitempty"`
@@ -343,11 +343,11 @@ type App struct {
 	AutoProvPolicies []string `protobuf:"bytes,32,rep,name=auto_prov_policies,json=autoProvPolicies,proto3" json:"auto_prov_policies,omitempty"`
 	// Delimiter to be used for template parsing, defaults to "[[ ]]"
 	TemplateDelimiter string `protobuf:"bytes,33,opt,name=template_delimiter,json=templateDelimiter,proto3" json:"template_delimiter,omitempty"`
-	// Comma separated list of protocol:port pairs that we should not run health check on
-	// Should be configured in case app does not always listen on these ports
-	// "all" can be specified if no health check to be run for this app
+	// Comma separated list of protocol:port pairs that we should not run health check on.
+	// Should be configured in case app does not always listen on these ports.
+	// "all" can be specified if no health check to be run for this app.
 	// Numerical values must be decimal format.
-	// i.e. tcp:80,udp:10002,http:443
+	// i.e. tcp:80,udp:10002,http:443.
 	SkipHcPorts string `protobuf:"bytes,34,opt,name=skip_hc_ports,json=skipHcPorts,proto3" json:"skip_hc_ports,omitempty"`
 	// Created at time
 	CreatedAt dme_proto.Timestamp `protobuf:"bytes,35,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
