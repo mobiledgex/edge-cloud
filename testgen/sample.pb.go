@@ -1341,10 +1341,17 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.RepeatedInt) != len(o.RepeatedInt) {
 				return false
 			}
-			for i := 0; i < len(m.RepeatedInt); i++ {
-				if o.RepeatedInt[i] != m.RepeatedInt[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.RepeatedInt {
+				for mIndex, _ := range m.RepeatedInt {
+					if o.RepeatedInt[oIndex] == m.RepeatedInt[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.RepeatedInt) {
+				return false
 			}
 		}
 	}
@@ -1355,10 +1362,17 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Ip) != len(o.Ip) {
 				return false
 			}
-			for i := 0; i < len(m.Ip); i++ {
-				if o.Ip[i] != m.Ip[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Ip {
+				for mIndex, _ := range m.Ip {
+					if o.Ip[oIndex] == m.Ip[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Ip) {
+				return false
 			}
 		}
 	}
@@ -1369,10 +1383,17 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Names) != len(o.Names) {
 				return false
 			}
-			for i := 0; i < len(m.Names); i++ {
-				if o.Names[i] != m.Names[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Names {
+				for mIndex, _ := range m.Names {
+					if o.Names[oIndex] == m.Names[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Names) {
+				return false
 			}
 		}
 	}
@@ -1383,8 +1404,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.RepeatedMsg) != len(o.RepeatedMsg) {
 				return false
 			}
-			for i := 0; i < len(m.RepeatedMsg); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.RepeatedMsgNonnull != nil {
@@ -1393,8 +1412,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		} else if m.RepeatedMsgNonnull != nil && o.RepeatedMsgNonnull != nil {
 			if !opts.Filter && len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
 				return false
-			}
-			for i := 0; i < len(m.RepeatedMsgNonnull); i++ {
 			}
 		}
 	}
@@ -1405,8 +1422,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.RepeatedFields) != len(o.RepeatedFields) {
 				return false
 			}
-			for i := 0; i < len(m.RepeatedFields); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.RepeatedFieldsNonnull != nil {
@@ -1415,8 +1430,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		} else if m.RepeatedFieldsNonnull != nil && o.RepeatedFieldsNonnull != nil {
 			if !opts.Filter && len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
 				return false
-			}
-			for i := 0; i < len(m.RepeatedFieldsNonnull); i++ {
 			}
 		}
 	}
@@ -1427,8 +1440,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
 				return false
 			}
-			for i := 0; i < len(m.RepeatedInnerMsg); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.RepeatedInnerMsgNonnull != nil {
@@ -1437,8 +1448,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		} else if m.RepeatedInnerMsgNonnull != nil && o.RepeatedInnerMsgNonnull != nil {
 			if !opts.Filter && len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
 				return false
-			}
-			for i := 0; i < len(m.RepeatedInnerMsgNonnull); i++ {
 			}
 		}
 	}
@@ -1449,8 +1458,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.RepeatedLoc) != len(o.RepeatedLoc) {
 				return false
 			}
-			for i := 0; i < len(m.RepeatedLoc); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.RepeatedLocNonnull != nil {
@@ -1459,8 +1466,6 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 		} else if m.RepeatedLocNonnull != nil && o.RepeatedLocNonnull != nil {
 			if !opts.Filter && len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
 				return false
-			}
-			for i := 0; i < len(m.RepeatedLocNonnull); i++ {
 			}
 		}
 	}

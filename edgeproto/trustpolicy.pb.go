@@ -643,8 +643,6 @@ func (m *TrustPolicy) Matches(o *TrustPolicy, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.OutboundSecurityRules) != len(o.OutboundSecurityRules) {
 				return false
 			}
-			for i := 0; i < len(m.OutboundSecurityRules); i++ {
-			}
 		}
 	}
 	return true

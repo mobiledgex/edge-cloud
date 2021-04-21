@@ -277,7 +277,6 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	}
 
 	warnings := []string{}
-	quotaResReqd := make(map[string]uint64)
 
 	// Theoretical Validation
 	errsStr := []string{}
@@ -292,7 +291,8 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		}
 		resReqd, ok := reqdResInfo[resName]
 		if !ok {
-			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+			// this resource is not tracked by controller, skip it
+			continue
 		}
 		thAvailableResVal := uint64(0)
 		if resInfo.Value > max {
@@ -306,7 +306,6 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		if resReqd.Value > thAvailableResVal {
 			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units))
 		}
-		quotaResReqd[resName] = thAvailableResVal
 	}
 
 	err = nil
@@ -351,7 +350,8 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		}
 		resReqd, ok := reqdResInfo[resName]
 		if !ok {
-			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+			// this resource is not tracked by controller, skip it
+			continue
 		}
 		infraAvailableResVal := resInfo.InfraMaxValue - resInfo.Value
 		if float64(resInfo.Value*100)/float64(resInfo.InfraMaxValue) > float64(resInfo.AlertThreshold) {
@@ -359,12 +359,6 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		}
 		if resReqd.Value > infraAvailableResVal {
 			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units))
-		}
-		if resVal, ok := quotaResReqd[resName]; ok {
-			// generate alert if expected resource quota is not available
-			if infraAvailableResVal < resVal {
-				warnings = append(warnings, fmt.Sprintf("[Quota] Expected %s available to be %d%s, but only %d%s is available", resName, resVal, resInfo.Units, infraAvailableResVal, resInfo.Units))
-			}
 		}
 	}
 	err = nil
@@ -583,12 +577,10 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 
 	ramUsed := uint64(0)
 	vcpusUsed := uint64(0)
-	diskUsed := uint64(0)
 	for _, vmRes := range allResources {
 		if vmRes.VmFlavor != nil {
 			ramUsed += vmRes.VmFlavor.Ram
 			vcpusUsed += vmRes.VmFlavor.Vcpus
-			diskUsed += vmRes.VmFlavor.Disk
 		}
 	}
 
@@ -600,7 +592,6 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	resMetric.AddTag("cloudlet", key.Name)
 	resMetric.AddIntVal("ramUsed", ramUsed)
 	resMetric.AddIntVal("vcpusUsed", vcpusUsed)
-	resMetric.AddIntVal("diskUsed", diskUsed)
 
 	// get additional infra specific metric
 	err = cloudletPlatform.GetClusterAdditionalResourceMetric(ctx, &cloudlet, &resMetric, allResources)

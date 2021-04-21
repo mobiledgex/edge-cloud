@@ -1083,8 +1083,6 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 					return o.ClusterInsts[i].GetKeyString() < o.ClusterInsts[j].GetKeyString()
 				})
 			}
-			for i := 0; i < len(m.ClusterInsts); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.VmAppInsts != nil {
@@ -1101,8 +1099,6 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 				sort.Slice(o.VmAppInsts, func(i, j int) bool {
 					return o.VmAppInsts[i].GetKeyString() < o.VmAppInsts[j].GetKeyString()
 				})
-			}
-			for i := 0; i < len(m.VmAppInsts); i++ {
 			}
 		}
 	}
@@ -1770,10 +1766,17 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 					return o.Apps[i].GetKeyString() < o.Apps[j].GetKeyString()
 				})
 			}
-			for i := 0; i < len(m.Apps); i++ {
-				if !m.Apps[i].Matches(&o.Apps[i], fopts...) {
-					return false
+			found := 0
+			for oIndex, _ := range o.Apps {
+				for mIndex, _ := range m.Apps {
+					if m.Apps[mIndex].Matches(&o.Apps[oIndex], fopts...) {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Apps) {
+				return false
 			}
 		}
 	}
