@@ -1748,10 +1748,9 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 	}
 	cloudletRes := map[string]string{
 		// Common Cloudlet Resources
-		cloudcommon.ResourceRamMb:  cloudcommon.ResourceRamUnits,
-		cloudcommon.ResourceVcpus:  "",
-		cloudcommon.ResourceDiskGb: cloudcommon.ResourceDiskUnits,
-		cloudcommon.ResourceGpus:   "",
+		cloudcommon.ResourceRamMb: cloudcommon.ResourceRamUnits,
+		cloudcommon.ResourceVcpus: "",
+		cloudcommon.ResourceGpus:  "",
 	}
 	resInfo := make(map[string]edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
@@ -1791,11 +1790,6 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 			if ok {
 				vcpusInfo.Value += vmRes.VmFlavor.Vcpus
 				resInfo[cloudcommon.ResourceVcpus] = vcpusInfo
-			}
-			diskInfo, ok := resInfo[cloudcommon.ResourceDiskGb]
-			if ok {
-				diskInfo.Value += vmRes.VmFlavor.Disk
-				resInfo[cloudcommon.ResourceDiskGb] = diskInfo
 			}
 			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
 				gpusInfo, ok := resInfo[cloudcommon.ResourceGpus]
