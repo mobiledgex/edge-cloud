@@ -1648,14 +1648,8 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.AutoProvPolicies) {
-					return false
-				}
-			} else {
-				if found != len(m.AutoProvPolicies) {
-					return false
-				}
+			if found != len(o.AutoProvPolicies) {
+				return false
 			}
 		}
 	}

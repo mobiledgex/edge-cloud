@@ -4317,14 +4317,8 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 						}
 					}
 				}
-				if opts.Filter {
-					if found != len(o.Errors) {
-						return false
-					}
-				} else {
-					if found != len(m.Errors) {
-						return false
-					}
+				if found != len(o.Errors) {
+					return false
 				}
 			}
 		}
@@ -7235,14 +7229,8 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Errors) {
-					return false
-				}
-			} else {
-				if found != len(m.Errors) {
-					return false
-				}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}

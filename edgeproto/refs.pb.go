@@ -1775,14 +1775,8 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Apps) {
-					return false
-				}
-			} else {
-				if found != len(m.Apps) {
-					return false
-				}
+			if found != len(o.Apps) {
+				return false
 			}
 		}
 	}

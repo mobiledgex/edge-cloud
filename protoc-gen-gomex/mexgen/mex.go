@@ -480,14 +480,8 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		if oName != "" && mName != "" {
 			m.P("}")
 			m.P("}")
-			m.P("if opts.Filter {")
 			m.P("if found != len(o.", name, ") {")
 			m.P("return false")
-			m.P("}")
-			m.P("} else {")
-			m.P("if found != len(m.", name, ") {")
-			m.P("return false")
-			m.P("}")
 			m.P("}")
 		}
 		if mapType != nil {

@@ -816,14 +816,8 @@ func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Cloudlets) {
-					return false
-				}
-			} else {
-				if found != len(m.Cloudlets) {
-					return false
-				}
+			if found != len(o.Cloudlets) {
+				return false
 			}
 		}
 	}

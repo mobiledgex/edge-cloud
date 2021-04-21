@@ -1592,14 +1592,8 @@ func (m *VMPool) Matches(o *VMPool, fopts ...MatchOpt) bool {
 						}
 					}
 				}
-				if opts.Filter {
-					if found != len(o.Errors) {
-						return false
-					}
-				} else {
-					if found != len(m.Errors) {
-						return false
-					}
+				if found != len(o.Errors) {
+					return false
 				}
 			}
 		}
@@ -2995,14 +2989,8 @@ func (m *VMPoolInfo) Matches(o *VMPoolInfo, fopts ...MatchOpt) bool {
 						}
 					}
 				}
-				if opts.Filter {
-					if found != len(o.Errors) {
-						return false
-					}
-				} else {
-					if found != len(m.Errors) {
-						return false
-					}
+				if found != len(o.Errors) {
+					return false
 				}
 			}
 		}

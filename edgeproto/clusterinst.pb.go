@@ -1439,14 +1439,8 @@ func (m *ClusterInst) Matches(o *ClusterInst, fopts ...MatchOpt) bool {
 						}
 					}
 				}
-				if opts.Filter {
-					if found != len(o.Errors) {
-						return false
-					}
-				} else {
-					if found != len(m.Errors) {
-						return false
-					}
+				if found != len(o.Errors) {
+					return false
 				}
 			}
 		}
@@ -3175,14 +3169,8 @@ func (m *ClusterInstInfo) Matches(o *ClusterInstInfo, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Errors) {
-					return false
-				}
-			} else {
-				if found != len(m.Errors) {
-					return false
-				}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}

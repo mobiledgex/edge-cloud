@@ -2430,14 +2430,8 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Completed) {
-					return false
-				}
-			} else {
-				if found != len(m.Completed) {
-					return false
-				}
+			if found != len(o.Completed) {
+				return false
 			}
 		}
 	}
@@ -2457,14 +2451,8 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Errors) {
-					return false
-				}
-			} else {
-				if found != len(m.Errors) {
-					return false
-				}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}

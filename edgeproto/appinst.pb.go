@@ -2327,14 +2327,8 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 						}
 					}
 				}
-				if opts.Filter {
-					if found != len(o.Errors) {
-						return false
-					}
-				} else {
-					if found != len(m.Errors) {
-						return false
-					}
+				if found != len(o.Errors) {
+					return false
 				}
 			}
 		}
@@ -4188,14 +4182,8 @@ func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Errors) {
-					return false
-				}
-			} else {
-				if found != len(m.Errors) {
-					return false
-				}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}

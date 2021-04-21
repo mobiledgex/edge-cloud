@@ -1350,14 +1350,8 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.RepeatedInt) {
-					return false
-				}
-			} else {
-				if found != len(m.RepeatedInt) {
-					return false
-				}
+			if found != len(o.RepeatedInt) {
+				return false
 			}
 		}
 	}
@@ -1377,14 +1371,8 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Ip) {
-					return false
-				}
-			} else {
-				if found != len(m.Ip) {
-					return false
-				}
+			if found != len(o.Ip) {
+				return false
 			}
 		}
 	}
@@ -1404,14 +1392,8 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 					}
 				}
 			}
-			if opts.Filter {
-				if found != len(o.Names) {
-					return false
-				}
-			} else {
-				if found != len(m.Names) {
-					return false
-				}
+			if found != len(o.Names) {
+				return false
 			}
 		}
 	}
