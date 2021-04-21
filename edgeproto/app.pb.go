@@ -1588,8 +1588,6 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Configs) != len(o.Configs) {
 				return false
 			}
-			for i := 0; i < len(m.Configs); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.ScaleWithCluster != false {
@@ -1641,10 +1639,17 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.AutoProvPolicies) != len(o.AutoProvPolicies) {
 				return false
 			}
-			for i := 0; i < len(m.AutoProvPolicies); i++ {
-				if o.AutoProvPolicies[i] != m.AutoProvPolicies[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.AutoProvPolicies {
+				for mIndex, _ := range m.AutoProvPolicies {
+					if o.AutoProvPolicies[oIndex] == m.AutoProvPolicies[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.AutoProvPolicies) {
+				return false
 			}
 		}
 	}
@@ -1673,8 +1678,6 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 		} else if m.RequiredOutboundConnections != nil && o.RequiredOutboundConnections != nil {
 			if !opts.Filter && len(m.RequiredOutboundConnections) != len(o.RequiredOutboundConnections) {
 				return false
-			}
-			for i := 0; i < len(m.RequiredOutboundConnections); i++ {
 			}
 		}
 	}
