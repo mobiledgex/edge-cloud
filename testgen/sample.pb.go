@@ -1342,8 +1342,8 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 				return false
 			}
 			found := 0
-			for mIndex, _ := range m.RepeatedInt {
-				for oIndex, _ := range o.RepeatedInt {
+			for oIndex, _ := range o.RepeatedInt {
+				for mIndex, _ := range m.RepeatedInt {
 					if o.RepeatedInt[oIndex] == m.RepeatedInt[mIndex] {
 						found++
 						break
@@ -1351,11 +1351,11 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.RepeatedInt) {
+				if found != len(o.RepeatedInt) {
 					return false
 				}
 			} else {
-				if found != len(o.RepeatedInt) {
+				if found != len(m.RepeatedInt) {
 					return false
 				}
 			}
@@ -1369,8 +1369,8 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 				return false
 			}
 			found := 0
-			for mIndex, _ := range m.Ip {
-				for oIndex, _ := range o.Ip {
+			for oIndex, _ := range o.Ip {
+				for mIndex, _ := range m.Ip {
 					if o.Ip[oIndex] == m.Ip[mIndex] {
 						found++
 						break
@@ -1378,11 +1378,11 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.Ip) {
+				if found != len(o.Ip) {
 					return false
 				}
 			} else {
-				if found != len(o.Ip) {
+				if found != len(m.Ip) {
 					return false
 				}
 			}
@@ -1396,8 +1396,8 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 				return false
 			}
 			found := 0
-			for mIndex, _ := range m.Names {
-				for oIndex, _ := range o.Names {
+			for oIndex, _ := range o.Names {
+				for mIndex, _ := range m.Names {
 					if o.Names[oIndex] == m.Names[mIndex] {
 						found++
 						break
@@ -1405,11 +1405,11 @@ func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.Names) {
+				if found != len(o.Names) {
 					return false
 				}
 			} else {
-				if found != len(o.Names) {
+				if found != len(m.Names) {
 					return false
 				}
 			}

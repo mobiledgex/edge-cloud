@@ -420,8 +420,8 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 			}
 			if !skipMatch {
 				m.P("found := 0")
-				m.P("for mIndex, _ := range m.", name, " {")
 				m.P("for oIndex, _ := range o.", name, " {")
+				m.P("for mIndex, _ := range m.", name, " {")
 				oName = name + "[oIndex]"
 				mName = name + "[mIndex]"
 			}
@@ -481,11 +481,11 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 			m.P("}")
 			m.P("}")
 			m.P("if opts.Filter {")
-			m.P("if found != len(m.", name, ") {")
+			m.P("if found != len(o.", name, ") {")
 			m.P("return false")
 			m.P("}")
 			m.P("} else {")
-			m.P("if found != len(o.", name, ") {")
+			m.P("if found != len(m.", name, ") {")
 			m.P("return false")
 			m.P("}")
 			m.P("}")

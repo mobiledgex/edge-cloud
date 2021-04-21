@@ -2319,8 +2319,8 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 					return false
 				}
 				found := 0
-				for mIndex, _ := range m.Errors {
-					for oIndex, _ := range o.Errors {
+				for oIndex, _ := range o.Errors {
+					for mIndex, _ := range m.Errors {
 						if o.Errors[oIndex] == m.Errors[mIndex] {
 							found++
 							break
@@ -2328,11 +2328,11 @@ func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 					}
 				}
 				if opts.Filter {
-					if found != len(m.Errors) {
+					if found != len(o.Errors) {
 						return false
 					}
 				} else {
-					if found != len(o.Errors) {
+					if found != len(m.Errors) {
 						return false
 					}
 				}
@@ -4180,8 +4180,8 @@ func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
 				return false
 			}
 			found := 0
-			for mIndex, _ := range m.Errors {
-				for oIndex, _ := range o.Errors {
+			for oIndex, _ := range o.Errors {
+				for mIndex, _ := range m.Errors {
 					if o.Errors[oIndex] == m.Errors[mIndex] {
 						found++
 						break
@@ -4189,11 +4189,11 @@ func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.Errors) {
+				if found != len(o.Errors) {
 					return false
 				}
 			} else {
-				if found != len(o.Errors) {
+				if found != len(m.Errors) {
 					return false
 				}
 			}

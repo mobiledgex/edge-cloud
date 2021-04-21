@@ -808,8 +808,8 @@ func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 				return false
 			}
 			found := 0
-			for mIndex, _ := range m.Cloudlets {
-				for oIndex, _ := range o.Cloudlets {
+			for oIndex, _ := range o.Cloudlets {
+				for mIndex, _ := range m.Cloudlets {
 					if o.Cloudlets[oIndex] == m.Cloudlets[mIndex] {
 						found++
 						break
@@ -817,11 +817,11 @@ func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.Cloudlets) {
+				if found != len(o.Cloudlets) {
 					return false
 				}
 			} else {
-				if found != len(o.Cloudlets) {
+				if found != len(m.Cloudlets) {
 					return false
 				}
 			}

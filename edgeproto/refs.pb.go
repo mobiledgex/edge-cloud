@@ -1767,8 +1767,8 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 				})
 			}
 			found := 0
-			for mIndex, _ := range m.Apps {
-				for oIndex, _ := range o.Apps {
+			for oIndex, _ := range o.Apps {
+				for mIndex, _ := range m.Apps {
 					if m.Apps[mIndex].Matches(&o.Apps[oIndex], fopts...) {
 						found++
 						break
@@ -1776,11 +1776,11 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.Apps) {
+				if found != len(o.Apps) {
 					return false
 				}
 			} else {
-				if found != len(o.Apps) {
+				if found != len(m.Apps) {
 					return false
 				}
 			}

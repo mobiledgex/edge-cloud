@@ -2422,8 +2422,8 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 				return false
 			}
 			found := 0
-			for mIndex, _ := range m.Completed {
-				for oIndex, _ := range o.Completed {
+			for oIndex, _ := range o.Completed {
+				for mIndex, _ := range m.Completed {
 					if o.Completed[oIndex] == m.Completed[mIndex] {
 						found++
 						break
@@ -2431,11 +2431,11 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.Completed) {
+				if found != len(o.Completed) {
 					return false
 				}
 			} else {
-				if found != len(o.Completed) {
+				if found != len(m.Completed) {
 					return false
 				}
 			}
@@ -2449,8 +2449,8 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 				return false
 			}
 			found := 0
-			for mIndex, _ := range m.Errors {
-				for oIndex, _ := range o.Errors {
+			for oIndex, _ := range o.Errors {
+				for mIndex, _ := range m.Errors {
 					if o.Errors[oIndex] == m.Errors[mIndex] {
 						found++
 						break
@@ -2458,11 +2458,11 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 				}
 			}
 			if opts.Filter {
-				if found != len(m.Errors) {
+				if found != len(o.Errors) {
 					return false
 				}
 			} else {
-				if found != len(o.Errors) {
+				if found != len(m.Errors) {
 					return false
 				}
 			}
