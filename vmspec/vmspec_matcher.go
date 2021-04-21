@@ -25,6 +25,15 @@ type VMCreationSpec struct {
 
 var verbose bool = false
 
+func ToggleFlavorMatchVerbose() string {
+	if verbose == true {
+		verbose = false
+	} else {
+		verbose = true
+	}
+	return strconv.FormatBool(verbose)
+}
+
 // Routines supporting the mapping used in GetVMSpec
 //
 
