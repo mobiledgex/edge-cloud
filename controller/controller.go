@@ -29,6 +29,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/mobiledgex/edge-cloud/vmspec"
 	"google.golang.org/grpc"
 )
 
@@ -178,6 +179,7 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
+	initDebug(ctx, &nodeMgr)
 	defer span.Finish()
 	vaultConfig = nodeMgr.VaultConfig
 
@@ -665,4 +667,15 @@ func (c *ControllerMetricsReceiver) RecvMetric(ctx context.Context, metric *edge
 	} else {
 		c.metricsInflux.AddMetric(metric)
 	}
+}
+
+const (
+	ToggleFlavorMatchVerbose = "toggle-flavormatch-verbose"
+)
+
+func initDebug(ctx context.Context, nodeMgr *node.NodeMgr) {
+	nodeMgr.Debug.AddDebugFunc(ToggleFlavorMatchVerbose,
+		func(ctx context.Context, req *edgeproto.DebugRequest) string {
+			return vmspec.ToggleFlavorMatchVerbose()
+		})
 }
