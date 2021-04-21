@@ -849,8 +849,6 @@ func (m *Settings) Matches(o *Settings, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals) != len(o.EdgeEventsMetricsContinuousQueriesCollectionIntervals) {
 				return false
 			}
-			for i := 0; i < len(m.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.InfluxDbDownsampledMetricsRetention != 0 {
