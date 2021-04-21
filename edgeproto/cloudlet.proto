@@ -95,6 +95,8 @@ message PlatformConfig {
   string crm_access_private_key = 22;
   // controller access API address
   string access_api_addr = 23;
+  // Cloudlet access token
+  string cloudlet_access_token = 24;
 }
 
 // Platform Type
