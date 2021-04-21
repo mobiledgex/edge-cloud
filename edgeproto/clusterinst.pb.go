@@ -1430,10 +1430,17 @@ func (m *ClusterInst) Matches(o *ClusterInst, fopts ...MatchOpt) bool {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
 					return false
 				}
-				for i := 0; i < len(m.Errors); i++ {
-					if o.Errors[i] != m.Errors[i] {
-						return false
+				found := 0
+				for oIndex, _ := range o.Errors {
+					for mIndex, _ := range m.Errors {
+						if o.Errors[oIndex] == m.Errors[mIndex] {
+							found++
+							break
+						}
 					}
+				}
+				if found != len(o.Errors) {
+					return false
 				}
 			}
 		}
@@ -3153,10 +3160,17 @@ func (m *ClusterInstInfo) Matches(o *ClusterInstInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
-			for i := 0; i < len(m.Errors); i++ {
-				if o.Errors[i] != m.Errors[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Errors {
+				for mIndex, _ := range m.Errors {
+					if o.Errors[oIndex] == m.Errors[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}

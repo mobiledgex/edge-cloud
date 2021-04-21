@@ -1114,8 +1114,6 @@ func (m *AutoProvPolicy) Matches(o *AutoProvPolicy, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Cloudlets) != len(o.Cloudlets) {
 				return false
 			}
-			for i := 0; i < len(m.Cloudlets); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.MinActiveInstances != 0 {
@@ -2423,10 +2421,17 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Completed) != len(o.Completed) {
 				return false
 			}
-			for i := 0; i < len(m.Completed); i++ {
-				if o.Completed[i] != m.Completed[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Completed {
+				for mIndex, _ := range m.Completed {
+					if o.Completed[oIndex] == m.Completed[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Completed) {
+				return false
 			}
 		}
 	}
@@ -2437,10 +2442,17 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
-			for i := 0; i < len(m.Errors); i++ {
-				if o.Errors[i] != m.Errors[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Errors {
+				for mIndex, _ := range m.Errors {
+					if o.Errors[oIndex] == m.Errors[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}

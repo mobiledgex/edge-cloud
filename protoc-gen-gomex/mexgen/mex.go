@@ -392,12 +392,15 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	}
 
 	mapType := m.support.GetMapType(m.gen, field)
+	oName := ""
+	mName := ""
 	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
 		m.P("if !opts.Filter && len(m.", name, ") != len(o.", name, ") {")
 		m.P("return false")
 		m.P("}")
 		if mapType == nil {
+			skipMatch := false
 			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 				subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
 				if GetObjKey(subDesc.DescriptorProto) {
@@ -411,9 +414,17 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 					m.P("}")
 					m.importSort = true
 				}
+				if !GetGenerateMatches(subDesc.DescriptorProto) {
+					skipMatch = true
+				}
 			}
-			m.P("for i := 0; i < len(m.", name, "); i++ {")
-			name = name + "[i]"
+			if !skipMatch {
+				m.P("found := 0")
+				m.P("for oIndex, _ := range o.", name, " {")
+				m.P("for mIndex, _ := range m.", name, " {")
+				oName = name + "[oIndex]"
+				mName = name + "[mIndex]"
+			}
 		} else {
 			m.P("for k, _ := range o.", name, " {")
 			m.P("_, ok := m.", name, "[k]")
@@ -435,7 +446,15 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		if *field.TypeName == ".google.protobuf.Timestamp" {
 			m.P("if m.", name, ".Seconds != o.", name, ".Seconds || m.", name, ".Nanos != o.", name, ".Nanos {")
 		} else if GetGenerateMatches(subDesc.DescriptorProto) {
-			m.P("if !m.", name, ".Matches(", ref, "o.", name, ", fopts...) {")
+			if oName != "" && mName != "" {
+				m.P("if m.", mName, ".Matches(", ref, "o.", oName, ", fopts...) {")
+				m.P("found++")
+				m.P("break")
+				m.P("}")
+				printedCheck = false
+			} else {
+				m.P("if !m.", name, ".Matches(", ref, "o.", name, ", fopts...) {")
+			}
 		} else {
 			printedCheck = false
 		}
@@ -446,12 +465,28 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	case descriptor.FieldDescriptorProto_TYPE_GROUP:
 		// deprecated in proto3
 	default:
-		m.P("if o.", name, " != m.", name, "{")
-		m.P("return false")
-		m.P("}")
+		if oName != "" && mName != "" {
+			m.P("if o.", oName, " == m.", mName, "{")
+			m.P("found++")
+			m.P("break")
+			m.P("}")
+		} else {
+			m.P("if o.", name, " != m.", name, "{")
+			m.P("return false")
+			m.P("}")
+		}
 	}
 	if repeated {
-		m.P("}")
+		if oName != "" && mName != "" {
+			m.P("}")
+			m.P("}")
+			m.P("if found != len(o.", name, ") {")
+			m.P("return false")
+			m.P("}")
+		}
+		if mapType != nil {
+			m.P("}")
+		}
 	}
 	if nilCheck && nilval == "nil" {
 		m.P("}")

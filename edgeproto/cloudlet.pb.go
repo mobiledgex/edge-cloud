@@ -4308,10 +4308,17 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
 					return false
 				}
-				for i := 0; i < len(m.Errors); i++ {
-					if o.Errors[i] != m.Errors[i] {
-						return false
+				found := 0
+				for oIndex, _ := range o.Errors {
+					for mIndex, _ := range m.Errors {
+						if o.Errors[oIndex] == m.Errors[mIndex] {
+							found++
+							break
+						}
 					}
+				}
+				if found != len(o.Errors) {
+					return false
 				}
 			}
 		}
@@ -4506,8 +4513,6 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 		} else if m.ResourceQuotas != nil && o.ResourceQuotas != nil {
 			if !opts.Filter && len(m.ResourceQuotas) != len(o.ResourceQuotas) {
 				return false
-			}
-			for i := 0; i < len(m.ResourceQuotas); i++ {
 			}
 		}
 	}
@@ -7215,10 +7220,17 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
-			for i := 0; i < len(m.Errors); i++ {
-				if o.Errors[i] != m.Errors[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Errors {
+				for mIndex, _ := range m.Errors {
+					if o.Errors[oIndex] == m.Errors[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}
@@ -7228,8 +7240,6 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		} else if m.Flavors != nil && o.Flavors != nil {
 			if !opts.Filter && len(m.Flavors) != len(o.Flavors) {
 				return false
-			}
-			for i := 0; i < len(m.Flavors); i++ {
 			}
 		}
 	}
@@ -7245,8 +7255,6 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.AvailabilityZones) != len(o.AvailabilityZones) {
 				return false
 			}
-			for i := 0; i < len(m.AvailabilityZones); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.OsImages != nil {
@@ -7255,8 +7263,6 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 		} else if m.OsImages != nil && o.OsImages != nil {
 			if !opts.Filter && len(m.OsImages) != len(o.OsImages) {
 				return false
-			}
-			for i := 0; i < len(m.OsImages); i++ {
 			}
 		}
 	}
