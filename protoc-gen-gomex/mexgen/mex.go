@@ -419,9 +419,9 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 				}
 			}
 			if !skipMatch {
-				m.P("found := false")
-				m.P("for oIndex, _ := range o.", name, " {")
+				m.P("found := 0")
 				m.P("for mIndex, _ := range m.", name, " {")
+				m.P("for oIndex, _ := range o.", name, " {")
 				oName = name + "[oIndex]"
 				mName = name + "[mIndex]"
 			}
@@ -448,7 +448,7 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		} else if GetGenerateMatches(subDesc.DescriptorProto) {
 			if oName != "" && mName != "" {
 				m.P("if m.", mName, ".Matches(", ref, "o.", oName, ", fopts...) {")
-				m.P("found = true")
+				m.P("found++")
 				m.P("break")
 				m.P("}")
 				printedCheck = false
@@ -467,7 +467,7 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	default:
 		if oName != "" && mName != "" {
 			m.P("if o.", oName, " == m.", mName, "{")
-			m.P("found = true")
+			m.P("found++")
 			m.P("break")
 			m.P("}")
 		} else {
@@ -480,8 +480,14 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		if oName != "" && mName != "" {
 			m.P("}")
 			m.P("}")
-			m.P("if !found {")
+			m.P("if opts.Filter {")
+			m.P("if found != len(m.", name, ") {")
 			m.P("return false")
+			m.P("}")
+			m.P("} else {")
+			m.P("if found != len(o.", name, ") {")
+			m.P("return false")
+			m.P("}")
 			m.P("}")
 		}
 		if mapType != nil {

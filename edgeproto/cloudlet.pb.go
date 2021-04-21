@@ -4308,17 +4308,23 @@ func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 				if !opts.Filter && len(m.Errors) != len(o.Errors) {
 					return false
 				}
-				found := false
-				for oIndex, _ := range o.Errors {
-					for mIndex, _ := range m.Errors {
+				found := 0
+				for mIndex, _ := range m.Errors {
+					for oIndex, _ := range o.Errors {
 						if o.Errors[oIndex] == m.Errors[mIndex] {
-							found = true
+							found++
 							break
 						}
 					}
 				}
-				if !found {
-					return false
+				if opts.Filter {
+					if found != len(m.Errors) {
+						return false
+					}
+				} else {
+					if found != len(o.Errors) {
+						return false
+					}
 				}
 			}
 		}
@@ -7220,17 +7226,23 @@ func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
-			found := false
-			for oIndex, _ := range o.Errors {
-				for mIndex, _ := range m.Errors {
+			found := 0
+			for mIndex, _ := range m.Errors {
+				for oIndex, _ := range o.Errors {
 					if o.Errors[oIndex] == m.Errors[mIndex] {
-						found = true
+						found++
 						break
 					}
 				}
 			}
-			if !found {
-				return false
+			if opts.Filter {
+				if found != len(m.Errors) {
+					return false
+				}
+			} else {
+				if found != len(o.Errors) {
+					return false
+				}
 			}
 		}
 	}

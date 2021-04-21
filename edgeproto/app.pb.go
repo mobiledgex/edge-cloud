@@ -1639,17 +1639,23 @@ func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.AutoProvPolicies) != len(o.AutoProvPolicies) {
 				return false
 			}
-			found := false
-			for oIndex, _ := range o.AutoProvPolicies {
-				for mIndex, _ := range m.AutoProvPolicies {
+			found := 0
+			for mIndex, _ := range m.AutoProvPolicies {
+				for oIndex, _ := range o.AutoProvPolicies {
 					if o.AutoProvPolicies[oIndex] == m.AutoProvPolicies[mIndex] {
-						found = true
+						found++
 						break
 					}
 				}
 			}
-			if !found {
-				return false
+			if opts.Filter {
+				if found != len(m.AutoProvPolicies) {
+					return false
+				}
+			} else {
+				if found != len(o.AutoProvPolicies) {
+					return false
+				}
 			}
 		}
 	}

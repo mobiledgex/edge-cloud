@@ -2421,17 +2421,23 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Completed) != len(o.Completed) {
 				return false
 			}
-			found := false
-			for oIndex, _ := range o.Completed {
-				for mIndex, _ := range m.Completed {
+			found := 0
+			for mIndex, _ := range m.Completed {
+				for oIndex, _ := range o.Completed {
 					if o.Completed[oIndex] == m.Completed[mIndex] {
-						found = true
+						found++
 						break
 					}
 				}
 			}
-			if !found {
-				return false
+			if opts.Filter {
+				if found != len(m.Completed) {
+					return false
+				}
+			} else {
+				if found != len(o.Completed) {
+					return false
+				}
 			}
 		}
 	}
@@ -2442,17 +2448,23 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
-			found := false
-			for oIndex, _ := range o.Errors {
-				for mIndex, _ := range m.Errors {
+			found := 0
+			for mIndex, _ := range m.Errors {
+				for oIndex, _ := range o.Errors {
 					if o.Errors[oIndex] == m.Errors[mIndex] {
-						found = true
+						found++
 						break
 					}
 				}
 			}
-			if !found {
-				return false
+			if opts.Filter {
+				if found != len(m.Errors) {
+					return false
+				}
+			} else {
+				if found != len(o.Errors) {
+					return false
+				}
 			}
 		}
 	}

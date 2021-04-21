@@ -1766,17 +1766,23 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 					return o.Apps[i].GetKeyString() < o.Apps[j].GetKeyString()
 				})
 			}
-			found := false
-			for oIndex, _ := range o.Apps {
-				for mIndex, _ := range m.Apps {
+			found := 0
+			for mIndex, _ := range m.Apps {
+				for oIndex, _ := range o.Apps {
 					if m.Apps[mIndex].Matches(&o.Apps[oIndex], fopts...) {
-						found = true
+						found++
 						break
 					}
 				}
 			}
-			if !found {
-				return false
+			if opts.Filter {
+				if found != len(m.Apps) {
+					return false
+				}
+			} else {
+				if found != len(o.Apps) {
+					return false
+				}
 			}
 		}
 	}
