@@ -140,7 +140,13 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 	// Finally, run the available tags looking for match
 	for tag_key, tag_val := range tbl.Tags {
 		var alias []string
+		propMapLen := len(flavor.PropMap)
+		curProp := 0
 		for flav_key, flav_val := range flavor.PropMap {
+			curProp++
+			if verbose {
+				log.SpanLog(ctx, log.DebugLevelApi, "Match consider", "flavor", flavor.Name, "Next Prop key", flav_key, "Prop val", flav_val)
+			}
 			// How many resources are supplied by this os flavor?
 			if strings.Contains(flav_val, ":") {
 				alias = strings.Split(flav_val, ":")
@@ -149,11 +155,20 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 				alias = strings.Split(flav_val, "=")
 			}
 			if len(alias) == 2 {
+				// handle single quoted count specifiers as in resources:VGPU='1'
+				if verbose {
+					log.SpanLog(ctx, log.DebugLevelApi, "Match consider", "flavor", flavor.Name, "alias", alias[1])
+				}
+				alias[1] = strings.Trim(alias[1], "\"")
+				alias[1] = strings.Trim(alias[1], "'")
 				if flavcnt, err = strconv.Atoi(alias[1]); err != nil {
 					if verbose {
 						log.SpanLog(ctx, log.DebugLevelApi, "Match fail Non-numeric count found in OS", "flavor", flavor.Name, "alias", alias)
 					}
-					return false, fmt.Errorf("Non-numeric count found in os flavor props for %s", flavor.Name)
+					// don't fail without looking at all props in map
+					if curProp == propMapLen {
+						return false, fmt.Errorf("End of flavor prop map Non-numeric count found in os flavor props for %s", flavor.Name)
+					}
 				}
 			} else {
 				if verbose {
@@ -162,6 +177,9 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 				continue
 			}
 			if wildcard {
+				if verbose {
+					log.SpanLog(ctx, log.DebugLevelApi, "Match wildcard", "flavor", flavor.Name, "tag_key", tag_key, "in flav_key?", flav_key, "flavcnt >=", flavcnt, "reqcnt", reqcnt)
+				}
 				// we have just the $kind:1 as in gpu=gpu:1
 				if strings.Contains(flav_key, tag_key) && flavcnt >= reqcnt {
 					if verbose {
@@ -170,11 +188,20 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 					return true, nil
 				}
 			} else {
+				if verbose {
+					log.SpanLog(ctx, log.DebugLevelApi, "Match qualified ", "flavor", flavor.Name, "request[0]", request[0], "tag_key", tag_key)
+				}
 				if request[0] == tag_key {
+					if verbose {
+						log.SpanLog(ctx, log.DebugLevelApi, "Match qualified", "flavor", flavor.Name, "tag_key", tag_key, "in flav_key?", flav_key, "flavcnt >=", flavcnt, "reqcnt", reqcnt)
+					}
 					if strings.Contains(flav_key, tag_key) {
+						if verbose {
+							log.SpanLog(ctx, log.DebugLevelApi, "Match qualified", "flavor", flavor.Name, "tag_val", tag_val, "in flav_val?", flav_val, "flavcnt >=", flavcnt, "reqcnt", reqcnt)
+						}
 						if strings.Contains(flav_val, tag_val) && flavcnt >= reqcnt {
 							if verbose {
-								log.SpanLog(ctx, log.DebugLevelApi, "Match:", "flavor", flavor.Name, "fkey", flav_key, "fval", flav_val, "tval", tag_val)
+								log.SpanLog(ctx, log.DebugLevelApi, "Match qualified!", "flavor", flavor.Name, "fkey", flav_key, "fval", flav_val, "tval", tag_val)
 							}
 							return true, nil
 						}
