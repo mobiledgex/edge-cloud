@@ -41,6 +41,7 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendVMPoolCache(&controllerData.VMPoolCache)
 	notifyServer.RegisterSendVMPoolInfoCache(&controllerData.VMPoolInfoCache)
 	notifyServer.RegisterSendCloudletCache(&controllerData.CloudletCache)
+	notifyServer.RegisterSendCloudletInternalCache(&controllerData.CloudletInternalCache)
 	notifyServer.RegisterSendAutoProvPolicyCache(&controllerData.AutoProvPolicyCache)
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)

@@ -314,6 +314,10 @@ func (s *CloudletInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (s *CloudletInternal) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func (key *CloudletPoolKey) ValidateKey() error {
 	if !util.ValidName(key.Organization) {
 		return errors.New("Invalid organization name")
