@@ -36,16 +36,17 @@ type PlatformConfig struct {
 }
 
 type Caches struct {
-	SettingsCache    *edgeproto.SettingsCache
-	FlavorCache      *edgeproto.FlavorCache
-	TrustPolicyCache *edgeproto.TrustPolicyCache
-	ClusterInstCache *edgeproto.ClusterInstCache
-	AppInstCache     *edgeproto.AppInstCache
-	AppCache         *edgeproto.AppCache
-	ResTagTableCache *edgeproto.ResTagTableCache
-	CloudletCache    *edgeproto.CloudletCache
-	VMPoolCache      *edgeproto.VMPoolCache
-	VMPoolInfoCache  *edgeproto.VMPoolInfoCache
+	SettingsCache         *edgeproto.SettingsCache
+	FlavorCache           *edgeproto.FlavorCache
+	TrustPolicyCache      *edgeproto.TrustPolicyCache
+	ClusterInstCache      *edgeproto.ClusterInstCache
+	AppInstCache          *edgeproto.AppInstCache
+	AppCache              *edgeproto.AppCache
+	ResTagTableCache      *edgeproto.ResTagTableCache
+	CloudletCache         *edgeproto.CloudletCache
+	CloudletInternalCache *edgeproto.CloudletInternalCache
+	VMPoolCache           *edgeproto.VMPoolCache
+	VMPoolInfoCache       *edgeproto.VMPoolInfoCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool

@@ -24,6 +24,7 @@ type ControllerData struct {
 	AppCache                    edgeproto.AppCache
 	AppInstCache                edgeproto.AppInstCache
 	CloudletCache               edgeproto.CloudletCache
+	CloudletInternalCache       edgeproto.CloudletInternalCache
 	VMPoolCache                 edgeproto.VMPoolCache
 	FlavorCache                 edgeproto.FlavorCache
 	ClusterInstCache            edgeproto.ClusterInstCache
@@ -70,6 +71,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
+	edgeproto.InitCloudletInternalCache(&cd.CloudletInternalCache)
 	edgeproto.InitVMPoolCache(&cd.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)

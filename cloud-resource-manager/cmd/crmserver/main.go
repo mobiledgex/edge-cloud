@@ -191,15 +191,16 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		caches := pf.Caches{
-			FlavorCache:      &controllerData.FlavorCache,
-			TrustPolicyCache: &controllerData.TrustPolicyCache,
-			ClusterInstCache: &controllerData.ClusterInstCache,
-			AppCache:         &controllerData.AppCache,
-			AppInstCache:     &controllerData.AppInstCache,
-			ResTagTableCache: &controllerData.ResTagTableCache,
-			CloudletCache:    &controllerData.CloudletCache,
-			VMPoolCache:      &controllerData.VMPoolCache,
-			VMPoolInfoCache:  &controllerData.VMPoolInfoCache,
+			FlavorCache:           &controllerData.FlavorCache,
+			TrustPolicyCache:      &controllerData.TrustPolicyCache,
+			ClusterInstCache:      &controllerData.ClusterInstCache,
+			AppCache:              &controllerData.AppCache,
+			AppInstCache:          &controllerData.AppInstCache,
+			ResTagTableCache:      &controllerData.ResTagTableCache,
+			CloudletCache:         &controllerData.CloudletCache,
+			CloudletInternalCache: &controllerData.CloudletInternalCache,
+			VMPoolCache:           &controllerData.VMPoolCache,
+			VMPoolInfoCache:       &controllerData.VMPoolInfoCache,
 		}
 
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
