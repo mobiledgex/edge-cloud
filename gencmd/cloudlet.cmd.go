@@ -1368,6 +1368,24 @@ var OperationTimeLimitsComments = map[string]string{
 	"deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 }
 var OperationTimeLimitsSpecialArgs = map[string]string{}
+var CloudletInternalRequiredArgs = []string{
+	"key.organization",
+	"key.name",
+}
+var CloudletInternalOptionalArgs = []string{
+	"props",
+}
+var CloudletInternalAliasArgs = []string{}
+var CloudletInternalComments = map[string]string{
+	"fields":           "Fields are used for the Update API to specify which fields to apply.",
+	"key.organization": "Organization of the cloudlet site",
+	"key.name":         "Name of the cloudlet",
+	"props":            "Map of key value pairs for data exchanged between components",
+}
+var CloudletInternalSpecialArgs = map[string]string{
+	"fields": "StringArray",
+	"props":  "StringToString",
+}
 var PlatformConfigRequiredArgs = []string{}
 var PlatformConfigOptionalArgs = []string{
 	"containerregistrypath",
@@ -1390,7 +1408,6 @@ var PlatformConfigOptionalArgs = []string{
 	"deploymenttag",
 	"crmaccessprivatekey",
 	"accessapiaddr",
-	"cloudletaccesstoken",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -1414,7 +1431,6 @@ var PlatformConfigComments = map[string]string{
 	"deploymenttag":         "Deployment Tag",
 	"crmaccessprivatekey":   "crm access private key",
 	"accessapiaddr":         "controller access API address",
-	"cloudletaccesstoken":   "Cloudlet access token",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -1557,7 +1573,6 @@ var CloudletComments = map[string]string{
 	"config.deploymenttag":                "Deployment Tag",
 	"config.crmaccessprivatekey":          "crm access private key",
 	"config.accessapiaddr":                "controller access API address",
-	"config.cloudletaccesstoken":          "Cloudlet access token",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",
