@@ -31,6 +31,8 @@ type KubeNames struct {
 	ImagePullSecrets  []string
 	ImagePaths        []string
 	IsUriIPAddr       bool
+	Namespace         string
+	BaseKconfName     string
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
@@ -52,6 +54,11 @@ func GetK8sNodeNameSuffix(clusterInstKey *edgeproto.ClusterInstKey) string {
 // GetCloudletClusterName return the name of the cluster including cloudlet
 func GetCloudletClusterName(clusterKey *edgeproto.ClusterInstKey) string {
 	return GetK8sNodeNameSuffix(clusterKey)
+}
+
+func GetNamespace(appInstKey *edgeproto.AppInstKey) string {
+	// Note that we use the virtual cluster name, not the real cluster name
+	return util.DNSSanitize(fmt.Sprintf("%s-%s-%s-%s", appInstKey.AppKey.Organization, appInstKey.AppKey.Name, appInstKey.AppKey.Version, appInstKey.ClusterInstKey.ClusterKey.Name))
 }
 
 func NormalizeName(name string) string {
@@ -103,6 +110,13 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	kubeNames.AppImage = NormalizeName(app.ImagePath)
 	kubeNames.OperatorName = NormalizeName(clusterInst.Key.CloudletKey.Organization)
 	kubeNames.KconfName = GetKconfName(clusterInst)
+	// if clusterInst is multi-tenant and AppInst is specified, use namespaced config
+	if clusterInst.MultiTenant && appInst.Key.AppKey.Name != "" && !cloudcommon.IsSideCarApp(app) {
+		kubeNames.Namespace = GetNamespace(&appInst.Key)
+		kubeNames.BaseKconfName = kubeNames.KconfName
+		baseName := strings.TrimSuffix(kubeNames.KconfName, ".kubeconfig")
+		kubeNames.KconfName = fmt.Sprintf("%s.%s.kubeconfig", baseName, kubeNames.Namespace)
+	}
 	kubeNames.KconfEnv = "KUBECONFIG=" + kubeNames.KconfName
 	kubeNames.DeploymentType = app.Deployment
 	if app.ImagePath != "" {

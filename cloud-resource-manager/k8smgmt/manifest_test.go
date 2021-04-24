@@ -45,17 +45,26 @@ func TestEnvVars(t *testing.T) {
 	}))
 	defer tsEnvVars.Close()
 
+	names := &KubeNames{}
+	flavor := &testutil.FlavorData[0]
+
 	authApi := &cloudcommon.DummyRegistryAuthApi{}
 	// Test Deploymeent manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
-	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
+	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
 	require.Nil(t, err)
 	// make envVars remote
 	app.Configs[0].Config = tsEnvVars.URL
-	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
+	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
+
+	// Test namespace options
+	names.Namespace = "app-ns"
+	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
+	require.Nil(t, err)
+	fmt.Printf("%s\n", merged)
 }
 
 var deploymentManifest = `apiVersion: v1
@@ -162,6 +171,7 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
+    config: ""
     run: pokemongo
   name: pokemongo-tcp
 spec:
@@ -180,6 +190,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   creationTimestamp: null
+  labels:
+    config: ""
   name: pokemongo-deployment
 spec:
   replicas: 1
@@ -233,6 +245,8 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   creationTimestamp: null
+  labels:
+    config: ""
   name: pokemongo2-deployment
 spec:
   selector:
@@ -274,6 +288,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: influxdb
+    config: ""
   name: influxdb
 spec:
   replicas: 1
@@ -342,7 +357,7 @@ func TestImagePullSecrets(t *testing.T) {
 		names.ImagePullSecrets = append(names.ImagePullSecrets, secret)
 	}
 
-	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets)
+	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets, &edgeproto.Flavor{}, &KubeNames{})
 	require.Nil(t, err)
 	fmt.Println(newMf)
 	require.Equal(t, newMf, expectedDeploymentManifest)

@@ -1104,7 +1104,7 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 		"traefik.http.services.jaeger-c.loadbalancer.server.port=14268",
 		"traefik.http.services.jaeger-ui-notls.loadbalancer.server.port=16686",
 	}
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	for _, l := range labels {
 		args = append(args, "-l", l)
 	}
@@ -1118,7 +1118,7 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 }
 
 func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	// jaeger version should match "jaeger_version" in
 	// ansible/roles/jaeger/defaults/main.yaml
 	args = append(args,
@@ -1152,7 +1152,7 @@ func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
 	return err
 }
 
-func (p *DockerGeneric) getRunArgs() []string {
+func (p *DockerGeneric) GetRunArgs() []string {
 	args := []string{
 		"run", "--rm", "--name", p.Name,
 	}
@@ -1176,6 +1176,10 @@ func (p *DockerGeneric) GetExeName() string { return "docker" }
 
 func (p *DockerGeneric) LookupArgs() string { return p.Name }
 
+func (p *DockerGeneric) SetCmd(cmd *exec.Cmd) { p.cmd = cmd }
+
+func (p *DockerGeneric) GetCmd() *exec.Cmd { return p.cmd }
+
 func (p *ElasticSearch) StartLocal(logfile string, opts ...StartOp) error {
 	switch p.Type {
 	case "kibana":
@@ -1189,7 +1193,7 @@ func (p *ElasticSearch) StartLocal(logfile string, opts ...StartOp) error {
 
 func (p *ElasticSearch) StartElasticSearch(logfile string, opts ...StartOp) error {
 	// simple single node cluster
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	args = append(args,
 		"-p", "9200:9200",
 		"-p", "9300:9300",
@@ -1228,7 +1232,7 @@ func (p *ElasticSearch) StartElasticSearch(logfile string, opts ...StartOp) erro
 }
 
 func (p *ElasticSearch) StartKibana(logfile string, opts ...StartOp) error {
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	args = append(args,
 		"-p", "5601:5601",
 		"docker.elastic.co/kibana/kibana:7.6.2",
@@ -1302,7 +1306,7 @@ func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 	}
 	wr.Flush()
 
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	args = append(args,
 		"-p", "9201:9201",
 		"-v", fmt.Sprintf("%s:/certs", certsDir),

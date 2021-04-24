@@ -604,6 +604,7 @@ var ClusterInstOptionalArgs = []string{
 	"skipcrmcleanuponfailure",
 	"reservationendedat.seconds",
 	"reservationendedat.nanos",
+	"multitenant",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -649,6 +650,7 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
+	"multitenant":                            "Multi-tenant kubernetes cluster",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors":      "StringArray",
@@ -730,4 +732,5 @@ var UpdateClusterInstOptionalArgs = []string{
 	"skipcrmcleanuponfailure",
 	"reservationendedat.seconds",
 	"reservationendedat.nanos",
+	"multitenant",
 }

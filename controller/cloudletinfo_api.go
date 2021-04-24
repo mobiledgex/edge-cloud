@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -68,6 +69,9 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	})
 	if changedToOnline {
 		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "version", in.ContainerVersion)
+		if cloudletSupportsMultiTenant(in) {
+			go createDefaultMultiTenantCluster(ctx, in.Key)
+		}
 	}
 
 	cloudlet := edgeproto.Cloudlet{}
@@ -387,4 +391,27 @@ func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edge
 	cancel()
 
 	return err
+}
+
+func getCloudletPropertyBool(info *edgeproto.CloudletInfo, prop string, def bool) bool {
+	if info.Properties == nil {
+		return def
+	}
+	str, found := info.Properties[prop]
+	if !found {
+		return def
+	}
+	val, err := strconv.ParseBool(str)
+	if err != nil {
+		return def
+	}
+	return val
+}
+
+// Most cloudlets should support creating a multi-tenant cluster.
+// However special cases like Anthos which are emulating clusters by using
+// a hidden multi-tenant cluster, cannot.
+// For now, however, we leave the default as false.
+func cloudletSupportsMultiTenant(info *edgeproto.CloudletInfo) bool {
+	return getCloudletPropertyBool(info, cloudcommon.CloudletSupportsMT, false)
 }
