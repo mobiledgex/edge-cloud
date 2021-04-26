@@ -635,7 +635,7 @@ var VMSpecComments = map[string]string{
 	"flavor.ram":       "RAM in megabytes",
 	"flavor.vcpus":     "Number of virtual CPUs",
 	"flavor.disk":      "Amount of disk space in gigabytes",
-	"flavor.optresmap": "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"flavor.optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
 }
 var VMSpecSpecialArgs = map[string]string{
 	"flavor.fields":    "StringArray",
