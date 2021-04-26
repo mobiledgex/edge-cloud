@@ -101,5 +101,5 @@ func EdgeEventsCookieFromContext(ctx context.Context) (eekey *EdgeEventsCookieKe
 }
 
 func IsTheSameCluster(key1 *EdgeEventsCookieKey, key2 *EdgeEventsCookieKey) bool {
-	return key1.CloudletOrg == key2.CloudletOrg && key1.CloudletName == key2.CloudletName && key1.ClusterOrg == key2.ClusterOrg && key2.ClusterName == key2.ClusterName
+	return key1.CloudletOrg == key2.CloudletOrg && key1.CloudletName == key2.CloudletName && key1.ClusterOrg == key2.ClusterOrg && key1.ClusterName == key2.ClusterName
 }
