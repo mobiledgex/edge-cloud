@@ -425,7 +425,7 @@ var FlavorComments = map[string]string{
 	"ram":       "RAM in megabytes",
 	"vcpus":     "Number of virtual CPUs",
 	"disk":      "Amount of disk space in gigabytes",
-	"optresmap": "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
 }
 var FlavorSpecialArgs = map[string]string{
 	"fields":    "StringArray",
