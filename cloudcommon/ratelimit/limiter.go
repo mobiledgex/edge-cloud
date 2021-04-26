@@ -2,9 +2,6 @@ package ratelimit
 
 import (
 	"context"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 )
 
 // Limiter Interface
@@ -18,13 +15,9 @@ type Limiter interface {
 
 type Context struct {
 	context.Context
-	Api  string
-	User string
-	Org  string
-	Ip   string
-}
-
-// Helper function that returns an error when rate limit is exceede. 429???
-func GrpcRateLimitError(msg string) error {
-	return grpc.Errorf(codes.ResourceExhausted, msg)
+	Api    string
+	User   string
+	Org    string
+	Ip     string
+	Bypass bool // bypass limiting (eg. controller apis called via mc api)
 }

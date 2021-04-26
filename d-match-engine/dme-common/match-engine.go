@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -1213,12 +1214,22 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		return fmt.Errorf("First message should have event type EVENT_INIT_CONNECTION")
 	}
 
+	// Initialize rate limiter so that we can handle all the incoming messages
+	rateLimiter := ratelimit.NewTokenBucketLimiter(ratelimit.DefaultReqsPerSecondPerApi, ratelimit.DefaultTokenBucketSize)
 	// Loop while persistent connection is up
 loop:
 	for {
 		// Receive data from stream
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
+		// Rate limit
+		rateLimiterCtx := ratelimit.Context{Context: ctx}
+		limit, err := rateLimiter.Limit(rateLimiterCtx)
+		if limit {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Limiting client messages", "err", err)
+			sendErrorEventToClient(ctx, fmt.Sprintf("Limiting client messages. Most recent ClientEdgeEvent will not be processed: %v. Error is: %s", cupdate, err), *appInstKey, *sessionCookieKey)
+			continue
+		}
 		// Check receive errors
 		if err != nil && err != io.EOF {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "error on receive", "error", err)

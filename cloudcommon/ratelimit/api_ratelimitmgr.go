@@ -4,8 +4,7 @@ import "fmt"
 
 // TODO: MUTEX
 // TODO: Allow unlimited for admin
-// TODO: rate limit before auth or vice versa??
-// TODO: Add time until next request available
+// TODO: rate limit before auth or vice versa?? (ans: before)
 
 type ApiRateLimitManager struct {
 	limitsPerApi map[string]*rateLimitPerApi
@@ -17,8 +16,8 @@ func NewApiRateLimitManager() *ApiRateLimitManager {
 	return r
 }
 
-func (r *ApiRateLimitManager) AddRateLimitPerApi(api string, perUserMaxReqs *ApiRateLimitMaxReqs, perOrgMaxReqs *ApiRateLimitMaxReqs, flowLimiter Limiter) {
-	r.limitsPerApi[api] = newRateLimitPerApi(perUserMaxReqs, perOrgMaxReqs, flowLimiter)
+func (r *ApiRateLimitManager) AddRateLimitPerApi(api string, flowLimiter *FlowLimiter, perIpConfig *FullLimiterConfig, perUserConfig *FullLimiterConfig, perOrgConfig *FullLimiterConfig) {
+	r.limitsPerApi[api] = newRateLimitPerApi(flowLimiter, perIpConfig, perUserConfig, perOrgConfig)
 }
 
 // TODO: Consolidate dict lookups into helper function
@@ -29,12 +28,25 @@ func (r *ApiRateLimitManager) Limit(ctx Context) (bool, error) {
 		// log or return error
 		return false, nil
 	}
+	if r.doesLimitByIp(api) && ctx.Ip != "" {
+		// limit per ip
+		limiter, ok := rateLimitPerApi.limitsPerIp[ctx.Ip]
+		if !ok {
+			// add ip
+			limiter = NewFullLimiter(rateLimitPerApi.perUserConfig)
+			rateLimitPerApi.limitsPerIp[ctx.Ip] = limiter
+		}
+		limit, err := limiter.Limit(ctx)
+		if limit {
+			return limit, fmt.Errorf("client exceeded api rate limit per ip. %s", err)
+		}
+	}
 	if r.doesLimitByUser(api) && ctx.User != "" {
 		// limit per user
 		limiter, ok := rateLimitPerApi.limitsPerUser[ctx.User]
 		if !ok {
 			// add user
-			limiter = NewFixedWindowLimiter(rateLimitPerApi.perUserMaxReqs)
+			limiter = NewFullLimiter(rateLimitPerApi.perUserConfig)
 			rateLimitPerApi.limitsPerUser[ctx.User] = limiter
 		}
 		limit, err := limiter.Limit(ctx)
@@ -47,25 +59,12 @@ func (r *ApiRateLimitManager) Limit(ctx Context) (bool, error) {
 		limiter, ok := rateLimitPerApi.limitsPerOrg[ctx.Org]
 		if !ok {
 			// add org
-			limiter = NewFixedWindowLimiter(rateLimitPerApi.perOrgMaxReqs)
+			limiter = NewFullLimiter(rateLimitPerApi.perOrgConfig)
 			rateLimitPerApi.limitsPerOrg[ctx.Org] = limiter
 		}
 		limit, err := limiter.Limit(ctx)
 		if limit {
 			return limit, fmt.Errorf("org \"%s\" exceeded api rate limit per org. %s", ctx.Org, err)
-		}
-	}
-	if r.doesLimitByIp(api) && ctx.Ip != "" {
-		// limit per ip
-		limiter, ok := rateLimitPerApi.limitsPerIp[ctx.Ip]
-		if !ok {
-			// add ip
-			limiter = NewFixedWindowLimiter(rateLimitPerApi.perUserMaxReqs)
-			rateLimitPerApi.limitsPerIp[ctx.Ip] = limiter
-		}
-		limit, err := limiter.Limit(ctx)
-		if limit {
-			return limit, fmt.Errorf("client exceeded api rate limit per ip. %s", err)
 		}
 	}
 	return rateLimitPerApi.flowLimiter.Limit(ctx)
@@ -77,7 +76,7 @@ func (r *ApiRateLimitManager) doesLimitByUser(api string) bool {
 		// log or return error
 		return false
 	}
-	if rateLimitPerApi.perUserMaxReqs == nil {
+	if rateLimitPerApi.perUserConfig == nil {
 		return false
 	}
 	return true
@@ -89,7 +88,7 @@ func (r *ApiRateLimitManager) doesLimitByOrg(api string) bool {
 		// log or return error
 		return false
 	}
-	if rateLimitPerApi.perOrgMaxReqs == nil {
+	if rateLimitPerApi.perOrgConfig == nil {
 		return false
 	}
 	return true
@@ -101,38 +100,33 @@ func (r *ApiRateLimitManager) doesLimitByIp(api string) bool {
 		// log or return error
 		return false
 	}
-	if rateLimitPerApi.perUserMaxReqs == nil {
+	if rateLimitPerApi.perUserConfig == nil {
 		return false
 	}
 	return true
 }
 
 type rateLimitPerApi struct {
-	perUserMaxReqs *ApiRateLimitMaxReqs
-	perOrgMaxReqs  *ApiRateLimitMaxReqs
-	limitsPerUser  map[string]*FixedWindowLimiter
-	limitsPerOrg   map[string]*FixedWindowLimiter
-	limitsPerIp    map[string]*FixedWindowLimiter
-	flowLimiter    Limiter
+	// Flow limiter for API endpoint
+	flowLimiter *FlowLimiter
+	// FullLimiterConfigs per ip, user, and org
+	perIpConfig   *FullLimiterConfig
+	perUserConfig *FullLimiterConfig
+	perOrgConfig  *FullLimiterConfig
+	// Maps of ip, user, or org to FullLimiters
+	limitsPerIp   map[string]*FullLimiter
+	limitsPerUser map[string]*FullLimiter
+	limitsPerOrg  map[string]*FullLimiter
 }
 
-func newRateLimitPerApi(perUserMaxReqs *ApiRateLimitMaxReqs, perOrgMaxReqs *ApiRateLimitMaxReqs, flowLimiter Limiter) *rateLimitPerApi {
+func newRateLimitPerApi(flowLimiter *FlowLimiter, perIpConfig *FullLimiterConfig, perUserConfig *FullLimiterConfig, perOrgConfig *FullLimiterConfig) *rateLimitPerApi {
 	r := &rateLimitPerApi{}
-	r.perUserMaxReqs = perUserMaxReqs
-	r.perOrgMaxReqs = perOrgMaxReqs
 	r.flowLimiter = flowLimiter
-	r.limitsPerUser = make(map[string]*FixedWindowLimiter)
-	r.limitsPerOrg = make(map[string]*FixedWindowLimiter)
-	r.limitsPerIp = make(map[string]*FixedWindowLimiter)
+	r.perIpConfig = perIpConfig
+	r.perUserConfig = perUserConfig
+	r.perOrgConfig = perOrgConfig
+	r.limitsPerUser = make(map[string]*FullLimiter)
+	r.limitsPerOrg = make(map[string]*FullLimiter)
+	r.limitsPerIp = make(map[string]*FullLimiter)
 	return r
 }
-
-// per user and per org and per ip
-// map of APIs to map of users and orgs
-// each user and org is mapped to FixedWindowLimiter
-
-// Rate limit interceptor that uses this Manager
-
-// TODO: differentiate between RBAC (devs, operators, admin)
-
-// TODO: add capability to do tiered api rates (connect with billing????)

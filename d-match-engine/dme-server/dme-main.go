@@ -539,18 +539,18 @@ func main() {
 	streamApiRateLimitMgr := ratelimit.NewApiRateLimitManager()
 	serverType := reflect.TypeOf(&server{})
 	for i := 0; i < serverType.NumMethod(); i++ {
+		apiFlowLimiter := ratelimit.NewFlowLimiter(ratelimit.DefaultDmeApiFlowLimiterConfig)
 		method := serverType.Method(i)
-		flowLimiter := ratelimit.NewLeakyBucketLimiter(ratelimit.DefaultReqsPerSecond)
 		if strings.Contains(method.Name, "Stream") || strings.Contains(method.Name, "Qos") {
-			streamApiRateLimitMgr.AddRateLimitPerApi(method.Name, ratelimit.TestDmeApiRateLimitMaxReqs, nil, flowLimiter)
+			streamApiRateLimitMgr.AddRateLimitPerApi(method.Name, apiFlowLimiter, ratelimit.DefaultDmeApiPerIpFullLimiterConfig, nil, nil)
 		} else {
-			unaryApiRateLimitMgr.AddRateLimitPerApi(method.Name, ratelimit.TestDmeApiRateLimitMaxReqs, nil, flowLimiter)
+			unaryApiRateLimitMgr.AddRateLimitPerApi(method.Name, apiFlowLimiter, ratelimit.DefaultDmeApiPerIpFullLimiterConfig, nil, nil)
 		}
 	}
 
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, cloudcommon.GetUnaryRateLimiterInterceptor(unaryApiRateLimitMgr), dmecommon.Stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), cloudcommon.GetStreamRateLimiterInterceptor(streamApiRateLimitMgr), dmecommon.Stats.GetStreamStatsInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.GetUnaryRateLimiterInterceptor(unaryApiRateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.GetStreamRateLimiterInterceptor(streamApiRateLimitMgr), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {

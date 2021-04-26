@@ -1,7 +1,6 @@
 package ratelimit
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -9,36 +8,48 @@ import (
 
 // Useful for rate limiting per user (eg. API limits)
 type FixedWindowLimiter struct {
+	limiterPerSecond *IntervalLimiter
 	limiterPerMinute *IntervalLimiter
 	limiterPerHour   *IntervalLimiter
-	limiterPerDay    *IntervalLimiter
 }
 
 // TODO: Default reqsPer[Interval], Handle unlimited reqs (-1??)
-func NewFixedWindowLimiter(maxReqs *ApiRateLimitMaxReqs) *FixedWindowLimiter {
+func NewFixedWindowLimiter(maxReqsPerSecondPerConsumer int, maxReqsPerMinutePerConsumer int, maxReqsPerHourPerConsumer int) *FixedWindowLimiter {
 	f := &FixedWindowLimiter{}
-	f.limiterPerMinute = NewIntervalLimiter(maxReqs.maxReqsPerMinutePerConsumer, time.Minute)
-	f.limiterPerHour = NewIntervalLimiter(maxReqs.maxReqsPerHourPerConsumer, time.Hour)
-	f.limiterPerDay = NewIntervalLimiter(maxReqs.maxReqsPerDayPerConsumer, 24*time.Hour)
+	if maxReqsPerSecondPerConsumer > 0 {
+		f.limiterPerSecond = NewIntervalLimiter(maxReqsPerSecondPerConsumer, time.Second)
+	}
+	if maxReqsPerMinutePerConsumer > 0 {
+		f.limiterPerMinute = NewIntervalLimiter(maxReqsPerMinutePerConsumer, time.Minute)
+	}
+	if maxReqsPerHourPerConsumer > 0 {
+		f.limiterPerHour = NewIntervalLimiter(maxReqsPerHourPerConsumer, time.Hour)
+	}
 	return f
 }
 
 // TODO: limit by largest timer interval first??
-func (f *FixedWindowLimiter) Limit(ctx context.Context) (bool, error) {
-	limit, err := f.limiterPerMinute.Limit(ctx)
-	if limit {
-		// log
-		return true, fmt.Errorf("reached limit per minute - %s", err.Error())
+func (f *FixedWindowLimiter) Limit(ctx Context) (bool, error) {
+	if f.limiterPerSecond != nil {
+		limit, err := f.limiterPerSecond.Limit(ctx)
+		if limit {
+			// log
+			return true, fmt.Errorf("reached limit per second - %s", err.Error())
+		}
 	}
-	limit, err = f.limiterPerHour.Limit(ctx)
-	if limit {
-		// log
-		return true, fmt.Errorf("reached limit per hour - %s", err.Error())
+	if f.limiterPerMinute != nil {
+		limit, err := f.limiterPerMinute.Limit(ctx)
+		if limit {
+			// log
+			return true, fmt.Errorf("reached limit per minute - %s", err.Error())
+		}
 	}
-	limit, err = f.limiterPerDay.Limit(ctx)
-	if limit {
-		// log
-		return true, fmt.Errorf("reached limit per day - %s", err.Error())
+	if f.limiterPerHour != nil {
+		limit, err := f.limiterPerHour.Limit(ctx)
+		if limit {
+			// log
+			return true, fmt.Errorf("reached limit per hour - %s", err.Error())
+		}
 	}
 	return false, nil
 }
@@ -63,7 +74,7 @@ func NewIntervalLimiter(reqLimit int, interval time.Duration) *IntervalLimiter {
 }
 
 // TODO: Charge once surpass api limit???
-func (i *IntervalLimiter) Limit(ctx context.Context) (bool, error) {
+func (i *IntervalLimiter) Limit(ctx Context) (bool, error) {
 	i.mux.Lock()
 	defer i.mux.Unlock()
 	// Check start of interval

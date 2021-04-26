@@ -1,6 +1,58 @@
 package ratelimit
 
-type ApiRateLimitMaxReqs struct {
+import "sync"
+
+// MaxReqs algorithms rate limiter
+// Imposes a maximum number of requests in a time frame (either fixed or rolling) for a user, organization, or ip
+// This is useful if we want to provide billing tiers for API usage (particularly free vs. paid tiers)
+type MaxReqsLimiter struct {
+	limiter Limiter
+	mux     sync.Mutex
+}
+
+type MaxReqsLimiterConfig struct {
+	MaxReqsAlgorithm MaxReqsRateLimitingAlgorithm
+	MaxReqsPerSecond int
+	MaxReqsPerMinute int
+	MaxReqsPerHour   int
+}
+
+type MaxReqsRateLimitingAlgorithm int
+
+const (
+	NoMaxReqsAlgorithm MaxReqsRateLimitingAlgorithm = iota
+	RollingWindowAlgorithm
+	FixedWindowAlgorithm
+)
+
+func NewMaxReqsLimiter(config *MaxReqsLimiterConfig) *MaxReqsLimiter {
+	maxReqsLimiter := &MaxReqsLimiter{}
+	switch config.MaxReqsAlgorithm {
+	case FixedWindowAlgorithm:
+		maxReqsLimiter.limiter = NewFixedWindowLimiter(config.MaxReqsPerSecond, config.MaxReqsPerMinute, config.MaxReqsPerHour)
+	case RollingWindowAlgorithm:
+		// log
+		fallthrough
+	case NoMaxReqsAlgorithm:
+		// log
+		fallthrough
+	default:
+		// log
+		return nil
+	}
+	return maxReqsLimiter
+}
+
+func (f *MaxReqsLimiter) Limit(ctx Context) (bool, error) {
+	f.mux.Lock()
+	defer f.mux.Unlock()
+	if f.limiter != nil {
+		return f.limiter.Limit(ctx)
+	}
+	return false, nil
+}
+
+/*type ApiRateLimitMaxReqs struct {
 	maxReqsPerMinutePerConsumer int
 	maxReqsPerHourPerConsumer   int
 	maxReqsPerDayPerConsumer    int
@@ -23,10 +75,6 @@ const (
 	tier2 ApiTier = 10
 	tier3 ApiTier = 100
 )
-
-var DefaultReqsPerSecond = 100
-
-var DefaultTokenBucketSize = 10 // equivalent to burst size
 
 // TODO: GROUP rates BY INDIVIDUAL RPCs or SERVICES??? (answer: lets do services)
 
@@ -58,4 +106,4 @@ var TestDmeApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
 	maxReqsPerMinutePerConsumer: 5,
 	maxReqsPerHourPerConsumer:   10,
 	maxReqsPerDayPerConsumer:    100,
-}
+}*/
