@@ -3,7 +3,6 @@ package xind
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/dockermgmt"
@@ -48,7 +47,7 @@ func (s *Xind) CreateAppInstNoPatch(ctx context.Context, clusterInst *edgeproto.
 		return err
 	}
 
-	if len(appInst.MappedPorts) > 0 && UseProxy(app) {
+	if len(appInst.MappedPorts) > 0 {
 		proxyName := dockermgmt.GetContainerName(&app.Key)
 		log.SpanLog(ctx, log.DebugLevelInfra, "Add Proxy", "ports", appInst.MappedPorts, "masterIP", masterIP, "network", network)
 		err = proxy.CreateNginxProxy(ctx, client,
@@ -158,7 +157,7 @@ func (s *Xind) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Cluster
 		return err
 	}
 
-	if len(appInst.MappedPorts) > 0 && UseProxy(app) {
+	if len(appInst.MappedPorts) > 0 {
 		log.SpanLog(ctx, log.DebugLevelInfra, "DeleteNginxProxy for xind")
 		if err = proxy.DeleteNginxProxy(ctx, client, dockermgmt.GetContainerName(&app.Key)); err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "cannot delete proxy", "name", names.AppName)
@@ -289,11 +288,4 @@ func (s *Xind) patchServiceIp(ctx context.Context, clusterInst *edgeproto.Cluste
 		log.SpanLog(ctx, log.DebugLevelInfra, "patched externalIPs on service", "service", serviceName, "externalIPs", ipaddr)
 	}
 	return nil
-}
-
-func UseProxy(app *edgeproto.App) bool {
-	if v := os.Getenv("XIND_SKIP_PROXY"); v == "true" {
-		return false
-	}
-	return true
 }

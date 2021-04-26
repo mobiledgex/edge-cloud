@@ -57,9 +57,6 @@ spec:
 {{- end}}
 `))
 
-//  labels:
-//    {{.ConfigLabelKey}}: {{.ConfigLabelVal}}
-
 func GetNetworkPolicy(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, names *KubeNames) (string, error) {
 	if names.Namespace == "" {
 		return "", fmt.Errorf("NetworkPolicy only valid for namespaced instances")

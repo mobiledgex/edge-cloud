@@ -61,6 +61,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // 11: `PLATFORM_TYPE_VCD`
 // 12: `PLATFORM_TYPE_K8S_BARE_METAL`
 // 13: `PLATFORM_TYPE_KIND`
+// 14: `PLATFORM_TYPE_KINDINFRA`
 type PlatformType int32
 
 const (

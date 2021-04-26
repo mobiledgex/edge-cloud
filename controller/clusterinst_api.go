@@ -1540,6 +1540,12 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 			// for now avoid gpu flavors
 			continue
 		}
+		if flavor.OptResMap != nil {
+			if _, found := flavor.OptResMap["gpu"]; found {
+				// avoid gpu flavors
+				continue
+			}
+		}
 		if flavor.Vcpus != largest.Vcpus {
 			if flavor.Vcpus > largest.Vcpus {
 				largest = *flavor

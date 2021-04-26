@@ -60,12 +60,104 @@ func TestEnvVars(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
 
-	// Test namespace options
+	// Test resource limit injection with namespace
 	names.Namespace = "app-ns"
 	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
 	require.Nil(t, err)
-	fmt.Printf("%s\n", merged)
+	require.Equal(t, expectedFullManifest, merged)
 }
+
+var expectedFullManifest = `apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+    run: pokemongo1.0.0
+  name: pokemongo100-tcp
+spec:
+  ports:
+  - name: tcp443
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  - name: tcp10002
+    port: 10002
+    protocol: TCP
+    targetPort: 10002
+  selector:
+    run: pokemongo1.0.0
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+    run: pokemongo1.0.0
+  name: pokemongo100-udp
+spec:
+  ports:
+  - name: udp10002
+    port: 10002
+    protocol: UDP
+    targetPort: 10002
+  selector:
+    run: pokemongo1.0.0
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+  name: pokemongo100-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: pokemongo1.0.0
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mex-app: pokemongo100-deployment
+        mexAppName: pokemongo
+        mexAppVersion: "100"
+        run: pokemongo1.0.0
+    spec:
+      containers:
+      - env:
+        - name: SOME_ENV1
+          value: value1
+        - name: SOME_ENV2
+        imagePullPolicy: Always
+        name: pokemongo100
+        ports:
+        - containerPort: 443
+          protocol: TCP
+        - containerPort: 10002
+          protocol: TCP
+        - containerPort: 10002
+          protocol: UDP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+      imagePullSecrets:
+      - {}
+status: {}
+`
 
 var deploymentManifest = `apiVersion: v1
 kind: Service

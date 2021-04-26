@@ -588,8 +588,6 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			str := fmt.Sprintf("Flavor %s not found",
 				new.Flavor.Name)
 			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
-			// Marks end of appinst change and hence reduces ref count
-			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)

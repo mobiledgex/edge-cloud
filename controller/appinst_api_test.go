@@ -516,10 +516,6 @@ func TestAutoClusterInst(t *testing.T) {
 	require.NotNil(t, err, "create autodelete appInst")
 	require.Contains(t, err.Error(), "Sidecar AppInst (AutoDelete App) must specify the RealClusterName field to deploy to the virtual cluster")
 
-	// Test multi-tenant autocluster.
-	// Positive tests are handled by testutil.test_data.go.
-	appInst = testutil.AppInstData[0]
-
 	err = clusterInstApi.DeleteClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err)
 
@@ -730,10 +726,5 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 
 	responder.SetSimulateAppDeleteFailure(false)
 	responder.SetSimulateClusterDeleteFailure(false)
-
-}
-
-func testMultiTenantAutoCluster(t *testing.T, ctx context.Context) {
-	// create multi-tenant base cluster
 
 }

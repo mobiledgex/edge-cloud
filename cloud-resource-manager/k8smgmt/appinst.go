@@ -384,7 +384,6 @@ func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 		return err
 	}
 	cmd := fmt.Sprintf("kubectl create -f %s --kubeconfig=%s", file, names.BaseKconfName)
-	//cmd := fmt.Sprintf("kubectl create namespace %s --kubeconfig=%s", names.Namespace, names.BaseKconfName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("Error in creating namespace: %s - %v", out, err)
