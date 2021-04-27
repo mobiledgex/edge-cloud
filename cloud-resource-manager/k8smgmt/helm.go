@@ -218,14 +218,14 @@ func InstallHelm(ctx context.Context, client ssh.Client, names *KubeNames) error
 	// Add service account for tiller
 	cmd := fmt.Sprintf("%s kubectl create serviceaccount --namespace kube-system tiller", names.KconfEnv)
 	out, err := client.Output(cmd)
-	if err != nil {
+	if err != nil && !strings.Contains(out, "already exists") {
 		return fmt.Errorf("error creating tiller service account, %s, %s, %v", cmd, out, err)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "setting service acct", "kconf", names.KconfName)
 
 	cmd = fmt.Sprintf("%s kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller", names.KconfEnv)
 	out, err = client.Output(cmd)
-	if err != nil {
+	if err != nil && !strings.Contains(out, "already exists") {
 		return fmt.Errorf("error creating role binding, %s, %s, %v", cmd, out, err)
 	}
 

@@ -1547,7 +1547,7 @@ var CloudletComments = map[string]string{
 	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind",
+	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
 	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
@@ -1664,7 +1664,7 @@ var CloudletPropsOptionalArgs = []string{
 }
 var CloudletPropsAliasArgs = []string{}
 var CloudletPropsComments = map[string]string{
-	"platformtype":                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind",
+	"platformtype":                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
 	"properties:#.value.name":        "Name of the property",
 	"properties:#.value.description": "Description of the property",
 	"properties:#.value.value":       "Default value of the property",
@@ -1688,7 +1688,7 @@ var CloudletResourceQuotaPropsOptionalArgs = []string{
 }
 var CloudletResourceQuotaPropsAliasArgs = []string{}
 var CloudletResourceQuotaPropsComments = map[string]string{
-	"platformtype":                "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind",
+	"platformtype":                "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
 	"properties:#.name":           "Resource name",
 	"properties:#.value":          "Resource value",
 	"properties:#.inframaxvalue":  "Resource infra max value",
@@ -1831,6 +1831,7 @@ var CloudletInfoOptionalArgs = []string{
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization",
 	"trustpolicystate",
 	"compatibilityversion",
+	"properties",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1884,11 +1885,13 @@ var CloudletInfoComments = map[string]string{
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 	"trustpolicystate":     "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"compatibilityversion": "Version for compatibility tracking",
+	"properties":           "Cloudlet properties",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
 	"fields":            "StringArray",
 	"flavors:#.propmap": "StringToString",
+	"properties":        "StringToString",
 	"status.msgs":       "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}

@@ -398,6 +398,27 @@ func TestAutoClusterInst(t *testing.T) {
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
+	// multi-tenant ClusterInst
+	mt := testutil.ClusterInstData[8]
+	require.True(t, mt.MultiTenant)
+	// negative tests
+	// bad Organization
+	mtBad := mt
+	mtBad.Key.Organization = "foo"
+	err := clusterInstApi.CreateClusterInst(&mtBad, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Only MobiledgeX ClusterInsts may be multi-tenant")
+	// bad deployment type
+	mtBad = mt
+	mtBad.Deployment = cloudcommon.DeploymentTypeDocker
+	err = clusterInstApi.CreateClusterInst(&mtBad, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Multi-tenant clusters must be of deployment type Kubernetes")
+	// Create multi-tenant ClusterInst before reservable tests.
+	// Reservable tests should pass without using multi-tenant because
+	// the App's SupportMultiTenant is false.
+	err = clusterInstApi.CreateClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
 
 	checkReserved := func(cloudletKey edgeproto.CloudletKey, found bool, id, reservedBy string) {
 		key := &edgeproto.ClusterInstKey{}
@@ -448,21 +469,23 @@ func TestAutoClusterInst(t *testing.T) {
 	}
 
 	// create auto-cluster AppInsts
-	cloudletKey := testutil.AppInstData[0].Key.ClusterInstKey.CloudletKey
-	createAutoClusterAppInst(testutil.AppInstData[0], "0")
+	appInst := testutil.AppInstData[0]
+	appInst.Key.AppKey = testutil.AppData[1].Key // does not support multi-tenant
+	cloudletKey := appInst.Key.ClusterInstKey.CloudletKey
+	createAutoClusterAppInst(appInst, "0")
 	checkReservedIds(cloudletKey, 1)
-	createAutoClusterAppInst(testutil.AppInstData[0], "1")
+	createAutoClusterAppInst(appInst, "1")
 	checkReservedIds(cloudletKey, 3)
-	createAutoClusterAppInst(testutil.AppInstData[0], "2")
+	createAutoClusterAppInst(appInst, "2")
 	checkReservedIds(cloudletKey, 7)
 	// delete one
-	deleteAutoClusterAppInst(testutil.AppInstData[0], "1")
+	deleteAutoClusterAppInst(appInst, "1")
 	checkReservedIds(cloudletKey, 7) // clusterinst doesn't get deleted
 	// create again, should reuse existing free ClusterInst
-	createAutoClusterAppInst(testutil.AppInstData[0], "1")
+	createAutoClusterAppInst(appInst, "1")
 	checkReservedIds(cloudletKey, 7)
 	// delete one again
-	deleteAutoClusterAppInst(testutil.AppInstData[0], "1")
+	deleteAutoClusterAppInst(appInst, "1")
 	checkReservedIds(cloudletKey, 7) // clusterinst doesn't get deleted
 	// cleanup unused reservable auto clusters
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
@@ -470,12 +493,12 @@ func TestAutoClusterInst(t *testing.T) {
 	checkReserved(cloudletKey, false, "1", "")
 	checkReservedIds(cloudletKey, 5)
 	// create again, should create new ClusterInst with next free id
-	createAutoClusterAppInst(testutil.AppInstData[0], "1")
+	createAutoClusterAppInst(appInst, "1")
 	checkReservedIds(cloudletKey, 7)
 	// delete all of them
-	deleteAutoClusterAppInst(testutil.AppInstData[0], "0")
-	deleteAutoClusterAppInst(testutil.AppInstData[0], "1")
-	deleteAutoClusterAppInst(testutil.AppInstData[0], "2")
+	deleteAutoClusterAppInst(appInst, "0")
+	deleteAutoClusterAppInst(appInst, "1")
+	deleteAutoClusterAppInst(appInst, "2")
 	checkReservedIds(cloudletKey, 7)
 	// cleanup unused reservable auto clusters
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
@@ -489,9 +512,12 @@ func TestAutoClusterInst(t *testing.T) {
 	autoDeleteAppInst := testutil.AppInstData[10]
 	autoDeleteAppInst.RealClusterName = ""
 	autoDeleteAppInst.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + "foo"
-	err := appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
+	err = appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "create autodelete appInst")
 	require.Contains(t, err.Error(), "Sidecar AppInst (AutoDelete App) must specify the RealClusterName field to deploy to the virtual cluster")
+
+	err = clusterInstApi.DeleteClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
 
 	testDeprecatedAutoCluster(t, ctx)
 	dummy.Stop()

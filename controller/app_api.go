@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -359,6 +360,22 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	}
 	if in.ScaleWithCluster && !manifestContainsDaemonSet(deploymf) {
 		return fmt.Errorf("DaemonSet required in manifest when ScaleWithCluster set")
+	}
+
+	if in.AllowMultiTenant {
+		if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
+			return fmt.Errorf("Allow multi-tenant only supported for deployment type Kubernetes")
+		}
+		if in.ScaleWithCluster {
+			return fmt.Errorf("Allow multi-tenant does not support scale with cluster")
+		}
+		if in.DeploymentGenerator != deploygen.KubernetesBasic {
+			// For now, only allow system generated manifests.
+			// In order to support user-supplied manifests, we will
+			// need to parse the manifest and look for any objects
+			// that cannot be segregated by namespace.
+			return fmt.Errorf("Allow multi-tenant only allowed for system generated manifests")
+		}
 	}
 
 	// Save manifest to app in case it was a remote target.

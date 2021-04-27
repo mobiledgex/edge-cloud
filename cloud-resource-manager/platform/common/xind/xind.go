@@ -80,7 +80,9 @@ func (s *Xind) GetNodePlatformClient(ctx context.Context, node *edgeproto.Cloudl
 
 func (s *Xind) GetClient(ctx context.Context) (ssh.Client, error) {
 	// TODO: add support for remote infra
-	return &pc.LocalClient{}, nil
+	return &pc.LocalClient{
+		WorkingDir: "/tmp",
+	}, nil
 }
 
 func (s *Xind) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {

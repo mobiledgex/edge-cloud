@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	v1 "k8s.io/api/core/v1"
 )
 
 type ClusterManager interface {
@@ -83,7 +84,7 @@ func (s *Xind) CreateAppInstNoPatch(ctx context.Context, clusterInst *edgeproto.
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
 	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
-		err = k8smgmt.CreateAppInst(ctx, nil, client, names, app, appInst)
+		err = k8smgmt.CreateAppInst(ctx, nil, client, names, app, appInst, flavor)
 		if err == nil {
 			err = k8smgmt.WaitForAppInst(ctx, client, names, app, k8smgmt.WaitRunning)
 			if err != nil {
@@ -166,7 +167,7 @@ func (s *Xind) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Cluster
 	return nil
 }
 
-func (s *Xind) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Xind) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateAppInst")
 	client, err := s.GetClient(ctx)
 	if err != nil {
@@ -196,7 +197,7 @@ func (s *Xind) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.Cluster
 	ctx = context.WithValue(ctx, crmutil.DeploymentReplaceVarsKey, &deploymentVars)
 
 	if DeploymentType == cloudcommon.DeploymentTypeKubernetes {
-		return k8smgmt.UpdateAppInst(ctx, nil, client, names, app, appInst)
+		return k8smgmt.UpdateAppInst(ctx, nil, client, names, app, appInst, flavor)
 	} else if DeploymentType == cloudcommon.DeploymentTypeHelm {
 		return k8smgmt.UpdateHelmAppInst(ctx, client, names, app, appInst)
 	}
@@ -264,9 +265,19 @@ func (s *Xind) patchServiceIp(ctx context.Context, clusterInst *edgeproto.Cluste
 	if err != nil {
 		return err
 	}
+	svcs, err := k8smgmt.GetServices(ctx, client, names)
+	if err != nil {
+		return err
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "Patch service", "kubeNames", names, "ipaddr", ipaddr)
-	for _, serviceName := range names.ServiceNames {
-
+	for _, svc := range svcs {
+		if svc.Spec.Type != v1.ServiceTypeLoadBalancer {
+			continue
+		}
+		if !names.ContainsService(svc.Name) {
+			continue
+		}
+		serviceName := svc.ObjectMeta.Name
 		cmd := fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, names.KconfEnv, serviceName, ipaddr)
 		out, err := client.Output(cmd)
 		if err != nil {
