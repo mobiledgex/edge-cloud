@@ -304,7 +304,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > thAvailableResVal {
-			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units))
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s out of %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units, max, resInfo.Units))
 		}
 	}
 
@@ -358,7 +358,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > infraAvailableResVal {
-			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units))
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s out of %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units, resInfo.InfraMaxValue, resInfo.Units))
 		}
 	}
 	err = nil
@@ -673,6 +673,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Reservable {
 		in.ReservationEndedAt = cloudcommon.TimeToTimestamp(time.Now())
 	}
+	if in.MultiTenant && in.Key.Organization != cloudcommon.OrganizationMobiledgeX {
+		return fmt.Errorf("Only %s ClusterInsts may be multi-tenant", cloudcommon.OrganizationMobiledgeX)
+	}
 
 	// validate deployment
 	if in.Deployment == "" {
@@ -686,6 +689,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Deployment == cloudcommon.DeploymentTypeVM {
 		// friendly error message if they try to specify VM
 		return fmt.Errorf("ClusterInst is not needed for deployment type %s, just create an AppInst directly", cloudcommon.DeploymentTypeVM)
+	}
+	if in.MultiTenant && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
+		return fmt.Errorf("Multi-tenant clusters must be of deployment type Kubernetes")
 	}
 
 	// validate other parameters based on deployment type
@@ -779,6 +785,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 
 		if in.Flavor.Name == "" {
 			return errors.New("No Flavor specified")
+		}
+		if in.MultiTenant && !cloudletSupportsMultiTenant(&info) {
+			return fmt.Errorf("Cloudlet does not support multi-tenant Clusters")
 		}
 
 		nodeFlavor := edgeproto.Flavor{}
@@ -1502,4 +1511,79 @@ func (s *ClusterInstApi) DeleteIdleReservableClusterInsts(ctx context.Context, i
 	s.cleanupIdleReservableAutoClusters(ctx, in.IdleTime.TimeDuration())
 	s.cleanupWorkers.WaitIdle()
 	return &edgeproto.Result{Message: "Delete done"}, nil
+}
+
+type StreamoutCb struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (s *StreamoutCb) Send(res *edgeproto.Result) error {
+	log.SpanLog(s.ctx, log.DebugLevelApi, res.Message)
+	return nil
+}
+
+func (s *StreamoutCb) Context() context.Context {
+	return s.ctx
+}
+
+func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.CloudletKey) {
+	span, ctx := log.ChildSpan(ctx, log.DebugLevelApi, "Create default multi-tenant cluster")
+	defer span.Finish()
+
+	// find largest flavor
+	largest := edgeproto.Flavor{}
+	flavorApi.cache.Mux.Lock()
+	for _, data := range flavorApi.cache.Objs {
+		flavor := data.Obj
+		if strings.Contains(flavor.Key.Name, "gpu") {
+			// for now avoid gpu flavors
+			continue
+		}
+		if flavor.OptResMap != nil {
+			if _, found := flavor.OptResMap["gpu"]; found {
+				// avoid gpu flavors
+				continue
+			}
+		}
+		if flavor.Vcpus != largest.Vcpus {
+			if flavor.Vcpus > largest.Vcpus {
+				largest = *flavor
+			}
+			continue
+		}
+		if flavor.Ram != largest.Ram {
+			if flavor.Ram > largest.Ram {
+				largest = *flavor
+			}
+			continue
+		}
+		if flavor.Disk > largest.Disk {
+			largest = *flavor
+		}
+	}
+	flavorApi.cache.Mux.Unlock()
+
+	clusterInst := edgeproto.ClusterInst{}
+	clusterInst.Key.CloudletKey = cloudletKey
+	clusterInst.Key.ClusterKey.Name = cloudcommon.DefaultMultiTenantCluster
+	clusterInst.Key.Organization = cloudcommon.OrganizationMobiledgeX
+	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
+	clusterInst.MultiTenant = true
+	clusterInst.Flavor = largest.Key
+	// TODO: custom settings or per-cloudlet config for the below fields?
+	clusterInst.NumMasters = 1
+	clusterInst.NumNodes = 3
+	cb := StreamoutCb{
+		ctx: ctx,
+	}
+	start := time.Now()
+
+	err := clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
+	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst", "cluster", clusterInst, "err", err)
+
+	if err != nil && err.Error() == clusterInst.Key.ExistsError().Error() {
+		return
+	}
+	nodeMgr.TimedEvent(ctx, "default multi-tenant cluster create", clusterInst.Key.Organization, node.EventType, clusterInst.Key.GetTags(), err, start, time.Now())
 }

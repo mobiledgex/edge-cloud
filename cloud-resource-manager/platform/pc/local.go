@@ -14,12 +14,14 @@ import (
 // Implements nanobox-io's ssh.Client interface, but runs commands locally.
 // This is used for kubernetes DIND or other local testing.
 type LocalClient struct {
-	cmd *exec.Cmd
+	cmd        *exec.Cmd
+	WorkingDir string
 }
 
 // Output returns the output of the command run on the remote host.
 func (s *LocalClient) Output(command string) (string, error) {
 	cmd := exec.Command("bash", "-c", command)
+	cmd.Dir = s.WorkingDir
 	out, err := cmd.CombinedOutput()
 	return string(out), err
 }
@@ -29,6 +31,7 @@ func (s *LocalClient) Output(command string) (string, error) {
 func (s *LocalClient) Shell(sin io.Reader, sout, serr io.Writer, args ...string) error {
 	args = append([]string{"-c"}, args...)
 	cmd := exec.Command("/bin/sh", args...)
+	cmd.Dir = s.WorkingDir
 	tty, err := pty.Start(cmd)
 	if err != nil {
 		return err
@@ -60,6 +63,7 @@ func (s *LocalClient) Shell(sin io.Reader, sout, serr io.Writer, args ...string)
 // the same logic as in the exec.Cmd.Start function.
 func (s *LocalClient) Start(command string) (io.ReadCloser, io.ReadCloser, io.WriteCloser, error) {
 	cmd := exec.Command("sh", "-c", command)
+	cmd.Dir = s.WorkingDir
 	sout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, nil, nil, err

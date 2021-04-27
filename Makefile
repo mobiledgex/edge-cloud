@@ -82,7 +82,7 @@ lint:
 UNIT_TEST_LOG ?= /tmp/edge-cloud-unit-test.log
 
 unit-test:
-	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
+	go test ./... > $(UNIT_TEST_LOG) || !(grep -A6 "\--- FAIL:" $(UNIT_TEST_LOG) && grep "FAIL\tgithub.com" $(UNIT_TEST_LOG))
 
 test:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml
