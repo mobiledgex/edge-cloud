@@ -130,6 +130,7 @@ message PlatformConfig {
 // 11: `PLATFORM_TYPE_VCD`
 // 12: `PLATFORM_TYPE_K8S_BARE_METAL`
 // 13: `PLATFORM_TYPE_KIND`
+// 14: `PLATFORM_TYPE_KINDINFRA`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -159,6 +160,8 @@ enum PlatformType {
   PLATFORM_TYPE_K8S_BARE_METAL = 12;
   // KIND Cloudlet
   PLATFORM_TYPE_KIND = 13;
+  // KIND Infra Cloudlet
+  PLATFORM_TYPE_KINDINFRA = 14;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
@@ -555,6 +558,8 @@ message CloudletInfo {
   TrackedState trust_policy_state = 18 [(protogen.hidetag) = "nocmp"];
   // Version for compatibility tracking
   uint32 compatibility_version = 19 [(protogen.hidetag) = "nocmp"];
+  // Cloudlet properties
+  map<string,string> properties = 20;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

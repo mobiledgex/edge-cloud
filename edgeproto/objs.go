@@ -796,6 +796,10 @@ func CmpSortDebugReply(a DebugReply, b DebugReply) bool {
 	return aKey.GetKeyString() < bKey.GetKeyString()
 }
 
+func CmpSortFlavorInfo(a *FlavorInfo, b *FlavorInfo) bool {
+	return a.Name < b.Name
+}
+
 func IgnoreTaggedFields(taglist string) []cmp.Option {
 	opts := []cmp.Option{}
 	opts = append(opts, IgnoreAppFields(taglist))
@@ -818,6 +822,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortFlavor))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletInfo))
+	opts = append(opts, cmpopts.SortSlices(CmpSortFlavorInfo))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstInfo))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInstInfo))
 	opts = append(opts, cmpopts.SortSlices(CmpSortNode))

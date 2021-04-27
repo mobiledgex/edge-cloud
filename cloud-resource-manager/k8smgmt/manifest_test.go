@@ -45,18 +45,119 @@ func TestEnvVars(t *testing.T) {
 	}))
 	defer tsEnvVars.Close()
 
+	names := &KubeNames{}
+	flavor := &testutil.FlavorData[0]
+
 	authApi := &cloudcommon.DummyRegistryAuthApi{}
 	// Test Deploymeent manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
-	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
+	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
 	require.Nil(t, err)
 	// make envVars remote
 	app.Configs[0].Config = tsEnvVars.URL
-	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
+	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
+
+	// Test resource limit injection with namespace
+	names.Namespace = "app-ns"
+	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
+	require.Nil(t, err)
+	require.Equal(t, expectedFullManifest, merged)
 }
+
+var expectedFullManifest = `apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+    run: pillimogo1.0.0
+  name: pillimogo100-tcp
+spec:
+  ports:
+  - name: tcp443
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  - name: tcp10002
+    port: 10002
+    protocol: TCP
+    targetPort: 10002
+  selector:
+    run: pillimogo1.0.0
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+    run: pillimogo1.0.0
+  name: pillimogo100-udp
+spec:
+  ports:
+  - name: udp10002
+    port: 10002
+    protocol: UDP
+    targetPort: 10002
+  selector:
+    run: pillimogo1.0.0
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+  name: pillimogo100-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: pillimogo1.0.0
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mex-app: pillimogo100-deployment
+        mexAppName: pillimogo
+        mexAppVersion: "100"
+        run: pillimogo1.0.0
+    spec:
+      containers:
+      - env:
+        - name: SOME_ENV1
+          value: value1
+        - name: SOME_ENV2
+        imagePullPolicy: Always
+        name: pillimogo100
+        ports:
+        - containerPort: 443
+          protocol: TCP
+        - containerPort: 10002
+          protocol: TCP
+        - containerPort: 10002
+          protocol: UDP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+      imagePullSecrets:
+      - {}
+status: {}
+`
 
 var deploymentManifest = `apiVersion: v1
 kind: Service
@@ -162,6 +263,7 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
+    config: ""
     run: pillimogo
   name: pillimogo-tcp
 spec:
@@ -180,6 +282,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   creationTimestamp: null
+  labels:
+    config: ""
   name: pillimogo-deployment
 spec:
   replicas: 1
@@ -233,6 +337,8 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   creationTimestamp: null
+  labels:
+    config: ""
   name: pillimogo2-deployment
 spec:
   selector:
@@ -274,6 +380,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: influxdb
+    config: ""
   name: influxdb
 spec:
   replicas: 1
@@ -342,7 +449,7 @@ func TestImagePullSecrets(t *testing.T) {
 		names.ImagePullSecrets = append(names.ImagePullSecrets, secret)
 	}
 
-	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets)
+	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets, &edgeproto.Flavor{}, &KubeNames{})
 	require.Nil(t, err)
 	fmt.Println(newMf)
 	require.Equal(t, newMf, expectedDeploymentManifest)

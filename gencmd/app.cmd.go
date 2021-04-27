@@ -505,6 +505,7 @@ var AppOptionalArgs = []string{
 	"requiredoutboundconnections:#.protocol",
 	"requiredoutboundconnections:#.port",
 	"requiredoutboundconnections:#.remoteip",
+	"allowmultitenant",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -546,6 +547,7 @@ var AppComments = map[string]string{
 	"requiredoutboundconnections:#.protocol": "tcp, udp or icmp",
 	"requiredoutboundconnections:#.port":     "TCP or UDP port",
 	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
+	"allowmultitenant":                       "App is allowed to deploy to multi-tenant clusters",
 }
 var AppSpecialArgs = map[string]string{
 	"autoprovpolicies": "StringArray",
