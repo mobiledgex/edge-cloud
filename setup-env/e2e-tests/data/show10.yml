@@ -590,10 +590,6 @@ cloudletinfos:
     - name: vCPUs
       value: 16
       inframaxvalue: 50
-    - name: Disk
-      value: 320
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 3
       inframaxvalue: 30
@@ -649,10 +645,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -708,10 +700,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -768,10 +756,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -827,10 +811,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -886,10 +866,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -945,10 +921,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -1004,10 +976,6 @@ cloudletinfos:
     - name: vCPUs
       value: 16
       inframaxvalue: 50
-    - name: Disk
-      value: 320
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 3
       inframaxvalue: 30
@@ -1063,10 +1031,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -1122,10 +1086,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
