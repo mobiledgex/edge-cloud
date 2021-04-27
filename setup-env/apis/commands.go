@@ -2,6 +2,7 @@ package apis
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -33,6 +34,10 @@ func RunCommands(apiFile, outputDir string, retry *bool) bool {
 		if c == "" {
 			continue
 		}
+		if strings.HasPrefix(c, "#") {
+			// comment
+			continue
+		}
 		log.Printf("Running: %s\n", c)
 		cmd := exec.Command("sh", "-c", c)
 		out, err := cmd.CombinedOutput()
@@ -48,5 +53,38 @@ func RunCommands(apiFile, outputDir string, retry *bool) bool {
 		log.Printf("err: %v\n", err)
 	}
 	err = ioutil.WriteFile(outputDir+"/cmds-output", output.Bytes(), 0666)
+	if err != nil {
+		log.Printf("failed to write output, %v\n", err)
+		return false
+	}
 	return rc
+}
+
+// Script may be a python, perl, shell, etc script.
+func RunScript(apiFile, outputDir string, retry *bool) bool {
+	log.Printf("Running script: %s\n", apiFile)
+	*retry = true
+
+	// api file is the command to run, not a file
+	r := csv.NewReader(strings.NewReader(apiFile))
+	r.Comma = ' '
+	args, err := r.Read()
+	if err != nil {
+		log.Printf("Failed to split command into args, %v\n", err)
+		return false
+	}
+	// Expected result can either be just a successful return value,
+	// or we may also want to compare the script output.
+	cmd := exec.Command(args[0], args[1:]...)
+	out, err := cmd.CombinedOutput()
+	log.Printf("%s\n%s\n", string(out), err)
+	if err != nil {
+		return false
+	}
+	err = ioutil.WriteFile(outputDir+"/cmds-output", out, 0666)
+	if err != nil {
+		log.Printf("failed to write output, %v\n", err)
+		return false
+	}
+	return true
 }

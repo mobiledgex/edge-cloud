@@ -41,3 +41,135 @@ func CleanupClusterConfig(ctx context.Context, client ssh.Client, clusterInst *e
 	}
 	return nil
 }
+
+func ClearCluster(ctx context.Context, client ssh.Client, clusterInst *edgeproto.ClusterInst) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "clearing cluster", "cluster", clusterInst.Key)
+	names, err := GetKubeNames(clusterInst, &edgeproto.App{}, &edgeproto.AppInst{})
+	if err != nil {
+		return err
+	}
+	// For a single-tenant cluster, all config will be in one dir
+	configDir, _ := getConfigDirName(names)
+	if err := ClearClusterConfig(ctx, client, configDir, "", names.KconfEnv); err != nil {
+		return err
+	}
+	// For a multi-tenant cluster, each namespace will have a config dir
+	cmd := fmt.Sprintf("%s kubectl get ns -o name", names.KconfEnv)
+	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error getting namespaces, %s: %s, %s", cmd, out, err)
+	}
+	for _, str := range strings.Split(out, "\n") {
+		str = strings.TrimSpace(str)
+		str = strings.TrimPrefix(str, "namespace/")
+		if strings.HasPrefix(str, "kube-") || str == "default" || str == "" {
+			continue
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "cleaning config for namespace", "namespace", str)
+		nsNames := *names
+		nsNames.Namespace = str
+		configDir, _ := getConfigDirName(&nsNames)
+		err = ClearClusterConfig(ctx, client, configDir, str, names.KconfEnv)
+		if err != nil {
+			return err
+		}
+		cmd = fmt.Sprintf("%s kubectl delete ns %s", names.KconfEnv, str)
+		log.SpanLog(ctx, log.DebugLevelInfra, "deleting extra namespace", "cmd", cmd)
+		out, err = client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error deleting namespace, %s: %s, %s", cmd, out, err)
+		}
+	}
+
+	// delete all helm installs (and leftover junk)
+	cmd = fmt.Sprintf("%s helm ls -q", names.KconfEnv)
+	out, err = client.Output(cmd)
+	if err != nil {
+		if strings.Contains(out, "could not find tiller") {
+			// helm not installed
+			out = ""
+		} else {
+			return fmt.Errorf("error listing helm instances, %s: %s, %s", cmd, out, err)
+		}
+	}
+	helmServs := []string{}
+	for _, name := range strings.Split(out, "\n") {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		cmd = fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, name)
+		log.SpanLog(ctx, log.DebugLevelInfra, "deleting helm install", "cmd", cmd)
+		out, err = client.Output(cmd)
+		if err != nil && !strings.Contains(out, "not found") {
+			return fmt.Errorf("error deleting helm install, %s: %s, %s", cmd, out, err)
+		}
+		helmServs = append(helmServs, name+"-pr-kubelet")
+	}
+	// If helm prometheus-operator 7.1.1 was installed, pr-kubelet services will
+	// be leftover. Need to delete manually.
+	if len(helmServs) > 0 {
+		cmd = fmt.Sprintf("%s kubectl delete --ignore-not-found --namespace=kube-system service %s", names.KconfEnv, strings.Join(helmServs, " "))
+		log.SpanLog(ctx, log.DebugLevelInfra, "deleting helm services", "cmd", cmd)
+		out, err = client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error deleting helm services, %s: %s, %s", cmd, out, err)
+		}
+	}
+	// If helm prometheus-operator was installed, CRDs will be leftover.
+	// Need to delete manually.
+	cmd = fmt.Sprintf("%s kubectl delete --ignore-not-found customresourcedefinitions prometheuses.monitoring.coreos.com servicemonitors.monitoring.coreos.com podmonitors.monitoring.coreos.com alertmanagers.monitoring.coreos.com prometheusrules.monitoring.coreos.com", names.KconfEnv)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting prometheus CRDs", "cmd", cmd)
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deleting prometheus-operator CRDs, %s: %s, %s", cmd, out, err)
+	}
+	return nil
+}
+
+func ClearClusterConfig(ctx context.Context, client ssh.Client, configDir, namespace, kconfEnv string) error {
+	// if config dir doesn't exist, then there's no config
+	cmd := fmt.Sprintf("stat %s", configDir)
+	out, err := client.Output(cmd)
+	log.SpanLog(ctx, log.DebugLevelInfra, "clear cluster config", "dir", configDir, "out", out, "err", err)
+	if err != nil {
+		if strings.Contains(out, "No such file or directory") {
+			return nil
+		}
+		return err
+	}
+	nsArg := ""
+	if namespace != "" {
+		nsArg = "-n " + namespace
+	}
+	// delete all AppInsts configs in cluster
+	cmd = fmt.Sprintf("%s kubectl delete %s -f %s", kconfEnv, nsArg, configDir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting cluster app", "cmd", cmd)
+	out, err = client.Output(cmd)
+	// bash returns "does not exist", zsh returns "no matches found"
+	if err != nil && !strings.Contains(out, "does not exist") && !strings.Contains(out, "no matches found") {
+		for _, msg := range strings.Split(out, "\n") {
+			msg = strings.TrimSpace(msg)
+			if msg == "" || strings.Contains(msg, " deleted") || strings.Contains(msg, "NotFound") {
+				continue
+			}
+			return fmt.Errorf("error deleting cluster apps, %s: %s, %s", cmd, out, err)
+		}
+	}
+	// delete all AppInst config files
+	cmd = fmt.Sprintf("rm %s/*.yaml", configDir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting all app config files", "cmd", cmd)
+	out, err = client.Output(cmd)
+	// bash returns "No such file or directory", zsh returns "no matches found"
+	if err != nil && !strings.Contains(out, "No such file or directory") && !strings.Contains(out, "no matches found") {
+		return fmt.Errorf("error deleting cluster config files, %s: %s, %s", cmd, out, err)
+	}
+	// remove configDir
+	cmd = fmt.Sprintf("rmdir %s", configDir)
+	log.SpanLog(ctx, log.DebugLevelInfra, "removing config dir", "cmd", cmd)
+	out, err = client.Output(cmd)
+	if err != nil && !strings.Contains(out, "Directory not empty") && !strings.Contains(out, "No such file or directory") {
+		return fmt.Errorf("error removing config dir, %s: %s, %s", cmd, out, err)
+	}
+	return nil
+}

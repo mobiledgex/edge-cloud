@@ -14,11 +14,13 @@ import (
 	yaml "github.com/mobiledgex/yaml/v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const MexAppLabel = "mex-app"
+const ConfigLabel = "config"
 
 // TestReplacementVars are used to syntax check app envvars
 var TestReplacementVars = crmutil.DeploymentReplaceVars{
@@ -63,11 +65,49 @@ func addMexLabel(meta *metav1.ObjectMeta, label string) {
 	meta.Labels[MexAppLabel] = label
 }
 
-// Add app details to the deployment as labela
+// Add app details to the deployment as labels
 // these labels will be picked up by Pormetheus and added to the metrics
 func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
 	meta.Labels[cloudcommon.MexAppNameLabel] = util.DNSSanitize(app.Key.Name)
 	meta.Labels[cloudcommon.MexAppVersionLabel] = util.DNSSanitize(app.Key.Version)
+}
+
+// The config label marks all objects that are part of config files in the
+// config dir. We use this with apply --prune -l config=configlabel to
+// only prune objects that were created with the config label, and are no
+// longer present in the configDir files.
+// Only objects that are created via files in the configDir should have
+// the config label. Typically this would be all the AppInsts in the
+// Cluster (or namespace for multi-tenant clusters).
+func getConfigLabel(names *KubeNames) string {
+	if names.Namespace != "" {
+		return names.Namespace
+	}
+	return names.ClusterName
+}
+
+func addResourceLimits(ctx context.Context, template *v1.PodTemplateSpec, limits *edgeproto.Flavor) error {
+	// This assumes there's only one container.
+	// Kubernetes does not give a way to specify resource limits per pod.
+	// It's either per container, or per namespace.
+	cpu, err := resource.ParseQuantity(fmt.Sprintf("%d", limits.Vcpus))
+	if err != nil {
+		return err
+	}
+	mem, err := resource.ParseQuantity(fmt.Sprintf("%dMi", limits.Ram))
+	if err != nil {
+		return err
+	}
+	for j, _ := range template.Spec.Containers {
+		resources := &template.Spec.Containers[j].Resources
+		resources.Limits = v1.ResourceList{}
+		resources.Limits[v1.ResourceCPU] = cpu
+		resources.Limits[v1.ResourceMemory] = mem
+		resources.Requests = v1.ResourceList{}
+		resources.Requests[v1.ResourceCPU] = cpu
+		resources.Requests[v1.ResourceMemory] = mem
+	}
+	return nil
 }
 
 func GetAppEnvVars(ctx context.Context, app *edgeproto.App, authApi cloudcommon.RegistryAuthApi, deploymentVars *crmutil.DeploymentReplaceVars) (*[]v1.EnvVar, error) {
@@ -101,7 +141,7 @@ func GetAppEnvVars(ctx context.Context, app *edgeproto.App, authApi cloudcommon.
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app *edgeproto.App, kubeManifest string, imagePullSecrets []string) (string, error) {
+func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app *edgeproto.App, kubeManifest string, imagePullSecrets []string, appInstFlavor *edgeproto.Flavor, names *KubeNames) (string, error) {
 	var files []string
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
@@ -135,6 +175,23 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 	var template *v1.PodTemplateSpec
 	var name string
 	for i, _ := range objs {
+		// convert obj to generic metaObject to set labels on every obj
+		var metaObj metav1.Object
+		if obj, ok := objs[i].(metav1.Object); ok {
+			metaObj = obj
+		} else if acc, ok := objs[i].(metav1.ObjectMetaAccessor); ok {
+			metaObj = acc.GetObjectMeta()
+		}
+		if metaObj != nil {
+			labels := metaObj.GetLabels()
+			if labels == nil {
+				labels = make(map[string]string)
+			}
+			// config label is used to mark for pruning
+			labels[ConfigLabel] = getConfigLabel(names)
+			metaObj.SetLabels(labels)
+		}
+
 		template = nil
 		name = ""
 		switch obj := objs[i].(type) {
@@ -158,7 +215,14 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 		if imagePullSecrets != nil {
 			addImagePullSecret(ctx, template, imagePullSecrets)
 		}
+		if names.Namespace != "" && appInstFlavor != nil {
+			err := addResourceLimits(ctx, template, appInstFlavor)
+			if err != nil {
+				return "", err
+			}
+		}
 	}
+
 	//marshal the objects back together and return as one string
 	printer := &printers.YAMLPrinter{}
 	for _, o := range objs {
@@ -172,4 +236,11 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 	}
 	mf = strings.Join(files, "---\n")
 	return mf, nil
+}
+
+func AddManifest(mf, addmf string) string {
+	if strings.TrimSpace(addmf) == "" {
+		return mf
+	}
+	return mf + "---\n" + addmf
 }

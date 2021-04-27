@@ -1,10 +1,12 @@
 package k8smgmt
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -20,6 +22,9 @@ const WaitRunning string = "WaitRunning"
 
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
+
+// How long to wait on create if there are no resources
+var createWaitNoResources = 10 * time.Second
 
 var applyManifest = "apply"
 var createManifest = "create"
@@ -110,10 +115,15 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 							return fmt.Errorf("Pod is unexpected state: %s", podState)
 						}
 					}
-				} else {
-					if waitFor == WaitDeleted && strings.Contains(line, "No resources found") {
-						break
+				} else if strings.Contains(line, "No resources found") {
+					// If creating, pods may not have taken
+					// effect yet. If deleting, may already
+					// be removed.
+					if waitFor == WaitRunning && time.Since(start) > createWaitNoResources {
+						return fmt.Errorf("no resources found for %s on create: %s", createWaitNoResources, line)
 					}
+					break
+				} else {
 					return fmt.Errorf("unable to parse kubectl output: [%s]", line)
 				}
 			}
@@ -142,15 +152,34 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 }
 
 func getConfigDirName(names *KubeNames) (string, string) {
-	return names.ClusterName, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
+	dir := names.ClusterName
+	if names.Namespace != "" {
+		dir += "." + names.Namespace
+	}
+	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
 
-func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
+func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor, action string) error {
+	if action == createManifest && names.Namespace != "" {
+		err := CreateNamespace(ctx, client, names)
+		if err != nil {
+			return err
+		}
+	}
+
 	mf, err := cloudcommon.GetDeploymentManifest(ctx, authApi, app.DeploymentManifest)
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(ctx, authApi, app, mf, names.ImagePullSecrets)
+	if names.Namespace != "" {
+		// Mulit-tenant cluster, add network policy
+		np, err := GetNetworkPolicy(ctx, app, appInst, names)
+		if err != nil {
+			return err
+		}
+		mf = AddManifest(mf, np)
+	}
+	mf, err = MergeEnvVars(ctx, authApi, app, mf, names.ImagePullSecrets, appInstFlavor, names)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
@@ -172,7 +201,19 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 	// Note that "kubectl create" does NOT fall under this style.
 	// Only "apply" and "delete" should be used. All configuration files
 	// for an AppInst must be stored in their own directory.
-	cmd := fmt.Sprintf("%s kubectl apply -f %s --prune --all", names.KconfEnv, configDir)
+
+	// Selector selects which objects to consider for pruning.
+	// Previously we used "--all", but that ends up deleting extra stuff,
+	// especially in the case of multi-tenant clusters. We want to
+	// transition to using the config label, but we can't use it for
+	// old configs that didn't have it. So we will have to continue
+	// to use "--all" for old stuff until those old configs eventually
+	// get removed naturally over time.
+	selector := "--all"
+	if names.Namespace != "" {
+		selector = fmt.Sprintf("-l %s=%s", ConfigLabel, getConfigLabel(names))
+	}
+	cmd := fmt.Sprintf("%s kubectl apply -f %s --prune %s", names.KconfEnv, configDir, selector)
 	log.SpanLog(ctx, log.DebugLevelInfra, "running kubectl", "action", action, "cmd", cmd)
 	out, err := client.Output(cmd)
 	if err != nil && strings.Contains(string(out), `pruning nonNamespaced object /v1, Kind=Namespace: namespaces "kube-system" is forbidden: this namespace may not be deleted`) {
@@ -189,12 +230,12 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 
 }
 
-func CreateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	return createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, createManifest)
+func CreateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor) error {
+	return createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, appInstFlavor, createManifest)
 }
 
-func UpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
-	err := createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, applyManifest)
+func UpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor) error {
+	err := createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, appInstFlavor, applyManifest)
 	if err != nil {
 		return err
 	}
@@ -225,7 +266,17 @@ func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app
 	//Note wait for deletion of appinst can be done here in a generic place, but wait for creation is split
 	// out in each platform specific task so that we can optimize the time taken for create by allowing the
 	// wait to be run in parallel with other tasks
-	return WaitForAppInst(ctx, client, names, app, WaitDeleted)
+	err = WaitForAppInst(ctx, client, names, app, WaitDeleted)
+	if err != nil {
+		return err
+	}
+	if names.Namespace != "" {
+		// clean up namespace
+		if err = DeleteNamespace(ctx, client, names); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
@@ -310,4 +361,62 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		return cmdStr, nil
 	}
 	return "", fmt.Errorf("no command or log specified with the exec request")
+}
+
+var namespaceTemplate = template.Must(template.New("namespace").Parse(`apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{.Namespace}}
+  labels:
+    name: {{.Namespace}}
+`))
+
+func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "creating namespace", "name", names.Namespace)
+	buf := bytes.Buffer{}
+	err := namespaceTemplate.Execute(&buf, names)
+	if err != nil {
+		return err
+	}
+	file := names.Namespace + ".yaml"
+	err = pc.WriteFile(client, file, buf.String(), "namespace", pc.NoSudo)
+	if err != nil {
+		return err
+	}
+	cmd := fmt.Sprintf("kubectl create -f %s --kubeconfig=%s", file, names.BaseKconfName)
+	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("Error in creating namespace: %s - %v", out, err)
+	}
+	// copy the kubeconfig
+	log.SpanLog(ctx, log.DebugLevelInfra, "create new kubeconfig for cluster namespace", "clusterKubeConfig", names.BaseKconfName, "namespaceKubeConfig", names.KconfName)
+	err = pc.CopyFile(client, names.BaseKconfName, names.KconfName)
+	if err != nil {
+		return fmt.Errorf("Failed to create new kubeconfig: %v", err)
+	}
+	// set the new kubeconfig to use the namespace
+	cmd = fmt.Sprintf("KUBECONFIG=%s kubectl config set-context --current --namespace=%s", names.KconfName, names.Namespace)
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("Error in setting new namespace context: %s - %v", out, err)
+	}
+	return nil
+}
+
+func DeleteNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespace", "name", names.Namespace)
+	cmd := fmt.Sprintf("kubectl delete namespace %s --kubeconfig=%s", names.Namespace, names.BaseKconfName)
+	out, err := client.Output(cmd)
+	if err != nil {
+		if !strings.Contains(out, "not found") {
+			return fmt.Errorf("Error in deleting namespace: %s - %v", out, err)
+		}
+	}
+	// delete namespaced kconf
+	err = pc.DeleteFile(client, names.KconfName)
+	if err != nil {
+		// just log the error
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to clean up namespaced kconf", "err", err)
+	}
+	return nil
 }

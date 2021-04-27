@@ -16,6 +16,9 @@ import (
 	"time"
 
 	sh "github.com/codeskyblue/go-sh"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/common/xind"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/kind"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
@@ -292,7 +295,7 @@ func CleanupLocalProxies() error {
 	return nil
 }
 
-func CleanupKIND() error {
+func CleanupKIND(ctx context.Context) error {
 	log.Printf("Running CleanupKIND\n")
 	vercmd := exec.Command("kind", "version")
 	_, err := vercmd.CombinedOutput()
@@ -301,20 +304,24 @@ func CleanupKIND() error {
 		log.Printf("No kind installed\n")
 		return nil
 	}
+	client := &pc.LocalClient{
+		WorkingDir: "/tmp",
+	}
 
-	lscmd := exec.Command("kind", "get", "clusters")
-	output, err := lscmd.CombinedOutput()
+	clusters, err := kind.GetClusters(ctx, client)
 	if err != nil {
-		log.Printf("Error running kind command to get clusters, %s, %s\n", string(output), err)
 		return err
 	}
-	clusters := strings.Split(string(output), "\n")
 	for _, name := range clusters {
-		log.Printf("deleting KIND cluster %s\n", name)
-		cmd := exec.Command("kind", "delete", "cluster", "--name", name)
-		out, err := cmd.CombinedOutput()
+		log.Printf("pausing KIND cluster %s\n", name)
+		nodes, err := kind.GetClusterContainerNames(ctx, client, name)
 		if err != nil {
-			log.Printf("Failed to delete kind cluster %s, %s, %s\n", name, string(out), err)
+			log.Printf("Failed to get KIND cluster %s container names, %s", name, err)
+			return err
+		}
+		err = xind.PauseContainers(ctx, client, nodes)
+		if err != nil {
+			log.Printf("Failed to pause KIND cluster %s, %s\n", name, err)
 			return err
 		}
 	}
@@ -591,7 +598,7 @@ func Cleanup(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = CleanupKIND()
+	err = CleanupKIND(ctx)
 	if err != nil {
 		return err
 	}
@@ -695,6 +702,11 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 		if !apis.RunCommands(spec.ApiFile, outputDir, retry) {
 			log.Printf("Unable to run commands for %s\n", action)
 			errors = append(errors, "commands failed")
+		}
+	case "script":
+		if !apis.RunScript(spec.ApiFile, outputDir, retry) {
+			log.Printf("Unable to run script for %s\n", action)
+			errors = append(errors, "script failed")
 		}
 	case "cleanup":
 		err := Cleanup(ctx)

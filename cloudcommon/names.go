@@ -23,6 +23,7 @@ var OrganizationMobiledgeX = "MobiledgeX"
 var OrganizationEdgeBox = "EdgeBox"
 
 const DefaultCluster string = "DefaultCluster"
+const DefaultMultiTenantCluster string = "defaultmtclust"
 
 // platform apps
 var PlatosEnablingLayer = "PlatosEnablingLayer"
@@ -136,6 +137,12 @@ const MaxClusterNameLength = 40
 const CertName = "envoyTlsCerts"
 const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
 
+// CloudletInfo properties
+const (
+	// Cloudlet supports multi-tenant k8s cluster
+	CloudletSupportsMT = "supports-mt"
+)
+
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only platos's Enabling layer is included.
 var platformApps = map[string]bool{
@@ -233,6 +240,13 @@ func IsClusterInstReqd(app *edgeproto.App) bool {
 		return false
 	}
 	return true
+}
+
+func IsSideCarApp(app *edgeproto.App) bool {
+	if app.Key.Organization == OrganizationMobiledgeX && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+		return true
+	}
+	return false
 }
 
 func Hostname() string {
