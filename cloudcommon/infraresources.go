@@ -13,13 +13,11 @@ import (
 
 var (
 	// Common platform resources
-	ResourceRamMb  = "RAM"
-	ResourceVcpus  = "vCPUs"
-	ResourceDiskGb = "Disk"
-	ResourceGpus   = "GPUs"
+	ResourceRamMb = "RAM"
+	ResourceVcpus = "vCPUs"
+	ResourceGpus  = "GPUs"
 
-	ResourceRamUnits  = "MB"
-	ResourceDiskUnits = "GB"
+	ResourceRamUnits = "MB"
 
 	CloudletResources = []edgeproto.InfraResource{
 		edgeproto.InfraResource{
@@ -29,10 +27,6 @@ var (
 		edgeproto.InfraResource{
 			Name:        ResourceVcpus,
 			Description: "Limit on vCPUs available",
-		},
-		edgeproto.InfraResource{
-			Name:        ResourceDiskGb,
-			Description: "Limit on disk available (GB)",
 		},
 		edgeproto.InfraResource{
 			Name:        ResourceGpus,
