@@ -329,12 +329,6 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 			InfraMaxValue: FakeVcpusMax,
 		},
 		edgeproto.InfraResource{
-			Name:          cloudcommon.ResourceDiskGb,
-			Value:         FakeDiskUsed,
-			InfraMaxValue: FakeDiskMax,
-			Units:         cloudcommon.ResourceDiskUnits,
-		},
-		edgeproto.InfraResource{
 			Name:          ResourceExternalIps,
 			Value:         FakeExternalIpsUsed,
 			InfraMaxValue: FakeExternalIpsMax,

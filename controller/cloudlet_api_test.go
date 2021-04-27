@@ -357,15 +357,13 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := ctrlHandler.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo)
 	require.True(t, found, "cloudlet info exists")
-	require.Equal(t, len(cloudletInfo.ResourcesSnapshot.Info), 4, "cloudlet resources info exists")
+	require.Equal(t, len(cloudletInfo.ResourcesSnapshot.Info), 3, "cloudlet resources info exists")
 	for _, resInfo := range cloudletInfo.ResourcesSnapshot.Info {
 		switch resInfo.Name {
 		case cloudcommon.ResourceRamMb:
 			require.Equal(t, resInfo.Value, uint64(8192), "cloudlet resources info exists")
 		case cloudcommon.ResourceVcpus:
 			require.Equal(t, resInfo.Value, uint64(4), "cloudlet resources info exists")
-		case cloudcommon.ResourceDiskGb:
-			require.Equal(t, resInfo.Value, uint64(80), "cloudlet resources info exists")
 		case "External IPs":
 			require.Equal(t, resInfo.Value, uint64(1), "cloudlet resources info exists")
 		default:
