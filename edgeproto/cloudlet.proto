@@ -601,3 +601,19 @@ service CloudletMetricsApi {
     };
   }
 }
+
+// Report Schedule
+//
+// ReportSchedule is the interval for which report is to be generated
+//
+// 0: `EveryWeek`
+// 1: `Every15Days`
+// 2: `Every30Days`
+enum ReportSchedule {
+  // Every Week
+  EveryWeek = 0;
+  // Every 15 Days
+  Every15Days = 1;
+  // Every 30 Days
+  Every30Days = 2;
+}
