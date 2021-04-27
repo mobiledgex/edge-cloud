@@ -362,19 +362,46 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		return fmt.Errorf("DaemonSet required in manifest when ScaleWithCluster set")
 	}
 
-	if in.AllowMultiTenant {
+	flavor := &edgeproto.Flavor{}
+	if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, flavor) {
+		return in.DefaultFlavor.NotFoundError()
+	}
+
+	if in.AllowServerless {
 		if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
-			return fmt.Errorf("Allow multi-tenant only supported for deployment type Kubernetes")
+			return fmt.Errorf("Allow serverless only supported for deployment type Kubernetes")
 		}
 		if in.ScaleWithCluster {
-			return fmt.Errorf("Allow multi-tenant does not support scale with cluster")
+			return fmt.Errorf("Allow serverless does not support scale with cluster")
 		}
 		if in.DeploymentGenerator != deploygen.KubernetesBasic {
 			// For now, only allow system generated manifests.
 			// In order to support user-supplied manifests, we will
 			// need to parse the manifest and look for any objects
 			// that cannot be segregated by namespace.
-			return fmt.Errorf("Allow multi-tenant only allowed for system generated manifests")
+			return fmt.Errorf("Allow serverless only allowed for system generated manifests")
+		}
+		if in.ServerlessConfig == nil {
+			in.ServerlessConfig = &edgeproto.ServerlessConfig{}
+		}
+		if in.ServerlessConfig.Vcpus == 0 {
+			in.ServerlessConfig.Vcpus = float32(flavor.Vcpus)
+		}
+		if in.ServerlessConfig.Ram == 0 {
+			in.ServerlessConfig.Ram = flavor.Ram
+		}
+		if in.ServerlessConfig.Vcpus < 0.001 {
+			return fmt.Errorf("Serverless config vcpus cannot be less than 0.001")
+		}
+		if in.ServerlessConfig.MinReplicas == 0 {
+			in.ServerlessConfig.MinReplicas = 1
+		}
+		// truncate any precision beyond 0.001
+		mvcpus := uint64(in.ServerlessConfig.Vcpus * 1000)
+		in.ServerlessConfig.Vcpus = float32(mvcpus) / 1000.0
+	} else {
+		if in.ServerlessConfig != nil {
+			return fmt.Errorf("Serverless config cannot be specified without allow serverless true")
 		}
 	}
 
@@ -412,9 +439,6 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		}
 	}
 
-	if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
-		return in.DefaultFlavor.NotFoundError()
-	}
 	if err := s.validatePolicies(stm, in); err != nil {
 		return err
 	}

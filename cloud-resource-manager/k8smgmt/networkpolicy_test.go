@@ -21,7 +21,7 @@ func TestGetNetworkPolicy(t *testing.T) {
 	app.Key.Name = "myapp"
 	app.Key.Version = "1.0"
 	app.Deployment = cloudcommon.DeploymentTypeKubernetes
-	app.AllowMultiTenant = true
+	app.AllowServerless = true
 	ci := edgeproto.ClusterInst{}
 	ci.Key.ClusterKey.Name = cloudcommon.DefaultMultiTenantCluster
 	ci.Key.Organization = cloudcommon.OrganizationMobiledgeX

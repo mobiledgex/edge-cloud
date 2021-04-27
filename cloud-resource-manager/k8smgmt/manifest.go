@@ -86,15 +86,15 @@ func getConfigLabel(names *KubeNames) string {
 	return names.ClusterName
 }
 
-func addResourceLimits(ctx context.Context, template *v1.PodTemplateSpec, limits *edgeproto.Flavor) error {
+func addResourceLimits(ctx context.Context, template *v1.PodTemplateSpec, config *edgeproto.ServerlessConfig) error {
 	// This assumes there's only one container.
 	// Kubernetes does not give a way to specify resource limits per pod.
 	// It's either per container, or per namespace.
-	cpu, err := resource.ParseQuantity(fmt.Sprintf("%d", limits.Vcpus))
+	cpu, err := resource.ParseQuantity(fmt.Sprintf("%.3f", config.Vcpus))
 	if err != nil {
 		return err
 	}
-	mem, err := resource.ParseQuantity(fmt.Sprintf("%dMi", limits.Ram))
+	mem, err := resource.ParseQuantity(fmt.Sprintf("%dMi", config.Ram))
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func GetAppEnvVars(ctx context.Context, app *edgeproto.App, authApi cloudcommon.
 }
 
 // Merge in all the environment variables into
-func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app *edgeproto.App, kubeManifest string, imagePullSecrets []string, appInstFlavor *edgeproto.Flavor, names *KubeNames) (string, error) {
+func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app *edgeproto.App, kubeManifest string, imagePullSecrets []string, names *KubeNames) (string, error) {
 	var files []string
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
@@ -198,12 +198,14 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 		case *appsv1.Deployment:
 			template = &obj.Spec.Template
 			name = obj.ObjectMeta.Name
+			obj.Spec.Replicas = getDefaultReplicas(app, names)
 		case *appsv1.DaemonSet:
 			template = &obj.Spec.Template
 			name = obj.ObjectMeta.Name
 		case *appsv1.StatefulSet:
 			template = &obj.Spec.Template
 			name = obj.ObjectMeta.Name
+			obj.Spec.Replicas = getDefaultReplicas(app, names)
 		}
 		if template == nil {
 			continue
@@ -215,8 +217,8 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 		if imagePullSecrets != nil {
 			addImagePullSecret(ctx, template, imagePullSecrets)
 		}
-		if names.Namespace != "" && appInstFlavor != nil {
-			err := addResourceLimits(ctx, template, appInstFlavor)
+		if names.Namespace != "" && app.ServerlessConfig != nil {
+			err := addResourceLimits(ctx, template, app.ServerlessConfig)
 			if err != nil {
 				return "", err
 			}
@@ -243,4 +245,12 @@ func AddManifest(mf, addmf string) string {
 		return mf
 	}
 	return mf + "---\n" + addmf
+}
+
+func getDefaultReplicas(app *edgeproto.App, names *KubeNames) *int32 {
+	val := int32(1)
+	if names.Namespace != "" && app.ServerlessConfig != nil {
+		val = int32(app.ServerlessConfig.MinReplicas)
+	}
+	return &val
 }
