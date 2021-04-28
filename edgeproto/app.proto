@@ -177,8 +177,10 @@ message App {
   bool trusted = 37;
   // Connections this app require to determine if the app is compatible with a trust policy
   repeated RemoteConnection required_outbound_connections = 38;
-  // App is allowed to deploy to multi-tenant clusters
-  bool allow_multi_tenant = 39;
+  // App is allowed to deploy as serverless containers
+  bool allow_serverless = 39;
+  // Configuration when deployed as serverless containers
+  ServerlessConfig serverless_config = 40;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -189,6 +191,15 @@ message App {
   option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,DelOpt,AutoProvPolicy";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
+}
+
+message ServerlessConfig {
+  // Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001
+  float vcpus = 1;
+  // RAM allocation in megabytes per container when serverless
+  uint64 ram = 2;
+  // Minimum number of replicas when serverless
+  uint32 min_replicas = 3;
 }
 
 message AppAutoProvPolicy {
