@@ -565,7 +565,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 		// Prefer multi-tenant autocluster over reservable autocluster.
-		if autoClusterType == ChooseAutoCluster && app.AllowMultiTenant {
+		if autoClusterType == ChooseAutoCluster && app.AllowServerless {
 			// if default multi-tenant cluster exists, target it
 			key := in.ClusterInstKey()
 			key.ClusterKey.Name = cloudcommon.DefaultMultiTenantCluster
@@ -1096,8 +1096,8 @@ func useMultiTenantClusterInst(stm concurrency.STM, ctx context.Context, in *edg
 	if sidecarApp {
 		// no restrictions, no resource check
 	}
-	if !app.AllowMultiTenant {
-		return fmt.Errorf("App must allow multi tenant deployment to deploy to multi-tenant cluster %s", in.RealClusterName)
+	if !app.AllowServerless {
+		return fmt.Errorf("App must allow serverless deployment to deploy to multi-tenant cluster %s", in.RealClusterName)
 	}
 	if app.Deployment != cloudcommon.DeploymentTypeKubernetes {
 		return fmt.Errorf("Deployment type must be kubernetes for multi-tenant ClusterInst")

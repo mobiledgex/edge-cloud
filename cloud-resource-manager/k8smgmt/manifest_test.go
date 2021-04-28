@@ -46,23 +46,28 @@ func TestEnvVars(t *testing.T) {
 	defer tsEnvVars.Close()
 
 	names := &KubeNames{}
-	flavor := &testutil.FlavorData[0]
 
 	authApi := &cloudcommon.DummyRegistryAuthApi{}
 	// Test Deploymeent manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
-	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
+	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
 	require.Nil(t, err)
 	// make envVars remote
 	app.Configs[0].Config = tsEnvVars.URL
-	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
+	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
 
 	// Test resource limit injection with namespace
 	names.Namespace = "app-ns"
-	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, flavor, names)
+	app.AllowServerless = true
+	app.ServerlessConfig = &edgeproto.ServerlessConfig{
+		Vcpus:       0.5,
+		Ram:         20,
+		MinReplicas: 2,
+	}
+	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
 	require.Nil(t, err)
 	require.Equal(t, expectedFullManifest, merged)
 }
@@ -119,7 +124,7 @@ metadata:
     config: app-ns
   name: pillimogo100-deployment
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       run: pillimogo1.0.0
@@ -149,11 +154,11 @@ spec:
           protocol: UDP
         resources:
           limits:
-            cpu: "1"
-            memory: 1Gi
+            cpu: 500m
+            memory: 20Mi
           requests:
-            cpu: "1"
-            memory: 1Gi
+            cpu: 500m
+            memory: 20Mi
       imagePullSecrets:
       - {}
 status: {}
@@ -449,7 +454,7 @@ func TestImagePullSecrets(t *testing.T) {
 		names.ImagePullSecrets = append(names.ImagePullSecrets, secret)
 	}
 
-	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets, &edgeproto.Flavor{}, &KubeNames{})
+	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets, &KubeNames{})
 	require.Nil(t, err)
 	fmt.Println(newMf)
 	require.Equal(t, newMf, expectedDeploymentManifest)
