@@ -176,7 +176,9 @@ message App {
   // Indicates that an instance of this app can be started on a trusted cloudlet
   bool trusted = 37;
   // Connections this app require to determine if the app is compatible with a trust policy
-  repeated RemoteConnection required_outbound_connections = 38; 
+  repeated RemoteConnection required_outbound_connections = 38;
+  // App is allowed to deploy to multi-tenant clusters
+  bool allow_multi_tenant = 39;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

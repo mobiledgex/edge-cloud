@@ -97,6 +97,8 @@ message ClusterInst {
   distributed_match_engine.Timestamp updated_at = 30 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // For reservable ClusterInsts, when the last reservation ended
   distributed_match_engine.Timestamp reservation_ended_at = 31 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // Multi-tenant kubernetes cluster
+  bool multi_tenant = 32;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

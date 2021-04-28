@@ -329,12 +329,6 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 			InfraMaxValue: FakeVcpusMax,
 		},
 		edgeproto.InfraResource{
-			Name:          cloudcommon.ResourceDiskGb,
-			Value:         FakeDiskUsed,
-			InfraMaxValue: FakeDiskMax,
-			Units:         cloudcommon.ResourceDiskUnits,
-		},
-		edgeproto.InfraResource{
 			Name:          ResourceExternalIps,
 			Value:         FakeExternalIpsUsed,
 			InfraMaxValue: FakeExternalIpsMax,
@@ -440,7 +434,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	return nil
 }
 
-func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "fake appInst updated")
 	return nil
 }

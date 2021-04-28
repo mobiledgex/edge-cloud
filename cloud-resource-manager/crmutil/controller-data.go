@@ -582,6 +582,14 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
+		flavor := edgeproto.Flavor{}
+		flavorFound := cd.FlavorCache.Get(&new.Flavor, &flavor)
+		if !flavorFound {
+			str := fmt.Sprintf("Flavor %s not found",
+				new.Flavor.Name)
+			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
+			return
+		}
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
 		if err != nil {
 			return
@@ -613,7 +621,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				return
 			}
 		}
-		err = cd.platform.UpdateAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
+		err = cd.platform.UpdateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update App Inst failed: %s", err)
 			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback)
