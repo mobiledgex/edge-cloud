@@ -91,11 +91,15 @@ var AppData = []edgeproto.App{
 			Name:         "Pillimo Go!",
 			Version:      "1.0.0",
 		},
-		ImageType:        edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:      "tcp:443,tcp:10002,udp:10002",
-		AccessType:       edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
-		DefaultFlavor:    FlavorData[0].Key,
-		AllowMultiTenant: true,
+		ImageType:       edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts:     "tcp:443,tcp:10002,udp:10002",
+		AccessType:      edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor:   FlavorData[0].Key,
+		AllowServerless: true,
+		ServerlessConfig: &edgeproto.ServerlessConfig{
+			Vcpus: 0.5,
+			Ram:   20,
+		},
 	},
 	edgeproto.App{ // 1
 		Key: edgeproto.AppKey{
@@ -193,11 +197,15 @@ var AppData = []edgeproto.App{
 			Name:         "AutoDeleteApp",
 			Version:      "1.0.0",
 		},
-		ImageType:        edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessType:       edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
-		DefaultFlavor:    FlavorData[0].Key,
-		DelOpt:           edgeproto.DeleteType_AUTO_DELETE,
-		AllowMultiTenant: true,
+		ImageType:       edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:      edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor:   FlavorData[0].Key,
+		DelOpt:          edgeproto.DeleteType_AUTO_DELETE,
+		AllowServerless: true,
+		ServerlessConfig: &edgeproto.ServerlessConfig{
+			Vcpus: 0.2,
+			Ram:   10,
+		},
 	},
 	edgeproto.App{ // 10
 		Key: edgeproto.AppKey{
@@ -244,11 +252,15 @@ var AppData = []edgeproto.App{
 			Name:         "SampleApp",
 			Version:      "1.0.0",
 		},
-		ImageType:        edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessType:       edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
-		AccessPorts:      "tcp:889",
-		DefaultFlavor:    FlavorData[0].Key,
-		AllowMultiTenant: true,
+		ImageType:       edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessType:      edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		AccessPorts:     "tcp:889",
+		DefaultFlavor:   FlavorData[0].Key,
+		AllowServerless: true,
+		ServerlessConfig: &edgeproto.ServerlessConfig{
+			Vcpus: 0.5,
+			Ram:   20,
+		},
 	},
 	edgeproto.App{ // 14
 		Key: edgeproto.AppKey{
@@ -256,11 +268,15 @@ var AppData = []edgeproto.App{
 			Name:         "Pillimo MT",
 			Version:      "1.0.0",
 		},
-		ImageType:        edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:      "tcp:444",
-		AccessType:       edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
-		DefaultFlavor:    FlavorData[0].Key,
-		AllowMultiTenant: true,
+		ImageType:       edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts:     "tcp:444",
+		AccessType:      edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor:   FlavorData[0].Key,
+		AllowServerless: true,
+		ServerlessConfig: &edgeproto.ServerlessConfig{
+			Vcpus: 0.5,
+			Ram:   20,
+		},
 	},
 }
 var OperatorData = []string{

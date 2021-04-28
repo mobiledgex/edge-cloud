@@ -505,7 +505,10 @@ var AppOptionalArgs = []string{
 	"requiredoutboundconnections:#.protocol",
 	"requiredoutboundconnections:#.port",
 	"requiredoutboundconnections:#.remoteip",
-	"allowmultitenant",
+	"allowserverless",
+	"serverlessconfig.vcpus",
+	"serverlessconfig.ram",
+	"serverlessconfig.minreplicas",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -547,12 +550,28 @@ var AppComments = map[string]string{
 	"requiredoutboundconnections:#.protocol": "tcp, udp or icmp",
 	"requiredoutboundconnections:#.port":     "TCP or UDP port",
 	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
-	"allowmultitenant":                       "App is allowed to deploy to multi-tenant clusters",
+	"allowserverless":                        "App is allowed to deploy as serverless containers",
+	"serverlessconfig.vcpus":                 "virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
+	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 }
 var AppSpecialArgs = map[string]string{
 	"autoprovpolicies": "StringArray",
 	"fields":           "StringArray",
 }
+var ServerlessConfigRequiredArgs = []string{}
+var ServerlessConfigOptionalArgs = []string{
+	"vcpus",
+	"ram",
+	"minreplicas",
+}
+var ServerlessConfigAliasArgs = []string{}
+var ServerlessConfigComments = map[string]string{
+	"vcpus":       "virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"ram":         "RAM allocation in megabytes per container when serverless",
+	"minreplicas": "Minimum number of replicas when serverless",
+}
+var ServerlessConfigSpecialArgs = map[string]string{}
 var AppAutoProvPolicyRequiredArgs = []string{
 	"app-org",
 	"appname",
