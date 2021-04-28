@@ -194,7 +194,7 @@ message App {
 }
 
 message ServerlessConfig {
-  // virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001
+  // Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001
   float vcpus = 1;
   // RAM allocation in megabytes per container when serverless
   uint64 ram = 2;
