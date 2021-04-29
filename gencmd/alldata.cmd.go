@@ -978,7 +978,7 @@ var AllDataComments = map[string]string{
 	"apps:#.requiredoutboundconnections:#.port":                                     "TCP or UDP port",
 	"apps:#.requiredoutboundconnections:#.remoteip":                                 "remote IP X.X.X.X",
 	"apps:#.allowserverless":                                                        "App is allowed to deploy as serverless containers",
-	"apps:#.serverlessconfig.vcpus":                                                 "virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"apps:#.serverlessconfig.vcpus":                                                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
 	"apps:#.serverlessconfig.ram":                                                   "RAM allocation in megabytes per container when serverless",
 	"apps:#.serverlessconfig.minreplicas":                                           "Minimum number of replicas when serverless",
 	"appinstances:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
