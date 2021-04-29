@@ -398,7 +398,7 @@ func (m *App) XXX_DiscardUnknown() {
 var xxx_messageInfo_App proto.InternalMessageInfo
 
 type ServerlessConfig struct {
-	// virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001
+	// Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001
 	Vcpus float32 `protobuf:"fixed32,1,opt,name=vcpus,proto3" json:"vcpus,omitempty"`
 	// RAM allocation in megabytes per container when serverless
 	Ram uint64 `protobuf:"varint,2,opt,name=ram,proto3" json:"ram,omitempty"`

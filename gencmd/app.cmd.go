@@ -551,7 +551,7 @@ var AppComments = map[string]string{
 	"requiredoutboundconnections:#.port":     "TCP or UDP port",
 	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
 	"allowserverless":                        "App is allowed to deploy as serverless containers",
-	"serverlessconfig.vcpus":                 "virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
 	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 }
@@ -567,7 +567,7 @@ var ServerlessConfigOptionalArgs = []string{
 }
 var ServerlessConfigAliasArgs = []string{}
 var ServerlessConfigComments = map[string]string{
-	"vcpus":       "virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"vcpus":       "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
 	"ram":         "RAM allocation in megabytes per container when serverless",
 	"minreplicas": "Minimum number of replicas when serverless",
 }
