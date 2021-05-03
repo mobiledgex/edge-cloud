@@ -37,6 +37,10 @@ func InitAppApi(sync *Sync) {
 	sync.RegisterCache(&appApi.cache)
 }
 
+func (s *AppApi) IsKeyField(f string) bool {
+	return strings.HasPrefix(f, edgeproto.AppFieldKey+".") || f == edgeproto.AppFieldKey
+}
+
 func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	return s.cache.HasKey(key)
 }
@@ -487,6 +491,10 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		edgeproto.AppFieldDeployment,
 		edgeproto.AppFieldDeploymentGenerator,
 	}
+	canAlwaysUpdate := map[string]bool{
+
+		edgeproto.AppFieldTrusted: true,
+	}
 
 	fields := edgeproto.MakeFieldMap(in.Fields)
 	if err := in.Validate(fields); err != nil {
@@ -505,7 +513,14 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			if cur.Deployment != cloudcommon.DeploymentTypeKubernetes &&
 				cur.Deployment != cloudcommon.DeploymentTypeDocker &&
 				cur.Deployment != cloudcommon.DeploymentTypeHelm {
-				return fmt.Errorf("Update App not supported for deployment: %s when AppInsts exist", cur.Deployment)
+				for f := range fields {
+					if s.IsKeyField(f) {
+						continue
+					}
+					if !canAlwaysUpdate[f] {
+						return fmt.Errorf("Update App field %s not supported for deployment: %s when AppInsts exist", edgeproto.AppAllFieldsStringMap[f], cur.Deployment)
+					}
+				}
 			}
 			for _, field := range inUseCannotUpdate {
 				if _, found := fields[field]; found {
