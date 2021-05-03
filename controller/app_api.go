@@ -37,10 +37,6 @@ func InitAppApi(sync *Sync) {
 	sync.RegisterCache(&appApi.cache)
 }
 
-func (s *AppApi) IsKeyField(f string) bool {
-	return strings.HasPrefix(f, edgeproto.AppFieldKey+".") || f == edgeproto.AppFieldKey
-}
-
 func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	return s.cache.HasKey(key)
 }
@@ -514,7 +510,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				cur.Deployment != cloudcommon.DeploymentTypeDocker &&
 				cur.Deployment != cloudcommon.DeploymentTypeHelm {
 				for f := range fields {
-					if s.IsKeyField(f) {
+					if in.IsKeyField(f) {
 						continue
 					}
 					if !canAlwaysUpdate[f] {
