@@ -488,7 +488,6 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		edgeproto.AppFieldDeploymentGenerator,
 	}
 	canAlwaysUpdate := map[string]bool{
-
 		edgeproto.AppFieldTrusted: true,
 	}
 
