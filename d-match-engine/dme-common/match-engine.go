@@ -1215,7 +1215,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	}
 
 	// Initialize rate limiter so that we can handle all the incoming messages
-	rateLimiter := ratelimit.NewTokenBucketLimiter(ratelimit.DefaultReqsPerSecondPerApi, ratelimit.DefaultTokenBucketSize)
+	rateLimiter := ratelimit.NewTokenBucketLimiter(edgeproto.DefaultReqsPerSecondPerApi, int(edgeproto.DefaultTokenBucketSize))
 	// Loop while persistent connection is up
 loop:
 	for {

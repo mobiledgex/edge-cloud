@@ -2,7 +2,6 @@ package ratelimit
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -16,7 +15,7 @@ func TestLeakyBucket(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	rateLimitCtx := Context{Context: ctx}
-	leakyBucket := NewLeakyBucketLimiter(1)
+	leakyBucket := NewLeakyBucketLimiter(0.5)
 	before := time.Now()
 	done := make(chan bool, 4)
 	go func() {
@@ -39,8 +38,5 @@ func TestLeakyBucket(t *testing.T) {
 	<-done
 	<-done
 	<-done
-	after := time.Now()
-	fmt.Printf("before: %v, after: %v, elapsed: %v", before, after, time.Since(before))
-	require.True(t, time.Since(before) > 3*time.Second)
-	require.Nil(t, after)
+	require.True(t, time.Since(before) > 6*time.Second)
 }

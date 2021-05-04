@@ -7,6 +7,7 @@ import (
 )
 
 // Useful for rate limiting per user (eg. API limits)
+// MaxReqsRateLimitingAlgorithm
 type FixedWindowLimiter struct {
 	limiterPerSecond *IntervalLimiter
 	limiterPerMinute *IntervalLimiter
@@ -92,5 +93,6 @@ func (i *IntervalLimiter) Limit(ctx Context) (bool, error) {
 }
 
 // TODO: Implement Sliding Window rate limiting algorithm
+// MaxReqsRateLimitingAlgorithm
 type SlidingWindowLimiter struct {
 }

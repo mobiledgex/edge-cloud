@@ -1,6 +1,10 @@
 package ratelimit
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+)
 
 // MaxReqs algorithms rate limiter
 // Imposes a maximum number of requests in a time frame (either fixed or rolling) for a user, organization, or ip
@@ -10,30 +14,15 @@ type MaxReqsLimiter struct {
 	mux     sync.Mutex
 }
 
-type MaxReqsLimiterConfig struct {
-	MaxReqsAlgorithm MaxReqsRateLimitingAlgorithm
-	MaxReqsPerSecond int
-	MaxReqsPerMinute int
-	MaxReqsPerHour   int
-}
-
-type MaxReqsRateLimitingAlgorithm int
-
-const (
-	NoMaxReqsAlgorithm MaxReqsRateLimitingAlgorithm = iota
-	RollingWindowAlgorithm
-	FixedWindowAlgorithm
-)
-
-func NewMaxReqsLimiter(config *MaxReqsLimiterConfig) *MaxReqsLimiter {
+func NewMaxReqsLimiter(settings *edgeproto.MaxReqsRateLimitSettings) *MaxReqsLimiter {
 	maxReqsLimiter := &MaxReqsLimiter{}
-	switch config.MaxReqsAlgorithm {
-	case FixedWindowAlgorithm:
-		maxReqsLimiter.limiter = NewFixedWindowLimiter(config.MaxReqsPerSecond, config.MaxReqsPerMinute, config.MaxReqsPerHour)
-	case RollingWindowAlgorithm:
+	switch settings.MaxReqsAlgorithm {
+	case edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM:
+		maxReqsLimiter.limiter = NewFixedWindowLimiter(int(settings.MaxRequestsPerSecond), int(settings.MaxRequestsPerMinute), int(settings.MaxRequestsPerHour))
+	case edgeproto.MaxReqsRateLimitAlgorithm_ROLLING_WINDOW_ALGORITHM:
 		// log
 		fallthrough
-	case NoMaxReqsAlgorithm:
+	case edgeproto.MaxReqsRateLimitAlgorithm_NO_MAX_REQS_ALGORITHM:
 		// log
 		fallthrough
 	default:
@@ -52,20 +41,7 @@ func (f *MaxReqsLimiter) Limit(ctx Context) (bool, error) {
 	return false, nil
 }
 
-/*type ApiRateLimitMaxReqs struct {
-	maxReqsPerMinutePerConsumer int
-	maxReqsPerHourPerConsumer   int
-	maxReqsPerDayPerConsumer    int
-}
-
-func (a *ApiRateLimitMaxReqs) Scale(scaleFactor int) {
-	a.maxReqsPerDayPerConsumer *= scaleFactor
-	a.maxReqsPerHourPerConsumer *= scaleFactor
-	a.maxReqsPerMinutePerConsumer *= scaleFactor
-}
-
-// TODO: Get rid of perMonth limit?
-
+/*
 // ApiTier is used as a multiplier for each rate
 // For example, a tier2 DeveloperCreateMaxReqs would allow 5*10 maxReqsPerMinute, 100*10 maxReqsPerHour, 1000*10 maxReqsPerDay, and 10000*10 maxReqsPerMonth
 type ApiTier int
@@ -76,34 +52,30 @@ const (
 	tier3 ApiTier = 100
 )
 
-// TODO: GROUP rates BY INDIVIDUAL RPCs or SERVICES??? (answer: lets do services)
-
-var DefaultIpApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
-	maxReqsPerMinutePerConsumer: 5,
-	maxReqsPerHourPerConsumer:   100,
-	maxReqsPerDayPerConsumer:    1000,
+var DefaultPerApiMaxReqsRateLimitSettings = &edgeproto.MaxReqsRateLimitSettings{
+	MaxReqsAlgorithm:     edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+	MaxRequestsPerSecond: 100,
+	MaxRequestsPerMinute: 500,
+	MaxRequestsPerHour:   1000,
 }
 
-var DefaultUserApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
-	maxReqsPerMinutePerConsumer: 5,
-	maxReqsPerHourPerConsumer:   100,
-	maxReqsPerDayPerConsumer:    1000,
+var DefaultPerApiPerIpMaxReqsRateLimitSettings = &edgeproto.MaxReqsRateLimitSettings{
+	MaxReqsAlgorithm:     edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+	MaxRequestsPerSecond: 1,
+	MaxRequestsPerMinute: 10,
+	MaxRequestsPerHour:   100,
 }
 
-var DefaultOrgApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
-	maxReqsPerMinutePerConsumer: 50,
-	maxReqsPerHourPerConsumer:   1000,
-	maxReqsPerDayPerConsumer:    10000,
+var DefaultPerApiPerUserMaxReqsRateLimitSettings = &edgeproto.MaxReqsRateLimitSettings{
+	MaxReqsAlgorithm:     edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+	MaxRequestsPerSecond: 1,
+	MaxRequestsPerMinute: 10,
+	MaxRequestsPerHour:   100,
 }
 
-var DefaultDmeApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
-	maxReqsPerMinutePerConsumer: 100,
-	maxReqsPerHourPerConsumer:   1000,
-	maxReqsPerDayPerConsumer:    10000,
-}
-
-var TestDmeApiRateLimitMaxReqs = &ApiRateLimitMaxReqs{
-	maxReqsPerMinutePerConsumer: 5,
-	maxReqsPerHourPerConsumer:   10,
-	maxReqsPerDayPerConsumer:    100,
+var DefaultPerApiPerOrgMaxReqsRateLimitSettings = &edgeproto.MaxReqsRateLimitSettings{
+	MaxReqsAlgorithm:     edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+	MaxRequestsPerSecond: 50,
+	MaxRequestsPerMinute: 100,
+	MaxRequestsPerHour:   500,
 }*/

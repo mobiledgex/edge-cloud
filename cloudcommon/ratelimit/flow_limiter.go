@@ -1,6 +1,10 @@
 package ratelimit
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+)
 
 // Flow rate limiting algorithms
 // Limiting the number of requests/ flow of requests through an endpoint (ie. 1 request every second).
@@ -10,28 +14,14 @@ type FlowLimiter struct {
 	mux     sync.Mutex
 }
 
-type FlowLimiterConfig struct {
-	FlowAlgorithm     FlowRateLimitingAlgorithm
-	RequestsPerSecond int
-	BurstSize         int
-}
-
-type FlowRateLimitingAlgorithm int
-
-const (
-	NoFlowAlgorithm FlowRateLimitingAlgorithm = iota
-	TokenBucketAlgorithm
-	LeakyBucketAlgorithm
-)
-
-func NewFlowLimiter(config *FlowLimiterConfig) *FlowLimiter {
+func NewFlowLimiter(settings *edgeproto.FlowRateLimitSettings) *FlowLimiter {
 	flowLimiter := &FlowLimiter{}
-	switch config.FlowAlgorithm {
-	case TokenBucketAlgorithm:
-		flowLimiter.limiter = NewTokenBucketLimiter(config.RequestsPerSecond, config.BurstSize)
-	case LeakyBucketAlgorithm:
-		flowLimiter.limiter = NewLeakyBucketLimiter(config.RequestsPerSecond)
-	case NoFlowAlgorithm:
+	switch settings.FlowAlgorithm {
+	case edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM:
+		flowLimiter.limiter = NewTokenBucketLimiter(settings.ReqsPerSecond, int(settings.BurstSize))
+	case edgeproto.FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM:
+		flowLimiter.limiter = NewLeakyBucketLimiter(settings.ReqsPerSecond)
+	case edgeproto.FlowRateLimitAlgorithm_NO_FLOW_ALGORITHM:
 		// log
 		fallthrough
 	default:
@@ -48,14 +38,4 @@ func (f *FlowLimiter) Limit(ctx Context) (bool, error) {
 		return f.limiter.Limit(ctx)
 	}
 	return false, nil
-}
-
-// TODO: Add to settings
-var DefaultReqsPerSecondPerApi = 100
-var DefaultTokenBucketSize = 10 // equivalent to burst size
-
-var DefaultDmeApiFlowLimiterConfig = &FlowLimiterConfig{
-	FlowAlgorithm:     TokenBucketAlgorithm,
-	RequestsPerSecond: DefaultReqsPerSecondPerApi,
-	BurstSize:         DefaultTokenBucketSize,
 }

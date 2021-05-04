@@ -20,6 +20,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -98,6 +99,8 @@ type Services struct {
 	accessKeyGrpcServer       node.AccessKeyGrpcServer
 	listeners                 []net.Listener
 	publicCertManager         *node.PublicCertManager
+	unaryApiRateLimitMgr      *ratelimit.ApiRateLimitManager
+	streamApiRateLimitMgr     *ratelimit.ApiRateLimitManager
 }
 
 func main() {
@@ -404,9 +407,14 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
+
+	// Initialize ApiRateLimitManagers
+	services.unaryApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
+	services.streamApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
+
 	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
-		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
-		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.GetControllerUnaryRateLimiterInterceptor(services.unaryApiRateLimitMgr), cloudcommon.AuditUnaryInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.GetControllerStreamRateLimiterInterceptor(services.streamApiRateLimitMgr), cloudcommon.AuditStreamInterceptor)))
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
@@ -434,6 +442,31 @@ func startServices() error {
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
+
+	// Add APIs to ApiRateLimitManager hashmaps
+	grpcServices := server.GetServiceInfo()
+	for _, serviceInfo := range grpcServices {
+		for _, methodInfo := range serviceInfo.Methods {
+			log.DebugLog(log.DebugLevelApi, "BLAH: controller api", "api", methodInfo)
+			var rateLimitSettings *edgeproto.ApiEndpointRateLimitSettings
+			if strings.Contains(methodInfo.Name, "Create") {
+				rateLimitSettings = settingsApi.Get().ControllerCreateApiEndpointRateLimitSettings
+			} else if strings.Contains(methodInfo.Name, "Delete") {
+				rateLimitSettings = settingsApi.Get().ControllerDeleteApiEndpointRateLimitSettings
+			} else if strings.Contains(methodInfo.Name, "Show") {
+				rateLimitSettings = settingsApi.Get().ControllerShowApiEndpointRateLimitSettings
+			} else if strings.Contains(methodInfo.Name, "Update") {
+				rateLimitSettings = settingsApi.Get().ControllerUpdateApiEndpointRateLimitSettings
+			} else {
+				rateLimitSettings = settingsApi.Get().ControllerDefaultApiEndpointRateLimitSettings
+			}
+			if methodInfo.IsClientStream || methodInfo.IsServerStream {
+				services.streamApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings)
+			} else {
+				services.unaryApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings)
+			}
+		}
+	}
 
 	go func() {
 		// Serve will block until interrupted and Stop is called

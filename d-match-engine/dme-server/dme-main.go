@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
-	"reflect"
 	"strings"
 	"time"
 
@@ -72,6 +71,10 @@ var operatorApiGw op.OperatorApiGw
 type server struct{}
 
 var nodeMgr node.NodeMgr
+
+// RateLimitManagers
+var unaryApiRateLimitMgr *ratelimit.ApiRateLimitManager
+var streamApiRateLimitMgr *ratelimit.ApiRateLimitManager
 
 var sigChan chan os.Signal
 
@@ -534,23 +537,13 @@ func main() {
 	dmecommon.InitAppInstClients()
 	defer dmecommon.StopAppInstClients()
 
-	// Setup rate limiters
-	unaryApiRateLimitMgr := ratelimit.NewApiRateLimitManager()
-	streamApiRateLimitMgr := ratelimit.NewApiRateLimitManager()
-	serverType := reflect.TypeOf(&server{})
-	for i := 0; i < serverType.NumMethod(); i++ {
-		apiFlowLimiter := ratelimit.NewFlowLimiter(ratelimit.DefaultDmeApiFlowLimiterConfig)
-		method := serverType.Method(i)
-		if strings.Contains(method.Name, "Stream") || strings.Contains(method.Name, "Qos") {
-			streamApiRateLimitMgr.AddRateLimitPerApi(method.Name, apiFlowLimiter, ratelimit.DefaultDmeApiPerIpFullLimiterConfig, nil, nil)
-		} else {
-			unaryApiRateLimitMgr.AddRateLimitPerApi(method.Name, apiFlowLimiter, ratelimit.DefaultDmeApiPerIpFullLimiterConfig, nil, nil)
-		}
-	}
+	// Initialize API RateLimitManagers
+	unaryApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
+	streamApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
 
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.GetUnaryRateLimiterInterceptor(unaryApiRateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.GetStreamRateLimiterInterceptor(streamApiRateLimitMgr), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.GetDmeUnaryRateLimiterInterceptor(unaryApiRateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.GetDmeStreamRateLimiterInterceptor(streamApiRateLimitMgr), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
@@ -607,6 +600,20 @@ func main() {
 	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
+
+	// Add APIs to RateLimitManagers
+	grpcServices := s.GetServiceInfo()
+	for _, serviceInfo := range grpcServices {
+		for _, methodInfo := range serviceInfo.Methods {
+			log.DebugLog(log.DebugLevelDmereq, "BLAH: dme api", "api", methodInfo)
+			rateLimitSettings := dmecommon.Settings.DmeDefaultApiEndpointRateLimitSettings
+			if methodInfo.IsClientStream || methodInfo.IsServerStream {
+				streamApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings)
+			} else {
+				unaryApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings)
+			}
+		}
+	}
 
 	InitDebug(&nodeMgr)
 

@@ -1,0 +1,41 @@
+syntax = "proto3";
+package edgeproto;
+
+message ApiEndpointRateLimitSettings {
+  RateLimitSettings endpoint_rate_limit_settings = 1;
+  RateLimitSettings endpoint_per_ip_rate_limit_settings = 2;
+  RateLimitSettings endpoint_per_user_rate_limit_settings = 3;
+  RateLimitSettings endpoint_per_org_rate_limit_settings = 4;
+}
+
+message RateLimitSettings {
+  FlowRateLimitSettings flow_rate_limit_settings = 1;
+  MaxReqsRateLimitSettings max_reqs_rate_limit_settings = 2;
+}
+
+message FlowRateLimitSettings {
+  FlowRateLimitAlgorithm flow_algorithm = 1;
+  // requests per second
+  double reqsPerSecond = 2;
+  // burst size 
+  int64 burstSize = 3;
+}
+
+message MaxReqsRateLimitSettings {
+  MaxReqsRateLimitAlgorithm max_reqs_algorithm = 1;
+  int64 max_requests_per_second = 2;
+  int64 max_requests_per_minute = 3;
+  int64 max_requests_per_hour = 4;
+}
+
+enum FlowRateLimitAlgorithm {
+  NO_FLOW_ALGORITHM = 0;
+  TOKEN_BUCKET_ALGORITHM = 1;
+  LEAKY_BUCKET_ALGORITHM = 2;
+}
+
+enum MaxReqsRateLimitAlgorithm {
+  NO_MAX_REQS_ALGORITHM = 0;
+  FIXED_WINDOW_ALGORITHM = 1;
+  ROLLING_WINDOW_ALGORITHM = 2;
+}

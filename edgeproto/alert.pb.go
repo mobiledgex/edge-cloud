@@ -1090,6 +1090,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		return data, nil
 	}
 	switch to {
+	case reflect.TypeOf(FlowRateLimitAlgorithm(0)):
+		if en, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)):
+		if en, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(OptResNames(0)):
 		if en, ok := OptResNames_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil

@@ -11,13 +11,14 @@ import (
 // A token is taken out on each request
 // Requests that come in when there are no tokens in the bucket are rejected
 // Useful for throttling requests (eg. grpc interceptor)
+// FlowRateLimitingAlgorithm
 type TokenBucketLimiter struct {
 	limiter         *rate.Limiter
-	tokensPerSecond int
+	tokensPerSecond float64
 	bucketSize      int
 }
 
-func NewTokenBucketLimiter(tokensPerSecond int, bucketSize int) *TokenBucketLimiter {
+func NewTokenBucketLimiter(tokensPerSecond float64, bucketSize int) *TokenBucketLimiter {
 	t := &TokenBucketLimiter{}
 	t.tokensPerSecond = tokensPerSecond
 	t.bucketSize = bucketSize
