@@ -68,13 +68,15 @@ type Command struct {
 	CobraCmd             *cobra.Command
 	Run                  func(c *Command, args []string) error
 	UsageIsHelp          bool
+	Annotations          map[string]string
 }
 
 func (c *Command) GenCmd() *cobra.Command {
 	short := c.Short
 	cmd := &cobra.Command{
-		Use:   c.Use,
-		Short: short,
+		Use:         c.Use,
+		Short:       short,
+		Annotations: c.Annotations,
 	}
 	cmd.SetUsageFunc(c.usageFunc)
 	cmd.SetHelpFunc(c.helpFunc)
