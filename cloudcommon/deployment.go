@@ -115,6 +115,11 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			if !ok {
 				continue
 			}
+			if ksvc.Spec.Type != v1.ServiceTypeLoadBalancer {
+				// we allow non-LB services such as ClusterIP, but they do not count for validating exposed ports
+				log.DebugLog(log.DebugLevelApi, "skipping non-load balancer service", "type", ksvc.Spec.Type)
+				continue
+			}
 			for _, kp := range ksvc.Spec.Ports {
 				appPort := dme.AppPort{}
 				appPort.Proto, err = edgeproto.GetLProto(string(kp.Protocol))
@@ -160,7 +165,7 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			missingPorts = append(missingPorts, fmt.Sprintf("%s:%d", protoStr, tp.InternalPort))
 		}
 		if len(missingPorts) > 0 {
-			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest", strings.Join(missingPorts, ","))
+			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest in a LoadBalancer service", strings.Join(missingPorts, ","))
 		}
 	}
 	return nil
