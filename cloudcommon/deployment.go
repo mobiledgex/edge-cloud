@@ -115,12 +115,12 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			if !ok {
 				continue
 			}
+			if ksvc.Spec.Type != v1.ServiceTypeLoadBalancer {
+				// we allow non-LB services such as ClusterIP, but they do not count for validating exposed ports
+				log.DebugLog(log.DebugLevelApi, "skipping non-load balancer service", "type", ksvc.Spec.Type)
+				continue
+			}
 			for _, kp := range ksvc.Spec.Ports {
-				if ksvc.Spec.Type != v1.ServiceTypeLoadBalancer {
-					// we allow non-LB services such as ClusterIP, but they do not count for validating exposed ports
-					log.DebugLog(log.DebugLevelApi, "skipping non-load balancer service", "type", ksvc.Spec.Type)
-					continue
-				}
 				appPort := dme.AppPort{}
 				appPort.Proto, err = edgeproto.GetLProto(string(kp.Protocol))
 				if err != nil {
