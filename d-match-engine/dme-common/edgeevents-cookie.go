@@ -15,7 +15,6 @@ type EdgeEventsCookieKey struct {
 	ClusterName  string `json:"clustername,omitempty"`
 	CloudletOrg  string `json:"cloudletorg,omitempty"`
 	CloudletName string `json:"cloudletname,omitempty"`
-	UpdatedStats bool   `json:"updatedstats,omitempty"`
 	Kid          int    `json:"kid,omitempty"`
 }
 
@@ -43,7 +42,6 @@ func CreateEdgeEventsCookieKey(appInst *DmeAppInst) *EdgeEventsCookieKey {
 		ClusterName:  appInst.virtualClusterInstKey.ClusterKey.Name,
 		CloudletOrg:  appInst.virtualClusterInstKey.CloudletKey.Organization,
 		CloudletName: appInst.virtualClusterInstKey.CloudletKey.Name,
-		UpdatedStats: false,
 	}
 	return key
 }
