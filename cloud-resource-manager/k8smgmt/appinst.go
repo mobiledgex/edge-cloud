@@ -159,7 +159,7 @@ func getConfigDirName(names *KubeNames) (string, string) {
 	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
 
-func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor, action string) error {
+func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
 	if action == createManifest && names.Namespace != "" {
 		err := CreateNamespace(ctx, client, names)
 		if err != nil {
@@ -179,7 +179,7 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 		}
 		mf = AddManifest(mf, np)
 	}
-	mf, err = MergeEnvVars(ctx, authApi, app, mf, names.ImagePullSecrets, appInstFlavor, names)
+	mf, err = MergeEnvVars(ctx, authApi, app, mf, names.ImagePullSecrets, names)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
@@ -231,11 +231,11 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 }
 
 func CreateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor) error {
-	return createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, appInstFlavor, createManifest)
+	return createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, createManifest)
 }
 
 func UpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor) error {
-	err := createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, appInstFlavor, applyManifest)
+	err := createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, applyManifest)
 	if err != nil {
 		return err
 	}
