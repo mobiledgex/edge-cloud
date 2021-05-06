@@ -286,6 +286,14 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
+	// store clusterInstInfo object on CRM bringup, if state is READY
+	if old == nil && new.State == edgeproto.TrackedState_READY {
+		if err := cd.ClusterInstInfoCache.SetState(ctx, &new.Key, new.State); err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
+		}
+		return
+	}
+
 	resetStatus := edgeproto.NoResetStatus
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
@@ -475,6 +483,14 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	var err error
 
 	if old != nil && old.State == new.State {
+		return
+	}
+
+	// store appInstInfo object on CRM bringup, if state is READY
+	if old == nil && new.State == edgeproto.TrackedState_READY {
+		if err := cd.AppInstInfoCache.SetState(ctx, &new.Key, new.State); err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "AppInst set state failed", "err", err)
+		}
 		return
 	}
 
