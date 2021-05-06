@@ -37,18 +37,27 @@ var AppPortComments = map[string]string{
 	"nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 }
 var AppPortSpecialArgs = map[string]string{}
-var DeviceInfoRequiredArgs = []string{}
-var DeviceInfoOptionalArgs = []string{
-	"datanetworktype",
+var DeviceInfoStaticRequiredArgs = []string{}
+var DeviceInfoStaticOptionalArgs = []string{
 	"deviceos",
 	"devicemodel",
+	"carriername",
+}
+var DeviceInfoStaticAliasArgs = []string{}
+var DeviceInfoStaticComments = map[string]string{
+	"deviceos":    "Android or iOS",
+	"devicemodel": "Device model",
+	"carriername": "Carrier name (can be different from cloudlet org if using )",
+}
+var DeviceInfoStaticSpecialArgs = map[string]string{}
+var DeviceInfoDynamicRequiredArgs = []string{}
+var DeviceInfoDynamicOptionalArgs = []string{
+	"datanetworktype",
 	"signalstrength",
 }
-var DeviceInfoAliasArgs = []string{}
-var DeviceInfoComments = map[string]string{
+var DeviceInfoDynamicAliasArgs = []string{}
+var DeviceInfoDynamicComments = map[string]string{
 	"datanetworktype": "LTE, 5G, etc.",
-	"deviceos":        "Android or iOS",
-	"devicemodel":     "Device model",
-	"signalstrength":  "Device signal strength (0-5)",
+	"signalstrength":  "Device signal strength (0-5) // TODO: WHAT VALUE SHOULD THIS BE???",
 }
-var DeviceInfoSpecialArgs = map[string]string{}
+var DeviceInfoDynamicSpecialArgs = map[string]string{}

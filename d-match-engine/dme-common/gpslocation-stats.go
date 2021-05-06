@@ -15,8 +15,10 @@ const kmPerDegLat = 110.57
 
 func GetLocationTileFromGpsLocation(loc *dme.Loc, locationTileSideLengthKm int) string {
 	var quadrant string
-	if loc == nil {
-		return fmt.Sprintf("0-0,0-%s", strconv.Itoa(locationTileSideLengthKm))
+	// Validate location
+	err := ValidateLocation(loc)
+	if err != nil {
+		return ""
 	}
 	if loc.Latitude >= 0 && loc.Longitude >= 0 {
 		quadrant = "1"
