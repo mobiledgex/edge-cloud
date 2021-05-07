@@ -10,8 +10,9 @@ import (
 
 type EdgeEventsHandler interface {
 	GetVersionProperties() map[string]string
-	AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, sendFunc func(event *dme.ServerEdgeEvent))
+	AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc *dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent))
 	RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
+	UpdateClientLastLocation(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc *dme.Loc)
 	RemoveAppInstKey(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	SendLatencyRequestEdgeEvent(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	ProcessLatencySamples(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, samples []*dme.Sample) (*dme.Statistics, error)
@@ -21,13 +22,18 @@ type EdgeEventsHandler interface {
 
 type EmptyEdgeEventsHandler struct{}
 
-func (e *EmptyEdgeEventsHandler) AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, sendFunc func(event *dme.ServerEdgeEvent)) {
+func (e *EmptyEdgeEventsHandler) AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc *dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent)) {
 	log.DebugLog(log.DebugLevelDmereq, "AddClientKey not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 
 func (e *EmptyEdgeEventsHandler) RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey) {
 	log.DebugLog(log.DebugLevelDmereq, "RemoveClientKey not implemented for EmptyEdgeEventHandler. Returning")
+	return
+}
+
+func (e *EmptyEdgeEventsHandler) UpdateClientLastLocation(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc *dme.Loc) {
+	log.DebugLog(log.DebugLevelDmereq, "UpdateClientLastLocation not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 

@@ -132,11 +132,6 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst.TrackedState != edgeproto.TrackedState_READY {
 		return false
 	}
-	return CheckAppInstStates(appInst)
-}
-
-// Checks the MaintenanceState, CloudletState, and HealthCheck (used by StreamEdgeEvent to see if a new appinst is needed for a client)
-func CheckAppInstStates(appInst *DmeAppInst) bool {
 	if appInst.MaintenanceState == dme.MaintenanceState_UNDER_MAINTENANCE {
 		return false
 	}
@@ -248,19 +243,19 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	cl.TrackedState = appInst.State
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
+		cl.AppInstHealth = appInst.HealthCheck
 		EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
-	cl.AppInstHealth = appInst.HealthCheck
 	// Check if Cloudlet states have changed
-	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+	if cloudlet, found := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; found {
 		if cl.CloudletState != cloudlet.State {
+			cl.CloudletState = cloudlet.State
 			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
 		}
 		if cl.MaintenanceState != cloudlet.MaintenanceState {
+			cl.MaintenanceState = cloudlet.MaintenanceState
 			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_MAINTENANCE)
 		}
-		cl.CloudletState = cloudlet.State
-		cl.MaintenanceState = cloudlet.MaintenanceState
 	} else {
 		cl.CloudletState = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 		cl.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
@@ -1147,7 +1142,9 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		}
 		updateDeviceInfoStats(ctx, appInstKey, deviceInfo, lastLocation, "event init connection")
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, sendFunc)
+		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, lastLocation, deviceInfoStatic.CarrierName, sendFunc)
+		// Remove Client from edgeevents plugin when StreamEdgeEvent exits
+		defer EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 		// Send successful init response
 		initServerEdgeEvent := new(dme.ServerEdgeEvent)
 		initServerEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
@@ -1245,9 +1242,13 @@ loop:
 				DeviceInfoDynamic: deviceInfoDynamic,
 			}
 			// Update deviceinfo stats if DeviceInfoDynamic has changed or Location has moved to different tile
-			if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) && !isLocationInSameTile(cupdate.GpsLocation, lastLocation) {
+			if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) || !isLocationInSameTile(cupdate.GpsLocation, lastLocation) {
 				updateDeviceInfoStats(ctx, appInstKey, deviceInfo, cupdate.GpsLocation, "event location update")
 				lastDeviceInfoDynamic = deviceInfoDynamic
+			}
+			// Update last client location in plugin if different from lastLocation
+			if cupdate.GpsLocation.Latitude != lastLocation.Latitude || cupdate.GpsLocation.Longitude != lastLocation.Longitude {
+				EEHandler.UpdateClientLastLocation(ctx, *appInstKey, *sessionCookieKey, cupdate.GpsLocation)
 				lastLocation = cupdate.GpsLocation
 			}
 			// Check if there is a better cloudlet based on location update
@@ -1255,23 +1256,20 @@ loop:
 			err = FindCloudlet(ctx, &appInstKey.AppKey, deviceInfoStatic.CarrierName, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
-				sendErrorEventToClient(ctx, fmt.Sprintf("Error trying to find closer cloudlet: %s", err), *appInstKey, *sessionCookieKey)
 				continue
 			}
 			if fcreply.Status != dme.FindCloudletReply_FIND_FOUND {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to find any cloudlets", "FindStatus", fcreply.Status)
-				sendErrorEventToClient(ctx, fmt.Sprintf("Unable to find any cloudlets, FindStatus is %v", fcreply.Status), *appInstKey, *sessionCookieKey)
 				continue
 			}
 			newEECookieKey, err := VerifyEdgeEventsCookie(ctx, fcreply.EdgeEventsCookie)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying verify new cloudlet edgeeventscookie", "err", err)
-				sendErrorEventToClient(ctx, fmt.Sprintf("Error trying verify new cloudlet edgeeventscookie: %s", err), *appInstKey, *sessionCookieKey)
 				continue
 			}
 			// Check if new appinst is different from current
 			if !IsTheSameCluster(newEECookieKey, edgeEventsCookieKey) {
-				// Send successful init response
+				// Send new cloudlet update
 				newCloudletEdgeEvent := new(dme.ServerEdgeEvent)
 				newCloudletEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_CLOUDLET_UPDATE
 				newCloudletEdgeEvent.NewCloudlet = fcreply
@@ -1294,8 +1292,6 @@ loop:
 			sendErrorEventToClient(ctx, fmt.Sprintf("Received unknown event type: %s", cupdate.EventType), *appInstKey, *sessionCookieKey)
 		}
 	}
-	// Remove Client from edgeevents plugin
-	EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 	return reterr
 }
 
@@ -1328,10 +1324,7 @@ func isDeviceInfoDynamicEqual(d1 *dme.DeviceInfoDynamic, d2 *dme.DeviceInfoDynam
 	if d2 == nil {
 		return false
 	}
-	if d1.DataNetworkType != d2.DataNetworkType {
-		return false
-	}
-	if d1.SignalStrength != d2.SignalStrength {
+	if d1.DataNetworkType != d2.DataNetworkType || d1.SignalStrength != d2.SignalStrength {
 		return false
 	}
 	return true
