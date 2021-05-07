@@ -177,7 +177,7 @@ func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (
 		return producer{}, fmt.Errorf("Unable to get system certs")
 	}
 	newConfig := tls.Config{RootCAs: rootCAs}
-	if s.unitTestMode {
+	if s.unitTestMode || kafkaCreds.Password == "kafka-secret" {
 		newConfig.InsecureSkipVerify = true
 	}
 	config.Net.TLS.Config = &newConfig

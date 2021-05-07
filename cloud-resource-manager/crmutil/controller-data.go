@@ -23,12 +23,8 @@ type ControllerData struct {
 	cloudletKey                 edgeproto.CloudletKey
 	AppCache                    edgeproto.AppCache
 	AppInstCache                edgeproto.AppInstCache
-<<<<<<< HEAD
-	CloudletCache               edgeproto.CloudletCache
-	CloudletInternalCache       edgeproto.CloudletInternalCache
-=======
 	CloudletCache               *edgeproto.CloudletCache
->>>>>>> kafka bus
+	CloudletInternalCache       edgeproto.CloudletInternalCache
 	VMPoolCache                 edgeproto.VMPoolCache
 	FlavorCache                 edgeproto.FlavorCache
 	ClusterInstCache            edgeproto.ClusterInstCache
