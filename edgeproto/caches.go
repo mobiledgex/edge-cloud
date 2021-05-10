@@ -152,6 +152,20 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 	s.Update(ctx, &info, 0)
 }
 
+func (s *ClusterInstInfoCache) RefreshObj(ctx context.Context, obj *ClusterInst) {
+	info := ClusterInstInfo{}
+	if s.Get(&obj.Key, &info) {
+		// already saved
+		return
+	}
+	info.Key = obj.Key
+	info.State = obj.State
+	info.Errors = obj.Errors
+	info.Status = obj.Status
+	info.Resources = obj.Resources
+	s.Update(ctx, &info, 0)
+}
+
 // If CRM crashes or reconnects to controller, controller will resend
 // current state. This is needed to:
 // -restart actions that were lost due to a crash
@@ -390,6 +404,22 @@ func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errSta
 	}
 	info.Errors = append(info.Errors, err)
 	info.State = errState
+	s.Update(ctx, &info, 0)
+}
+
+func (s *AppInstInfoCache) RefreshObj(ctx context.Context, obj *AppInst) {
+	info := AppInstInfo{}
+	if s.Get(&obj.Key, &info) {
+		// already saved
+		return
+	}
+	info.Key = obj.Key
+	info.State = obj.State
+	info.Errors = obj.Errors
+	info.RuntimeInfo = obj.RuntimeInfo
+	info.Status = obj.Status
+	info.PowerState = obj.PowerState
+	info.Uri = obj.Uri
 	s.Update(ctx, &info, 0)
 }
 
