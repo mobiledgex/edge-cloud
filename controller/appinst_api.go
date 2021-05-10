@@ -1691,8 +1691,10 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			// already in that state
 			if in.State == edgeproto.TrackedState_READY {
 				// update runtime info
-				inst.RuntimeInfo = in.RuntimeInfo
-				applyUpdate = true
+				if len(in.RuntimeInfo.ContainerIds) > 0 {
+					inst.RuntimeInfo = in.RuntimeInfo
+					applyUpdate = true
+				}
 			}
 		} else {
 			// please see state_transitions.md

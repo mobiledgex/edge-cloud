@@ -288,9 +288,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	// store clusterInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
-		if err := cd.ClusterInstInfoCache.SetState(ctx, &new.Key, new.State); err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
-		}
+		cd.ClusterInstInfoCache.RefreshObj(ctx, new)
 		return
 	}
 
@@ -488,9 +486,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 
 	// store appInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
-		if err := cd.AppInstInfoCache.SetState(ctx, &new.Key, new.State); err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "AppInst set state failed", "err", err)
-		}
+		cd.AppInstInfoCache.RefreshObj(ctx, new)
 		return
 	}
 
