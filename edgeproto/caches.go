@@ -152,7 +152,7 @@ func (s *ClusterInstInfoCache) SetError(ctx context.Context, key *ClusterInstKey
 	s.Update(ctx, &info, 0)
 }
 
-func (s *ClusterInstInfoCache) SaveObj(ctx context.Context, obj *ClusterInst) {
+func (s *ClusterInstInfoCache) RefreshObj(ctx context.Context, obj *ClusterInst) {
 	info := ClusterInstInfo{}
 	if s.Get(&obj.Key, &info) {
 		// already saved
@@ -407,7 +407,7 @@ func (s *AppInstInfoCache) SetError(ctx context.Context, key *AppInstKey, errSta
 	s.Update(ctx, &info, 0)
 }
 
-func (s *AppInstInfoCache) SaveObj(ctx context.Context, obj *AppInst) {
+func (s *AppInstInfoCache) RefreshObj(ctx context.Context, obj *AppInst) {
 	info := AppInstInfo{}
 	if s.Get(&obj.Key, &info) {
 		// already saved

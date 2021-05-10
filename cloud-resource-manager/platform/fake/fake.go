@@ -575,6 +575,10 @@ func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Cac
 	if caches == nil {
 		return fmt.Errorf("caches is nil")
 	}
+	// Because the fake cloudlet doesn't have it's own internal database of
+	// allocated objects like Openstack/VMWare, we just fake it by copying
+	// what the Controller says is supposed to be here. This handles the CRM
+	// restart case.
 	clusterInstKeys := []edgeproto.ClusterInstKey{}
 	caches.ClusterInstCache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
 		clusterInstKeys = append(clusterInstKeys, *k)

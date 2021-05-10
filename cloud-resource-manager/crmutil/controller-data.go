@@ -288,7 +288,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	// store clusterInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
-		cd.ClusterInstInfoCache.SaveObj(ctx, new)
+		cd.ClusterInstInfoCache.RefreshObj(ctx, new)
 		return
 	}
 
@@ -486,7 +486,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 
 	// store appInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
-		cd.AppInstInfoCache.SaveObj(ctx, new)
+		cd.AppInstInfoCache.RefreshObj(ctx, new)
 		return
 	}
 
