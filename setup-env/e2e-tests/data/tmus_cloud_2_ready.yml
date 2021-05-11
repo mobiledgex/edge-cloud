@@ -38,12 +38,19 @@ cloudletinfos:
       - externalip: 10.101.100.11
     info:
     - name: RAM
-      value: 8192
+      value: 28672
       inframaxvalue: 40960
       units: MB
     - name: vCPUs
-      value: 4
+      value: 14
       inframaxvalue: 50
     - name: External IPs
-      value: 1
+      value: 2
       inframaxvalue: 30
+    clusterinsts:
+    - clusterkey:
+        name: ReservableCluster2
+      organization: MobiledgeX
+    - clusterkey:
+        name: SmallCluster
+      organization: AcmeAppCo
