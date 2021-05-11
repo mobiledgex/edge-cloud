@@ -349,7 +349,7 @@ func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath stri
 	// Adjust request timeout based on File Size
 	//  - Timeout is increased by 10min for every 5GB
 	//  - If less than 5GB, then use default timeout
-	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, authApi, nil)
+	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, authApi, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -366,7 +366,7 @@ func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath stri
 		}
 	}
 
-	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, authApi, reqConfig)
+	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, authApi, reqConfig, nil)
 	if err != nil {
 		return err
 	}
