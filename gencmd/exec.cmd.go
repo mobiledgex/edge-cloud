@@ -96,7 +96,7 @@ func RunCommand(c *cli.Command, in *edgeproto.ExecRequest) error {
 		return fmt.Errorf("RunCommand failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -154,7 +154,7 @@ func RunConsole(c *cli.Command, in *edgeproto.ExecRequest) error {
 		return fmt.Errorf("RunConsole failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -212,7 +212,7 @@ func ShowLogs(c *cli.Command, in *edgeproto.ExecRequest) error {
 		return fmt.Errorf("ShowLogs failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -270,7 +270,7 @@ func AccessCloudlet(c *cli.Command, in *edgeproto.ExecRequest) error {
 		return fmt.Errorf("AccessCloudlet failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -328,7 +328,7 @@ func SendLocalRequest(c *cli.Command, in *edgeproto.ExecRequest) error {
 		return fmt.Errorf("SendLocalRequest failed: %s", errstr)
 	}
 	ExecRequestHideTags(obj)
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 

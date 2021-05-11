@@ -25,6 +25,7 @@ service OrganizationApi {
       body: "*"
     };
   }
+  option (protogen.dummy_server) = true;
 }
 
 message OrganizationData {

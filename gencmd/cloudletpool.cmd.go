@@ -83,7 +83,7 @@ func CreateCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 		}
 		return fmt.Errorf("CreateCloudletPool failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -140,7 +140,7 @@ func DeleteCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 		}
 		return fmt.Errorf("DeleteCloudletPool failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -198,7 +198,7 @@ func UpdateCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 		}
 		return fmt.Errorf("UpdateCloudletPool failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -275,7 +275,7 @@ func ShowCloudletPool(c *cli.Command, in *edgeproto.CloudletPool) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -332,7 +332,7 @@ func AddCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) err
 		}
 		return fmt.Errorf("AddCloudletPoolMember failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -389,7 +389,7 @@ func RemoveCloudletPoolMember(c *cli.Command, in *edgeproto.CloudletPoolMember) 
 		}
 		return fmt.Errorf("RemoveCloudletPoolMember failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
