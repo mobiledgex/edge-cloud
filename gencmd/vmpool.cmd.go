@@ -145,7 +145,7 @@ func CreateVMPool(c *cli.Command, in *edgeproto.VMPool) error {
 		}
 		return fmt.Errorf("CreateVMPool failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -202,7 +202,7 @@ func DeleteVMPool(c *cli.Command, in *edgeproto.VMPool) error {
 		}
 		return fmt.Errorf("DeleteVMPool failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -260,7 +260,7 @@ func UpdateVMPool(c *cli.Command, in *edgeproto.VMPool) error {
 		}
 		return fmt.Errorf("UpdateVMPool failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -337,7 +337,7 @@ func ShowVMPool(c *cli.Command, in *edgeproto.VMPool) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -394,7 +394,7 @@ func AddVMPoolMember(c *cli.Command, in *edgeproto.VMPoolMember) error {
 		}
 		return fmt.Errorf("AddVMPoolMember failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -451,7 +451,7 @@ func RemoveVMPoolMember(c *cli.Command, in *edgeproto.VMPoolMember) error {
 		}
 		return fmt.Errorf("RemoveVMPoolMember failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 

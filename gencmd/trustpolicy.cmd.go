@@ -81,7 +81,7 @@ func CreateTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 			return fmt.Errorf("CreateTrustPolicy recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -89,7 +89,7 @@ func CreateTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -162,7 +162,7 @@ func DeleteTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 			return fmt.Errorf("DeleteTrustPolicy recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -170,7 +170,7 @@ func DeleteTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -244,7 +244,7 @@ func UpdateTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 			return fmt.Errorf("UpdateTrustPolicy recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -252,7 +252,7 @@ func UpdateTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -328,7 +328,7 @@ func ShowTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

@@ -65,7 +65,7 @@ func CreateResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 		}
 		return fmt.Errorf("CreateResTagTable failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -122,7 +122,7 @@ func DeleteResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 		}
 		return fmt.Errorf("DeleteResTagTable failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -180,7 +180,7 @@ func UpdateResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 		}
 		return fmt.Errorf("UpdateResTagTable failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -256,7 +256,7 @@ func ShowResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -313,7 +313,7 @@ func AddResTag(c *cli.Command, in *edgeproto.ResTagTable) error {
 		}
 		return fmt.Errorf("AddResTag failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -370,7 +370,7 @@ func RemoveResTag(c *cli.Command, in *edgeproto.ResTagTable) error {
 		}
 		return fmt.Errorf("RemoveResTag failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -427,7 +427,7 @@ func GetResTagTable(c *cli.Command, in *edgeproto.ResTagTableKey) error {
 		}
 		return fmt.Errorf("GetResTagTable failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
