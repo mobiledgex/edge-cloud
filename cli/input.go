@@ -221,6 +221,18 @@ const (
 	JsonNamespace
 )
 
+func (s FieldNamespace) String() string {
+	switch s {
+	case StructNamespace:
+		return "StructNamespace"
+	case YamlNamespace:
+		return "YamlNamespace"
+	case JsonNamespace:
+		return "JsonNamespace"
+	}
+	return fmt.Sprintf("UnknownNamespace(%d)", s)
+}
+
 // JsonMap takes as input the generic args map from ParseArgs
 // corresponding to obj, and uses the json tags in obj to generate
 // a map with field names in the JSON namespace.
@@ -245,7 +257,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		// get the StructField to get the json tag
 		sf, ok := FindField(t, key, inputNS)
 		if !ok {
-			continue
+			return fmt.Errorf("Field %s (%s) not found in struct %T", key, inputNS.String(), t)
 		}
 		tag := sf.Tag.Get("json")
 		tagvals := strings.Split(tag, ",")
@@ -255,7 +267,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 			tagvals = tagvals[1:]
 		}
 		if jsonName == "" {
-			jsonName = strings.ToLower(key)
+			jsonName = sf.Name
 		}
 		if subargs, ok := val.(map[string]interface{}); ok {
 			// sub struct
@@ -264,7 +276,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 				kind = sf.Type.Elem().Kind()
 			}
 			if kind != reflect.Struct {
-				return fmt.Errorf("key %s value %v is a map (struct) but expected %v", key, val, sf.Type)
+				return fmt.Errorf("key %s (%s) value %v is a map (struct) but expected %v", key, inputNS.String(), val, sf.Type)
 			}
 			var subjson map[string]interface{}
 			if hasTag("inline", tagvals) {
@@ -279,7 +291,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		} else if list, ok := val.([]map[string]interface{}); ok {
 			// arrayed struct
 			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s value %v is an array but expected %v", key, val, sf.Type)
+				return fmt.Errorf("key %s (%s) value %v is an array but expected %v", key, inputNS.String(), val, sf.Type)
 			}
 			elemt := sf.Type.Elem()
 			jslist := make([]map[string]interface{}, 0, len(list))
@@ -295,7 +307,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		} else if reflect.TypeOf(val).Kind() == reflect.Slice {
 			// array of built-in types
 			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s value %v is an array but expected type %v", key, val, sf.Type)
+				return fmt.Errorf("key %s (%s) value %v is an array but expected type %v", key, inputNS.String(), val, sf.Type)
 			}
 			js[jsonName] = val
 		} else {
@@ -315,7 +327,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 				}
 				err := yaml.Unmarshal([]byte(strval), v.Interface())
 				if err != nil {
-					return fmt.Errorf("unmarshal err on %s, %s, %v, %v", key, strval, v.Elem().Kind(), err)
+					return fmt.Errorf("unmarshal err on %s (%s), %s, %v, %v", key, inputNS.String(), strval, v.Elem().Kind(), err)
 				}
 				// elem to dereference it
 				js[jsonName] = v.Elem().Interface()
@@ -354,6 +366,25 @@ func FindField(t reflect.Type, name string, ns FieldNamespace) (reflect.StructFi
 		}
 		return reflect.StructField{}, false
 	}
+}
+
+func FindHierField(t reflect.Type, hierName string, ns FieldNamespace) (reflect.StructField, bool) {
+	sf := reflect.StructField{}
+	found := false
+	for _, name := range strings.Split(hierName, ".") {
+		if t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
+		if t.Kind() != reflect.Struct {
+			return sf, false
+		}
+		sf, found = FindField(t, name, ns)
+		if !found {
+			return sf, false
+		}
+		t = sf.Type
+	}
+	return sf, found
 }
 
 func getSubMap(cur map[string]interface{}, key string, arrIdx int) map[string]interface{} {
@@ -556,6 +587,10 @@ func MarshalArgs(obj interface{}, ignore []string, aliases []string) ([]string, 
 			return args, err
 		}
 	}
+	// Note if generic map is passed in, it must be the StructNamespace.
+	// This is because args are also nominally in the struct namespace.
+	// It is difficult to accept JsonNamespace, because JSON collapses
+	// embedded structs, while args/yaml/mapstructure do not.
 
 	ignoremap := make(map[string]struct{})
 	if ignore != nil {
@@ -583,6 +618,7 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 		if v == nil {
 			continue
 		}
+		k = strings.ToLower(k)
 		if sub, ok := v.(map[string]interface{}); ok {
 			subargs := MapToArgs(append(prefix, k), sub, ignore, specialArgs, aliases)
 			args = append(args, subargs...)

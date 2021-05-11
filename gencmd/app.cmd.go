@@ -102,7 +102,7 @@ func CreateApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("CreateApp failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -159,7 +159,7 @@ func DeleteApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("DeleteApp failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -217,7 +217,7 @@ func UpdateApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("UpdateApp failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -294,7 +294,7 @@ func ShowApp(c *cli.Command, in *edgeproto.App) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -351,7 +351,7 @@ func AddAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) error
 		}
 		return fmt.Errorf("AddAppAutoProvPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -408,7 +408,7 @@ func RemoveAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) er
 		}
 		return fmt.Errorf("RemoveAppAutoProvPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 

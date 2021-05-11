@@ -180,7 +180,7 @@ func CreateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			return fmt.Errorf("CreateCloudlet recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -188,7 +188,7 @@ func CreateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -261,7 +261,7 @@ func DeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			return fmt.Errorf("DeleteCloudlet recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -269,7 +269,7 @@ func DeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -343,7 +343,7 @@ func UpdateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			return fmt.Errorf("UpdateCloudlet recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -351,7 +351,7 @@ func UpdateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -428,7 +428,7 @@ func ShowCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -485,7 +485,7 @@ func GetCloudletManifest(c *cli.Command, in *edgeproto.CloudletKey) error {
 		}
 		return fmt.Errorf("GetCloudletManifest failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -542,7 +542,7 @@ func GetCloudletProps(c *cli.Command, in *edgeproto.CloudletProps) error {
 		}
 		return fmt.Errorf("GetCloudletProps failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -599,7 +599,7 @@ func GetCloudletResourceQuotaProps(c *cli.Command, in *edgeproto.CloudletResourc
 		}
 		return fmt.Errorf("GetCloudletResourceQuotaProps failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -656,7 +656,7 @@ func GetCloudletResourceUsage(c *cli.Command, in *edgeproto.CloudletResourceUsag
 		}
 		return fmt.Errorf("GetCloudletResourceUsage failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -713,7 +713,7 @@ func AddCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) error {
 		}
 		return fmt.Errorf("AddCloudletResMapping failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -770,7 +770,7 @@ func RemoveCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) erro
 		}
 		return fmt.Errorf("RemoveCloudletResMapping failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -827,7 +827,7 @@ func FindFlavorMatch(c *cli.Command, in *edgeproto.FlavorMatch) error {
 		}
 		return fmt.Errorf("FindFlavorMatch failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -884,7 +884,7 @@ func RevokeAccessKey(c *cli.Command, in *edgeproto.CloudletKey) error {
 		}
 		return fmt.Errorf("RevokeAccessKey failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -941,7 +941,7 @@ func GenerateAccessKey(c *cli.Command, in *edgeproto.CloudletKey) error {
 		}
 		return fmt.Errorf("GenerateAccessKey failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -1018,7 +1018,7 @@ func PlatformDeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -1114,7 +1114,7 @@ func ShowCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -1171,7 +1171,7 @@ func InjectCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 		}
 		return fmt.Errorf("InjectCloudletInfo failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -1228,7 +1228,7 @@ func EvictCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 		}
 		return fmt.Errorf("EvictCloudletInfo failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -1312,7 +1312,7 @@ func ShowCloudletMetrics(c *cli.Command, in *edgeproto.CloudletMetrics) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

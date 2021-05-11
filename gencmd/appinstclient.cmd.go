@@ -100,7 +100,7 @@ func ShowAppInstClient(c *cli.Command, in *edgeproto.AppInstClientKey) error {
 		}
 		AppInstClientHideTags(obj)
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -108,7 +108,7 @@ func ShowAppInstClient(c *cli.Command, in *edgeproto.AppInstClientKey) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -186,7 +186,7 @@ func StreamAppInstClientsLocal(c *cli.Command, in *edgeproto.AppInstClientKey) e
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

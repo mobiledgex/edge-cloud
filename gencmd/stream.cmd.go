@@ -81,7 +81,7 @@ func StreamAppInst(c *cli.Command, in *edgeproto.AppInstKey) error {
 			return fmt.Errorf("StreamAppInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -89,7 +89,7 @@ func StreamAppInst(c *cli.Command, in *edgeproto.AppInstKey) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -162,7 +162,7 @@ func StreamClusterInst(c *cli.Command, in *edgeproto.ClusterInstKey) error {
 			return fmt.Errorf("StreamClusterInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -170,7 +170,7 @@ func StreamClusterInst(c *cli.Command, in *edgeproto.ClusterInstKey) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -243,7 +243,7 @@ func StreamCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
 			return fmt.Errorf("StreamCloudlet recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -251,7 +251,7 @@ func StreamCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -328,7 +328,7 @@ func StreamLocalMsgs(c *cli.Command, in *edgeproto.AppInstKey) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
