@@ -157,7 +157,7 @@ func CreateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			return fmt.Errorf("CreateClusterInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -165,7 +165,7 @@ func CreateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -238,7 +238,7 @@ func DeleteClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			return fmt.Errorf("DeleteClusterInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -246,7 +246,7 @@ func DeleteClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -320,7 +320,7 @@ func UpdateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 			return fmt.Errorf("UpdateClusterInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -328,7 +328,7 @@ func UpdateClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -405,7 +405,7 @@ func ShowClusterInst(c *cli.Command, in *edgeproto.ClusterInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -462,7 +462,7 @@ func DeleteIdleReservableClusterInsts(c *cli.Command, in *edgeproto.IdleReservab
 		}
 		return fmt.Errorf("DeleteIdleReservableClusterInsts failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -546,7 +546,7 @@ func ShowClusterInstInfo(c *cli.Command, in *edgeproto.ClusterInstInfo) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

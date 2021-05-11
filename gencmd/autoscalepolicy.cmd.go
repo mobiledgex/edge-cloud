@@ -65,7 +65,7 @@ func CreateAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error 
 		}
 		return fmt.Errorf("CreateAutoScalePolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -122,7 +122,7 @@ func DeleteAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error 
 		}
 		return fmt.Errorf("DeleteAutoScalePolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -180,7 +180,7 @@ func UpdateAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error 
 		}
 		return fmt.Errorf("UpdateAutoScalePolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -256,7 +256,7 @@ func ShowAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

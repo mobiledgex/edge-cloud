@@ -80,7 +80,7 @@ func CreateAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 		}
 		return fmt.Errorf("CreateAutoProvPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -137,7 +137,7 @@ func DeleteAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 		}
 		return fmt.Errorf("DeleteAutoProvPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -195,7 +195,7 @@ func UpdateAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 		}
 		return fmt.Errorf("UpdateAutoProvPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -271,7 +271,7 @@ func ShowAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -328,7 +328,7 @@ func AddAutoProvPolicyCloudlet(c *cli.Command, in *edgeproto.AutoProvPolicyCloud
 		}
 		return fmt.Errorf("AddAutoProvPolicyCloudlet failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -385,7 +385,7 @@ func RemoveAutoProvPolicyCloudlet(c *cli.Command, in *edgeproto.AutoProvPolicyCl
 		}
 		return fmt.Errorf("RemoveAutoProvPolicyCloudlet failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 

@@ -106,7 +106,7 @@ func InjectDevice(c *cli.Command, in *edgeproto.Device) error {
 		}
 		return fmt.Errorf("InjectDevice failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -183,7 +183,7 @@ func ShowDevice(c *cli.Command, in *edgeproto.Device) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -240,7 +240,7 @@ func EvictDevice(c *cli.Command, in *edgeproto.Device) error {
 		}
 		return fmt.Errorf("EvictDevice failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -317,7 +317,7 @@ func ShowDeviceReport(c *cli.Command, in *edgeproto.DeviceReport) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

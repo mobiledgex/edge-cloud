@@ -65,7 +65,7 @@ func UpdateSettings(c *cli.Command, in *edgeproto.Settings) error {
 		}
 		return fmt.Errorf("UpdateSettings failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -119,7 +119,7 @@ func ResetSettings(c *cli.Command, in *edgeproto.Settings) error {
 		}
 		return fmt.Errorf("ResetSettings failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -172,7 +172,7 @@ func ShowSettings(c *cli.Command, in *edgeproto.Settings) error {
 		}
 		return fmt.Errorf("ShowSettings failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 

@@ -301,7 +301,7 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 	{{- end}}
 	{{- if .StreamOutIncremental}}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 	{{- end}}
@@ -310,7 +310,7 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 {{- else}}
 	obj, err := {{.Service}}Cmd.{{.Method}}(ctx, in)
 	if err != nil {
@@ -324,7 +324,7 @@ func {{.Method}}(c *cli.Command, in *{{.FQInType}}) error {
 	{{- if .OutHideTags}}
 	{{.OutType}}HideTags(obj)
 	{{- end}}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 {{- end}}
 	return nil
 }

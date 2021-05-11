@@ -94,7 +94,7 @@ func Request(c *cli.Command, in *testgen.TestGen) error {
 		return fmt.Errorf("Request failed: %s", errstr)
 	}
 	TestGenHideTags(obj)
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
