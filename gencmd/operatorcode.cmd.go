@@ -65,7 +65,7 @@ func CreateOperatorCode(c *cli.Command, in *edgeproto.OperatorCode) error {
 		}
 		return fmt.Errorf("CreateOperatorCode failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -122,7 +122,7 @@ func DeleteOperatorCode(c *cli.Command, in *edgeproto.OperatorCode) error {
 		}
 		return fmt.Errorf("DeleteOperatorCode failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -198,7 +198,7 @@ func ShowOperatorCode(c *cli.Command, in *edgeproto.OperatorCode) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

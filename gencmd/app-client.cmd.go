@@ -63,7 +63,7 @@ func RegisterClient(c *cli.Command, in *distributed_match_engine.RegisterClientR
 		}
 		return fmt.Errorf("RegisterClient failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -120,7 +120,7 @@ func FindCloudlet(c *cli.Command, in *distributed_match_engine.FindCloudletReque
 		}
 		return fmt.Errorf("FindCloudlet failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -177,7 +177,7 @@ func PlatformFindCloudlet(c *cli.Command, in *distributed_match_engine.PlatformF
 		}
 		return fmt.Errorf("PlatformFindCloudlet failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -234,7 +234,7 @@ func VerifyLocation(c *cli.Command, in *distributed_match_engine.VerifyLocationR
 		}
 		return fmt.Errorf("VerifyLocation failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -291,7 +291,7 @@ func GetLocation(c *cli.Command, in *distributed_match_engine.GetLocationRequest
 		}
 		return fmt.Errorf("GetLocation failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -348,7 +348,7 @@ func AddUserToGroup(c *cli.Command, in *distributed_match_engine.DynamicLocGroup
 		}
 		return fmt.Errorf("AddUserToGroup failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -405,7 +405,7 @@ func GetAppInstList(c *cli.Command, in *distributed_match_engine.AppInstListRequ
 		}
 		return fmt.Errorf("GetAppInstList failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -462,7 +462,7 @@ func GetFqdnList(c *cli.Command, in *distributed_match_engine.FqdnListRequest) e
 		}
 		return fmt.Errorf("GetFqdnList failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -519,7 +519,7 @@ func GetAppOfficialFqdn(c *cli.Command, in *distributed_match_engine.AppOfficial
 		}
 		return fmt.Errorf("GetAppOfficialFqdn failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -596,7 +596,7 @@ func GetQosPositionKpi(c *cli.Command, in *distributed_match_engine.QosPositionR
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
