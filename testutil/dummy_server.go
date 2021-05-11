@@ -9,72 +9,123 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (s *DummyServer) AddDummyObjs(ctx context.Context, num int) {
+type Action int
+
+const (
+	Create Action = iota
+	Delete
+)
+
+func (s *DummyServer) SetDummyObjs(ctx context.Context, a Action, tag string, num int) {
 	for ii := 0; ii < num; ii++ {
-		name := fmt.Sprintf("%d", ii)
+		name := fmt.Sprintf("%s%d", tag, ii)
 
 		flavor := edgeproto.Flavor{}
 		flavor.Key.Name = name
-		s.FlavorCache.Update(ctx, &flavor, int64(ii))
+		if a == Create {
+			s.FlavorCache.Update(ctx, &flavor, int64(ii))
+		} else if a == Delete {
+			s.FlavorCache.Delete(ctx, &flavor, int64(ii))
+		}
 	}
 }
 
-func (s *DummyServer) AddDummyOrgObjs(ctx context.Context, org string, num int) {
+func (s *DummyServer) SetDummyOrgObjs(ctx context.Context, a Action, org string, num int) {
 	for ii := 0; ii < num; ii++ {
 		name := fmt.Sprintf("%d", ii)
 
 		app := edgeproto.App{}
 		app.Key.Organization = org
 		app.Key.Name = name
-		s.AppCache.Update(ctx, &app, int64(ii))
+		if a == Create {
+			s.AppCache.Update(ctx, &app, int64(ii))
+		} else if a == Delete {
+			s.AppCache.Delete(ctx, &app, int64(ii))
+		}
 
 		appinst := edgeproto.AppInst{}
 		appinst.Key.AppKey.Organization = org
 		appinst.Key.AppKey.Name = name
-		s.AppInstCache.Update(ctx, &appinst, int64(ii))
+		if a == Create {
+			s.AppInstCache.Update(ctx, &appinst, int64(ii))
+		} else if a == Delete {
+			s.AppInstCache.Delete(ctx, &appinst, int64(ii))
+		}
 
 		cinst := edgeproto.ClusterInst{}
 		cinst.Key.Organization = org
 		cinst.Key.ClusterKey.Name = name
-		s.ClusterInstCache.Update(ctx, &cinst, int64(ii))
+		if a == Create {
+			s.ClusterInstCache.Update(ctx, &cinst, int64(ii))
+		} else if a == Delete {
+			s.ClusterInstCache.Delete(ctx, &cinst, int64(ii))
+		}
 
 		cloudlet := edgeproto.Cloudlet{}
 		cloudlet.Key.Organization = org
 		cloudlet.Key.Name = name
 		cloudlet.EnvVar = map[string]string{"key1": "val1"}
-		s.CloudletCache.Update(ctx, &cloudlet, int64(ii))
+		if a == Create {
+			s.CloudletCache.Update(ctx, &cloudlet, int64(ii))
+		} else if a == Delete {
+			s.CloudletCache.Delete(ctx, &cloudlet, int64(ii))
+		}
 
 		cloudletInfo := edgeproto.CloudletInfo{}
 		cloudletInfo.Key.Organization = org
 		cloudletInfo.Key.Name = name
 		cloudletInfo.ContainerVersion = "xyz"
-		s.CloudletInfoCache.Update(ctx, &cloudletInfo, int64(ii))
+		if a == Create {
+			s.CloudletInfoCache.Update(ctx, &cloudletInfo, int64(ii))
+		} else if a == Delete {
+			s.CloudletInfoCache.Delete(ctx, &cloudletInfo, int64(ii))
+		}
 
 		pool := edgeproto.CloudletPool{}
 		pool.Key.Name = name
 		pool.Key.Organization = org
 		pool.Cloudlets = []string{"cloudlet1", "cloudlet2", "cloudlet3"}
-		s.CloudletPoolCache.Update(ctx, &pool, int64(ii))
+		if a == Create {
+			s.CloudletPoolCache.Update(ctx, &pool, int64(ii))
+		} else if a == Delete {
+			s.CloudletPoolCache.Delete(ctx, &pool, int64(ii))
+		}
 
 		vmpool := edgeproto.VMPool{}
 		vmpool.Key.Name = name
 		vmpool.Key.Organization = org
-		s.VMPoolCache.Update(ctx, &vmpool, int64(ii))
+		if a == Create {
+			s.VMPoolCache.Update(ctx, &vmpool, int64(ii))
+		} else if a == Delete {
+			s.VMPoolCache.Delete(ctx, &vmpool, int64(ii))
+		}
 
 		autoprov := edgeproto.AutoProvPolicy{}
 		autoprov.Key.Name = name + "autoprov"
 		autoprov.Key.Organization = org
-		s.AutoProvPolicyCache.Update(ctx, &autoprov, int64(ii))
+		if a == Create {
+			s.AutoProvPolicyCache.Update(ctx, &autoprov, int64(ii))
+		} else if a == Delete {
+			s.AutoProvPolicyCache.Delete(ctx, &autoprov, int64(ii))
+		}
 
 		autoscale := edgeproto.AutoScalePolicy{}
 		autoscale.Key.Name = name + "autoscale"
 		autoscale.Key.Organization = org
-		s.AutoScalePolicyCache.Update(ctx, &autoscale, int64(ii))
+		if a == Create {
+			s.AutoScalePolicyCache.Update(ctx, &autoscale, int64(ii))
+		} else if a == Delete {
+			s.AutoScalePolicyCache.Delete(ctx, &autoscale, int64(ii))
+		}
 
 		priv := edgeproto.TrustPolicy{}
 		priv.Key.Name = name + "trust"
 		priv.Key.Organization = org
-		s.TrustPolicyCache.Update(ctx, &priv, int64(ii))
+		if a == Create {
+			s.TrustPolicyCache.Update(ctx, &priv, int64(ii))
+		} else if a == Delete {
+			s.TrustPolicyCache.Delete(ctx, &priv, int64(ii))
+		}
 	}
 }
 

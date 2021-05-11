@@ -398,7 +398,7 @@ func TestJsonMapFromYaml(t *testing.T) {
 		require.Nil(t, err, "%d: unmarshal json to map", ii)
 
 		// convert yaml map to json map (this is the focus of the test)
-		jsonMapFromYaml, err := cli.JsonMap(jsonMap, d.obj3, cli.YamlNamespace)
+		jsonMapFromYaml, err := cli.JsonMap(yamlMap, d.obj3, cli.YamlNamespace)
 		require.Nil(t, err, "%d: jsonMap conversion")
 
 		// Due to difference with enums and numeric types

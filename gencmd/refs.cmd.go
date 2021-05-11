@@ -83,7 +83,7 @@ func ShowCloudletRefs(c *cli.Command, in *edgeproto.CloudletRefs) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -165,7 +165,7 @@ func ShowClusterRefs(c *cli.Command, in *edgeproto.ClusterRefs) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -247,7 +247,7 @@ func ShowAppInstRefs(c *cli.Command, in *edgeproto.AppInstRefs) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

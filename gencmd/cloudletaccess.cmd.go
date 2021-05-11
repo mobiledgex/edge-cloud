@@ -62,7 +62,7 @@ func IssueCert(c *cli.Command, in *edgeproto.IssueCertRequest) error {
 		}
 		return fmt.Errorf("IssueCert failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -119,7 +119,7 @@ func GetCas(c *cli.Command, in *edgeproto.GetCasRequest) error {
 		}
 		return fmt.Errorf("GetCas failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -176,7 +176,7 @@ func GetAccessData(c *cli.Command, in *edgeproto.AccessDataRequest) error {
 		}
 		return fmt.Errorf("GetAccessData failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
