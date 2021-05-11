@@ -1836,9 +1836,9 @@ type ClientEdgeEvent struct {
 	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation,proto3" json:"gps_location,omitempty"`
 	// Latency Samples if event_type is EVENT_LATENCY_SAMPLES or EVENT_CUSTOM_EVENT
 	Samples []*Sample `protobuf:"bytes,5,rep,name=samples,proto3" json:"samples,omitempty"`
-	// Static device information for stats (must be sent on EVENT_INIT_CONNECTION if wanted for stats)
+	// Static device information for stats (sent on EVENT_INIT_CONNECTION. Fields are optional if not wanted for stats)
 	DeviceInfoStatic *DeviceInfoStatic `protobuf:"bytes,6,opt,name=device_info_static,json=deviceInfoStatic,proto3" json:"device_info_static,omitempty"`
-	// Dynamic device information for stats (must be sent on EVENT_INIT_CONNECTION, and/or EVENT_LOCATION_UPDATE, and/or EVENT_LATENCY_SAMPLES if wanted for stats)
+	// Dynamic device information for stats (sent on EVENT_INIT_CONNECTION, and/or EVENT_LOCATION_UPDATE, and/or EVENT_LATENCY_SAMPLES if wanted for stats)
 	DeviceInfoDynamic *DeviceInfoDynamic `protobuf:"bytes,7,opt,name=device_info_dynamic,json=deviceInfoDynamic,proto3" json:"device_info_dynamic,omitempty"`
 	// Custom event specified by the application
 	CustomEvent string `protobuf:"bytes,8,opt,name=custom_event,json=customEvent,proto3" json:"custom_event,omitempty"`
@@ -7023,10 +7023,6 @@ func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
 			m.DeviceInfoStatic.DeviceModel = src.DeviceInfoStatic.DeviceModel
 			changed++
 		}
-		if m.DeviceInfoStatic.CarrierName != src.DeviceInfoStatic.CarrierName {
-			m.DeviceInfoStatic.CarrierName = src.DeviceInfoStatic.CarrierName
-			changed++
-		}
 	} else if m.DeviceInfoStatic != nil {
 		m.DeviceInfoStatic = nil
 		changed++
@@ -7039,6 +7035,10 @@ func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
 		}
 		if m.DeviceInfoDynamic.SignalStrength != src.DeviceInfoDynamic.SignalStrength {
 			m.DeviceInfoDynamic.SignalStrength = src.DeviceInfoDynamic.SignalStrength
+			changed++
+		}
+		if m.DeviceInfoDynamic.CarrierName != src.DeviceInfoDynamic.CarrierName {
+			m.DeviceInfoDynamic.CarrierName = src.DeviceInfoDynamic.CarrierName
 			changed++
 		}
 	} else if m.DeviceInfoDynamic != nil {

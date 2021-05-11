@@ -20,9 +20,9 @@ func GetDeviceStatKey(appInstKey edgeproto.AppInstKey, deviceInfo *DeviceInfo, l
 	if deviceInfo.DeviceInfoStatic != nil {
 		statKey.DeviceOs = deviceInfo.DeviceInfoStatic.DeviceOs
 		statKey.DeviceModel = deviceInfo.DeviceInfoStatic.DeviceModel
-		statKey.DeviceCarrier = deviceInfo.DeviceInfoStatic.CarrierName
 	}
 	if deviceInfo.DeviceInfoDynamic != nil {
+		statKey.DeviceCarrier = deviceInfo.DeviceInfoDynamic.CarrierName
 		statKey.DataNetworkType = deviceInfo.DeviceInfoDynamic.DataNetworkType
 		statKey.SignalStrength = uint64(deviceInfo.DeviceInfoDynamic.SignalStrength)
 	}

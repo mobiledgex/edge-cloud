@@ -1067,6 +1067,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	// Initialize vars used for edgeevents stats
 	var deviceInfoStatic *dme.DeviceInfoStatic
 	var lastLocation *dme.Loc
+	var lastCarrier string = ""
 	var lastDeviceInfoDynamic *dme.DeviceInfoDynamic
 	// Intialize send function to be passed to plugin functions
 	sendFunc := func(event *dme.ServerEdgeEvent) {
@@ -1117,6 +1118,9 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		}
 		// Intialize last deviceInfoDynamic for stats
 		lastDeviceInfoDynamic = initMsg.DeviceInfoDynamic
+		if lastDeviceInfoDynamic != nil {
+			lastCarrier = lastDeviceInfoDynamic.CarrierName
+		}
 		// Create AppInstKey from SessionCookie and EdgeEventsCookie
 		appInstKey = &edgeproto.AppInstKey{
 			AppKey: edgeproto.AppKey{
@@ -1142,7 +1146,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		}
 		updateDeviceInfoStats(ctx, appInstKey, deviceInfo, lastLocation, "event init connection")
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, lastLocation, deviceInfoStatic.CarrierName, sendFunc)
+		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, lastLocation, lastCarrier, sendFunc)
 		// Remove Client from edgeevents plugin when StreamEdgeEvent exits
 		defer EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 		// Send successful init response
@@ -1196,10 +1200,7 @@ loop:
 				continue
 			}
 			// Latency stats update
-			deviceInfoDynamic := &dme.DeviceInfoDynamic{}
-			if cupdate.DeviceInfoDynamic != nil {
-				deviceInfoDynamic = cupdate.DeviceInfoDynamic
-			}
+			deviceInfoDynamic := cupdate.DeviceInfoDynamic
 			deviceInfo := &DeviceInfo{
 				DeviceInfoStatic:  deviceInfoStatic,
 				DeviceInfoDynamic: deviceInfoDynamic,
@@ -1214,16 +1215,25 @@ loop:
 				LatencyStatInfo: latencyStatInfo,
 			}
 			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
-			// If there is a valid location, fallthrough to next case and check if there is a better cloudlet
-			if !validLocation {
+			if validLocation {
+				// Update deviceinfo stats if DeviceInfoDynamic or location tile has changed
+				if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) || !isLocationInSameTile(cupdate.GpsLocation, lastLocation) {
+					updateDeviceInfoStats(ctx, appInstKey, deviceInfo, nil, "event latency samples")
+					lastDeviceInfoDynamic = deviceInfoDynamic
+					if lastDeviceInfoDynamic != nil {
+						lastCarrier = lastDeviceInfoDynamic.CarrierName
+					}
+				}
+			} else {
 				// Update deviceinfo stats if DeviceInfoDynamic has changed
 				if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) {
 					updateDeviceInfoStats(ctx, appInstKey, deviceInfo, nil, "event latency samples")
 					lastDeviceInfoDynamic = deviceInfoDynamic
+					if lastDeviceInfoDynamic != nil {
+						lastCarrier = lastDeviceInfoDynamic.CarrierName
+					}
 				}
-				continue
 			}
-			fallthrough
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			err := ValidateLocation(cupdate.GpsLocation)
@@ -1233,10 +1243,7 @@ loop:
 				continue
 			}
 			// Deviceinfo stats update
-			deviceInfoDynamic := &dme.DeviceInfoDynamic{}
-			if cupdate.DeviceInfoDynamic != nil {
-				deviceInfoDynamic = cupdate.DeviceInfoDynamic
-			}
+			deviceInfoDynamic := cupdate.DeviceInfoDynamic
 			deviceInfo := &DeviceInfo{
 				DeviceInfoStatic:  deviceInfoStatic,
 				DeviceInfoDynamic: deviceInfoDynamic,
@@ -1245,6 +1252,9 @@ loop:
 			if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) || !isLocationInSameTile(cupdate.GpsLocation, lastLocation) {
 				updateDeviceInfoStats(ctx, appInstKey, deviceInfo, cupdate.GpsLocation, "event location update")
 				lastDeviceInfoDynamic = deviceInfoDynamic
+				if lastDeviceInfoDynamic != nil {
+					lastCarrier = lastDeviceInfoDynamic.CarrierName
+				}
 			}
 			// Update last client location in plugin if different from lastLocation
 			if cupdate.GpsLocation.Latitude != lastLocation.Latitude || cupdate.GpsLocation.Longitude != lastLocation.Longitude {
@@ -1253,7 +1263,7 @@ loop:
 			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
-			err = FindCloudlet(ctx, &appInstKey.AppKey, deviceInfoStatic.CarrierName, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
+			err = FindCloudlet(ctx, &appInstKey.AppKey, lastCarrier, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
 				continue

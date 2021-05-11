@@ -1429,9 +1429,9 @@ var ClientEdgeEventOptionalArgs = []string{
 	"samples:#.tags",
 	"deviceinfostatic.deviceos",
 	"deviceinfostatic.devicemodel",
-	"deviceinfostatic.carriername",
 	"deviceinfodynamic.datanetworktype",
 	"deviceinfodynamic.signalstrength",
+	"deviceinfodynamic.carriername",
 	"customevent",
 	"tags",
 }
@@ -1451,9 +1451,9 @@ var ClientEdgeEventComments = map[string]string{
 	"samples:#.tags":                    "_(optional)_ Vendor specific data",
 	"deviceinfostatic.deviceos":         "Android or iOS",
 	"deviceinfostatic.devicemodel":      "Device model",
-	"deviceinfostatic.carriername":      "Carrier name (can be different from cloudlet org if using )",
 	"deviceinfodynamic.datanetworktype": "LTE, 5G, etc.",
-	"deviceinfodynamic.signalstrength":  "Device signal strength (0-5) // TODO: WHAT VALUE SHOULD THIS BE???",
+	"deviceinfodynamic.signalstrength":  "Device signal strength (0-5)",
+	"deviceinfodynamic.carriername":     "Carrier name (can be different from cloudlet org if using )",
 	"customevent":                       "Custom event specified by the application",
 	"tags":                              "_(optional)_ Vendor specific data",
 }
