@@ -395,11 +395,11 @@ func initEdgeEventsPlugin(ctx context.Context, operatorName string) (dmecommon.E
 	if err != nil {
 		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
 	}
-	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (dmecommon.EdgeEventsHandler, error))
+	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context, edgeEventsCookieExpiration time.Duration) (dmecommon.EdgeEventsHandler, error))
 	if !ok {
-		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
+		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context, edgeEventsCookieExpiration time.Duration) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
 	}
-	eehandler, err := getEdgeEventsHandlerFunc(ctx)
+	eehandler, err := getEdgeEventsHandlerFunc(ctx, *edgeEventsCookieExpiration)
 	if err != nil {
 		return nil, err
 	}
