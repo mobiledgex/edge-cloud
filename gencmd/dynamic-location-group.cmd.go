@@ -61,7 +61,7 @@ func SendToGroup(c *cli.Command, in *distributed_match_engine.DlgMessage) error 
 		}
 		return fmt.Errorf("SendToGroup failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
