@@ -89,7 +89,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, req.DeviceInfo, reply, *edgeEventsCookieExpiration, nil)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, *edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -135,7 +135,7 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
-	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, req.DeviceInfo, reply, *edgeEventsCookieExpiration, nil)
+	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, *edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -395,11 +395,11 @@ func initEdgeEventsPlugin(ctx context.Context, operatorName string) (dmecommon.E
 	if err != nil {
 		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
 	}
-	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (dmecommon.EdgeEventsHandler, error))
+	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context, edgeEventsCookieExpiration time.Duration) (dmecommon.EdgeEventsHandler, error))
 	if !ok {
-		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
+		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context, edgeEventsCookieExpiration time.Duration) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
 	}
-	eehandler, err := getEdgeEventsHandlerFunc(ctx)
+	eehandler, err := getEdgeEventsHandlerFunc(ctx, *edgeEventsCookieExpiration)
 	if err != nil {
 		return nil, err
 	}
