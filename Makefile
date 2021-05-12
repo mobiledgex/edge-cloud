@@ -42,15 +42,16 @@ build-linux:
 build-docker:
 	rsync --checksum .dockerignore ../.dockerignore
 	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d'), ${TAG}" \
-		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
-	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
-	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
-	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
-	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
-	for ADDLTAG in ${ADDLTAGS}; do \
-		docker tag mobiledgex/edge-cloud:${TAG} $$ADDLTAG; \
-		docker push $$ADDLTAG; \
-	done
+		-t mobiledgex/edge-cloud:$(TAG) -f docker/Dockerfile.edge-cloud ..
+	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:${TAG}
+	docker push $(REGISTRY)/edge-cloud:$(TAG)
+	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:latest
+	docker push $(REGISTRY)/edge-cloud:latest
+
+build-nightly: REGISTRY = harbor.mobiledgex.net/mobiledgex
+build-nightly: build-docker
+	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:nightly
+	docker push $(REGISTRY)/edge-cloud:nightly
 
 install:
 	go install ./...
