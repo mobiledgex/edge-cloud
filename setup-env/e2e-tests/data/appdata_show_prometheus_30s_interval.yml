@@ -27,7 +27,7 @@ settings:
   influxdbcloudletusagemetricsretention: 8760h0m0s
   appinstclientcleanupinterval: 24h
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1s
+  edgeeventsmetricscollectioninterval: 3s
   influxdbedgeeventsmetricsretention: 672h0m0s
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:

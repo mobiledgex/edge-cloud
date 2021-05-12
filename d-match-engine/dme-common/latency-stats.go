@@ -14,16 +14,22 @@ type LatencyStatInfo struct {
 	Samples []*dme.Sample
 }
 
-func GetLatencyStatKey(appInstKey edgeproto.AppInstKey, deviceInfo *dme.DeviceInfo, carrier string, loc *dme.Loc, tileLength int) LatencyStatKey {
-	return LatencyStatKey{
-		AppInstKey:      appInstKey,
-		DataNetworkType: deviceInfo.DataNetworkType,
-		DeviceOs:        deviceInfo.DeviceOs,
-		DeviceModel:     deviceInfo.DeviceModel,
-		SignalStrength:  uint64(deviceInfo.SignalStrength),
-		DeviceCarrier:   carrier,
-		LocationTile:    GetLocationTileFromGpsLocation(loc, tileLength),
+func GetLatencyStatKey(appInstKey edgeproto.AppInstKey, deviceInfo *DeviceInfo, loc *dme.Loc, tileLength int) LatencyStatKey {
+	statKey := LatencyStatKey{
+		AppInstKey:   appInstKey,
+		LocationTile: GetLocationTileFromGpsLocation(loc, tileLength),
 	}
+
+	if deviceInfo.DeviceInfoStatic != nil {
+		statKey.DeviceOs = deviceInfo.DeviceInfoStatic.DeviceOs
+		statKey.DeviceModel = deviceInfo.DeviceInfoStatic.DeviceModel
+	}
+	if deviceInfo.DeviceInfoDynamic != nil {
+		statKey.DeviceCarrier = deviceInfo.DeviceInfoDynamic.CarrierName
+		statKey.DataNetworkType = deviceInfo.DeviceInfoDynamic.DataNetworkType
+		statKey.SignalStrength = uint64(deviceInfo.DeviceInfoDynamic.SignalStrength)
+	}
+	return statKey
 }
 
 // Used to find corresponding LatencyStat

@@ -20,7 +20,7 @@ settings:
   dmeapimetricscollectioninterval: 1s
   influxdbmetricsretention: 672h0m0s
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1s
+  edgeeventsmetricscollectioninterval: 3s
   influxdbedgeeventsmetricsretention: 672h0m0s
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
