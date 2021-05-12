@@ -1836,9 +1836,15 @@ type ClientEdgeEvent struct {
 	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation,proto3" json:"gps_location,omitempty"`
 	// Latency Samples if event_type is EVENT_LATENCY_SAMPLES or EVENT_CUSTOM_EVENT
 	Samples []*Sample `protobuf:"bytes,5,rep,name=samples,proto3" json:"samples,omitempty"`
-	// Static device information for stats (sent on EVENT_INIT_CONNECTION. Fields are optional if not wanted for stats)
+	//
+	// _(optional)_ Static device information for latency and deviceinfo stats
+	// Send on EVENT_INIT_CONNECTION to get this information in latency stats and deviceinfo stats
 	DeviceInfoStatic *DeviceInfoStatic `protobuf:"bytes,6,opt,name=device_info_static,json=deviceInfoStatic,proto3" json:"device_info_static,omitempty"`
-	// Dynamic device information for stats (sent on EVENT_INIT_CONNECTION, and/or EVENT_LOCATION_UPDATE, and/or EVENT_LATENCY_SAMPLES if wanted for stats)
+	//
+	// _(optional)_ Dynamic device information for latency and deviceinfo stats
+	// Send on EVENT_INIT_CONNECTION to get this information in first deviceinfo stat
+	// Send on EVENT_LOCATION_UPDATE to get this information in dynamic deviceinfo stats
+	// Send on EVENT_LATENCY_SAMPLES to get this information in latency stats
 	DeviceInfoDynamic *DeviceInfoDynamic `protobuf:"bytes,7,opt,name=device_info_dynamic,json=deviceInfoDynamic,proto3" json:"device_info_dynamic,omitempty"`
 	// Custom event specified by the application
 	CustomEvent string `protobuf:"bytes,8,opt,name=custom_event,json=customEvent,proto3" json:"custom_event,omitempty"`
@@ -1893,6 +1899,7 @@ type ServerEdgeEvent struct {
 	HealthCheck HealthCheck `protobuf:"varint,4,opt,name=health_check,json=healthCheck,proto3,enum=distributed_match_engine.HealthCheck" json:"health_check,omitempty"`
 	// Summarized RTT Latency stats from samples provided from client if event_type is EVENT_LATENCY
 	Statistics *Statistics `protobuf:"bytes,5,opt,name=statistics,proto3" json:"statistics,omitempty"`
+	//
 	// New and closer cloudlet if event_type is EVENT_CLOUDLET_UPDATE.
 	// Also sent on EVENT_CLOUDLET_STATE, if cloudlet_state != CLOUDLET_STATE_READY
 	// Also sent on EVENT_CLOUDLET_MAINTENANCE, if maintenance_state == UNDER_MAINTENANCE

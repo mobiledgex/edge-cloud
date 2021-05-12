@@ -1185,12 +1185,11 @@ loop:
 			break loop
 		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
 			// Client sent latency samples to be processed
-			validLocation := true
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
-				validLocation = false
 				log.SpanLog(ctx, log.DebugLevelDmereq, "No location in EVENT_LATENCY_SAMPLES", "err", err)
 				sendErrorEventToClient(ctx, fmt.Sprintf("No location in EVENT_LATENCY_SAMPLES, error is: %s", err), *appInstKey, *sessionCookieKey)
+				continue
 			}
 			// Process latency samples and send results to client
 			_, err = EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
@@ -1215,25 +1214,6 @@ loop:
 				LatencyStatInfo: latencyStatInfo,
 			}
 			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
-			if validLocation {
-				// Update deviceinfo stats if DeviceInfoDynamic or location tile has changed
-				if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) || !isLocationInSameTile(cupdate.GpsLocation, lastLocation) {
-					updateDeviceInfoStats(ctx, appInstKey, deviceInfo, nil, "event latency samples")
-					lastDeviceInfoDynamic = deviceInfoDynamic
-					if lastDeviceInfoDynamic != nil {
-						lastCarrier = lastDeviceInfoDynamic.CarrierName
-					}
-				}
-			} else {
-				// Update deviceinfo stats if DeviceInfoDynamic has changed
-				if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) {
-					updateDeviceInfoStats(ctx, appInstKey, deviceInfo, nil, "event latency samples")
-					lastDeviceInfoDynamic = deviceInfoDynamic
-					if lastDeviceInfoDynamic != nil {
-						lastCarrier = lastDeviceInfoDynamic.CarrierName
-					}
-				}
-			}
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
 			err := ValidateLocation(cupdate.GpsLocation)
