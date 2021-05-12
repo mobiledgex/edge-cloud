@@ -528,8 +528,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				Latitude:  31.00,
 				Longitude: -91.00,
 			}
-			latencyEvent.CarrierName = "dmuus"
-			latencyEvent.DeviceInfo = apiRequest.Eereq.DeviceInfo
+			latencyEvent.DeviceInfoDynamic = apiRequest.Eereq.DeviceInfoDynamic
 			samples := make([]*dmeproto.Sample, 0)
 			// Create dummy samples
 			list := []float64{1.12, 2.354, 3.85, 4.23, 5.33}
@@ -578,8 +577,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				Latitude:  35.00,
 				Longitude: -95.00,
 			}
-			gpsUpdateEvent.CarrierName = "dmuus"
-			gpsUpdateEvent.DeviceInfo = apiRequest.Eereq.DeviceInfo
+			gpsUpdateEvent.DeviceInfoDynamic = apiRequest.Eereq.DeviceInfoDynamic
 			err = resp.Send(gpsUpdateEvent)
 			// Receive processed latency samples
 			dmereply, err = resp.Recv()
