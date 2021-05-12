@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
@@ -13,19 +12,30 @@ import (
 const kmPerDegLong = 111.32
 const kmPerDegLat = 110.57
 
+type LocationTileInfo struct {
+	Quadrant   int
+	LongIndex  int
+	LatIndex   int
+	TileLength int
+}
+
 func GetLocationTileFromGpsLocation(loc *dme.Loc, locationTileSideLengthKm int) string {
-	var quadrant string
-	if loc == nil {
-		return fmt.Sprintf("0-0,0-%s", strconv.Itoa(locationTileSideLengthKm))
+	// Validate location
+	err := ValidateLocation(loc)
+	if err != nil {
+		return ""
 	}
+	// Create LocationTileInfo
+	locationTileInfo := &LocationTileInfo{}
+	locationTileInfo.TileLength = locationTileSideLengthKm
 	if loc.Latitude >= 0 && loc.Longitude >= 0 {
-		quadrant = "1"
+		locationTileInfo.Quadrant = 1
 	} else if loc.Latitude >= 0 && loc.Longitude < 0 {
-		quadrant = "2"
+		locationTileInfo.Quadrant = 2
 	} else if loc.Latitude < 0 && loc.Longitude < 0 {
-		quadrant = "3"
+		locationTileInfo.Quadrant = 3
 	} else {
-		quadrant = "4"
+		locationTileInfo.Quadrant = 4
 	}
 	// Convert lat, long to positive
 	lat := math.Abs(loc.Latitude)
@@ -34,31 +44,26 @@ func GetLocationTileFromGpsLocation(loc *dme.Loc, locationTileSideLengthKm int) 
 	latKm := lat * kmPerDegLat
 	longKm := long * kmPerDegLong
 	// Calculate number of tiles to get to loc (round down)
-	latIndex := int(latKm / float64(locationTileSideLengthKm))
-	longIndex := int(longKm / float64(locationTileSideLengthKm))
-	// Append lat long to string for metrics
-	pair := strconv.Itoa(latIndex) + "," + strconv.Itoa(longIndex)
+	locationTileInfo.LatIndex = int(latKm / float64(locationTileSideLengthKm))
+	locationTileInfo.LongIndex = int(longKm / float64(locationTileSideLengthKm))
+	// Get the lower and upper gps location ranges
+	locUnder, locOver, err := getGpsLocationRangeFromLocationInfo(locationTileInfo)
+	if err != nil {
+		return ""
+	}
+	// Append long,lat for both locUnder and locOver to string for metrics
+	locUnderStr := fmt.Sprintf("%f,%f", locUnder.Longitude, locUnder.Latitude)
+	locOverStr := fmt.Sprintf("%f,%f", locOver.Longitude, locOver.Latitude)
 	// Append location tile side length for easy conversion
 	sideLengthStr := strconv.Itoa(locationTileSideLengthKm)
-	return quadrant + "-" + pair + "-" + sideLengthStr
+	return locUnderStr + "_" + locOverStr + "_" + sideLengthStr
 }
 
-func GetGpsLocationRangeFromLocationTile(locationTile string) (under *dme.Loc, over *dme.Loc, err error) {
-	s := strings.Split(locationTile, "-")
-	indeces := strings.Split(s[1], ",")
-	quadrant := s[0]
-	latIndex, err := strconv.Atoi(indeces[0])
-	if err != nil {
-		return nil, nil, err
-	}
-	longIndex, err := strconv.Atoi(indeces[1])
-	if err != nil {
-		return nil, nil, err
-	}
-	locationTileSideLengthKm, err := strconv.Atoi(s[2])
-	if err != nil {
-		return nil, nil, err
-	}
+func getGpsLocationRangeFromLocationInfo(locationTileInfo *LocationTileInfo) (under *dme.Loc, over *dme.Loc, err error) {
+	quadrant := locationTileInfo.Quadrant
+	latIndex := locationTileInfo.LatIndex
+	longIndex := locationTileInfo.LongIndex
+	locationTileSideLengthKm := locationTileInfo.TileLength
 
 	latKmUnder := latIndex * locationTileSideLengthKm
 	latKmOver := (latIndex + 1) * locationTileSideLengthKm
@@ -79,17 +84,17 @@ func GetGpsLocationRangeFromLocationTile(locationTile string) (under *dme.Loc, o
 		Longitude: longOver,
 	}
 	switch quadrant {
-	case "1":
+	case 1:
 		// no-op
-	case "2":
+	case 2:
 		under.Longitude *= -1
 		over.Longitude *= -1
-	case "3":
+	case 3:
 		under.Latitude *= -1
 		under.Longitude *= -1
 		over.Latitude *= -1
 		over.Longitude *= -1
-	case "4":
+	case 4:
 		under.Latitude *= -1
 		over.Latitude *= -1
 	default:
