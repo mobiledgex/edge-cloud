@@ -45,6 +45,12 @@ type RequestConfig struct {
 	Headers map[string]string
 }
 
+type AuthTokenResp struct {
+	Scope       string `json:"scope"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+}
+
 func getVaultRegistryPath(registry string) string {
 	return fmt.Sprintf("/secret/data/registry/%s", registry)
 }
@@ -91,6 +97,31 @@ func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Conf
 		auth.AuthType = ApiKeyAuth
 	}
 	return auth, nil
+}
+
+func GetAuthToken(ctx context.Context, host string, authApi RegistryAuthApi, userName string) (string, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetAuthToken", "host", host, "userName", userName)
+
+	url := fmt.Sprintf("https://%s/artifactory/api/security/token", host)
+	reqConfig := RequestConfig{}
+	reqConfig.Headers = make(map[string]string)
+	reqConfig.Headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+	resp, err := SendHTTPReq(ctx, "POST", url, authApi, &reqConfig, strings.NewReader("username="+userName+"&scope=member-of-groups:readers"))
+	if err != nil {
+		return "", err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		return "", fmt.Errorf("error reading gettoken response: %v", err)
+	}
+	var tokResp AuthTokenResp
+	err = json.Unmarshal(body, &tokResp)
+	if err != nil {
+		return "", fmt.Errorf("Fail to unmarshal response - %v", err)
+	}
+	return tokResp.AccessToken, nil
 }
 
 func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth, reqConfig *RequestConfig, body io.Reader) (*http.Response, error) {
