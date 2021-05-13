@@ -1134,6 +1134,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(ReportSchedule(0)):
+		if en, ok := ReportSchedule_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VMState(0)):
 		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil

@@ -65,3 +65,21 @@ func CapitalizeMessage(msg string) string {
 	t = string(c) + t
 	return t
 }
+
+func SplitCamelCase(name string) []string {
+	out := []string{}
+	if name == "" {
+		return out
+	}
+	startIndex := 0
+	for ii := 1; ii < len(name); ii++ {
+		if isASCIIUpper(name[ii]) {
+			out = append(out, name[startIndex:ii])
+			startIndex = ii
+		}
+	}
+	if startIndex < len(name) {
+		out = append(out, name[startIndex:])
+	}
+	return out
+}
