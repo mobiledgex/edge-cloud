@@ -90,12 +90,17 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 			Hostname: cloudlet.Key.Name,
 			EnvVars:  envVars,
 		},
-		TLS: process.TLSCerts{
-			ServerCert: tlsCertFile,
-			ServerKey:  tlsKeyFile,
-			CACert:     tlsCAFile,
+		NodeCommon: process.NodeCommon{
+			TLS: process.TLSCerts{
+				ServerCert: tlsCertFile,
+				ServerKey:  tlsKeyFile,
+				CACert:     tlsCAFile,
+			},
+			VaultAddr:     vaultAddr,
+			UseVaultPki:   useVaultPki,
+			DeploymentTag: deploymentTag,
+			AccessApiAddr: accessApiAddr,
 		},
-		VaultAddr:           vaultAddr,
 		PhysicalName:        cloudlet.PhysicalName,
 		TestMode:            testMode,
 		Span:                span,
@@ -104,11 +109,8 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		CloudletVMImagePath: cloudletVMImagePath,
 		Region:              region,
 		CommercialCerts:     commercialCerts,
-		UseVaultPki:         useVaultPki,
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
-		DeploymentTag:       deploymentTag,
-		AccessApiAddr:       accessApiAddr,
 	}, opts, nil
 }
 

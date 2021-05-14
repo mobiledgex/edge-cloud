@@ -24,63 +24,52 @@ type Etcd struct {
 	cmd            *exec.Cmd
 }
 type Controller struct {
-	Common                 `yaml:",inline"`
-	EtcdAddrs              string
-	ApiAddr                string
-	HttpAddr               string
-	NotifyAddr             string
-	NotifyRootAddrs        string
-	NotifyParentAddrs      string
-	EdgeTurnAddr           string
-	VaultAddr              string
-	InfluxAddr             string
-	Region                 string
-	TLS                    TLSCerts
-	UseVaultPki            bool
-	cmd                    *exec.Cmd
-	TestMode               bool
-	RegistryFQDN           string
-	ArtifactoryFQDN        string
-	CloudletRegistryPath   string
-	VersionTag             string
-	CloudletVMImagePath    string
-	CheckpointInterval     string
-	AppDNSRoot             string
-	DeploymentTag          string
-	ChefServerPath         string
-	AccessApiAddr          string
-	RequireNotifyAccessKey bool
+	Common               `yaml:",inline"`
+	NodeCommon           `yaml:",inline"`
+	EtcdAddrs            string
+	ApiAddr              string
+	HttpAddr             string
+	NotifyAddr           string
+	NotifyRootAddrs      string
+	NotifyParentAddrs    string
+	EdgeTurnAddr         string
+	InfluxAddr           string
+	Region               string
+	cmd                  *exec.Cmd
+	TestMode             bool
+	RegistryFQDN         string
+	ArtifactoryFQDN      string
+	CloudletRegistryPath string
+	VersionTag           string
+	CloudletVMImagePath  string
+	CheckpointInterval   string
+	AppDNSRoot           string
+	ChefServerPath       string
 }
 type Dme struct {
-	Common        `yaml:",inline"`
-	ApiAddr       string
-	HttpAddr      string
-	NotifyAddrs   string
-	LocVerUrl     string
-	TokSrvUrl     string
-	QosPosUrl     string
-	Carrier       string
-	CloudletKey   string
-	VaultAddr     string
-	CookieExpr    string
-	Region        string
-	TLS           TLSCerts
-	UseVaultPki   bool
-	cmd           *exec.Cmd
-	AccessKeyFile string
-	AccessApiAddr string
+	Common      `yaml:",inline"`
+	NodeCommon  `yaml:",inline"`
+	ApiAddr     string
+	HttpAddr    string
+	NotifyAddrs string
+	LocVerUrl   string
+	TokSrvUrl   string
+	QosPosUrl   string
+	Carrier     string
+	CloudletKey string
+	CookieExpr  string
+	Region      string
+	cmd         *exec.Cmd
 }
 type Crm struct {
 	Common              `yaml:",inline"`
+	NodeCommon          `yaml:",inline"`
 	NotifyAddrs         string
 	NotifySrvAddr       string
 	CloudletKey         string
 	Platform            string
 	Plugin              string
-	TLS                 TLSCerts
-	UseVaultPki         bool
 	cmd                 *exec.Cmd
-	VaultAddr           string
 	PhysicalName        string
 	TestMode            bool
 	Span                string
@@ -91,9 +80,6 @@ type Crm struct {
 	CommercialCerts     bool
 	AppDNSRoot          string
 	ChefServerPath      string
-	DeploymentTag       string
-	AccessKeyFile       string
-	AccessApiAddr       string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
@@ -129,16 +115,14 @@ type Influx struct {
 }
 type ClusterSvc struct {
 	Common         `yaml:",inline"`
+	NodeCommon     `yaml:",inline"`
 	NotifyAddrs    string
 	CtrlAddrs      string
 	PromPorts      string
 	InfluxDB       string
 	Interval       string
 	Region         string
-	VaultAddr      string
 	PluginRequired bool
-	UseVaultPki    bool
-	TLS            TLSCerts
 	cmd            *exec.Cmd
 }
 type DockerGeneric struct {
@@ -161,20 +145,16 @@ type Traefik struct {
 	cmd    *exec.Cmd
 }
 type NotifyRoot struct {
-	Common      `yaml:",inline"`
-	VaultAddr   string
-	TLS         TLSCerts
-	UseVaultPki bool
-	cmd         *exec.Cmd
+	Common     `yaml:",inline"`
+	NodeCommon `yaml:",inline"`
+	cmd        *exec.Cmd
 }
 type EdgeTurn struct {
-	Common      `yaml:",inline"`
-	TLS         TLSCerts
-	cmd         *exec.Cmd
-	UseVaultPki bool
-	VaultAddr   string
-	ListenAddr  string
-	ProxyAddr   string
-	Region      string
-	TestMode    bool
+	Common     `yaml:",inline"`
+	NodeCommon `yaml:",inline"`
+	cmd        *exec.Cmd
+	ListenAddr string
+	ProxyAddr  string
+	Region     string
+	TestMode   bool
 }
