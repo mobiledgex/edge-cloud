@@ -430,6 +430,10 @@ func main() {
 	nodeMgr.AccessKeyClient.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
+	done := make(chan struct{})
+	defer func() {
+		close(done)
+	}()
 
 	var myCertIssuer string
 	if *cloudletDme {
@@ -459,7 +463,7 @@ func main() {
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
-	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
+	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region, done)
 	if err != nil {
 		span.Finish()
 		log.FatalLog("Failed to init vault", "err", err)

@@ -21,13 +21,13 @@ import (
 
 var Jwks vault.JWKS
 
-func InitVault(addr, region string) error {
+func InitVault(addr, region string, done chan struct{}) error {
 	config, err := vault.BestConfig(addr)
 	if err != nil {
 		return err
 	}
 	Jwks.Init(config, region, "dme")
-	Jwks.GoUpdate(nil)
+	Jwks.GoUpdate(done, nil)
 	return nil
 }
 
