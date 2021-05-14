@@ -405,6 +405,7 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 type ReadYamlOptions struct {
 	vars                 map[string]string
 	validateReplacedVars bool
+	strict               bool
 }
 
 type ReadYamlOp func(opts *ReadYamlOptions)
@@ -448,7 +449,11 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 		}
 	}
 
-	err = yaml.Unmarshal(yamlFile, iface)
+	if opts.strict {
+		err = yaml.UnmarshalStrict(yamlFile, iface)
+	} else {
+		err = yaml.Unmarshal(yamlFile, iface)
+	}
 	if err != nil {
 		return err
 	}
@@ -464,6 +469,12 @@ func WithVars(vars map[string]string) ReadYamlOp {
 func ValidateReplacedVars() ReadYamlOp {
 	return func(opts *ReadYamlOptions) {
 		opts.validateReplacedVars = true
+	}
+}
+
+func WithStrict() ReadYamlOp {
+	return func(opts *ReadYamlOptions) {
+		opts.strict = true
 	}
 }
 
