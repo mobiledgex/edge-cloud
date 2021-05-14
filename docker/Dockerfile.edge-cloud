@@ -86,6 +86,7 @@ COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/doc/*.json 
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/edgeproto/external-doc/*.json /usr/local/doc/external/
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/external-doc/*.json /usr/local/doc/client/
 COPY --from=build /go/src/github.com/mobiledgex/edge-cloud-infra/doc/apidocs.swagger.json /usr/local/doc/mc/
+COPY --from=build /go/src/github.com/mobiledgex/edge-cloud-infra/static/MobiledgeX_Logo.png /MobiledgeX_Logo.png
 
 RUN echo $BUILD_TAG >/version.txt
 
