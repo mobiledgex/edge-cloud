@@ -167,7 +167,7 @@ func ReadSetupFile(setupfile string, deployment interface{}, vars map[string]str
 	setupdir := filepath.Dir(setupfile)
 	vars["setupdir"] = setupdir
 
-	util.ReadYamlFile(setupfile, &setupVars)
+	util.ReadYamlFile(setupfile, &setupVars, util.WithStrict())
 
 	for _, repl := range setupVars.Vars {
 		for varname, value := range repl {
