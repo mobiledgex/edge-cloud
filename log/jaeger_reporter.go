@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"crypto/tls"
+	"io"
 	"net/http"
 	"time"
 
@@ -14,12 +15,23 @@ import (
 
 var ReporterMetrics *metricstest.Backend
 
+type ReporterCloser struct {
+	reporter jaeger.Reporter
+	done     chan struct{}
+}
+
+func (s *ReporterCloser) Close() error {
+	s.reporter.Close()
+	close(s.done)
+	return nil
+}
+
 // Adapted from config.NewReporter, in order to be able to pass
 // in TLS config to http transport.
 // If the jaeger client code
 // could expose transport (or tls.Config) in their Configuration,
 // then we could avoid this duplication of NewReporter.
-func NewReporter(serviceName string, tlsConfig *tls.Config, rc *config.ReporterConfig, logger jaeger.Logger) jaeger.Reporter {
+func NewReporter(serviceName string, tlsConfig *tls.Config, rc *config.ReporterConfig, logger jaeger.Logger) (jaeger.Reporter, io.Closer) {
 	opts := make([]transport.HTTPOption, 0)
 	opts = append(opts, transport.HTTPBatchSize(1))
 	if tlsConfig != nil {
@@ -41,13 +53,20 @@ func NewReporter(serviceName string, tlsConfig *tls.Config, rc *config.ReporterC
 		reporter = jaeger.NewCompositeReporter(jaeger.NewLoggingReporter(logger), reporter)
 	}
 	ReporterMetrics = factory.Backend
-	go reportMetrics(factory.Backend)
-	return reporter
+	closer := &ReporterCloser{}
+	closer.reporter = reporter
+	closer.done = make(chan struct{})
+	go reportMetrics(factory.Backend, closer.done)
+	return reporter, closer
 }
 
-func reportMetrics(metrics *metricstest.Backend) {
+func reportMetrics(metrics *metricstest.Backend, done chan struct{}) {
 	for {
-		time.Sleep(5 * time.Minute)
+		select {
+		case <-done:
+			return
+		case <-time.After(5 * time.Minute):
+		}
 		counters, gauges := metrics.Snapshot()
 		span := StartSpan(DebugLevelInfo, "reporter metrics")
 		ctx := ContextWithSpan(context.Background(), span)

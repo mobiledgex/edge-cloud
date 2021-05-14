@@ -67,20 +67,22 @@ func (s *JWKS) Init(config *Config, region, name string) {
 // A chan struct can be passed in which will be closed once
 // the first iteration is done and the key set was downloaded
 // from Vault.
-func (s *JWKS) GoUpdate(done chan struct{}) {
+func (s *JWKS) GoUpdate(callerDone chan struct{}, updateDone chan struct{}) {
+	// make initial attempt immediately
+	refreshDelay := time.Duration(0)
 	go func() {
-		first := true
 		for {
-			if !first {
-				time.Sleep(s.RefreshDelay)
-			} else {
-				first = false
+			select {
+			case <-callerDone:
+				return
+			case <-time.After(refreshDelay):
+				refreshDelay = s.RefreshDelay
 			}
 
 			err := s.updateKeys()
-			if done != nil {
-				close(done)
-				done = nil
+			if updateDone != nil {
+				close(updateDone)
+				updateDone = nil
 			}
 			if err != nil {
 				log.InfoLog("jwks update keys", "path", s.Path, "metapath", s.Metapath, "err", err)

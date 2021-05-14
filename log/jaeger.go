@@ -20,6 +20,7 @@ import (
 
 var tracer opentracing.Tracer
 var tracerCloser io.Closer
+var reporterCloser io.Closer
 
 type contextKey struct{}
 
@@ -33,6 +34,10 @@ var JaegerUnitTest bool
 // Set JAEGER_ENDPOINT to http://<jaegerhost>:14268/api/traces to
 // specify the Jaeger server.
 func InitTracer(tlsConfig *tls.Config) {
+	if tracerCloser != nil {
+		// already initialized. this happens in unit-tests
+		return
+	}
 	SpanServiceName = filepath.Base(os.Args[0])
 
 	jaegerEndpoint := os.Getenv("JAEGER_ENDPOINT")
@@ -59,7 +64,8 @@ func InitTracer(tlsConfig *tls.Config) {
 		QueueSize:         1000,
 	}
 	logger := zap.NewLogger(slogger.Desugar())
-	reporter := NewReporter(SpanServiceName, tlsConfig, rc, logger)
+	reporter, rcloser := NewReporter(SpanServiceName, tlsConfig, rc, logger)
+	reporterCloser = rcloser
 
 	cfg := &config.Configuration{
 		ServiceName: SpanServiceName,
@@ -96,7 +102,13 @@ func InitTracer(tlsConfig *tls.Config) {
 }
 
 func FinishTracer() {
+	if tracerCloser == nil {
+		return
+	}
 	tracerCloser.Close()
+	tracerCloser = nil
+	reporterCloser.Close()
+	reporterCloser = nil
 }
 
 // TraceData is used to transport trace/span across boundaries,
