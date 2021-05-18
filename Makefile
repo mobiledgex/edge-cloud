@@ -42,6 +42,7 @@ build-linux:
 build-docker:
 	rsync --checksum .dockerignore ../.dockerignore
 	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d'), ${TAG}" \
+		--build-arg REGISTRY=$(REGISTRY) \
 		-t mobiledgex/edge-cloud:$(TAG) -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:${TAG}
 	docker push $(REGISTRY)/edge-cloud:$(TAG)
