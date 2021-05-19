@@ -475,7 +475,7 @@ func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.Cl
 	return &pc.LocalClient{}, nil
 }
 
-func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
+func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst, vmAppInsts []edgeproto.AppInst) ([]edgeproto.CloudletMgmtNode, error) {
 	return []edgeproto.CloudletMgmtNode{
 		edgeproto.CloudletMgmtNode{
 			Type: "platformvm",

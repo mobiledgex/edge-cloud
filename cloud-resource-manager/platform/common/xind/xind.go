@@ -85,7 +85,7 @@ func (s *Xind) GetClient(ctx context.Context) (ssh.Client, error) {
 	}, nil
 }
 
-func (s *Xind) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error) {
+func (s *Xind) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst, vmAppInsts []edgeproto.AppInst) ([]edgeproto.CloudletMgmtNode, error) {
 	return []edgeproto.CloudletMgmtNode{}, nil
 }
 
