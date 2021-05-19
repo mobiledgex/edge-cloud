@@ -12,12 +12,12 @@ import (
 )
 
 type EdgeEventsCookieKey struct {
-	ClusterOrg   string `json:"clusterorg,omitempty"`
-	ClusterName  string `json:"clustername,omitempty"`
-	CloudletOrg  string `json:"cloudletorg,omitempty"`
-	CloudletName string `json:"cloudletname,omitempty"`
-	Location     dme.Loc
-	Kid          int `json:"kid,omitempty"`
+	ClusterOrg   string  `json:"clusterorg,omitempty"`
+	ClusterName  string  `json:"clustername,omitempty"`
+	CloudletOrg  string  `json:"cloudletorg,omitempty"`
+	CloudletName string  `json:"cloudletname,omitempty"`
+	Location     dme.Loc `json:"location,omitempty"`
+	Kid          int     `json:"kid,omitempty"`
 }
 
 type edgeEventsClaims struct {
