@@ -80,13 +80,23 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 		execReqType = cloudcommon.ExecReqConsole
 		initURL = urlObj
 	} else if req.Cmd != nil && req.Cmd.CloudletMgmtNode != nil {
-		insts := []edgeproto.ClusterInst{}
+		clusterInsts := []edgeproto.ClusterInst{}
 		cd.ClusterInstCache.Mux.Lock()
 		for _, v := range cd.ClusterInstCache.Objs {
-			insts = append(insts, *v.Obj)
+			clusterInsts = append(clusterInsts, *v.Obj)
 		}
 		cd.ClusterInstCache.Mux.Unlock()
-		nodes, err := cd.platform.ListCloudletMgmtNodes(ctx, insts)
+		vmAppInsts := []edgeproto.AppInst{}
+		cd.AppInstCache.Mux.Lock()
+		for _, v := range cd.AppInstCache.Objs {
+			appObj := edgeproto.App{}
+			found := cd.AppCache.Get(&v.Obj.Key.AppKey, &appObj)
+			if found && appObj.Deployment == cloudcommon.DeploymentTypeVM {
+				vmAppInsts = append(vmAppInsts, *v.Obj)
+			}
+		}
+		cd.AppInstCache.Mux.Unlock()
+		nodes, err := cd.platform.ListCloudletMgmtNodes(ctx, clusterInsts, vmAppInsts)
 		if err != nil {
 			return fmt.Errorf("unable to get list of cloudlet mgmt nodes, %v", err)
 		}
