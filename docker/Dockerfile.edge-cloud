@@ -10,7 +10,12 @@
 # All the tools will be inside the docker.
 #
 
-FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.15.2 AS build
+ARG REGISTRY=registry.mobiledgex.net:5000/mobiledgex
+
+FROM $REGISTRY/protoc-gen-swagger:2020-01-19 AS protoc-gen-swagger
+FROM $REGISTRY/swagger:2020-03-12 AS swagger
+
+FROM $REGISTRY/build:go1.15.2 AS build
 
 ENV GOPATH=/go
 ENV PATH="/go/bin:${PATH}"
@@ -19,7 +24,7 @@ ENV DOCKER_BUILD=yes
 
 # Install support tools for docs
 RUN go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@v1.3.2
-COPY --from=registry.mobiledgex.net:5000/mobiledgex/protoc-gen-swagger:2020-01-19 /build/bin/protoc-gen-swagger /go/bin
+COPY --from=protoc-gen-swagger /build/bin/protoc-gen-swagger /go/bin
 
 WORKDIR /go/src/github.com/mobiledgex
 # Do dependencies first so they can be cached
@@ -44,14 +49,14 @@ RUN make
 
 # Buld the docs
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
-COPY --from=registry.mobiledgex.net:5000/mobiledgex/swagger:2020-03-12 /swagger /go/bin/swagger
+COPY --from=swagger /swagger /go/bin/swagger
 RUN make doc
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud
 RUN make doc
 RUN make external-doc
 RUN make -C d-match-engine/dme-proto external-swagger
 
-FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v1.2.4-38-gfd20fba6
+FROM $REGISTRY/edge-cloud-base-image:v1.2.4.1-hf3-52-gb43c6ad1
 
 # Will be overridden during build from the command line
 ARG BUILD_TAG=latest
