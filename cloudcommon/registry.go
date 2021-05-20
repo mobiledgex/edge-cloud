@@ -41,8 +41,9 @@ type RegistryTags struct {
 }
 
 type RequestConfig struct {
-	Timeout time.Duration
-	Headers map[string]string
+	Timeout               time.Duration
+	ResponseHeaderTimeout time.Duration
+	Headers               map[string]string
 }
 
 type AuthTokenResp struct {
@@ -126,6 +127,11 @@ func GetAuthToken(ctx context.Context, host string, authApi RegistryAuthApi, use
 
 func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth, reqConfig *RequestConfig, body io.Reader) (*http.Response, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "send http request", "method", method, "url", regUrl, "reqConfig", reqConfig)
+
+	respHeaderTimeout := 5 * time.Second
+	if reqConfig != nil && reqConfig.ResponseHeaderTimeout != 0 {
+		respHeaderTimeout = reqConfig.ResponseHeaderTimeout
+	}
 	client := &http.Client{
 		Transport: &http.Transport{
 			// Connection Timeout
@@ -137,7 +143,7 @@ func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryA
 
 			// Response Header Timeout
 			ExpectContinueTimeout: 5 * time.Second,
-			ResponseHeaderTimeout: 5 * time.Second,
+			ResponseHeaderTimeout: respHeaderTimeout,
 			// use proxy if env vars set
 			Proxy: http.ProxyFromEnvironment,
 		},
