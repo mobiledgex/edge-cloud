@@ -7,15 +7,17 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
 type EdgeEventsCookieKey struct {
-	ClusterOrg   string `json:"clusterorg,omitempty"`
-	ClusterName  string `json:"clustername,omitempty"`
-	CloudletOrg  string `json:"cloudletorg,omitempty"`
-	CloudletName string `json:"cloudletname,omitempty"`
-	Kid          int    `json:"kid,omitempty"`
+	ClusterOrg   string  `json:"clusterorg,omitempty"`
+	ClusterName  string  `json:"clustername,omitempty"`
+	CloudletOrg  string  `json:"cloudletorg,omitempty"`
+	CloudletName string  `json:"cloudletname,omitempty"`
+	Location     dme.Loc `json:"location,omitempty"`
+	Kid          int     `json:"kid,omitempty"`
 }
 
 type edgeEventsClaims struct {
@@ -36,12 +38,13 @@ func (e *edgeEventsClaims) SetKid(kid int) {
 	e.Key.Kid = kid
 }
 
-func CreateEdgeEventsCookieKey(appInst *DmeAppInst) *EdgeEventsCookieKey {
+func CreateEdgeEventsCookieKey(appInst *DmeAppInst, loc dme.Loc) *EdgeEventsCookieKey {
 	key := &EdgeEventsCookieKey{
 		ClusterOrg:   appInst.virtualClusterInstKey.Organization,
 		ClusterName:  appInst.virtualClusterInstKey.ClusterKey.Name,
 		CloudletOrg:  appInst.virtualClusterInstKey.CloudletKey.Organization,
 		CloudletName: appInst.virtualClusterInstKey.CloudletKey.Name,
+		Location:     loc,
 	}
 	return key
 }
@@ -60,6 +63,11 @@ func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCook
 	if !token.Valid {
 		log.InfoLog("edgeevents cookie is invalid or expired", "eecookie", cookie, "claims", claims)
 		return nil, errors.New("invalid or expired cookie")
+	}
+	err = ValidateLocation(&claims.Key.Location)
+	if err != nil {
+		log.InfoLog("edgeevents cookie has invalid location", "eecookie", cookie, "claims", claims)
+		return nil, errors.New("invalid location in cookie")
 	}
 	log.SpanLog(ctx, log.DebugLevelDmereq, "verified edgeevents cookie", "eecookie", cookie, "expires", claims.ExpiresAt)
 	return claims.Key, nil

@@ -922,7 +922,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		mreply.Ports = copyPorts(best.appInst.ports)
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
 		// Create EdgeEventsCookieKey
-		key := CreateEdgeEventsCookieKey(best.appInst)
+		key := CreateEdgeEventsCookieKey(best.appInst, *loc)
 		// Generate edgeEventsCookie
 		ctx = NewEdgeEventsCookieContext(ctx, key)
 		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
@@ -1047,7 +1047,7 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 		ai.Ports = copyPorts(found.appInst.ports)
 
 		// Create EdgeEventsCookieKey
-		key := CreateEdgeEventsCookieKey(found.appInst)
+		key := CreateEdgeEventsCookieKey(found.appInst, *mreq.GpsLocation)
 		// Generate edgeEventsCookie
 		ctx = NewEdgeEventsCookieContext(ctx, key)
 		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
@@ -1103,13 +1103,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
-		// Validate Gps Location
-		err := ValidateLocation(initMsg.GpsLocation)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "A valid location is required in EVENT_INIT_CONNECTION", "err", err)
-			return fmt.Errorf("A valid location is required in EVENT_INIT_CONNECTION - error is %v", err)
-		}
-		lastLocation = initMsg.GpsLocation
+		lastLocation = &edgeEventsCookieKey.Location
 		// Initialize deviceInfoStatic for stats
 		if initMsg.DeviceInfoStatic != nil {
 			deviceInfoStatic = initMsg.DeviceInfoStatic
