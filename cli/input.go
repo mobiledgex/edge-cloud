@@ -257,7 +257,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 		// get the StructField to get the json tag
 		sf, ok := FindField(t, key, inputNS)
 		if !ok {
-			return fmt.Errorf("Field %s (%s) not found in struct %T", key, inputNS.String(), t)
+			return fmt.Errorf("Field %s (%s) not found in struct %s", key, inputNS.String(), t.Name())
 		}
 		tag := sf.Tag.Get("json")
 		tagvals := strings.Split(tag, ",")
