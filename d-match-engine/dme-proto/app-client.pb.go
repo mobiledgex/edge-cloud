@@ -1832,7 +1832,7 @@ type ClientEdgeEvent struct {
 	// Session Cookie from FindCloudletReply
 	EdgeEventsCookie string                          `protobuf:"bytes,2,opt,name=edge_events_cookie,json=edgeEventsCookie,proto3" json:"edge_events_cookie,omitempty"`
 	EventType        ClientEdgeEvent_ClientEventType `protobuf:"varint,3,opt,name=event_type,json=eventType,proto3,enum=distributed_match_engine.ClientEdgeEvent_ClientEventType" json:"event_type,omitempty"`
-	// GPS Location info if event_type is EVENT_LOCATION_UPDATE or EVENT_LATENCY_SAMPLES
+	// GPS Location info if event_type is EVENT_LOCATION_UPDATE or EVENT_LATENCY_SAMPLES. Also must be sent on EVENT_INIT_CONNECTION.
 	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation,proto3" json:"gps_location,omitempty"`
 	// Latency Samples if event_type is EVENT_LATENCY_SAMPLES or EVENT_CUSTOM_EVENT
 	Samples []*Sample `protobuf:"bytes,5,rep,name=samples,proto3" json:"samples,omitempty"`
