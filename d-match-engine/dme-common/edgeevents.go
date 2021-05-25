@@ -13,10 +13,13 @@ type EdgeEventsHandler interface {
 	AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc *dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent))
 	RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
 	UpdateClientLastLocation(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc *dme.Loc)
+	RemoveCloudletKey(ctx context.Context, cloudletKey edgeproto.CloudletKey)
 	RemoveAppInstKey(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	SendLatencyRequestEdgeEvent(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	ProcessLatencySamples(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, samples []*dme.Sample) (*dme.Statistics, error)
-	SendAppInstStateEvent(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType)
+	SendAppInstStateEdgeEvent(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType)
+	SendCloudletStateEdgeEvent(ctx context.Context, cloudlet *DmeCloudlet, cloudletKey edgeproto.CloudletKey)
+	SendCloudletMaintenanceStateEdgeEvent(ctx context.Context, cloudlet *DmeCloudlet, cloudletKey edgeproto.CloudletKey)
 	SendEdgeEventToClient(ctx context.Context, serverEdgeEvent *dme.ServerEdgeEvent, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
 }
 
@@ -34,6 +37,11 @@ func (e *EmptyEdgeEventsHandler) RemoveClientKey(ctx context.Context, appInstKey
 
 func (e *EmptyEdgeEventsHandler) UpdateClientLastLocation(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc *dme.Loc) {
 	log.DebugLog(log.DebugLevelDmereq, "UpdateClientLastLocation not implemented for EmptyEdgeEventHandler. Returning")
+	return
+}
+
+func (e *EmptyEdgeEventsHandler) RemoveCloudletKey(ctx context.Context, cloudletKey edgeproto.CloudletKey) {
+	log.DebugLog(log.DebugLevelDmereq, "RemoveCloudletKey not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 
@@ -64,8 +72,18 @@ func (e *EmptyEdgeEventsHandler) ProcessLatencySamples(ctx context.Context, appI
 	return fakestats, nil
 }
 
-func (e *EmptyEdgeEventsHandler) SendAppInstStateEvent(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType) {
-	log.DebugLog(log.DebugLevelDmereq, "SendAppInstStateEvent not implemented for EmptyEdgeEventHandler. Returning")
+func (e *EmptyEdgeEventsHandler) SendAppInstStateEdgeEvent(ctx context.Context, appInst *DmeAppInst, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType) {
+	log.DebugLog(log.DebugLevelDmereq, "SendAppInstStateEdgeEvent not implemented for EmptyEdgeEventHandler. Returning")
+	return
+}
+
+func (e *EmptyEdgeEventsHandler) SendCloudletStateEdgeEvent(ctx context.Context, cloudlet *DmeCloudlet, cloudletKey edgeproto.CloudletKey) {
+	log.DebugLog(log.DebugLevelDmereq, "SendCloudletStateEdgeEvent not implemented for EmptyEdgeEventHandler. Returning")
+	return
+}
+
+func (e *EmptyEdgeEventsHandler) SendCloudletMaintenanceStateEdgeEvent(ctx context.Context, cloudlet *DmeCloudlet, cloudletKey edgeproto.CloudletKey) {
+	log.DebugLog(log.DebugLevelDmereq, "SendCloudletMaintenanceStateEdgeEvent not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 
