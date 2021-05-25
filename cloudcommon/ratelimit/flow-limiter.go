@@ -1,6 +1,7 @@
 package ratelimit
 
 import (
+	"context"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -14,28 +15,30 @@ type FlowLimiter struct {
 	mux     sync.Mutex
 }
 
-func NewFlowLimiter(settings *edgeproto.FlowRateLimitSettings) *FlowLimiter {
+func NewFlowLimiter(settings *FlowRateLimitSettings) *FlowLimiter {
 	flowLimiter := &FlowLimiter{}
 	switch settings.FlowAlgorithm {
 	case edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM:
 		flowLimiter.limiter = NewTokenBucketLimiter(settings.ReqsPerSecond, int(settings.BurstSize))
 	case edgeproto.FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM:
 		flowLimiter.limiter = NewLeakyBucketLimiter(settings.ReqsPerSecond)
-	case edgeproto.FlowRateLimitAlgorithm_NO_FLOW_ALGORITHM:
-		// log
-		fallthrough
 	default:
-		// log
 		return nil
 	}
 	return flowLimiter
 }
 
-func (f *FlowLimiter) Limit(ctx Context) (bool, error) {
+func (f *FlowLimiter) Limit(ctx context.Context) (bool, error) {
 	f.mux.Lock()
 	defer f.mux.Unlock()
 	if f.limiter != nil {
 		return f.limiter.Limit(ctx)
 	}
 	return false, nil
+}
+
+type FlowRateLimitSettings struct {
+	FlowAlgorithm edgeproto.FlowRateLimitAlgorithm
+	ReqsPerSecond float64
+	BurstSize     int
 }

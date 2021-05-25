@@ -108,6 +108,30 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.AppinstClientCleanupInterval = edgeproto.GetDefaultSettings().AppinstClientCleanupInterval
 			modified = true
 		}
+		if cur.ControllerCreateApiEndpointRateLimitSettings == nil {
+			cur.ControllerCreateApiEndpointRateLimitSettings = edgeproto.GetDefaultSettings().ControllerCreateApiEndpointRateLimitSettings
+			modified = true
+		}
+		if cur.ControllerDeleteApiEndpointRateLimitSettings == nil {
+			cur.ControllerDeleteApiEndpointRateLimitSettings = edgeproto.GetDefaultSettings().ControllerDeleteApiEndpointRateLimitSettings
+			modified = true
+		}
+		if cur.ControllerUpdateApiEndpointRateLimitSettings == nil {
+			cur.ControllerUpdateApiEndpointRateLimitSettings = edgeproto.GetDefaultSettings().ControllerUpdateApiEndpointRateLimitSettings
+			modified = true
+		}
+		if cur.ControllerShowApiEndpointRateLimitSettings == nil {
+			cur.ControllerShowApiEndpointRateLimitSettings = edgeproto.GetDefaultSettings().ControllerShowApiEndpointRateLimitSettings
+			modified = true
+		}
+		if cur.ControllerDefaultApiEndpointRateLimitSettings == nil {
+			cur.ControllerDefaultApiEndpointRateLimitSettings = edgeproto.GetDefaultSettings().ControllerDefaultApiEndpointRateLimitSettings
+			modified = true
+		}
+		if cur.DmeDefaultApiEndpointRateLimitSettings == nil {
+			cur.DmeDefaultApiEndpointRateLimitSettings = edgeproto.GetDefaultSettings().DmeDefaultApiEndpointRateLimitSettings
+			modified = true
+		}
 
 		if modified {
 			s.store.STMPut(stm, cur)
@@ -130,6 +154,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 			log.SpanLog(ctx, log.DebugLevelApi, "settings not found")
 			return in.GetKey().NotFoundError()
 		}
+		old := cur
 		changeCount := cur.CopyInFields(in)
 		log.SpanLog(ctx, log.DebugLevelApi, "update settings", "changed", changeCount)
 		if changeCount == 0 {
@@ -189,7 +214,6 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 						return resd.Err
 					}
 				}
-			}
 		}
 		s.store.STMPut(stm, &cur)
 		return nil

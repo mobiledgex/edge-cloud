@@ -1,8 +1,10 @@
 package ratelimit
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/mobiledgex/edge-cloud/log"
 	"golang.org/x/time/rate"
 )
 
@@ -22,10 +24,10 @@ func NewLeakyBucketLimiter(reqsPerSecond float64) *LeakyBucketLimiter {
 	return l
 }
 
-func (l *LeakyBucketLimiter) Limit(ctx Context) (bool, error) {
+func (l *LeakyBucketLimiter) Limit(ctx context.Context) (bool, error) {
 	err := l.limiter.Wait(ctx)
 	if err != nil {
-		// log
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error during leakybucker rate limiting", "error", err)
 		return true, fmt.Errorf("error during leakybucker rate limiting: %s", err)
 	}
 	return false, nil

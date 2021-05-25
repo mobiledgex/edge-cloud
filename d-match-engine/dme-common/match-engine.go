@@ -120,6 +120,10 @@ var StatKeyContextKey = StatKeyContextType("statKey")
 // EdgeEventsHandler implementation (loaded from Plugin)
 var EEHandler EdgeEventsHandler
 
+// RateLimitManagers
+var UnaryApiRateLimitMgr *ratelimit.ApiRateLimitManager
+var StreamApiRateLimitMgr *ratelimit.ApiRateLimitManager
+
 func SetupMatchEngine(eehandler EdgeEventsHandler) {
 	DmeAppTbl = new(DmeApps)
 	DmeAppTbl.Apps = make(map[edgeproto.AppKey]*DmeApp)
@@ -128,6 +132,9 @@ func SetupMatchEngine(eehandler EdgeEventsHandler) {
 	DmeAppTbl.FreeReservableClusterInsts.Init()
 	edgeproto.InitOperatorCodeCache(&DmeAppTbl.OperatorCodes)
 	EEHandler = eehandler
+	// Initialize API RateLimitManagers
+	UnaryApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
+	StreamApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
 }
 
 // AppInst state is a superset of the cloudlet state and appInst state
@@ -1223,8 +1230,7 @@ loop:
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
 		// Rate limit
-		rateLimiterCtx := ratelimit.Context{Context: ctx}
-		limit, err := rateLimiter.Limit(rateLimiterCtx)
+		limit, err := rateLimiter.Limit(ctx)
 		if limit {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Limiting client messages", "err", err)
 			sendErrorEventToClient(ctx, fmt.Sprintf("Limiting client messages. Most recent ClientEdgeEvent will not be processed: %v. Error is: %s", cupdate, err), *appInstKey, *sessionCookieKey)
@@ -1489,4 +1495,6 @@ func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeprot
 	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
 	clientsMap.UpdateClientTimeout(new.AppinstClientCleanupInterval)
 	EEStats.UpdateSettings(time.Duration(new.EdgeEventsMetricsCollectionInterval))
+	UnaryApiRateLimitMgr.UpdateRateLimitSettings(new.DmeDefaultApiEndpointRateLimitSettings, edgeproto.SettingsFieldDmeDefaultApiEndpointRateLimitSettings)
+	StreamApiRateLimitMgr.UpdateRateLimitSettings(new.DmeDefaultApiEndpointRateLimitSettings, edgeproto.SettingsFieldDmeDefaultApiEndpointRateLimitSettings)
 }

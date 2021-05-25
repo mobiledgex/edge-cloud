@@ -1,11 +1,15 @@
 package ratelimit
 
 import (
+	"context"
 	"fmt"
-	"sync"
 	"time"
+
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
+// Allows a certain number of requests to pass in a fixed time periods (perSecond, perMinute, and/or perHour)
+// If the limit is reached, the client must wait until the interval is over
 // Useful for rate limiting per user (eg. API limits)
 // MaxReqsRateLimitingAlgorithm
 type FixedWindowLimiter struct {
@@ -14,41 +18,41 @@ type FixedWindowLimiter struct {
 	limiterPerHour   *IntervalLimiter
 }
 
-// TODO: Default reqsPer[Interval], Handle unlimited reqs (-1??)
-func NewFixedWindowLimiter(maxReqsPerSecondPerConsumer int, maxReqsPerMinutePerConsumer int, maxReqsPerHourPerConsumer int) *FixedWindowLimiter {
+// Create a FixedWindowLimiter
+func NewFixedWindowLimiter(maxReqsPerSecond int, maxReqsPerMinute int, maxReqsPerHour int) *FixedWindowLimiter {
 	f := &FixedWindowLimiter{}
-	if maxReqsPerSecondPerConsumer > 0 {
-		f.limiterPerSecond = NewIntervalLimiter(maxReqsPerSecondPerConsumer, time.Second)
+	// If valid maxReqsPerSecond, create an IntervalLimiter that accepts maxReqsPerSecond
+	if maxReqsPerSecond > 0 {
+		f.limiterPerSecond = NewIntervalLimiter(maxReqsPerSecond, time.Second)
 	}
-	if maxReqsPerMinutePerConsumer > 0 {
-		f.limiterPerMinute = NewIntervalLimiter(maxReqsPerMinutePerConsumer, time.Minute)
+	// If valid maxReqsPerMinute, create an IntervalLimiter that accepts maxReqsPerMinute
+	if maxReqsPerMinute > 0 {
+		f.limiterPerMinute = NewIntervalLimiter(maxReqsPerMinute, time.Minute)
 	}
-	if maxReqsPerHourPerConsumer > 0 {
-		f.limiterPerHour = NewIntervalLimiter(maxReqsPerHourPerConsumer, time.Hour)
+	// If valid maxReqsPerHour, create an IntervalLimiter that accepts maxReqsPerHour
+	if maxReqsPerHour > 0 {
+		f.limiterPerHour = NewIntervalLimiter(maxReqsPerHour, time.Hour)
 	}
 	return f
 }
 
-// TODO: limit by largest timer interval first??
-func (f *FixedWindowLimiter) Limit(ctx Context) (bool, error) {
+// Implements Limiter interface
+func (f *FixedWindowLimiter) Limit(ctx context.Context) (bool, error) {
 	if f.limiterPerSecond != nil {
 		limit, err := f.limiterPerSecond.Limit(ctx)
 		if limit {
-			// log
 			return true, fmt.Errorf("reached limit per second - %s", err.Error())
 		}
 	}
 	if f.limiterPerMinute != nil {
 		limit, err := f.limiterPerMinute.Limit(ctx)
 		if limit {
-			// log
 			return true, fmt.Errorf("reached limit per minute - %s", err.Error())
 		}
 	}
 	if f.limiterPerHour != nil {
 		limit, err := f.limiterPerHour.Limit(ctx)
 		if limit {
-			// log
 			return true, fmt.Errorf("reached limit per hour - %s", err.Error())
 		}
 	}
@@ -58,13 +62,14 @@ func (f *FixedWindowLimiter) Limit(ctx Context) (bool, error) {
 // Limits requests based on requestLimit set for the specified interval
 // For example, if the interval is 1 hour and requestLimit is 100, the Limit function will reject requests once the 100 requests is reached, but will reset the count when an hour has passed.
 type IntervalLimiter struct {
+	util.Mutex
 	requestLimit            int
 	currentNumberOfRequests int
 	interval                time.Duration
 	intervalStartTime       time.Time
-	mux                     sync.Mutex
 }
 
+// Creates IntervalLimiter
 func NewIntervalLimiter(reqLimit int, interval time.Duration) *IntervalLimiter {
 	return &IntervalLimiter{
 		requestLimit:            reqLimit,
@@ -74,10 +79,10 @@ func NewIntervalLimiter(reqLimit int, interval time.Duration) *IntervalLimiter {
 	}
 }
 
-// TODO: Charge once surpass api limit???
-func (i *IntervalLimiter) Limit(ctx Context) (bool, error) {
-	i.mux.Lock()
-	defer i.mux.Unlock()
+// TODO: Charge once surpass api limit
+func (i *IntervalLimiter) Limit(ctx context.Context) (bool, error) {
+	i.Lock()
+	defer i.Unlock()
 	// Check start of interval
 	if time.Since(i.intervalStartTime) > i.interval {
 		i.intervalStartTime = time.Now().Truncate(i.interval)

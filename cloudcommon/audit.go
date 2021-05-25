@@ -14,6 +14,21 @@ import (
 )
 
 func AuditUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	_, cmd := ParseGrpcMethod(info.FullMethod)
+	pr, ok := peer.FromContext(ctx)
+	client := "unknown"
+	if ok {
+		client = pr.Addr.String()
+	}
+
+	span := log.NewSpanFromGrpc(ctx, log.DebugLevelApi, cmd)
+	defer span.Finish()
+	ctx = log.ContextWithSpan(ctx, span)
+	span.SetTag("organization", edgeproto.GetOrg(req))
+	span.SetTag("client", client)
+	log.SetTags(span, edgeproto.GetTags(req))
+	span.SetTag("request", req)
+
 	resp, err := handler(ctx, req)
 	// Make sure first letter is capitalized in error message
 	if err != nil {

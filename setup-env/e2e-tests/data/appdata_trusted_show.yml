@@ -48,6 +48,18 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  controllercreateapiendpointratelimitsettings:
+    removeratelimit: true
+  controllerupdateapiendpointratelimitsettings:
+    removeratelimit: true
+  controllerdeleteapiendpointratelimitsettings:
+    removeratelimit: true
+  controllershowapiendpointratelimitsettings:
+    removeratelimit: true
+  controllerdefaultapiendpointratelimitsettings:
+    removeratelimit: true
+  dmedefaultapiendpointratelimitsettings:
+    removeratelimit: true
 trustpolicies:
 - key:
     organization: tmus

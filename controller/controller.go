@@ -413,8 +413,8 @@ func startServices() error {
 	services.streamApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
 
 	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.GetControllerUnaryRateLimiterInterceptor(services.unaryApiRateLimitMgr), cloudcommon.AuditUnaryInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.GetControllerStreamRateLimiterInterceptor(services.streamApiRateLimitMgr), cloudcommon.AuditStreamInterceptor)))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor, ratelimit.GetControllerUnaryRateLimiterInterceptor(services.unaryApiRateLimitMgr))),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor, ratelimit.GetControllerStreamRateLimiterInterceptor(services.streamApiRateLimitMgr))))
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
@@ -444,26 +444,33 @@ func startServices() error {
 	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
 
 	// Add APIs to ApiRateLimitManager hashmaps
-	grpcServices := server.GetServiceInfo()
-	for _, serviceInfo := range grpcServices {
-		for _, methodInfo := range serviceInfo.Methods {
-			log.DebugLog(log.DebugLevelApi, "BLAH: controller api", "api", methodInfo)
-			var rateLimitSettings *edgeproto.ApiEndpointRateLimitSettings
-			if strings.Contains(methodInfo.Name, "Create") {
-				rateLimitSettings = settingsApi.Get().ControllerCreateApiEndpointRateLimitSettings
-			} else if strings.Contains(methodInfo.Name, "Delete") {
-				rateLimitSettings = settingsApi.Get().ControllerDeleteApiEndpointRateLimitSettings
-			} else if strings.Contains(methodInfo.Name, "Show") {
-				rateLimitSettings = settingsApi.Get().ControllerShowApiEndpointRateLimitSettings
-			} else if strings.Contains(methodInfo.Name, "Update") {
-				rateLimitSettings = settingsApi.Get().ControllerUpdateApiEndpointRateLimitSettings
-			} else {
-				rateLimitSettings = settingsApi.Get().ControllerDefaultApiEndpointRateLimitSettings
-			}
-			if methodInfo.IsClientStream || methodInfo.IsServerStream {
-				services.streamApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings)
-			} else {
-				services.unaryApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings)
+	if !*testMode {
+		grpcServices := server.GetServiceInfo()
+		for _, serviceInfo := range grpcServices {
+			for _, methodInfo := range serviceInfo.Methods {
+				var rateLimitSettings *edgeproto.ApiEndpointRateLimitSettings
+				var settingsName string
+				if strings.Contains(methodInfo.Name, "Create") {
+					rateLimitSettings = settingsApi.Get().ControllerCreateApiEndpointRateLimitSettings
+					settingsName = edgeproto.SettingsFieldControllerCreateApiEndpointRateLimitSettings
+				} else if strings.Contains(methodInfo.Name, "Delete") {
+					rateLimitSettings = settingsApi.Get().ControllerDeleteApiEndpointRateLimitSettings
+					settingsName = edgeproto.SettingsFieldControllerDeleteApiEndpointRateLimitSettings
+				} else if strings.Contains(methodInfo.Name, "Show") {
+					rateLimitSettings = settingsApi.Get().ControllerShowApiEndpointRateLimitSettings
+					settingsName = edgeproto.SettingsFieldControllerShowApiEndpointRateLimitSettings
+				} else if strings.Contains(methodInfo.Name, "Update") {
+					rateLimitSettings = settingsApi.Get().ControllerUpdateApiEndpointRateLimitSettings
+					settingsName = edgeproto.SettingsFieldControllerUpdateApiEndpointRateLimitSettings
+				} else {
+					rateLimitSettings = settingsApi.Get().ControllerDefaultApiEndpointRateLimitSettings
+					settingsName = edgeproto.SettingsFieldControllerDefaultApiEndpointRateLimitSettings
+				}
+				if methodInfo.IsClientStream || methodInfo.IsServerStream {
+					services.streamApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings, settingsName)
+				} else {
+					services.unaryApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings, settingsName)
+				}
 			}
 		}
 	}

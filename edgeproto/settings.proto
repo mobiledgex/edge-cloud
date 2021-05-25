@@ -2,7 +2,6 @@ syntax = "proto3";
 package edgeproto;
 
 import "result.proto";
-import "ratelimit.proto";
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
@@ -80,14 +79,6 @@ message Settings {
   int64 influx_db_edge_events_metrics_retention = 32 [(gogoproto.casttype) = "Duration"];
   // AppInstClient cleanup thread run interval
   int64 appinst_client_cleanup_interval = 33 [(gogoproto.casttype) = "Duration"];
-
-  ApiEndpointRateLimitSettings controller_create_api_endpoint_rate_limit_settings = 34;
-  ApiEndpointRateLimitSettings controller_show_api_endpoint_rate_limit_settings = 35;
-  ApiEndpointRateLimitSettings controller_delete_api_endpoint_rate_limit_settings = 36;
-  ApiEndpointRateLimitSettings controller_update_api_endpoint_rate_limit_settings = 37;
-  ApiEndpointRateLimitSettings controller_default_api_endpoint_rate_limit_settings = 38;
-  ApiEndpointRateLimitSettings dme_default_api_endpoint_rate_limit_settings = 39;
-
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

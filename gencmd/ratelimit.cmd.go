@@ -17,6 +17,7 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 var ApiEndpointRateLimitSettingsRequiredArgs = []string{}
 var ApiEndpointRateLimitSettingsOptionalArgs = []string{
+	"removeratelimit",
 	"endpointratelimitsettings.flowratelimitsettings.flowalgorithm",
 	"endpointratelimitsettings.flowratelimitsettings.reqspersecond",
 	"endpointratelimitsettings.flowratelimitsettings.burstsize",
@@ -48,22 +49,35 @@ var ApiEndpointRateLimitSettingsOptionalArgs = []string{
 }
 var ApiEndpointRateLimitSettingsAliasArgs = []string{}
 var ApiEndpointRateLimitSettingsComments = map[string]string{
-	"endpointratelimitsettings.flowratelimitsettings.flowalgorithm":              ", one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointratelimitsettings.flowratelimitsettings.reqspersecond":              "requests per second",
-	"endpointratelimitsettings.flowratelimitsettings.burstsize":                  "burst size",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":        ", one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"endpointperipratelimitsettings.flowratelimitsettings.flowalgorithm":         ", one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointperipratelimitsettings.flowratelimitsettings.reqspersecond":         "requests per second",
-	"endpointperipratelimitsettings.flowratelimitsettings.burstsize":             "burst size",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":   ", one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"endpointperuserratelimitsettings.flowratelimitsettings.flowalgorithm":       ", one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointperuserratelimitsettings.flowratelimitsettings.reqspersecond":       "requests per second",
-	"endpointperuserratelimitsettings.flowratelimitsettings.burstsize":           "burst size",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm": ", one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"endpointperorgratelimitsettings.flowratelimitsettings.flowalgorithm":        ", one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointperorgratelimitsettings.flowratelimitsettings.reqspersecond":        "requests per second",
-	"endpointperorgratelimitsettings.flowratelimitsettings.burstsize":            "burst size",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":  ", one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"removeratelimit": "If set to true, no rate limiting will occur",
+	"endpointratelimitsettings.flowratelimitsettings.flowalgorithm":                  "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"endpointratelimitsettings.flowratelimitsettings.reqspersecond":                  "requests per second",
+	"endpointratelimitsettings.flowratelimitsettings.burstsize":                      "burst size",
+	"endpointratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":            "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond":        "maximum number of requests per second",
+	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute":        "maximum number of requests per minute",
+	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":          "maximum number of requests per hour",
+	"endpointperipratelimitsettings.flowratelimitsettings.flowalgorithm":             "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"endpointperipratelimitsettings.flowratelimitsettings.reqspersecond":             "requests per second",
+	"endpointperipratelimitsettings.flowratelimitsettings.burstsize":                 "burst size",
+	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":       "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond":   "maximum number of requests per second",
+	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute":   "maximum number of requests per minute",
+	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":     "maximum number of requests per hour",
+	"endpointperuserratelimitsettings.flowratelimitsettings.flowalgorithm":           "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"endpointperuserratelimitsettings.flowratelimitsettings.reqspersecond":           "requests per second",
+	"endpointperuserratelimitsettings.flowratelimitsettings.burstsize":               "burst size",
+	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond": "maximum number of requests per second",
+	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute": "maximum number of requests per minute",
+	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":   "maximum number of requests per hour",
+	"endpointperorgratelimitsettings.flowratelimitsettings.flowalgorithm":            "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"endpointperorgratelimitsettings.flowratelimitsettings.reqspersecond":            "requests per second",
+	"endpointperorgratelimitsettings.flowratelimitsettings.burstsize":                "burst size",
+	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":      "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond":  "maximum number of requests per second",
+	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute":  "maximum number of requests per minute",
+	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":    "maximum number of requests per hour",
 }
 var ApiEndpointRateLimitSettingsSpecialArgs = map[string]string{}
 var RateLimitSettingsRequiredArgs = []string{}
@@ -78,10 +92,13 @@ var RateLimitSettingsOptionalArgs = []string{
 }
 var RateLimitSettingsAliasArgs = []string{}
 var RateLimitSettingsComments = map[string]string{
-	"flowratelimitsettings.flowalgorithm":       ", one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"flowratelimitsettings.reqspersecond":       "requests per second",
-	"flowratelimitsettings.burstsize":           "burst size",
-	"maxreqsratelimitsettings.maxreqsalgorithm": ", one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"flowratelimitsettings.flowalgorithm":           "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"flowratelimitsettings.reqspersecond":           "requests per second",
+	"flowratelimitsettings.burstsize":               "burst size",
+	"maxreqsratelimitsettings.maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"maxreqsratelimitsettings.maxrequestspersecond": "maximum number of requests per second",
+	"maxreqsratelimitsettings.maxrequestsperminute": "maximum number of requests per minute",
+	"maxreqsratelimitsettings.maxrequestsperhour":   "maximum number of requests per hour",
 }
 var RateLimitSettingsSpecialArgs = map[string]string{}
 var FlowRateLimitSettingsRequiredArgs = []string{}
@@ -92,7 +109,7 @@ var FlowRateLimitSettingsOptionalArgs = []string{
 }
 var FlowRateLimitSettingsAliasArgs = []string{}
 var FlowRateLimitSettingsComments = map[string]string{
-	"flowalgorithm": ", one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"flowalgorithm": "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"reqspersecond": "requests per second",
 	"burstsize":     "burst size",
 }
@@ -106,6 +123,9 @@ var MaxReqsRateLimitSettingsOptionalArgs = []string{
 }
 var MaxReqsRateLimitSettingsAliasArgs = []string{}
 var MaxReqsRateLimitSettingsComments = map[string]string{
-	"maxreqsalgorithm": ", one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
+	"maxrequestspersecond": "maximum number of requests per second",
+	"maxrequestsperminute": "maximum number of requests per minute",
+	"maxrequestsperhour":   "maximum number of requests per hour",
 }
 var MaxReqsRateLimitSettingsSpecialArgs = map[string]string{}

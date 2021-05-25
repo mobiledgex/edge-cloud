@@ -1,44 +1,47 @@
 package ratelimit
 
 import (
-	"sync"
+	"context"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 // MaxReqs algorithms rate limiter
 // Imposes a maximum number of requests in a time frame (either fixed or rolling) for a user, organization, or ip
 // This is useful if we want to provide billing tiers for API usage (particularly free vs. paid tiers)
 type MaxReqsLimiter struct {
+	util.Mutex
 	limiter Limiter
-	mux     sync.Mutex
 }
 
-func NewMaxReqsLimiter(settings *edgeproto.MaxReqsRateLimitSettings) *MaxReqsLimiter {
+func NewMaxReqsLimiter(settings *MaxReqsRateLimitSettings) *MaxReqsLimiter {
 	maxReqsLimiter := &MaxReqsLimiter{}
 	switch settings.MaxReqsAlgorithm {
 	case edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM:
 		maxReqsLimiter.limiter = NewFixedWindowLimiter(int(settings.MaxRequestsPerSecond), int(settings.MaxRequestsPerMinute), int(settings.MaxRequestsPerHour))
 	case edgeproto.MaxReqsRateLimitAlgorithm_ROLLING_WINDOW_ALGORITHM:
-		// log
-		fallthrough
-	case edgeproto.MaxReqsRateLimitAlgorithm_NO_MAX_REQS_ALGORITHM:
-		// log
 		fallthrough
 	default:
-		// log
 		return nil
 	}
 	return maxReqsLimiter
 }
 
-func (f *MaxReqsLimiter) Limit(ctx Context) (bool, error) {
-	f.mux.Lock()
-	defer f.mux.Unlock()
+func (f *MaxReqsLimiter) Limit(ctx context.Context) (bool, error) {
+	f.Lock()
+	defer f.Unlock()
 	if f.limiter != nil {
 		return f.limiter.Limit(ctx)
 	}
 	return false, nil
+}
+
+type MaxReqsRateLimitSettings struct {
+	MaxReqsAlgorithm     edgeproto.MaxReqsRateLimitAlgorithm
+	MaxRequestsPerSecond int
+	MaxRequestsPerMinute int
+	MaxRequestsPerHour   int
 }
 
 /*

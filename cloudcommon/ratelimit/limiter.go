@@ -10,13 +10,29 @@ import (
 // If Limit returns true, check the error for additional information
 // Current implementations in: api_ratelimitmgr.go, full_limiter.go, flow_limiter.go, maxreqs_limiter.go, fixedwindow.go, leakybucket.go, tokenbucket.go
 type Limiter interface {
-	Limit(ctx Context) (bool, error)
+	Limit(ctx context.Context) (bool, error)
 }
 
-type Context struct {
-	context.Context
+type LimiterInfo struct {
 	Api  string
 	User string
 	Org  string
 	Ip   string
 }
+
+type limiterInfoKey struct{}
+
+func NewLimiterInfoContext(ctx context.Context, li *LimiterInfo) context.Context {
+	if li == nil {
+		return ctx
+	}
+	return context.WithValue(ctx, limiterInfoKey{}, li)
+}
+
+func LimiterInfoFromContext(ctx context.Context) (li *LimiterInfo, ok bool) {
+	li, ok = ctx.Value(limiterInfoKey{}).(*LimiterInfo)
+	return
+}
+
+var DefaultReqsPerSecondPerApi = 100.0
+var DefaultTokenBucketSize int64 = 10 // equivalent to burst size

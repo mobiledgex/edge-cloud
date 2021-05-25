@@ -125,18 +125,6 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			// no validation
 		case SettingsFieldLocationTileSideLengthKm:
 			v.CheckGT(f, s.LocationTileSideLengthKm, int64(0))
-		case SettingsFieldControllerCreateApiEndpointRateLimitSettings:
-			validateApiEndpointRateLimitSettings(v, f, s.ControllerCreateApiEndpointRateLimitSettings)
-		case SettingsFieldControllerDefaultApiEndpointRateLimitSettings:
-			validateApiEndpointRateLimitSettings(v, f, s.ControllerDefaultApiEndpointRateLimitSettings)
-		case SettingsFieldControllerShowApiEndpointRateLimitSettings:
-			validateApiEndpointRateLimitSettings(v, f, s.ControllerShowApiEndpointRateLimitSettings)
-		case SettingsFieldControllerUpdateApiEndpointRateLimitSettings:
-			validateApiEndpointRateLimitSettings(v, f, s.ControllerUpdateApiEndpointRateLimitSettings)
-		case SettingsFieldControllerDeleteApiEndpointRateLimitSettings:
-			validateApiEndpointRateLimitSettings(v, f, s.ControllerDeleteApiEndpointRateLimitSettings)
-		case SettingsFieldDmeDefaultApiEndpointRateLimitSettings:
-			validateApiEndpointRateLimitSettings(v, f, s.DmeDefaultApiEndpointRateLimitSettings)
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -196,13 +184,6 @@ func GetDefaultSettings() *Settings {
 		},
 	}
 	s.InfluxDbDownsampledMetricsRetention = Duration(8760 * time.Hour) // 1 year
-	// Set default RateLimit settings for Controller and Dme apis
-	s.ControllerCreateApiEndpointRateLimitSettings = DefaultControllerCreateApiEndpointRateLimitSettings
-	s.ControllerShowApiEndpointRateLimitSettings = DefaultControllerShowApiEndpointRateLimitSettings
-	s.ControllerDeleteApiEndpointRateLimitSettings = DefaultControllerDeleteApiEndpointRateLimitSettings
-	s.ControllerUpdateApiEndpointRateLimitSettings = DefaultControllerUpdateApiEndpointRateLimitSettings
-	s.ControllerDefaultApiEndpointRateLimitSettings = DefaultControllerDefaultApiEndpointRateLimitSettings
-	s.DmeDefaultApiEndpointRateLimitSettings = DefaultDmeDefaultApiEndpointRateLimitSettings
 	return &s
 }
 
