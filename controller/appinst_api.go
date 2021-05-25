@@ -709,6 +709,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
 			in.OptRes = "gpu"
+		} else {
+			// allow non-openstack platforms to support docker gpu use
+			if strings.Contains(in.Flavor.Name, "gpu") {
+				log.SpanLog(ctx, log.DebugLevelApi, "mex", "flavor", in.Flavor.Name, "uses gpu", true)
+				in.OptRes = "gpu"
+			}
 		}
 
 		in.Revision = app.Revision
