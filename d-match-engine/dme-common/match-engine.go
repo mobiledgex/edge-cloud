@@ -132,11 +132,16 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst.TrackedState != edgeproto.TrackedState_READY {
 		return false
 	}
-	if appInst.MaintenanceState == dme.MaintenanceState_UNDER_MAINTENANCE {
+	return AreStatesUsable(appInst.MaintenanceState, appInst.CloudletState, appInst.AppInstHealth)
+}
+
+// Checks dme proto states for an appinst or cloudlet (Maintenance, Cloudlet, and AppInstHealth states)
+func AreStatesUsable(maintenanceState dme.MaintenanceState, cloudletState dme.CloudletState, appInstHealth dme.HealthCheck) bool {
+	if maintenanceState == dme.MaintenanceState_UNDER_MAINTENANCE {
 		return false
 	}
-	if appInst.CloudletState == dme.CloudletState_CLOUDLET_STATE_READY {
-		return appInst.AppInstHealth == dme.HealthCheck_HEALTH_CHECK_OK || appInst.AppInstHealth == dme.HealthCheck_HEALTH_CHECK_UNKNOWN
+	if cloudletState == dme.CloudletState_CLOUDLET_STATE_READY {
+		return appInstHealth == dme.HealthCheck_HEALTH_CHECK_OK || appInstHealth == dme.HealthCheck_HEALTH_CHECK_UNKNOWN
 	}
 	return false
 }
@@ -244,18 +249,12 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
 		cl.AppInstHealth = appInst.HealthCheck
-		EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+		EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
 	// Check if Cloudlet states have changed
-	if cloudlet, found := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; found {
-		if cl.CloudletState != cloudlet.State {
-			cl.CloudletState = cloudlet.State
-			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-		}
-		if cl.MaintenanceState != cloudlet.MaintenanceState {
-			cl.MaintenanceState = cloudlet.MaintenanceState
-			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_MAINTENANCE)
-		}
+	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
+		cl.CloudletState = cloudlet.State
+		cl.MaintenanceState = cloudlet.MaintenanceState
 	} else {
 		cl.CloudletState = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 		cl.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
@@ -307,7 +306,7 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
 				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 				// Remove AppInst from edgeevents plugin
-				EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+				EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 				EEHandler.RemoveAppInstKey(ctx, appInst.Key)
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
@@ -364,7 +363,7 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
 					// Remove AppInst from edgeevents plugin
-					EEHandler.SendAppInstStateEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+					EEHandler.SendAppInstStateEdgeEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 					EEHandler.RemoveAppInstKey(ctx, key)
 					delete(carr.Insts, key.ClusterInstKey)
 				}
@@ -393,7 +392,13 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, cloudletKey) {
 					c.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 					c.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
+					appInstKey := edgeproto.AppInstKey{
+						AppKey:         app.AppKey,
+						ClusterInstKey: clusterInstKey,
+					}
+					EEHandler.SendAppInstStateEdgeEvent(ctx, c.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
 				}
+				EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
 			}
 		}
 		app.Unlock()
@@ -418,7 +423,13 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
 					carr.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 					carr.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
+					appInstKey := edgeproto.AppInstKey{
+						AppKey:         app.AppKey,
+						ClusterInstKey: clusterInstKey,
+					}
+					EEHandler.SendAppInstStateEdgeEvent(ctx, carr.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
 				}
+				EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
 			}
 		}
 		app.Unlock()
@@ -514,7 +525,11 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		cloudlet.CloudletKey = in.Key
 		tbl.Cloudlets[in.Key] = cloudlet
 	}
-	cloudlet.MaintenanceState = in.MaintenanceState
+	// Check if CloudletMaintenance state has changed
+	if cloudlet.MaintenanceState != in.MaintenanceState {
+		cloudlet.MaintenanceState = in.MaintenanceState
+		EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, cloudlet, in.Key)
+	}
 	cloudlet.GpsLocation = in.Location
 
 	for _, app := range tbl.Apps {
@@ -544,7 +559,11 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 		// object should've been added on receipt of cloudlet object from controller
 		return
 	}
-	cloudlet.State = info.State
+	// Check if Cloudlet state has changed
+	if cloudlet.State != info.State {
+		cloudlet.State = info.State
+		EEHandler.SendCloudletStateEdgeEvent(ctx, cloudlet, info.Key)
+	}
 
 	for _, app := range tbl.Apps {
 		app.Lock()
