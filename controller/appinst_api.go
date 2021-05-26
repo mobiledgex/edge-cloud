@@ -712,7 +712,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.OptRes = "gpu"
 		} else {
 			// allow non-openstack platforms to support docker gpu use
-			if strings.Contains(in.Flavor.Name, "gpu") {
+		if strings.Contains(in.Flavor.Name, "gpu") {
 				log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", in.Flavor.Name)
 				in.OptRes = "gpu"
 			}
