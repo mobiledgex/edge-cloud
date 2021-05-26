@@ -708,14 +708,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)
 
 		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
+			log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", vmspec.FlavorName)
 			in.OptRes = "gpu"
 		} else {
-			if app.Deployment == cloudcommon.DeploymentTypeDocker {
-				// allow non-openstack platforms to support docker gpu use
-				if strings.Contains(in.Flavor.Name, "gpu") {
-					log.SpanLog(ctx, log.DebugLevelApi, "support docker gpu on non-openstack platform", "flavor", in.Flavor.Name, "uses gpu", true)
-					in.OptRes = "gpu"
-				}
+			// allow non-openstack platforms to support docker gpu use
+			if strings.Contains(in.Flavor.Name, "gpu") {
+				log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", in.Flavor.Name)
+				in.OptRes = "gpu"
 			}
 		}
 

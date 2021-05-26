@@ -798,8 +798,15 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "Selected ClusterInst Node Flavor", "vmspec", vmspec.FlavorName)
 		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
+			log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", vmspec.FlavorName)
 			in.OptRes = "gpu"
+		} else {
+			if strings.Contains(vmspec.FlavorInfo.Name, "gpu") {
+				log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", in.Flavor.Name)
+				in.OptRes = "gpu"
+			}
 		}
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone

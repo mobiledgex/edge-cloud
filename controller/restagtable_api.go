@@ -12,6 +12,11 @@ import (
 	"github.com/mobiledgex/edge-cloud/vmspec"
 )
 
+// duplicates vmlayer/props.go xxx Names?
+const MINIMUM_DISK_SIZE uint64 = 20
+const MINIMUM_RAM_SIZE uint64 = 2048
+const MINIMUM_VCPUS uint64 = 2
+
 type ResTagTableApi struct {
 	sync  *Sync
 	store edgeproto.ResTagTableStore
@@ -229,8 +234,52 @@ func (s *ResTagTableApi) UsesGpu(ctx context.Context, stm concurrency.STM, flavo
 	return false
 }
 
+func (s *ResTagTableApi) PlatformSupportsNativeFlavors(ctx context.Context, pt edgeproto.PlatformType) bool {
+
+	switch pt {
+	case edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK,
+		edgeproto.PlatformType_PLATFORM_TYPE_AZURE,
+		edgeproto.PlatformType_PLATFORM_TYPE_GCP,
+		edgeproto.PlatformType_PLATFORM_TYPE_AWS_EC2,
+		edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
+
+		return true
+	default:
+		return false
+	}
+}
+
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
 func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
+
+	// for those platforms with no concept of a quantized set of resources (flavors)
+	// return a vmspec based on the our meta-flavor resource request.
+	// while
+	if !s.PlatformSupportsNativeFlavors(ctx, cl.PlatformType) {
+		log.SpanLog(ctx, log.DebugLevelApi, "GetVMSpec platform has no native flavors", "platform", cl.PlatformType, "using flavor", nodeflavor)
+		spec := vmspec.VMCreationSpec{}
+		spec.FlavorName = nodeflavor.Key.Name
+		spec.FlavorInfo.Name = spec.FlavorName
+		spec.ExternalVolumeSize = 0
+
+		if nodeflavor.Ram >= MINIMUM_RAM_SIZE {
+			spec.FlavorInfo.Ram = nodeflavor.Ram
+		} else {
+			spec.FlavorInfo.Ram = MINIMUM_RAM_SIZE
+		}
+		if nodeflavor.Vcpus >= MINIMUM_VCPUS {
+			spec.FlavorInfo.Vcpus = nodeflavor.Vcpus
+		} else {
+			spec.FlavorInfo.Vcpus = MINIMUM_VCPUS
+		}
+		if nodeflavor.Disk >= MINIMUM_DISK_SIZE {
+			spec.FlavorInfo.Disk = nodeflavor.Disk
+		} else {
+			spec.FlavorInfo.Disk = MINIMUM_DISK_SIZE
+		}
+
+		return &spec, nil
+	}
 
 	tbls, _ := s.GetResTablesForCloudlet(ctx, stm, &cl)
 	return vmspec.GetVMSpec(ctx, nodeflavor, cli, tbls)
