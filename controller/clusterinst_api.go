@@ -590,8 +590,8 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	resMetric.Name = cloudcommon.GetCloudletResourceUsageMeasurement(pfType)
 	resMetric.AddTag("cloudletorg", key.Organization)
 	resMetric.AddTag("cloudlet", key.Name)
-	resMetric.AddIntVal("ramUsed", ramUsed)
-	resMetric.AddIntVal("vcpusUsed", vcpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricRamMB, ramUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricVcpus, vcpusUsed)
 
 	// get additional infra specific metric
 	err = cloudletPlatform.GetClusterAdditionalResourceMetric(ctx, &cloudlet, &resMetric, allResources)
@@ -614,7 +614,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 			}
 		}
 	}
-	resMetric.AddIntVal("gpusUsed", gpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricsGpus, gpusUsed)
 	metrics := []*edgeproto.Metric{}
 	metrics = append(metrics, &resMetric)
 
