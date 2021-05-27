@@ -294,6 +294,11 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 			// this resource is not tracked by controller, skip it
 			continue
 		}
+		if resInfo.QuotaMaxValue > 0 && resInfo.InfraMaxValue > 0 {
+			if resInfo.QuotaMaxValue > resInfo.InfraMaxValue {
+				warnings = append(warnings, fmt.Sprintf("[Quota] Invalid quota set for %s, quota max value %d is more than infra max value %d", resName, resInfo.QuotaMaxValue, resInfo.InfraMaxValue))
+			}
+		}
 		thAvailableResVal := uint64(0)
 		if resInfo.Value > max {
 			warnings = append(warnings, fmt.Sprintf("[Quota] Invalid quota set for %s, quota max value %d is less than used resource value %d", resName, max, resInfo.Value))
