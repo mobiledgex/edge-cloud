@@ -17,8 +17,23 @@ var (
 	ResourceVcpus = "vCPUs"
 	ResourceGpus  = "GPUs"
 
+	// Platform specific resources
+	ResourceInstances   = "Instances"
+	ResourceFloatingIPs = "Floating IPs"
+	ResourceExternalIPs = "External IPs"
+
+	// Resource units
 	ResourceRamUnits = "MB"
 
+	// Resource metrics
+	ResourceMetricRamMB       = "ramUsed"
+	ResourceMetricVcpus       = "vcpusUsed"
+	ResourceMetricsGpus       = "gpusUsed"
+	ResourceMetricInstances   = "instancesUsed"
+	ResourceMetricExternalIPs = "externalIpsUsed"
+	ResourceMetricFloatingIPs = "floatingIpsUsed"
+
+	// Common cloudlet resources
 	CloudletResources = []edgeproto.InfraResource{
 		edgeproto.InfraResource{
 			Name:        ResourceRamMb,
@@ -32,6 +47,21 @@ var (
 			Name:        ResourceGpus,
 			Description: "Limit on GPUs available",
 		},
+	}
+
+	ResourceQuotaDesc = map[string]string{
+		ResourceInstances:   "Limit on number of instances that can be provisioned",
+		ResourceFloatingIPs: "Limit on number of floating IPs that can be created",
+		ResourceExternalIPs: "Limit on how many external IPs are available",
+	}
+
+	ResourceMetricsDesc = map[string]string{
+		ResourceMetricRamMB:       "RAM Usage (MB)",
+		ResourceMetricVcpus:       "vCPU Usage",
+		ResourceMetricsGpus:       "GPU Usage",
+		ResourceMetricInstances:   "VM Instance Usage",
+		ResourceMetricExternalIPs: "External IP Usage",
+		ResourceMetricFloatingIPs: "Floating IP Usage",
 	}
 )
 
