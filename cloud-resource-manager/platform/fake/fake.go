@@ -28,8 +28,6 @@ var (
 	ResourceAdd    = true
 	ResourceRemove = false
 
-	ResourceExternalIps = "External IPs"
-
 	FakeRamUsed         = uint64(0)
 	FakeVcpusUsed       = uint64(0)
 	FakeDiskUsed        = uint64(0)
@@ -357,7 +355,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 			InfraMaxValue: FakeVcpusMax,
 		},
 		edgeproto.InfraResource{
-			Name:          ResourceExternalIps,
+			Name:          cloudcommon.ResourceExternalIPs,
 			Value:         FakeExternalIpsUsed,
 			InfraMaxValue: FakeExternalIpsMax,
 		},
@@ -370,7 +368,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]edgeproto.InfraResource) map[string]edgeproto.InfraResource {
 	// resource name -> resource units
 	cloudletRes := map[string]string{
-		ResourceExternalIps: "",
+		cloudcommon.ResourceExternalIPs: "",
 	}
 	resInfo := make(map[string]edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
@@ -387,10 +385,10 @@ func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *
 
 	for _, vmRes := range vmResources {
 		if vmRes.Type == cloudcommon.VMTypeRootLB {
-			out, ok := resInfo[ResourceExternalIps]
+			out, ok := resInfo[cloudcommon.ResourceExternalIPs]
 			if ok {
 				out.Value += 1
-				resInfo[ResourceExternalIps] = out
+				resInfo[cloudcommon.ResourceExternalIPs] = out
 			}
 		}
 	}
@@ -401,8 +399,8 @@ func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeprot
 	return &edgeproto.CloudletResourceQuotaProps{
 		Properties: []edgeproto.InfraResource{
 			edgeproto.InfraResource{
-				Name:        ResourceExternalIps,
-				Description: "Limit on external IPs available",
+				Name:        cloudcommon.ResourceExternalIPs,
+				Description: cloudcommon.ResourceQuotaDesc[cloudcommon.ResourceExternalIPs],
 			},
 		},
 	}, nil
@@ -416,7 +414,7 @@ func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, cloud
 		}
 	}
 
-	resMetric.AddIntVal("externalIpsUsed", externalIpsUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricExternalIPs, externalIpsUsed)
 	return nil
 }
 
