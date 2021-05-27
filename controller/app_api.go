@@ -328,6 +328,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		VaultConfig: vaultConfig,
 	}
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+		if !strings.Contains(in.ImagePath, "://") {
+			in.ImagePath = "https://" + in.ImagePath
+		}
 		err := util.ValidateImagePath(in.ImagePath)
 		if err != nil {
 			return err
