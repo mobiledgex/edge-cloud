@@ -707,18 +707,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)
-
-		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
-			log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", vmspec.FlavorName)
-			in.OptRes = "gpu"
-		} else {
-			// allow platforms with no native flavor support to received gpu hint
-			if strings.Contains(in.Flavor.Name, "gpu") {
-				log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", in.Flavor.Name)
-				in.OptRes = "gpu"
-			}
-		}
-
+		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
 		// there may be direct access apps still defined, disallow them from being instantiated.

@@ -234,7 +234,6 @@ func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nod
 	// for those platforms with no concept of a quantized set of resources (flavors)
 	// return a VMCreationSpec  based on the our meta-flavor resource request.
 	if len(cli.Flavors) == 0 {
-		log.SpanLog(ctx, log.DebugLevelApi, "GetVMSpec platform has no native flavors", "platform", cl.PlatformType, "using flavor", nodeflavor)
 		spec := vmspec.VMCreationSpec{
 			FlavorName: nodeflavor.Key.Name,
 			FlavorInfo: &edgeproto.FlavorInfo{
@@ -319,4 +318,18 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 		}
 	}
 	return true, nil
+}
+
+func (s *ResTagTableApi) AddGpuResourceHintIfNeeded(ctx context.Context, stm concurrency.STM, spec *vmspec.VMCreationSpec, cloudlet edgeproto.Cloudlet) string {
+
+	if resTagTableApi.UsesGpu(ctx, stm, *spec.FlavorInfo, cloudlet) {
+		log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", spec.FlavorName)
+		return "gpu"
+	} else {
+		if strings.Contains(spec.FlavorInfo.Name, "gpu") {
+			log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", spec.FlavorName)
+			return "gpu"
+		}
+	}
+	return ""
 }
