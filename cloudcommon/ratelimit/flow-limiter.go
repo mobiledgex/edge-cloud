@@ -16,6 +16,9 @@ type FlowLimiter struct {
 }
 
 func NewFlowLimiter(settings *FlowRateLimitSettings) *FlowLimiter {
+	if settings == nil {
+		return nil
+	}
 	flowLimiter := &FlowLimiter{}
 	switch settings.FlowAlgorithm {
 	case edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM:

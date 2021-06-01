@@ -68,6 +68,7 @@ var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs f
 var checkpointInterval = flag.String("checkpointInterval", "MONTH", "Interval at which to checkpoint cluster usage")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var requireNotifyAccessKey = flag.Bool("requireNotifyAccessKey", false, "Require AccessKey authentication on notify API")
+var removeRateLimit = flag.Bool("removeRateLimit", false, "Do no rate limit public endpoints")
 
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
@@ -99,8 +100,8 @@ type Services struct {
 	accessKeyGrpcServer       node.AccessKeyGrpcServer
 	listeners                 []net.Listener
 	publicCertManager         *node.PublicCertManager
-	unaryApiRateLimitMgr      *ratelimit.ApiRateLimitManager
-	streamApiRateLimitMgr     *ratelimit.ApiRateLimitManager
+	unaryRateLimitMgr         *ratelimit.RateLimitManager
+	streamRateLimitMgr        *ratelimit.RateLimitManager
 }
 
 func main() {
@@ -252,6 +253,11 @@ func startServices() error {
 	err = settingsApi.initDefaults(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to init settings, %v", err)
+	}
+
+	err = rateLimitSettingsApi.setDefaults(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to set rate limit settings defaults, %v", err)
 	}
 
 	// get influxDB credentials from vault
@@ -409,12 +415,12 @@ func startServices() error {
 	}
 
 	// Initialize ApiRateLimitManagers
-	services.unaryApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
-	services.streamApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
+	services.unaryRateLimitMgr = ratelimit.NewRateLimitManager()
+	services.streamRateLimitMgr = ratelimit.NewRateLimitManager()
 
 	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor, ratelimit.GetControllerUnaryRateLimiterInterceptor(services.unaryApiRateLimitMgr))),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor, ratelimit.GetControllerStreamRateLimiterInterceptor(services.streamApiRateLimitMgr))))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor, ratelimit.GetControllerUnaryRateLimiterInterceptor(services.unaryRateLimitMgr))),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor, ratelimit.GetControllerStreamRateLimiterInterceptor(services.streamRateLimitMgr))))
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
@@ -436,6 +442,7 @@ func startServices() error {
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
+	edgeproto.RegisterRateLimitSettingsApiServer(server, &rateLimitSettingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
 	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
@@ -443,34 +450,34 @@ func startServices() error {
 	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
 
-	// Add APIs to ApiRateLimitManager hashmaps
-	if !*testMode {
-		grpcServices := server.GetServiceInfo()
-		for _, serviceInfo := range grpcServices {
-			for _, methodInfo := range serviceInfo.Methods {
-				var rateLimitSettings *edgeproto.ApiEndpointRateLimitSettings
-				var settingsName string
+	// Add ApiEndpointLimiter to each Controller api
+	grpcServices := server.GetServiceInfo()
+	for _, serviceInfo := range grpcServices {
+		for _, methodInfo := range serviceInfo.Methods {
+			var allReqsRateLimitSettings *edgeproto.RateLimitSettings
+			var perIpRateLimitSettings *edgeproto.RateLimitSettings
+			if !*removeRateLimit {
 				if strings.Contains(methodInfo.Name, "Create") {
-					rateLimitSettings = settingsApi.Get().ControllerCreateApiEndpointRateLimitSettings
-					settingsName = edgeproto.SettingsFieldControllerCreateApiEndpointRateLimitSettings
+					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_CREATE_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
+					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_CREATE_ACTION, edgeproto.RateLimitTarget_PER_IP)
 				} else if strings.Contains(methodInfo.Name, "Delete") {
-					rateLimitSettings = settingsApi.Get().ControllerDeleteApiEndpointRateLimitSettings
-					settingsName = edgeproto.SettingsFieldControllerDeleteApiEndpointRateLimitSettings
+					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DELETE_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
+					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DELETE_ACTION, edgeproto.RateLimitTarget_PER_IP)
 				} else if strings.Contains(methodInfo.Name, "Show") {
-					rateLimitSettings = settingsApi.Get().ControllerShowApiEndpointRateLimitSettings
-					settingsName = edgeproto.SettingsFieldControllerShowApiEndpointRateLimitSettings
+					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_SHOW_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
+					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_SHOW_ACTION, edgeproto.RateLimitTarget_PER_IP)
 				} else if strings.Contains(methodInfo.Name, "Update") {
-					rateLimitSettings = settingsApi.Get().ControllerUpdateApiEndpointRateLimitSettings
-					settingsName = edgeproto.SettingsFieldControllerUpdateApiEndpointRateLimitSettings
+					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_UPDATE_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
+					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_UPDATE_ACTION, edgeproto.RateLimitTarget_PER_IP)
 				} else {
-					rateLimitSettings = settingsApi.Get().ControllerDefaultApiEndpointRateLimitSettings
-					settingsName = edgeproto.SettingsFieldControllerDefaultApiEndpointRateLimitSettings
+					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DEFAULT_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
+					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DEFAULT_ACTION, edgeproto.RateLimitTarget_PER_IP)
 				}
-				if methodInfo.IsClientStream || methodInfo.IsServerStream {
-					services.streamApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings, settingsName)
-				} else {
-					services.unaryApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings, settingsName)
-				}
+			}
+			if methodInfo.IsClientStream || methodInfo.IsServerStream {
+				services.streamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, nil, nil)
+			} else {
+				services.unaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, nil, nil)
 			}
 		}
 	}
@@ -506,6 +513,7 @@ func startServices() error {
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterTrustPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
+			edgeproto.RegisterRateLimitSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
 			edgeproto.RegisterDeviceApiHandler,
@@ -601,6 +609,12 @@ func stopServices() {
 	nodeMgr.Finish()
 }
 
+// Helper function that gets the RateLimitSettings that corresponds to the Controller RateLimitSettingsKey
+func getControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, target edgeproto.RateLimitTarget) *edgeproto.RateLimitSettings {
+	key := edgeproto.GetRateLimitSettingsKey(edgeproto.ApiEndpointType_CONTROLLER, actionType, target)
+	return rateLimitSettingsApi.Get(key)
+}
+
 // Helper function to verify the compatibility of etcd version and
 // current data model version
 func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error) {
@@ -653,6 +667,7 @@ func InitApis(sync *Sync) {
 	InitResTagTableApi(sync)
 	InitTrustPolicyApi(sync)
 	InitSettingsApi(sync)
+	InitRateLimitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
 	InitDeviceApi(sync)
@@ -663,6 +678,7 @@ func InitApis(sync *Sync) {
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
+	notify.ServerMgrOne.RegisterSendRateLimitSettingsCache(&rateLimitSettingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendGPUDriverCache(&gpuDriverApi.cache)

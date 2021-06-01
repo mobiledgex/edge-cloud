@@ -59,6 +59,7 @@ var solib = flag.String("plugin", "", "plugin file")
 var eesolib = flag.String("eeplugin", "", "plugin file") // for edge events plugin
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
+var removeRateLimit = flag.Bool("removeRateLimit", false, "Do no rate limit public endpoints")
 
 // TODO: carrier arg is redundant with Organization in MyCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -534,8 +535,8 @@ func main() {
 	defer dmecommon.StopAppInstClients()
 
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(ratelimit.GetDmeUnaryRateLimiterInterceptor(dmecommon.UnaryApiRateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(ratelimit.GetDmeStreamRateLimiterInterceptor(dmecommon.StreamApiRateLimitMgr), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(ratelimit.GetDmeUnaryRateLimiterInterceptor(dmecommon.UnaryRateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(ratelimit.GetDmeStreamRateLimiterInterceptor(dmecommon.StreamRateLimitMgr), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
@@ -594,17 +595,33 @@ func main() {
 	dme.RegisterMatchEngineApiServer(s, &server{})
 
 	// Add APIs to RateLimitManagers
-	if !*testMode {
-		grpcServices := s.GetServiceInfo()
-		for _, serviceInfo := range grpcServices {
-			for _, methodInfo := range serviceInfo.Methods {
-				rateLimitSettings := dmecommon.Settings.DmeDefaultApiEndpointRateLimitSettings
-				settingsName := edgeproto.SettingsFieldDmeDefaultApiEndpointRateLimitSettings
-				if methodInfo.IsClientStream || methodInfo.IsServerStream {
-					dmecommon.StreamApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings, settingsName)
-				} else {
-					dmecommon.UnaryApiRateLimitMgr.AddRateLimitPerApi(methodInfo.Name, rateLimitSettings, settingsName)
-				}
+	dmecommon.RateLimitSettings = edgeproto.GetDefaultRateLimitSettings()
+	// Initialize RateLimitSettingsKeys for lookup
+	allReqsSettingsKey := edgeproto.RateLimitSettingsKey{
+		ApiEndpointType: edgeproto.ApiEndpointType_DME,
+		ApiActionType:   edgeproto.ApiActionType_DEFAULT_ACTION,
+		RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
+	}
+	perIpSettingsKey := edgeproto.RateLimitSettingsKey{
+		ApiEndpointType: edgeproto.ApiEndpointType_DME,
+		ApiActionType:   edgeproto.ApiActionType_DEFAULT_ACTION,
+		RateLimitTarget: edgeproto.RateLimitTarget_PER_IP,
+	}
+	// Get RateLimitSettings that correspond to the key
+	var allRequestsRateLimitSettings *edgeproto.RateLimitSettings
+	var perIpRateLimitSettings *edgeproto.RateLimitSettings
+	if !*removeRateLimit {
+		allRequestsRateLimitSettings = dmecommon.RateLimitSettings[allReqsSettingsKey]
+		perIpRateLimitSettings = dmecommon.RateLimitSettings[perIpSettingsKey]
+	}
+	// Add ApiEndpointLimiter to each DME api
+	grpcServices := s.GetServiceInfo()
+	for _, serviceInfo := range grpcServices {
+		for _, methodInfo := range serviceInfo.Methods {
+			if methodInfo.IsClientStream || methodInfo.IsServerStream {
+				dmecommon.StreamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, nil, nil)
+			} else {
+				dmecommon.UnaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, nil, nil)
 			}
 		}
 	}

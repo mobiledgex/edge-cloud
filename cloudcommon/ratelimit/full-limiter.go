@@ -2,6 +2,8 @@ package ratelimit
 
 import (
 	"context"
+
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 // FullLimiter
@@ -11,26 +13,26 @@ type FullLimiter struct {
 	maxReqsLimiter *MaxReqsLimiter
 }
 
-func NewFullLimiter(settings *RateLimitSettings) *FullLimiter {
-	fullLimiter := &FullLimiter{}
+func NewFullLimiter(settings *edgeproto.RateLimitSettings) *FullLimiter {
 	if settings == nil {
-		return fullLimiter
+		return nil
 	}
+	fullLimiter := &FullLimiter{}
 	// Get flowLimiter
 	flowRateLimitSettings := &FlowRateLimitSettings{
 		FlowAlgorithm: settings.FlowAlgorithm,
 		ReqsPerSecond: settings.ReqsPerSecond,
-		BurstSize:     settings.BurstSize,
+		BurstSize:     int(settings.BurstSize),
 	}
-	fullLimiter.flowLimiter = NewFlowLimiter(flowRateAlgorithm)
+	fullLimiter.flowLimiter = NewFlowLimiter(flowRateLimitSettings)
 	// Get maxReqsLimiter
 	maxReqsRateLimitSettings := &MaxReqsRateLimitSettings{
 		MaxReqsAlgorithm:     settings.MaxReqsAlgorithm,
-		MaxRequestsPerSecond: settings.MaxRequestsPerSecond,
-		MaxRequestsPerMinute: settings.MaxRequestsPerMinute,
-		MaxRequestsPerHour:   settings.MaxRequestsPerHour,
+		MaxRequestsPerSecond: int(settings.MaxRequestsPerSecond),
+		MaxRequestsPerMinute: int(settings.MaxRequestsPerMinute),
+		MaxRequestsPerHour:   int(settings.MaxRequestsPerHour),
 	}
-	fullLimiter.maxReqsLimiter = NewMaxReqsLimiter(maxRequsAlgorithm)
+	fullLimiter.maxReqsLimiter = NewMaxReqsLimiter(maxReqsRateLimitSettings)
 	return fullLimiter
 }
 

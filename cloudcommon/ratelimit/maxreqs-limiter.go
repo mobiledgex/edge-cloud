@@ -16,6 +16,9 @@ type MaxReqsLimiter struct {
 }
 
 func NewMaxReqsLimiter(settings *MaxReqsRateLimitSettings) *MaxReqsLimiter {
+	if settings == nil {
+		return nil
+	}
 	maxReqsLimiter := &MaxReqsLimiter{}
 	switch settings.MaxReqsAlgorithm {
 	case edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM:

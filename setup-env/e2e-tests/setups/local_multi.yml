@@ -58,6 +58,7 @@ controllers:
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
   accessapiaddr: "127.0.0.1:41001"
+  removeratelimit: true
   envvars:
     ES_SERVER_URLS: https://localhost:9201
     E2ETEST_TLS: true
@@ -82,6 +83,7 @@ controllers:
   edgeturnaddr: "127.0.0.1:6080"
   appdnsroot: localtest.net
   accessapiaddr: "127.0.0.1:41002"
+  removeratelimit: true
   envvars:
     ES_SERVER_URLS: https://localhost:9201
     E2ETEST_TLS: true
@@ -123,6 +125,7 @@ dmes:
   cloudletkey: '{"organization":"tmus","name":"tmus-cloud-1"}'
   vaultaddr: "http://127.0.0.1:8200"
   usevaultpki: true
+  removeratelimit: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
@@ -139,6 +142,7 @@ dmes:
   cloudletkey: '{"organization":"tmus","name":"tmus-cloud-2"}'
   vaultaddr: "http://127.0.0.1:8200"
   usevaultpki: true
+  removeratelimit: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -118,7 +117,7 @@ func TestFixedWindow(t *testing.T) {
 
 func TestApiRateLimitMgr(t *testing.T) {
 	// init ratelimitmgr
-	mgr := NewApiRateLimitManager()
+	mgr := NewRateLimitManager()
 	// init apis
 	api1 := "api1"
 	api2 := "api2"
@@ -129,30 +128,42 @@ func TestApiRateLimitMgr(t *testing.T) {
 	api7 := "api7"
 	apis := []string{api1, api2, api3, api4, api5, api6, api7}
 	// init rate limit settings (similar to controller and dme settings)
-	createLimitSettings := edgeproto.ApiEndpointRateLimitSettings{
-		EndpointRateLimitSettings: &edgeproto.RateLimitSettings{
-			FlowRateLimitSettings: &edgeproto.FlowRateLimitSettings{
-				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-				ReqsPerSecond: 100,
-				BurstSize:     100,
-			},
+	createLimitSettings := edgeproto.RateLimitSettings{
+		Key: edgeproto.RateLimitSettingsKey{
+			ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
+			ApiActionType:   edgeproto.ApiActionType_CREATE_ACTION,
+			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		EndpointPerIpRateLimitSettings: &edgeproto.RateLimitSettings{
-			FlowRateLimitSettings: &edgeproto.FlowRateLimitSettings{
-				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-				ReqsPerSecond: 100,
-				BurstSize:     100,
-			},
-		},
+		FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+		ReqsPerSecond: 100,
+		BurstSize:     100,
 	}
-	deleteLimitSettings := createLimitSettings
-	showLimitSettings := createLimitSettings
-	settings := []edgeproto.ApiEndpointRateLimitSettings{createLimitSettings, deleteLimitSettings, showLimitSettings}
-	settingsNames := []string{"create", "delete", "show"}
+	deleteLimitSettings := edgeproto.RateLimitSettings{
+		Key: edgeproto.RateLimitSettingsKey{
+			ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
+			ApiActionType:   edgeproto.ApiActionType_DELETE_ACTION,
+			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
+		},
+		FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+		ReqsPerSecond: 200,
+		BurstSize:     100,
+	}
+	showLimitSettings := edgeproto.RateLimitSettings{
+		Key: edgeproto.RateLimitSettingsKey{
+			ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
+			ApiActionType:   edgeproto.ApiActionType_SHOW_ACTION,
+			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
+		},
+		FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+		ReqsPerSecond: 300,
+		BurstSize:     100,
+	}
+
+	settings := []edgeproto.RateLimitSettings{createLimitSettings, deleteLimitSettings, showLimitSettings}
 
 	// Add apis and their rate limit settings to mgr
 	for i, api := range apis {
-		mgr.AddRateLimitPerApi(api, &settings[i%len(settings)], settingsNames[i%len(settingsNames)])
+		mgr.AddApiEndpointLimiter(api, &settings[i%len(settings)], nil, nil, nil)
 	}
 
 	// Spawn fake clients that "call" the apis (all should pass)
@@ -195,15 +206,16 @@ func TestApiRateLimitMgr(t *testing.T) {
 		}(i)
 		// Update settings midway through
 		if i == numClients/2 {
-			newCreateLimitSettings := &edgeproto.ApiEndpointRateLimitSettings{
-				EndpointRateLimitSettings: &edgeproto.RateLimitSettings{
-					MaxReqsRateLimitSettings: &edgeproto.MaxReqsRateLimitSettings{
-						MaxReqsAlgorithm:     edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
-						MaxRequestsPerSecond: 1,
-					},
+			newCreateLimitSettings := &edgeproto.RateLimitSettings{
+				Key: edgeproto.RateLimitSettingsKey{
+					ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
+					ApiActionType:   edgeproto.ApiActionType_CREATE_ACTION,
+					RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 				},
+				MaxReqsAlgorithm:     edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+				MaxRequestsPerSecond: 1,
 			}
-			mgr.UpdateRateLimitSettings(newCreateLimitSettings, settingsNames[0])
+			mgr.UpdateRateLimitSettings(newCreateLimitSettings)
 		}
 	}
 	wg.Wait()

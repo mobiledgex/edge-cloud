@@ -102,7 +102,9 @@ type ClientToken struct {
 }
 
 var DmeAppTbl *DmeApps
+
 var Settings edgeproto.Settings
+var RateLimitSettings map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings
 
 // Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
 type StatKey struct {
@@ -121,8 +123,8 @@ var StatKeyContextKey = StatKeyContextType("statKey")
 var EEHandler EdgeEventsHandler
 
 // RateLimitManagers
-var UnaryApiRateLimitMgr *ratelimit.ApiRateLimitManager
-var StreamApiRateLimitMgr *ratelimit.ApiRateLimitManager
+var UnaryRateLimitMgr *ratelimit.RateLimitManager
+var StreamRateLimitMgr *ratelimit.RateLimitManager
 
 func SetupMatchEngine(eehandler EdgeEventsHandler) {
 	DmeAppTbl = new(DmeApps)
@@ -133,8 +135,8 @@ func SetupMatchEngine(eehandler EdgeEventsHandler) {
 	edgeproto.InitOperatorCodeCache(&DmeAppTbl.OperatorCodes)
 	EEHandler = eehandler
 	// Initialize API RateLimitManagers
-	UnaryApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
-	StreamApiRateLimitMgr = ratelimit.NewApiRateLimitManager()
+	UnaryRateLimitMgr = ratelimit.NewRateLimitManager()
+	StreamRateLimitMgr = ratelimit.NewRateLimitManager()
 }
 
 // AppInst state is a superset of the cloudlet state and appInst state
@@ -1222,7 +1224,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	}
 
 	// Initialize rate limiter so that we can handle all the incoming messages
-	rateLimiter := ratelimit.NewTokenBucketLimiter(edgeproto.DefaultReqsPerSecondPerApi, int(edgeproto.DefaultTokenBucketSize))
+	rateLimiter := ratelimit.NewTokenBucketLimiter(ratelimit.DefaultReqsPerSecondPerApi, int(ratelimit.DefaultTokenBucketSize))
 	// Loop while persistent connection is up
 loop:
 	for {
@@ -1495,6 +1497,4 @@ func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeprot
 	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
 	clientsMap.UpdateClientTimeout(new.AppinstClientCleanupInterval)
 	EEStats.UpdateSettings(time.Duration(new.EdgeEventsMetricsCollectionInterval))
-	UnaryApiRateLimitMgr.UpdateRateLimitSettings(new.DmeDefaultApiEndpointRateLimitSettings, edgeproto.SettingsFieldDmeDefaultApiEndpointRateLimitSettings)
-	StreamApiRateLimitMgr.UpdateRateLimitSettings(new.DmeDefaultApiEndpointRateLimitSettings, edgeproto.SettingsFieldDmeDefaultApiEndpointRateLimitSettings)
 }

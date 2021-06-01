@@ -25,6 +25,9 @@ type CloudletHandler struct {
 type CloudletInfoHandler struct {
 }
 
+type RateLimitSettingsHandler struct {
+}
+
 func (s *AppHandler) Update(ctx context.Context, in *edgeproto.App, rev int64) {
 	dmecommon.AddApp(ctx, in)
 }
@@ -99,6 +102,34 @@ func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.Clou
 
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 
+func (r *RateLimitSettingsHandler) Update(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
+	if in.Key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "BLAH: Update ratelimit settings in dme", "settings", in)
+		dmecommon.UnaryRateLimitMgr.UpdateRateLimitSettings(in)
+		dmecommon.StreamRateLimitMgr.UpdateRateLimitSettings(in)
+	}
+}
+
+func (r *RateLimitSettingsHandler) Delete(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
+	if in.Key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "BLAH: Delete ratelimit settings in dme", "settings", in)
+		dmecommon.UnaryRateLimitMgr.RemoveRateLimitSettings(in.Key)
+		dmecommon.StreamRateLimitMgr.RemoveRateLimitSettings(in.Key)
+	}
+}
+
+func (r *RateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto.RateLimitSettingsKey]struct{}) {
+	for key, _ := range keys {
+		if key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "BLAH: Prune ratelimit settings in dme", "key", key)
+			dmecommon.UnaryRateLimitMgr.RemoveRateLimitSettings(key)
+			dmecommon.StreamRateLimitMgr.RemoveRateLimitSettings(key)
+		}
+	}
+}
+
+func (r *RateLimitSettingsHandler) Flush(ctx context.Context, notifyId int64) {}
+
 var nodeCache edgeproto.NodeCache
 
 func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption, notifyOps ...notify.ClientOp) *notify.Client {
@@ -108,6 +139,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	dmecommon.AppInstClientKeyCache.SetUpdatedCb(dmecommon.SendCachedClients)
 	notifyClient := notify.NewClient(nodeMgr.Name(), strings.Split(addrs, ","), tlsDialOption, notifyOps...)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
+	notifyClient.RegisterRecv(notify.NewRateLimitSettingsRecv(&RateLimitSettingsHandler{}))
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
 	notifyClient.RegisterRecv(notify.NewOperatorCodeRecv(&dmecommon.DmeAppTbl.OperatorCodes))
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))

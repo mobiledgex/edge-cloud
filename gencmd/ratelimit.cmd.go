@@ -4,9 +4,19 @@
 package gencmd
 
 import (
+	"context"
 	fmt "fmt"
+	_ "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc/status"
+	"io"
 	math "math"
+	"strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -15,117 +25,308 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var ApiEndpointRateLimitSettingsRequiredArgs = []string{}
-var ApiEndpointRateLimitSettingsOptionalArgs = []string{
-	"removeratelimit",
-	"endpointratelimitsettings.flowratelimitsettings.flowalgorithm",
-	"endpointratelimitsettings.flowratelimitsettings.reqspersecond",
-	"endpointratelimitsettings.flowratelimitsettings.burstsize",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour",
-	"endpointperipratelimitsettings.flowratelimitsettings.flowalgorithm",
-	"endpointperipratelimitsettings.flowratelimitsettings.reqspersecond",
-	"endpointperipratelimitsettings.flowratelimitsettings.burstsize",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour",
-	"endpointperuserratelimitsettings.flowratelimitsettings.flowalgorithm",
-	"endpointperuserratelimitsettings.flowratelimitsettings.reqspersecond",
-	"endpointperuserratelimitsettings.flowratelimitsettings.burstsize",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour",
-	"endpointperorgratelimitsettings.flowratelimitsettings.flowalgorithm",
-	"endpointperorgratelimitsettings.flowratelimitsettings.reqspersecond",
-	"endpointperorgratelimitsettings.flowratelimitsettings.burstsize",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour",
+var RateLimitSettingsApiCmd edgeproto.RateLimitSettingsApiClient
+
+var UpdateRateLimitSettingsCmd = &cli.Command{
+	Use:          "UpdateRateLimitSettings",
+	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
+	OptionalArgs: strings.Join(RateLimitSettingsOptionalArgs, " "),
+	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
+	SpecialArgs:  &RateLimitSettingsSpecialArgs,
+	Comments:     RateLimitSettingsComments,
+	ReqData:      &edgeproto.RateLimitSettings{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateRateLimitSettings,
 }
-var ApiEndpointRateLimitSettingsAliasArgs = []string{}
-var ApiEndpointRateLimitSettingsComments = map[string]string{
-	"removeratelimit": "If set to true, no rate limiting will occur",
-	"endpointratelimitsettings.flowratelimitsettings.flowalgorithm":                  "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointratelimitsettings.flowratelimitsettings.reqspersecond":                  "requests per second",
-	"endpointratelimitsettings.flowratelimitsettings.burstsize":                      "burst size",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":            "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond":        "maximum number of requests per second",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute":        "maximum number of requests per minute",
-	"endpointratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":          "maximum number of requests per hour",
-	"endpointperipratelimitsettings.flowratelimitsettings.flowalgorithm":             "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointperipratelimitsettings.flowratelimitsettings.reqspersecond":             "requests per second",
-	"endpointperipratelimitsettings.flowratelimitsettings.burstsize":                 "burst size",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":       "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond":   "maximum number of requests per second",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute":   "maximum number of requests per minute",
-	"endpointperipratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":     "maximum number of requests per hour",
-	"endpointperuserratelimitsettings.flowratelimitsettings.flowalgorithm":           "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointperuserratelimitsettings.flowratelimitsettings.reqspersecond":           "requests per second",
-	"endpointperuserratelimitsettings.flowratelimitsettings.burstsize":               "burst size",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond": "maximum number of requests per second",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute": "maximum number of requests per minute",
-	"endpointperuserratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":   "maximum number of requests per hour",
-	"endpointperorgratelimitsettings.flowratelimitsettings.flowalgorithm":            "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"endpointperorgratelimitsettings.flowratelimitsettings.reqspersecond":            "requests per second",
-	"endpointperorgratelimitsettings.flowratelimitsettings.burstsize":                "burst size",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxreqsalgorithm":      "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestspersecond":  "maximum number of requests per second",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestsperminute":  "maximum number of requests per minute",
-	"endpointperorgratelimitsettings.maxreqsratelimitsettings.maxrequestsperhour":    "maximum number of requests per hour",
+
+func runUpdateRateLimitSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.RateLimitSettings)
+	jsonMap, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	return UpdateRateLimitSettings(c, obj)
 }
-var ApiEndpointRateLimitSettingsSpecialArgs = map[string]string{}
-var RateLimitSettingsRequiredArgs = []string{}
+
+func UpdateRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
+	if RateLimitSettingsApiCmd == nil {
+		return fmt.Errorf("RateLimitSettingsApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := RateLimitSettingsApiCmd.UpdateRateLimitSettings(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateRateLimitSettings failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateRateLimitSettings %v\n", data[ii])
+		myerr := UpdateRateLimitSettings(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var DeleteRateLimitSettingsCmd = &cli.Command{
+	Use:          "DeleteRateLimitSettings",
+	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
+	OptionalArgs: strings.Join(RateLimitSettingsOptionalArgs, " "),
+	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
+	SpecialArgs:  &RateLimitSettingsSpecialArgs,
+	Comments:     RateLimitSettingsComments,
+	ReqData:      &edgeproto.RateLimitSettings{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteRateLimitSettings,
+}
+
+func runDeleteRateLimitSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.RateLimitSettings)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DeleteRateLimitSettings(c, obj)
+}
+
+func DeleteRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
+	if RateLimitSettingsApiCmd == nil {
+		return fmt.Errorf("RateLimitSettingsApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := RateLimitSettingsApiCmd.DeleteRateLimitSettings(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteRateLimitSettings failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteRateLimitSettings %v\n", data[ii])
+		myerr := DeleteRateLimitSettings(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var ResetRateLimitSettingsCmd = &cli.Command{
+	Use:          "ResetRateLimitSettings",
+	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
+	OptionalArgs: strings.Join(RateLimitSettingsOptionalArgs, " "),
+	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
+	SpecialArgs:  &RateLimitSettingsSpecialArgs,
+	Comments:     RateLimitSettingsComments,
+	ReqData:      &edgeproto.RateLimitSettings{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runResetRateLimitSettings,
+}
+
+func runResetRateLimitSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.RateLimitSettings)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ResetRateLimitSettings(c, obj)
+}
+
+func ResetRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
+	if RateLimitSettingsApiCmd == nil {
+		return fmt.Errorf("RateLimitSettingsApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := RateLimitSettingsApiCmd.ResetRateLimitSettings(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ResetRateLimitSettings failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ResetRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ResetRateLimitSettings %v\n", data[ii])
+		myerr := ResetRateLimitSettings(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var ShowRateLimitSettingsCmd = &cli.Command{
+	Use:          "ShowRateLimitSettings",
+	OptionalArgs: strings.Join(append(RateLimitSettingsRequiredArgs, RateLimitSettingsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
+	SpecialArgs:  &RateLimitSettingsSpecialArgs,
+	Comments:     RateLimitSettingsComments,
+	ReqData:      &edgeproto.RateLimitSettings{},
+	ReplyData:    &edgeproto.RateLimitSettings{},
+	Run:          runShowRateLimitSettings,
+}
+
+func runShowRateLimitSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.RateLimitSettings)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowRateLimitSettings(c, obj)
+}
+
+func ShowRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
+	if RateLimitSettingsApiCmd == nil {
+		return fmt.Errorf("RateLimitSettingsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := RateLimitSettingsApiCmd.ShowRateLimitSettings(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowRateLimitSettings failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.RateLimitSettings, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowRateLimitSettings recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowRateLimitSettings %v\n", data[ii])
+		myerr := ShowRateLimitSettings(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RateLimitSettingsApiCmds = []*cobra.Command{
+	UpdateRateLimitSettingsCmd.GenCmd(),
+	DeleteRateLimitSettingsCmd.GenCmd(),
+	ResetRateLimitSettingsCmd.GenCmd(),
+	ShowRateLimitSettingsCmd.GenCmd(),
+}
+
+var RateLimitSettingsKeyRequiredArgs = []string{}
+var RateLimitSettingsKeyOptionalArgs = []string{
+	"apiendpointtype",
+	"apiactiontype",
+	"ratelimittarget",
+}
+var RateLimitSettingsKeyAliasArgs = []string{}
+var RateLimitSettingsKeyComments = map[string]string{
+	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"apiactiontype":   "API Action type, one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
+	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
+}
+var RateLimitSettingsKeySpecialArgs = map[string]string{}
+var RateLimitSettingsRequiredArgs = []string{
+	"apiendpointtype",
+	"apiactiontype",
+	"ratelimittarget",
+}
 var RateLimitSettingsOptionalArgs = []string{
-	"flowratelimitsettings.flowalgorithm",
-	"flowratelimitsettings.reqspersecond",
-	"flowratelimitsettings.burstsize",
-	"maxreqsratelimitsettings.maxreqsalgorithm",
-	"maxreqsratelimitsettings.maxrequestspersecond",
-	"maxreqsratelimitsettings.maxrequestsperminute",
-	"maxreqsratelimitsettings.maxrequestsperhour",
-}
-var RateLimitSettingsAliasArgs = []string{}
-var RateLimitSettingsComments = map[string]string{
-	"flowratelimitsettings.flowalgorithm":           "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"flowratelimitsettings.reqspersecond":           "requests per second",
-	"flowratelimitsettings.burstsize":               "burst size",
-	"maxreqsratelimitsettings.maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"maxreqsratelimitsettings.maxrequestspersecond": "maximum number of requests per second",
-	"maxreqsratelimitsettings.maxrequestsperminute": "maximum number of requests per minute",
-	"maxreqsratelimitsettings.maxrequestsperhour":   "maximum number of requests per hour",
-}
-var RateLimitSettingsSpecialArgs = map[string]string{}
-var FlowRateLimitSettingsRequiredArgs = []string{}
-var FlowRateLimitSettingsOptionalArgs = []string{
 	"flowalgorithm",
 	"reqspersecond",
 	"burstsize",
-}
-var FlowRateLimitSettingsAliasArgs = []string{}
-var FlowRateLimitSettingsComments = map[string]string{
-	"flowalgorithm": "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of NoFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"reqspersecond": "requests per second",
-	"burstsize":     "burst size",
-}
-var FlowRateLimitSettingsSpecialArgs = map[string]string{}
-var MaxReqsRateLimitSettingsRequiredArgs = []string{}
-var MaxReqsRateLimitSettingsOptionalArgs = []string{
 	"maxreqsalgorithm",
 	"maxrequestspersecond",
 	"maxrequestsperminute",
 	"maxrequestsperhour",
 }
-var MaxReqsRateLimitSettingsAliasArgs = []string{}
-var MaxReqsRateLimitSettingsComments = map[string]string{
-	"maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of NoMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"maxrequestspersecond": "maximum number of requests per second",
-	"maxrequestsperminute": "maximum number of requests per minute",
-	"maxrequestsperhour":   "maximum number of requests per hour",
+var RateLimitSettingsAliasArgs = []string{
+	"apiendpointtype=key.apiendpointtype",
+	"apiactiontype=key.apiactiontype",
+	"ratelimittarget=key.ratelimittarget",
 }
-var MaxReqsRateLimitSettingsSpecialArgs = map[string]string{}
+var RateLimitSettingsComments = map[string]string{
+	"fields":               "Fields are used for the Update API to specify which fields to apply",
+	"apiendpointtype":      "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"apiactiontype":        "API Action type, one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
+	"ratelimittarget":      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
+	"flowalgorithm":        "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm, NoFlowAlgorithm",
+	"reqspersecond":        "requests per second for flow rate limiting. If updating, must provide burstSize as well",
+	"burstsize":            "burst size for flow rate limiting. If updating, must provide reqsPerSecond as well",
+	"maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm, NoMaxReqsAlgorithm",
+	"maxrequestspersecond": "maximum number of requests per second for max reqs rate limiting",
+	"maxrequestsperminute": "maximum number of requests per minute for max reqs rate limiting",
+	"maxrequestsperhour":   "maximum number of requests per hour for max reqs rate limiting",
+}
+var RateLimitSettingsSpecialArgs = map[string]string{
+	"fields": "StringArray",
+}

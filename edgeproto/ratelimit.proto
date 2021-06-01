@@ -1,0 +1,131 @@
+syntax = "proto3";
+package edgeproto;
+
+import "result.proto";
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+message RateLimitSettingsKey {
+  // API Endpoint type
+  ApiEndpointType api_endpoint_type = 1 [(protogen.keytag) = "apiendpointtype"];
+  // API Action type (All DME apis are Default)
+  ApiActionType api_action_type = 2 [(protogen.keytag) = "apiactiontype"];
+  // Target to rate limit
+  RateLimitTarget rate_limit_target = 3 [(protogen.keytag) = "ratelimittarget"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+enum FlowRateLimitAlgorithm {
+  UNKNOWN_FLOW_ALGORITHM = 0;
+  TOKEN_BUCKET_ALGORITHM = 1;
+  LEAKY_BUCKET_ALGORITHM = 2;
+  NO_FLOW_ALGORITHM = 3;
+}
+
+enum MaxReqsRateLimitAlgorithm {
+  UNKNOWN_MAX_REQS_ALGORITHM = 0;
+  FIXED_WINDOW_ALGORITHM = 1;
+  ROLLING_WINDOW_ALGORITHM = 2;
+  NO_MAX_REQS_ALGORITHM = 3;
+}
+
+
+// TODO: UPDATE COMMENTS WITH LIST OF ENUMS
+message RateLimitSettings {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // required: true
+  // Unique identifier key
+  RateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
+  // Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm 
+  FlowRateLimitAlgorithm flow_algorithm = 4;
+  // requests per second for flow rate limiting. If updating, must provide burstSize as well
+  double reqsPerSecond = 5;
+  // burst size for flow rate limiting. If updating, must provide reqsPerSecond as well
+  int64 burstSize = 6;
+  // MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm
+  MaxReqsRateLimitAlgorithm max_reqs_algorithm = 7;
+  // maximum number of requests per second for max reqs rate limiting
+  int64 max_requests_per_second = 8;
+  // maximum number of requests per minute for max reqs rate limiting
+  int64 max_requests_per_minute = 9;
+  // maximum number of requests per hour for max reqs rate limiting
+  int64 max_requests_per_hour = 10;
+  
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_streamout) = true;
+  //option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.uses_org) = "none";
+
+  option (protogen.alias) = "apiendpointtype=Key.ApiEndpointType,ratelimittarget=Key.RateLimitTarget,apiactiontype=Key.ApiActionType";
+}
+
+// TODO: Consolidate ApiEndpointType and ApiActionType
+enum ApiEndpointType {
+  UNKNOWN_API_ENDPOINT_TYPE = 0;
+  CONTROLLER = 1;
+  DME = 2;
+  // MC = 3;
+}
+
+enum ApiActionType {
+  UNKNOWN_ACTION = 0;
+  CREATE_ACTION = 1;
+  DELETE_ACTION = 2;
+  UPDATE_ACTION = 3;
+  SHOW_ACTION = 4;
+  DEFAULT_ACTION = 5;
+}
+
+enum RateLimitTarget {
+  UNKNOWN_TARGET = 0;
+  ALL_REQUESTS = 1;
+  PER_IP = 2;
+  PER_USER = 3;
+  PER_ORG = 4;
+}
+
+service RateLimitSettingsApi {
+  // Update RateLimit settings for an API endpoint type
+  rpc UpdateRateLimitSettings(RateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/ratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Delete RateLimit settings for an API endpoint type (ie. no rate limiting)
+  rpc DeleteRateLimitSettings(RateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/ratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Reset RateLimit settings to default for an API endpoint type
+  rpc ResetRateLimitSettings(RateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/reset/ratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Show RateLimit settings for an API endpoint type
+  rpc ShowRateLimitSettings(RateLimitSettings) returns (stream RateLimitSettings) {
+    option (google.api.http) = {
+      post: "/show/ratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+  }
+}
