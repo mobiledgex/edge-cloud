@@ -696,6 +696,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
 			return in.Flavor.NotFoundError()
 		}
+
 		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, vmFlavor, cloudlet, info)
 		if verr != nil {
 			return verr
@@ -706,19 +707,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)
-
-		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
-			in.OptRes = "gpu"
-		} else {
-			if app.Deployment == cloudcommon.DeploymentTypeDocker {
-				// allow non-openstack platforms to support docker gpu use
-				if strings.Contains(in.Flavor.Name, "gpu") {
-					log.SpanLog(ctx, log.DebugLevelApi, "support docker gpu on non-openstack platform", "flavor", in.Flavor.Name, "uses gpu", true)
-					in.OptRes = "gpu"
-				}
-			}
-		}
-
+		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
 		// there may be direct access apps still defined, disallow them from being instantiated.
