@@ -51,6 +51,8 @@ message AppKey {
 // 1: `IMAGE_TYPE_DOCKER`
 // 2: `IMAGE_TYPE_QCOW`
 // 3: `IMAGE_TYPE_HELM`
+// 4: `IMAGE_TYPE_OVF`
+
 enum ImageType {
   // Unknown image type
   IMAGE_TYPE_UNKNOWN = 0;
@@ -60,6 +62,8 @@ enum ImageType {
   IMAGE_TYPE_QCOW = 2;
   // Helm chart is a separate image type
   IMAGE_TYPE_HELM = 3;
+    // OVF is for VMWare VCloud Director. A VMDK and optional MF file should also be present
+  IMAGE_TYPE_OVF = 4;
 }
 
 // DeleteType
@@ -90,7 +94,6 @@ enum AccessType {
     // Access via a load balancer
   ACCESS_TYPE_LOAD_BALANCER = 2;
 }
-
 
 // ConfigFile
 message ConfigFile {
@@ -179,7 +182,7 @@ message App {
   repeated RemoteConnection required_outbound_connections = 38;
   // App is allowed to deploy as serverless containers
   bool allow_serverless = 39;
-  // Configuration when deployed as serverless containers
+  // Configuration when deployed as serverless container
   ServerlessConfig serverless_config = 40;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

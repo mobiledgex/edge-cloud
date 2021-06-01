@@ -62,6 +62,8 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 			return true
 		}
 	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
+		fallthrough
+	case edgeproto.ImageType_IMAGE_TYPE_OVF:
 		if deployment == DeploymentTypeVM {
 			return true
 		}

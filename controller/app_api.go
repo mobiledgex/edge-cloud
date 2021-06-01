@@ -344,6 +344,23 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 			}
 		}
 	}
+	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_OVF {
+		if !strings.Contains(in.ImagePath, "://") {
+			in.ImagePath = "https://" + in.ImagePath
+		}
+		// need to check for both an OVF and the corresponding VMDK
+		if !strings.Contains(in.ImagePath, ".ovf") {
+			return fmt.Errorf("image path does not specify an OVF file %s, %v", in.ImagePath, err)
+		}
+		err = cloudcommon.ValidateOvfRegistryPath(ctx, in.ImagePath, authApi)
+		if err != nil {
+			if *testMode {
+				log.SpanLog(ctx, log.DebugLevelApi, "Warning, could not validate ovf file path.", "path", in.ImagePath, "err", err)
+			} else {
+				return fmt.Errorf("failed to validate ovf file path, path %s, %v", in.ImagePath, err)
+			}
+		}
+	}
 
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER &&
 		!cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) &&

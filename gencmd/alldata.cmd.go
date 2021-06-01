@@ -949,7 +949,7 @@ var AllDataComments = map[string]string{
 	"apps:#.key.name":                                                               "App name",
 	"apps:#.key.version":                                                            "App version",
 	"apps:#.imagepath":                                                              "URI of where image resides",
-	"apps:#.imagetype":                                                              "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm",
+	"apps:#.imagetype":                                                              "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm, ImageTypeOvf",
 	"apps:#.accessports":                                                            "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 	"apps:#.defaultflavor.name":                                                     "Flavor name",
 	"apps:#.authpublickey":                                                          "Public key used for authentication",
