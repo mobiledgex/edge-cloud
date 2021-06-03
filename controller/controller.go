@@ -450,10 +450,10 @@ func startServices() error {
 	for _, serviceInfo := range grpcServices {
 		for _, methodInfo := range serviceInfo.Methods {
 			// Get RateLimitSettings for all RateLimitTargets (allrequest, perip, peruser, perorg)
-			var allReqsRateLimitSettings *edgeproto.RateLimitSettings
-			var perIpRateLimitSettings *edgeproto.RateLimitSettings
-			var perUserRateLimitSettings *edgeproto.RateLimitSettings
-			var perOrgRateLimitSettings *edgeproto.RateLimitSettings
+			allReqsRateLimitSettings := &edgeproto.RateLimitSettings{}
+			perIpRateLimitSettings := &edgeproto.RateLimitSettings{}
+			perUserRateLimitSettings := &edgeproto.RateLimitSettings{}
+			perOrgRateLimitSettings := &edgeproto.RateLimitSettings{}
 			if strings.Contains(methodInfo.Name, "Create") {
 				setControllerApiRateLimitSettings(edgeproto.ApiActionType_CREATE_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
 			} else if strings.Contains(methodInfo.Name, "Delete") {
@@ -602,21 +602,21 @@ func stopServices() {
 }
 
 func setControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, allRequestsRateLimitSettings *edgeproto.RateLimitSettings, perIpRateLimitSettings *edgeproto.RateLimitSettings, perUserRateLimitSettings *edgeproto.RateLimitSettings, perOrgRateLimitSettings *edgeproto.RateLimitSettings) {
-	allRequestsRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_ALL_REQUESTS)
-	perIpRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_IP)
-	perUserRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_USER)
-	perOrgRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_ORG)
+	*allRequestsRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_ALL_REQUESTS)
+	*perIpRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_IP)
+	*perUserRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_USER)
+	*perOrgRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_ORG)
 }
 
 // Helper function that gets the RateLimitSettings that corresponds to the Controller RateLimitSettingsKey
-func getControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, target edgeproto.RateLimitTarget) *edgeproto.RateLimitSettings {
+func getControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, target edgeproto.RateLimitTarget) edgeproto.RateLimitSettings {
 	key := edgeproto.GetRateLimitSettingsKey(edgeproto.ApiEndpointType_CONTROLLER, actionType, target)
 	settings := rateLimitSettingsApi.Get(key)
 	if settings != nil {
-		return settings
+		return *settings
 	}
 	// Return empty RateLimitSettings with key
-	return &edgeproto.RateLimitSettings{
+	return edgeproto.RateLimitSettings{
 		Key: key,
 	}
 }

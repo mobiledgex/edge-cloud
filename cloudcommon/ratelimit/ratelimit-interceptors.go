@@ -68,7 +68,6 @@ func GetControllerUnaryRateLimiterInterceptor(limiter Limiter) grpc.UnaryServerI
 				errMsg += fmt.Sprintf(" Error is: %s.", err.Error())
 			}
 			return nil, status.Errorf(codes.ResourceExhausted, errMsg)
-
 		}
 		return handler(ctx, req)
 	}
@@ -109,7 +108,6 @@ func GetDmeStreamRateLimiterInterceptor(limiter Limiter) grpc.StreamServerInterc
 				errMsg += fmt.Sprintf(" error is %s.", err.Error())
 			}
 			return status.Errorf(codes.ResourceExhausted, errMsg)
-
 		}
 
 		wrapper := &LimiterStreamWrapper{ServerStream: ss, ctx: cctx}
@@ -143,7 +141,6 @@ func GetControllerStreamRateLimiterInterceptor(limiter Limiter) grpc.StreamServe
 				errMsg += fmt.Sprintf(" error is %s.", err.Error())
 			}
 			return status.Errorf(codes.ResourceExhausted, errMsg)
-
 		}
 
 		wrapper := &LimiterStreamWrapper{ServerStream: ss, ctx: cctx}
