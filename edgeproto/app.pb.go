@@ -399,7 +399,7 @@ type App struct {
 	RequiredOutboundConnections []*RemoteConnection `protobuf:"bytes,38,rep,name=required_outbound_connections,json=requiredOutboundConnections,proto3" json:"required_outbound_connections,omitempty"`
 	// App is allowed to deploy as serverless containers
 	AllowServerless bool `protobuf:"varint,39,opt,name=allow_serverless,json=allowServerless,proto3" json:"allow_serverless,omitempty"`
-	// Configuration when deployed as serverless container
+	// Configuration when deployed as serverless containers
 	ServerlessConfig *ServerlessConfig `protobuf:"bytes,40,opt,name=serverless_config,json=serverlessConfig,proto3" json:"serverless_config,omitempty"`
 	// OS Type for VM Apps
 	VmAppOsType VmAppOsType `protobuf:"varint,41,opt,name=vm_app_os_type,json=vmAppOsType,proto3,enum=edgeproto.VmAppOsType" json:"vm_app_os_type,omitempty"`

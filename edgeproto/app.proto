@@ -207,7 +207,7 @@ message App {
   repeated RemoteConnection required_outbound_connections = 38;
   // App is allowed to deploy as serverless containers
   bool allow_serverless = 39;
-  // Configuration when deployed as serverless container
+  // Configuration when deployed as serverless containers
   ServerlessConfig serverless_config = 40;
   // OS Type for VM Apps
   VmAppOsType vm_app_os_type = 41;
