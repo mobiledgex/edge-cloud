@@ -2,7 +2,6 @@ package edgeproto
 
 import (
 	"fmt"
-	strings "strings"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -99,6 +98,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.ChefClientInterval, dur0)
 		case SettingsFieldCloudletMaintenanceTimeout:
 			v.CheckGT(f, s.CloudletMaintenanceTimeout, dur0)
+		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval:
+			// no validation
 		case SettingsFieldInfluxDbMetricsRetention:
 			// no validation
 		case SettingsFieldInfluxDbCloudletUsageMetricsRetention:
@@ -130,10 +131,7 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			// above.  If no validation is to be done for a field, make an empty case entry
 			_, ok := SettingsAllFieldsMap[f]
 			if ok {
-				// No validation for subfields (ie. "39.1") is ok
-				if !strings.Contains(f, ".") {
-					return fmt.Errorf("No validation set for settings field: %s - %s", v.fieldDesc[f], f)
-				}
+				return fmt.Errorf("No validation set for settings field: %s - %s", v.fieldDesc[f], f)
 			}
 		}
 	}

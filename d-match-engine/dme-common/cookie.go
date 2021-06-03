@@ -117,11 +117,6 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	allow := false
 	var cookie string
 
-	/*_, cmd := cloudcommon.ParseGrpcMethod(info.FullMethod)
-	span := log.NewSpanFromGrpc(ctx, log.DebugLevelDmereq, cmd)
-	defer span.Finish()
-	ctx = log.ContextWithSpan(ctx, span)*/
-
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:
 		// allow any
