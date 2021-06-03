@@ -233,11 +233,6 @@ func startServices() error {
 	}
 	services.listeners = append(services.listeners, lis)
 
-	// Intialize ApiRateLimitManager
-	// TODO: INIT API RATE LIMIT IN INITAPIS
-	// TODO: init each init function for each api, look up method names (using reflect) and add to dict
-	//services.apiRateLimitManager = ratelimit.NewRateLimitManager()
-
 	sync := InitSync(objStore)
 	InitApis(sync)
 	sync.Start()
@@ -255,7 +250,7 @@ func startServices() error {
 		return fmt.Errorf("Failed to init settings, %v", err)
 	}
 
-	err = rateLimitSettingsApi.setDefaults(ctx)
+	err = rateLimitSettingsApi.setControllerDefaults(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to set rate limit settings defaults, %v", err)
 	}
@@ -454,30 +449,27 @@ func startServices() error {
 	grpcServices := server.GetServiceInfo()
 	for _, serviceInfo := range grpcServices {
 		for _, methodInfo := range serviceInfo.Methods {
+			// Get RateLimitSettings for all RateLimitTargets (allrequest, perip, peruser, perorg)
 			var allReqsRateLimitSettings *edgeproto.RateLimitSettings
 			var perIpRateLimitSettings *edgeproto.RateLimitSettings
-			if !*removeRateLimit {
-				if strings.Contains(methodInfo.Name, "Create") {
-					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_CREATE_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
-					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_CREATE_ACTION, edgeproto.RateLimitTarget_PER_IP)
-				} else if strings.Contains(methodInfo.Name, "Delete") {
-					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DELETE_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
-					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DELETE_ACTION, edgeproto.RateLimitTarget_PER_IP)
-				} else if strings.Contains(methodInfo.Name, "Show") {
-					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_SHOW_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
-					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_SHOW_ACTION, edgeproto.RateLimitTarget_PER_IP)
-				} else if strings.Contains(methodInfo.Name, "Update") {
-					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_UPDATE_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
-					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_UPDATE_ACTION, edgeproto.RateLimitTarget_PER_IP)
-				} else {
-					allReqsRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DEFAULT_ACTION, edgeproto.RateLimitTarget_ALL_REQUESTS)
-					perIpRateLimitSettings = getControllerApiRateLimitSettings(edgeproto.ApiActionType_DEFAULT_ACTION, edgeproto.RateLimitTarget_PER_IP)
-				}
-			}
-			if methodInfo.IsClientStream || methodInfo.IsServerStream {
-				services.streamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, nil, nil)
+			var perUserRateLimitSettings *edgeproto.RateLimitSettings
+			var perOrgRateLimitSettings *edgeproto.RateLimitSettings
+			if strings.Contains(methodInfo.Name, "Create") {
+				setControllerApiRateLimitSettings(edgeproto.ApiActionType_CREATE_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
+			} else if strings.Contains(methodInfo.Name, "Delete") {
+				setControllerApiRateLimitSettings(edgeproto.ApiActionType_DELETE_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
+			} else if strings.Contains(methodInfo.Name, "Show") {
+				setControllerApiRateLimitSettings(edgeproto.ApiActionType_SHOW_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
+			} else if strings.Contains(methodInfo.Name, "Update") {
+				setControllerApiRateLimitSettings(edgeproto.ApiActionType_UPDATE_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
 			} else {
-				services.unaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, nil, nil)
+				setControllerApiRateLimitSettings(edgeproto.ApiActionType_DEFAULT_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
+			}
+			// Add RateLimitSettings to correct RateLimitMgr
+			if methodInfo.IsClientStream || methodInfo.IsServerStream {
+				services.streamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
+			} else {
+				services.unaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
 			}
 		}
 	}
@@ -609,10 +601,24 @@ func stopServices() {
 	nodeMgr.Finish()
 }
 
+func setControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, allRequestsRateLimitSettings *edgeproto.RateLimitSettings, perIpRateLimitSettings *edgeproto.RateLimitSettings, perUserRateLimitSettings *edgeproto.RateLimitSettings, perOrgRateLimitSettings *edgeproto.RateLimitSettings) {
+	allRequestsRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_ALL_REQUESTS)
+	perIpRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_IP)
+	perUserRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_USER)
+	perOrgRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_ORG)
+}
+
 // Helper function that gets the RateLimitSettings that corresponds to the Controller RateLimitSettingsKey
 func getControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, target edgeproto.RateLimitTarget) *edgeproto.RateLimitSettings {
 	key := edgeproto.GetRateLimitSettingsKey(edgeproto.ApiEndpointType_CONTROLLER, actionType, target)
-	return rateLimitSettingsApi.Get(key)
+	settings := rateLimitSettingsApi.Get(key)
+	if settings != nil {
+		return settings
+	}
+	// Return empty RateLimitSettings with key
+	return &edgeproto.RateLimitSettings{
+		Key: key,
+	}
 }
 
 // Helper function to verify the compatibility of etcd version and
@@ -711,6 +717,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(NewControllerMetricsReceiver(metricsInflux, edgeEventsInflux)))
+	notify.ServerMgrOne.RegisterRecv(notify.NewRateLimitSettingsRecvMany(&rateLimitSettingsApi))
 }
 
 type ControllerMetricsReceiver struct {

@@ -104,7 +104,6 @@ type ClientToken struct {
 var DmeAppTbl *DmeApps
 
 var Settings edgeproto.Settings
-var RateLimitSettings map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings
 
 // Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
 type StatKey struct {

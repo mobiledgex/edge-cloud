@@ -427,6 +427,26 @@ func allowCORS(h http.Handler) http.Handler {
 	})
 }
 
+func getDmeApiRateLimitSettings(target edgeproto.RateLimitTarget, settingsMap map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings) *edgeproto.RateLimitSettings {
+	key := edgeproto.RateLimitSettingsKey{
+		ApiEndpointType: edgeproto.ApiEndpointType_DME,
+		ApiActionType:   edgeproto.ApiActionType_DEFAULT_ACTION,
+		RateLimitTarget: target,
+	}
+	emptySettings := &edgeproto.RateLimitSettings{
+		Key: key,
+	}
+	if *removeRateLimit {
+		return emptySettings
+	}
+
+	settings, ok := settingsMap[key]
+	if ok && settings != nil {
+		return settings
+	}
+	return emptySettings
+}
+
 func main() {
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
@@ -595,33 +615,25 @@ func main() {
 	dme.RegisterMatchEngineApiServer(s, &server{})
 
 	// Add APIs to RateLimitManagers
-	dmecommon.RateLimitSettings = edgeproto.GetDefaultRateLimitSettings()
-	// Initialize RateLimitSettingsKeys for lookup
-	allReqsSettingsKey := edgeproto.RateLimitSettingsKey{
-		ApiEndpointType: edgeproto.ApiEndpointType_DME,
-		ApiActionType:   edgeproto.ApiActionType_DEFAULT_ACTION,
-		RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
-	}
-	perIpSettingsKey := edgeproto.RateLimitSettingsKey{
-		ApiEndpointType: edgeproto.ApiEndpointType_DME,
-		ApiActionType:   edgeproto.ApiActionType_DEFAULT_ACTION,
-		RateLimitTarget: edgeproto.RateLimitTarget_PER_IP,
-	}
+	settings := edgeproto.GetDefaultDmeRateLimitSettings()
 	// Get RateLimitSettings that correspond to the key
-	var allRequestsRateLimitSettings *edgeproto.RateLimitSettings
-	var perIpRateLimitSettings *edgeproto.RateLimitSettings
+	allRequestsRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_ALL_REQUESTS, settings)
+	perIpRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_PER_IP, settings)
+	perUserRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_PER_USER, settings)
+	perOrgRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_PER_ORG, settings)
 	if !*removeRateLimit {
-		allRequestsRateLimitSettings = dmecommon.RateLimitSettings[allReqsSettingsKey]
-		perIpRateLimitSettings = dmecommon.RateLimitSettings[perIpSettingsKey]
+		// Update local cache which will update controller cache
+		rateLimitSettingsCache.Update(ctx, allRequestsRateLimitSettings, 0)
+		rateLimitSettingsCache.Update(ctx, perIpRateLimitSettings, 0)
 	}
-	// Add ApiEndpointLimiter to each DME api
+	// Add ApiEndpointLimiter to each DME api in correct RateLimitMgr
 	grpcServices := s.GetServiceInfo()
 	for _, serviceInfo := range grpcServices {
 		for _, methodInfo := range serviceInfo.Methods {
 			if methodInfo.IsClientStream || methodInfo.IsServerStream {
-				dmecommon.StreamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, nil, nil)
+				dmecommon.StreamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
 			} else {
-				dmecommon.UnaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, nil, nil)
+				dmecommon.UnaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
 			}
 		}
 	}

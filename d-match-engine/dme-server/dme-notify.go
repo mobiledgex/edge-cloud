@@ -104,7 +104,7 @@ func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 
 func (r *RateLimitSettingsHandler) Update(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
 	if in.Key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "BLAH: Update ratelimit settings in dme", "settings", in)
+		// Update RateLimitMgr with updated RateLimitSettings
 		dmecommon.UnaryRateLimitMgr.UpdateRateLimitSettings(in)
 		dmecommon.StreamRateLimitMgr.UpdateRateLimitSettings(in)
 	}
@@ -112,18 +112,24 @@ func (r *RateLimitSettingsHandler) Update(ctx context.Context, in *edgeproto.Rat
 
 func (r *RateLimitSettingsHandler) Delete(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
 	if in.Key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "BLAH: Delete ratelimit settings in dme", "settings", in)
-		dmecommon.UnaryRateLimitMgr.RemoveRateLimitSettings(in.Key)
-		dmecommon.StreamRateLimitMgr.RemoveRateLimitSettings(in.Key)
+		// "Remove" RateLimitSettings from RateLimitMgr (ie. remove settings but keep the key)
+		in = &edgeproto.RateLimitSettings{
+			Key: in.Key,
+		}
+		dmecommon.UnaryRateLimitMgr.UpdateRateLimitSettings(in)
+		dmecommon.StreamRateLimitMgr.UpdateRateLimitSettings(in)
 	}
 }
 
 func (r *RateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto.RateLimitSettingsKey]struct{}) {
 	for key, _ := range keys {
 		if key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "BLAH: Prune ratelimit settings in dme", "key", key)
-			dmecommon.UnaryRateLimitMgr.RemoveRateLimitSettings(key)
-			dmecommon.StreamRateLimitMgr.RemoveRateLimitSettings(key)
+			// "Remove" RateLimitSettings from RateLimitMgr (ie. remove settings but keep the key)
+			in := &edgeproto.RateLimitSettings{
+				Key: key,
+			}
+			dmecommon.UnaryRateLimitMgr.UpdateRateLimitSettings(in)
+			dmecommon.StreamRateLimitMgr.UpdateRateLimitSettings(in)
 		}
 	}
 }
@@ -131,21 +137,23 @@ func (r *RateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto
 func (r *RateLimitSettingsHandler) Flush(ctx context.Context, notifyId int64) {}
 
 var nodeCache edgeproto.NodeCache
+var rateLimitSettingsCache edgeproto.RateLimitSettingsCache
 
 func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption, notifyOps ...notify.ClientOp) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	edgeproto.InitAppInstClientKeyCache(&dmecommon.AppInstClientKeyCache)
 	edgeproto.InitDeviceCache(&dmecommon.PlatformClientsCache)
 	dmecommon.AppInstClientKeyCache.SetUpdatedCb(dmecommon.SendCachedClients)
+	edgeproto.InitRateLimitSettingsCache(&rateLimitSettingsCache)
 	notifyClient := notify.NewClient(nodeMgr.Name(), strings.Split(addrs, ","), tlsDialOption, notifyOps...)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
-	notifyClient.RegisterRecv(notify.NewRateLimitSettingsRecv(&RateLimitSettingsHandler{}))
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
 	notifyClient.RegisterRecv(notify.NewOperatorCodeRecv(&dmecommon.DmeAppTbl.OperatorCodes))
 	notifyClient.RegisterRecv(notify.NewAppRecv(&AppHandler{}))
 	notifyClient.RegisterRecv(notify.NewCloudletRecv(&CloudletHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&dmecommon.DmeAppTbl.FreeReservableClusterInsts))
+	notifyClient.RegisterRecv(notify.NewRateLimitSettingsRecv(&RateLimitSettingsHandler{}))
 	notifyClient.RegisterRecvAppInstClientKeyCache(&dmecommon.AppInstClientKeyCache)
 
 	notifyClient.RegisterSendNodeCache(&nodeCache)
@@ -154,6 +162,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	dmecommon.ClientSender = notify.NewAppInstClientSend()
 	notifyClient.RegisterSend(dmecommon.ClientSender)
+	notifyClient.RegisterSendRateLimitSettingsCache(&rateLimitSettingsCache)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient

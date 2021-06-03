@@ -1,0 +1,104 @@
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagetype: ImageTypeDocker
+  accessports: tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls
+  defaultflavor:
+    name: x1.small
+  authpublickey: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij
+    TkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0
+    VU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC
+    GJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS
+    z3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m
+    QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
+    /QIDAQAB
+    -----END PUBLIC KEY-----
+  deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-tcp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp80
+        protocol: TCP
+        port: 80
+        targetPort: 80
+      - name: tcp443
+        protocol: TCP
+        port: 443
+        targetPort: 443
+      - name: tcp81tls
+        protocol: TCP
+        port: 81
+        targetPort: 81
+      - name: tcp444tls
+        protocol: TCP
+        port: 444
+        targetPort: 444
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-udp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp10002
+        protocol: UDP
+        port: 10002
+        targetPort: 10002
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: someapplication110-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: someapplication11.0
+      template:
+        metadata:
+          labels:
+            run: someapplication11.0
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: registry.mobiledgex.net
+          containers:
+          - name: someapplication110
+            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 80
+              protocol: TCP
+            - containerPort: 443
+              protocol: TCP
+            - containerPort: 10002
+              protocol: UDP
+            - containerPort: 81
+              protocol: TCP
+            - containerPort: 444
+              protocol: TCP
+  deploymentgenerator: kubernetes-basic
+  androidpackagename: com.acme.someapplication1
+  officialfqdn: someapplication1.acmeappco.com
+  accesstype: AccessTypeLoadBalancer
+  createdat:
+    seconds: 1622674872
+    nanos: 636276000

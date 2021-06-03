@@ -31,7 +31,40 @@ func GetRateLimitSettingsKey(apiEndpointType ApiEndpointType, apiActionType ApiA
 	}
 }
 
-func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
+// Returns map of Default DME RateLimitSettings
+func GetDefaultDmeRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
+	// Init all AllRequests RateLimitSettings
+	dmeDefaultAllReqs := &RateLimitSettings{
+		Key: RateLimitSettingsKey{
+			ApiEndpointType: ApiEndpointType_DME,
+			ApiActionType:   ApiActionType_DEFAULT_ACTION,
+			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
+		},
+		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+		ReqsPerSecond: 50,
+		BurstSize:     5,
+	}
+	// Init all PerIp RateLimitSettings
+	dmeDefaultPerIp := &RateLimitSettings{
+		Key: RateLimitSettingsKey{
+			ApiEndpointType: ApiEndpointType_DME,
+			ApiActionType:   ApiActionType_DEFAULT_ACTION,
+			RateLimitTarget: RateLimitTarget_PER_IP,
+		},
+		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+		ReqsPerSecond: 10,
+		BurstSize:     3,
+	}
+	// Assign RateLimitSettings to RateLimitSettingsKey
+	rlMap := make(map[RateLimitSettingsKey]*RateLimitSettings)
+	rlMap[dmeDefaultAllReqs.Key] = dmeDefaultAllReqs
+	rlMap[dmeDefaultPerIp.Key] = dmeDefaultPerIp
+
+	return rlMap
+}
+
+// Returns map of Default Controller RateLimitSettings
+func GetDefaultControllerRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 	// Init all AllRequests RateLimitSettings
 	ctrlCreateAllReqs := &RateLimitSettings{
 		Key: RateLimitSettingsKey{
@@ -83,17 +116,6 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 		ReqsPerSecond: 50,
 		BurstSize:     5,
 	}
-	dmeDefaultAllReqs := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_DME,
-			ApiActionType:   ApiActionType_DEFAULT_ACTION,
-			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 50,
-		BurstSize:     5,
-	}
-
 	// Init all PerIp RateLimitSettings
 	ctrlCreatePerIp := &RateLimitSettings{
 		Key: RateLimitSettingsKey{
@@ -145,30 +167,18 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 		ReqsPerSecond: 10,
 		BurstSize:     3,
 	}
-	dmeDefaultPerIp := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_DME,
-			ApiActionType:   ApiActionType_DEFAULT_ACTION,
-			RateLimitTarget: RateLimitTarget_PER_IP,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 10,
-		BurstSize:     3,
-	}
-
+	// Assign RateLimitSettings to RateLimitSettingsKey
 	rlMap := make(map[RateLimitSettingsKey]*RateLimitSettings)
 	rlMap[ctrlCreateAllReqs.Key] = ctrlCreateAllReqs
 	rlMap[ctrlDeleteAllReqs.Key] = ctrlDeleteAllReqs
 	rlMap[ctrlUpdateAllReqs.Key] = ctrlUpdateAllReqs
 	rlMap[ctrlShowAllReqs.Key] = ctrlShowAllReqs
 	rlMap[ctrlDefaultAllReqs.Key] = ctrlDefaultAllReqs
-	rlMap[dmeDefaultAllReqs.Key] = dmeDefaultAllReqs
 	rlMap[ctrlCreatePerIp.Key] = ctrlCreatePerIp
 	rlMap[ctrlDeletePerIp.Key] = ctrlDeletePerIp
 	rlMap[ctrlUpdatePerIp.Key] = ctrlUpdatePerIp
 	rlMap[ctrlShowPerIp.Key] = ctrlShowPerIp
 	rlMap[ctrlDefaultPerIp.Key] = ctrlDefaultPerIp
-	rlMap[dmeDefaultPerIp.Key] = dmeDefaultPerIp
 
 	return rlMap
 }

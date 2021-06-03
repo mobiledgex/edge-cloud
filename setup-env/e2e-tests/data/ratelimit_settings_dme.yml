@@ -1,0 +1,7 @@
+settings:
+- key:
+    apiendpointtype: Dme
+    apiactiontype: DefaultAction
+    ratelimittarget: AllRequests
+  reqspersecond: 1
+  burstsize: 1

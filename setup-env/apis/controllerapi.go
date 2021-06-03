@@ -125,6 +125,26 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		run.Mode = "show"
 		run.DeviceApi(nil, nil, &output.Devices)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
+	} else if api == "showappfiltered" {
+		// show app for rate limited api (no retry)
+		data := []edgeproto.App{}
+		err := util.ReadYamlFile(apiFile, &data)
+		if err != nil {
+			log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
+			os.Exit(1)
+		}
+		output := []edgeproto.App{}
+		run.Mode = "showfiltered"
+		run.AppApi(&data, nil, &output)
+		util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
+		*retry = false
+	} else if api == "ratelimitshow" {
+		output := &edgeproto.RateLimitSettingsData{}
+		run.Mode = "show"
+		run.RateLimitSettingsApi(nil, nil, &output.Settings)
+		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
+	} else if strings.Contains(api, "ratelimit") {
+		runRateLimitSettings(run, api, apiFile, outputDir)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, outputDir)
 	} else {
@@ -375,4 +395,44 @@ func runOrg(run *testutil.Run, api, apiFile, outputDir string) {
 	output := testutil.OrganizationDataOut{}
 	testutil.RunOrganizationDataApis(run, &data, make(map[string]interface{}), &output, testutil.NoApiCallback)
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
+}
+
+func runRateLimitSettings(run *testutil.Run, api, apiFile, outputDir string) {
+	data := edgeproto.RateLimitSettingsData{}
+
+	if apiFile == "" {
+		log.Println("Error: Cannot run Org API without API file")
+		*run.Rc = false
+		return
+	}
+	err := util.ReadYamlFile(apiFile, &data)
+	if err != nil {
+		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
+		os.Exit(1)
+	}
+
+	output := testutil.RateLimitSettingsDataOut{}
+	inMap := make(map[string]interface{})
+	switch api {
+	case "ratelimitreset":
+		run.Mode = "reset"
+	case "ratelimitupdate":
+		run.Mode = "update"
+		err := util.ReadYamlFile(apiFile, &inMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
+		if err != nil {
+			if !util.IsYamlOk(err, "appdata") {
+				fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apiFile)
+				os.Exit(1)
+			}
+		}
+	case "ratelimitdelete":
+		run.Mode = "delete"
+	default:
+		log.Printf("Invalid ratelimit api %s\n", api)
+		*run.Rc = false
+		return
+	}
+
+	testutil.RunRateLimitSettingsDataApis(run, &data, inMap, &output, testutil.NoApiCallback)
+	util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 }

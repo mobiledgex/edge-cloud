@@ -1,0 +1,108 @@
+description: Show, Update, Reset, and Delete RateLimitSettings
+
+tests:
+
+- name: Add and show provisioning and verify it is there
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
+    filetype: appdata
+
+- name: Show RateLimitSettings that have been removed on deployment (empty)
+  actions: [ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit_settings_no_ratelimit_show.yml"
+    filetype: ratelimitsettings
+
+- name: Reset RateLimitSettings to defaults
+  apifile: "{{datadir}}/ratelimit_settings_reset.yml"
+  actions: [ctrlapi-ratelimitreset,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit_settings_reset_show.yml"
+    filetype: ratelimitsettings
+
+- name: Update RateLimitSettings, add rate limit on controller show apis (1 req/sec and 1 burstsize)
+  apifile: "{{datadir}}/ratelimit_settings_ctrl.yml"
+  actions: [ctrlapi-ratelimitupdate,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit_settings_ctrl_ratelimit_show.yml"
+    filetype: ratelimitsettings
+
+- name: ShowApp1 (will be successful)
+  apifile: "{{datadir}}/app_ratelimit.yml"
+  actions: [ctrlapi-showappfiltered]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/app_ratelimit_ready.yml"
+    filetype: appdatafiltered
+
+- name: ShowApp2 (will be rejected, so no appdata will be outputted)
+  apifile: "{{datadir}}/app_ratelimit.yml"
+  actions: [ctrlapi-showappfiltered-expecterr]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/app_ratelimit_reject.yml"
+    filetype: appdatafiltered
+
+- name: sleep, allow time token bucket to refill
+  actions: [sleep=2]
+
+- name: ShowApp3 (will be successful)
+  apifile: "{{datadir}}/app_ratelimit.yml"
+  actions: [ctrlapi-showappfiltered]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/app_ratelimit_ready.yml"
+    filetype: appdatafiltered
+
+- name: Update RateLimitSettings, update flow rate limit on dme apis (1 req/sec and 1 burstsize)
+  apifile: "{{datadir}}/ratelimit_settings_dme.yml"
+  actions: [ctrlapi-ratelimitupdate,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit_settings_dme_ratelimit_show.yml"
+    filetype: ratelimitsettings
+
+- name: FindCloudlet1 (will be successful)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: FindCloudlet2 (will be rejected)
+  apifile: "{{datadir}}/find_cloudlet_app1_ratelimit.yml"
+  actions: [dmeapi-findcloudlet]
+
+- name: sleep, allow time token bucket to refill
+  actions: [sleep=2]
+
+- name: FindCloudlet3 (will be successful)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: Delete all RateLimitSettings
+  apifile: "{{datadir}}/ratelimit_settings_delete.yml"
+  actions: [ctrlapi-ratelimitdelete,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit_settings_no_ratelimit_show.yml"
+    filetype: ratelimitsettings
+
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

@@ -36,8 +36,6 @@ enum MaxReqsRateLimitAlgorithm {
   NO_MAX_REQS_ALGORITHM = 3;
 }
 
-
-// TODO: UPDATE COMMENTS WITH LIST OF ENUMS
 message RateLimitSettings {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
@@ -62,20 +60,16 @@ message RateLimitSettings {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_streamout) = true;
-  //option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.uses_org) = "none";
-
   option (protogen.alias) = "apiendpointtype=Key.ApiEndpointType,ratelimittarget=Key.RateLimitTarget,apiactiontype=Key.ApiActionType";
 }
 
-// TODO: Consolidate ApiEndpointType and ApiActionType
 enum ApiEndpointType {
   UNKNOWN_API_ENDPOINT_TYPE = 0;
   CONTROLLER = 1;
   DME = 2;
-  // MC = 3;
 }
 
 enum ApiActionType {
@@ -128,4 +122,10 @@ service RateLimitSettingsApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
+}
+
+message RateLimitSettingsData {
+  repeated RateLimitSettings settings = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
 }

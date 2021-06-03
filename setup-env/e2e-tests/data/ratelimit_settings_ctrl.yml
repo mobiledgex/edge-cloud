@@ -1,0 +1,8 @@
+settings:
+- key:
+    apiendpointtype: Controller
+    apiactiontype: ShowAction
+    ratelimittarget: AllRequests
+  flowalgorithm: TokenBucketAlgorithm
+  reqspersecond: 1
+  burstsize: 1

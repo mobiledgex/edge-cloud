@@ -291,7 +291,7 @@ var RateLimitSettingsKeyOptionalArgs = []string{
 var RateLimitSettingsKeyAliasArgs = []string{}
 var RateLimitSettingsKeyComments = map[string]string{
 	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
-	"apiactiontype":   "API Action type, one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
+	"apiactiontype":   "API Action type (All DME apis are Default), one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
 	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
 }
 var RateLimitSettingsKeySpecialArgs = map[string]string{}
@@ -317,7 +317,7 @@ var RateLimitSettingsAliasArgs = []string{
 var RateLimitSettingsComments = map[string]string{
 	"fields":               "Fields are used for the Update API to specify which fields to apply",
 	"apiendpointtype":      "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
-	"apiactiontype":        "API Action type, one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
+	"apiactiontype":        "API Action type (All DME apis are Default), one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
 	"ratelimittarget":      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
 	"flowalgorithm":        "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm, NoFlowAlgorithm",
 	"reqspersecond":        "requests per second for flow rate limiting. If updating, must provide burstSize as well",
@@ -329,4 +329,35 @@ var RateLimitSettingsComments = map[string]string{
 }
 var RateLimitSettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
+}
+var RateLimitSettingsDataRequiredArgs = []string{}
+var RateLimitSettingsDataOptionalArgs = []string{
+	"settings:#.fields",
+	"settings:#.key.apiendpointtype",
+	"settings:#.key.apiactiontype",
+	"settings:#.key.ratelimittarget",
+	"settings:#.flowalgorithm",
+	"settings:#.reqspersecond",
+	"settings:#.burstsize",
+	"settings:#.maxreqsalgorithm",
+	"settings:#.maxrequestspersecond",
+	"settings:#.maxrequestsperminute",
+	"settings:#.maxrequestsperhour",
+}
+var RateLimitSettingsDataAliasArgs = []string{}
+var RateLimitSettingsDataComments = map[string]string{
+	"settings:#.fields":               "Fields are used for the Update API to specify which fields to apply",
+	"settings:#.key.apiendpointtype":  "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"settings:#.key.apiactiontype":    "API Action type (All DME apis are Default), one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
+	"settings:#.key.ratelimittarget":  "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
+	"settings:#.flowalgorithm":        "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm, NoFlowAlgorithm",
+	"settings:#.reqspersecond":        "requests per second for flow rate limiting. If updating, must provide burstSize as well",
+	"settings:#.burstsize":            "burst size for flow rate limiting. If updating, must provide reqsPerSecond as well",
+	"settings:#.maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm, NoMaxReqsAlgorithm",
+	"settings:#.maxrequestspersecond": "maximum number of requests per second for max reqs rate limiting",
+	"settings:#.maxrequestsperminute": "maximum number of requests per minute for max reqs rate limiting",
+	"settings:#.maxrequestsperhour":   "maximum number of requests per hour for max reqs rate limiting",
+}
+var RateLimitSettingsDataSpecialArgs = map[string]string{
+	"settings:#.fields": "StringArray",
 }

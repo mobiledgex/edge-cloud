@@ -529,6 +529,14 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = a1
 		y2 = a2
+	} else if fileType == "appdatafiltered" {
+		var a1 []edgeproto.App
+		var a2 []edgeproto.App
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
+		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
+		y1 = a1
+		y2 = a2
 	} else if fileType == "findcloudlet" {
 		var f1 dmeproto.FindCloudletReply
 		var f2 dmeproto.FindCloudletReply
@@ -710,6 +718,18 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = s1
 		y2 = s2
+	} else if fileType == "ratelimitsettings" {
+		var r1 edgeproto.RateLimitSettingsData
+		var r2 edgeproto.RateLimitSettingsData
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = []cmp.Option{
+			cmpopts.SortSlices(func(a edgeproto.RateLimitSettings, b edgeproto.RateLimitSettings) bool {
+				return a.GetKey().GetKeyString() < b.GetKey().GetKeyString()
+			}),
+		}
+		y1 = r1
+		y2 = r2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1)
 		err2 = ReadYamlFile(secondYamlFile, &y2)

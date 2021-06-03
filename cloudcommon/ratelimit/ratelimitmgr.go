@@ -31,18 +31,10 @@ func (r *RateLimitManager) AddApiEndpointLimiter(api string, allRequestsRateLimi
 	r.Lock()
 	defer r.Unlock()
 	// Add apiEndpointType apisPerRateLimitSettingsKey map
-	if allRequestsRateLimitSettings != nil {
-		r.addRateLimitSettingsKey(api, allRequestsRateLimitSettings.Key)
-	}
-	if perIpRateLimitSettings != nil {
-		r.addRateLimitSettingsKey(api, perIpRateLimitSettings.Key)
-	}
-	if perUserRateLimitSettings != nil {
-		r.addRateLimitSettingsKey(api, perUserRateLimitSettings.Key)
-	}
-	if perOrgRateLimitSettings != nil {
-		r.addRateLimitSettingsKey(api, perOrgRateLimitSettings.Key)
-	}
+	r.addRateLimitSettingsKey(api, allRequestsRateLimitSettings)
+	r.addRateLimitSettingsKey(api, perIpRateLimitSettings)
+	r.addRateLimitSettingsKey(api, perUserRateLimitSettings)
+	r.addRateLimitSettingsKey(api, perOrgRateLimitSettings)
 
 	apiEndpointRateLimitSettings := &apiEndpointRateLimitSettings{
 		AllRequestsRateLimitSettings: allRequestsRateLimitSettings,
@@ -64,24 +56,10 @@ func (r *RateLimitManager) UpdateRateLimitSettings(rateLimitSettings *edgeproto.
 			limiter, ok := r.limitsPerApi[api]
 			if !ok || limiter == nil {
 				limiter = NewApiEndpointLimiter(&apiEndpointRateLimitSettings{})
+				r.addRateLimitSettingsKey(api, rateLimitSettings)
 			}
 			limiter.UpdateRateLimitSettings(rateLimitSettings)
 			r.limitsPerApi[api] = limiter
-		}
-	}
-}
-
-// Remove rate limit settings for all the APIs that use the rate limit settings associated with the specified apiEndpointType
-func (r *RateLimitManager) RemoveRateLimitSettings(key edgeproto.RateLimitSettingsKey) {
-	r.Lock()
-	defer r.Unlock()
-	apis, ok := r.apisPerRateLimitSettingsKey[key]
-	if ok && apis != nil {
-		for _, api := range apis {
-			limiter, ok := r.limitsPerApi[api]
-			if ok && limiter != nil {
-				limiter.RemoveRateLimitSettings(key.RateLimitTarget)
-			}
 		}
 	}
 }
@@ -93,6 +71,7 @@ func (r *RateLimitManager) Limit(ctx context.Context) (bool, error) {
 	// Check for LimiterInfo which provides essential information about the api, ip, user, and org
 	li, ok := LimiterInfoFromContext(ctx)
 	if !ok || li == nil {
+		log.DebugLog(log.DebugLevelInfo, "Unable to find LimiterInfo from context")
 		return false, fmt.Errorf("Unable to get LimiterInfo from context. Skipping rate limit")
 	}
 	// Check that api exists
@@ -111,7 +90,11 @@ func (r *RateLimitManager) Limit(ctx context.Context) (bool, error) {
 }
 
 // Helper function that adds the RateLimitSettingsKey to the apisPerRateLimitSettingsKey map (must lock before calling)
-func (r *RateLimitManager) addRateLimitSettingsKey(api string, key edgeproto.RateLimitSettingsKey) {
+func (r *RateLimitManager) addRateLimitSettingsKey(api string, settings *edgeproto.RateLimitSettings) {
+	if settings == nil {
+		return
+	}
+	key := settings.Key
 	apis, ok := r.apisPerRateLimitSettingsKey[key]
 	if ok && apis != nil {
 		r.apisPerRateLimitSettingsKey[key] = append(apis, api)

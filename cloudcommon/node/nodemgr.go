@@ -66,7 +66,7 @@ func (s *NodeMgr) InitFlags() {
 	// used if Vault-PKI cannot be used.
 	flag.StringVar(&s.iTlsCertFile, "itlsCert", "", "internal mTLS cert file for communication between services")
 	flag.StringVar(&s.iTlsKeyFile, "itlsKey", "", "internal mTLS key file for communication between services")
-	flag.StringVar(&s.iTlsCAFile, "itlsCA", "", "internal mTLS CA file for communication between servcies")
+	flag.StringVar(&s.iTlsCAFile, "itlsCA", "", "internal mTLS CA file for communication between services")
 	flag.StringVar(&s.VaultAddr, "vaultAddr", "", "Vault address; local vault runs at http://127.0.0.1:8200")
 	flag.BoolVar(&s.InternalPki.UseVaultPki, "useVaultPki", false, "Use Vault Certs and CAs for internal mTLS and public TLS")
 	flag.StringVar(&s.InternalDomain, "internalDomain", "mobiledgex.net", "domain name for internal PKI")

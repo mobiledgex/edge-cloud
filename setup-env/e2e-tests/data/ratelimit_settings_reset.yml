@@ -1,0 +1,17 @@
+settings:
+- key:
+    apiendpointtype: Dme
+    apiactiontype: DefaultAction
+    ratelimittarget: PerIp
+- key:
+    apiendpointtype: Dme
+    apiactiontype: DefaultAction
+    ratelimittarget: AllRequests
+- key:
+    apiendpointtype: Controller
+    apiactiontype: CreateAction
+    ratelimittarget: PerIp
+- key:
+    apiendpointtype: Controller
+    apiactiontype: CreateAction
+    ratelimittarget: AllRequests

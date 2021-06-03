@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Handles all the rate limiting for an API
@@ -60,7 +61,6 @@ func (a *apiEndpointLimiter) UpdateRateLimitSettings(rateLimitSettings *edgeprot
 		a.apiEndpointRateLimitSettings.PerOrgRateLimitSettings = rateLimitSettings
 		a.limitsPerOrg = make(map[string]*FullLimiter)
 	default:
-		// log
 	}
 }
 
@@ -87,6 +87,7 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context) (bool, error) {
 	// Check for LimiterInfo which provides essential information about the api, ip, user, and org
 	li, ok := LimiterInfoFromContext(ctx)
 	if !ok || li == nil {
+		log.DebugLog(log.DebugLevelInfo, "Unable to get LimiterInfo from context. Skipping rate limit")
 		return false, fmt.Errorf("Unable to get LimiterInfo from context. Skipping rate limit")
 	}
 
