@@ -24,6 +24,7 @@ const (
 	DeleteDNSRecord         = "delete-dns-record"
 	GetSessionTokens        = "get-session-tokens"
 	GetPublicCert           = "get-public-cert"
+	GetGCSCreds             = "get-gcs-creds"
 )
 
 // ControllerClient implements platform.AccessApi for cloudlet
@@ -219,4 +220,15 @@ func (s *ControllerClient) GetSessionTokens(ctx context.Context, arg []byte) (ma
 		return nil, err
 	}
 	return tokens, nil
+}
+
+func (s *ControllerClient) GetGCSCreds(ctx context.Context) ([]byte, error) {
+	req := &edgeproto.AccessDataRequest{
+		Type: GetGCSCreds,
+	}
+	reply, err := s.client.GetAccessData(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return reply.Data, err
 }

@@ -12,6 +12,7 @@ import (
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/gcs"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
@@ -146,4 +147,12 @@ func (s *VaultClient) GetPublicCert(ctx context.Context, commonName string) (*va
 		return nil, err
 	}
 	return publicCert, nil
+}
+
+func (s *VaultClient) GetGCSCreds(ctx context.Context) ([]byte, error) {
+	creds, err := gcs.GetGCSCreds(ctx, s.vaultConfig)
+	if err != nil {
+		return nil, err
+	}
+	return creds, nil
 }

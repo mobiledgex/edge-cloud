@@ -124,6 +124,379 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	}
 }
 
+var GPUDriverApiCmd edgeproto.GPUDriverApiClient
+
+var CreateGPUDriverCmd = &cli.Command{
+	Use:          "CreateGPUDriver",
+	RequiredArgs: strings.Join(GPUDriverRequiredArgs, " "),
+	OptionalArgs: strings.Join(GPUDriverOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverAliasArgs, " "),
+	SpecialArgs:  &GPUDriverSpecialArgs,
+	Comments:     GPUDriverComments,
+	ReqData:      &edgeproto.GPUDriver{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateGPUDriver,
+}
+
+func runCreateGPUDriver(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriver)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return CreateGPUDriver(c, obj)
+}
+
+func CreateGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := GPUDriverApiCmd.CreateGPUDriver(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateGPUDriver failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateGPUDrivers(c *cli.Command, data []edgeproto.GPUDriver, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateGPUDriver %v\n", data[ii])
+		myerr := CreateGPUDriver(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var DeleteGPUDriverCmd = &cli.Command{
+	Use:          "DeleteGPUDriver",
+	RequiredArgs: strings.Join(GPUDriverRequiredArgs, " "),
+	OptionalArgs: strings.Join(GPUDriverOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverAliasArgs, " "),
+	SpecialArgs:  &GPUDriverSpecialArgs,
+	Comments:     GPUDriverComments,
+	ReqData:      &edgeproto.GPUDriver{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runDeleteGPUDriver,
+}
+
+func runDeleteGPUDriver(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriver)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return DeleteGPUDriver(c, obj)
+}
+
+func DeleteGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := GPUDriverApiCmd.DeleteGPUDriver(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteGPUDriver failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func DeleteGPUDrivers(c *cli.Command, data []edgeproto.GPUDriver, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteGPUDriver %v\n", data[ii])
+		myerr := DeleteGPUDriver(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var UpdateGPUDriverCmd = &cli.Command{
+	Use:          "UpdateGPUDriver",
+	RequiredArgs: strings.Join(UpdateGPUDriverRequiredArgs, " "),
+	OptionalArgs: strings.Join(UpdateGPUDriverOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverAliasArgs, " "),
+	SpecialArgs:  &GPUDriverSpecialArgs,
+	Comments:     GPUDriverComments,
+	ReqData:      &edgeproto.GPUDriver{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runUpdateGPUDriver,
+}
+
+func runUpdateGPUDriver(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriver)
+	jsonMap, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	return UpdateGPUDriver(c, obj)
+}
+
+func UpdateGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := GPUDriverApiCmd.UpdateGPUDriver(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateGPUDriver failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func UpdateGPUDrivers(c *cli.Command, data []edgeproto.GPUDriver, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateGPUDriver %v\n", data[ii])
+		myerr := UpdateGPUDriver(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var ShowGPUDriverCmd = &cli.Command{
+	Use:          "ShowGPUDriver",
+	OptionalArgs: strings.Join(append(GPUDriverRequiredArgs, GPUDriverOptionalArgs...), " "),
+	AliasArgs:    strings.Join(GPUDriverAliasArgs, " "),
+	SpecialArgs:  &GPUDriverSpecialArgs,
+	Comments:     GPUDriverComments,
+	ReqData:      &edgeproto.GPUDriver{},
+	ReplyData:    &edgeproto.GPUDriver{},
+	Run:          runShowGPUDriver,
+}
+
+func runShowGPUDriver(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriver)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowGPUDriver(c, obj)
+}
+
+func ShowGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := GPUDriverApiCmd.ShowGPUDriver(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowGPUDriver failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.GPUDriver, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowGPUDriver recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowGPUDrivers(c *cli.Command, data []edgeproto.GPUDriver, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowGPUDriver %v\n", data[ii])
+		myerr := ShowGPUDriver(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var AddGPUDriverBuildCmd = &cli.Command{
+	Use:          "AddGPUDriverBuild",
+	RequiredArgs: strings.Join(AddGPUDriverBuildRequiredArgs, " "),
+	OptionalArgs: strings.Join(AddGPUDriverBuildOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverBuildMemberAliasArgs, " "),
+	SpecialArgs:  &GPUDriverBuildMemberSpecialArgs,
+	Comments:     GPUDriverBuildMemberComments,
+	ReqData:      &edgeproto.GPUDriverBuildMember{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddGPUDriverBuild,
+}
+
+func runAddGPUDriverBuild(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriverBuildMember)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddGPUDriverBuild(c, obj)
+}
+
+func AddGPUDriverBuild(c *cli.Command, in *edgeproto.GPUDriverBuildMember) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := GPUDriverApiCmd.AddGPUDriverBuild(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddGPUDriverBuild failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddGPUDriverBuilds(c *cli.Command, data []edgeproto.GPUDriverBuildMember, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddGPUDriverBuild %v\n", data[ii])
+		myerr := AddGPUDriverBuild(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RemoveGPUDriverBuildCmd = &cli.Command{
+	Use:          "RemoveGPUDriverBuild",
+	RequiredArgs: strings.Join(RemoveGPUDriverBuildRequiredArgs, " "),
+	OptionalArgs: strings.Join(RemoveGPUDriverBuildOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverBuildMemberAliasArgs, " "),
+	SpecialArgs:  &GPUDriverBuildMemberSpecialArgs,
+	Comments:     GPUDriverBuildMemberComments,
+	ReqData:      &edgeproto.GPUDriverBuildMember{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRemoveGPUDriverBuild,
+}
+
+func runRemoveGPUDriverBuild(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriverBuildMember)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RemoveGPUDriverBuild(c, obj)
+}
+
+func RemoveGPUDriverBuild(c *cli.Command, in *edgeproto.GPUDriverBuildMember) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := GPUDriverApiCmd.RemoveGPUDriverBuild(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RemoveGPUDriverBuild failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RemoveGPUDriverBuilds(c *cli.Command, data []edgeproto.GPUDriverBuildMember, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RemoveGPUDriverBuild %v\n", data[ii])
+		myerr := RemoveGPUDriverBuild(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var GPUDriverApiCmds = []*cobra.Command{
+	CreateGPUDriverCmd.GenCmd(),
+	DeleteGPUDriverCmd.GenCmd(),
+	UpdateGPUDriverCmd.GenCmd(),
+	ShowGPUDriverCmd.GenCmd(),
+	AddGPUDriverBuildCmd.GenCmd(),
+	RemoveGPUDriverBuildCmd.GenCmd(),
+}
+
 var CloudletApiCmd edgeproto.CloudletApiClient
 
 var CreateCloudletCmd = &cli.Command{
@@ -1477,6 +1850,115 @@ var ResourceQuotaComments = map[string]string{
 	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var ResourceQuotaSpecialArgs = map[string]string{}
+var GPUDriverKeyRequiredArgs = []string{}
+var GPUDriverKeyOptionalArgs = []string{
+	"name",
+	"organization",
+	"type",
+}
+var GPUDriverKeyAliasArgs = []string{}
+var GPUDriverKeyComments = map[string]string{
+	"name":         "Name of the driver",
+	"organization": "Organization to which the driver belongs to",
+	"type":         "Type of GPU hardware, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
+}
+var GPUDriverKeySpecialArgs = map[string]string{}
+var GPUDriverBuildRequiredArgs = []string{}
+var GPUDriverBuildOptionalArgs = []string{
+	"name",
+	"driverpath",
+	"operatingsystem",
+	"kernelversion",
+	"hypervisor",
+}
+var GPUDriverBuildAliasArgs = []string{}
+var GPUDriverBuildComments = map[string]string{
+	"name":            "Unique identifier key",
+	"driverpath":      "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
+	"operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
+	"kernelversion":   "Kernel Version supported by GPU driver build",
+	"hypervisor":      "Hypervisor supported by vGPU driver",
+}
+var GPUDriverBuildSpecialArgs = map[string]string{}
+var GPUDriverBuildMemberRequiredArgs = []string{
+	"gpudrivername",
+	"gpudriver-org",
+	"gpudrivertype",
+}
+var GPUDriverBuildMemberOptionalArgs = []string{
+	"build.name",
+	"build.driverpath",
+	"build.operatingsystem",
+	"build.kernelversion",
+	"build.hypervisor",
+}
+var GPUDriverBuildMemberAliasArgs = []string{
+	"gpudrivername=key.name",
+	"gpudriver-org=key.organization",
+	"gpudrivertype=key.type",
+}
+var GPUDriverBuildMemberComments = map[string]string{
+	"gpudrivername":         "Name of the driver",
+	"gpudriver-org":         "Organization to which the driver belongs to",
+	"gpudrivertype":         "Type of GPU hardware, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
+	"build.name":            "Unique identifier key",
+	"build.driverpath":      "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
+	"build.operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
+	"build.kernelversion":   "Kernel Version supported by GPU driver build",
+	"build.hypervisor":      "Hypervisor supported by vGPU driver",
+}
+var GPUDriverBuildMemberSpecialArgs = map[string]string{}
+var GPUDriverRequiredArgs = []string{
+	"gpudrivername",
+	"gpudrivertype",
+}
+var GPUDriverOptionalArgs = []string{
+	"gpudriver-org",
+	"builds:#.name",
+	"builds:#.driverpath",
+	"builds:#.operatingsystem",
+	"builds:#.kernelversion",
+	"builds:#.hypervisor",
+	"licenseconfig",
+	"properties",
+}
+var GPUDriverAliasArgs = []string{
+	"gpudrivername=key.name",
+	"gpudriver-org=key.organization",
+	"gpudrivertype=key.type",
+}
+var GPUDriverComments = map[string]string{
+	"fields":                   "Fields are used for the Update API to specify which fields to apply",
+	"gpudrivername":            "Name of the driver",
+	"gpudriver-org":            "Organization to which the driver belongs to",
+	"gpudrivertype":            "Type of GPU hardware, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
+	"builds:#.name":            "Unique identifier key",
+	"builds:#.driverpath":      "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
+	"builds:#.operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
+	"builds:#.kernelversion":   "Kernel Version supported by GPU driver build",
+	"builds:#.hypervisor":      "Hypervisor supported by vGPU driver",
+	"licenseconfig":            "License config to setup license (will be stored in secure storage)",
+	"properties":               "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
+}
+var GPUDriverSpecialArgs = map[string]string{
+	"fields":     "StringArray",
+	"properties": "StringToString",
+}
+var GPUConfigRequiredArgs = []string{}
+var GPUConfigOptionalArgs = []string{
+	"gputype",
+	"drivername",
+	"properties",
+}
+var GPUConfigAliasArgs = []string{}
+var GPUConfigComments = map[string]string{
+	"gputype":    "Type of GPU hardware supported by the Cloudlet, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
+	"drivername": "GPU driver to be used",
+	"properties": "Properties to identify specifics of GPU",
+}
+var GPUConfigSpecialArgs = map[string]string{
+	"properties": "StringToString",
+}
 var CloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
@@ -1518,6 +2000,9 @@ var CloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"gpuconfig.gputype",
+	"gpuconfig.drivername",
+	"gpuconfig.properties",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1594,15 +2079,19 @@ var CloudletComments = map[string]string{
 	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
 	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
 	"hostcontroller":                      "Addr of the controller hosting the cloudlet services if it is running locally",
+	"gpuconfig.gputype":                   "Type of GPU hardware supported by the Cloudlet, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
+	"gpuconfig.drivername":                "GPU driver to be used",
+	"gpuconfig.properties":                "Properties to identify specifics of GPU",
 }
 var CloudletSpecialArgs = map[string]string{
-	"accessvars":    "StringToString",
-	"chefclientkey": "StringToString",
-	"config.envvar": "StringToString",
-	"envvar":        "StringToString",
-	"errors":        "StringArray",
-	"fields":        "StringArray",
-	"status.msgs":   "StringArray",
+	"accessvars":           "StringToString",
+	"chefclientkey":        "StringToString",
+	"config.envvar":        "StringToString",
+	"envvar":               "StringToString",
+	"errors":               "StringArray",
+	"fields":               "StringArray",
+	"gpuconfig.properties": "StringToString",
+	"status.msgs":          "StringArray",
 }
 var FlavorMatchRequiredArgs = []string{
 	"cloudlet-org",
@@ -1903,6 +2392,34 @@ var CloudletMetricsComments = map[string]string{
 	"foo": "what goes here?",
 }
 var CloudletMetricsSpecialArgs = map[string]string{}
+var UpdateGPUDriverRequiredArgs = []string{
+	"gpudrivername",
+	"gpudrivertype",
+}
+var UpdateGPUDriverOptionalArgs = []string{
+	"gpudriver-org",
+	"licenseconfig",
+	"properties",
+}
+var AddGPUDriverBuildRequiredArgs = []string{
+	"gpudrivername",
+	"gpudriver-org",
+	"gpudrivertype",
+	"build.name",
+	"build.driverpath",
+	"build.operatingsystem",
+}
+var AddGPUDriverBuildOptionalArgs = []string{
+	"build.kernelversion",
+	"build.hypervisor",
+}
+var RemoveGPUDriverBuildRequiredArgs = []string{
+	"gpudrivername",
+	"gpudriver-org",
+	"gpudrivertype",
+	"build.name",
+}
+var RemoveGPUDriverBuildOptionalArgs = []string{}
 var CreateCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
@@ -1941,6 +2458,9 @@ var CreateCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"gpuconfig.gputype",
+	"gpuconfig.drivername",
+	"gpuconfig.properties",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1980,6 +2500,9 @@ var DeleteCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"gpuconfig.gputype",
+	"gpuconfig.drivername",
+	"gpuconfig.properties",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2007,6 +2530,9 @@ var UpdateCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"gpuconfig.gputype",
+	"gpuconfig.drivername",
+	"gpuconfig.properties",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2046,6 +2572,9 @@ var ShowCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"gpuconfig.gputype",
+	"gpuconfig.drivername",
+	"gpuconfig.properties",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

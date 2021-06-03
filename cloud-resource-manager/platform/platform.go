@@ -33,6 +33,8 @@ type PlatformConfig struct {
 	Upgrade             bool
 	AccessApi           AccessApi
 	TrustPolicy         string
+	CacheDir            string
+	GPUConfig           *edgeproto.GPUConfig
 }
 
 type Caches struct {
@@ -47,6 +49,7 @@ type Caches struct {
 	CloudletInternalCache *edgeproto.CloudletInternalCache
 	VMPoolCache           *edgeproto.VMPoolCache
 	VMPoolInfoCache       *edgeproto.VMPoolInfoCache
+	GPUDriverCache        *edgeproto.GPUDriverCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
@@ -152,6 +155,7 @@ type AccessApi interface {
 	GetDNSRecords(ctx context.Context, zone, fqdn string) ([]cloudflare.DNSRecord, error)
 	DeleteDNSRecord(ctx context.Context, zone, recordID string) error
 	GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error)
+	GetGCSCreds(ctx context.Context) ([]byte, error)
 }
 
 var pfMaps = map[string]string{

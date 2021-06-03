@@ -396,6 +396,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
 		}
 	}
+
+	if in.GpuConfig.GpuType == edgeproto.GPUType_GPU_TYPE_NONE {
+		in.GpuConfig = edgeproto.GPUConfig{}
+	}
 	return s.createCloudletInternal(DefCallContext(), in, cb)
 }
 
@@ -489,6 +493,17 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		in.CrmAccessKeyUpgradeRequired = true
 		pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
 	}
+
+	if in.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+		gpuDrivers, err := gpuDriverApi.GetCloudletGPUDrivers(in.GpuConfig.GpuType, in.GpuConfig.DriverName, in.Key.Organization)
+		if err != nil {
+			return err
+		}
+		if len(gpuDrivers) == 0 {
+			return fmt.Errorf("No GPU drivers found with name %s", in.GpuConfig.DriverName)
+		}
+	}
+
 	vmPool := edgeproto.VMPool{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
