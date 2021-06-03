@@ -66,6 +66,31 @@ enum ImageType {
   IMAGE_TYPE_OVF = 4;
 }
 
+// VmAppOsType
+//
+// VmAppOsType specifies the Operating System for VM based Apps
+//
+// 0: 'VM_APP_OS_UNKNOWN'
+// 1: 'VM_APP_OS_LINUX'
+// 2: 'VM_APP_OS_WINDOWS_10'
+// 3: 'VM_APP_OS_WINDOWS_2012'
+// 4: 'VM_APP_OS_WINDOWS_2016'
+// 5: 'VM_APP_OS_WINDOWS_2019'
+
+enum VmAppOsType {
+  // Unknown OS type
+  VM_APP_OS_UNKNOWN = 0;
+  // All Linux 64 bit varieties
+  VM_APP_OS_LINUX = 1;
+  // Windows 10
+  VM_APP_OS_WINDOWS_10 = 2;
+  // Windows 2012 Server
+  VM_APP_OS_WINDOWS_2012 = 3;
+  // Windows 2016 Server
+  VM_APP_OS_WINDOWS_2016 = 4;
+  // Windows 2019 Server
+  VM_APP_OS_WINDOWS_2019 = 5;
+}
 // DeleteType
 //
 // DeleteType specifies if AppInst can be auto deleted or not
@@ -184,6 +209,8 @@ message App {
   bool allow_serverless = 39;
   // Configuration when deployed as serverless container
   ServerlessConfig serverless_config = 40;
+  // OS Type for VM Apps
+  VmAppOsType vm_app_os_type = 41;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

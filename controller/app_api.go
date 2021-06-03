@@ -317,6 +317,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if in.ScaleWithCluster && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 		return fmt.Errorf("app scaling is only supported for Kubernetes deployments")
 	}
+	if in.VmAppOsType != edgeproto.VmAppOsType_VM_APP_OS_UNKNOWN && in.Deployment != cloudcommon.DeploymentTypeVM {
+		return fmt.Errorf("VM App OS Type is only supported for VM deployments")
+	}
 
 	if !cloudcommon.IsPlatformApp(in.Key.Organization, in.Key.Name) {
 		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER && in.ImagePath != "" {
@@ -508,7 +511,8 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		edgeproto.AppFieldDeploymentGenerator,
 	}
 	canAlwaysUpdate := map[string]bool{
-		edgeproto.AppFieldTrusted: true,
+		edgeproto.AppFieldTrusted:     true,
+		edgeproto.AppFieldVmAppOsType: true, // will not affect current AppInsts, but needed to launch existing apps on VCD
 	}
 
 	fields := edgeproto.MakeFieldMap(in.Fields)
