@@ -249,7 +249,7 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
 		cl.AppInstHealth = appInst.HealthCheck
-		go EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+		go EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
@@ -307,7 +307,7 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 				// Remove AppInst from edgeevents plugin
 				go func() {
-					EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+					EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 					EEHandler.RemoveAppInstKey(ctx, appInst.Key)
 				}()
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
@@ -366,7 +366,7 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
 					// Remove AppInst from edgeevents plugin
 					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+						EEHandler.SendAppInstStateEdgeEvent(ctx, *inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 						EEHandler.RemoveAppInstKey(ctx, key)
 					}()
 					delete(carr.Insts, key.ClusterInstKey)
@@ -401,7 +401,7 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 						ClusterInstKey: clusterInstKey,
 					}
 					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, c.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+						EEHandler.SendAppInstStateEdgeEvent(ctx, *c.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
 						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
 					}()
 				}
@@ -434,7 +434,7 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 						ClusterInstKey: clusterInstKey,
 					}
 					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, carr.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+						EEHandler.SendAppInstStateEdgeEvent(ctx, *carr.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
 						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
 					}()
 
@@ -537,7 +537,7 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 	// Check if CloudletMaintenance state has changed
 	if cloudlet.MaintenanceState != in.MaintenanceState {
 		cloudlet.MaintenanceState = in.MaintenanceState
-		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, cloudlet, in.Key)
+		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, *cloudlet, in.Key)
 	}
 	cloudlet.GpsLocation = in.Location
 
@@ -571,7 +571,7 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 	// Check if Cloudlet state has changed
 	if cloudlet.State != info.State {
 		cloudlet.State = info.State
-		go EEHandler.SendCloudletStateEdgeEvent(ctx, cloudlet, info.Key)
+		go EEHandler.SendCloudletStateEdgeEvent(ctx, *cloudlet, info.Key)
 	}
 
 	for _, app := range tbl.Apps {
@@ -1168,7 +1168,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		}
 		updateDeviceInfoStats(ctx, appInstKey, deviceInfo, lastLocation, "event init connection")
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, lastLocation, lastCarrier, sendFunc)
+		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, *lastLocation, lastCarrier, sendFunc)
 		// Remove Client from edgeevents plugin when StreamEdgeEvent exits
 		defer EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 		// Send successful init response
@@ -1260,7 +1260,7 @@ loop:
 			}
 			// Update last client location in plugin if different from lastLocation
 			if cupdate.GpsLocation.Latitude != lastLocation.Latitude || cupdate.GpsLocation.Longitude != lastLocation.Longitude {
-				EEHandler.UpdateClientLastLocation(ctx, *appInstKey, *sessionCookieKey, cupdate.GpsLocation)
+				EEHandler.UpdateClientLastLocation(ctx, *appInstKey, *sessionCookieKey, *cupdate.GpsLocation)
 				lastLocation = cupdate.GpsLocation
 			}
 			// Check if there is a better cloudlet based on location update
