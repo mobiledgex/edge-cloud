@@ -1,16 +1,90 @@
 package edgeproto
 
-import fmt "fmt"
+import (
+	fmt "fmt"
+)
 
 func (r *RateLimitSettings) Validate(fields map[string]struct{}) error {
-	var err error
-	if err = r.GetKey().ValidateKey(); err != nil {
-		return err
+	// Validate fields that must be set if FlowAlgorithm is set
+	if r.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM || r.FlowAlgorithm == FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
+		if r.ReqsPerSecond <= 0 {
+			return fmt.Errorf("Invalid ReqsPerSecond %f, must be greater than 0", r.ReqsPerSecond)
+		}
+		if r.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM {
+			if r.BurstSize <= 0 {
+				return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", r.BurstSize)
+			}
+		}
 	}
-	return err
+
+	// RollingWindowAlgorithm is not implemented yet
+	if r.MaxReqsAlgorithm == MaxReqsRateLimitAlgorithm_ROLLING_WINDOW_ALGORITHM {
+		return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm %v, only FixedWindowAlgorithm is implemented", r.MaxReqsAlgorithm)
+	}
+
+	// Validate fields that must be set if MaxReqsAlgorithm is set
+	if r.MaxReqsAlgorithm == MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM {
+		if r.MaxRequestsPerSecond <= 0 && r.MaxRequestsPerMinute <= 0 && r.MaxRequestsPerHour <= 0 {
+			return fmt.Errorf("One of MaxRequestsPerSecond, MaxRequestsPerMinute, or MaxRequestsPerHour must be greater than 0 to use MaxReqs limiting")
+		}
+	}
+
+	// Validate fields that must be set if ReqsPerSecond is set
+	if r.ReqsPerSecond != 0 {
+		if r.ReqsPerSecond < 0 {
+			return fmt.Errorf("Invalid ReqsPerSecond %f, must be greater than 0", r.ReqsPerSecond)
+		}
+		if r.FlowAlgorithm != FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM && r.FlowAlgorithm != FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
+			return fmt.Errorf("Must have valid FlowRateLimitAlgorithm if ReqsPerSecond is set")
+		}
+	}
+
+	// Validate fields that must be set if BurstSize is set
+	if r.BurstSize != 0 {
+		if r.BurstSize < 0 {
+			return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", r.BurstSize)
+		}
+		if r.FlowAlgorithm != FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM && r.FlowAlgorithm != FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
+			return fmt.Errorf("Must have valid FlowRateLimitAlgorithm if BurstSize is set")
+		}
+	}
+
+	// Validate fields that must be set if MaxRequestsPerSecond is set
+	if r.MaxRequestsPerSecond != 0 {
+		if r.MaxRequestsPerSecond < 0 {
+			return fmt.Errorf("Invalid MaxRequestsPerSecond %d, must be greater than 0", r.MaxRequestsPerSecond)
+		}
+		if r.MaxReqsAlgorithm != MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM {
+			return fmt.Errorf("Must have valid MaxReqsRateLimitAlgorithm if MaxRequestsPerSecond is set")
+		}
+	}
+
+	// Validate fields that must be set if MaxRequestsPerMinute is set
+	if r.MaxRequestsPerMinute != 0 {
+		if r.MaxRequestsPerMinute < 0 {
+			return fmt.Errorf("Invalid MaxRequestsPerMinute %d, must be greater than 0", r.MaxRequestsPerMinute)
+		}
+		if r.MaxReqsAlgorithm != MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM {
+			return fmt.Errorf("Must have valid MaxReqsRateLimitAlgorithm if MaxRequestsPerMinute is set")
+		}
+	}
+
+	// Validate fields that must be set if MaxRequestsPerHour is set
+	if r.MaxRequestsPerHour != 0 {
+		if r.MaxRequestsPerHour < 0 {
+			return fmt.Errorf("Invalid MaxRequestsPerHour %d, must be greater than 0", r.MaxRequestsPerHour)
+		}
+		if r.MaxReqsAlgorithm != MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM {
+			return fmt.Errorf("Must have valid MaxReqsRateLimitAlgorithm if MaxRequestsPerHour is set")
+		}
+	}
+	return nil
 }
 
 func (key *RateLimitSettingsKey) ValidateKey() error {
+	if key == nil {
+		return fmt.Errorf("Nil key")
+	}
 	if key.ApiEndpointType == ApiEndpointType_UNKNOWN_API_ENDPOINT_TYPE {
 		return fmt.Errorf("Invalid ApiEndpointType")
 	}
