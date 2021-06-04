@@ -56,6 +56,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	chefServerPath := ""
 	deploymentTag := ""
 	accessApiAddr := ""
+	cacheDir := ""
 	if pfConfig != nil {
 		for k, v := range pfConfig.EnvVar {
 			envVars[k] = v
@@ -74,6 +75,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		chefServerPath = pfConfig.ChefServerPath
 		deploymentTag = pfConfig.DeploymentTag
 		accessApiAddr = pfConfig.AccessApiAddr
+		cacheDir = pfConfig.CacheDir
 	}
 	for envKey, envVal := range cloudlet.EnvVar {
 		envVars[envKey] = envVal
@@ -111,6 +113,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		CommercialCerts:     commercialCerts,
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
+		CacheDir:            cacheDir,
 	}, opts, nil
 }
 

@@ -977,6 +977,18 @@ func (r *Run) GPUDriverApi_GPUDriverBuildMember(data *[]edgeproto.GPUDriverBuild
 				}
 				*outp = append(*outp, *out)
 			}
+		case "getgpudriverbuildurl":
+			out, err := r.client.GetGPUDriverBuildURL(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("GPUDriverApi_GPUDriverBuildMember[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi_GPUDriverBuildMember expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		}
 	}
 }
@@ -1542,6 +1554,18 @@ func (s *CliClient) RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUD
 	return &out, err
 }
 
+func (s *ApiClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	return api.GetGPUDriverBuildURL(ctx, in)
+}
+
+func (s *CliClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "GetGPUDriverBuildURL")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 type GPUDriverApiClient interface {
 	CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) (*edgeproto.Result, error)
 	DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) (*edgeproto.Result, error)
@@ -1549,6 +1573,7 @@ type GPUDriverApiClient interface {
 	ShowGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.GPUDriver, error)
 	AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error)
 	RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error)
+	GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error)
 }
 
 type ResultStream interface {

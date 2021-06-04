@@ -488,6 +488,63 @@ func RemoveGPUDriverBuilds(c *cli.Command, data []edgeproto.GPUDriverBuildMember
 	}
 }
 
+var GetGPUDriverBuildURLCmd = &cli.Command{
+	Use:          "GetGPUDriverBuildURL",
+	RequiredArgs: strings.Join(GetGPUDriverBuildURLRequiredArgs, " "),
+	OptionalArgs: strings.Join(GetGPUDriverBuildURLOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverBuildMemberAliasArgs, " "),
+	SpecialArgs:  &GPUDriverBuildMemberSpecialArgs,
+	Comments:     GPUDriverBuildMemberComments,
+	ReqData:      &edgeproto.GPUDriverBuildMember{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runGetGPUDriverBuildURL,
+}
+
+func runGetGPUDriverBuildURL(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriverBuildMember)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetGPUDriverBuildURL(c, obj)
+}
+
+func GetGPUDriverBuildURL(c *cli.Command, in *edgeproto.GPUDriverBuildMember) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := GPUDriverApiCmd.GetGPUDriverBuildURL(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetGPUDriverBuildURL failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetGPUDriverBuildURLs(c *cli.Command, data []edgeproto.GPUDriverBuildMember, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetGPUDriverBuildURL %v\n", data[ii])
+		myerr := GetGPUDriverBuildURL(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var GPUDriverApiCmds = []*cobra.Command{
 	CreateGPUDriverCmd.GenCmd(),
 	DeleteGPUDriverCmd.GenCmd(),
@@ -495,6 +552,7 @@ var GPUDriverApiCmds = []*cobra.Command{
 	ShowGPUDriverCmd.GenCmd(),
 	AddGPUDriverBuildCmd.GenCmd(),
 	RemoveGPUDriverBuildCmd.GenCmd(),
+	GetGPUDriverBuildURLCmd.GenCmd(),
 }
 
 var CloudletApiCmd edgeproto.CloudletApiClient
@@ -1781,6 +1839,7 @@ var PlatformConfigOptionalArgs = []string{
 	"deploymenttag",
 	"crmaccessprivatekey",
 	"accessapiaddr",
+	"cachedir",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -1804,6 +1863,7 @@ var PlatformConfigComments = map[string]string{
 	"deploymenttag":         "Deployment Tag",
 	"crmaccessprivatekey":   "crm access private key",
 	"accessapiaddr":         "controller access API address",
+	"cachedir":              "cache dir",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -2058,6 +2118,7 @@ var CloudletComments = map[string]string{
 	"config.deploymenttag":                "Deployment Tag",
 	"config.crmaccessprivatekey":          "crm access private key",
 	"config.accessapiaddr":                "controller access API address",
+	"config.cachedir":                     "cache dir",
 	"restagmap:#.value.name":              "Resource Table Name",
 	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
 	"accessvars":                          "Variables required to access cloudlet",
@@ -2420,6 +2481,13 @@ var RemoveGPUDriverBuildRequiredArgs = []string{
 	"build.name",
 }
 var RemoveGPUDriverBuildOptionalArgs = []string{}
+var GetGPUDriverBuildURLRequiredArgs = []string{
+	"gpudrivername",
+	"gpudriver-org",
+	"gpudrivertype",
+	"build.name",
+}
+var GetGPUDriverBuildURLOptionalArgs = []string{}
 var CreateCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",

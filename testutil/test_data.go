@@ -343,6 +343,10 @@ var CloudletData = []edgeproto.Cloudlet{
 		ResTagMap: map[string]*edgeproto.ResTagTableKey{
 			"gpu": &Restblkeys[3],
 		},
+		GpuConfig: edgeproto.GPUConfig{
+			DriverName: "nvidia-450",
+			GpuType:    edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
+		},
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -1865,6 +1869,29 @@ var VMPoolData = []edgeproto.VMPool{
 					Disk:  uint64(20),
 				},
 			},
+		},
+	},
+}
+
+var GPUDriverData = []edgeproto.GPUDriver{
+	edgeproto.GPUDriver{
+		Key: edgeproto.GPUDriverKey{
+			Organization: OperatorData[0],
+			Name:         "nvidia-450",
+			Type:         edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
+		},
+	},
+	edgeproto.GPUDriver{
+		Key: edgeproto.GPUDriverKey{
+			Name: "nvidia-490",
+			Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
+		},
+	},
+	edgeproto.GPUDriver{
+		Key: edgeproto.GPUDriverKey{
+			Organization: OperatorData[1],
+			Name:         "nvidia-999",
+			Type:         edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 		},
 	},
 }

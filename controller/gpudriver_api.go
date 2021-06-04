@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gcs"
@@ -62,12 +66,32 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	if err != nil {
 		return fmt.Errorf("Failed to download GPU driver build %s, %v", build.DriverPath, err)
 	}
-	// TODO: If linux, then validate the pkg
-	//                  * Pkg must be deb pkg
-	//                  * Pkg control file must depend on specified kernel version
+	fileName := cloudcommon.GetGPUDriverBuildStoragePath(driverKey, build.Name, ext)
+
+	// If Linux, then validate the pkg
+	//     * Pkg must be deb pkg
+	//     * Pkg control file must have kernel dependency specified
+	if build.OperatingSystem == edgeproto.OSType_LINUX {
+		if ext != "deb" {
+			return fmt.Errorf("Only supported file extension for Linux GPU driver is 'deb', given %s", ext)
+		}
+		testFileName := "/tmp/" + strings.ReplaceAll(fileName, "/", "_")
+		err = ioutil.WriteFile(testFileName, []byte(fileContents), 0644)
+		if err != nil {
+			return fmt.Errorf("Failed to write driver package to %s, %v", testFileName, err)
+		}
+		localClient := &pc.LocalClient{}
+		cmd := fmt.Sprintf("dpkg-deb -I %s | grep -i 'Depends: linux-image-%s'", testFileName, build.KernelVersion)
+		out, err := localClient.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("Failed to validate driver package %s, kernel version %s, %s, %v", testFileName, build.KernelVersion, out, err)
+		}
+		if out == "" {
+			return fmt.Errorf("Driver package(%q) should have Linux Kernel dependency(%q) specified as part of debian control file", fileName, build.KernelVersion)
+		}
+	}
 
 	// Upload the package to GCS
-	fileName := cloudcommon.GetGPUDriverBuildStoragePath(driverKey, build.Name, ext)
 	err = storageClient.UploadObject(ctx, fileName, bytes.NewBufferString(fileContents))
 	if err != nil {
 		return fmt.Errorf("Failed to upload GPU driver build to %s, %v", fileName, err)
@@ -101,8 +125,7 @@ func (s *GPUDriverApi) CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDri
 	}
 
 	if in.Key.Organization == "" {
-		// By default GPU drivers are owned by MobiledgeX org
-		in.Key.Organization = cloudcommon.OrganizationMobiledgeX
+		// Public GPU drivers have no org associated with them
 	}
 
 	// Step-1: First commit to etcd
@@ -131,26 +154,28 @@ func (s *GPUDriverApi) CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDri
 		}
 	}()
 
-	storageClient, err := getGCSStorageClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer storageClient.Close()
-
-	// Step-2: Validate and upload the builds/license-config to GCS
-	for ii, build := range in.Builds {
-		err := setupGPUDriver(ctx, storageClient, &in.Key, &build)
+	if len(in.Builds) > 0 || in.LicenseConfig != "" {
+		storageClient, err := getGCSStorageClient(ctx)
 		if err != nil {
 			return nil, err
 		}
-		in.Builds[ii].DriverPath = build.DriverPath
-	}
+		defer storageClient.Close()
 
-	// If license config is present, upload it to GCS
-	if in.LicenseConfig != "" {
-		err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &in.LicenseConfig)
-		if err != nil {
-			return nil, err
+		// Step-2: Validate and upload the builds/license-config to GCS
+		for ii, build := range in.Builds {
+			err := setupGPUDriver(ctx, storageClient, &in.Key, &build)
+			if err != nil {
+				return nil, err
+			}
+			in.Builds[ii].DriverPath = build.DriverPath
+		}
+
+		// If license config is present, upload it to GCS
+		if in.LicenseConfig != "" {
+			err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &in.LicenseConfig)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -208,14 +233,15 @@ func (s *GPUDriverApi) DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDri
 	if err := in.Key.ValidateKey(); err != nil {
 		return &edgeproto.Result{}, err
 	}
-	storageClient, err := getGCSStorageClient(ctx)
-	if err != nil {
-		return nil, err
+	// Validate if driver is in use by Cloudlet
+	if cloudletApi.UsesGPUDriver(&in.Key) {
+		return &edgeproto.Result{}, fmt.Errorf("GPU driver in use by Cloudlet")
 	}
-	defer storageClient.Close()
 	buildFiles := []string{}
-	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, nil) {
+	licenseConfig := ""
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.GPUDriver{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
 		buildFiles = []string{}
@@ -223,22 +249,31 @@ func (s *GPUDriverApi) DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDri
 			fileName := cloudcommon.GetGPUDriverBuildPathFromURL(build.DriverPath, nodeMgr.DeploymentTag)
 			buildFiles = append(buildFiles, fileName)
 		}
+		licenseConfig = cur.LicenseConfig
+
 		s.store.STMDel(stm, &in.Key)
 		return nil
 	})
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
-	// Delete license config from GCS
-	err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.Key)
-	if err != nil {
-		return nil, err
-	}
-	// Delete builds from GCS
-	for _, filename := range buildFiles {
-		err = storageClient.DeleteObject(ctx, filename)
+	if len(buildFiles) > 0 || licenseConfig != "" {
+		storageClient, err := getGCSStorageClient(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to delete GPU driver build %s, %v: %v", filename, in.Key, err)
+			return nil, err
+		}
+		defer storageClient.Close()
+		// Delete license config from GCS
+		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.Key)
+		if err != nil {
+			return nil, err
+		}
+		// Delete builds from GCS
+		for _, filename := range buildFiles {
+			err = storageClient.DeleteObject(ctx, filename)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to delete GPU driver build %s, %v: %v", filename, in.Key, err)
+			}
 		}
 	}
 	return &edgeproto.Result{}, nil
@@ -372,6 +407,47 @@ func (s *GPUDriverApi) RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.G
 	return &edgeproto.Result{}, nil
 }
 
+func (s *GPUDriverApi) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
+	if err := in.Key.ValidateKey(); err != nil {
+		return &edgeproto.Result{}, err
+	}
+	if err := in.Build.ValidateName(); err != nil {
+		return &edgeproto.Result{}, err
+	}
+	var driverURL string
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.GPUDriver{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		for _, build := range cur.Builds {
+			if build.Name == in.Build.Name {
+				driverURL = build.DriverPath
+				break
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	if driverURL == "" {
+		return &edgeproto.Result{}, fmt.Errorf("GPUDriver build %s for driver %s not found", in.Build.Name, in.Key.GetKeyString())
+	}
+	fileName := cloudcommon.GetGPUDriverBuildPathFromURL(driverURL, nodeMgr.DeploymentTag)
+	storageClient, err := getGCSStorageClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storageClient.Close()
+	signedUrl, err := storageClient.GenerateV4GetObjectSignedURL(ctx, fileName, 20*time.Minute)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to generate signed URL for GCS object", "filename", fileName, "err", err)
+		return nil, err
+	}
+	return &edgeproto.Result{Message: signedUrl}, nil
+}
+
 func (s *GPUDriverApi) GetCloudletGPUDrivers(gpuType edgeproto.GPUType, driverName, cloudletOrg string) ([]edgeproto.GPUDriver, error) {
 	if driverName == "" {
 		return nil, fmt.Errorf("Missing GPU driver name")
@@ -384,7 +460,7 @@ func (s *GPUDriverApi) GetCloudletGPUDrivers(gpuType edgeproto.GPUType, driverNa
 	}
 	gpuDrivers := []edgeproto.GPUDriver{}
 	err := s.cache.Show(&gpuDriver, func(obj *edgeproto.GPUDriver) error {
-		if obj.Key.Organization == cloudcommon.OrganizationMobiledgeX ||
+		if obj.Key.Organization == "" ||
 			obj.Key.Organization == cloudletOrg {
 			gpuDrivers = append(gpuDrivers, *obj)
 		}

@@ -817,6 +817,19 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		crmUpdateReqd = true
 	}
 
+	if _, found := fmap[edgeproto.CloudletFieldGpuConfig]; found {
+		if in.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+			gpuDrivers, err := gpuDriverApi.GetCloudletGPUDrivers(in.GpuConfig.GpuType, in.GpuConfig.DriverName, in.Key.Organization)
+			if err != nil {
+				return err
+			}
+			if len(gpuDrivers) == 0 {
+				return fmt.Errorf("No GPU drivers found with name %s", in.GpuConfig.DriverName)
+			}
+		}
+		crmUpdateReqd = true
+	}
+
 	cctx := DefCallContext()
 	cctx.SetOverride(&in.CrmOverride)
 
@@ -1573,6 +1586,23 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 			Name:         val.VmPool,
 		}
 		if vmPoolKey.Matches(&cVMPoolKey) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, data := range s.cache.Objs {
+		val := data.Obj
+		cDriverKey := edgeproto.GPUDriverKey{
+			Organization: key.Organization,
+			Name:         val.GpuConfig.DriverName,
+			Type:         val.GpuConfig.GpuType,
+		}
+		if driverKey.Matches(&cDriverKey) {
 			return true
 		}
 	}

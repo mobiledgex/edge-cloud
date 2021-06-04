@@ -80,6 +80,7 @@ type Crm struct {
 	CommercialCerts     bool
 	AppDNSRoot          string
 	ChefServerPath      string
+	CacheDir            string
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`

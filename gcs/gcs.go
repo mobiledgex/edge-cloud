@@ -12,6 +12,8 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/mobiledgex/edge-cloud/vault"
+	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -20,6 +22,7 @@ type GCSClient struct {
 	Client     *storage.Client
 	BucketName string
 	Timeout    time.Duration
+	AuthConf   *jwt.Config
 }
 
 const (
@@ -49,6 +52,11 @@ func GetGCSCreds(ctx context.Context, vaultConfig *vault.Config) ([]byte, error)
 func NewClient(ctx context.Context, credsObj []byte, bucketName string, timeout time.Duration) (*GCSClient, error) {
 	gcsClient := &GCSClient{}
 
+	conf, err := google.JWTConfigFromJSON(credsObj)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read service account credentials: %v", err)
+	}
+
 	storageClient, err := storage.NewClient(ctx, option.WithCredentialsJSON(credsObj))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create new GCS client: %v", err)
@@ -57,6 +65,7 @@ func NewClient(ctx context.Context, credsObj []byte, bucketName string, timeout 
 	gcsClient.Client = storageClient
 	gcsClient.BucketName = bucketName
 	gcsClient.Timeout = timeout
+	gcsClient.AuthConf = conf
 	return gcsClient, nil
 }
 
@@ -131,4 +140,36 @@ func (gc *GCSClient) DeleteObject(ctx context.Context, objectName string) error 
 		}
 	}
 	return nil
+}
+
+// Generates object signed URL with GET method. This gives time-limited resource access.
+func (gc *GCSClient) GenerateV4GetObjectSignedURL(ctx context.Context, objectName string, validity time.Duration) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, ShortTimeout)
+	defer cancel()
+	objs, err := gc.ListObjects(ctx)
+	if err != nil {
+		return "", err
+	}
+	found := false
+	for _, objName := range objs {
+		if objName == objectName {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return "", fmt.Errorf("Unable to find object(%q) in bucket(%q)", objectName, gc.BucketName)
+	}
+	opts := &storage.SignedURLOptions{
+		Scheme:         storage.SigningSchemeV4,
+		Method:         "GET",
+		GoogleAccessID: gc.AuthConf.Email,
+		PrivateKey:     gc.AuthConf.PrivateKey,
+		Expires:        time.Now().Add(validity),
+	}
+	urlStr, err := storage.SignedURL(gc.BucketName, objectName, opts)
+	if err != nil {
+		return "", fmt.Errorf("Failed to generate signed URL for bucket(%q), object(%q): %v", gc.BucketName, objectName, err)
+	}
+	return urlStr, nil
 }

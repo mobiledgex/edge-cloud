@@ -53,6 +53,21 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 				Organization: key.Organization,
 			}, 0)
 		}
+		// also trigger send of GPU driver object
+		if s.handler.GetWithRev(key, &cloudlet, &modRev) && cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+			// cloudlet can access public GPU driver
+			s.sendrecv.gpuDriverSend.updateInternal(ctx, &edgeproto.GPUDriverKey{
+				Name:         cloudlet.GpuConfig.DriverName,
+				Organization: "",
+				Type:         cloudlet.GpuConfig.GpuType,
+			}, 0)
+			// cloudlet can access GPU driver of its own org
+			s.sendrecv.gpuDriverSend.updateInternal(ctx, &edgeproto.GPUDriverKey{
+				Name:         cloudlet.GpuConfig.DriverName,
+				Organization: key.Organization,
+				Type:         cloudlet.GpuConfig.GpuType,
+			}, 0)
+		}
 	}
 	return true
 }
@@ -101,6 +116,27 @@ func (s *VMPoolSend) UpdateOk(ctx context.Context, key *edgeproto.VMPoolKey) boo
 	return true
 }
 
+func (s *GPUDriverSend) UpdateOk(ctx context.Context, key *edgeproto.GPUDriverKey) bool {
+	if s.sendrecv.filterCloudletKeys {
+		for cKey, _ := range s.sendrecv.cloudletKeys {
+			cloudlet := edgeproto.Cloudlet{}
+			var modRev int64
+			if cKey.Organization != key.Organization &&
+				key.Organization != "" {
+				continue
+			}
+			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
+				if cloudlet.GpuConfig.DriverName != key.Name {
+					continue
+				}
+				return true
+			}
+		}
+		return false
+	}
+	return true
+}
+
 func (s *AppSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
@@ -118,6 +154,10 @@ func (s *ClusterInstSend) UpdateAllOk() bool {
 }
 
 func (s *VMPoolSend) UpdateAllOk() bool {
+	return !s.sendrecv.filterCloudletKeys
+}
+
+func (s *GPUDriverSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
 

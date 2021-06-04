@@ -110,6 +110,8 @@ message PlatformConfig {
   string crm_access_private_key = 22;
   // controller access API address
   string access_api_addr = 23;
+  // cache dir
+  string cache_dir = 24;
 }
 
 // Platform Type
@@ -292,7 +294,7 @@ message GPUDriver {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  //option (protogen.notify_custom_update) = true;
+  option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "gpudrivername=Key.Name,gpudriver-org=Key.Organization,gpudrivertype=Key.Type";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.not_required) = "Key.Organization";
@@ -334,7 +336,8 @@ service GPUDriverApi {
       post: "/show/gpudriver"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
 
   // Add GPU Driver Build. Adds new build to GPU driver.
@@ -355,6 +358,17 @@ service GPUDriverApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "Build.Name";
     option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.Hypervisor";
+  }
+  // Get GPU Driver Build URL. Returns a time-limited signed URL to download GPU driver.
+  rpc GetGPUDriverBuildURL(GPUDriverBuildMember) returns (Result) {
+    option (google.api.http) = {
+      post: "/get/gpudriverbuildurl"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.method_also_required) = "Build.Name";
+    option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.Hypervisor";
+    option (protogen.mc2_custom_authz) = true;
   }
 }
 

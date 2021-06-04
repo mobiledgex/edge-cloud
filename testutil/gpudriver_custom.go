@@ -13,3 +13,7 @@ func (s *DummyServer) AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDr
 func (s *DummyServer) RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
 	return &edgeproto.Result{}, nil
 }
+
+func (s *DummyServer) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}

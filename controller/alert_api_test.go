@@ -39,6 +39,7 @@ func TestAlertApi(t *testing.T) {
 	testutil.InternalAlertTest(t, "show", &alertApi, testutil.AlertData)
 
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	testCloudlet := testutil.CloudletData[0]
 	testCloudlet.Key.Name = "testcloudlet"
@@ -97,6 +98,7 @@ func TestAppInstDownAlert(t *testing.T) {
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
