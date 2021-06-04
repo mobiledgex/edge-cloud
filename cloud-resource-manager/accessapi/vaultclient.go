@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/cloudflaremgmt"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
@@ -146,4 +147,15 @@ func (s *VaultClient) GetPublicCert(ctx context.Context, commonName string) (*va
 		return nil, err
 	}
 	return publicCert, nil
+}
+
+func (s *VaultClient) GetKafkaCreds(ctx context.Context) (*node.KafkaCreds, error) {
+	path := node.GetKafkaVaultPath(s.region, s.cloudlet.Key.Name, s.cloudlet.Key.Organization)
+	creds := node.KafkaCreds{}
+	err := vault.GetData(s.vaultConfig, path, 0, &creds)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get kafka credentials at %s, %v", path, err)
+	}
+	return &creds, nil
+
 }

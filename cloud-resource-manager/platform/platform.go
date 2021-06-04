@@ -152,6 +152,7 @@ type AccessApi interface {
 	GetDNSRecords(ctx context.Context, zone, fqdn string) ([]cloudflare.DNSRecord, error)
 	DeleteDNSRecord(ctx context.Context, zone, recordID string) error
 	GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error)
+	GetKafkaCreds(ctx context.Context) (*node.KafkaCreds, error)
 }
 
 var pfMaps = map[string]string{

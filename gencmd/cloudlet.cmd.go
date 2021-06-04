@@ -1518,6 +1518,9 @@ var CloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1594,6 +1597,9 @@ var CloudletComments = map[string]string{
 	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
 	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
 	"hostcontroller":                      "Addr of the controller hosting the cloudlet services if it is running locally",
+	"kafkacluster":                        "operator provided kafka cluster endpoint to push events to",
+	"kafkauser":                           "username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
+	"kafkapassword":                       "password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1941,6 +1947,9 @@ var CreateCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1980,6 +1989,9 @@ var DeleteCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2007,6 +2019,9 @@ var UpdateCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2046,6 +2061,9 @@ var ShowCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

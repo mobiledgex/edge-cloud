@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
@@ -34,6 +35,27 @@ func GetData(config *Config, path string, version int, data interface{}) error {
 		return err
 	}
 	return mapstructure.WeakDecode(vdat["data"], data)
+}
+
+func PutData(config *Config, path string, data interface{}) error {
+	client, err := config.Login()
+	if err != nil {
+		return err
+	}
+	vdata := map[string]interface{}{
+		"data": data,
+	}
+	out, err := json.Marshal(vdata)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal data to json: %v", err)
+	}
+
+	var vaultData map[string]interface{}
+	err = json.Unmarshal(out, &vaultData)
+	if err != nil {
+		return fmt.Errorf("Failed to unmarshal json to vault data: %v", err)
+	}
+	return PutKV(client, path, vaultData)
 }
 
 func GetEnvVars(config *Config, path string) (map[string]string, error) {
