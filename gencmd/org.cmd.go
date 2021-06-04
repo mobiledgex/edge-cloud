@@ -64,7 +64,7 @@ func OrganizationInUse(c *cli.Command, in *edgeproto.Organization) error {
 		}
 		return fmt.Errorf("OrganizationInUse failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 

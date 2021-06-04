@@ -36,16 +36,17 @@ type PlatformConfig struct {
 }
 
 type Caches struct {
-	SettingsCache    *edgeproto.SettingsCache
-	FlavorCache      *edgeproto.FlavorCache
-	TrustPolicyCache *edgeproto.TrustPolicyCache
-	ClusterInstCache *edgeproto.ClusterInstCache
-	AppInstCache     *edgeproto.AppInstCache
-	AppCache         *edgeproto.AppCache
-	ResTagTableCache *edgeproto.ResTagTableCache
-	CloudletCache    *edgeproto.CloudletCache
-	VMPoolCache      *edgeproto.VMPoolCache
-	VMPoolInfoCache  *edgeproto.VMPoolInfoCache
+	SettingsCache         *edgeproto.SettingsCache
+	FlavorCache           *edgeproto.FlavorCache
+	TrustPolicyCache      *edgeproto.TrustPolicyCache
+	ClusterInstCache      *edgeproto.ClusterInstCache
+	AppInstCache          *edgeproto.AppInstCache
+	AppCache              *edgeproto.AppCache
+	ResTagTableCache      *edgeproto.ResTagTableCache
+	CloudletCache         *edgeproto.CloudletCache
+	CloudletInternalCache *edgeproto.CloudletInternalCache
+	VMPoolCache           *edgeproto.VMPoolCache
+	VMPoolInfoCache       *edgeproto.VMPoolInfoCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
@@ -83,7 +84,7 @@ type Platform interface {
 	// Delete an AppInst on a Cluster
 	DeleteAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
 	// Update an AppInst
-	UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
+	UpdateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get AppInst runtime information
 	GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error)
 	// Get the client to manage the ClusterInst
@@ -91,7 +92,7 @@ type Platform interface {
 	// Get the client to manage the specified platform management node
 	GetNodePlatformClient(ctx context.Context, node *edgeproto.CloudletMgmtNode, ops ...pc.SSHClientOp) (ssh.Client, error)
 	// List the cloudlet management nodes used by this platform
-	ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst) ([]edgeproto.CloudletMgmtNode, error)
+	ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst, vmAppInsts []edgeproto.AppInst) ([]edgeproto.CloudletMgmtNode, error)
 	// Get the command to pass to PlatformClient for the container command
 	GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
 	// Get the console URL of the VM app
@@ -151,11 +152,13 @@ type AccessApi interface {
 	GetDNSRecords(ctx context.Context, zone, fqdn string) ([]cloudflare.DNSRecord, error)
 	DeleteDNSRecord(ctx context.Context, zone, recordID string) error
 	GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error)
+	GetKafkaCreds(ctx context.Context) (*node.KafkaCreds, error)
 }
 
 var pfMaps = map[string]string{
 	"fakeinfra": "fake",
 	"edgebox":   "dind",
+	"kindinfra": "kind",
 }
 
 func GetType(pfType string) string {

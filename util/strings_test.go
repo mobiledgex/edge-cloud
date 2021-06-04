@@ -57,8 +57,23 @@ var camelCaseMaps = []StringMap{
 	},
 }
 
+var camelCaseSplits = map[string][]string{
+	"":             []string{},
+	"testStr":      []string{"test", "Str"},
+	"testStrSS":    []string{"test", "Str", "S", "S"},
+	"TTtTestStrSS": []string{"T", "Tt", "Test", "Str", "S", "S"},
+	"TestStr12":    []string{"Test", "Str12"},
+}
+
 func TestCamelCase(t *testing.T) {
 	for _, stringMap := range camelCaseMaps {
 		require.Equal(t, stringMap.to, CamelCase(stringMap.from))
+	}
+	for camelCaseStr, camelSplit := range camelCaseSplits {
+		out := SplitCamelCase(camelCaseStr)
+		require.Equal(t, len(out), len(camelSplit), camelCaseStr)
+		for ii, _ := range out {
+			require.Equal(t, out[ii], camelSplit[ii], camelCaseStr)
+		}
 	}
 }

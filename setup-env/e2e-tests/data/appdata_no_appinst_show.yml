@@ -16,7 +16,7 @@ settings:
   updatecloudlettimeout: 2s
   updatetrustpolicytimeout: 5s
   masternodeflavor: x1.small
-  loadbalancermaxportrange: 100
+
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   influxdbmetricsretention: 672h0m0s
@@ -27,7 +27,7 @@ settings:
   influxdbcloudletusagemetricsretention: 8760h0m0s
   appinstclientcleanupinterval: 24h
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1s
+  edgeeventsmetricscollectioninterval: 3s
   influxdbedgeeventsmetricsretention: 672h0m0s
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
@@ -236,10 +236,6 @@ cloudletinfos:
     - name: vCPUs
       value: 16
       inframaxvalue: 50
-    - name: Disk
-      value: 320
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 3
       inframaxvalue: 30
@@ -295,10 +291,6 @@ cloudletinfos:
     - name: vCPUs
       value: 14
       inframaxvalue: 50
-    - name: Disk
-      value: 280
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 2
       inframaxvalue: 30
@@ -354,10 +346,6 @@ cloudletinfos:
     - name: vCPUs
       value: 4
       inframaxvalue: 50
-    - name: Disk
-      value: 80
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -406,10 +394,6 @@ cloudletinfos:
     - name: vCPUs
       value: 4
       inframaxvalue: 50
-    - name: Disk
-      value: 80
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -458,10 +442,6 @@ cloudletinfos:
     - name: vCPUs
       value: 4
       inframaxvalue: 50
-    - name: Disk
-      value: 80
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30

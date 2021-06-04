@@ -180,7 +180,7 @@ func CreateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			return fmt.Errorf("CreateCloudlet recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -188,7 +188,7 @@ func CreateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -261,7 +261,7 @@ func DeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			return fmt.Errorf("DeleteCloudlet recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -269,7 +269,7 @@ func DeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -343,7 +343,7 @@ func UpdateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 			return fmt.Errorf("UpdateCloudlet recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -351,7 +351,7 @@ func UpdateCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -428,7 +428,7 @@ func ShowCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -485,7 +485,7 @@ func GetCloudletManifest(c *cli.Command, in *edgeproto.CloudletKey) error {
 		}
 		return fmt.Errorf("GetCloudletManifest failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -542,7 +542,7 @@ func GetCloudletProps(c *cli.Command, in *edgeproto.CloudletProps) error {
 		}
 		return fmt.Errorf("GetCloudletProps failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -599,7 +599,7 @@ func GetCloudletResourceQuotaProps(c *cli.Command, in *edgeproto.CloudletResourc
 		}
 		return fmt.Errorf("GetCloudletResourceQuotaProps failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -656,7 +656,7 @@ func GetCloudletResourceUsage(c *cli.Command, in *edgeproto.CloudletResourceUsag
 		}
 		return fmt.Errorf("GetCloudletResourceUsage failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -713,7 +713,7 @@ func AddCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) error {
 		}
 		return fmt.Errorf("AddCloudletResMapping failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -770,7 +770,7 @@ func RemoveCloudletResMapping(c *cli.Command, in *edgeproto.CloudletResMap) erro
 		}
 		return fmt.Errorf("RemoveCloudletResMapping failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -827,7 +827,7 @@ func FindFlavorMatch(c *cli.Command, in *edgeproto.FlavorMatch) error {
 		}
 		return fmt.Errorf("FindFlavorMatch failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -884,7 +884,7 @@ func RevokeAccessKey(c *cli.Command, in *edgeproto.CloudletKey) error {
 		}
 		return fmt.Errorf("RevokeAccessKey failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -941,7 +941,7 @@ func GenerateAccessKey(c *cli.Command, in *edgeproto.CloudletKey) error {
 		}
 		return fmt.Errorf("GenerateAccessKey failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -1018,7 +1018,7 @@ func PlatformDeleteCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -1114,7 +1114,7 @@ func ShowCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -1171,7 +1171,7 @@ func InjectCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 		}
 		return fmt.Errorf("InjectCloudletInfo failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -1228,7 +1228,7 @@ func EvictCloudletInfo(c *cli.Command, in *edgeproto.CloudletInfo) error {
 		}
 		return fmt.Errorf("EvictCloudletInfo failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -1312,7 +1312,7 @@ func ShowCloudletMetrics(c *cli.Command, in *edgeproto.CloudletMetrics) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -1368,6 +1368,24 @@ var OperationTimeLimitsComments = map[string]string{
 	"deleteappinsttimeout":     "override default max time to delete an app instance (duration)",
 }
 var OperationTimeLimitsSpecialArgs = map[string]string{}
+var CloudletInternalRequiredArgs = []string{
+	"key.organization",
+	"key.name",
+}
+var CloudletInternalOptionalArgs = []string{
+	"props",
+}
+var CloudletInternalAliasArgs = []string{}
+var CloudletInternalComments = map[string]string{
+	"fields":           "Fields are used for the Update API to specify which fields to apply.",
+	"key.organization": "Organization of the cloudlet site",
+	"key.name":         "Name of the cloudlet",
+	"props":            "Map of key value pairs for data exchanged between components",
+}
+var CloudletInternalSpecialArgs = map[string]string{
+	"fields": "StringArray",
+	"props":  "StringToString",
+}
 var PlatformConfigRequiredArgs = []string{}
 var PlatformConfigOptionalArgs = []string{
 	"containerregistrypath",
@@ -1500,6 +1518,9 @@ var CloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1529,7 +1550,7 @@ var CloudletComments = map[string]string{
 	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind",
+	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
 	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
@@ -1576,6 +1597,9 @@ var CloudletComments = map[string]string{
 	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
 	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
 	"hostcontroller":                      "Addr of the controller hosting the cloudlet services if it is running locally",
+	"kafkacluster":                        "operator provided kafka cluster endpoint to push events to",
+	"kafkauser":                           "username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
+	"kafkapassword":                       "password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":    "StringToString",
@@ -1646,7 +1670,7 @@ var CloudletPropsOptionalArgs = []string{
 }
 var CloudletPropsAliasArgs = []string{}
 var CloudletPropsComments = map[string]string{
-	"platformtype":                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind",
+	"platformtype":                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
 	"properties:#.value.name":        "Name of the property",
 	"properties:#.value.description": "Description of the property",
 	"properties:#.value.value":       "Default value of the property",
@@ -1670,7 +1694,7 @@ var CloudletResourceQuotaPropsOptionalArgs = []string{
 }
 var CloudletResourceQuotaPropsAliasArgs = []string{}
 var CloudletResourceQuotaPropsComments = map[string]string{
-	"platformtype":                "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind",
+	"platformtype":                "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
 	"properties:#.name":           "Resource name",
 	"properties:#.value":          "Resource value",
 	"properties:#.inframaxvalue":  "Resource infra max value",
@@ -1813,6 +1837,7 @@ var CloudletInfoOptionalArgs = []string{
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization",
 	"trustpolicystate",
 	"compatibilityversion",
+	"properties",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -1842,7 +1867,7 @@ var CloudletInfoComments = map[string]string{
 	"controllercachereceived":                "Indicates all controller data has been sent to CRM",
 	"maintenancestate":                       "State for maintenance, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
 	"resourcessnapshot.platformvms:#.name":   "Virtual machine name",
-	"resourcessnapshot.platformvms:#.type":   "Type can be platform, rootlb, cluster-master, cluster-node, vmapp",
+	"resourcessnapshot.platformvms:#.type":   "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"resourcessnapshot.platformvms:#.status": "Runtime status of the VM",
 	"resourcessnapshot.platformvms:#.infraflavor":                   "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
 	"resourcessnapshot.platformvms:#.containers:#.name":             "Name of the container",
@@ -1866,11 +1891,13 @@ var CloudletInfoComments = map[string]string{
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 	"trustpolicystate":     "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"compatibilityversion": "Version for compatibility tracking",
+	"properties":           "Cloudlet properties",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
 	"fields":            "StringArray",
 	"flavors:#.propmap": "StringToString",
+	"properties":        "StringToString",
 	"status.msgs":       "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}
@@ -1920,6 +1947,9 @@ var CreateCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1959,6 +1989,9 @@ var DeleteCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -1986,6 +2019,9 @@ var UpdateCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2025,6 +2061,9 @@ var ShowCloudletOptionalArgs = []string{
 	"resourcequotas:#.value",
 	"resourcequotas:#.alertthreshold",
 	"defaultresourcealertthreshold",
+	"kafkacluster",
+	"kafkauser",
+	"kafkapassword",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

@@ -31,7 +31,7 @@ settings:
   createcloudlettimeout: 10s
   updatecloudlettimeout: 2s
   masternodeflavor: x1.small
-  loadbalancermaxportrange: 100
+
   maxtrackeddmeclients: 100
   chefclientinterval: 10m0s
   influxdbmetricsretention: 2h0m0s
@@ -43,7 +43,7 @@ settings:
   influxdbcloudletusagemetricsretention: 8760h0m0s
   appinstclientcleanupinterval: 24h
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1s
+  edgeeventsmetricscollectioninterval: 3s
   influxdbedgeeventsmetricsretention: 672h0m0s
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
@@ -161,10 +161,6 @@ cloudletinfos:
     - name: vCPUs
       value: 10
       inframaxvalue: 50
-    - name: Disk
-      value: 200
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -215,10 +211,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 2
       inframaxvalue: 30
@@ -260,7 +252,7 @@ clusterinsts:
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -300,7 +292,7 @@ clusterinsts:
       ipaddresses:
       - externalip: 10.100.100.11
     - name: fake-cluster-vm-2
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:

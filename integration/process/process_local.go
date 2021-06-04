@@ -97,6 +97,7 @@ func (p *Etcd) ResetData() error {
 
 func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--etcdUrls", p.EtcdAddrs, "--notifyAddr", p.NotifyAddr}
+	args = append(args, p.GetNodeMgrArgs()...)
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
@@ -105,14 +106,9 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--httpAddr")
 		args = append(args, p.HttpAddr)
 	}
-	args = p.TLS.AddInternalPkiArgs(args)
 	if p.InfluxAddr != "" {
 		args = append(args, "--influxAddr")
 		args = append(args, p.InfluxAddr)
-	}
-	if p.VaultAddr != "" {
-		args = append(args, "--vaultAddr")
-		args = append(args, p.VaultAddr)
 	}
 	if p.RegistryFQDN != "" {
 		args = append(args, "--registryFQDN")
@@ -141,9 +137,6 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
-	if p.UseVaultPki {
-		args = append(args, "--useVaultPki")
-	}
 	if p.EdgeTurnAddr != "" {
 		args = append(args, "--edgeTurnAddr")
 		args = append(args, p.EdgeTurnAddr)
@@ -169,19 +162,9 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--checkpointInterval")
 		args = append(args, p.CheckpointInterval)
 	}
-	if p.DeploymentTag != "" {
-		args = append(args, "--deploymentTag")
-		args = append(args, p.DeploymentTag)
-	}
 	if p.ChefServerPath != "" {
 		args = append(args, "--chefServerPath")
 		args = append(args, p.ChefServerPath)
-	}
-	if p.AccessApiAddr != "" {
-		args = append(args, "--accessApiAddr", p.AccessApiAddr)
-	}
-	if p.RequireNotifyAccessKey {
-		args = append(args, "--requireNotifyAccessKey")
 	}
 
 	envs := p.GetEnv()
@@ -279,6 +262,7 @@ func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
 
 func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	args = append(args, p.GetNodeMgrArgs()...)
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
@@ -307,14 +291,6 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
 	}
-	args = p.TLS.AddInternalPkiArgs(args)
-	if p.VaultAddr != "" {
-		args = append(args, "--vaultAddr")
-		args = append(args, p.VaultAddr)
-	}
-	if p.UseVaultPki {
-		args = append(args, "--useVaultPki")
-	}
 	if p.CookieExpr != "" {
 		args = append(args, "--cookieExpiration")
 		args = append(args, p.CookieExpr)
@@ -322,12 +298,7 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
-	if p.AccessKeyFile != "" {
-		args = append(args, "--accessKeyFile", p.AccessKeyFile)
-	}
-	if p.AccessApiAddr != "" {
-		args = append(args, "--accessApiAddr", p.AccessApiAddr)
-	}
+
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -401,6 +372,7 @@ func (p *Dme) getTlsConfig(addr string) *tls.Config {
 
 func (p *Crm) GetArgs(opts ...StartOp) []string {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	args = append(args, p.GetNodeMgrArgs()...)
 	if p.NotifySrvAddr != "" {
 		args = append(args, "--notifySrvAddr")
 		args = append(args, p.NotifySrvAddr)
@@ -409,7 +381,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
 	}
-	args = p.TLS.AddInternalPkiArgs(args)
 	if p.Name != "" {
 		args = append(args, "--hostname")
 		args = append(args, p.Name)
@@ -421,10 +392,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	if p.Plugin != "" {
 		args = append(args, "--plugin")
 		args = append(args, p.Plugin)
-	}
-	if p.VaultAddr != "" {
-		args = append(args, "--vaultAddr")
-		args = append(args, p.VaultAddr)
 	}
 	if p.PhysicalName != "" {
 		args = append(args, "--physicalName")
@@ -453,9 +420,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--region")
 		args = append(args, p.Region)
 	}
-	if p.UseVaultPki {
-		args = append(args, "--useVaultPki")
-	}
 	if p.AppDNSRoot != "" {
 		args = append(args, "--appDNSRoot")
 		args = append(args, p.AppDNSRoot)
@@ -464,16 +428,7 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--chefServerPath")
 		args = append(args, p.ChefServerPath)
 	}
-	if p.DeploymentTag != "" {
-		args = append(args, "--deploymentTag")
-		args = append(args, p.DeploymentTag)
-	}
-	if p.AccessKeyFile != "" {
-		args = append(args, "--accessKeyFile", p.AccessKeyFile)
-	}
-	if p.AccessApiAddr != "" {
-		args = append(args, "--accessApiAddr", p.AccessApiAddr)
-	}
+
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -622,11 +577,11 @@ func (p *Influx) GetClient() (influxclient.Client, error) {
 
 func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	args = append(args, p.GetNodeMgrArgs()...)
 	if p.CtrlAddrs != "" {
 		args = append(args, "--ctrlAddrs")
 		args = append(args, p.CtrlAddrs)
 	}
-	args = p.TLS.AddInternalPkiArgs(args)
 	if p.PromPorts != "" {
 		args = append(args, "--prometheus-ports")
 		args = append(args, p.PromPorts)
@@ -641,13 +596,6 @@ func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	}
 	if p.PluginRequired {
 		args = append(args, "--pluginRequired")
-	}
-	if p.VaultAddr != "" {
-		args = append(args, "--vaultAddr")
-		args = append(args, p.VaultAddr)
-	}
-	if p.UseVaultPki {
-		args = append(args, "--useVaultPki")
 	}
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
@@ -1104,7 +1052,7 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 		"traefik.http.services.jaeger-c.loadbalancer.server.port=14268",
 		"traefik.http.services.jaeger-ui-notls.loadbalancer.server.port=16686",
 	}
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	for _, l := range labels {
 		args = append(args, "-l", l)
 	}
@@ -1118,7 +1066,7 @@ func (p *Jaeger) StartLocal(logfile string, opts ...StartOp) error {
 }
 
 func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	// jaeger version should match "jaeger_version" in
 	// ansible/roles/jaeger/defaults/main.yaml
 	args = append(args,
@@ -1152,7 +1100,7 @@ func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
 	return err
 }
 
-func (p *DockerGeneric) getRunArgs() []string {
+func (p *DockerGeneric) GetRunArgs() []string {
 	args := []string{
 		"run", "--rm", "--name", p.Name,
 	}
@@ -1176,6 +1124,10 @@ func (p *DockerGeneric) GetExeName() string { return "docker" }
 
 func (p *DockerGeneric) LookupArgs() string { return p.Name }
 
+func (p *DockerGeneric) SetCmd(cmd *exec.Cmd) { p.cmd = cmd }
+
+func (p *DockerGeneric) GetCmd() *exec.Cmd { return p.cmd }
+
 func (p *ElasticSearch) StartLocal(logfile string, opts ...StartOp) error {
 	switch p.Type {
 	case "kibana":
@@ -1189,7 +1141,7 @@ func (p *ElasticSearch) StartLocal(logfile string, opts ...StartOp) error {
 
 func (p *ElasticSearch) StartElasticSearch(logfile string, opts ...StartOp) error {
 	// simple single node cluster
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	args = append(args,
 		"-p", "9200:9200",
 		"-p", "9300:9300",
@@ -1228,7 +1180,7 @@ func (p *ElasticSearch) StartElasticSearch(logfile string, opts ...StartOp) erro
 }
 
 func (p *ElasticSearch) StartKibana(logfile string, opts ...StartOp) error {
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	args = append(args,
 		"-p", "5601:5601",
 		"docker.elastic.co/kibana/kibana:7.6.2",
@@ -1302,7 +1254,7 @@ func (p *ElasticSearch) StartNginxProxy(logfile string, opts ...StartOp) error {
 	}
 	wr.Flush()
 
-	args := p.getRunArgs()
+	args := p.GetRunArgs()
 	args = append(args,
 		"-p", "9201:9201",
 		"-v", fmt.Sprintf("%s:/certs", certsDir),
@@ -1352,15 +1304,8 @@ http {
 `
 
 func (p *NotifyRoot) StartLocal(logfile string, opts ...StartOp) error {
-	args := []string{}
-	if p.VaultAddr != "" {
-		args = append(args, "--vaultAddr")
-		args = append(args, p.VaultAddr)
-	}
-	args = p.TLS.AddInternalPkiArgs(args)
-	if p.UseVaultPki {
-		args = append(args, "--useVaultPki")
-	}
+	args := p.GetNodeMgrArgs()
+
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -1398,7 +1343,7 @@ func (p *NotifyRoot) GetExeName() string { return "notifyroot" }
 func (p *NotifyRoot) LookupArgs() string { return "" }
 
 func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
-	args := []string{}
+	args := p.GetNodeMgrArgs()
 	if p.ListenAddr != "" {
 		args = append(args, "--listenAddr")
 		args = append(args, p.ListenAddr)
@@ -1407,19 +1352,11 @@ func (p *EdgeTurn) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--proxyAddr")
 		args = append(args, p.ProxyAddr)
 	}
-	args = p.TLS.AddInternalPkiArgs(args)
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
 	}
 	if p.TestMode {
 		args = append(args, "--testMode")
-	}
-	if p.UseVaultPki {
-		args = append(args, "--useVaultPki")
-	}
-	if p.VaultAddr != "" {
-		args = append(args, "--vaultAddr")
-		args = append(args, p.VaultAddr)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

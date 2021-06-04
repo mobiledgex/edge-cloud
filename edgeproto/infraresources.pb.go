@@ -123,7 +123,7 @@ var xxx_messageInfo_IpAddr proto.InternalMessageInfo
 type VmInfo struct {
 	// Virtual machine name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+	// Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm
 	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
 	// Runtime status of the VM
 	Status string `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`

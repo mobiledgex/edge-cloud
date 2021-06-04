@@ -45,18 +45,124 @@ func TestEnvVars(t *testing.T) {
 	}))
 	defer tsEnvVars.Close()
 
+	names := &KubeNames{}
+
 	authApi := &cloudcommon.DummyRegistryAuthApi{}
 	// Test Deploymeent manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
-	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
+	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
 	require.Nil(t, err)
 	// make envVars remote
 	app.Configs[0].Config = tsEnvVars.URL
-	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil)
+	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
+
+	// Test resource limit injection with namespace
+	names.Namespace = "app-ns"
+	app.AllowServerless = true
+	app.ServerlessConfig = &edgeproto.ServerlessConfig{
+		Vcpus:       0.5,
+		Ram:         20,
+		MinReplicas: 2,
+	}
+	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
+	require.Nil(t, err)
+	require.Equal(t, expectedFullManifest, merged)
 }
+
+var expectedFullManifest = `apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+    run: pokemongo1.0.0
+  name: pokemongo100-tcp
+spec:
+  ports:
+  - name: tcp443
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  - name: tcp10002
+    port: 10002
+    protocol: TCP
+    targetPort: 10002
+  selector:
+    run: pokemongo1.0.0
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+    run: pokemongo1.0.0
+  name: pokemongo100-udp
+spec:
+  ports:
+  - name: udp10002
+    port: 10002
+    protocol: UDP
+    targetPort: 10002
+  selector:
+    run: pokemongo1.0.0
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    config: app-ns
+  name: pokemongo100-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      run: pokemongo1.0.0
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mex-app: pokemongo100-deployment
+        mexAppName: pokemongo
+        mexAppVersion: "100"
+        run: pokemongo1.0.0
+    spec:
+      containers:
+      - env:
+        - name: SOME_ENV1
+          value: value1
+        - name: SOME_ENV2
+        imagePullPolicy: Always
+        name: pokemongo100
+        ports:
+        - containerPort: 443
+          protocol: TCP
+        - containerPort: 10002
+          protocol: TCP
+        - containerPort: 10002
+          protocol: UDP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 20Mi
+          requests:
+            cpu: 500m
+            memory: 20Mi
+      imagePullSecrets:
+      - {}
+status: {}
+`
 
 var deploymentManifest = `apiVersion: v1
 kind: Service
@@ -162,6 +268,7 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
+    config: ""
     run: pokemongo
   name: pokemongo-tcp
 spec:
@@ -180,6 +287,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   creationTimestamp: null
+  labels:
+    config: ""
   name: pokemongo-deployment
 spec:
   replicas: 1
@@ -233,6 +342,8 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   creationTimestamp: null
+  labels:
+    config: ""
   name: pokemongo2-deployment
 spec:
   selector:
@@ -274,6 +385,7 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: influxdb
+    config: ""
   name: influxdb
 spec:
   replicas: 1
@@ -342,7 +454,7 @@ func TestImagePullSecrets(t *testing.T) {
 		names.ImagePullSecrets = append(names.ImagePullSecrets, secret)
 	}
 
-	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets)
+	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets, &KubeNames{})
 	require.Nil(t, err)
 	fmt.Println(newMf)
 	require.Equal(t, newMf, expectedDeploymentManifest)

@@ -42,15 +42,17 @@ build-linux:
 build-docker:
 	rsync --checksum .dockerignore ../.dockerignore
 	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d'), ${TAG}" \
-		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
-	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
-	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
-	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
-	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
-	for ADDLTAG in ${ADDLTAGS}; do \
-		docker tag mobiledgex/edge-cloud:${TAG} $$ADDLTAG; \
-		docker push $$ADDLTAG; \
-	done
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t mobiledgex/edge-cloud:$(TAG) -f docker/Dockerfile.edge-cloud ..
+	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:${TAG}
+	docker push $(REGISTRY)/edge-cloud:$(TAG)
+	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:latest
+	docker push $(REGISTRY)/edge-cloud:latest
+
+build-nightly: REGISTRY = harbor.mobiledgex.net/mobiledgex
+build-nightly: build-docker
+	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:nightly
+	docker push $(REGISTRY)/edge-cloud:nightly
 
 install:
 	go install ./...
@@ -82,7 +84,7 @@ lint:
 UNIT_TEST_LOG ?= /tmp/edge-cloud-unit-test.log
 
 unit-test:
-	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
+	go test ./... > $(UNIT_TEST_LOG) || !(grep -A6 "\--- FAIL:" $(UNIT_TEST_LOG) && grep "FAIL\tgithub.com" $(UNIT_TEST_LOG))
 
 test:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml

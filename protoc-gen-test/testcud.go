@@ -917,7 +917,7 @@ func (t *TestCud) genDummyServer() {
 					break
 				}
 			}
-			if hasCudMethod {
+			if hasCudMethod || GetExplicitDummyServer(service) {
 				t.P("edgeproto.Register", service.Name,
 					"Server(server, d)")
 			}
@@ -1175,6 +1175,10 @@ func GetTestUpdate(field *descriptor.FieldDescriptorProto) bool {
 
 func GetDummyServer(service *descriptor.ServiceDescriptorProto) bool {
 	return proto.GetBoolExtension(service.Options, protogen.E_DummyServer, true)
+}
+
+func GetExplicitDummyServer(service *descriptor.ServiceDescriptorProto) bool {
+	return proto.GetBoolExtension(service.Options, protogen.E_DummyServer, false)
 }
 
 func GetGenerateAddrmTest(message *descriptor.DescriptorProto) bool {

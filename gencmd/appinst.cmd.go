@@ -161,7 +161,7 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			return fmt.Errorf("CreateAppInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -169,7 +169,7 @@ func CreateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -242,7 +242,7 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			return fmt.Errorf("DeleteAppInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -250,7 +250,7 @@ func DeleteAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -323,7 +323,7 @@ func RefreshAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			return fmt.Errorf("RefreshAppInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -331,7 +331,7 @@ func RefreshAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -405,7 +405,7 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 			return fmt.Errorf("UpdateAppInst recv failed: %s", errstr)
 		}
 		if cli.OutputStream {
-			c.WriteOutput(obj, cli.OutputFormat)
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
 		}
 		objs = append(objs, obj)
@@ -413,7 +413,7 @@ func UpdateAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -490,7 +490,7 @@ func ShowAppInst(c *cli.Command, in *edgeproto.AppInst) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -577,7 +577,7 @@ func ShowAppInstInfo(c *cli.Command, in *edgeproto.AppInstInfo) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -659,7 +659,7 @@ func ShowAppInstMetrics(c *cli.Command, in *edgeproto.AppInstMetrics) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -722,7 +722,7 @@ func RequestAppInstLatency(c *cli.Command, in *edgeproto.AppInstLatency) error {
 		}
 		return fmt.Errorf("RequestAppInstLatency failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -846,8 +846,8 @@ var AppInstComments = map[string]string{
 	"revision":                       "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
-	"configs:#.kind":                 "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
-	"configs:#.config":               "config file contents or URI reference",
+	"configs:#.kind":                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
+	"configs:#.config":               "Config file contents or URI reference",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
 	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",

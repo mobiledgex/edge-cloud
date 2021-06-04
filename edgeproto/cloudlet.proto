@@ -50,6 +50,21 @@ message OperationTimeLimits{
     int64 delete_app_inst_timeout = 6 [(gogoproto.casttype) = "Duration"];
 }
 
+// CloudletInternal is for data exchanged only between CRM and Shepherd and never the controller 
+message CloudletInternal {
+  // Fields are used for the Update API to specify which fields to apply.
+  repeated string fields = 1;
+  // Resource cloudlet key
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
+  // Map of key value pairs for data exchanged between components
+  map<string, string> props = 3;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.uses_org) = "key=Organization";
+  option (protogen.notify_cache) = true;
+}
+
 //
 // Platform specific configuration required for Cloudlet management
 message PlatformConfig {
@@ -115,6 +130,7 @@ message PlatformConfig {
 // 11: `PLATFORM_TYPE_VCD`
 // 12: `PLATFORM_TYPE_K8S_BARE_METAL`
 // 13: `PLATFORM_TYPE_KIND`
+// 14: `PLATFORM_TYPE_KINDINFRA`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -144,6 +160,8 @@ enum PlatformType {
   PLATFORM_TYPE_K8S_BARE_METAL = 12;
   // KIND Cloudlet
   PLATFORM_TYPE_KIND = 13;
+  // KIND Infra Cloudlet
+  PLATFORM_TYPE_KINDINFRA = 14;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
@@ -268,6 +286,12 @@ message Cloudlet {
   int32 default_resource_alert_threshold = 40 [(protogen.hidetag) = "nocmp"];
   // Addr of the controller hosting the cloudlet services if it is running locally
   string HostController = 41 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // operator provided kafka cluster endpoint to push events to
+  string kafka_cluster = 42;
+  // username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+  string kafka_user = 43;
+  // password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+  string kafka_password = 44;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -540,6 +564,8 @@ message CloudletInfo {
   TrackedState trust_policy_state = 18 [(protogen.hidetag) = "nocmp"];
   // Version for compatibility tracking
   uint32 compatibility_version = 19 [(protogen.hidetag) = "nocmp"];
+  // Cloudlet properties
+  map<string,string> properties = 20;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
@@ -585,4 +611,23 @@ service CloudletMetricsApi {
       body: "*"
     };
   }
+}
+
+// Report Schedule
+//
+// ReportSchedule is the interval for which report is to be generated
+//
+// 0: `EveryWeek`
+// 1: `Every15Days`
+// 2: `Every30Days`
+// 3: `EveryMonth`
+enum ReportSchedule {
+  // Every Week
+  EveryWeek = 0;
+  // Every 15 Days
+  Every15Days = 1;
+  // Every 30 Days
+  Every30Days = 2;
+  // Every Month
+  EveryMonth = 3;
 }

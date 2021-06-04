@@ -13,14 +13,27 @@ import (
 
 var (
 	// Common platform resources
-	ResourceRamMb  = "RAM"
-	ResourceVcpus  = "vCPUs"
-	ResourceDiskGb = "Disk"
-	ResourceGpus   = "GPUs"
+	ResourceRamMb = "RAM"
+	ResourceVcpus = "vCPUs"
+	ResourceGpus  = "GPUs"
 
-	ResourceRamUnits  = "MB"
-	ResourceDiskUnits = "GB"
+	// Platform specific resources
+	ResourceInstances   = "Instances"
+	ResourceFloatingIPs = "Floating IPs"
+	ResourceExternalIPs = "External IPs"
 
+	// Resource units
+	ResourceRamUnits = "MB"
+
+	// Resource metrics
+	ResourceMetricRamMB       = "ramUsed"
+	ResourceMetricVcpus       = "vcpusUsed"
+	ResourceMetricsGpus       = "gpusUsed"
+	ResourceMetricInstances   = "instancesUsed"
+	ResourceMetricExternalIPs = "externalIpsUsed"
+	ResourceMetricFloatingIPs = "floatingIpsUsed"
+
+	// Common cloudlet resources
 	CloudletResources = []edgeproto.InfraResource{
 		edgeproto.InfraResource{
 			Name:        ResourceRamMb,
@@ -31,13 +44,24 @@ var (
 			Description: "Limit on vCPUs available",
 		},
 		edgeproto.InfraResource{
-			Name:        ResourceDiskGb,
-			Description: "Limit on disk available (GB)",
-		},
-		edgeproto.InfraResource{
 			Name:        ResourceGpus,
 			Description: "Limit on GPUs available",
 		},
+	}
+
+	ResourceQuotaDesc = map[string]string{
+		ResourceInstances:   "Limit on number of instances that can be provisioned",
+		ResourceFloatingIPs: "Limit on number of floating IPs that can be created",
+		ResourceExternalIPs: "Limit on how many external IPs are available",
+	}
+
+	ResourceMetricsDesc = map[string]string{
+		ResourceMetricRamMB:       "RAM Usage (MB)",
+		ResourceMetricVcpus:       "vCPU Usage",
+		ResourceMetricsGpus:       "GPU Usage",
+		ResourceMetricInstances:   "VM Instance Usage",
+		ResourceMetricExternalIPs: "External IP Usage",
+		ResourceMetricFloatingIPs: "Floating IP Usage",
 	}
 )
 
@@ -58,6 +82,12 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			masterNodeFlavorFound = true
 		}
 	}
+	// platforms with no native flavor support return zero len flavor lists and use our meta flavors only
+	if len(pfFlavorList) == 0 {
+		log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources empty flavor list", "clusterinst key", clusterInst.Key, "platform flavors", pfFlavorList, "root lb flavor", rootLBFlavor)
+		nodeFlavorFound = true
+		masterNodeFlavorFound = true
+	}
 
 	if !nodeFlavorFound {
 		return nil, fmt.Errorf("Node flavor %s does not exist", clusterInst.NodeFlavor)
@@ -69,7 +99,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 		vmResources = append(vmResources, edgeproto.VMResource{
 			Key:      clusterInst.Key,
 			VmFlavor: nodeFlavor,
-			Type:     VMTypeClusterNode,
+			Type:     VMTypeClusterDockerNode,
 		})
 	} else {
 		for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
@@ -91,7 +121,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			vmResources = append(vmResources, edgeproto.VMResource{
 				Key:      clusterInst.Key,
 				VmFlavor: nodeFlavor,
-				Type:     VMTypeClusterNode,
+				Type:     VMTypeClusterK8sNode,
 			})
 		}
 	}

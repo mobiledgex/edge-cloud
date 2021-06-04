@@ -58,6 +58,36 @@ func (c *Common) GetEnv() []string {
 	return envs
 }
 
+// Common args for all nodeMgr processes
+type NodeCommon struct {
+	TLS           TLSCerts
+	VaultAddr     string
+	UseVaultPki   bool
+	DeploymentTag string
+	AccessApiAddr string
+	AccessKeyFile string
+}
+
+func (p *NodeCommon) GetNodeMgrArgs() []string {
+	args := []string{}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr", p.VaultAddr)
+	}
+	if p.UseVaultPki {
+		args = append(args, "--useVaultPki")
+	}
+	if p.DeploymentTag != "" {
+		args = append(args, "--deploymentTag", p.DeploymentTag)
+	}
+	if p.AccessApiAddr != "" {
+		args = append(args, "--accessApiAddr", p.AccessApiAddr)
+	}
+	if p.AccessKeyFile != "" {
+		args = append(args, "--accessKeyFile", p.AccessKeyFile)
+	}
+	return p.TLS.AddInternalPkiArgs(args)
+}
+
 // options
 
 type StartOptions struct {

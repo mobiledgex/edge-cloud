@@ -65,7 +65,7 @@ func UpdateSettings(c *cli.Command, in *edgeproto.Settings) error {
 		}
 		return fmt.Errorf("UpdateSettings failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -119,7 +119,7 @@ func ResetSettings(c *cli.Command, in *edgeproto.Settings) error {
 		}
 		return fmt.Errorf("ResetSettings failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -172,7 +172,7 @@ func ShowSettings(c *cli.Command, in *edgeproto.Settings) error {
 		}
 		return fmt.Errorf("ShowSettings failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -210,7 +210,6 @@ var SettingsOptionalArgs = []string{
 	"updateclusterinsttimeout",
 	"deleteclusterinsttimeout",
 	"masternodeflavor",
-	"loadbalancermaxportrange",
 	"maxtrackeddmeclients",
 	"chefclientinterval",
 	"influxdbmetricsretention",
@@ -246,7 +245,6 @@ var SettingsComments = map[string]string{
 	"updateclusterinsttimeout":              "Update ClusterInst timeout (duration)",
 	"deleteclusterinsttimeout":              "Delete ClusterInst timeout (duration)",
 	"masternodeflavor":                      "Default flavor for k8s master VM and > 0  workers",
-	"loadbalancermaxportrange":              "Max IP Port range when using a load balancer",
 	"maxtrackeddmeclients":                  "Max DME clients to be tracked at the same time.",
 	"chefclientinterval":                    "Default chef client interval (duration)",
 	"influxdbmetricsretention":              "Default influxDB metrics retention policy (duration)",
@@ -260,9 +258,10 @@ var SettingsComments = map[string]string{
 	"createcloudlettimeout":                 "Create Cloudlet timeout (duration)",
 	"updatecloudlettimeout":                 "Update Cloudlet timeout (duration)",
 	"locationtilesidelengthkm":              "Length of location tiles side for latency metrics (km)",
-	"influxdbdownsampledmetricsretention":   "Default retention policy for downsampled influx db (duration)",
-	"influxdbedgeeventsmetricsretention":    "Default retention policy for edgeevents metrics influx db (duration)",
-	"appinstclientcleanupinterval":          "AppInstClient cleanup thread run interval",
+	"edgeeventsmetricscontinuousqueriescollectionintervals:#.interval": "Collection interval for Influxdb (Specifically used for continuous query intervals)",
+	"influxdbdownsampledmetricsretention":                              "Default retention policy for downsampled influx db (duration)",
+	"influxdbedgeeventsmetricsretention":                               "Default retention policy for edgeevents metrics influx db (duration)",
+	"appinstclientcleanupinterval":                                     "AppInstClient cleanup thread run interval",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -272,5 +271,7 @@ var CollectionIntervalOptionalArgs = []string{
 	"interval",
 }
 var CollectionIntervalAliasArgs = []string{}
-var CollectionIntervalComments = map[string]string{}
+var CollectionIntervalComments = map[string]string{
+	"interval": "Collection interval for Influxdb (Specifically used for continuous query intervals)",
+}
 var CollectionIntervalSpecialArgs = map[string]string{}

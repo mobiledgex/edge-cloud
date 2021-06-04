@@ -747,11 +747,21 @@ func (c *AlertCache) UpdateModFunc(ctx context.Context, key *AlertKey, modRev in
 }
 
 func (c *AlertCache) Delete(ctx context.Context, in *Alert, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *Alert) bool {
+		return true
+	})
+}
+
+func (c *AlertCache) DeleteCondFunc(ctx context.Context, in *Alert, modRev int64, condFunc func(old *Alert) bool) {
 	c.Mux.Lock()
 	var old *Alert
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -1122,6 +1132,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(InfraApiAccess(0)):
 		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(ReportSchedule(0)):
+		if en, ok := ReportSchedule_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(VMState(0)):

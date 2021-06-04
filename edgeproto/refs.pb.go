@@ -44,7 +44,7 @@ type VMResource struct {
 	Key ClusterInstKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Flavor requirement of the VM required by the cluster
 	VmFlavor *FlavorInfo `protobuf:"bytes,2,opt,name=vm_flavor,json=vmFlavor,proto3" json:"vm_flavor,omitempty"`
-	// Resource Type can be platform, rootlb, cluster-master, cluster-node, vmapp
+	// Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm
 	Type string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
 	// Access type for resource of type App VM
 	AppAccessType AccessType `protobuf:"varint,4,opt,name=app_access_type,json=appAccessType,proto3,enum=edgeproto.AccessType" json:"app_access_type,omitempty"`
@@ -1083,8 +1083,6 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 					return o.ClusterInsts[i].GetKeyString() < o.ClusterInsts[j].GetKeyString()
 				})
 			}
-			for i := 0; i < len(m.ClusterInsts); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.VmAppInsts != nil {
@@ -1101,8 +1099,6 @@ func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 				sort.Slice(o.VmAppInsts, func(i, j int) bool {
 					return o.VmAppInsts[i].GetKeyString() < o.VmAppInsts[j].GetKeyString()
 				})
-			}
-			for i := 0; i < len(m.VmAppInsts); i++ {
 			}
 		}
 	}
@@ -1456,11 +1452,21 @@ func (c *CloudletRefsCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 }
 
 func (c *CloudletRefsCache) Delete(ctx context.Context, in *CloudletRefs, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *CloudletRefs) bool {
+		return true
+	})
+}
+
+func (c *CloudletRefsCache) DeleteCondFunc(ctx context.Context, in *CloudletRefs, modRev int64, condFunc func(old *CloudletRefs) bool) {
 	c.Mux.Lock()
 	var old *CloudletRefs
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -1760,10 +1766,17 @@ func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 					return o.Apps[i].GetKeyString() < o.Apps[j].GetKeyString()
 				})
 			}
-			for i := 0; i < len(m.Apps); i++ {
-				if !m.Apps[i].Matches(&o.Apps[i], fopts...) {
-					return false
+			found := 0
+			for oIndex, _ := range o.Apps {
+				for mIndex, _ := range m.Apps {
+					if m.Apps[mIndex].Matches(&o.Apps[oIndex], fopts...) {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Apps) {
+				return false
 			}
 		}
 	}
@@ -2091,11 +2104,21 @@ func (c *ClusterRefsCache) UpdateModFunc(ctx context.Context, key *ClusterInstKe
 }
 
 func (c *ClusterRefsCache) Delete(ctx context.Context, in *ClusterRefs, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *ClusterRefs) bool {
+		return true
+	})
+}
+
+func (c *ClusterRefsCache) DeleteCondFunc(ctx context.Context, in *ClusterRefs, modRev int64, condFunc func(old *ClusterRefs) bool) {
 	c.Mux.Lock()
 	var old *ClusterRefs
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -2685,11 +2708,21 @@ func (c *AppInstRefsCache) UpdateModFunc(ctx context.Context, key *AppKey, modRe
 }
 
 func (c *AppInstRefsCache) Delete(ctx context.Context, in *AppInstRefs, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AppInstRefs) bool {
+		return true
+	})
+}
+
+func (c *AppInstRefsCache) DeleteCondFunc(ctx context.Context, in *AppInstRefs, modRev int64, condFunc func(old *AppInstRefs) bool) {
 	c.Mux.Lock()
 	var old *AppInstRefs
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

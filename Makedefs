@@ -1,3 +1,4 @@
 LINUX_XCOMPILE_ENV = CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
-TAG ?= latest
+TAG ?= $(shell echo $$USER | tr -cd 'a-zA-Z' )-$(shell date +'%Y-%m-%d' )
+REGISTRY ?= harbor.mobiledgex.net/mobiledgex-dev

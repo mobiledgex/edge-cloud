@@ -103,6 +103,12 @@ func (s *ControllerHandler) GetAccessData(ctx context.Context, req *edgeproto.Ac
 			return nil, err
 		}
 		out, merr = json.Marshal(*publicCert)
+	case GetKafkaCreds:
+		creds, err := s.vaultClient.GetKafkaCreds(ctx)
+		if err != nil {
+			return nil, err
+		}
+		out, merr = json.Marshal(creds)
 	default:
 		return nil, fmt.Errorf("Unexpected request data type %s", req.Type)
 	}

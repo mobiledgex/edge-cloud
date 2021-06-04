@@ -294,6 +294,7 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	appinst2 := edgeproto.AppInst{}
 	appinst2.Key.AppKey = testutil.AppData[10].Key
 	appinst2.Key.ClusterInstKey = *cinst.Key.Virtual("")
+	appinst2.Flavor = appinst.Flavor
 	require.NotEqual(t, appinst.Key.AppKey.Organization, appinst2.Key.AppKey.Organization)
 	err = appInstApi.CreateAppInst(&appinst2, streamOut)
 	require.NotNil(t, err, "create AppInst on already reserved ClusterInst")
@@ -508,7 +509,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		for _, res := range ciResources {
 			if res.Type == cloudcommon.VMTypeClusterMaster {
 				numMasters++
-			} else if res.Type == cloudcommon.VMTypeClusterNode {
+			} else if res.Type == cloudcommon.VMTypeClusterK8sNode {
 				numNodes++
 			} else if res.Type == cloudcommon.VMTypeRootLB {
 				numRootLB++

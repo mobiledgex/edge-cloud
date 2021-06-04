@@ -29,6 +29,7 @@ var nginxConfT *template.Template
 
 // defaultConcurrentConnsPerIP is the default DOS protection setting for connections per source IP
 const defaultConcurrentConnsPerIP uint64 = 100
+const defaultWorkerConns int = 1024
 
 // TCP is in envoy, which does not have concurrent connections per IP, but rather
 // just concurrent connections overall
@@ -198,10 +199,13 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 
 func createNginxConf(ctx context.Context, client ssh.Client, confname, name, listenIP, backendIP string, ports []dme.AppPort, usesTLS bool) error {
 	spec := ProxySpec{
-		Name:       name,
-		UsesTLS:    usesTLS,
-		MetricPort: cloudcommon.ProxyMetricsPort,
+		Name:        name,
+		UsesTLS:     usesTLS,
+		MetricIP:    listenIP,
+		MetricPort:  cloudcommon.ProxyMetricsPort,
+		WorkerConns: defaultWorkerConns,
 	}
+	portCount := 0
 
 	udpconns, err := getUDPConcurrentConnections()
 	if err != nil {
@@ -221,7 +225,9 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 			endPort := p.EndPort
 			if endPort == 0 {
 				endPort = p.PublicPort
+				portCount = portCount + 1
 			} else {
+				portCount = int((p.EndPort-p.InternalPort)+1) + portCount
 				// if we have a port range, the internal ports and external ports must match
 				if p.InternalPort != p.PublicPort {
 					return fmt.Errorf("public and internal ports must match when port range in use")
@@ -237,6 +243,10 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 			}
 			spec.UDPSpec = append(spec.UDPSpec, &udpPort)
 		}
+	}
+	// need to have more worker connections than ports otherwise nginx will crash
+	if portCount > 1000 {
+		spec.WorkerConns = int(float64(portCount) * 1.2)
 	}
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "create nginx conf", "name", name)
@@ -255,12 +265,14 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 }
 
 type ProxySpec struct {
-	Name       string
-	UDPSpec    []*UDPSpecDetail
-	TCPSpec    []*TCPSpecDetail
-	UsesTLS    bool // To be removed
-	MetricPort int32
-	CertName   string
+	Name        string
+	UDPSpec     []*UDPSpecDetail
+	TCPSpec     []*TCPSpecDetail
+	UsesTLS     bool // To be removed
+	MetricIP    string
+	MetricPort  int32
+	CertName    string
+	WorkerConns int
 }
 
 type TCPSpecDetail struct {
@@ -290,7 +302,7 @@ error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 
 events {
-    worker_connections  1024;
+    worker_connections  {{.WorkerConns}};
 }
 
 stream { 
@@ -339,6 +351,7 @@ type Options struct {
 	DockerNetwork      string
 	Cert               *access.TLSCert
 	DockerUser         string
+	MetricIP           string
 }
 
 type Op func(opts *Options)
@@ -365,6 +378,12 @@ func WithTLSCert(cert *access.TLSCert) Op {
 func WithDockerUser(user string) Op {
 	return func(opts *Options) {
 		opts.DockerUser = user
+	}
+}
+
+func WithMetricIP(addr string) Op {
+	return func(opts *Options) {
+		opts.MetricIP = addr
 	}
 }
 

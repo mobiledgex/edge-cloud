@@ -807,10 +807,17 @@ func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Cloudlets) != len(o.Cloudlets) {
 				return false
 			}
-			for i := 0; i < len(m.Cloudlets); i++ {
-				if o.Cloudlets[i] != m.Cloudlets[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Cloudlets {
+				for mIndex, _ := range m.Cloudlets {
+					if o.Cloudlets[oIndex] == m.Cloudlets[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Cloudlets) {
+				return false
 			}
 		}
 	}
@@ -1266,11 +1273,21 @@ func (c *CloudletPoolCache) UpdateModFunc(ctx context.Context, key *CloudletPool
 }
 
 func (c *CloudletPoolCache) Delete(ctx context.Context, in *CloudletPool, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *CloudletPool) bool {
+		return true
+	})
+}
+
+func (c *CloudletPoolCache) DeleteCondFunc(ctx context.Context, in *CloudletPool, modRev int64, condFunc func(old *CloudletPool) bool) {
 	c.Mux.Lock()
 	var old *CloudletPool
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

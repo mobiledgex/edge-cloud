@@ -29,7 +29,7 @@ settings:
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
   masternodeflavor: x1.small
-  loadbalancermaxportrange: 100
+
   maxtrackeddmeclients: 100
   chefclientinterval: 10m0s
   influxdbmetricsretention: 2h0m0s
@@ -162,10 +162,6 @@ cloudletinfos:
     - name: vCPUs
       value: 10
       inframaxvalue: 50
-    - name: Disk
-      value: 200
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -217,10 +213,6 @@ cloudletinfos:
     - name: vCPUs
       value: 4
       inframaxvalue: 50
-    - name: Disk
-      value: 80
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -251,11 +243,11 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-cloudlet1-cluster1-acmeappco
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-2-cloudlet1-cluster1-acmeappco
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
   createdat:

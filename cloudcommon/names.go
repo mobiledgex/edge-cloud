@@ -23,6 +23,7 @@ var OrganizationMobiledgeX = "MobiledgeX"
 var OrganizationEdgeBox = "EdgeBox"
 
 const DefaultCluster string = "DefaultCluster"
+const DefaultMultiTenantCluster string = "defaultmtclust"
 
 // platform apps
 var SamsungEnablingLayer = "SamsungEnablingLayer"
@@ -45,7 +46,8 @@ var VMTypePlatform = "platform"
 var VMTypePlatformClusterMaster = "platform-cluster-master"
 var VMTypePlatformClusterNode = "platform-cluster-node"
 var VMTypeClusterMaster = "cluster-master"
-var VMTypeClusterNode = "cluster-node"
+var VMTypeClusterK8sNode = "cluster-k8s-node"
+var VMTypeClusterDockerNode = "cluster-docker-node"
 
 const AutoClusterPrefix = "autocluster"
 const ReservableClusterPrefix = "reservable"
@@ -62,6 +64,7 @@ var MEXPrometheusAppName = "MEXPrometheusAppName"
 var PrometheusPort = int32(9090)
 var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
+var ProxyMetricsDefaultListenIP = "127.0.0.1"
 var AutoProvMeasurement = "auto-prov-counts"
 
 // AppLabels for the application containers
@@ -133,6 +136,12 @@ const MaxClusterNameLength = 40
 // Common cert name. Cannot use common name as filename since envoy doesn't know if the app is dedicated or not
 const CertName = "envoyTlsCerts"
 const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
+
+// CloudletInfo properties
+const (
+	// Cloudlet supports multi-tenant k8s cluster
+	CloudletSupportsMT = "supports-mt"
+)
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
@@ -231,6 +240,13 @@ func IsClusterInstReqd(app *edgeproto.App) bool {
 		return false
 	}
 	return true
+}
+
+func IsSideCarApp(app *edgeproto.App) bool {
+	if app.Key.Organization == OrganizationMobiledgeX && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+		return true
+	}
+	return false
 }
 
 func Hostname() string {

@@ -90,7 +90,7 @@ func TestEvents(t *testing.T) {
 		},
 		Cloudlets: []string{"cloudlet1"},
 	}
-	nodeMgr.CloudletPoolLookup.GetCloudletPoolCache("").Update(ctx, &pool, 0)
+	nodeMgr.CloudletPoolLookup.GetCloudletPoolCache(NoRegion).Update(ctx, &pool, 0)
 	cloudletKey := edgeproto.CloudletKey{
 		Organization: operOrg,
 		Name:         "cloudlet1",

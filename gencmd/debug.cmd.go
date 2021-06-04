@@ -127,7 +127,7 @@ func EnableDebugLevels(c *cli.Command, in *edgeproto.DebugRequest) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -205,7 +205,7 @@ func DisableDebugLevels(c *cli.Command, in *edgeproto.DebugRequest) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -283,7 +283,7 @@ func ShowDebugLevels(c *cli.Command, in *edgeproto.DebugRequest) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -361,7 +361,7 @@ func RunDebug(c *cli.Command, in *edgeproto.DebugRequest) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

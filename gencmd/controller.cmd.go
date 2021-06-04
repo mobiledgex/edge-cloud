@@ -107,7 +107,7 @@ func ShowController(c *cli.Command, in *edgeproto.Controller) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

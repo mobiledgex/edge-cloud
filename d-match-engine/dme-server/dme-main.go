@@ -52,6 +52,7 @@ var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key f
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
+var edgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
 var region = flag.String("region", "local", "region name")
 var solib = flag.String("plugin", "", "plugin file")
 var eesolib = flag.String("eeplugin", "", "plugin file") // for edge events plugin
@@ -72,16 +73,6 @@ var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
 
-func validateLocation(loc *dme.Loc) error {
-	if loc == nil {
-		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
-	}
-	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
-		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
-	}
-	return nil
-}
-
 func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest) (*dme.FindCloudletReply, error) {
 	reply := new(dme.FindCloudletReply)
 	var appkey edgeproto.AppKey
@@ -93,12 +84,12 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	appkey.Name = ckey.AppName
 	appkey.Version = ckey.AppVers
 
-	err := validateLocation(req.GpsLocation)
+	err := dmecommon.ValidateLocation(req.GpsLocation)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, req.DeviceInfo, reply, dmecommon.EdgeEventsCookieExpiration)
+	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, *edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -139,12 +130,12 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Requested app does not exist", "requestedAppKey", tokdata.AppKey)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Requested app does not exist")
 	}
-	err = validateLocation(&tokdata.Location)
+	err = dmecommon.ValidateLocation(&tokdata.Location)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
-	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, req.DeviceInfo, reply, cookieExpiration)
+	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, *edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -180,7 +171,7 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 		return nil, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 	alist := new(dme.AppInstListReply)
-	dmecommon.GetAppInstList(ctx, ckey, req, alist)
+	dmecommon.GetAppInstList(ctx, ckey, req, alist, *edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
 	return alist, nil
 }
@@ -192,7 +183,7 @@ func (s *server) GetAppOfficialFqdn(ctx context.Context, req *dme.AppOfficialFqd
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	log.SpanLog(ctx, log.DebugLevelDmereq, "GetAppOfficialFqdn", "ckey", ckey, "loc", req.GpsLocation)
-	err := validateLocation(req.GpsLocation)
+	err := dmecommon.ValidateLocation(req.GpsLocation)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid GetAppOfficialFqdn request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
@@ -353,7 +344,7 @@ func (s *server) GetQosPositionKpi(req *dme.QosPositionRequest, getQosSvr dme.Ma
 func (s *server) StreamEdgeEvent(streamEdgeEventSvr dme.MatchEngineApi_StreamEdgeEventServer) error {
 	ctx := streamEdgeEventSvr.Context()
 	log.SpanLog(ctx, log.DebugLevelDmereq, "StreamEdgeEvent")
-	return dmecommon.StreamEdgeEvent(ctx, streamEdgeEventSvr)
+	return dmecommon.StreamEdgeEvent(ctx, streamEdgeEventSvr, *edgeEventsCookieExpiration)
 }
 
 func initOperator(ctx context.Context, operatorName string) (op.OperatorApiGw, error) {
@@ -404,11 +395,11 @@ func initEdgeEventsPlugin(ctx context.Context, operatorName string) (dmecommon.E
 	if err != nil {
 		log.FatalLog("plugin does not have GetEdgeEventsHandler symbol", "plugin", *eesolib)
 	}
-	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context) (dmecommon.EdgeEventsHandler, error))
+	getEdgeEventsHandlerFunc, ok := sym.(func(ctx context.Context, edgeEventsCookieExpiration time.Duration) (dmecommon.EdgeEventsHandler, error))
 	if !ok {
-		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
+		log.FatalLog("plugin GetEdgeEventsHandler symbol does not implement func(ctx context.Context, edgeEventsCookieExpiration time.Duration) (dmecommon.EdgeEventsHandler, error)", "plugin", *eesolib)
 	}
-	eehandler, err := getEdgeEventsHandlerFunc(ctx)
+	eehandler, err := getEdgeEventsHandlerFunc(ctx, *edgeEventsCookieExpiration)
 	if err != nil {
 		return nil, err
 	}
@@ -439,6 +430,10 @@ func main() {
 	nodeMgr.AccessKeyClient.InitFlags()
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
+	done := make(chan struct{})
+	defer func() {
+		close(done)
+	}()
 
 	var myCertIssuer string
 	if *cloudletDme {
@@ -468,7 +463,7 @@ func main() {
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "plugin init done", "operatorApiGw", operatorApiGw)
 
-	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region)
+	err = dmecommon.InitVault(nodeMgr.VaultAddr, *region, done)
 	if err != nil {
 		span.Finish()
 		log.FatalLog("Failed to init vault", "err", err)
@@ -555,17 +550,7 @@ func main() {
 			span.Finish()
 			log.FatalLog("access key client is not enabled")
 		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "Setup persistent access connection to Controller")
-		ctrlConn, err := nodeMgr.AccessKeyClient.ConnectController(ctx)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to connect to controller", "err", err)
-			span.Finish()
-			log.FatalLog("Failed to connect to controller for access API", "err", err)
-		}
-		defer ctrlConn.Close()
-		// Create CloudletAccessApiClient
-		accessClient := edgeproto.NewCloudletAccessApiClient(ctrlConn)
-		accessApi = accessapi.NewControllerClient(accessClient)
+		accessApi = accessapi.NewControllerClient(nodeMgr.AccessApiClient)
 	} else {
 		// DME has direct access to vault
 		cloudlet := &edgeproto.Cloudlet{

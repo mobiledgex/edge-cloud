@@ -65,7 +65,7 @@ func CreateFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("CreateFlavor failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -122,7 +122,7 @@ func DeleteFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("DeleteFlavor failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -180,7 +180,7 @@ func UpdateFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("UpdateFlavor failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -256,7 +256,7 @@ func ShowFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -313,7 +313,7 @@ func AddFlavorRes(c *cli.Command, in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("AddFlavorRes failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -370,7 +370,7 @@ func RemoveFlavorRes(c *cli.Command, in *edgeproto.Flavor) error {
 		}
 		return fmt.Errorf("RemoveFlavorRes failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -425,7 +425,7 @@ var FlavorComments = map[string]string{
 	"ram":       "RAM in megabytes",
 	"vcpus":     "Number of virtual CPUs",
 	"disk":      "Amount of disk space in gigabytes",
-	"optresmap": "Optional Resources request, key = [gpu, nas, nic] gpu kinds: [gpu, vgpu, pci] form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
 }
 var FlavorSpecialArgs = map[string]string{
 	"fields":    "StringArray",

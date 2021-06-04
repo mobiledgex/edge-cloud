@@ -2,6 +2,8 @@ package dmecommon
 
 import (
 	"math"
+	"strconv"
+	"strings"
 	"testing"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -39,71 +41,70 @@ func TestGpsLocation(t *testing.T) {
 
 	// Get location tile for Berlin with location tile length == 1km
 	tile1Berlin := GetLocationTileFromGpsLocation(berlin, tl1)
-	// Get Gps Location ranges for tile generated above
-	under, over, err := GetGpsLocationRangeFromLocationTile(tile1Berlin, tl1)
-	assert.Nil(t, err)
 	// Check to make sure lat, long of berlin is within the location ranges generated above
-	checkLocationRange(t, under, over, berlin)
+	checkLocationRange(t, tile1Berlin, berlin)
 
 	// Get location tile for Berlin with location tile length == 2km
 	tile2Berlin := GetLocationTileFromGpsLocation(berlin, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Berlin, tl2)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, berlin)
+	checkLocationRange(t, tile2Berlin, berlin)
 
 	// Get location tile for Berlin with location tile length == 5km
 	tile5Berlin := GetLocationTileFromGpsLocation(berlin, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Berlin, tl5)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, berlin)
+	checkLocationRange(t, tile5Berlin, berlin)
 
 	tile1SanJose := GetLocationTileFromGpsLocation(sanjose, tl1)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile1SanJose, tl1)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, sanjose)
+	checkLocationRange(t, tile1SanJose, sanjose)
 
 	tile2SanJose := GetLocationTileFromGpsLocation(sanjose, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2SanJose, tl2)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, sanjose)
+	checkLocationRange(t, tile2SanJose, sanjose)
 
 	tile5SanJose := GetLocationTileFromGpsLocation(sanjose, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5SanJose, tl5)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, sanjose)
+	checkLocationRange(t, tile5SanJose, sanjose)
 
 	tile1Sydney := GetLocationTileFromGpsLocation(sydney, tl1)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Sydney, tl1)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, sydney)
+	checkLocationRange(t, tile1Sydney, sydney)
 
 	tile2Sydney := GetLocationTileFromGpsLocation(sydney, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Sydney, tl2)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, sydney)
+	checkLocationRange(t, tile2Sydney, sydney)
 
 	tile5Sydney := GetLocationTileFromGpsLocation(sydney, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Sydney, tl5)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, sydney)
+	checkLocationRange(t, tile5Sydney, sydney)
 
 	tile1Rio := GetLocationTileFromGpsLocation(rio, tl1)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile1Rio, tl1)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, rio)
+	checkLocationRange(t, tile1Rio, rio)
 
 	tile2Rio := GetLocationTileFromGpsLocation(rio, tl2)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile2Rio, tl2)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, rio)
+	checkLocationRange(t, tile2Rio, rio)
 
 	tile5Rio := GetLocationTileFromGpsLocation(rio, tl5)
-	under, over, err = GetGpsLocationRangeFromLocationTile(tile5Rio, tl5)
-	assert.Nil(t, err)
-	checkLocationRange(t, under, over, rio)
+	checkLocationRange(t, tile5Rio, rio)
 }
 
-func checkLocationRange(t *testing.T, under, over, actual *dme.Loc) {
+func checkLocationRange(t *testing.T, locationTile string, actual *dme.Loc) {
+	s := strings.Split(locationTile, "_")
+	// Pull out underLoc values
+	underStr := s[0]
+	underLongLat := strings.Split(underStr, ",")
+	underLong, err := strconv.ParseFloat(underLongLat[0], 64)
+	assert.Nil(t, err)
+	underLat, err := strconv.ParseFloat(underLongLat[1], 64)
+	assert.Nil(t, err)
+	under := &dme.Loc{
+		Longitude: underLong,
+		Latitude:  underLat,
+	}
+	// Pull out overLoc values
+	overStr := s[1]
+	overLongLat := strings.Split(overStr, ",")
+	overLong, err := strconv.ParseFloat(overLongLat[0], 64)
+	assert.Nil(t, err)
+	overLat, err := strconv.ParseFloat(overLongLat[1], 64)
+	assert.Nil(t, err)
+	over := &dme.Loc{
+		Longitude: overLong,
+		Latitude:  overLat,
+	}
+
 	assert.True(t, math.Abs(actual.Latitude) < math.Abs(over.Latitude))
 	assert.True(t, math.Abs(actual.Latitude) >= math.Abs(under.Latitude))
 

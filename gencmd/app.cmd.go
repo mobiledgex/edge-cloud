@@ -102,7 +102,7 @@ func CreateApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("CreateApp failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -159,7 +159,7 @@ func DeleteApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("DeleteApp failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -217,7 +217,7 @@ func UpdateApp(c *cli.Command, in *edgeproto.App) error {
 		}
 		return fmt.Errorf("UpdateApp failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -294,7 +294,7 @@ func ShowApp(c *cli.Command, in *edgeproto.App) error {
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -351,7 +351,7 @@ func AddAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) error
 		}
 		return fmt.Errorf("AddAppAutoProvPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -408,7 +408,7 @@ func RemoveAppAutoProvPolicy(c *cli.Command, in *edgeproto.AppAutoProvPolicy) er
 		}
 		return fmt.Errorf("RemoveAppAutoProvPolicy failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -469,8 +469,8 @@ var ConfigFileOptionalArgs = []string{
 }
 var ConfigFileAliasArgs = []string{}
 var ConfigFileComments = map[string]string{
-	"kind":   "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
-	"config": "config file contents or URI reference",
+	"kind":   "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
+	"config": "Config file contents or URI reference",
 }
 var ConfigFileSpecialArgs = map[string]string{}
 var AppRequiredArgs = []string{
@@ -505,6 +505,10 @@ var AppOptionalArgs = []string{
 	"requiredoutboundconnections:#.protocol",
 	"requiredoutboundconnections:#.port",
 	"requiredoutboundconnections:#.remoteip",
+	"allowserverless",
+	"serverlessconfig.vcpus",
+	"serverlessconfig.ram",
+	"serverlessconfig.minreplicas",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -521,16 +525,16 @@ var AppComments = map[string]string{
 	"imagetype":                              "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm",
 	"accessports":                            "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 	"defaultflavor":                          "Flavor name",
-	"authpublickey":                          "public key used for authentication",
+	"authpublickey":                          "Public key used for authentication",
 	"command":                                "Command that the container runs to start service",
 	"annotations":                            "Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=val 3",
 	"deployment":                             "Deployment type (kubernetes, docker, or vm)",
-	"deploymentmanifest":                     "Deployment manifest is the deployment specific manifest file/config For docker deployment, this can be a docker-compose or docker run file For kubernetes deployment, this can be a kubernetes yaml or helm chart file",
+	"deploymentmanifest":                     "Deployment manifest is the deployment specific manifest file/config. For docker deployment, this can be a docker-compose or docker run file. For kubernetes deployment, this can be a kubernetes yaml or helm chart file.",
 	"deploymentgenerator":                    "Deployment generator target to generate a basic deployment manifest",
 	"androidpackagename":                     "Android package name used to match the App name from the Android package",
 	"delopt":                                 "Override actions to Controller, one of NoAutoDelete, AutoDelete",
-	"configs:#.kind":                         "kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
-	"configs:#.config":                       "config file contents or URI reference",
+	"configs:#.kind":                         "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
+	"configs:#.config":                       "Config file contents or URI reference",
 	"scalewithcluster":                       "Option to run App on all nodes of the cluster",
 	"internalports":                          "Should this app have access to outside world?",
 	"revision":                               "Revision can be specified or defaults to current timestamp when app is updated",
@@ -541,16 +545,33 @@ var AppComments = map[string]string{
 	"deleteprepare":                          "Preparing to be deleted",
 	"autoprovpolicies":                       "Auto provisioning policy names, may be specified multiple times",
 	"templatedelimiter":                      "Delimiter to be used for template parsing, defaults to [[ ]]",
-	"skiphcports":                            "Comma separated list of protocol:port pairs that we should not run health check on Should be configured in case app does not always listen on these ports all can be specified if no health check to be run for this app Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
+	"skiphcports":                            "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443.",
 	"trusted":                                "Indicates that an instance of this app can be started on a trusted cloudlet",
 	"requiredoutboundconnections:#.protocol": "tcp, udp or icmp",
 	"requiredoutboundconnections:#.port":     "TCP or UDP port",
 	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
+	"allowserverless":                        "App is allowed to deploy as serverless containers",
+	"serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
+	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 }
 var AppSpecialArgs = map[string]string{
 	"autoprovpolicies": "StringArray",
 	"fields":           "StringArray",
 }
+var ServerlessConfigRequiredArgs = []string{}
+var ServerlessConfigOptionalArgs = []string{
+	"vcpus",
+	"ram",
+	"minreplicas",
+}
+var ServerlessConfigAliasArgs = []string{}
+var ServerlessConfigComments = map[string]string{
+	"vcpus":       "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"ram":         "RAM allocation in megabytes per container when serverless",
+	"minreplicas": "Minimum number of replicas when serverless",
+}
+var ServerlessConfigSpecialArgs = map[string]string{}
 var AppAutoProvPolicyRequiredArgs = []string{
 	"app-org",
 	"appname",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -40,7 +41,15 @@ type RegistryTags struct {
 }
 
 type RequestConfig struct {
-	Timeout time.Duration
+	Timeout               time.Duration
+	ResponseHeaderTimeout time.Duration
+	Headers               map[string]string
+}
+
+type AuthTokenResp struct {
+	Scope       string `json:"scope"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 func getVaultRegistryPath(registry string) string {
@@ -91,8 +100,38 @@ func GetRegistryAuth(ctx context.Context, imgUrl string, vaultConfig *vault.Conf
 	return auth, nil
 }
 
-func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth, reqConfig *RequestConfig) (*http.Response, error) {
+func GetAuthToken(ctx context.Context, host string, authApi RegistryAuthApi, userName string) (string, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetAuthToken", "host", host, "userName", userName)
+
+	url := fmt.Sprintf("https://%s/artifactory/api/security/token", host)
+	reqConfig := RequestConfig{}
+	reqConfig.Headers = make(map[string]string)
+	reqConfig.Headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+	resp, err := SendHTTPReq(ctx, "POST", url, authApi, &reqConfig, strings.NewReader("username="+userName+"&scope=member-of-groups:readers"))
+	if err != nil {
+		return "", err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil {
+		return "", fmt.Errorf("error reading gettoken response: %v", err)
+	}
+	var tokResp AuthTokenResp
+	err = json.Unmarshal(body, &tokResp)
+	if err != nil {
+		return "", fmt.Errorf("Fail to unmarshal response - %v", err)
+	}
+	return tokResp.AccessToken, nil
+}
+
+func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth, reqConfig *RequestConfig, body io.Reader) (*http.Response, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "send http request", "method", method, "url", regUrl, "reqConfig", reqConfig)
+
+	respHeaderTimeout := 5 * time.Second
+	if reqConfig != nil && reqConfig.ResponseHeaderTimeout != 0 {
+		respHeaderTimeout = reqConfig.ResponseHeaderTimeout
+	}
 	client := &http.Client{
 		Transport: &http.Transport{
 			// Connection Timeout
@@ -104,7 +143,7 @@ func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryA
 
 			// Response Header Timeout
 			ExpectContinueTimeout: 5 * time.Second,
-			ResponseHeaderTimeout: 5 * time.Second,
+			ResponseHeaderTimeout: respHeaderTimeout,
 			// use proxy if env vars set
 			Proxy: http.ProxyFromEnvironment,
 		},
@@ -114,11 +153,15 @@ func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryA
 	if reqConfig != nil && reqConfig.Timeout > 10*time.Minute {
 		client.Timeout = reqConfig.Timeout
 	}
-	req, err := http.NewRequest(method, regUrl, nil)
+	req, err := http.NewRequest(method, regUrl, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed sending request %v", err)
 	}
-
+	if reqConfig != nil {
+		for k, v := range reqConfig.Headers {
+			req.Header.Add(k, v)
+		}
+	}
 	if auth != nil {
 		switch auth.AuthType {
 		case BasicAuth:
@@ -137,7 +180,7 @@ func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryA
 	return resp, nil
 }
 
-func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth *RegistryAuth) (*http.Response, error) {
+func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth *RegistryAuth, body io.Reader) (*http.Response, error) {
 	log.SpanLog(ctx,
 		log.DebugLevelApi, "handling www-auth for Docker Registry v2 Authentication",
 		"regUrl", regUrl,
@@ -164,7 +207,7 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
 		if v, ok := m["scope"]; ok {
 			authURL += "&scope=" + v
 		}
-		resp, err := SendHTTPReqAuth(ctx, "GET", authURL, auth, nil)
+		resp, err := SendHTTPReqAuth(ctx, "GET", authURL, auth, nil, body)
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +218,7 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
 			authTok.AuthType = TokenAuth
 
 			log.SpanLog(ctx, log.DebugLevelApi, "retrying request with auth-token")
-			resp, err = SendHTTPReqAuth(ctx, method, regUrl, &authTok, nil)
+			resp, err = SendHTTPReqAuth(ctx, method, regUrl, &authTok, nil, body)
 			if err != nil {
 				return nil, err
 			}
@@ -212,7 +255,7 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
  * - The Registry authorizes the client by validating the Bearer token and the claim set embedded within
  *   it and begins the session as usual
  */
-func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAuthApi, reqConfig *RequestConfig) (*http.Response, error) {
+func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAuthApi, reqConfig *RequestConfig, body io.Reader) (*http.Response, error) {
 	var auth *RegistryAuth
 	var err error
 
@@ -226,7 +269,7 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAut
 		auth = nil
 		log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
 	}
-	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth, reqConfig)
+	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth, reqConfig, body)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +281,7 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAut
 		authHeader := resp.Header.Get("Www-Authenticate")
 		if authHeader != "" {
 			// fetch authorization token to access tags
-			resp, err = handleWWWAuth(ctx, method, regUrl, authHeader, auth)
+			resp, err = handleWWWAuth(ctx, method, regUrl, authHeader, auth, body)
 			if err == nil {
 				return resp, nil
 			}
@@ -251,6 +294,8 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAut
 	case http.StatusForbidden:
 		resp.Body.Close()
 		return nil, fmt.Errorf("Invalid credentials to access URL: %s", regUrl)
+	case http.StatusCreated:
+		fallthrough
 	case http.StatusOK:
 		return resp, nil
 	default:
@@ -291,7 +336,7 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl string, authApi Regi
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.SpanLog(ctx, log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	resp, err := SendHTTPReq(ctx, "GET", regUrl, authApi, nil)
+	resp, err := SendHTTPReq(ctx, "GET", regUrl, authApi, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -323,7 +368,7 @@ func ValidateVMRegistryPath(ctx context.Context, imgUrl string, authApi Registry
 		return fmt.Errorf("image path is empty")
 	}
 
-	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, nil)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, nil, nil)
 	if err != nil {
 		return err
 	}

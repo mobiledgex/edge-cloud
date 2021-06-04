@@ -14,7 +14,7 @@ settings:
   deleteclusterinsttimeout: 20m
   createcloudlettimeout: 30m
   updatecloudlettimeout: 20m
-  loadbalancermaxportrange: 50
+
   updatetrustpolicytimeout: 10m
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
@@ -78,7 +78,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-tmus-cloud-1-reservable0-mobiledgex
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
 - key:
@@ -108,7 +108,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-tmus-cloud-2-reservable0-mobiledgex
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
 - key:
@@ -138,7 +138,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-tmus-cloud-2-reservable1-mobiledgex
-      type: cluster-node
+      type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
 cloudlets:
@@ -222,10 +222,6 @@ cloudletinfos:
     - name: vCPUs
       value: 8
       inframaxvalue: 50
-    - name: Disk
-      value: 160
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30
@@ -276,10 +272,6 @@ cloudletinfos:
     - name: vCPUs
       value: 12
       inframaxvalue: 50
-    - name: Disk
-      value: 240
-      inframaxvalue: 5000
-      units: GB
     - name: External IPs
       value: 1
       inframaxvalue: 30

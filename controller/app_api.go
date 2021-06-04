@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -175,21 +176,6 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
-func validatePortRangeForAccessType(ports []dme.AppPort, accessType edgeproto.AccessType, deploymentType string) error {
-	maxPorts := settingsApi.Get().LoadBalancerMaxPortRange
-	for ii, _ := range ports {
-		ports[ii].PublicPort = ports[ii].InternalPort
-		if ports[ii].EndPort != 0 {
-			numPortsInRange := ports[ii].EndPort - ports[ii].PublicPort + 1
-			// this is checked in app_api also, but this in case there are pre-existing apps which violate this new restriction
-			if accessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER && numPortsInRange > maxPorts {
-				return fmt.Errorf("Port range greater than max of %d for load balanced application", maxPorts)
-			}
-		}
-	}
-	return nil
-}
-
 func validateSkipHcPorts(app *edgeproto.App) error {
 	if app.SkipHcPorts == "" {
 		return nil
@@ -342,6 +328,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		VaultConfig: vaultConfig,
 	}
 	if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
+		if !strings.Contains(in.ImagePath, "://") {
+			in.ImagePath = "https://" + in.ImagePath
+		}
 		err := util.ValidateImagePath(in.ImagePath)
 		if err != nil {
 			return err
@@ -376,6 +365,49 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		return fmt.Errorf("DaemonSet required in manifest when ScaleWithCluster set")
 	}
 
+	flavor := &edgeproto.Flavor{}
+	if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, flavor) {
+		return in.DefaultFlavor.NotFoundError()
+	}
+
+	if in.AllowServerless {
+		if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
+			return fmt.Errorf("Allow serverless only supported for deployment type Kubernetes")
+		}
+		if in.ScaleWithCluster {
+			return fmt.Errorf("Allow serverless does not support scale with cluster")
+		}
+		if in.DeploymentGenerator != deploygen.KubernetesBasic {
+			// For now, only allow system generated manifests.
+			// In order to support user-supplied manifests, we will
+			// need to parse the manifest and look for any objects
+			// that cannot be segregated by namespace.
+			return fmt.Errorf("Allow serverless only allowed for system generated manifests")
+		}
+		if in.ServerlessConfig == nil {
+			in.ServerlessConfig = &edgeproto.ServerlessConfig{}
+		}
+		if in.ServerlessConfig.Vcpus == 0 {
+			in.ServerlessConfig.Vcpus = float32(flavor.Vcpus)
+		}
+		if in.ServerlessConfig.Ram == 0 {
+			in.ServerlessConfig.Ram = flavor.Ram
+		}
+		if in.ServerlessConfig.Vcpus < 0.001 {
+			return fmt.Errorf("Serverless config vcpus cannot be less than 0.001")
+		}
+		if in.ServerlessConfig.MinReplicas == 0 {
+			in.ServerlessConfig.MinReplicas = 1
+		}
+		// truncate any precision beyond 0.001
+		mvcpus := uint64(in.ServerlessConfig.Vcpus * 1000)
+		in.ServerlessConfig.Vcpus = float32(mvcpus) / 1000.0
+	} else {
+		if in.ServerlessConfig != nil {
+			return fmt.Errorf("Serverless config cannot be specified without allow serverless true")
+		}
+	}
+
 	// Save manifest to app in case it was a remote target.
 	// Manifest is required on app delete and we'll be in trouble
 	// if remote target is unreachable or changed at that time.
@@ -399,10 +431,6 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 			return fmt.Errorf("Invalid deployment manifest, %v", err)
 		}
 	}
-	err = validatePortRangeForAccessType(ports, in.AccessType, in.Deployment)
-	if err != nil {
-		return err
-	}
 
 	if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
 		authApi := &cloudcommon.VaultRegistryAuthApi{
@@ -414,9 +442,6 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		}
 	}
 
-	if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
-		return in.DefaultFlavor.NotFoundError()
-	}
 	if err := s.validatePolicies(stm, in); err != nil {
 		return err
 	}
@@ -465,6 +490,9 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		edgeproto.AppFieldDeployment,
 		edgeproto.AppFieldDeploymentGenerator,
 	}
+	canAlwaysUpdate := map[string]bool{
+		edgeproto.AppFieldTrusted: true,
+	}
 
 	fields := edgeproto.MakeFieldMap(in.Fields)
 	if err := in.Validate(fields); err != nil {
@@ -483,7 +511,14 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			if cur.Deployment != cloudcommon.DeploymentTypeKubernetes &&
 				cur.Deployment != cloudcommon.DeploymentTypeDocker &&
 				cur.Deployment != cloudcommon.DeploymentTypeHelm {
-				return fmt.Errorf("Update App not supported for deployment: %s when AppInsts exist", cur.Deployment)
+				for f := range fields {
+					if in.IsKeyField(f) {
+						continue
+					}
+					if !canAlwaysUpdate[f] {
+						return fmt.Errorf("Update App field %s not supported for deployment: %s when AppInsts exist", edgeproto.AppAllFieldsStringMap[f], cur.Deployment)
+					}
+				}
 			}
 			for _, field := range inUseCannotUpdate {
 				if _, found := fields[field]; found {

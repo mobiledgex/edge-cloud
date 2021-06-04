@@ -14,7 +14,6 @@ import (
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util/tasks"
@@ -32,6 +31,7 @@ var clusterInstApi = ClusterInstApi{}
 
 var AutoClusterPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
 	cloudcommon.AutoClusterPrefix)
+var ObjBusyDeletionMsg = "busy, cannot be deleted"
 
 // Transition states indicate states in which the CRM is still busy.
 var CreateClusterInstTransitions = map[edgeproto.TrackedState]struct{}{
@@ -219,7 +219,7 @@ func validateNumNodesForDeployment(ctx context.Context, platformType edgeproto.P
 
 func startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
 	streamKey := &edgeproto.AppInstKey{ClusterInstKey: *key.Virtual("")}
-	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb, SaveOnStreamObj)
+	streamSendObj, err := streamObjApi.startStream(ctx, streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
 		return nil, inCb, err
@@ -277,7 +277,6 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	}
 
 	warnings := []string{}
-	quotaResReqd := make(map[string]uint64)
 
 	// Theoretical Validation
 	errsStr := []string{}
@@ -292,7 +291,13 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		}
 		resReqd, ok := reqdResInfo[resName]
 		if !ok {
-			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+			// this resource is not tracked by controller, skip it
+			continue
+		}
+		if resInfo.QuotaMaxValue > 0 && resInfo.InfraMaxValue > 0 {
+			if resInfo.QuotaMaxValue > resInfo.InfraMaxValue {
+				warnings = append(warnings, fmt.Sprintf("[Quota] Invalid quota set for %s, quota max value %d is more than infra max value %d", resName, resInfo.QuotaMaxValue, resInfo.InfraMaxValue))
+			}
 		}
 		thAvailableResVal := uint64(0)
 		if resInfo.Value > max {
@@ -304,9 +309,8 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > thAvailableResVal {
-			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units))
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s out of %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units, max, resInfo.Units))
 		}
-		quotaResReqd[resName] = thAvailableResVal
 	}
 
 	err = nil
@@ -351,20 +355,15 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		}
 		resReqd, ok := reqdResInfo[resName]
 		if !ok {
-			return nil, fmt.Errorf("Missing resource from required resource info: %s", resName)
+			// this resource is not tracked by controller, skip it
+			continue
 		}
 		infraAvailableResVal := resInfo.InfraMaxValue - resInfo.Value
 		if float64(resInfo.Value*100)/float64(resInfo.InfraMaxValue) > float64(resInfo.AlertThreshold) {
 			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > infraAvailableResVal {
-			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units))
-		}
-		if resVal, ok := quotaResReqd[resName]; ok {
-			// generate alert if expected resource quota is not available
-			if infraAvailableResVal < resVal {
-				warnings = append(warnings, fmt.Sprintf("[Quota] Expected %s available to be %d%s, but only %d%s is available", resName, resVal, resInfo.Units, infraAvailableResVal, resInfo.Units))
-			}
+			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s out of %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units, resInfo.InfraMaxValue, resInfo.Units))
 		}
 	}
 	err = nil
@@ -583,12 +582,10 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 
 	ramUsed := uint64(0)
 	vcpusUsed := uint64(0)
-	diskUsed := uint64(0)
 	for _, vmRes := range allResources {
 		if vmRes.VmFlavor != nil {
 			ramUsed += vmRes.VmFlavor.Ram
 			vcpusUsed += vmRes.VmFlavor.Vcpus
-			diskUsed += vmRes.VmFlavor.Disk
 		}
 	}
 
@@ -598,9 +595,8 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	resMetric.Name = cloudcommon.GetCloudletResourceUsageMeasurement(pfType)
 	resMetric.AddTag("cloudletorg", key.Organization)
 	resMetric.AddTag("cloudlet", key.Name)
-	resMetric.AddIntVal("ramUsed", ramUsed)
-	resMetric.AddIntVal("vcpusUsed", vcpusUsed)
-	resMetric.AddIntVal("diskUsed", diskUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricRamMB, ramUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricVcpus, vcpusUsed)
 
 	// get additional infra specific metric
 	err = cloudletPlatform.GetClusterAdditionalResourceMetric(ctx, &cloudlet, &resMetric, allResources)
@@ -623,7 +619,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 			}
 		}
 	}
-	resMetric.AddIntVal("gpusUsed", gpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricsGpus, gpusUsed)
 	metrics := []*edgeproto.Metric{}
 	metrics = append(metrics, &resMetric)
 
@@ -682,6 +678,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Reservable {
 		in.ReservationEndedAt = cloudcommon.TimeToTimestamp(time.Now())
 	}
+	if in.MultiTenant && in.Key.Organization != cloudcommon.OrganizationMobiledgeX {
+		return fmt.Errorf("Only %s ClusterInsts may be multi-tenant", cloudcommon.OrganizationMobiledgeX)
+	}
 
 	// validate deployment
 	if in.Deployment == "" {
@@ -695,6 +694,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Deployment == cloudcommon.DeploymentTypeVM {
 		// friendly error message if they try to specify VM
 		return fmt.Errorf("ClusterInst is not needed for deployment type %s, just create an AppInst directly", cloudcommon.DeploymentTypeVM)
+	}
+	if in.MultiTenant && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
+		return fmt.Errorf("Multi-tenant clusters must be of deployment type Kubernetes")
 	}
 
 	// validate other parameters based on deployment type
@@ -789,18 +791,20 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.Flavor.Name == "" {
 			return errors.New("No Flavor specified")
 		}
+		if in.MultiTenant && !cloudletSupportsMultiTenant(&info) {
+			return fmt.Errorf("Cloudlet does not support multi-tenant Clusters")
+		}
 
 		nodeFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "nodeFlavor found find match", "nodeFlavor", nodeFlavor)
 		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
 		if err != nil {
 			return err
 		}
-		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
-			in.OptRes = "gpu"
-		}
+		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
@@ -1072,6 +1076,30 @@ func validateClusterInstUpdates(ctx context.Context, stm concurrency.STM, in *ed
 	return nil
 }
 
+func validateDeleteState(cctx *CallContext, objName string, state edgeproto.TrackedState, prevErrs []string, send func(*edgeproto.Result) error) error {
+	if cctx.Undo {
+		// ignore any validation if deletion is done as part of undo
+		return nil
+	}
+	if cctx.Override != edgeproto.CRMOverride_IGNORE_TRANSIENT_STATE &&
+		cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
+		if edgeproto.IsDeleteState(state) {
+			return fmt.Errorf("%s busy, already under deletion", objName)
+		}
+		if edgeproto.IsTransientState(state) {
+			return fmt.Errorf("%s %s", objName, ObjBusyDeletionMsg)
+		}
+	}
+	if cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
+		if state == edgeproto.TrackedState_DELETE_ERROR {
+			send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", prevErrs)})
+			send(&edgeproto.Result{Message: fmt.Sprintf("Use Create%s to rebuild, and try again", objName)})
+			return fmt.Errorf("%s busy (%s), cannot delete", objName, state.String())
+		}
+	}
+	return nil
+}
+
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_DeleteClusterInstServer) (reterr error) {
 	log.SpanLog(inCb.Context(), log.DebugLevelApi, "delete ClusterInst internal", "key", in.Key)
 	if err := in.Key.ValidateKey(); err != nil {
@@ -1092,6 +1120,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err == nil {
 		defer func() {
 			stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+			if reterr == nil {
+				RecordClusterInstEvent(context.WithValue(ctx, clusterInstKey, *in), &clusterInstKey, cloudcommon.DELETED, cloudcommon.InstanceDown)
+			}
 		}()
 	}
 
@@ -1104,12 +1135,8 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Delete); err != nil {
 			return err
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_READY && in.State != edgeproto.TrackedState_CREATE_ERROR && in.State != edgeproto.TrackedState_DELETE_PREPARE && in.State != edgeproto.TrackedState_UPDATE_ERROR && !ignoreTransient(cctx, in.State) {
-			if in.State == edgeproto.TrackedState_DELETE_ERROR {
-				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
-				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})
-			}
-			return fmt.Errorf("ClusterInst busy (%s), cannot delete", in.State.String())
+		if err := validateDeleteState(cctx, "ClusterInst", in.State, in.Errors, cb.Send); err != nil {
+			return err
 		}
 		prevState = in.State
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
@@ -1121,21 +1148,11 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		return err
 	}
 
-	defer func() {
-		if reterr == nil {
-			RecordClusterInstEvent(context.WithValue(ctx, in.Key, *in), &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
-			streamObj := edgeproto.StreamObj{}
-			streamObj.Key = edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
-			if cErr := streamObjApi.CleanupStreamObj(ctx, &streamObj); cErr != nil {
-				log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup streamobj", "key", streamObj.Key, "err", cErr)
-			}
-		}
-	}()
-
 	// Delete appInsts that are set for autodelete
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
 		// restore previous state since we failed pre-delete actions
 		in.State = prevState
+		in.Fields = []string{edgeproto.ClusterInstFieldState}
 		s.store.Update(ctx, in, s.sync.syncWait)
 		return fmt.Errorf("Failed to auto-delete applications from ClusterInst %s, %s",
 			in.Key.ClusterKey.Name, err.Error())
@@ -1158,9 +1175,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			log.WarnLog("Delete ClusterInst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
-		}
-		if cloudlet.MaintenanceState != dme.MaintenanceState_NORMAL_OPERATION {
-			return errors.New("Cloudlet under maintenance, please try again later")
 		}
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
@@ -1200,6 +1214,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			// delete associated streamobj as well
+			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+			streamObjApi.store.STMDel(stm, &streamKey)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			s.store.STMPut(stm, in)
@@ -1231,7 +1248,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		undoErr := s.createClusterInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to undo ClusterInst deletion: %v", undoErr)})
-			log.InfoLog("Undo delete ClusterInst", "undoErr", undoErr)
+			log.SpanLog(ctx, log.DebugLevelApi, "Undo delete ClusterInst", "name", in.Key, "undoErr", undoErr)
 			RecordClusterInstEvent(ctx, &in.Key, cloudcommon.DELETE_ERROR, cloudcommon.InstanceDown)
 		}
 	}
@@ -1292,7 +1309,7 @@ func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
 }
 
 func ignoreCRM(cctx *CallContext) bool {
-	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
+	if (cctx.Undo && !cctx.CRMUndo) || cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
 		return true
 	}
@@ -1356,6 +1373,10 @@ func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+
+		// delete associated streamobj as well
+		streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
+		streamObjApi.store.STMDel(stm, &streamKey)
 		return nil
 	})
 }
@@ -1455,7 +1476,8 @@ func (s *ClusterInstApi) cleanupClusterInst(ctx context.Context, k interface{}) 
 	}
 	startTime := time.Now()
 	cb := &DummyStreamout{}
-	cb.ctx = ctx
+	// disable stream for cleanup of Idle reservable auto-clusterinsts
+	cb.ctx = context.WithValue(ctx, streamOkKey, false)
 	err := s.DeleteClusterInst(&clusterInst, cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst cleanup", "ClusterInst", key, "err", err)
 	if err != nil && err.Error() == key.NotFoundError().Error() {
@@ -1493,4 +1515,79 @@ func (s *ClusterInstApi) DeleteIdleReservableClusterInsts(ctx context.Context, i
 	s.cleanupIdleReservableAutoClusters(ctx, in.IdleTime.TimeDuration())
 	s.cleanupWorkers.WaitIdle()
 	return &edgeproto.Result{Message: "Delete done"}, nil
+}
+
+type StreamoutCb struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (s *StreamoutCb) Send(res *edgeproto.Result) error {
+	log.SpanLog(s.ctx, log.DebugLevelApi, res.Message)
+	return nil
+}
+
+func (s *StreamoutCb) Context() context.Context {
+	return s.ctx
+}
+
+func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.CloudletKey) {
+	span, ctx := log.ChildSpan(ctx, log.DebugLevelApi, "Create default multi-tenant cluster")
+	defer span.Finish()
+
+	// find largest flavor
+	largest := edgeproto.Flavor{}
+	flavorApi.cache.Mux.Lock()
+	for _, data := range flavorApi.cache.Objs {
+		flavor := data.Obj
+		if strings.Contains(flavor.Key.Name, "gpu") {
+			// for now avoid gpu flavors
+			continue
+		}
+		if flavor.OptResMap != nil {
+			if _, found := flavor.OptResMap["gpu"]; found {
+				// avoid gpu flavors
+				continue
+			}
+		}
+		if flavor.Vcpus != largest.Vcpus {
+			if flavor.Vcpus > largest.Vcpus {
+				largest = *flavor
+			}
+			continue
+		}
+		if flavor.Ram != largest.Ram {
+			if flavor.Ram > largest.Ram {
+				largest = *flavor
+			}
+			continue
+		}
+		if flavor.Disk > largest.Disk {
+			largest = *flavor
+		}
+	}
+	flavorApi.cache.Mux.Unlock()
+
+	clusterInst := edgeproto.ClusterInst{}
+	clusterInst.Key.CloudletKey = cloudletKey
+	clusterInst.Key.ClusterKey.Name = cloudcommon.DefaultMultiTenantCluster
+	clusterInst.Key.Organization = cloudcommon.OrganizationMobiledgeX
+	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
+	clusterInst.MultiTenant = true
+	clusterInst.Flavor = largest.Key
+	// TODO: custom settings or per-cloudlet config for the below fields?
+	clusterInst.NumMasters = 1
+	clusterInst.NumNodes = 3
+	cb := StreamoutCb{
+		ctx: ctx,
+	}
+	start := time.Now()
+
+	err := clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
+	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst", "cluster", clusterInst, "err", err)
+
+	if err != nil && err.Error() == clusterInst.Key.ExistsError().Error() {
+		return
+	}
+	nodeMgr.TimedEvent(ctx, "default multi-tenant cluster create", clusterInst.Key.Organization, node.EventType, clusterInst.Key.GetTags(), err, start, time.Now())
 }

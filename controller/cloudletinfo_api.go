@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -11,7 +12,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type CloudletInfoApi struct {
@@ -34,7 +34,7 @@ func InitCloudletInfoApi(sync *Sync) {
 // and CRM suddenly go away, etcd will remove the stale CloudletInfo data.
 
 func (s *CloudletInfoApi) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
-	return s.store.Put(ctx, in, s.sync.syncWait, objstore.WithLease(controllerAliveLease))
+	return s.store.Put(ctx, in, s.sync.syncWait)
 }
 
 func (s *CloudletInfoApi) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
@@ -64,11 +64,14 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				changedToOnline = true
 			}
 		}
-		s.store.STMPut(stm, in, objstore.WithLease(controllerAliveLease))
+		s.store.STMPut(stm, in)
 		return nil
 	})
 	if changedToOnline {
 		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "version", in.ContainerVersion)
+		if cloudletSupportsMultiTenant(in) {
+			go createDefaultMultiTenantCluster(ctx, in.Key)
+		}
 	}
 
 	cloudlet := edgeproto.Cloudlet{}
@@ -205,7 +208,7 @@ func (s *CloudletInfoApi) Delete(ctx context.Context, in *edgeproto.CloudletInfo
 		}
 		buf.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
 		buf.Fields = []string{edgeproto.CloudletInfoFieldState}
-		s.store.STMPut(stm, &buf, objstore.WithLease(controllerAliveLease))
+		s.store.STMPut(stm, &buf)
 		return nil
 	})
 	if err != nil {
@@ -250,7 +253,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 			}
 			info.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
-			s.store.STMPut(stm, &info, objstore.WithLease(controllerAliveLease))
+			s.store.STMPut(stm, &info)
 			return nil
 		})
 		if err != nil {
@@ -388,4 +391,27 @@ func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edge
 	cancel()
 
 	return err
+}
+
+func getCloudletPropertyBool(info *edgeproto.CloudletInfo, prop string, def bool) bool {
+	if info.Properties == nil {
+		return def
+	}
+	str, found := info.Properties[prop]
+	if !found {
+		return def
+	}
+	val, err := strconv.ParseBool(str)
+	if err != nil {
+		return def
+	}
+	return val
+}
+
+// Most cloudlets should support creating a multi-tenant cluster.
+// However special cases like Anthos which are emulating clusters by using
+// a hidden multi-tenant cluster, cannot.
+// For now, however, we leave the default as false.
+func cloudletSupportsMultiTenant(info *edgeproto.CloudletInfo) bool {
+	return getCloudletPropertyBool(info, cloudcommon.CloudletSupportsMT, false)
 }

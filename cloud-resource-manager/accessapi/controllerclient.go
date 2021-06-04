@@ -7,6 +7,7 @@ import (
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/chefmgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
@@ -24,6 +25,7 @@ const (
 	DeleteDNSRecord         = "delete-dns-record"
 	GetSessionTokens        = "get-session-tokens"
 	GetPublicCert           = "get-public-cert"
+	GetKafkaCreds           = "get-kafka-creds"
 )
 
 // ControllerClient implements platform.AccessApi for cloudlet
@@ -219,4 +221,17 @@ func (s *ControllerClient) GetSessionTokens(ctx context.Context, arg []byte) (ma
 		return nil, err
 	}
 	return tokens, nil
+}
+
+func (s *ControllerClient) GetKafkaCreds(ctx context.Context) (*node.KafkaCreds, error) {
+	req := &edgeproto.AccessDataRequest{
+		Type: GetKafkaCreds,
+	}
+	reply, err := s.client.GetAccessData(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	creds := node.KafkaCreds{}
+	err = json.Unmarshal(reply.Data, &creds)
+	return &creds, err
 }

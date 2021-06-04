@@ -23,7 +23,8 @@ type ControllerData struct {
 	cloudletKey                 edgeproto.CloudletKey
 	AppCache                    edgeproto.AppCache
 	AppInstCache                edgeproto.AppInstCache
-	CloudletCache               edgeproto.CloudletCache
+	CloudletCache               *edgeproto.CloudletCache
+	CloudletInternalCache       edgeproto.CloudletInternalCache
 	VMPoolCache                 edgeproto.VMPoolCache
 	FlavorCache                 edgeproto.FlavorCache
 	ClusterInstCache            edgeproto.ClusterInstCache
@@ -69,7 +70,8 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.cloudletKey = *key
 	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
-	edgeproto.InitCloudletCache(&cd.CloudletCache)
+	edgeproto.InitCloudletInternalCache(&cd.CloudletInternalCache)
+	cd.CloudletCache = nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion)
 	edgeproto.InitVMPoolCache(&cd.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
@@ -284,6 +286,12 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
+	// store clusterInstInfo object on CRM bringup, if state is READY
+	if old == nil && new.State == edgeproto.TrackedState_READY {
+		cd.ClusterInstInfoCache.RefreshObj(ctx, new)
+		return
+	}
+
 	resetStatus := edgeproto.NoResetStatus
 	updateClusterCacheCallback := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
@@ -439,15 +447,25 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateClusterCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
-		cd.clusterInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_CREATING,
+		transStates := map[edgeproto.TrackedState]struct{}{
+			edgeproto.TrackedState_CREATING: struct{}{},
+		}
+		cd.clusterInstInfoCheckState(ctx, &new.Key, transStates,
 			edgeproto.TrackedState_READY,
 			edgeproto.TrackedState_CREATE_ERROR)
 	} else if new.State == edgeproto.TrackedState_UPDATING {
-		cd.clusterInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_UPDATING,
+		transStates := map[edgeproto.TrackedState]struct{}{
+			edgeproto.TrackedState_UPDATING: struct{}{},
+		}
+		cd.clusterInstInfoCheckState(ctx, &new.Key, transStates,
 			edgeproto.TrackedState_READY,
 			edgeproto.TrackedState_UPDATE_ERROR)
 	} else if new.State == edgeproto.TrackedState_DELETING {
-		cd.clusterInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_DELETING,
+		transStates := map[edgeproto.TrackedState]struct{}{
+			edgeproto.TrackedState_DELETING:    struct{}{},
+			edgeproto.TrackedState_DELETE_DONE: struct{}{},
+		}
+		cd.clusterInstInfoCheckState(ctx, &new.Key, transStates,
 			edgeproto.TrackedState_NOT_PRESENT,
 			edgeproto.TrackedState_DELETE_ERROR)
 	}
@@ -463,6 +481,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	var err error
 
 	if old != nil && old.State == new.State {
+		return
+	}
+
+	// store appInstInfo object on CRM bringup, if state is READY
+	if old == nil && new.State == edgeproto.TrackedState_READY {
+		cd.AppInstInfoCache.RefreshObj(ctx, new)
 		return
 	}
 
@@ -570,6 +594,14 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
+		flavor := edgeproto.Flavor{}
+		flavorFound := cd.FlavorCache.Get(&new.Flavor, &flavor)
+		if !flavorFound {
+			str := fmt.Sprintf("Flavor %s not found",
+				new.Flavor.Name)
+			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
+			return
+		}
 		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
 		if err != nil {
 			return
@@ -601,7 +633,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				return
 			}
 		}
-		err = cd.platform.UpdateAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
+		err = cd.platform.UpdateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update App Inst failed: %s", err)
 			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback)
@@ -669,15 +701,25 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		// the appInst, and Controller is waiting for a new state from
 		// the CRM. If CRM is not creating, or has not just finished
 		// creating (ready), set an error state.
-		cd.appInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_CREATING,
+		transStates := map[edgeproto.TrackedState]struct{}{
+			edgeproto.TrackedState_CREATING: struct{}{},
+		}
+		cd.appInstInfoCheckState(ctx, &new.Key, transStates,
 			edgeproto.TrackedState_READY,
 			edgeproto.TrackedState_CREATE_ERROR)
 	} else if new.State == edgeproto.TrackedState_UPDATING {
-		cd.appInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_UPDATING,
+		transStates := map[edgeproto.TrackedState]struct{}{
+			edgeproto.TrackedState_UPDATING: struct{}{},
+		}
+		cd.appInstInfoCheckState(ctx, &new.Key, transStates,
 			edgeproto.TrackedState_READY,
 			edgeproto.TrackedState_UPDATE_ERROR)
 	} else if new.State == edgeproto.TrackedState_DELETING {
-		cd.appInstInfoCheckState(ctx, &new.Key, edgeproto.TrackedState_DELETING,
+		transStates := map[edgeproto.TrackedState]struct{}{
+			edgeproto.TrackedState_DELETING:    struct{}{},
+			edgeproto.TrackedState_DELETE_DONE: struct{}{},
+		}
+		cd.appInstInfoCheckState(ctx, &new.Key, transStates,
 			edgeproto.TrackedState_NOT_PRESENT,
 			edgeproto.TrackedState_DELETE_ERROR)
 	}
@@ -765,15 +807,15 @@ func (cd *ControllerData) appInstInfoRuntime(ctx context.Context, key *edgeproto
 // This is used when the controller sends CRM a state that implies the
 // controller is waiting for the CRM to send back the next state, but the
 // CRM does not have any change in progress.
-func (cd *ControllerData) clusterInstInfoCheckState(ctx context.Context, key *edgeproto.ClusterInstKey, transState, finalState, errState edgeproto.TrackedState) {
+func (cd *ControllerData) clusterInstInfoCheckState(ctx context.Context, key *edgeproto.ClusterInstKey, transStates map[edgeproto.TrackedState]struct{}, finalState, errState edgeproto.TrackedState) {
 	cd.ClusterInstInfoCache.UpdateModFunc(ctx, key, 0, func(old *edgeproto.ClusterInstInfo) (newObj *edgeproto.ClusterInstInfo, changed bool) {
 		if old == nil {
-			if transState == edgeproto.TrackedState_NOT_PRESENT || finalState == edgeproto.TrackedState_NOT_PRESENT {
+			if _, ok := transStates[edgeproto.TrackedState_NOT_PRESENT]; ok || finalState == edgeproto.TrackedState_NOT_PRESENT {
 				return old, false
 			}
 			old = &edgeproto.ClusterInstInfo{Key: *key}
 		}
-		if old.State != transState && old.State != finalState {
+		if _, ok := transStates[old.State]; !ok && old.State != finalState {
 			new := &edgeproto.ClusterInstInfo{}
 			*new = *old
 			new.State = errState
@@ -784,15 +826,15 @@ func (cd *ControllerData) clusterInstInfoCheckState(ctx context.Context, key *ed
 	})
 }
 
-func (cd *ControllerData) appInstInfoCheckState(ctx context.Context, key *edgeproto.AppInstKey, transState, finalState, errState edgeproto.TrackedState) {
+func (cd *ControllerData) appInstInfoCheckState(ctx context.Context, key *edgeproto.AppInstKey, transStates map[edgeproto.TrackedState]struct{}, finalState, errState edgeproto.TrackedState) {
 	cd.AppInstInfoCache.UpdateModFunc(ctx, key, 0, func(old *edgeproto.AppInstInfo) (newObj *edgeproto.AppInstInfo, changed bool) {
 		if old == nil {
-			if transState == edgeproto.TrackedState_NOT_PRESENT || finalState == edgeproto.TrackedState_NOT_PRESENT {
+			if _, ok := transStates[edgeproto.TrackedState_NOT_PRESENT]; ok || finalState == edgeproto.TrackedState_NOT_PRESENT {
 				return old, false
 			}
 			old = &edgeproto.AppInstInfo{Key: *key}
 		}
-		if old.State != transState && old.State != finalState {
+		if _, ok := transStates[old.State]; !ok && old.State != finalState {
 			new := &edgeproto.AppInstInfo{}
 			*new = *old
 			new.State = errState

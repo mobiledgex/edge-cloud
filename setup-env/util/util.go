@@ -405,6 +405,7 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 type ReadYamlOptions struct {
 	vars                 map[string]string
 	validateReplacedVars bool
+	strict               bool
 }
 
 type ReadYamlOp func(opts *ReadYamlOptions)
@@ -448,7 +449,11 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 		}
 	}
 
-	err = yaml.Unmarshal(yamlFile, iface)
+	if opts.strict {
+		err = yaml.UnmarshalStrict(yamlFile, iface)
+	} else {
+		err = yaml.Unmarshal(yamlFile, iface)
+	}
 	if err != nil {
 		return err
 	}
@@ -464,6 +469,12 @@ func WithVars(vars map[string]string) ReadYamlOp {
 func ValidateReplacedVars() ReadYamlOp {
 	return func(opts *ReadYamlOptions) {
 		opts.validateReplacedVars = true
+	}
+}
+
+func WithStrict() ReadYamlOp {
+	return func(opts *ReadYamlOptions) {
+		opts.strict = true
 	}
 }
 
@@ -558,6 +569,18 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = f1
 		y2 = f2
+	} else if fileType == "getappinstlist" {
+		var a1 *dmeproto.AppInstListReply
+		var a2 *dmeproto.AppInstListReply
+
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
+
+		clearAppInstEdgeEventsCookies(a1)
+		clearAppInstEdgeEventsCookies(a2)
+
+		y1 = a1
+		y2 = a2
 	} else if fileType == "getqospositionkpi" {
 		var q1 dmeproto.QosPositionKpiReply
 		var q2 dmeproto.QosPositionKpiReply
@@ -794,6 +817,15 @@ func clearFindCloudletPorts(reply *dmeproto.FindCloudletReply) {
 	for _, p := range reply.Ports {
 		p.PublicPort = 0
 	}
+}
+
+func clearAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
+	for _, cloudlet := range appInstReply.Cloudlets {
+		for _, appinst := range cloudlet.Appinstances {
+			appinst.EdgeEventsCookie = ""
+		}
+	}
+
 }
 
 func ClearAppDataOutputStatus(output *testutil.AllDataOut) {

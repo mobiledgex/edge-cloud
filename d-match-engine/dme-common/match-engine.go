@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"math/rand"
@@ -17,6 +16,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
@@ -110,8 +110,6 @@ type StatKeyContextType string
 
 var StatKeyContextKey = StatKeyContextType("statKey")
 
-var EdgeEventsCookieExpiration = flag.Duration("edgeEventsCookieExpiration", time.Minute*10, "Edge Events Cookie expiration time")
-
 // EdgeEventsHandler implementation (loaded from Plugin)
 var EEHandler EdgeEventsHandler
 
@@ -134,11 +132,16 @@ func IsAppInstUsable(appInst *DmeAppInst) bool {
 	if appInst.TrackedState != edgeproto.TrackedState_READY {
 		return false
 	}
-	if appInst.MaintenanceState == dme.MaintenanceState_UNDER_MAINTENANCE {
+	return AreStatesUsable(appInst.MaintenanceState, appInst.CloudletState, appInst.AppInstHealth)
+}
+
+// Checks dme proto states for an appinst or cloudlet (Maintenance, Cloudlet, and AppInstHealth states)
+func AreStatesUsable(maintenanceState dme.MaintenanceState, cloudletState dme.CloudletState, appInstHealth dme.HealthCheck) bool {
+	if maintenanceState == dme.MaintenanceState_UNDER_MAINTENANCE {
 		return false
 	}
-	if appInst.CloudletState == dme.CloudletState_CLOUDLET_STATE_READY {
-		return appInst.AppInstHealth == dme.HealthCheck_HEALTH_CHECK_OK || appInst.AppInstHealth == dme.HealthCheck_HEALTH_CHECK_UNKNOWN
+	if cloudletState == dme.CloudletState_CLOUDLET_STATE_READY {
+		return appInstHealth == dme.HealthCheck_HEALTH_CHECK_OK || appInstHealth == dme.HealthCheck_HEALTH_CHECK_UNKNOWN
 	}
 	return false
 }
@@ -245,17 +248,11 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	cl.TrackedState = appInst.State
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
-		EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+		cl.AppInstHealth = appInst.HealthCheck
+		go EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
-	cl.AppInstHealth = appInst.HealthCheck
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
-		if cl.CloudletState != cloudlet.State {
-			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-		}
-		if cl.MaintenanceState != cloudlet.MaintenanceState {
-			EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_CLOUDLET_MAINTENANCE)
-		}
 		cl.CloudletState = cloudlet.State
 		cl.MaintenanceState = cloudlet.MaintenanceState
 	} else {
@@ -309,8 +306,10 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
 				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 				// Remove AppInst from edgeevents plugin
-				EEHandler.SendAppInstStateEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-				EEHandler.RemoveAppInstKey(ctx, appInst.Key)
+				go func() {
+					EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+					EEHandler.RemoveAppInstKey(ctx, appInst.Key)
+				}()
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
@@ -366,8 +365,10 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
 					// Remove AppInst from edgeevents plugin
-					EEHandler.SendAppInstStateEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-					EEHandler.RemoveAppInstKey(ctx, key)
+					go func() {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+						EEHandler.RemoveAppInstKey(ctx, key)
+					}()
 					delete(carr.Insts, key.ClusterInstKey)
 				}
 			}
@@ -395,6 +396,14 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, cloudletKey) {
 					c.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 					c.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
+					appInstKey := edgeproto.AppInstKey{
+						AppKey:         app.AppKey,
+						ClusterInstKey: clusterInstKey,
+					}
+					go func() {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, c.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+					}()
 				}
 			}
 		}
@@ -420,6 +429,15 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 				if _, found := cloudlets[clusterInstKey.CloudletKey]; !found {
 					carr.Insts[clusterInstKey].CloudletState = dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 					carr.Insts[clusterInstKey].MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
+					appInstKey := edgeproto.AppInstKey{
+						AppKey:         app.AppKey,
+						ClusterInstKey: clusterInstKey,
+					}
+					go func() {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, carr.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+					}()
+
 				}
 			}
 		}
@@ -516,7 +534,11 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		cloudlet.CloudletKey = in.Key
 		tbl.Cloudlets[in.Key] = cloudlet
 	}
-	cloudlet.MaintenanceState = in.MaintenanceState
+	// Check if CloudletMaintenance state has changed
+	if cloudlet.MaintenanceState != in.MaintenanceState {
+		cloudlet.MaintenanceState = in.MaintenanceState
+		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, cloudlet, in.Key)
+	}
 	cloudlet.GpsLocation = in.Location
 
 	for _, app := range tbl.Apps {
@@ -546,7 +568,11 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 		// object should've been added on receipt of cloudlet object from controller
 		return
 	}
-	cloudlet.State = info.State
+	// Check if Cloudlet state has changed
+	if cloudlet.State != info.State {
+		cloudlet.State = info.State
+		go EEHandler.SendCloudletStateEdgeEvent(ctx, cloudlet, info.Key)
+	}
 
 	for _, app := range tbl.Apps {
 		app.Lock()
@@ -903,7 +929,7 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
-func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, deviceInfo *dme.DeviceInfo, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration *time.Duration) error {
+func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration time.Duration) error {
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
@@ -923,38 +949,12 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 		*mreply.CloudletLocation = best.appInst.location
 		mreply.Ports = copyPorts(best.appInst.ports)
 		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
-
-		key := &EdgeEventsCookieKey{
-			ClusterOrg:   best.appInst.virtualClusterInstKey.Organization,
-			ClusterName:  best.appInst.virtualClusterInstKey.ClusterKey.Name,
-			CloudletOrg:  best.appInst.virtualClusterInstKey.CloudletKey.Organization,
-			CloudletName: best.appInst.virtualClusterInstKey.CloudletKey.Name,
-		}
+		// Create EdgeEventsCookieKey
+		key := CreateEdgeEventsCookieKey(best.appInst, *loc)
+		// Generate edgeEventsCookie
 		ctx = NewEdgeEventsCookieContext(ctx, key)
 		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
 		mreply.EdgeEventsCookie = eecookie
-
-		// Update edgeevents stats influx db with gps locations
-		if EEStats != nil {
-			appInstKey := edgeproto.AppInstKey{
-				AppKey: *appkey,
-				ClusterInstKey: edgeproto.VirtualClusterInstKey{
-					ClusterKey:   best.appInst.virtualClusterInstKey.ClusterKey,
-					CloudletKey:  best.appInst.virtualClusterInstKey.CloudletKey,
-					Organization: best.appInst.virtualClusterInstKey.Organization,
-				},
-			}
-			devinfo := &dme.DeviceInfo{}
-			if deviceInfo != nil {
-				devinfo = deviceInfo
-			}
-			deviceStatKey := GetDeviceStatKey(appInstKey, devinfo, carrier, loc, int(Settings.LocationTileSideLengthKm))
-			edgeEventStatCall := &EdgeEventStatCall{
-				Metric:        cloudcommon.DeviceMetric,
-				DeviceStatKey: deviceStatKey,
-			}
-			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
-		}
 
 		// Update Context variable if passed
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
@@ -1040,7 +1040,7 @@ func GetAppOfficialFqdn(ctx context.Context, ckey *CookieKey, mreq *dme.AppOffic
 	repl.Ports = copyPorts(app.Ports)
 }
 
-func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
+func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply, edgeEventsCookieExpiration time.Duration) {
 	var appkey edgeproto.AppKey
 	appkey.Organization = ckey.OrgName
 	appkey.Name = ckey.AppName
@@ -1073,17 +1073,30 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 		ai.OrgName = appkey.Organization
 		ai.Fqdn = found.appInst.uri
 		ai.Ports = copyPorts(found.appInst.ports)
+
+		// Create EdgeEventsCookieKey
+		key := CreateEdgeEventsCookieKey(found.appInst, *mreq.GpsLocation)
+		// Generate edgeEventsCookie
+		ctx = NewEdgeEventsCookieContext(ctx, key)
+		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
+		ai.EdgeEventsCookie = eecookie
+
 		cloc.Appinstances = append(cloc.Appinstances, &ai)
 	}
 	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
-func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer) (reterr error) {
+func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEventServer, edgeEventsCookieExpiration time.Duration) (reterr error) {
 	// Initialize vars used in persistent connection
 	var appInstKey *edgeproto.AppInstKey
 	var sessionCookie string
 	var sessionCookieKey *CookieKey
 	var edgeEventsCookieKey *EdgeEventsCookieKey
+	// Initialize vars used for edgeevents stats
+	var deviceInfoStatic *dme.DeviceInfoStatic
+	var lastLocation *dme.Loc
+	var lastCarrier string = ""
+	var lastDeviceInfoDynamic *dme.DeviceInfoDynamic
 	// Intialize send function to be passed to plugin functions
 	sendFunc := func(event *dme.ServerEdgeEvent) {
 		err := svr.Send(event)
@@ -1102,6 +1115,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	// On first message:
 	// Verify Session Cookie and EdgeEvents Cookie
 	// Then add connection, client, and appinst to Plugin hashmap
+	// Send first deviceinfo stats update
 	if initMsg.EventType == dme.ClientEdgeEvent_EVENT_INIT_CONNECTION {
 		// Verify session cookie
 		sessionCookie = initMsg.SessionCookie
@@ -1116,6 +1130,18 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		log.SpanLog(ctx, log.DebugLevelDmereq, "EdgeEvent VerifyEdgeEventsCookie result", "key", edgeEventsCookieKey, "err", err)
 		if err != nil {
 			return grpc.Errorf(codes.Unauthenticated, err.Error())
+		}
+		lastLocation = &edgeEventsCookieKey.Location
+		// Initialize deviceInfoStatic for stats
+		if initMsg.DeviceInfoStatic != nil {
+			deviceInfoStatic = initMsg.DeviceInfoStatic
+		} else {
+			deviceInfoStatic = &dme.DeviceInfoStatic{}
+		}
+		// Intialize last deviceInfoDynamic for stats
+		lastDeviceInfoDynamic = initMsg.DeviceInfoDynamic
+		if lastDeviceInfoDynamic != nil {
+			lastCarrier = lastDeviceInfoDynamic.CarrierName
 		}
 		// Create AppInstKey from SessionCookie and EdgeEventsCookie
 		appInstKey = &edgeproto.AppInstKey{
@@ -1135,8 +1161,16 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 				Organization: edgeEventsCookieKey.ClusterOrg,
 			},
 		}
+		// Send first deviceinfo stats for client
+		deviceInfo := &DeviceInfo{
+			DeviceInfoStatic:  deviceInfoStatic,
+			DeviceInfoDynamic: lastDeviceInfoDynamic,
+		}
+		updateDeviceInfoStats(ctx, appInstKey, deviceInfo, lastLocation, "event init connection")
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, sendFunc)
+		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, lastLocation, lastCarrier, sendFunc)
+		// Remove Client from edgeevents plugin when StreamEdgeEvent exits
+		defer EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 		// Send successful init response
 		initServerEdgeEvent := new(dme.ServerEdgeEvent)
 		initServerEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
@@ -1173,17 +1207,26 @@ loop:
 			break loop
 		case dme.ClientEdgeEvent_EVENT_LATENCY_SAMPLES:
 			// Client sent latency samples to be processed
-			_, err := EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
+			err := ValidateLocation(cupdate.GpsLocation)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "No location in EVENT_LATENCY_SAMPLES", "err", err)
+				sendErrorEventToClient(ctx, fmt.Sprintf("No location in EVENT_LATENCY_SAMPLES, error is: %s", err), *appInstKey, *sessionCookieKey)
+				continue
+			}
+			// Process latency samples and send results to client
+			_, err = EEHandler.ProcessLatencySamples(ctx, *appInstKey, *sessionCookieKey, cupdate.Samples)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ClientEdgeEvent latency unable to process latency samples", "err", err)
-				reterr = err
-				break loop
+				sendErrorEventToClient(ctx, fmt.Sprintf("ClientEdgeEvent latency unable to process latency samples, error is: %s", err), *appInstKey, *sessionCookieKey)
+				continue
 			}
-			deviceInfo := &dme.DeviceInfo{}
-			if cupdate.DeviceInfo != nil {
-				deviceInfo = cupdate.DeviceInfo
+			// Latency stats update
+			deviceInfoDynamic := cupdate.DeviceInfoDynamic
+			deviceInfo := &DeviceInfo{
+				DeviceInfoStatic:  deviceInfoStatic,
+				DeviceInfoDynamic: deviceInfoDynamic,
 			}
-			latencyStatKey := GetLatencyStatKey(*appInstKey, deviceInfo, cupdate.CarrierName, cupdate.GpsLocation, int(Settings.LocationTileSideLengthKm))
+			latencyStatKey := GetLatencyStatKey(*appInstKey, deviceInfo, cupdate.GpsLocation, int(Settings.LocationTileSideLengthKm))
 			latencyStatInfo := &LatencyStatInfo{
 				Samples: cupdate.Samples,
 			}
@@ -1195,16 +1238,40 @@ loop:
 			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 		case dme.ClientEdgeEvent_EVENT_LOCATION_UPDATE:
 			// Client updated gps location
-			// Gps location stats update
-			deviceInfo := &dme.DeviceInfo{}
-			if cupdate.DeviceInfo != nil {
-				deviceInfo = cupdate.DeviceInfo
+			err := ValidateLocation(cupdate.GpsLocation)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LOCATION_UPDATE, invalid location", "err", err)
+				sendErrorEventToClient(ctx, fmt.Sprintf("Invalid EVENT_LOCATION_UPDATE, invalid location: %s", err), *appInstKey, *sessionCookieKey)
+				continue
+			}
+			// Deviceinfo stats update
+			deviceInfoDynamic := cupdate.DeviceInfoDynamic
+			deviceInfo := &DeviceInfo{
+				DeviceInfoStatic:  deviceInfoStatic,
+				DeviceInfoDynamic: deviceInfoDynamic,
+			}
+			// Update deviceinfo stats if DeviceInfoDynamic has changed or Location has moved to different tile
+			if !isDeviceInfoDynamicEqual(deviceInfoDynamic, lastDeviceInfoDynamic) || !isLocationInSameTile(cupdate.GpsLocation, lastLocation) {
+				updateDeviceInfoStats(ctx, appInstKey, deviceInfo, cupdate.GpsLocation, "event location update")
+				lastDeviceInfoDynamic = deviceInfoDynamic
+				if lastDeviceInfoDynamic != nil {
+					lastCarrier = lastDeviceInfoDynamic.CarrierName
+				}
+			}
+			// Update last client location in plugin if different from lastLocation
+			if cupdate.GpsLocation.Latitude != lastLocation.Latitude || cupdate.GpsLocation.Longitude != lastLocation.Longitude {
+				EEHandler.UpdateClientLastLocation(ctx, *appInstKey, *sessionCookieKey, cupdate.GpsLocation)
+				lastLocation = cupdate.GpsLocation
 			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
-			err = FindCloudlet(ctx, &appInstKey.AppKey, cupdate.CarrierName, cupdate.GpsLocation, deviceInfo, fcreply, EdgeEventsCookieExpiration)
+			err = FindCloudlet(ctx, &appInstKey.AppKey, lastCarrier, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
+				continue
+			}
+			if fcreply.Status != dme.FindCloudletReply_FIND_FOUND {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Unable to find any cloudlets", "FindStatus", fcreply.Status)
 				continue
 			}
 			newEECookieKey, err := VerifyEdgeEventsCookie(ctx, fcreply.EdgeEventsCookie)
@@ -1213,8 +1280,8 @@ loop:
 				continue
 			}
 			// Check if new appinst is different from current
-			if fcreply.Status == dme.FindCloudletReply_FIND_FOUND && !IsTheSameCluster(newEECookieKey, edgeEventsCookieKey) {
-				// Send successful init response
+			if !IsTheSameCluster(newEECookieKey, edgeEventsCookieKey) {
+				// Send new cloudlet update
 				newCloudletEdgeEvent := new(dme.ServerEdgeEvent)
 				newCloudletEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_CLOUDLET_UPDATE
 				newCloudletEdgeEvent.NewCloudlet = fcreply
@@ -1234,11 +1301,59 @@ loop:
 		default:
 			// Unknown client event
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Received unknown event type", "eventtype", cupdate.EventType)
+			sendErrorEventToClient(ctx, fmt.Sprintf("Received unknown event type: %s", cupdate.EventType), *appInstKey, *sessionCookieKey)
 		}
 	}
-	// Remove Client from edgeevents plugin
-	EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 	return reterr
+}
+
+// helper function that creates and sends an EVENT_ERROR ServerEdgeEvent to corresponding client
+func sendErrorEventToClient(ctx context.Context, msg string, appInstKey edgeproto.AppInstKey, cookieKey CookieKey) {
+	errorEdgeEvent := new(dme.ServerEdgeEvent)
+	errorEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_ERROR
+	errorEdgeEvent.ErrorMsg = msg
+	EEHandler.SendEdgeEventToClient(ctx, errorEdgeEvent, appInstKey, cookieKey)
+}
+
+// helper function that updates deviceinfo stats
+func updateDeviceInfoStats(ctx context.Context, appInstKey *edgeproto.AppInstKey, deviceInfo *DeviceInfo, loc *dme.Loc, callerMethod string) {
+	deviceStatKey := GetDeviceStatKey(*appInstKey, deviceInfo, loc, int(Settings.LocationTileSideLengthKm))
+	edgeEventStatCall := &EdgeEventStatCall{
+		Metric:        cloudcommon.DeviceMetric,
+		DeviceStatKey: deviceStatKey,
+	}
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Updating deviceinfo stats", "appinst", appInstKey, "callermethod", callerMethod)
+	EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
+}
+
+func isDeviceInfoDynamicEqual(d1 *dme.DeviceInfoDynamic, d2 *dme.DeviceInfoDynamic) bool {
+	if d1 == nil && d2 == nil {
+		return true
+	}
+	if d1 == nil {
+		return false
+	}
+	if d2 == nil {
+		return false
+	}
+	if d1.DataNetworkType != d2.DataNetworkType || d1.SignalStrength != d2.SignalStrength {
+		return false
+	}
+	return true
+}
+
+func isLocationInSameTile(l1 *dme.Loc, l2 *dme.Loc) bool {
+	if l1 == nil && l2 == nil {
+		return true
+	}
+	if l1 == nil {
+		return false
+	}
+	if l2 == nil {
+		return false
+	}
+	tileLength := int(Settings.LocationTileSideLengthKm)
+	return GetLocationTileFromGpsLocation(l1, tileLength) == GetLocationTileFromGpsLocation(l2, tileLength)
 }
 
 func ListAppinstTbl(ctx context.Context) {
@@ -1311,6 +1426,16 @@ func AppExists(orgname string, appname string, appvers string) bool {
 	defer tbl.RUnlock()
 	_, ok := tbl.Apps[key]
 	return ok
+}
+
+func ValidateLocation(loc *dme.Loc) error {
+	if loc == nil {
+		return grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	}
+	if !util.IsLatitudeValid(loc.Latitude) || !util.IsLongitudeValid(loc.Longitude) {
+		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	}
+	return nil
 }
 
 func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeproto.Settings) {

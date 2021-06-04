@@ -63,7 +63,7 @@ func RegisterClient(c *cli.Command, in *distributed_match_engine.RegisterClientR
 		}
 		return fmt.Errorf("RegisterClient failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -120,7 +120,7 @@ func FindCloudlet(c *cli.Command, in *distributed_match_engine.FindCloudletReque
 		}
 		return fmt.Errorf("FindCloudlet failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -177,7 +177,7 @@ func PlatformFindCloudlet(c *cli.Command, in *distributed_match_engine.PlatformF
 		}
 		return fmt.Errorf("PlatformFindCloudlet failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -234,7 +234,7 @@ func VerifyLocation(c *cli.Command, in *distributed_match_engine.VerifyLocationR
 		}
 		return fmt.Errorf("VerifyLocation failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -291,7 +291,7 @@ func GetLocation(c *cli.Command, in *distributed_match_engine.GetLocationRequest
 		}
 		return fmt.Errorf("GetLocation failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -348,7 +348,7 @@ func AddUserToGroup(c *cli.Command, in *distributed_match_engine.DynamicLocGroup
 		}
 		return fmt.Errorf("AddUserToGroup failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -405,7 +405,7 @@ func GetAppInstList(c *cli.Command, in *distributed_match_engine.AppInstListRequ
 		}
 		return fmt.Errorf("GetAppInstList failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -462,7 +462,7 @@ func GetFqdnList(c *cli.Command, in *distributed_match_engine.FqdnListRequest) e
 		}
 		return fmt.Errorf("GetFqdnList failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -519,7 +519,7 @@ func GetAppOfficialFqdn(c *cli.Command, in *distributed_match_engine.AppOfficial
 		}
 		return fmt.Errorf("GetAppOfficialFqdn failed: %s", errstr)
 	}
-	c.WriteOutput(obj, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
@@ -596,7 +596,7 @@ func GetQosPositionKpi(c *cli.Command, in *distributed_match_engine.QosPositionR
 	if len(objs) == 0 {
 		return nil
 	}
-	c.WriteOutput(objs, cli.OutputFormat)
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -695,10 +695,6 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
-	"deviceinfo.datanetworktype",
-	"deviceinfo.deviceos",
-	"deviceinfo.devicemodel",
-	"deviceinfo.signalstrength",
 	"tags",
 }
 var FindCloudletRequestAliasArgs = []string{}
@@ -714,10 +710,6 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
-	"deviceinfo.datanetworktype":     "LTE, 5G, etc.",
-	"deviceinfo.deviceos":            "Android or iOS",
-	"deviceinfo.devicemodel":         "Device model",
-	"deviceinfo.signalstrength":      "Device signal strength (0-5)",
 	"tags":                           "Tags _(optional)_ Vendor specific data",
 }
 var FindCloudletRequestSpecialArgs = map[string]string{
@@ -729,23 +721,15 @@ var PlatformFindCloudletRequestOptionalArgs = []string{
 	"sessioncookie",
 	"carriername",
 	"clienttoken",
-	"deviceinfo.datanetworktype",
-	"deviceinfo.deviceos",
-	"deviceinfo.devicemodel",
-	"deviceinfo.signalstrength",
 	"tags",
 }
 var PlatformFindCloudletRequestAliasArgs = []string{}
 var PlatformFindCloudletRequestComments = map[string]string{
-	"ver":                        "API version _(hidden)_ Reserved for future use",
-	"sessioncookie":              "Session Cookie Session Cookie from RegisterClientRequest",
-	"carriername":                "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any app instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
-	"clienttoken":                "Client Token Token with encoded client data",
-	"deviceinfo.datanetworktype": "LTE, 5G, etc.",
-	"deviceinfo.deviceos":        "Android or iOS",
-	"deviceinfo.devicemodel":     "Device model",
-	"deviceinfo.signalstrength":  "Device signal strength (0-5)",
-	"tags":                       "Tags _(optional)_ Vendor specific data",
+	"ver":           "API version _(hidden)_ Reserved for future use",
+	"sessioncookie": "Session Cookie Session Cookie from RegisterClientRequest",
+	"carriername":   "Carrier Name _(optional)_ By default, all SDKs will automatically fill in this parameter with the MCC+MNC of your current provider. Only override this parameter if you need to filter for a specific carrier on the DME. The DME will filter for App instances that are associated with the specified carrier. If you wish to search for any app instance on the DME regardless of carrier name, you can input “” to consider all carriers as “Any”.",
+	"clienttoken":   "Client Token Token with encoded client data",
+	"tags":          "Tags _(optional)_ Vendor specific data",
 }
 var PlatformFindCloudletRequestSpecialArgs = map[string]string{
 	"tags": "StringToString",
@@ -959,6 +943,7 @@ var AppinstanceOptionalArgs = []string{
 	"ports:#.tls",
 	"ports:#.nginx",
 	"orgname",
+	"edgeeventscookie",
 }
 var AppinstanceAliasArgs = []string{}
 var AppinstanceComments = map[string]string{
@@ -973,6 +958,7 @@ var AppinstanceComments = map[string]string{
 	"ports:#.tls":          "TLS termination for this port",
 	"ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"orgname":              "App Organization Name",
+	"edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
 }
 var AppinstanceSpecialArgs = map[string]string{}
 var CloudletLocationRequiredArgs = []string{}
@@ -1000,6 +986,7 @@ var CloudletLocationOptionalArgs = []string{
 	"appinstances:#.ports:#.tls",
 	"appinstances:#.ports:#.nginx",
 	"appinstances:#.orgname",
+	"appinstances:#.edgeeventscookie",
 }
 var CloudletLocationAliasArgs = []string{}
 var CloudletLocationComments = map[string]string{
@@ -1024,6 +1011,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances:#.ports:#.tls":          "TLS termination for this port",
 	"appinstances:#.ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"appinstances:#.orgname":              "App Organization Name",
+	"appinstances:#.edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
 }
 var CloudletLocationSpecialArgs = map[string]string{}
 var AppInstListReplyRequiredArgs = []string{}
@@ -1053,6 +1041,7 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets:#.appinstances:#.ports:#.tls",
 	"cloudlets:#.appinstances:#.ports:#.nginx",
 	"cloudlets:#.appinstances:#.orgname",
+	"cloudlets:#.appinstances:#.edgeeventscookie",
 	"tags",
 }
 var AppInstListReplyAliasArgs = []string{}
@@ -1080,7 +1069,8 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets:#.appinstances:#.ports:#.tls":          "TLS termination for this port",
 	"cloudlets:#.appinstances:#.ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"cloudlets:#.appinstances:#.orgname":              "App Organization Name",
-	"tags":                                            "_(optional)_ Vendor specific data",
+	"cloudlets:#.appinstances:#.edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
+	"tags": "_(optional)_ Vendor specific data",
 }
 var AppInstListReplySpecialArgs = map[string]string{
 	"tags": "StringToString",
@@ -1437,35 +1427,35 @@ var ClientEdgeEventOptionalArgs = []string{
 	"samples:#.timestamp.seconds",
 	"samples:#.timestamp.nanos",
 	"samples:#.tags",
-	"carriername",
-	"deviceinfo.datanetworktype",
-	"deviceinfo.deviceos",
-	"deviceinfo.devicemodel",
-	"deviceinfo.signalstrength",
+	"deviceinfostatic.deviceos",
+	"deviceinfostatic.devicemodel",
+	"deviceinfodynamic.datanetworktype",
+	"deviceinfodynamic.signalstrength",
+	"deviceinfodynamic.carriername",
 	"customevent",
 	"tags",
 }
 var ClientEdgeEventAliasArgs = []string{}
 var ClientEdgeEventComments = map[string]string{
-	"sessioncookie":                  "Session Cookie from RegisterClientReply",
-	"edgeeventscookie":               "Session Cookie from FindCloudletReply",
-	"eventtype":                      ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate, EventCustomEvent",
-	"gpslocation.latitude":           "latitude in WGS 84 coordinates",
-	"gpslocation.longitude":          "longitude in WGS 84 coordinates",
-	"gpslocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"gpslocation.verticalaccuracy":   "vertical accuracy (meters)",
-	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"gpslocation.course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"gpslocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
-	"samples:#.value":                "latency value",
-	"samples:#.tags":                 "_(optional)_ Vendor specific data",
-	"carriername":                    "Carrier name for EVENT_LATENCY_SAMPLES or EVENT_LOCATION_UPDATE (can be different from cloudlet org if used )",
-	"deviceinfo.datanetworktype":     "LTE, 5G, etc.",
-	"deviceinfo.deviceos":            "Android or iOS",
-	"deviceinfo.devicemodel":         "Device model",
-	"deviceinfo.signalstrength":      "Device signal strength (0-5)",
-	"customevent":                    "Custom event specified by the application",
-	"tags":                           "_(optional)_ Vendor specific data",
+	"sessioncookie":                     "Session Cookie from RegisterClientReply",
+	"edgeeventscookie":                  "Session Cookie from FindCloudletReply",
+	"eventtype":                         ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate, EventCustomEvent",
+	"gpslocation.latitude":              "latitude in WGS 84 coordinates",
+	"gpslocation.longitude":             "longitude in WGS 84 coordinates",
+	"gpslocation.horizontalaccuracy":    "horizontal accuracy (radius in meters)",
+	"gpslocation.verticalaccuracy":      "vertical accuracy (meters)",
+	"gpslocation.altitude":              "On android only lat and long are guaranteed to be supplied altitude in meters",
+	"gpslocation.course":                "course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"gpslocation.speed":                 "speed (IOS) / velocity (Android) (meters/sec)",
+	"samples:#.value":                   "latency value",
+	"samples:#.tags":                    "_(optional)_ Vendor specific data",
+	"deviceinfostatic.deviceos":         "Android or iOS",
+	"deviceinfostatic.devicemodel":      "Device model",
+	"deviceinfodynamic.datanetworktype": "LTE, 5G, etc.",
+	"deviceinfodynamic.signalstrength":  "Device signal strength (0-5)",
+	"deviceinfodynamic.carriername":     "Carrier name (can be different from cloudlet org if using )",
+	"customevent":                       "Custom event specified by the application",
+	"tags":                              "_(optional)_ Vendor specific data",
 }
 var ClientEdgeEventSpecialArgs = map[string]string{
 	"samples:#.tags": "StringToString",
@@ -1506,11 +1496,12 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.cloudletlocation.timestamp.nanos",
 	"newcloudlet.edgeeventscookie",
 	"newcloudlet.tags",
+	"errormsg",
 	"tags",
 }
 var ServerEdgeEventAliasArgs = []string{}
 var ServerEdgeEventComments = map[string]string{
-	"eventtype":                                       ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth, EventCloudletUpdate",
+	"eventtype":                                       ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth, EventCloudletUpdate, EventError",
 	"cloudletstate":                                   "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
 	"maintenancestate":                                "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
 	"healthcheck":                                     "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
@@ -1539,6 +1530,7 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.cloudletlocation.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"newcloudlet.edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
+	"errormsg":                                        "Error message if event_type is EVENT_ERROR",
 	"tags":                                            "_(optional)_ Vendor specific data",
 }
 var ServerEdgeEventSpecialArgs = map[string]string{

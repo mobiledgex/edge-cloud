@@ -1114,8 +1114,6 @@ func (m *AutoProvPolicy) Matches(o *AutoProvPolicy, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Cloudlets) != len(o.Cloudlets) {
 				return false
 			}
-			for i := 0; i < len(m.Cloudlets); i++ {
-			}
 		}
 	}
 	if !opts.Filter || o.MinActiveInstances != 0 {
@@ -1732,11 +1730,21 @@ func (c *AutoProvPolicyCache) UpdateModFunc(ctx context.Context, key *PolicyKey,
 }
 
 func (c *AutoProvPolicyCache) Delete(ctx context.Context, in *AutoProvPolicy, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AutoProvPolicy) bool {
+		return true
+	})
+}
+
+func (c *AutoProvPolicyCache) DeleteCondFunc(ctx context.Context, in *AutoProvPolicy, modRev int64, condFunc func(old *AutoProvPolicy) bool) {
 	c.Mux.Lock()
 	var old *AutoProvPolicy
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
@@ -2413,10 +2421,17 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Completed) != len(o.Completed) {
 				return false
 			}
-			for i := 0; i < len(m.Completed); i++ {
-				if o.Completed[i] != m.Completed[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Completed {
+				for mIndex, _ := range m.Completed {
+					if o.Completed[oIndex] == m.Completed[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Completed) {
+				return false
 			}
 		}
 	}
@@ -2427,10 +2442,17 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 			if !opts.Filter && len(m.Errors) != len(o.Errors) {
 				return false
 			}
-			for i := 0; i < len(m.Errors); i++ {
-				if o.Errors[i] != m.Errors[i] {
-					return false
+			found := 0
+			for oIndex, _ := range o.Errors {
+				for mIndex, _ := range m.Errors {
+					if o.Errors[oIndex] == m.Errors[mIndex] {
+						found++
+						break
+					}
 				}
+			}
+			if found != len(o.Errors) {
+				return false
 			}
 		}
 	}
@@ -2850,11 +2872,21 @@ func (c *AutoProvInfoCache) UpdateModFunc(ctx context.Context, key *CloudletKey,
 }
 
 func (c *AutoProvInfoCache) Delete(ctx context.Context, in *AutoProvInfo, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AutoProvInfo) bool {
+		return true
+	})
+}
+
+func (c *AutoProvInfoCache) DeleteCondFunc(ctx context.Context, in *AutoProvInfo, modRev int64, condFunc func(old *AutoProvInfo) bool) {
 	c.Mux.Lock()
 	var old *AutoProvInfo
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
 	}
 	delete(c.Objs, in.GetKeyVal())
 	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")

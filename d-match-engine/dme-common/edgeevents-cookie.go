@@ -7,15 +7,17 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
 type EdgeEventsCookieKey struct {
-	ClusterOrg   string `json:"clusterorg,omitempty"`
-	ClusterName  string `json:"clustername,omitempty"`
-	CloudletOrg  string `json:"cloudletorg,omitempty"`
-	CloudletName string `json:"cloudletname,omitempty"`
-	Kid          int    `json:"kid,omitempty"`
+	ClusterOrg   string  `json:"clusterorg,omitempty"`
+	ClusterName  string  `json:"clustername,omitempty"`
+	CloudletOrg  string  `json:"cloudletorg,omitempty"`
+	CloudletName string  `json:"cloudletname,omitempty"`
+	Location     dme.Loc `json:"location,omitempty"`
+	Kid          int     `json:"kid,omitempty"`
 }
 
 type edgeEventsClaims struct {
@@ -36,6 +38,17 @@ func (e *edgeEventsClaims) SetKid(kid int) {
 	e.Key.Kid = kid
 }
 
+func CreateEdgeEventsCookieKey(appInst *DmeAppInst, loc dme.Loc) *EdgeEventsCookieKey {
+	key := &EdgeEventsCookieKey{
+		ClusterOrg:   appInst.virtualClusterInstKey.Organization,
+		ClusterName:  appInst.virtualClusterInstKey.ClusterKey.Name,
+		CloudletOrg:  appInst.virtualClusterInstKey.CloudletKey.Organization,
+		CloudletName: appInst.virtualClusterInstKey.CloudletKey.Name,
+		Location:     loc,
+	}
+	return key
+}
+
 func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCookieKey, error) {
 	claims := edgeEventsClaims{}
 	token, err := Jwks.VerifyCookie(cookie, &claims)
@@ -51,6 +64,11 @@ func VerifyEdgeEventsCookie(ctx context.Context, cookie string) (*EdgeEventsCook
 		log.InfoLog("edgeevents cookie is invalid or expired", "eecookie", cookie, "claims", claims)
 		return nil, errors.New("invalid or expired cookie")
 	}
+	err = ValidateLocation(&claims.Key.Location)
+	if err != nil {
+		log.InfoLog("edgeevents cookie has invalid location", "eecookie", cookie, "claims", claims)
+		return nil, errors.New("invalid location in cookie")
+	}
 	log.SpanLog(ctx, log.DebugLevelDmereq, "verified edgeevents cookie", "eecookie", cookie, "expires", claims.ExpiresAt)
 	return claims.Key, nil
 }
@@ -62,11 +80,11 @@ func verifyEdgeEventsCookieKey(key *EdgeEventsCookieKey) bool {
 	return true
 }
 
-func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {
+func GenerateEdgeEventsCookie(key *EdgeEventsCookieKey, ctx context.Context, cookieExpiration time.Duration) (string, error) {
 	claims := edgeEventsClaims{
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(*cookieExpiration).Unix(),
+			ExpiresAt: time.Now().Add(cookieExpiration).Unix(),
 		},
 		Key: key,
 	}
@@ -89,5 +107,5 @@ func EdgeEventsCookieFromContext(ctx context.Context) (eekey *EdgeEventsCookieKe
 }
 
 func IsTheSameCluster(key1 *EdgeEventsCookieKey, key2 *EdgeEventsCookieKey) bool {
-	return key1.CloudletOrg == key2.CloudletOrg && key1.CloudletName == key2.CloudletName && key1.ClusterOrg == key2.ClusterOrg && key2.ClusterName == key2.ClusterName
+	return key1.CloudletOrg == key2.CloudletOrg && key1.CloudletName == key2.CloudletName && key1.ClusterOrg == key2.ClusterOrg && key1.ClusterName == key2.ClusterName
 }
