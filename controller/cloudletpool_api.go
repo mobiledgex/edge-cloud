@@ -8,6 +8,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -23,7 +24,7 @@ var cloudletPoolApi = CloudletPoolApi{}
 func InitCloudletPoolApi(sync *Sync) {
 	cloudletPoolApi.sync = sync
 	cloudletPoolApi.store = edgeproto.NewCloudletPoolStore(sync.store)
-	cloudletPoolApi.cache = nodeMgr.CloudletPoolLookup.GetCloudletPoolCache("")
+	cloudletPoolApi.cache = nodeMgr.CloudletPoolLookup.GetCloudletPoolCache(node.NoRegion)
 	sync.RegisterCache(cloudletPoolApi.cache)
 }
 

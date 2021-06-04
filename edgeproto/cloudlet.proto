@@ -286,6 +286,12 @@ message Cloudlet {
   int32 default_resource_alert_threshold = 40 [(protogen.hidetag) = "nocmp"];
   // Addr of the controller hosting the cloudlet services if it is running locally
   string HostController = 41 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // operator provided kafka cluster endpoint to push events to
+  string kafka_cluster = 42;
+  // username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+  string kafka_user = 43;
+  // password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+  string kafka_password = 44;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
