@@ -114,7 +114,6 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 		Value:     sarama.StringEncoder(buildMessageBody(event)),
 		Timestamp: event.Timestamp,
 	}
-
 	go s.sendMessage(ctx, producer.producer, message, &cloudletKey)
 }
 
@@ -177,7 +176,7 @@ func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (
 		return producer{}, fmt.Errorf("Unable to get system certs")
 	}
 	newConfig := tls.Config{RootCAs: rootCAs}
-	if s.unitTestMode || kafkaCreds.Password == "kafka-secret" {
+	if s.unitTestMode {
 		newConfig.InsecureSkipVerify = true
 	}
 	config.Net.TLS.Config = &newConfig
