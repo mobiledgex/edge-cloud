@@ -336,15 +336,19 @@ func GetGPUDriverBucketName(deploymentTag string) string {
 }
 
 func GetGPUDriverStoragePath(key *edgeproto.GPUDriverKey) string {
-	return fmt.Sprintf("%s/%s/%s", key.Organization, key.Type.String(), key.Name)
+	orgName := key.Organization
+	if key.Organization == "" {
+		orgName = OrganizationMobiledgeX
+	}
+	return fmt.Sprintf("%s/%s/%s", orgName, edgeproto.GPUType_CamelName[int32(key.Type)], key.Name)
 }
 
 func GetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey) string {
-	return fmt.Sprintf("%s/license.conf", GetGPUDriverStoragePath(key))
+	return fmt.Sprintf("%s/%s", GetGPUDriverStoragePath(key), edgeproto.GPUDriverLicenseConfig)
 }
 
 func GetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, buildName, ext string) string {
-	return fmt.Sprintf("%s/%s.%s", GetGPUDriverStoragePath(key), buildName, ext)
+	return fmt.Sprintf("%s/%s%s", GetGPUDriverStoragePath(key), buildName, ext)
 }
 
 func GetGPUDriverURL(key *edgeproto.GPUDriverKey, deploymentTag, buildName, ext string) string {

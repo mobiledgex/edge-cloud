@@ -155,7 +155,7 @@ func CreateGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 		return fmt.Errorf("GPUDriverApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := GPUDriverApiCmd.CreateGPUDriver(ctx, in)
+	stream, err := GPUDriverApiCmd.CreateGPUDriver(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -164,7 +164,31 @@ func CreateGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 		}
 		return fmt.Errorf("CreateGPUDriver failed: %s", errstr)
 	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateGPUDriver recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -212,7 +236,7 @@ func DeleteGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 		return fmt.Errorf("GPUDriverApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := GPUDriverApiCmd.DeleteGPUDriver(ctx, in)
+	stream, err := GPUDriverApiCmd.DeleteGPUDriver(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -221,7 +245,31 @@ func DeleteGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 		}
 		return fmt.Errorf("DeleteGPUDriver failed: %s", errstr)
 	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteGPUDriver recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -270,7 +318,7 @@ func UpdateGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 		return fmt.Errorf("GPUDriverApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := GPUDriverApiCmd.UpdateGPUDriver(ctx, in)
+	stream, err := GPUDriverApiCmd.UpdateGPUDriver(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -279,7 +327,31 @@ func UpdateGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 		}
 		return fmt.Errorf("UpdateGPUDriver failed: %s", errstr)
 	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateGPUDriver recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -350,6 +422,10 @@ func ShowGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 			}
 			return fmt.Errorf("ShowGPUDriver recv failed: %s", errstr)
 		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -403,7 +479,7 @@ func AddGPUDriverBuild(c *cli.Command, in *edgeproto.GPUDriverBuildMember) error
 		return fmt.Errorf("GPUDriverApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := GPUDriverApiCmd.AddGPUDriverBuild(ctx, in)
+	stream, err := GPUDriverApiCmd.AddGPUDriverBuild(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -412,7 +488,31 @@ func AddGPUDriverBuild(c *cli.Command, in *edgeproto.GPUDriverBuildMember) error
 		}
 		return fmt.Errorf("AddGPUDriverBuild failed: %s", errstr)
 	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("AddGPUDriverBuild recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
@@ -460,7 +560,7 @@ func RemoveGPUDriverBuild(c *cli.Command, in *edgeproto.GPUDriverBuildMember) er
 		return fmt.Errorf("GPUDriverApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := GPUDriverApiCmd.RemoveGPUDriverBuild(ctx, in)
+	stream, err := GPUDriverApiCmd.RemoveGPUDriverBuild(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -469,7 +569,31 @@ func RemoveGPUDriverBuild(c *cli.Command, in *edgeproto.GPUDriverBuildMember) er
 		}
 		return fmt.Errorf("RemoveGPUDriverBuild failed: %s", errstr)
 	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("RemoveGPUDriverBuild recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 

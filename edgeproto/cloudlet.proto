@@ -292,6 +292,7 @@ message GPUDriver {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
@@ -303,29 +304,32 @@ message GPUDriver {
 service GPUDriverApi {
   // Create GPU Driver. Creates GPU driver with all the config
   // required to install it.
-  rpc CreateGPUDriver(GPUDriver) returns (Result) {
+  rpc CreateGPUDriver(GPUDriver) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/gpudriver"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
   // Delete GPU Driver. Deletes GPU driver given that it is not
   // used by any cloudlet.
-  rpc DeleteGPUDriver(GPUDriver) returns (Result) {
+  rpc DeleteGPUDriver(GPUDriver) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/gpudriver"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
   // Update GPU Driver. Updates GPU driver config.
-  rpc UpdateGPUDriver(GPUDriver) returns (Result) {
+  rpc UpdateGPUDriver(GPUDriver) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/gpudriver"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_noconfig) = "Builds";
   }
@@ -336,25 +340,28 @@ service GPUDriverApi {
       post: "/show/gpudriver"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
     option (protogen.mc2_custom_authz) = true;
   }
 
   // Add GPU Driver Build. Adds new build to GPU driver.
-  rpc AddGPUDriverBuild(GPUDriverBuildMember) returns (Result) {
+  rpc AddGPUDriverBuild(GPUDriverBuildMember) returns (stream Result) {
     option (google.api.http) = {
       post: "/add/gpudriverbuild"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "Build.Name,Build.DriverPath,Build.OperatingSystem";
   }
   // Remove GPU Driver Build. Removes build from GPU driver.
-  rpc RemoveGPUDriverBuild(GPUDriverBuildMember) returns (Result) {
+  rpc RemoveGPUDriverBuild(GPUDriverBuildMember) returns (stream Result) {
     option (google.api.http) = {
       post: "/remove/gpudriverbuild"
       body: "*"
     };
+    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "Build.Name";
     option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.Hypervisor";

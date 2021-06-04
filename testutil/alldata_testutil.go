@@ -35,7 +35,7 @@ type AllDataOut struct {
 	Apps                       []edgeproto.Result
 	AppInstances               [][]edgeproto.Result
 	VmPools                    []edgeproto.Result
-	GpuDrivers                 []edgeproto.Result
+	GpuDrivers                 [][]edgeproto.Result
 	Errors                     []Err
 }
 

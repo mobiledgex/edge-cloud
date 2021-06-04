@@ -31,7 +31,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
-func request_GPUDriverApi_CreateGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_GPUDriverApi_CreateGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (GPUDriverApi_CreateGPUDriverClient, runtime.ServerMetadata, error) {
 	var protoReq GPUDriver
 	var metadata runtime.ServerMetadata
 
@@ -43,12 +43,20 @@ func request_GPUDriverApi_CreateGPUDriver_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateGPUDriver(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.CreateGPUDriver(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func local_request_GPUDriverApi_CreateGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, server GPUDriverApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_GPUDriverApi_DeleteGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (GPUDriverApi_DeleteGPUDriverClient, runtime.ServerMetadata, error) {
 	var protoReq GPUDriver
 	var metadata runtime.ServerMetadata
 
@@ -60,12 +68,20 @@ func local_request_GPUDriverApi_CreateGPUDriver_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.CreateGPUDriver(ctx, &protoReq)
-	return msg, metadata, err
+	stream, err := client.DeleteGPUDriver(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_GPUDriverApi_DeleteGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_GPUDriverApi_UpdateGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (GPUDriverApi_UpdateGPUDriverClient, runtime.ServerMetadata, error) {
 	var protoReq GPUDriver
 	var metadata runtime.ServerMetadata
 
@@ -77,59 +93,16 @@ func request_GPUDriverApi_DeleteGPUDriver_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteGPUDriver(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_GPUDriverApi_DeleteGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, server GPUDriverApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GPUDriver
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	stream, err := client.UpdateGPUDriver(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
 	}
-
-	msg, err := server.DeleteGPUDriver(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-func request_GPUDriverApi_UpdateGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GPUDriver
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UpdateGPUDriver(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_GPUDriverApi_UpdateGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, server GPUDriverApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GPUDriver
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.UpdateGPUDriver(ctx, &protoReq)
-	return msg, metadata, err
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -158,7 +131,7 @@ func request_GPUDriverApi_ShowGPUDriver_0(ctx context.Context, marshaler runtime
 
 }
 
-func request_GPUDriverApi_AddGPUDriverBuild_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_GPUDriverApi_AddGPUDriverBuild_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (GPUDriverApi_AddGPUDriverBuildClient, runtime.ServerMetadata, error) {
 	var protoReq GPUDriverBuildMember
 	var metadata runtime.ServerMetadata
 
@@ -170,12 +143,20 @@ func request_GPUDriverApi_AddGPUDriverBuild_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AddGPUDriverBuild(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.AddGPUDriverBuild(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func local_request_GPUDriverApi_AddGPUDriverBuild_0(ctx context.Context, marshaler runtime.Marshaler, server GPUDriverApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_GPUDriverApi_RemoveGPUDriverBuild_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (GPUDriverApi_RemoveGPUDriverBuildClient, runtime.ServerMetadata, error) {
 	var protoReq GPUDriverBuildMember
 	var metadata runtime.ServerMetadata
 
@@ -187,42 +168,16 @@ func local_request_GPUDriverApi_AddGPUDriverBuild_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.AddGPUDriverBuild(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-func request_GPUDriverApi_RemoveGPUDriverBuild_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GPUDriverBuildMember
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	stream, err := client.RemoveGPUDriverBuild(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
 	}
-
-	msg, err := client.RemoveGPUDriverBuild(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_GPUDriverApi_RemoveGPUDriverBuild_0(ctx context.Context, marshaler runtime.Marshaler, server GPUDriverApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GPUDriverBuildMember
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.RemoveGPUDriverBuild(ctx, &protoReq)
-	return msg, metadata, err
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -722,63 +677,24 @@ func request_CloudletMetricsApi_ShowCloudletMetrics_0(ctx context.Context, marsh
 func RegisterGPUDriverApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server GPUDriverApiServer) error {
 
 	mux.Handle("POST", pattern_GPUDriverApi_CreateGPUDriver_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_GPUDriverApi_CreateGPUDriver_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_GPUDriverApi_CreateGPUDriver_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_GPUDriverApi_DeleteGPUDriver_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_GPUDriverApi_DeleteGPUDriver_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_GPUDriverApi_DeleteGPUDriver_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_GPUDriverApi_UpdateGPUDriver_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_GPUDriverApi_UpdateGPUDriver_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_GPUDriverApi_UpdateGPUDriver_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_GPUDriverApi_ShowGPUDriver_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -789,43 +705,17 @@ func RegisterGPUDriverApiHandlerServer(ctx context.Context, mux *runtime.ServeMu
 	})
 
 	mux.Handle("POST", pattern_GPUDriverApi_AddGPUDriverBuild_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_GPUDriverApi_AddGPUDriverBuild_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_GPUDriverApi_AddGPUDriverBuild_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_GPUDriverApi_RemoveGPUDriverBuild_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_GPUDriverApi_RemoveGPUDriverBuild_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_GPUDriverApi_RemoveGPUDriverBuild_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 
 	mux.Handle("POST", pattern_GPUDriverApi_GetGPUDriverBuildURL_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -1151,7 +1041,7 @@ func RegisterGPUDriverApiHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_GPUDriverApi_CreateGPUDriver_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_GPUDriverApi_CreateGPUDriver_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1171,7 +1061,7 @@ func RegisterGPUDriverApiHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_GPUDriverApi_DeleteGPUDriver_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_GPUDriverApi_DeleteGPUDriver_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1191,7 +1081,7 @@ func RegisterGPUDriverApiHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_GPUDriverApi_UpdateGPUDriver_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_GPUDriverApi_UpdateGPUDriver_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1231,7 +1121,7 @@ func RegisterGPUDriverApiHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_GPUDriverApi_AddGPUDriverBuild_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_GPUDriverApi_AddGPUDriverBuild_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1251,7 +1141,7 @@ func RegisterGPUDriverApiHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_GPUDriverApi_RemoveGPUDriverBuild_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_GPUDriverApi_RemoveGPUDriverBuild_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1295,17 +1185,17 @@ var (
 )
 
 var (
-	forward_GPUDriverApi_CreateGPUDriver_0 = runtime.ForwardResponseMessage
+	forward_GPUDriverApi_CreateGPUDriver_0 = runtime.ForwardResponseStream
 
-	forward_GPUDriverApi_DeleteGPUDriver_0 = runtime.ForwardResponseMessage
+	forward_GPUDriverApi_DeleteGPUDriver_0 = runtime.ForwardResponseStream
 
-	forward_GPUDriverApi_UpdateGPUDriver_0 = runtime.ForwardResponseMessage
+	forward_GPUDriverApi_UpdateGPUDriver_0 = runtime.ForwardResponseStream
 
 	forward_GPUDriverApi_ShowGPUDriver_0 = runtime.ForwardResponseStream
 
-	forward_GPUDriverApi_AddGPUDriverBuild_0 = runtime.ForwardResponseMessage
+	forward_GPUDriverApi_AddGPUDriverBuild_0 = runtime.ForwardResponseStream
 
-	forward_GPUDriverApi_RemoveGPUDriverBuild_0 = runtime.ForwardResponseMessage
+	forward_GPUDriverApi_RemoveGPUDriverBuild_0 = runtime.ForwardResponseStream
 
 	forward_GPUDriverApi_GetGPUDriverBuildURL_0 = runtime.ForwardResponseMessage
 )

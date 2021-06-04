@@ -202,6 +202,7 @@ func main() {
 			CloudletInternalCache: &controllerData.CloudletInternalCache,
 			VMPoolCache:           &controllerData.VMPoolCache,
 			VMPoolInfoCache:       &controllerData.VMPoolInfoCache,
+			GPUDriverCache:        &controllerData.GPUDriverCache,
 		}
 
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {

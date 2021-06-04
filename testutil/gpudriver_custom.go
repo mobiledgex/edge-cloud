@@ -6,12 +6,12 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-func (s *DummyServer) AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, nil
+func (s *DummyServer) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb edgeproto.GPUDriverApi_AddGPUDriverBuildServer) error {
+	return nil
 }
 
-func (s *DummyServer) RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, nil
+func (s *DummyServer) RemoveGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb edgeproto.GPUDriverApi_RemoveGPUDriverBuildServer) error {
+	return nil
 }
 
 func (s *DummyServer) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {

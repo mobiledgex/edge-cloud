@@ -26,6 +26,8 @@ const (
 	AppConfigHelmYaml      = "helmCustomizationYaml"
 	AppAccessCustomization = "appAccessCustomization"
 	AppConfigEnvYaml       = "envVarsYaml"
+
+	GPUDriverLicenseConfig = "license.conf"
 )
 
 var ValidConfigKinds = map[string]struct{}{
@@ -275,14 +277,11 @@ func (g *GPUDriverBuild) ValidateName() error {
 	if g.Name == "" {
 		return errors.New("Missing gpu driver build name")
 	}
+	if g.Name == GPUDriverLicenseConfig {
+		return fmt.Errorf("%s is a reserved name and hence cannot be used as a build name", g.Name)
+	}
 	if !util.ValidName(g.Name) {
 		return fmt.Errorf("Invalid gpu driver build name: %s", g.Name)
-	}
-	if g.DriverPath == "" {
-		return fmt.Errorf("Missing driverpath")
-	}
-	if g.OperatingSystem == OSType_LINUX && g.KernelVersion == "" {
-		return fmt.Errorf("Kernel version is required for Linux build")
 	}
 	return nil
 }
@@ -290,6 +289,12 @@ func (g *GPUDriverBuild) ValidateName() error {
 func (g *GPUDriverBuild) Validate() error {
 	if err := g.ValidateName(); err != nil {
 		return err
+	}
+	if g.DriverPath == "" {
+		return fmt.Errorf("Missing driverpath")
+	}
+	if g.OperatingSystem == OSType_LINUX && g.KernelVersion == "" {
+		return fmt.Errorf("Kernel version is required for Linux build")
 	}
 	if err := g.ValidateEnums(); err != nil {
 		return err
