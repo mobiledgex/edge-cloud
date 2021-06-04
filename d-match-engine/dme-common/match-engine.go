@@ -1209,8 +1209,8 @@ loop:
 			// Client sent latency samples to be processed
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "No location in EVENT_LATENCY_SAMPLES", "err", err)
-				sendErrorEventToClient(ctx, fmt.Sprintf("No location in EVENT_LATENCY_SAMPLES, error is: %s", err), *appInstKey, *sessionCookieKey)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LATENCY_SAMPLES, invalid location", "err", err)
+				sendErrorEventToClient(ctx, fmt.Sprintf("Invalid EVENT_LATENCY_SAMPLES, invalid location: %s", err), *appInstKey, *sessionCookieKey)
 				continue
 			}
 			// Process latency samples and send results to client
