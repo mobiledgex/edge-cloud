@@ -114,7 +114,7 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context) (bool, error) {
 		}
 		limit, err := limiter.Limit(ctx)
 		if limit {
-			return limit, fmt.Errorf("user \"%s\" exceeded api rate limit per usea. %s", li.User, err)
+			return limit, fmt.Errorf("user \"%s\" exceeded api rate limit per user. %s", li.User, err)
 		}
 	}
 	if a.doesLimitByOrg() && li.Org != "" {
