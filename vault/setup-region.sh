@@ -77,6 +77,10 @@ path "pki-regional-cloudlet/issue/$REGION" {
 path "ssh/sign/machine" {
   capabilities = [ "create", "update" ]
 }
+
+path "secret/data/$REGION/kafka/*" {
+  capabilities = [ "create", "update", "delete", "read" ]
+}
 EOF
 vault policy write $REGION.controller /tmp/controller-pol.hcl
 rm /tmp/controller-pol.hcl

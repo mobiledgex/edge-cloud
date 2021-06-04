@@ -324,7 +324,6 @@ func (s *NodeMgr) esQueuedEvent() {
 func (s *NodeMgr) Event(ctx context.Context, name, org string, keyTags map[string]string, err error, keysAndValues ...string) {
 	s.EventAtTime(ctx, name, org, "event", keyTags, err, time.Now(), keysAndValues...)
 }
-
 func (s *NodeMgr) TimedEvent(ctx context.Context, name, org, typ string, keyTags map[string]string, err error, startTime, endTime time.Time, keysAndValues ...string) {
 	keysAndValues = append(keysAndValues,
 		"duration", endTime.Sub(startTime).String(),
@@ -339,9 +338,6 @@ func (s *NodeMgr) EventAtTime(ctx context.Context, name, org, typ string, keyTag
 }
 
 func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[string]string, err error, ts time.Time, keysAndValues ...string) {
-	if s.ESClient == nil {
-		return
-	}
 	event := EventData{
 		Name:      name,
 		Org:       []string{org},
@@ -396,6 +392,11 @@ func (s *NodeMgr) event(ctx context.Context, name, org, typ string, keyTags map[
 	ec := zapcore.NewEntryCaller(runtime.Caller(2))
 	event.Tags = append(event.Tags, EventTag{"lineno", ec.TrimmedPath()})
 	event.Tags = append(event.Tags, EventTag{"hostname", s.MyNode.Hostname})
+
+	s.kafkaSend(ctx, event, keyTags, keysAndValues...)
+	if s.ESClient == nil {
+		return
+	}
 
 	dat, err := json.Marshal(event)
 	if err != nil {
