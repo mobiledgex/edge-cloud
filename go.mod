@@ -9,6 +9,7 @@ require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/SAP/go-hdb v0.14.1 // indirect
 	github.com/SermoDigital/jose v0.9.1 // indirect
+	github.com/Shopify/sarama v1.22.2-0.20190604114437-cd910a683f9f
 	github.com/Sirupsen/logrus v1.6.0 // indirect
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
