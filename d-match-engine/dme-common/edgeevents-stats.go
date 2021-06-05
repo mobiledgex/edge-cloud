@@ -1,6 +1,7 @@
 package dmecommon
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -199,7 +200,7 @@ func LatencyStatToMetric(ts *types.Timestamp, key LatencyStatKey, stat *LatencyS
 	metric.AddTag("datanetworktype", key.DataNetworkType)
 	metric.AddTag("deviceos", key.DeviceOs)
 	metric.AddTag("devicemodel", key.DeviceModel)
-	metric.AddIntVal("signalstrength", key.SignalStrength)
+	metric.AddTag("signalstrength", fmt.Sprint(key.SignalStrength))
 	// Latency information
 	metric.AddDoubleVal("avg", stat.RollingStatistics.Statistics.Avg)
 	metric.AddDoubleVal("variance", stat.RollingStatistics.Statistics.Variance)
@@ -221,7 +222,7 @@ func DeviceStatToMetric(ts *types.Timestamp, key DeviceStatKey, stat *DeviceStat
 	metric.AddTag("datanetworktype", key.DataNetworkType)
 	metric.AddTag("deviceos", key.DeviceOs)
 	metric.AddTag("devicemodel", key.DeviceModel)
-	metric.AddIntVal("signalstrength", key.SignalStrength)
+	metric.AddTag("signalstrength", fmt.Sprint(key.SignalStrength))
 	// Num session information
 	metric.AddIntVal("numsessions", stat.NumSessions)
 	return metric
