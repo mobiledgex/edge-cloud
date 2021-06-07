@@ -690,6 +690,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if app.Deployment == cloudcommon.DeploymentTypeVM && in.AutoClusterIpAccess != edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			return fmt.Errorf("Cannot specify AutoClusterIpAccess if deployment type is VM")
 		}
+		err := validateImageTypeForPlatform(app.ImageType, cloudlet.PlatformType)
+		if err != nil {
+			return err
+		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
 		vmFlavor := edgeproto.Flavor{}
@@ -1779,6 +1783,17 @@ func isIPAllocatedPerService(platformType edgeproto.PlatformType, operator strin
 	return platformType == edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS ||
 		platformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE ||
 		platformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP
+}
+
+func validateImageTypeForPlatform(imageType edgeproto.ImageType, platformType edgeproto.PlatformType) error {
+	log.DebugLog(log.DebugLevelApi, "validateImageTypeForPlatform", "imageType", imageType, "platformType", platformType)
+	if imageType == edgeproto.ImageType_IMAGE_TYPE_OVF {
+		if platformType != edgeproto.PlatformType_PLATFORM_TYPE_VCD {
+			platName := edgeproto.PlatformType_name[int32(platformType)]
+			return fmt.Errorf("image type %s is not valid for platform type: %s", imageType, platName)
+		}
+	}
+	return nil
 }
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, platformType edgeproto.PlatformType, refs *edgeproto.CloudletRefs) error {
