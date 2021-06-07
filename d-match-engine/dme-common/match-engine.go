@@ -249,7 +249,9 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
 		cl.AppInstHealth = appInst.HealthCheck
-		go EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+		if cl != nil {
+			go EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+		}
 	}
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
@@ -307,8 +309,10 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 				// Remove AppInst from edgeevents plugin
 				go func() {
-					EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-					EEHandler.RemoveAppInstKey(ctx, appInst.Key)
+					if cl != nil {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+						EEHandler.RemoveAppInstKey(ctx, appInst.Key)
+					}
 				}()
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
@@ -366,8 +370,10 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
 					// Remove AppInst from edgeevents plugin
 					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, *inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-						EEHandler.RemoveAppInstKey(ctx, key)
+						if inst != nil {
+							EEHandler.SendAppInstStateEdgeEvent(ctx, *inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+							EEHandler.RemoveAppInstKey(ctx, key)
+						}
 					}()
 					delete(carr.Insts, key.ClusterInstKey)
 				}
@@ -401,8 +407,11 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 						ClusterInstKey: clusterInstKey,
 					}
 					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, *c.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+						appinst := c.Insts[clusterInstKey]
+						if appinst != nil {
+							EEHandler.SendAppInstStateEdgeEvent(ctx, *appinst, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+							EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+						}
 					}()
 				}
 			}
@@ -434,8 +443,11 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 						ClusterInstKey: clusterInstKey,
 					}
 					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, *carr.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+						appinst := carr.Insts[clusterInstKey]
+						if appinst != nil {
+							EEHandler.SendAppInstStateEdgeEvent(ctx, *appinst, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+							EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+						}
 					}()
 
 				}
@@ -537,7 +549,9 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 	// Check if CloudletMaintenance state has changed
 	if cloudlet.MaintenanceState != in.MaintenanceState {
 		cloudlet.MaintenanceState = in.MaintenanceState
-		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, *cloudlet, in.Key)
+		if cloudlet != nil {
+			go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, *cloudlet, in.Key)
+		}
 	}
 	cloudlet.GpsLocation = in.Location
 
@@ -571,7 +585,9 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 	// Check if Cloudlet state has changed
 	if cloudlet.State != info.State {
 		cloudlet.State = info.State
-		go EEHandler.SendCloudletStateEdgeEvent(ctx, *cloudlet, info.Key)
+		if cloudlet != nil {
+			go EEHandler.SendCloudletStateEdgeEvent(ctx, *cloudlet, info.Key)
+		}
 	}
 
 	for _, app := range tbl.Apps {
