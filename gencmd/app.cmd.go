@@ -509,6 +509,7 @@ var AppOptionalArgs = []string{
 	"serverlessconfig.vcpus",
 	"serverlessconfig.ram",
 	"serverlessconfig.minreplicas",
+	"vmappostype",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -522,7 +523,7 @@ var AppComments = map[string]string{
 	"appname":                                "App name",
 	"appvers":                                "App version",
 	"imagepath":                              "URI of where image resides",
-	"imagetype":                              "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm",
+	"imagetype":                              "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm, ImageTypeOvf",
 	"accessports":                            "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
 	"defaultflavor":                          "Flavor name",
 	"authpublickey":                          "Public key used for authentication",
@@ -554,6 +555,7 @@ var AppComments = map[string]string{
 	"serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
 	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
+	"vmappostype":                            "OS Type for VM Apps, one of VmAppOsUnknown, VmAppOsLinux, VmAppOsWindows10, VmAppOsWindows2012, VmAppOsWindows2016, VmAppOsWindows2019",
 }
 var AppSpecialArgs = map[string]string{
 	"autoprovpolicies": "StringArray",
