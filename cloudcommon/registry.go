@@ -27,7 +27,7 @@ const (
 	ApiKeyAuth        = "apikey"
 	DockerHub         = "docker.io"
 	DockerHubRegistry = "registry-1.docker.io"
-	MaxVmVersion      = 14
+	MaxOvfVmVersion   = 14
 )
 
 type RegistryAuth struct {
@@ -419,8 +419,8 @@ func ValidateOvfRegistryPath(ctx context.Context, imgUrl string, authApi Registr
 			if err != nil {
 				return fmt.Errorf("Unable to parse VM Version in OVF: %s, %v", version, err)
 			}
-			if versionInt > MaxVmVersion {
-				return fmt.Errorf("Invalid VM version in OVF: %d, max value: %d", versionInt, MaxVmVersion)
+			if versionInt > MaxOvfVmVersion {
+				return fmt.Errorf("Invalid VM version in OVF: %d, max value: %d", versionInt, MaxOvfVmVersion)
 			}
 		}
 	}
@@ -441,10 +441,10 @@ func ValidateOvfRegistryPath(ctx context.Context, imgUrl string, authApi Registr
 	// check that all referenced files are available
 	for _, f := range filesToCheck {
 		fresp, err := SendHTTPReq(ctx, "HEAD", f, authApi, nil, nil)
-		defer fresp.Body.Close()
 		if err != nil {
 			return fmt.Errorf("unable to get referenced file: %s - %v", f, err)
 		}
+		defer fresp.Body.Close()
 		if fresp.StatusCode != http.StatusOK {
 			return fmt.Errorf("Error getting OVF - code %d", resp.StatusCode)
 		}
