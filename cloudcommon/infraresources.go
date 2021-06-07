@@ -151,7 +151,7 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 			break
 		}
 	}
-	if !vmFlavorFound {
+	if !vmFlavorFound && len(pfFlavorList) > 0 {
 		return nil, fmt.Errorf("VM flavor %s does not exist", appInst.VmFlavor)
 	}
 	if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
