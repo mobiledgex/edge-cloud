@@ -145,6 +145,42 @@ func TestAppApi(t *testing.T) {
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Empty config for config kind")
 
+	// test Updating of the ports with a manifest k8s. Manifest should be cleared
+	k8sApp := testutil.AppData[2]
+	// clean up previous instance first
+	_, err = appApi.DeleteApp(ctx, &k8sApp)
+	require.Nil(t, err)
+
+	k8sApp = testutil.AppData[2]
+	k8sApp.Deployment = cloudcommon.DeploymentTypeKubernetes
+	k8sApp.DeploymentManifest = testK8SManifest1
+	k8sApp.AccessPorts = "tcp:80"
+	_, err = appApi.CreateApp(ctx, &k8sApp)
+	require.Nil(t, err)
+	// Update ports with a manifest and verify it requires an update to the manifest
+	k8sApp.AccessPorts = "tcp:80,tcp:81"
+	k8sApp.Fields = []string{edgeproto.AppFieldAccessPorts}
+	_, err = appApi.UpdateApp(ctx, &k8sApp)
+	require.NotNil(t, err, "k8s app with manifest should complain about the manifest")
+	require.Contains(t, "kubernetes manifest which was previously specified must be provided again when changing access ports",
+		err.Error())
+
+	vmApp := testutil.AppData[3]
+	vmApp.Deployment = cloudcommon.DeploymentTypeVM
+	vmApp.DeploymentManifest = testVmManifest
+	vmApp.AccessPorts = "tcp:80"
+	_, err = appApi.CreateApp(ctx, &vmApp)
+	require.Nil(t, err)
+	vmApp.AccessPorts = "tcp:80,tcp:81"
+	vmApp.Fields = []string{edgeproto.AppFieldAccessPorts}
+	// Update of the VM app with a manifest and make sure that manifest is retained
+	_, err = appApi.UpdateApp(ctx, &vmApp)
+	require.Nil(t, err, "Vm app should be updated with no error")
+	storedApp := edgeproto.App{}
+	found = appApi.Get(vmApp.GetKey(), &storedApp)
+	require.True(t, found, "VM app should still be in etcd after update")
+	require.Equal(t, testVmManifest, storedApp.DeploymentManifest, "Deployment manifest should not be affected by access port update")
+
 	dummy.Stop()
 }
 
@@ -183,6 +219,8 @@ func TestValidateAppConfigs(t *testing.T) {
 	err = validateAppConfigsForDeployment(ctx, configs, cloudcommon.DeploymentTypeHelm)
 	require.NotNil(t, err)
 }
+
+var testVmManifest = `#cloud-config vmManifest`
 
 var testK8SManifest1 = `---
 # Source: cornav/templates/gh-configmap.yml
