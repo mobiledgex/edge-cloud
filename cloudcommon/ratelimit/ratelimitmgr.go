@@ -9,9 +9,11 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
-// RateLimitManager manages all the rate limits per API for a node (DME, Controller, and MC)
-// limitsPerApi maps an API to a ApiEndpointLimiter struct, which will handle all of the rate limiting for the endpoint and per ip, user, and/or org
-// apisPerRateLimitSettingsKey maps the RateLimitSettingsKey to a list of APIs (eg. CreateApp, CreateCloudlet, etc.). This is used to update the rate limit settings if the rate limit settings api is updated
+/*
+ * RateLimitManager manages all the rate limits per API for a node (DME, Controller, and MC)
+ * limitsPerApi maps an API to a ApiEndpointLimiter struct, which will handle all of the rate limiting for the endpoint and per ip, user, and/or org
+ * apisPerRateLimitSettingsKey maps the RateLimitSettingsKey to a list of APIs (eg. CreateApp, CreateCloudlet, etc.). This is used to update the rate limit settings if the rate limit settings api is updated
+ */
 type RateLimitManager struct {
 	util.Mutex
 	limitsPerApi                map[string]*apiEndpointLimiter
@@ -65,17 +67,16 @@ func (r *RateLimitManager) UpdateRateLimitSettings(rateLimitSettings *edgeproto.
 }
 
 // Implements the Limiter interface
-func (r *RateLimitManager) Limit(ctx context.Context) (bool, error) {
+func (r *RateLimitManager) Limit(ctx context.Context, info *CallerInfo) error {
 	r.Lock()
 	defer r.Unlock()
-	// Check for LimiterInfo which provides essential information about the api, ip, user, and org
-	li, ok := LimiterInfoFromContext(ctx)
-	if !ok || li == nil {
-		log.DebugLog(log.DebugLevelInfo, "Unable to find LimiterInfo from context")
-		return false, fmt.Errorf("Unable to get LimiterInfo from context. Skipping rate limit")
+	// Check for CallerInfo which provides essential information about the api, ip, user, and org
+	if info == nil {
+		log.DebugLog(log.DebugLevelInfo, "nil CallerInfo")
+		return false, fmt.Errorf("nil CallerInfo - skipping rate limit")
 	}
 	// Check that api exists
-	api := li.Api
+	api := info.Api
 	limiter, ok := r.limitsPerApi[api]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Unable to find api in ApiEndpointLimiter", "api", api)
@@ -87,6 +88,10 @@ func (r *RateLimitManager) Limit(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 	return limiter.Limit(ctx)
+}
+
+func (r *RateLimitManager) Type() string {
+	return "RateLimitManager"
 }
 
 // Helper function that adds the RateLimitSettingsKey to the apisPerRateLimitSettingsKey map (must lock before calling)

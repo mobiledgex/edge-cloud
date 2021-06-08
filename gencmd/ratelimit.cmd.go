@@ -27,6 +27,63 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 var RateLimitSettingsApiCmd edgeproto.RateLimitSettingsApiClient
 
+var CreateRateLimitSettingsCmd = &cli.Command{
+	Use:          "CreateRateLimitSettings",
+	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
+	OptionalArgs: strings.Join(RateLimitSettingsOptionalArgs, " "),
+	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
+	SpecialArgs:  &RateLimitSettingsSpecialArgs,
+	Comments:     RateLimitSettingsComments,
+	ReqData:      &edgeproto.RateLimitSettings{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runCreateRateLimitSettings,
+}
+
+func runCreateRateLimitSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.RateLimitSettings)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return CreateRateLimitSettings(c, obj)
+}
+
+func CreateRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
+	if RateLimitSettingsApiCmd == nil {
+		return fmt.Errorf("RateLimitSettingsApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := RateLimitSettingsApiCmd.CreateRateLimitSettings(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateRateLimitSettings failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func CreateRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateRateLimitSettings %v\n", data[ii])
+		myerr := CreateRateLimitSettings(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var UpdateRateLimitSettingsCmd = &cli.Command{
 	Use:          "UpdateRateLimitSettings",
 	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
@@ -276,6 +333,7 @@ func ShowRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, 
 }
 
 var RateLimitSettingsApiCmds = []*cobra.Command{
+	CreateRateLimitSettingsCmd.GenCmd(),
 	UpdateRateLimitSettingsCmd.GenCmd(),
 	DeleteRateLimitSettingsCmd.GenCmd(),
 	ResetRateLimitSettingsCmd.GenCmd(),
@@ -285,47 +343,71 @@ var RateLimitSettingsApiCmds = []*cobra.Command{
 var RateLimitSettingsKeyRequiredArgs = []string{}
 var RateLimitSettingsKeyOptionalArgs = []string{
 	"apiendpointtype",
-	"apiactiontype",
 	"ratelimittarget",
+	"apiname",
 }
 var RateLimitSettingsKeyAliasArgs = []string{}
 var RateLimitSettingsKeyComments = map[string]string{
 	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
-	"apiactiontype":   "API Action type (All DME apis are Default), one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
-	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
+	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"apiname":         "Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)",
 }
 var RateLimitSettingsKeySpecialArgs = map[string]string{}
-var RateLimitSettingsRequiredArgs = []string{
-	"apiendpointtype",
-	"apiactiontype",
-	"ratelimittarget",
-}
-var RateLimitSettingsOptionalArgs = []string{
+var FlowSettingsRequiredArgs = []string{}
+var FlowSettingsOptionalArgs = []string{
 	"flowalgorithm",
 	"reqspersecond",
 	"burstsize",
+}
+var FlowSettingsAliasArgs = []string{}
+var FlowSettingsComments = map[string]string{
+	"flowalgorithm": "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"reqspersecond": "requests per second for flow rate limiting",
+	"burstsize":     "burst size for flow rate limiting",
+}
+var FlowSettingsSpecialArgs = map[string]string{}
+var MaxReqsSettingsRequiredArgs = []string{}
+var MaxReqsSettingsOptionalArgs = []string{
 	"maxreqsalgorithm",
-	"maxrequestspersecond",
-	"maxrequestsperminute",
-	"maxrequestsperhour",
+	"maxrequests",
+	"interval",
+}
+var MaxReqsSettingsAliasArgs = []string{}
+var MaxReqsSettingsComments = map[string]string{
+	"maxreqsalgorithm": "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
+	"maxrequests":      "Maximum number of requests for the given Interval",
+	"interval":         "Time interval",
+}
+var MaxReqsSettingsSpecialArgs = map[string]string{}
+var RateLimitSettingsRequiredArgs = []string{
+	"apiendpointtype",
+	"ratelimittarget",
+	"apiname",
+}
+var RateLimitSettingsOptionalArgs = []string{
+	"flowsettings:#.flowalgorithm",
+	"flowsettings:#.reqspersecond",
+	"flowsettings:#.burstsize",
+	"maxreqssettings:#.maxreqsalgorithm",
+	"maxreqssettings:#.maxrequests",
+	"maxreqssettings:#.interval",
 }
 var RateLimitSettingsAliasArgs = []string{
 	"apiendpointtype=key.apiendpointtype",
-	"apiactiontype=key.apiactiontype",
 	"ratelimittarget=key.ratelimittarget",
+	"apiname=key.apiname",
 }
 var RateLimitSettingsComments = map[string]string{
-	"fields":               "Fields are used for the Update API to specify which fields to apply",
-	"apiendpointtype":      "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
-	"apiactiontype":        "API Action type (All DME apis are Default), one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
-	"ratelimittarget":      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
-	"flowalgorithm":        "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"reqspersecond":        "requests per second for flow rate limiting. If updating, must provide burstSize as well",
-	"burstsize":            "burst size for flow rate limiting. If updating, must provide reqsPerSecond as well",
-	"maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"maxrequestspersecond": "maximum number of requests per second for max reqs rate limiting",
-	"maxrequestsperminute": "maximum number of requests per minute for max reqs rate limiting",
-	"maxrequestsperhour":   "maximum number of requests per hour for max reqs rate limiting",
+	"fields":                             "Fields are used for the Update API to specify which fields to apply",
+	"apiendpointtype":                    "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"ratelimittarget":                    "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"apiname":                            "Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)",
+	"flowsettings:#.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"flowsettings:#.reqspersecond":       "requests per second for flow rate limiting",
+	"flowsettings:#.burstsize":           "burst size for flow rate limiting",
+	"maxreqssettings:#.maxreqsalgorithm": "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
+	"maxreqssettings:#.maxrequests":      "Maximum number of requests for the given Interval",
+	"maxreqssettings:#.interval":         "Time interval",
 }
 var RateLimitSettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -334,29 +416,27 @@ var RateLimitSettingsDataRequiredArgs = []string{}
 var RateLimitSettingsDataOptionalArgs = []string{
 	"settings:#.fields",
 	"settings:#.key.apiendpointtype",
-	"settings:#.key.apiactiontype",
 	"settings:#.key.ratelimittarget",
-	"settings:#.flowalgorithm",
-	"settings:#.reqspersecond",
-	"settings:#.burstsize",
-	"settings:#.maxreqsalgorithm",
-	"settings:#.maxrequestspersecond",
-	"settings:#.maxrequestsperminute",
-	"settings:#.maxrequestsperhour",
+	"settings:#.key.apiname",
+	"settings:#.flowsettings:#.flowalgorithm",
+	"settings:#.flowsettings:#.reqspersecond",
+	"settings:#.flowsettings:#.burstsize",
+	"settings:#.maxreqssettings:#.maxreqsalgorithm",
+	"settings:#.maxreqssettings:#.maxrequests",
+	"settings:#.maxreqssettings:#.interval",
 }
 var RateLimitSettingsDataAliasArgs = []string{}
 var RateLimitSettingsDataComments = map[string]string{
-	"settings:#.fields":               "Fields are used for the Update API to specify which fields to apply",
-	"settings:#.key.apiendpointtype":  "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
-	"settings:#.key.apiactiontype":    "API Action type (All DME apis are Default), one of UnknownAction, CreateAction, DeleteAction, UpdateAction, ShowAction, DefaultAction",
-	"settings:#.key.ratelimittarget":  "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser, PerOrg",
-	"settings:#.flowalgorithm":        "Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
-	"settings:#.reqspersecond":        "requests per second for flow rate limiting. If updating, must provide burstSize as well",
-	"settings:#.burstsize":            "burst size for flow rate limiting. If updating, must provide reqsPerSecond as well",
-	"settings:#.maxreqsalgorithm":     "MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm, RollingWindowAlgorithm",
-	"settings:#.maxrequestspersecond": "maximum number of requests per second for max reqs rate limiting",
-	"settings:#.maxrequestsperminute": "maximum number of requests per minute for max reqs rate limiting",
-	"settings:#.maxrequestsperhour":   "maximum number of requests per hour for max reqs rate limiting",
+	"settings:#.fields":                             "Fields are used for the Update API to specify which fields to apply",
+	"settings:#.key.apiendpointtype":                "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"settings:#.key.ratelimittarget":                "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"settings:#.key.apiname":                        "Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)",
+	"settings:#.flowsettings:#.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"settings:#.flowsettings:#.reqspersecond":       "requests per second for flow rate limiting",
+	"settings:#.flowsettings:#.burstsize":           "burst size for flow rate limiting",
+	"settings:#.maxreqssettings:#.maxreqsalgorithm": "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
+	"settings:#.maxreqssettings:#.maxrequests":      "Maximum number of requests for the given Interval",
+	"settings:#.maxreqssettings:#.interval":         "Time interval",
 }
 var RateLimitSettingsDataSpecialArgs = map[string]string{
 	"settings:#.fields": "StringArray",

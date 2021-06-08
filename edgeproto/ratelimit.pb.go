@@ -39,62 +39,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type FlowRateLimitAlgorithm int32
-
-const (
-	FlowRateLimitAlgorithm_UNKNOWN_FLOW_ALGORITHM FlowRateLimitAlgorithm = 0
-	FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM FlowRateLimitAlgorithm = 1
-	FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM FlowRateLimitAlgorithm = 2
-)
-
-var FlowRateLimitAlgorithm_name = map[int32]string{
-	0: "UNKNOWN_FLOW_ALGORITHM",
-	1: "TOKEN_BUCKET_ALGORITHM",
-	2: "LEAKY_BUCKET_ALGORITHM",
-}
-
-var FlowRateLimitAlgorithm_value = map[string]int32{
-	"UNKNOWN_FLOW_ALGORITHM": 0,
-	"TOKEN_BUCKET_ALGORITHM": 1,
-	"LEAKY_BUCKET_ALGORITHM": 2,
-}
-
-func (x FlowRateLimitAlgorithm) String() string {
-	return proto.EnumName(FlowRateLimitAlgorithm_name, int32(x))
-}
-
-func (FlowRateLimitAlgorithm) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{0}
-}
-
-type MaxReqsRateLimitAlgorithm int32
-
-const (
-	MaxReqsRateLimitAlgorithm_UNKNOWN_MAX_REQS_ALGORITHM MaxReqsRateLimitAlgorithm = 0
-	MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM     MaxReqsRateLimitAlgorithm = 1
-	MaxReqsRateLimitAlgorithm_ROLLING_WINDOW_ALGORITHM   MaxReqsRateLimitAlgorithm = 2
-)
-
-var MaxReqsRateLimitAlgorithm_name = map[int32]string{
-	0: "UNKNOWN_MAX_REQS_ALGORITHM",
-	1: "FIXED_WINDOW_ALGORITHM",
-	2: "ROLLING_WINDOW_ALGORITHM",
-}
-
-var MaxReqsRateLimitAlgorithm_value = map[string]int32{
-	"UNKNOWN_MAX_REQS_ALGORITHM": 0,
-	"FIXED_WINDOW_ALGORITHM":     1,
-	"ROLLING_WINDOW_ALGORITHM":   2,
-}
-
-func (x MaxReqsRateLimitAlgorithm) String() string {
-	return proto.EnumName(MaxReqsRateLimitAlgorithm_name, int32(x))
-}
-
-func (MaxReqsRateLimitAlgorithm) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{1}
-}
-
 type ApiEndpointType int32
 
 const (
@@ -120,44 +64,7 @@ func (x ApiEndpointType) String() string {
 }
 
 func (ApiEndpointType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{2}
-}
-
-type ApiActionType int32
-
-const (
-	ApiActionType_UNKNOWN_ACTION ApiActionType = 0
-	ApiActionType_CREATE_ACTION  ApiActionType = 1
-	ApiActionType_DELETE_ACTION  ApiActionType = 2
-	ApiActionType_UPDATE_ACTION  ApiActionType = 3
-	ApiActionType_SHOW_ACTION    ApiActionType = 4
-	ApiActionType_DEFAULT_ACTION ApiActionType = 5
-)
-
-var ApiActionType_name = map[int32]string{
-	0: "UNKNOWN_ACTION",
-	1: "CREATE_ACTION",
-	2: "DELETE_ACTION",
-	3: "UPDATE_ACTION",
-	4: "SHOW_ACTION",
-	5: "DEFAULT_ACTION",
-}
-
-var ApiActionType_value = map[string]int32{
-	"UNKNOWN_ACTION": 0,
-	"CREATE_ACTION":  1,
-	"DELETE_ACTION":  2,
-	"UPDATE_ACTION":  3,
-	"SHOW_ACTION":    4,
-	"DEFAULT_ACTION": 5,
-}
-
-func (x ApiActionType) String() string {
-	return proto.EnumName(ApiActionType_name, int32(x))
-}
-
-func (ApiActionType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{3}
+	return fileDescriptor_9c81fd649b00920f, []int{0}
 }
 
 type RateLimitTarget int32
@@ -167,7 +74,6 @@ const (
 	RateLimitTarget_ALL_REQUESTS   RateLimitTarget = 1
 	RateLimitTarget_PER_IP         RateLimitTarget = 2
 	RateLimitTarget_PER_USER       RateLimitTarget = 3
-	RateLimitTarget_PER_ORG        RateLimitTarget = 4
 )
 
 var RateLimitTarget_name = map[int32]string{
@@ -175,7 +81,6 @@ var RateLimitTarget_name = map[int32]string{
 	1: "ALL_REQUESTS",
 	2: "PER_IP",
 	3: "PER_USER",
-	4: "PER_ORG",
 }
 
 var RateLimitTarget_value = map[string]int32{
@@ -183,7 +88,6 @@ var RateLimitTarget_value = map[string]int32{
 	"ALL_REQUESTS":   1,
 	"PER_IP":         2,
 	"PER_USER":       3,
-	"PER_ORG":        4,
 }
 
 func (x RateLimitTarget) String() string {
@@ -191,16 +95,69 @@ func (x RateLimitTarget) String() string {
 }
 
 func (RateLimitTarget) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{4}
+	return fileDescriptor_9c81fd649b00920f, []int{1}
+}
+
+type FlowRateLimitAlgorithm int32
+
+const (
+	FlowRateLimitAlgorithm_UNKNOWN_FLOW_ALGORITHM FlowRateLimitAlgorithm = 0
+	FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM FlowRateLimitAlgorithm = 1
+	FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM FlowRateLimitAlgorithm = 2
+)
+
+var FlowRateLimitAlgorithm_name = map[int32]string{
+	0: "UNKNOWN_FLOW_ALGORITHM",
+	1: "TOKEN_BUCKET_ALGORITHM",
+	2: "LEAKY_BUCKET_ALGORITHM",
+}
+
+var FlowRateLimitAlgorithm_value = map[string]int32{
+	"UNKNOWN_FLOW_ALGORITHM": 0,
+	"TOKEN_BUCKET_ALGORITHM": 1,
+	"LEAKY_BUCKET_ALGORITHM": 2,
+}
+
+func (x FlowRateLimitAlgorithm) String() string {
+	return proto.EnumName(FlowRateLimitAlgorithm_name, int32(x))
+}
+
+func (FlowRateLimitAlgorithm) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{2}
+}
+
+type MaxReqsRateLimitAlgorithm int32
+
+const (
+	MaxReqsRateLimitAlgorithm_UNKNOWN_MAX_REQS_ALGORITHM MaxReqsRateLimitAlgorithm = 0
+	MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM     MaxReqsRateLimitAlgorithm = 1
+)
+
+var MaxReqsRateLimitAlgorithm_name = map[int32]string{
+	0: "UNKNOWN_MAX_REQS_ALGORITHM",
+	1: "FIXED_WINDOW_ALGORITHM",
+}
+
+var MaxReqsRateLimitAlgorithm_value = map[string]int32{
+	"UNKNOWN_MAX_REQS_ALGORITHM": 0,
+	"FIXED_WINDOW_ALGORITHM":     1,
+}
+
+func (x MaxReqsRateLimitAlgorithm) String() string {
+	return proto.EnumName(MaxReqsRateLimitAlgorithm_name, int32(x))
+}
+
+func (MaxReqsRateLimitAlgorithm) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{3}
 }
 
 type RateLimitSettingsKey struct {
 	// API Endpoint type
 	ApiEndpointType ApiEndpointType `protobuf:"varint,1,opt,name=api_endpoint_type,json=apiEndpointType,proto3,enum=edgeproto.ApiEndpointType" json:"api_endpoint_type,omitempty"`
-	// API Action type (All DME apis are Default)
-	ApiActionType ApiActionType `protobuf:"varint,2,opt,name=api_action_type,json=apiActionType,proto3,enum=edgeproto.ApiActionType" json:"api_action_type,omitempty"`
 	// Target to rate limit
-	RateLimitTarget RateLimitTarget `protobuf:"varint,3,opt,name=rate_limit_target,json=rateLimitTarget,proto3,enum=edgeproto.RateLimitTarget" json:"rate_limit_target,omitempty"`
+	RateLimitTarget RateLimitTarget `protobuf:"varint,2,opt,name=rate_limit_target,json=rateLimitTarget,proto3,enum=edgeproto.RateLimitTarget" json:"rate_limit_target,omitempty"`
+	// Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)
+	ApiName string `protobuf:"bytes,3,opt,name=api_name,json=apiName,proto3" json:"api_name,omitempty"`
 }
 
 func (m *RateLimitSettingsKey) Reset()         { *m = RateLimitSettingsKey{} }
@@ -236,33 +193,107 @@ func (m *RateLimitSettingsKey) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RateLimitSettingsKey proto.InternalMessageInfo
 
+type FlowSettings struct {
+	// Flow Rate Limit algorithm
+	FlowAlgorithm FlowRateLimitAlgorithm `protobuf:"varint,1,opt,name=flow_algorithm,json=flowAlgorithm,proto3,enum=edgeproto.FlowRateLimitAlgorithm" json:"flow_algorithm,omitempty"`
+	// requests per second for flow rate limiting
+	ReqsPerSecond float64 `protobuf:"fixed64,2,opt,name=reqsPerSecond,proto3" json:"reqsPerSecond,omitempty"`
+	// burst size for flow rate limiting
+	BurstSize int64 `protobuf:"varint,3,opt,name=burstSize,proto3" json:"burstSize,omitempty"`
+}
+
+func (m *FlowSettings) Reset()         { *m = FlowSettings{} }
+func (m *FlowSettings) String() string { return proto.CompactTextString(m) }
+func (*FlowSettings) ProtoMessage()    {}
+func (*FlowSettings) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{1}
+}
+func (m *FlowSettings) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FlowSettings) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FlowSettings.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FlowSettings) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowSettings.Merge(m, src)
+}
+func (m *FlowSettings) XXX_Size() int {
+	return m.Size()
+}
+func (m *FlowSettings) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlowSettings.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FlowSettings proto.InternalMessageInfo
+
+type MaxReqsSettings struct {
+	// MaxReqs Rate Limit Algorithm
+	MaxReqsAlgorithm MaxReqsRateLimitAlgorithm `protobuf:"varint,1,opt,name=max_reqs_algorithm,json=maxReqsAlgorithm,proto3,enum=edgeproto.MaxReqsRateLimitAlgorithm" json:"max_reqs_algorithm,omitempty"`
+	// Maximum number of requests for the given Interval
+	MaxRequests int64 `protobuf:"varint,2,opt,name=max_requests,json=maxRequests,proto3" json:"max_requests,omitempty"`
+	// Time interval
+	Interval Duration `protobuf:"varint,3,opt,name=interval,proto3,casttype=Duration" json:"interval,omitempty"`
+}
+
+func (m *MaxReqsSettings) Reset()         { *m = MaxReqsSettings{} }
+func (m *MaxReqsSettings) String() string { return proto.CompactTextString(m) }
+func (*MaxReqsSettings) ProtoMessage()    {}
+func (*MaxReqsSettings) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{2}
+}
+func (m *MaxReqsSettings) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MaxReqsSettings) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MaxReqsSettings.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MaxReqsSettings) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaxReqsSettings.Merge(m, src)
+}
+func (m *MaxReqsSettings) XXX_Size() int {
+	return m.Size()
+}
+func (m *MaxReqsSettings) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaxReqsSettings.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaxReqsSettings proto.InternalMessageInfo
+
 type RateLimitSettings struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// required: true
 	// Unique identifier key
 	Key RateLimitSettingsKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
-	// Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm
-	FlowAlgorithm FlowRateLimitAlgorithm `protobuf:"varint,4,opt,name=flow_algorithm,json=flowAlgorithm,proto3,enum=edgeproto.FlowRateLimitAlgorithm" json:"flow_algorithm,omitempty"`
-	// requests per second for flow rate limiting. If updating, must provide burstSize as well
-	ReqsPerSecond float64 `protobuf:"fixed64,5,opt,name=reqsPerSecond,proto3" json:"reqsPerSecond,omitempty"`
-	// burst size for flow rate limiting. If updating, must provide reqsPerSecond as well
-	BurstSize int64 `protobuf:"varint,6,opt,name=burstSize,proto3" json:"burstSize,omitempty"`
-	// MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm
-	MaxReqsAlgorithm MaxReqsRateLimitAlgorithm `protobuf:"varint,7,opt,name=max_reqs_algorithm,json=maxReqsAlgorithm,proto3,enum=edgeproto.MaxReqsRateLimitAlgorithm" json:"max_reqs_algorithm,omitempty"`
-	// maximum number of requests per second for max reqs rate limiting
-	MaxRequestsPerSecond int64 `protobuf:"varint,8,opt,name=max_requests_per_second,json=maxRequestsPerSecond,proto3" json:"max_requests_per_second,omitempty"`
-	// maximum number of requests per minute for max reqs rate limiting
-	MaxRequestsPerMinute int64 `protobuf:"varint,9,opt,name=max_requests_per_minute,json=maxRequestsPerMinute,proto3" json:"max_requests_per_minute,omitempty"`
-	// maximum number of requests per hour for max reqs rate limiting
-	MaxRequestsPerHour int64 `protobuf:"varint,10,opt,name=max_requests_per_hour,json=maxRequestsPerHour,proto3" json:"max_requests_per_hour,omitempty"`
+	// List of FlowSettings
+	FlowSettings []*FlowSettings `protobuf:"bytes,7,rep,name=flow_settings,json=flowSettings,proto3" json:"flow_settings,omitempty"`
+	// List of MaxReqsSettings
+	MaxReqsSettings []*MaxReqsSettings `protobuf:"bytes,8,rep,name=max_reqs_settings,json=maxReqsSettings,proto3" json:"max_reqs_settings,omitempty"`
 }
 
 func (m *RateLimitSettings) Reset()         { *m = RateLimitSettings{} }
 func (m *RateLimitSettings) String() string { return proto.CompactTextString(m) }
 func (*RateLimitSettings) ProtoMessage()    {}
 func (*RateLimitSettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{1}
+	return fileDescriptor_9c81fd649b00920f, []int{3}
 }
 func (m *RateLimitSettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -299,7 +330,7 @@ func (m *RateLimitSettingsData) Reset()         { *m = RateLimitSettingsData{} }
 func (m *RateLimitSettingsData) String() string { return proto.CompactTextString(m) }
 func (*RateLimitSettingsData) ProtoMessage()    {}
 func (*RateLimitSettingsData) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{2}
+	return fileDescriptor_9c81fd649b00920f, []int{4}
 }
 func (m *RateLimitSettingsData) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -329,12 +360,13 @@ func (m *RateLimitSettingsData) XXX_DiscardUnknown() {
 var xxx_messageInfo_RateLimitSettingsData proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterEnum("edgeproto.ApiEndpointType", ApiEndpointType_name, ApiEndpointType_value)
+	proto.RegisterEnum("edgeproto.RateLimitTarget", RateLimitTarget_name, RateLimitTarget_value)
 	proto.RegisterEnum("edgeproto.FlowRateLimitAlgorithm", FlowRateLimitAlgorithm_name, FlowRateLimitAlgorithm_value)
 	proto.RegisterEnum("edgeproto.MaxReqsRateLimitAlgorithm", MaxReqsRateLimitAlgorithm_name, MaxReqsRateLimitAlgorithm_value)
-	proto.RegisterEnum("edgeproto.ApiEndpointType", ApiEndpointType_name, ApiEndpointType_value)
-	proto.RegisterEnum("edgeproto.ApiActionType", ApiActionType_name, ApiActionType_value)
-	proto.RegisterEnum("edgeproto.RateLimitTarget", RateLimitTarget_name, RateLimitTarget_value)
 	proto.RegisterType((*RateLimitSettingsKey)(nil), "edgeproto.RateLimitSettingsKey")
+	proto.RegisterType((*FlowSettings)(nil), "edgeproto.FlowSettings")
+	proto.RegisterType((*MaxReqsSettings)(nil), "edgeproto.MaxReqsSettings")
 	proto.RegisterType((*RateLimitSettings)(nil), "edgeproto.RateLimitSettings")
 	proto.RegisterType((*RateLimitSettingsData)(nil), "edgeproto.RateLimitSettingsData")
 }
@@ -342,75 +374,73 @@ func init() {
 func init() { proto.RegisterFile("ratelimit.proto", fileDescriptor_9c81fd649b00920f) }
 
 var fileDescriptor_9c81fd649b00920f = []byte{
-	// 1085 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x95, 0xcd, 0x4f, 0x24, 0xc5,
-	0x1b, 0xc7, 0xa7, 0x66, 0x66, 0x59, 0x28, 0xde, 0x9a, 0xfa, 0x2d, 0x50, 0x4c, 0x66, 0x07, 0x7e,
-	0x93, 0x3d, 0x90, 0x09, 0x32, 0x8a, 0x31, 0x1a, 0x12, 0x8d, 0xcd, 0x4c, 0x03, 0x93, 0x79, 0xb5,
-	0xa7, 0x47, 0x76, 0x63, 0x62, 0xa7, 0x61, 0x8a, 0xa6, 0x63, 0x4f, 0x57, 0x6f, 0xbf, 0x04, 0xf0,
-	0xa4, 0x5e, 0xbc, 0x19, 0x12, 0x0f, 0x1a, 0x4f, 0xfb, 0x27, 0x6c, 0xf4, 0xb6, 0x7f, 0x01, 0xc7,
-	0x4d, 0xbc, 0x78, 0x32, 0x0a, 0x26, 0x9a, 0x3d, 0x69, 0x40, 0xe2, 0xd1, 0x54, 0xf5, 0xbc, 0xf4,
-	0xbc, 0x48, 0xf6, 0x60, 0xbc, 0x90, 0xaa, 0xe7, 0x79, 0xbe, 0xcf, 0xf3, 0xa9, 0xaa, 0x6f, 0x33,
-	0x70, 0xd6, 0xd1, 0x3c, 0x62, 0x1a, 0x2d, 0xc3, 0x5b, 0xb7, 0x1d, 0xea, 0x51, 0x34, 0x41, 0x9a,
-	0x3a, 0xe1, 0xcb, 0xc4, 0x94, 0x43, 0x5c, 0xdf, 0x6c, 0x27, 0x12, 0x49, 0x9d, 0x52, 0xdd, 0x24,
-	0x59, 0xcd, 0x36, 0xb2, 0x9a, 0x65, 0x51, 0x4f, 0xf3, 0x0c, 0x6a, 0xb9, 0xed, 0xec, 0x5b, 0xba,
-	0xe1, 0x1d, 0xf9, 0xfb, 0xeb, 0x07, 0xb4, 0x95, 0x6d, 0xd1, 0x7d, 0xc3, 0x64, 0x6d, 0x4e, 0xb2,
-	0xec, 0xef, 0x2b, 0x07, 0x26, 0xf5, 0x9b, 0x59, 0x5e, 0xa7, 0x13, 0xab, 0xbb, 0x68, 0x2b, 0xef,
-	0xe9, 0x54, 0xa7, 0x7c, 0x99, 0x65, 0xab, 0x20, 0x9a, 0xfe, 0x2e, 0x0a, 0xef, 0xc9, 0x9a, 0x47,
-	0x4a, 0x0c, 0xad, 0x4e, 0x3c, 0xcf, 0xb0, 0x74, 0xb7, 0x48, 0x4e, 0xd1, 0x07, 0x70, 0x4e, 0xb3,
-	0x0d, 0x95, 0x58, 0x4d, 0x9b, 0x1a, 0x96, 0xa7, 0x7a, 0xa7, 0x36, 0xc1, 0x60, 0x05, 0xac, 0xce,
-	0x6c, 0x24, 0xd6, 0xbb, 0xec, 0xeb, 0xa2, 0x6d, 0x48, 0xed, 0x12, 0xe5, 0xd4, 0x26, 0x5b, 0xff,
-	0x7b, 0x76, 0x83, 0x67, 0x35, 0xdb, 0xe8, 0xe8, 0x98, 0x4c, 0x66, 0x81, 0x70, 0x15, 0xaa, 0x43,
-	0x16, 0x52, 0xb5, 0x03, 0x76, 0xb4, 0xa0, 0x75, 0x94, 0xb7, 0xc6, 0xfd, 0xad, 0x45, 0x5e, 0xc0,
-	0x1b, 0xcf, 0x3d, 0xbb, 0xc1, 0xd3, 0x9a, 0x6d, 0x04, 0x1a, 0xde, 0x96, 0x6d, 0x7b, 0x15, 0x8c,
-	0x98, 0x5d, 0xb2, 0xca, 0x6f, 0x59, 0xf5, 0x34, 0x47, 0x27, 0x1e, 0x8e, 0x0d, 0x11, 0x77, 0x4f,
-	0xab, 0xf0, 0x8a, 0x80, 0xb8, 0xfb, 0x3a, 0x81, 0x4c, 0xe6, 0x81, 0x50, 0xd5, 0xe6, 0xd4, 0x6f,
-	0x57, 0x18, 0xfc, 0x75, 0x85, 0xc1, 0xd3, 0x27, 0xcb, 0x20, 0xfd, 0x47, 0x1c, 0xce, 0x0d, 0xdd,
-	0x1a, 0x5a, 0x80, 0x63, 0x87, 0x06, 0x31, 0x9b, 0x2e, 0x06, 0x2b, 0xb1, 0xd5, 0x09, 0xb9, 0xbd,
-	0x43, 0x6f, 0xc2, 0xd8, 0x47, 0xe4, 0x94, 0x9f, 0x70, 0x72, 0x63, 0x79, 0x14, 0x4a, 0xe8, 0xe2,
-	0xb7, 0xe2, 0xe7, 0x3f, 0x2e, 0x47, 0x64, 0xa6, 0x40, 0xbb, 0x70, 0xe6, 0xd0, 0xa4, 0xc7, 0xaa,
-	0x66, 0xea, 0xd4, 0x31, 0xbc, 0xa3, 0x16, 0x8e, 0xf3, 0xe3, 0xfc, 0x3f, 0xd4, 0x63, 0xdb, 0xa4,
-	0xc7, 0xdd, 0x3e, 0x62, 0xa7, 0x50, 0x9e, 0x66, 0xc2, 0xee, 0x16, 0x3d, 0x80, 0xd3, 0x0e, 0x79,
-	0xec, 0xd6, 0x88, 0x53, 0x27, 0x07, 0xd4, 0x6a, 0xe2, 0x3b, 0x2b, 0x60, 0x15, 0xc8, 0xfd, 0x41,
-	0x94, 0x84, 0x13, 0xfb, 0xbe, 0xe3, 0x7a, 0x75, 0xe3, 0x63, 0x82, 0xc7, 0x56, 0xc0, 0x6a, 0x4c,
-	0xee, 0x05, 0x90, 0x0c, 0x51, 0x4b, 0x3b, 0x51, 0x99, 0x24, 0x44, 0x74, 0x97, 0x13, 0x3d, 0x08,
-	0x11, 0x95, 0xb5, 0x13, 0x99, 0x3c, 0x76, 0x47, 0x40, 0x09, 0xad, 0x20, 0xd5, 0xe3, 0x7a, 0x03,
-	0x2e, 0xb6, 0x7b, 0xfa, 0xc4, 0xf5, 0x5c, 0xd5, 0x26, 0x8e, 0xea, 0x06, 0x84, 0xe3, 0x7c, 0xfe,
-	0xbd, 0x40, 0xc2, 0xb3, 0x3d, 0xd0, 0x51, 0xb2, 0x96, 0x61, 0xf9, 0x1e, 0xc1, 0x13, 0xa3, 0x64,
-	0x65, 0x9e, 0x43, 0xaf, 0xc1, 0xf9, 0x21, 0xd9, 0x11, 0xf5, 0x1d, 0x0c, 0xb9, 0x08, 0xf5, 0x8b,
-	0x76, 0xa9, 0xef, 0x6c, 0x7e, 0x0e, 0xd8, 0xc3, 0xff, 0x7e, 0x85, 0xc1, 0x27, 0xd7, 0x18, 0x9c,
-	0x5d, 0x63, 0xf0, 0xf4, 0x1a, 0x83, 0x6f, 0xfe, 0xc4, 0xfa, 0x80, 0xc9, 0xdf, 0x2e, 0x92, 0xd3,
-	0xc1, 0xaf, 0x61, 0x6d, 0xc0, 0x56, 0xbc, 0x66, 0xc0, 0x7f, 0x6b, 0x7d, 0x9e, 0xee, 0x74, 0xe9,
-	0xd9, 0xfa, 0xdb, 0x1b, 0x1c, 0xb7, 0xa8, 0x45, 0xd2, 0x1a, 0x9c, 0x1f, 0xf2, 0x4b, 0x5e, 0xf3,
-	0x34, 0xf4, 0x0e, 0x1c, 0x77, 0xdb, 0x7b, 0x6e, 0xbc, 0xc9, 0x8d, 0xe4, 0x6d, 0x1e, 0x6b, 0x1b,
-	0xac, 0xab, 0xd9, 0x1c, 0xff, 0xfa, 0x06, 0x83, 0x27, 0x37, 0x38, 0x92, 0x31, 0xe1, 0xc2, 0x68,
-	0x3b, 0xa1, 0x04, 0x5c, 0x68, 0x54, 0x8a, 0x95, 0xea, 0x5e, 0x45, 0xdd, 0x2e, 0x55, 0xf7, 0x54,
-	0xb1, 0xb4, 0x53, 0x95, 0x0b, 0xca, 0x6e, 0x59, 0x88, 0xb0, 0x9c, 0x52, 0x2d, 0x4a, 0x15, 0x75,
-	0xab, 0x91, 0x2b, 0x4a, 0x4a, 0x28, 0x07, 0x58, 0xae, 0x24, 0x89, 0xc5, 0x47, 0xc3, 0xb9, 0x68,
-	0xc6, 0x87, 0x4b, 0xff, 0x68, 0x15, 0x94, 0x82, 0x89, 0xce, 0xc0, 0xb2, 0xf8, 0x50, 0x95, 0xa5,
-	0xf7, 0xea, 0x83, 0x43, 0xb7, 0x0b, 0x0f, 0xa5, 0xbc, 0xba, 0x57, 0xa8, 0xe4, 0xfb, 0x80, 0x00,
-	0x4a, 0x42, 0x2c, 0x57, 0x4b, 0xa5, 0x42, 0x65, 0x67, 0x38, 0x1b, 0xcd, 0x14, 0xe0, 0xec, 0xc0,
-	0x33, 0xa1, 0xfb, 0x70, 0xa9, 0x33, 0x4c, 0xac, 0x15, 0x54, 0xa9, 0x92, 0xaf, 0x55, 0x0b, 0x15,
-	0x45, 0x55, 0x1e, 0xd5, 0x24, 0x21, 0x82, 0x66, 0x20, 0xcc, 0x55, 0x2b, 0x0a, 0xeb, 0x29, 0xc9,
-	0x02, 0x40, 0x77, 0x61, 0x2c, 0x5f, 0x96, 0x84, 0x68, 0xe6, 0x53, 0x00, 0xa7, 0xfb, 0x1e, 0x0b,
-	0x21, 0x38, 0xd3, 0xed, 0x94, 0x53, 0x0a, 0xd5, 0x8a, 0x10, 0x41, 0x73, 0x70, 0x3a, 0x27, 0x4b,
-	0xa2, 0x22, 0x75, 0x42, 0x80, 0x85, 0xf2, 0x52, 0x49, 0xea, 0x85, 0xa2, 0x2c, 0xd4, 0xa8, 0xe5,
-	0x43, 0x55, 0x31, 0x34, 0x0b, 0x27, 0xeb, 0xbb, 0x8c, 0x3e, 0x08, 0xc4, 0x59, 0xf7, 0xbc, 0xb4,
-	0x2d, 0x36, 0x4a, 0x4a, 0x27, 0x76, 0x27, 0xf3, 0x21, 0x9c, 0x1d, 0x70, 0x54, 0x18, 0x42, 0x11,
-	0xe5, 0x1d, 0x49, 0x11, 0x22, 0x48, 0x80, 0x53, 0x62, 0xa9, 0xc4, 0xee, 0xb1, 0x21, 0xd5, 0x95,
-	0xba, 0x00, 0x10, 0x84, 0x63, 0x35, 0x49, 0x56, 0x0b, 0x35, 0x21, 0x8a, 0xa6, 0xe0, 0x38, 0x5b,
-	0x37, 0xea, 0x92, 0x2c, 0xc4, 0xd0, 0x24, 0xbc, 0xcb, 0x76, 0x55, 0x79, 0x47, 0x88, 0x6f, 0xfc,
-	0x1a, 0x1f, 0xf1, 0x03, 0x21, 0xda, 0x06, 0x3a, 0x03, 0x70, 0xb1, 0x61, 0x37, 0x35, 0x8f, 0x0c,
-	0xff, 0x27, 0xbc, 0xd5, 0x80, 0x89, 0xb9, 0x70, 0x96, 0xff, 0xf4, 0xa5, 0xf3, 0x2f, 0xae, 0x71,
-	0x52, 0x26, 0x2e, 0xf5, 0x9d, 0x03, 0x92, 0xa3, 0xd6, 0xa1, 0xa1, 0xaf, 0x05, 0xd7, 0x5a, 0xd6,
-	0x2c, 0x4d, 0x27, 0x6b, 0x9f, 0x7d, 0xff, 0xcb, 0x97, 0xd1, 0x54, 0x7a, 0x29, 0xeb, 0xf3, 0x91,
-	0xd9, 0xee, 0x97, 0xd5, 0xb5, 0x31, 0xc8, 0x70, 0xa4, 0x3c, 0x31, 0xc9, 0x7f, 0x8c, 0xd4, 0xe4,
-	0x23, 0x47, 0x23, 0x7d, 0x01, 0xe0, 0x82, 0x4c, 0x5c, 0xe2, 0xfd, 0x0b, 0x44, 0xb9, 0x97, 0x22,
-	0xba, 0x9f, 0xc6, 0x59, 0x87, 0x4d, 0x1c, 0x0d, 0xf4, 0x15, 0x80, 0xf3, 0xf5, 0xa3, 0xd0, 0x47,
-	0xfe, 0x92, 0x3c, 0xb7, 0x66, 0xd3, 0xef, 0xbe, 0xb8, 0xc6, 0x89, 0x91, 0x68, 0xef, 0x1b, 0xe4,
-	0x38, 0x00, 0x4b, 0xa6, 0x17, 0xb3, 0xee, 0x11, 0x3d, 0x1e, 0xc9, 0xf5, 0x2a, 0xd8, 0x4a, 0x9e,
-	0xff, 0x9c, 0x8a, 0x9c, 0x5f, 0xa4, 0xc0, 0xf3, 0x8b, 0x14, 0xf8, 0xe9, 0x22, 0x05, 0xce, 0x2e,
-	0x53, 0x91, 0xe7, 0x97, 0xa9, 0xc8, 0x0f, 0x97, 0xa9, 0xc8, 0xfe, 0x18, 0x1f, 0xfd, 0xfa, 0xdf,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0x0f, 0xbd, 0x85, 0x01, 0x49, 0x09, 0x00, 0x00,
+	// 1044 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x95, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xc7, 0x3d, 0x76, 0x69, 0x9c, 0x89, 0x1b, 0x3b, 0x43, 0x9b, 0x6c, 0x2c, 0xd7, 0x49, 0xad,
+	0x0a, 0x45, 0x51, 0x88, 0x51, 0x38, 0x80, 0x22, 0x40, 0xd8, 0xf1, 0xa6, 0xb5, 0xec, 0xd8, 0xee,
+	0x78, 0x43, 0x5a, 0xf5, 0xb0, 0x9a, 0xd8, 0x93, 0xcd, 0x8a, 0xf5, 0xce, 0x76, 0x77, 0x4c, 0x12,
+	0xb8, 0x20, 0x0e, 0x1c, 0x51, 0x24, 0x0e, 0x20, 0xc4, 0xa1, 0x7f, 0x42, 0xd5, 0x63, 0xff, 0x82,
+	0x1c, 0x2b, 0x71, 0xe1, 0x54, 0x41, 0x82, 0x04, 0xea, 0x09, 0x29, 0xc1, 0x42, 0x3d, 0xa1, 0x19,
+	0xaf, 0xb7, 0x8e, 0xed, 0x46, 0x3d, 0xa0, 0x5e, 0xa2, 0xd9, 0xf7, 0xf3, 0x33, 0x6f, 0xbe, 0x2f,
+	0x86, 0x71, 0x97, 0x70, 0x6a, 0x99, 0x2d, 0x93, 0x2f, 0x3b, 0x2e, 0xe3, 0x0c, 0x8d, 0xd3, 0xa6,
+	0x41, 0xe5, 0x31, 0x19, 0x73, 0xa9, 0xd7, 0xb6, 0x7c, 0x47, 0x32, 0x65, 0x30, 0x66, 0x58, 0x34,
+	0x4b, 0x1c, 0x33, 0x4b, 0x6c, 0x9b, 0x71, 0xc2, 0x4d, 0x66, 0x7b, 0xbe, 0xf7, 0x43, 0xc3, 0xe4,
+	0xbb, 0xed, 0xed, 0xe5, 0x06, 0x6b, 0x65, 0x5b, 0x6c, 0xdb, 0xb4, 0x44, 0x99, 0xfd, 0xac, 0xf8,
+	0xfb, 0x6e, 0xc3, 0x62, 0xed, 0x66, 0x56, 0xc6, 0x19, 0xd4, 0x0e, 0x0e, 0x7e, 0xe6, 0x55, 0x83,
+	0x19, 0x4c, 0x1e, 0xb3, 0xe2, 0xd4, 0xb5, 0x66, 0xbe, 0x0d, 0xc3, 0xab, 0x98, 0x70, 0x5a, 0x16,
+	0x68, 0x75, 0xca, 0xb9, 0x69, 0x1b, 0x5e, 0x89, 0x1e, 0xa0, 0xfb, 0x70, 0x8a, 0x38, 0xa6, 0x4e,
+	0xed, 0xa6, 0xc3, 0x4c, 0x9b, 0xeb, 0xfc, 0xc0, 0xa1, 0x0a, 0x98, 0x07, 0x0b, 0x93, 0x2b, 0xc9,
+	0xe5, 0x80, 0x7d, 0x39, 0xe7, 0x98, 0xaa, 0x1f, 0xa2, 0x1d, 0x38, 0x34, 0xff, 0xf6, 0x93, 0x8e,
+	0x12, 0x27, 0x8e, 0xd9, 0xcb, 0x13, 0x69, 0x58, 0x18, 0xfa, 0xa3, 0x44, 0x71, 0x31, 0x0f, 0x5d,
+	0x0e, 0x44, 0xe7, 0xc4, 0x35, 0x28, 0x57, 0xc2, 0x43, 0xc5, 0x03, 0x30, 0x4d, 0x46, 0x74, 0x8b,
+	0x07, 0x83, 0xec, 0xa6, 0x61, 0x69, 0xe8, 0x8b, 0x42, 0xef, 0xc0, 0xa8, 0x20, 0xb7, 0x49, 0x8b,
+	0x2a, 0x91, 0x79, 0xb0, 0x30, 0x9e, 0x9f, 0x78, 0xd2, 0x51, 0xc6, 0x88, 0x63, 0x0a, 0x13, 0x16,
+	0x87, 0x0a, 0x69, 0xd1, 0xd5, 0xd8, 0x5f, 0xa7, 0x0a, 0xf8, 0xf7, 0x54, 0x01, 0x8f, 0x1e, 0xce,
+	0x81, 0xcc, 0xcf, 0x00, 0xc6, 0xd6, 0x2d, 0xb6, 0xd7, 0x9b, 0x01, 0xba, 0x0d, 0x27, 0x77, 0x2c,
+	0xb6, 0xa7, 0x13, 0xcb, 0x60, 0xae, 0xc9, 0x77, 0x5b, 0xfe, 0xed, 0x6f, 0xf4, 0x01, 0x8a, 0x84,
+	0x00, 0x32, 0xd7, 0x0b, 0xc4, 0x57, 0x44, 0x62, 0xf0, 0x89, 0x6e, 0xc2, 0x2b, 0x2e, 0x7d, 0xe0,
+	0xd5, 0xa8, 0x5b, 0xa7, 0x0d, 0x66, 0x37, 0xe5, 0x4d, 0x01, 0x3e, 0x6f, 0x44, 0x29, 0x38, 0xbe,
+	0xdd, 0x76, 0x3d, 0x5e, 0x37, 0xbf, 0xec, 0x72, 0x47, 0xf0, 0x4b, 0x43, 0xe6, 0x31, 0x80, 0xf1,
+	0x0d, 0xb2, 0x8f, 0xe9, 0x03, 0x2f, 0x20, 0xc4, 0x10, 0xb5, 0xc8, 0xbe, 0x2e, 0xca, 0x0c, 0x51,
+	0xde, 0xec, 0xa3, 0xf4, 0xf3, 0x46, 0x80, 0x26, 0x5a, 0x5d, 0xd7, 0x4b, 0xd6, 0x1b, 0x30, 0xe6,
+	0xd7, 0x6c, 0x53, 0x8f, 0x7b, 0x12, 0x35, 0x82, 0x27, 0xba, 0x71, 0xd2, 0x84, 0x16, 0x60, 0xd4,
+	0xb4, 0x39, 0x75, 0xbf, 0x20, 0x56, 0x97, 0x33, 0x1f, 0x7b, 0xf1, 0x6c, 0x2e, 0x5a, 0x68, 0xbb,
+	0x52, 0xa9, 0x38, 0xf0, 0x66, 0xfe, 0x0c, 0xc3, 0xa9, 0x21, 0x71, 0xa1, 0x69, 0x78, 0x79, 0xc7,
+	0xa4, 0x56, 0xd3, 0x53, 0xc0, 0x7c, 0x64, 0x61, 0x1c, 0xfb, 0x5f, 0xe8, 0x03, 0x18, 0xf9, 0x9c,
+	0x1e, 0xc8, 0x8e, 0x13, 0x2b, 0x73, 0xa3, 0x64, 0xd0, 0xa7, 0xcf, 0xfc, 0xa5, 0xa3, 0x67, 0x73,
+	0x21, 0x2c, 0x32, 0xd0, 0x47, 0x50, 0x0e, 0x5c, 0xf7, 0x7c, 0xb7, 0x32, 0x36, 0x1f, 0x59, 0x98,
+	0x58, 0x99, 0x19, 0x78, 0xa8, 0x5e, 0x36, 0x8e, 0xed, 0xf4, 0xbf, 0xf3, 0x3a, 0x9c, 0x0a, 0xa6,
+	0x18, 0x54, 0x88, 0xca, 0x0a, 0xc9, 0xe1, 0x21, 0x06, 0x45, 0xe2, 0xad, 0xf3, 0x86, 0xd5, 0xaf,
+	0x84, 0x9c, 0xfe, 0x3e, 0x55, 0xc0, 0xd7, 0x67, 0x0a, 0x38, 0x3c, 0x53, 0xc0, 0xa3, 0x33, 0x05,
+	0xfc, 0xf4, 0x8f, 0x72, 0x7f, 0x60, 0x1b, 0x3e, 0x2e, 0xd1, 0x83, 0xc1, 0xb5, 0x59, 0x1a, 0x10,
+	0xb5, 0x8c, 0x19, 0x50, 0xff, 0x92, 0x2f, 0xe0, 0x5e, 0xbe, 0xd0, 0xf0, 0xe3, 0x8e, 0x72, 0xc9,
+	0x66, 0x36, 0xcd, 0x10, 0x78, 0x6d, 0x68, 0x4a, 0x05, 0xc2, 0x09, 0xfa, 0x04, 0x46, 0x83, 0x4b,
+	0x01, 0x79, 0xa9, 0xd4, 0x45, 0x93, 0xf5, 0xc7, 0x1a, 0xe4, 0xac, 0x46, 0x7f, 0xec, 0x28, 0xe0,
+	0x61, 0x47, 0x09, 0x2d, 0x16, 0x61, 0x7c, 0x80, 0x1a, 0x5d, 0x87, 0xb3, 0x9b, 0x95, 0x52, 0xa5,
+	0xba, 0x55, 0xd1, 0x73, 0xb5, 0xa2, 0xae, 0x56, 0x0a, 0xb5, 0x6a, 0xb1, 0xa2, 0xe9, 0xda, 0xbd,
+	0x9a, 0x9a, 0x08, 0xa1, 0x49, 0x08, 0xd7, 0xaa, 0x15, 0x0d, 0x57, 0xcb, 0x65, 0x15, 0x27, 0x00,
+	0x1a, 0x83, 0x91, 0xc2, 0x86, 0x9a, 0x08, 0x2f, 0xde, 0x81, 0xf1, 0x81, 0xcb, 0x21, 0x04, 0x27,
+	0x7b, 0xa5, 0xb4, 0x1c, 0xbe, 0xa5, 0x6a, 0x89, 0x10, 0x4a, 0xc0, 0x58, 0xae, 0x5c, 0xd6, 0xb1,
+	0x7a, 0x67, 0x53, 0xad, 0x6b, 0xf5, 0x04, 0x40, 0x10, 0x5e, 0xae, 0xa9, 0x58, 0x2f, 0xd6, 0x12,
+	0x61, 0x14, 0x83, 0x51, 0x71, 0xde, 0xac, 0xab, 0x38, 0x11, 0x59, 0xb4, 0xe0, 0xf4, 0xe8, 0x65,
+	0x44, 0x49, 0x38, 0xdd, 0xab, 0xbc, 0x5e, 0xae, 0x6e, 0xe9, 0xb9, 0xf2, 0xad, 0x2a, 0x2e, 0x6a,
+	0xb7, 0x37, 0x12, 0x21, 0xe1, 0xd3, 0xaa, 0x25, 0xb5, 0xa2, 0xe7, 0x37, 0xd7, 0x4a, 0xaa, 0xd6,
+	0xe7, 0x03, 0xc2, 0x57, 0x56, 0x73, 0xa5, 0x7b, 0xc3, 0xbe, 0xf0, 0xe2, 0x16, 0x9c, 0x7d, 0xe5,
+	0x52, 0xa1, 0x34, 0x4c, 0xf6, 0x1a, 0x6e, 0xe4, 0xee, 0x0a, 0xfc, 0xfa, 0x60, 0xd3, 0xf5, 0xe2,
+	0x5d, 0xb5, 0xa0, 0x6f, 0x15, 0x2b, 0x85, 0x73, 0x40, 0x60, 0xe5, 0xc5, 0x5b, 0x23, 0xfe, 0x1d,
+	0xe7, 0x1c, 0x13, 0x1d, 0x02, 0x38, 0xb3, 0xe6, 0x52, 0xc2, 0xe9, 0xf0, 0x42, 0x5d, 0xf8, 0xa2,
+	0xc9, 0xa9, 0x7e, 0xaf, 0xfc, 0xa1, 0xc9, 0x14, 0x9e, 0x9f, 0x29, 0x29, 0x4c, 0x3d, 0xd6, 0x76,
+	0x1b, 0x74, 0x8d, 0xd9, 0x3b, 0xa6, 0xb1, 0x94, 0x6b, 0x88, 0xe5, 0xdd, 0x20, 0x36, 0x31, 0xe8,
+	0xd2, 0x37, 0xbf, 0xfc, 0xf1, 0x7d, 0x38, 0x9d, 0x99, 0xcd, 0x36, 0x64, 0xcb, 0x6c, 0x20, 0xcf,
+	0x40, 0x17, 0x60, 0x51, 0x22, 0x6d, 0x3a, 0xcd, 0x37, 0x8d, 0xd4, 0x96, 0x2d, 0x5f, 0x8d, 0x54,
+	0xa0, 0x16, 0x7d, 0xc3, 0x48, 0x4d, 0xd9, 0x72, 0x34, 0xd2, 0x77, 0x00, 0x4e, 0x63, 0xea, 0x51,
+	0xfe, 0x3f, 0x10, 0xad, 0xbd, 0x16, 0xd1, 0xf5, 0x8c, 0x92, 0x75, 0x45, 0xc7, 0xd1, 0x40, 0x3f,
+	0x00, 0x78, 0xad, 0xbe, 0xdb, 0xb7, 0x2a, 0xaf, 0xc9, 0x73, 0xa1, 0x37, 0xf3, 0xe9, 0xf3, 0x33,
+	0x25, 0x39, 0x12, 0xed, 0x33, 0x93, 0xee, 0x75, 0xc1, 0x52, 0x99, 0x99, 0xac, 0xb7, 0xcb, 0xf6,
+	0x46, 0x72, 0xbd, 0x07, 0xf2, 0xa9, 0xa3, 0xdf, 0xd3, 0xa1, 0xa3, 0xe3, 0x34, 0x78, 0x7a, 0x9c,
+	0x06, 0xbf, 0x1d, 0xa7, 0xc1, 0xe1, 0x49, 0x3a, 0xf4, 0xf4, 0x24, 0x1d, 0xfa, 0xf5, 0x24, 0x1d,
+	0xda, 0xbe, 0x2c, 0x5b, 0xbf, 0xff, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xcb, 0x0d, 0xea, 0x57,
+	0x4a, 0x09, 0x00, 0x00,
 }
 
 func (this *RateLimitSettingsKey) GoString() string {
@@ -420,8 +450,8 @@ func (this *RateLimitSettingsKey) GoString() string {
 	s := make([]string, 0, 7)
 	s = append(s, "&edgeproto.RateLimitSettingsKey{")
 	s = append(s, "ApiEndpointType: "+fmt.Sprintf("%#v", this.ApiEndpointType)+",\n")
-	s = append(s, "ApiActionType: "+fmt.Sprintf("%#v", this.ApiActionType)+",\n")
 	s = append(s, "RateLimitTarget: "+fmt.Sprintf("%#v", this.RateLimitTarget)+",\n")
+	s = append(s, "ApiName: "+fmt.Sprintf("%#v", this.ApiName)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -446,13 +476,15 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type RateLimitSettingsApiClient interface {
-	// Update RateLimit settings for an API endpoint type
+	// Create RateLimitSettings for an API endpoint
+	CreateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Update RateLimit settings for an API endpoint
 	UpdateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
-	// Delete RateLimit settings for an API endpoint type (ie. no rate limiting)
+	// Delete RateLimit settings for an API endpoint (ie. no rate limiting)
 	DeleteRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
-	// Reset RateLimit settings to default for an API endpoint type
+	// Reset RateLimit settings to default for an API endpoint
 	ResetRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
-	// Show RateLimit settings for an API endpoint type
+	// Show RateLimit settings for an API endpoint
 	ShowRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowRateLimitSettingsClient, error)
 }
 
@@ -462,6 +494,15 @@ type rateLimitSettingsApiClient struct {
 
 func NewRateLimitSettingsApiClient(cc *grpc.ClientConn) RateLimitSettingsApiClient {
 	return &rateLimitSettingsApiClient{cc}
+}
+
+func (c *rateLimitSettingsApiClient) CreateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/CreateRateLimitSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *rateLimitSettingsApiClient) UpdateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
@@ -525,13 +566,15 @@ func (x *rateLimitSettingsApiShowRateLimitSettingsClient) Recv() (*RateLimitSett
 
 // RateLimitSettingsApiServer is the server API for RateLimitSettingsApi service.
 type RateLimitSettingsApiServer interface {
-	// Update RateLimit settings for an API endpoint type
+	// Create RateLimitSettings for an API endpoint
+	CreateRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
+	// Update RateLimit settings for an API endpoint
 	UpdateRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
-	// Delete RateLimit settings for an API endpoint type (ie. no rate limiting)
+	// Delete RateLimit settings for an API endpoint (ie. no rate limiting)
 	DeleteRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
-	// Reset RateLimit settings to default for an API endpoint type
+	// Reset RateLimit settings to default for an API endpoint
 	ResetRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
-	// Show RateLimit settings for an API endpoint type
+	// Show RateLimit settings for an API endpoint
 	ShowRateLimitSettings(*RateLimitSettings, RateLimitSettingsApi_ShowRateLimitSettingsServer) error
 }
 
@@ -539,6 +582,9 @@ type RateLimitSettingsApiServer interface {
 type UnimplementedRateLimitSettingsApiServer struct {
 }
 
+func (*UnimplementedRateLimitSettingsApiServer) CreateRateLimitSettings(ctx context.Context, req *RateLimitSettings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateRateLimitSettings not implemented")
+}
 func (*UnimplementedRateLimitSettingsApiServer) UpdateRateLimitSettings(ctx context.Context, req *RateLimitSettings) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRateLimitSettings not implemented")
 }
@@ -554,6 +600,24 @@ func (*UnimplementedRateLimitSettingsApiServer) ShowRateLimitSettings(req *RateL
 
 func RegisterRateLimitSettingsApiServer(s *grpc.Server, srv RateLimitSettingsApiServer) {
 	s.RegisterService(&_RateLimitSettingsApi_serviceDesc, srv)
+}
+
+func _RateLimitSettingsApi_CreateRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RateLimitSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RateLimitSettingsApiServer).CreateRateLimitSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.RateLimitSettingsApi/CreateRateLimitSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RateLimitSettingsApiServer).CreateRateLimitSettings(ctx, req.(*RateLimitSettings))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _RateLimitSettingsApi_UpdateRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -636,6 +700,10 @@ var _RateLimitSettingsApi_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*RateLimitSettingsApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "CreateRateLimitSettings",
+			Handler:    _RateLimitSettingsApi_CreateRateLimitSettings_Handler,
+		},
+		{
 			MethodName: "UpdateRateLimitSettings",
 			Handler:    _RateLimitSettingsApi_UpdateRateLimitSettings_Handler,
 		},
@@ -678,18 +746,97 @@ func (m *RateLimitSettingsKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.ApiName) > 0 {
+		i -= len(m.ApiName)
+		copy(dAtA[i:], m.ApiName)
+		i = encodeVarintRatelimit(dAtA, i, uint64(len(m.ApiName)))
+		i--
+		dAtA[i] = 0x1a
+	}
 	if m.RateLimitTarget != 0 {
 		i = encodeVarintRatelimit(dAtA, i, uint64(m.RateLimitTarget))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.ApiActionType != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.ApiActionType))
 		i--
 		dAtA[i] = 0x10
 	}
 	if m.ApiEndpointType != 0 {
 		i = encodeVarintRatelimit(dAtA, i, uint64(m.ApiEndpointType))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *FlowSettings) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowSettings) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FlowSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BurstSize != 0 {
+		i = encodeVarintRatelimit(dAtA, i, uint64(m.BurstSize))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.ReqsPerSecond != 0 {
+		i -= 8
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.ReqsPerSecond))))
+		i--
+		dAtA[i] = 0x11
+	}
+	if m.FlowAlgorithm != 0 {
+		i = encodeVarintRatelimit(dAtA, i, uint64(m.FlowAlgorithm))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MaxReqsSettings) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MaxReqsSettings) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MaxReqsSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Interval != 0 {
+		i = encodeVarintRatelimit(dAtA, i, uint64(m.Interval))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.MaxRequests != 0 {
+		i = encodeVarintRatelimit(dAtA, i, uint64(m.MaxRequests))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.MaxReqsAlgorithm != 0 {
+		i = encodeVarintRatelimit(dAtA, i, uint64(m.MaxReqsAlgorithm))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -716,41 +863,33 @@ func (m *RateLimitSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.MaxRequestsPerHour != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.MaxRequestsPerHour))
-		i--
-		dAtA[i] = 0x50
+	if len(m.MaxReqsSettings) > 0 {
+		for iNdEx := len(m.MaxReqsSettings) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MaxReqsSettings[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRatelimit(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
 	}
-	if m.MaxRequestsPerMinute != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.MaxRequestsPerMinute))
-		i--
-		dAtA[i] = 0x48
-	}
-	if m.MaxRequestsPerSecond != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.MaxRequestsPerSecond))
-		i--
-		dAtA[i] = 0x40
-	}
-	if m.MaxReqsAlgorithm != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.MaxReqsAlgorithm))
-		i--
-		dAtA[i] = 0x38
-	}
-	if m.BurstSize != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.BurstSize))
-		i--
-		dAtA[i] = 0x30
-	}
-	if m.ReqsPerSecond != 0 {
-		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.ReqsPerSecond))))
-		i--
-		dAtA[i] = 0x29
-	}
-	if m.FlowAlgorithm != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.FlowAlgorithm))
-		i--
-		dAtA[i] = 0x20
+	if len(m.FlowSettings) > 0 {
+		for iNdEx := len(m.FlowSettings) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.FlowSettings[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRatelimit(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
 	}
 	{
 		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
@@ -836,13 +975,13 @@ func (m *RateLimitSettingsKey) Matches(o *RateLimitSettingsKey, fopts ...MatchOp
 			return false
 		}
 	}
-	if !opts.Filter || o.ApiActionType != 0 {
-		if o.ApiActionType != m.ApiActionType {
+	if !opts.Filter || o.RateLimitTarget != 0 {
+		if o.RateLimitTarget != m.RateLimitTarget {
 			return false
 		}
 	}
-	if !opts.Filter || o.RateLimitTarget != 0 {
-		if o.RateLimitTarget != m.RateLimitTarget {
+	if !opts.Filter || o.ApiName != "" {
+		if o.ApiName != m.ApiName {
 			return false
 		}
 	}
@@ -855,12 +994,12 @@ func (m *RateLimitSettingsKey) CopyInFields(src *RateLimitSettingsKey) int {
 		m.ApiEndpointType = src.ApiEndpointType
 		changed++
 	}
-	if m.ApiActionType != src.ApiActionType {
-		m.ApiActionType = src.ApiActionType
-		changed++
-	}
 	if m.RateLimitTarget != src.RateLimitTarget {
 		m.RateLimitTarget = src.RateLimitTarget
+		changed++
+	}
+	if m.ApiName != src.ApiName {
+		m.ApiName = src.ApiName
 		changed++
 	}
 	return changed
@@ -868,8 +1007,8 @@ func (m *RateLimitSettingsKey) CopyInFields(src *RateLimitSettingsKey) int {
 
 func (m *RateLimitSettingsKey) DeepCopyIn(src *RateLimitSettingsKey) {
 	m.ApiEndpointType = src.ApiEndpointType
-	m.ApiActionType = src.ApiActionType
 	m.RateLimitTarget = src.RateLimitTarget
+	m.ApiName = src.ApiName
 }
 
 func (m *RateLimitSettingsKey) GetKeyString() string {
@@ -896,14 +1035,14 @@ func (m *RateLimitSettingsKey) ExistsError() error {
 }
 
 var RateLimitSettingsKeyTagApiEndpointType = "apiendpointtype"
-var RateLimitSettingsKeyTagApiActionType = "apiactiontype"
 var RateLimitSettingsKeyTagRateLimitTarget = "ratelimittarget"
+var RateLimitSettingsKeyTagApiName = "apiname"
 
 func (m *RateLimitSettingsKey) GetTags() map[string]string {
 	tags := make(map[string]string)
 	tags["apiendpointtype"] = ApiEndpointType_name[int32(m.ApiEndpointType)]
-	tags["apiactiontype"] = ApiActionType_name[int32(m.ApiActionType)]
 	tags["ratelimittarget"] = RateLimitTarget_name[int32(m.RateLimitTarget)]
+	tags["apiname"] = m.ApiName
 	return tags
 }
 
@@ -912,11 +1051,70 @@ func (m *RateLimitSettingsKey) ValidateEnums() error {
 	if _, ok := ApiEndpointType_name[int32(m.ApiEndpointType)]; !ok {
 		return errors.New("invalid ApiEndpointType")
 	}
-	if _, ok := ApiActionType_name[int32(m.ApiActionType)]; !ok {
-		return errors.New("invalid ApiActionType")
-	}
 	if _, ok := RateLimitTarget_name[int32(m.RateLimitTarget)]; !ok {
 		return errors.New("invalid RateLimitTarget")
+	}
+	return nil
+}
+
+func (m *FlowSettings) CopyInFields(src *FlowSettings) int {
+	changed := 0
+	if m.FlowAlgorithm != src.FlowAlgorithm {
+		m.FlowAlgorithm = src.FlowAlgorithm
+		changed++
+	}
+	if m.ReqsPerSecond != src.ReqsPerSecond {
+		m.ReqsPerSecond = src.ReqsPerSecond
+		changed++
+	}
+	if m.BurstSize != src.BurstSize {
+		m.BurstSize = src.BurstSize
+		changed++
+	}
+	return changed
+}
+
+func (m *FlowSettings) DeepCopyIn(src *FlowSettings) {
+	m.FlowAlgorithm = src.FlowAlgorithm
+	m.ReqsPerSecond = src.ReqsPerSecond
+	m.BurstSize = src.BurstSize
+}
+
+// Helper method to check that enums have valid values
+func (m *FlowSettings) ValidateEnums() error {
+	if _, ok := FlowRateLimitAlgorithm_name[int32(m.FlowAlgorithm)]; !ok {
+		return errors.New("invalid FlowAlgorithm")
+	}
+	return nil
+}
+
+func (m *MaxReqsSettings) CopyInFields(src *MaxReqsSettings) int {
+	changed := 0
+	if m.MaxReqsAlgorithm != src.MaxReqsAlgorithm {
+		m.MaxReqsAlgorithm = src.MaxReqsAlgorithm
+		changed++
+	}
+	if m.MaxRequests != src.MaxRequests {
+		m.MaxRequests = src.MaxRequests
+		changed++
+	}
+	if m.Interval != src.Interval {
+		m.Interval = src.Interval
+		changed++
+	}
+	return changed
+}
+
+func (m *MaxReqsSettings) DeepCopyIn(src *MaxReqsSettings) {
+	m.MaxReqsAlgorithm = src.MaxReqsAlgorithm
+	m.MaxRequests = src.MaxRequests
+	m.Interval = src.Interval
+}
+
+// Helper method to check that enums have valid values
+func (m *MaxReqsSettings) ValidateEnums() error {
+	if _, ok := MaxReqsRateLimitAlgorithm_name[int32(m.MaxReqsAlgorithm)]; !ok {
+		return errors.New("invalid MaxReqsAlgorithm")
 	}
 	return nil
 }
@@ -933,39 +1131,22 @@ func (m *RateLimitSettings) Matches(o *RateLimitSettings, fopts ...MatchOpt) boo
 	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if !opts.Filter || o.FlowAlgorithm != 0 {
-		if o.FlowAlgorithm != m.FlowAlgorithm {
+	if !opts.Filter || o.FlowSettings != nil {
+		if len(m.FlowSettings) == 0 && len(o.FlowSettings) > 0 || len(m.FlowSettings) > 0 && len(o.FlowSettings) == 0 {
 			return false
+		} else if m.FlowSettings != nil && o.FlowSettings != nil {
+			if !opts.Filter && len(m.FlowSettings) != len(o.FlowSettings) {
+				return false
+			}
 		}
 	}
-	if !opts.Filter || o.ReqsPerSecond != 0 {
-		if o.ReqsPerSecond != m.ReqsPerSecond {
+	if !opts.Filter || o.MaxReqsSettings != nil {
+		if len(m.MaxReqsSettings) == 0 && len(o.MaxReqsSettings) > 0 || len(m.MaxReqsSettings) > 0 && len(o.MaxReqsSettings) == 0 {
 			return false
-		}
-	}
-	if !opts.Filter || o.BurstSize != 0 {
-		if o.BurstSize != m.BurstSize {
-			return false
-		}
-	}
-	if !opts.Filter || o.MaxReqsAlgorithm != 0 {
-		if o.MaxReqsAlgorithm != m.MaxReqsAlgorithm {
-			return false
-		}
-	}
-	if !opts.Filter || o.MaxRequestsPerSecond != 0 {
-		if o.MaxRequestsPerSecond != m.MaxRequestsPerSecond {
-			return false
-		}
-	}
-	if !opts.Filter || o.MaxRequestsPerMinute != 0 {
-		if o.MaxRequestsPerMinute != m.MaxRequestsPerMinute {
-			return false
-		}
-	}
-	if !opts.Filter || o.MaxRequestsPerHour != 0 {
-		if o.MaxRequestsPerHour != m.MaxRequestsPerHour {
-			return false
+		} else if m.MaxReqsSettings != nil && o.MaxReqsSettings != nil {
+			if !opts.Filter && len(m.MaxReqsSettings) != len(o.MaxReqsSettings) {
+				return false
+			}
 		}
 	}
 	return true
@@ -973,53 +1154,51 @@ func (m *RateLimitSettings) Matches(o *RateLimitSettings, fopts ...MatchOpt) boo
 
 const RateLimitSettingsFieldKey = "2"
 const RateLimitSettingsFieldKeyApiEndpointType = "2.1"
-const RateLimitSettingsFieldKeyApiActionType = "2.2"
-const RateLimitSettingsFieldKeyRateLimitTarget = "2.3"
-const RateLimitSettingsFieldFlowAlgorithm = "4"
-const RateLimitSettingsFieldReqsPerSecond = "5"
-const RateLimitSettingsFieldBurstSize = "6"
-const RateLimitSettingsFieldMaxReqsAlgorithm = "7"
-const RateLimitSettingsFieldMaxRequestsPerSecond = "8"
-const RateLimitSettingsFieldMaxRequestsPerMinute = "9"
-const RateLimitSettingsFieldMaxRequestsPerHour = "10"
+const RateLimitSettingsFieldKeyRateLimitTarget = "2.2"
+const RateLimitSettingsFieldKeyApiName = "2.3"
+const RateLimitSettingsFieldFlowSettings = "7"
+const RateLimitSettingsFieldFlowSettingsFlowAlgorithm = "7.1"
+const RateLimitSettingsFieldFlowSettingsReqsPerSecond = "7.2"
+const RateLimitSettingsFieldFlowSettingsBurstSize = "7.3"
+const RateLimitSettingsFieldMaxReqsSettings = "8"
+const RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm = "8.1"
+const RateLimitSettingsFieldMaxReqsSettingsMaxRequests = "8.2"
+const RateLimitSettingsFieldMaxReqsSettingsInterval = "8.3"
 
 var RateLimitSettingsAllFields = []string{
 	RateLimitSettingsFieldKeyApiEndpointType,
-	RateLimitSettingsFieldKeyApiActionType,
 	RateLimitSettingsFieldKeyRateLimitTarget,
-	RateLimitSettingsFieldFlowAlgorithm,
-	RateLimitSettingsFieldReqsPerSecond,
-	RateLimitSettingsFieldBurstSize,
-	RateLimitSettingsFieldMaxReqsAlgorithm,
-	RateLimitSettingsFieldMaxRequestsPerSecond,
-	RateLimitSettingsFieldMaxRequestsPerMinute,
-	RateLimitSettingsFieldMaxRequestsPerHour,
+	RateLimitSettingsFieldKeyApiName,
+	RateLimitSettingsFieldFlowSettingsFlowAlgorithm,
+	RateLimitSettingsFieldFlowSettingsReqsPerSecond,
+	RateLimitSettingsFieldFlowSettingsBurstSize,
+	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm,
+	RateLimitSettingsFieldMaxReqsSettingsMaxRequests,
+	RateLimitSettingsFieldMaxReqsSettingsInterval,
 }
 
 var RateLimitSettingsAllFieldsMap = map[string]struct{}{
-	RateLimitSettingsFieldKeyApiEndpointType:   struct{}{},
-	RateLimitSettingsFieldKeyApiActionType:     struct{}{},
-	RateLimitSettingsFieldKeyRateLimitTarget:   struct{}{},
-	RateLimitSettingsFieldFlowAlgorithm:        struct{}{},
-	RateLimitSettingsFieldReqsPerSecond:        struct{}{},
-	RateLimitSettingsFieldBurstSize:            struct{}{},
-	RateLimitSettingsFieldMaxReqsAlgorithm:     struct{}{},
-	RateLimitSettingsFieldMaxRequestsPerSecond: struct{}{},
-	RateLimitSettingsFieldMaxRequestsPerMinute: struct{}{},
-	RateLimitSettingsFieldMaxRequestsPerHour:   struct{}{},
+	RateLimitSettingsFieldKeyApiEndpointType:              struct{}{},
+	RateLimitSettingsFieldKeyRateLimitTarget:              struct{}{},
+	RateLimitSettingsFieldKeyApiName:                      struct{}{},
+	RateLimitSettingsFieldFlowSettingsFlowAlgorithm:       struct{}{},
+	RateLimitSettingsFieldFlowSettingsReqsPerSecond:       struct{}{},
+	RateLimitSettingsFieldFlowSettingsBurstSize:           struct{}{},
+	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm: struct{}{},
+	RateLimitSettingsFieldMaxReqsSettingsMaxRequests:      struct{}{},
+	RateLimitSettingsFieldMaxReqsSettingsInterval:         struct{}{},
 }
 
 var RateLimitSettingsAllFieldsStringMap = map[string]string{
-	RateLimitSettingsFieldKeyApiEndpointType:   "Key Api Endpoint Type",
-	RateLimitSettingsFieldKeyApiActionType:     "Key Api Action Type",
-	RateLimitSettingsFieldKeyRateLimitTarget:   "Key Rate Limit Target",
-	RateLimitSettingsFieldFlowAlgorithm:        "Flow Algorithm",
-	RateLimitSettingsFieldReqsPerSecond:        "Reqs Per Second",
-	RateLimitSettingsFieldBurstSize:            "Burst Size",
-	RateLimitSettingsFieldMaxReqsAlgorithm:     "Max Reqs Algorithm",
-	RateLimitSettingsFieldMaxRequestsPerSecond: "Max Requests Per Second",
-	RateLimitSettingsFieldMaxRequestsPerMinute: "Max Requests Per Minute",
-	RateLimitSettingsFieldMaxRequestsPerHour:   "Max Requests Per Hour",
+	RateLimitSettingsFieldKeyApiEndpointType:              "Key Api Endpoint Type",
+	RateLimitSettingsFieldKeyRateLimitTarget:              "Key Rate Limit Target",
+	RateLimitSettingsFieldKeyApiName:                      "Key Api Name",
+	RateLimitSettingsFieldFlowSettingsFlowAlgorithm:       "Flow Settings Flow Algorithm",
+	RateLimitSettingsFieldFlowSettingsReqsPerSecond:       "Flow Settings Reqs Per Second",
+	RateLimitSettingsFieldFlowSettingsBurstSize:           "Flow Settings Burst Size",
+	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm: "Max Reqs Settings Max Reqs Algorithm",
+	RateLimitSettingsFieldMaxReqsSettingsMaxRequests:      "Max Reqs Settings Max Requests",
+	RateLimitSettingsFieldMaxReqsSettingsInterval:         "Max Reqs Settings Interval",
 }
 
 func (m *RateLimitSettings) IsKeyField(s string) bool {
@@ -1031,45 +1210,69 @@ func (m *RateLimitSettings) DiffFields(o *RateLimitSettings, fields map[string]s
 		fields[RateLimitSettingsFieldKeyApiEndpointType] = struct{}{}
 		fields[RateLimitSettingsFieldKey] = struct{}{}
 	}
-	if m.Key.ApiActionType != o.Key.ApiActionType {
-		fields[RateLimitSettingsFieldKeyApiActionType] = struct{}{}
-		fields[RateLimitSettingsFieldKey] = struct{}{}
-	}
 	if m.Key.RateLimitTarget != o.Key.RateLimitTarget {
 		fields[RateLimitSettingsFieldKeyRateLimitTarget] = struct{}{}
 		fields[RateLimitSettingsFieldKey] = struct{}{}
 	}
-	if m.FlowAlgorithm != o.FlowAlgorithm {
-		fields[RateLimitSettingsFieldFlowAlgorithm] = struct{}{}
+	if m.Key.ApiName != o.Key.ApiName {
+		fields[RateLimitSettingsFieldKeyApiName] = struct{}{}
+		fields[RateLimitSettingsFieldKey] = struct{}{}
 	}
-	if m.ReqsPerSecond != o.ReqsPerSecond {
-		fields[RateLimitSettingsFieldReqsPerSecond] = struct{}{}
+	if m.FlowSettings != nil && o.FlowSettings != nil {
+		if len(m.FlowSettings) != len(o.FlowSettings) {
+			fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
+		} else {
+			for i0 := 0; i0 < len(m.FlowSettings); i0++ {
+				if m.FlowSettings[i0].FlowAlgorithm != o.FlowSettings[i0].FlowAlgorithm {
+					fields[RateLimitSettingsFieldFlowSettingsFlowAlgorithm] = struct{}{}
+					fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
+				}
+				if m.FlowSettings[i0].ReqsPerSecond != o.FlowSettings[i0].ReqsPerSecond {
+					fields[RateLimitSettingsFieldFlowSettingsReqsPerSecond] = struct{}{}
+					fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
+				}
+				if m.FlowSettings[i0].BurstSize != o.FlowSettings[i0].BurstSize {
+					fields[RateLimitSettingsFieldFlowSettingsBurstSize] = struct{}{}
+					fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
+				}
+			}
+		}
+	} else if (m.FlowSettings != nil && o.FlowSettings == nil) || (m.FlowSettings == nil && o.FlowSettings != nil) {
+		fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
 	}
-	if m.BurstSize != o.BurstSize {
-		fields[RateLimitSettingsFieldBurstSize] = struct{}{}
-	}
-	if m.MaxReqsAlgorithm != o.MaxReqsAlgorithm {
-		fields[RateLimitSettingsFieldMaxReqsAlgorithm] = struct{}{}
-	}
-	if m.MaxRequestsPerSecond != o.MaxRequestsPerSecond {
-		fields[RateLimitSettingsFieldMaxRequestsPerSecond] = struct{}{}
-	}
-	if m.MaxRequestsPerMinute != o.MaxRequestsPerMinute {
-		fields[RateLimitSettingsFieldMaxRequestsPerMinute] = struct{}{}
-	}
-	if m.MaxRequestsPerHour != o.MaxRequestsPerHour {
-		fields[RateLimitSettingsFieldMaxRequestsPerHour] = struct{}{}
+	if m.MaxReqsSettings != nil && o.MaxReqsSettings != nil {
+		if len(m.MaxReqsSettings) != len(o.MaxReqsSettings) {
+			fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
+		} else {
+			for i0 := 0; i0 < len(m.MaxReqsSettings); i0++ {
+				if m.MaxReqsSettings[i0].MaxReqsAlgorithm != o.MaxReqsSettings[i0].MaxReqsAlgorithm {
+					fields[RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm] = struct{}{}
+					fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
+				}
+				if m.MaxReqsSettings[i0].MaxRequests != o.MaxReqsSettings[i0].MaxRequests {
+					fields[RateLimitSettingsFieldMaxReqsSettingsMaxRequests] = struct{}{}
+					fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
+				}
+				if m.MaxReqsSettings[i0].Interval != o.MaxReqsSettings[i0].Interval {
+					fields[RateLimitSettingsFieldMaxReqsSettingsInterval] = struct{}{}
+					fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
+				}
+			}
+		}
+	} else if (m.MaxReqsSettings != nil && o.MaxReqsSettings == nil) || (m.MaxReqsSettings == nil && o.MaxReqsSettings != nil) {
+		fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
 	}
 }
 
 var UpdateRateLimitSettingsFieldsMap = map[string]struct{}{
-	RateLimitSettingsFieldFlowAlgorithm:        struct{}{},
-	RateLimitSettingsFieldReqsPerSecond:        struct{}{},
-	RateLimitSettingsFieldBurstSize:            struct{}{},
-	RateLimitSettingsFieldMaxReqsAlgorithm:     struct{}{},
-	RateLimitSettingsFieldMaxRequestsPerSecond: struct{}{},
-	RateLimitSettingsFieldMaxRequestsPerMinute: struct{}{},
-	RateLimitSettingsFieldMaxRequestsPerHour:   struct{}{},
+	RateLimitSettingsFieldFlowSettings:                    struct{}{},
+	RateLimitSettingsFieldFlowSettingsFlowAlgorithm:       struct{}{},
+	RateLimitSettingsFieldFlowSettingsReqsPerSecond:       struct{}{},
+	RateLimitSettingsFieldFlowSettingsBurstSize:           struct{}{},
+	RateLimitSettingsFieldMaxReqsSettings:                 struct{}{},
+	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm: struct{}{},
+	RateLimitSettingsFieldMaxReqsSettingsMaxRequests:      struct{}{},
+	RateLimitSettingsFieldMaxReqsSettingsInterval:         struct{}{},
 }
 
 func (m *RateLimitSettings) ValidateUpdateFields() error {
@@ -1106,57 +1309,33 @@ func (m *RateLimitSettings) CopyInFields(src *RateLimitSettings) int {
 			}
 		}
 		if _, set := fmap["2.2"]; set {
-			if m.Key.ApiActionType != src.Key.ApiActionType {
-				m.Key.ApiActionType = src.Key.ApiActionType
-				changed++
-			}
-		}
-		if _, set := fmap["2.3"]; set {
 			if m.Key.RateLimitTarget != src.Key.RateLimitTarget {
 				m.Key.RateLimitTarget = src.Key.RateLimitTarget
 				changed++
 			}
 		}
-	}
-	if _, set := fmap["4"]; set {
-		if m.FlowAlgorithm != src.FlowAlgorithm {
-			m.FlowAlgorithm = src.FlowAlgorithm
-			changed++
-		}
-	}
-	if _, set := fmap["5"]; set {
-		if m.ReqsPerSecond != src.ReqsPerSecond {
-			m.ReqsPerSecond = src.ReqsPerSecond
-			changed++
-		}
-	}
-	if _, set := fmap["6"]; set {
-		if m.BurstSize != src.BurstSize {
-			m.BurstSize = src.BurstSize
-			changed++
+		if _, set := fmap["2.3"]; set {
+			if m.Key.ApiName != src.Key.ApiName {
+				m.Key.ApiName = src.Key.ApiName
+				changed++
+			}
 		}
 	}
 	if _, set := fmap["7"]; set {
-		if m.MaxReqsAlgorithm != src.MaxReqsAlgorithm {
-			m.MaxReqsAlgorithm = src.MaxReqsAlgorithm
+		if src.FlowSettings != nil {
+			m.FlowSettings = src.FlowSettings
+			changed++
+		} else if m.FlowSettings != nil {
+			m.FlowSettings = nil
 			changed++
 		}
 	}
 	if _, set := fmap["8"]; set {
-		if m.MaxRequestsPerSecond != src.MaxRequestsPerSecond {
-			m.MaxRequestsPerSecond = src.MaxRequestsPerSecond
+		if src.MaxReqsSettings != nil {
+			m.MaxReqsSettings = src.MaxReqsSettings
 			changed++
-		}
-	}
-	if _, set := fmap["9"]; set {
-		if m.MaxRequestsPerMinute != src.MaxRequestsPerMinute {
-			m.MaxRequestsPerMinute = src.MaxRequestsPerMinute
-			changed++
-		}
-	}
-	if _, set := fmap["10"]; set {
-		if m.MaxRequestsPerHour != src.MaxRequestsPerHour {
-			m.MaxRequestsPerHour = src.MaxRequestsPerHour
+		} else if m.MaxReqsSettings != nil {
+			m.MaxReqsSettings = nil
 			changed++
 		}
 	}
@@ -1165,13 +1344,26 @@ func (m *RateLimitSettings) CopyInFields(src *RateLimitSettings) int {
 
 func (m *RateLimitSettings) DeepCopyIn(src *RateLimitSettings) {
 	m.Key.DeepCopyIn(&src.Key)
-	m.FlowAlgorithm = src.FlowAlgorithm
-	m.ReqsPerSecond = src.ReqsPerSecond
-	m.BurstSize = src.BurstSize
-	m.MaxReqsAlgorithm = src.MaxReqsAlgorithm
-	m.MaxRequestsPerSecond = src.MaxRequestsPerSecond
-	m.MaxRequestsPerMinute = src.MaxRequestsPerMinute
-	m.MaxRequestsPerHour = src.MaxRequestsPerHour
+	if src.FlowSettings != nil {
+		m.FlowSettings = make([]*FlowSettings, len(src.FlowSettings), len(src.FlowSettings))
+		for ii, s := range src.FlowSettings {
+			var tmp_s FlowSettings
+			tmp_s.DeepCopyIn(s)
+			m.FlowSettings[ii] = &tmp_s
+		}
+	} else {
+		m.FlowSettings = nil
+	}
+	if src.MaxReqsSettings != nil {
+		m.MaxReqsSettings = make([]*MaxReqsSettings, len(src.MaxReqsSettings), len(src.MaxReqsSettings))
+		for ii, s := range src.MaxReqsSettings {
+			var tmp_s MaxReqsSettings
+			tmp_s.DeepCopyIn(s)
+			m.MaxReqsSettings[ii] = &tmp_s
+		}
+	} else {
+		m.MaxReqsSettings = nil
+	}
 }
 
 func (s *RateLimitSettings) HasFields() bool {
@@ -1714,11 +1906,15 @@ func (m *RateLimitSettings) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
-	if _, ok := FlowRateLimitAlgorithm_name[int32(m.FlowAlgorithm)]; !ok {
-		return errors.New("invalid FlowAlgorithm")
+	for _, e := range m.FlowSettings {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
 	}
-	if _, ok := MaxReqsRateLimitAlgorithm_name[int32(m.MaxReqsAlgorithm)]; !ok {
-		return errors.New("invalid MaxReqsAlgorithm")
+	for _, e := range m.MaxReqsSettings {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1742,6 +1938,173 @@ func (m *RateLimitSettingsData) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+var ApiEndpointTypeStrings = []string{
+	"UNKNOWN_API_ENDPOINT_TYPE",
+	"CONTROLLER",
+	"DME",
+}
+
+const (
+	ApiEndpointTypeUNKNOWN_API_ENDPOINT_TYPE uint64 = 1 << 0
+	ApiEndpointTypeCONTROLLER                uint64 = 1 << 1
+	ApiEndpointTypeDME                       uint64 = 1 << 2
+)
+
+var ApiEndpointType_CamelName = map[int32]string{
+	// UNKNOWN_API_ENDPOINT_TYPE -> UnknownApiEndpointType
+	0: "UnknownApiEndpointType",
+	// CONTROLLER -> Controller
+	1: "Controller",
+	// DME -> Dme
+	2: "Dme",
+}
+var ApiEndpointType_CamelValue = map[string]int32{
+	"UnknownApiEndpointType": 0,
+	"Controller":             1,
+	"Dme":                    2,
+}
+
+func (e *ApiEndpointType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := ApiEndpointType_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = ApiEndpointType_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = ApiEndpointType(val)
+	return nil
+}
+
+func (e ApiEndpointType) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(ApiEndpointType_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *ApiEndpointType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := ApiEndpointType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = ApiEndpointType_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = ApiEndpointType(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = ApiEndpointType(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+var RateLimitTargetStrings = []string{
+	"UNKNOWN_TARGET",
+	"ALL_REQUESTS",
+	"PER_IP",
+	"PER_USER",
+}
+
+const (
+	RateLimitTargetUNKNOWN_TARGET uint64 = 1 << 0
+	RateLimitTargetALL_REQUESTS   uint64 = 1 << 1
+	RateLimitTargetPER_IP         uint64 = 1 << 2
+	RateLimitTargetPER_USER       uint64 = 1 << 3
+)
+
+var RateLimitTarget_CamelName = map[int32]string{
+	// UNKNOWN_TARGET -> UnknownTarget
+	0: "UnknownTarget",
+	// ALL_REQUESTS -> AllRequests
+	1: "AllRequests",
+	// PER_IP -> PerIp
+	2: "PerIp",
+	// PER_USER -> PerUser
+	3: "PerUser",
+}
+var RateLimitTarget_CamelValue = map[string]int32{
+	"UnknownTarget": 0,
+	"AllRequests":   1,
+	"PerIp":         2,
+	"PerUser":       3,
+}
+
+func (e *RateLimitTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := RateLimitTarget_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = RateLimitTarget_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = RateLimitTarget(val)
+	return nil
+}
+
+func (e RateLimitTarget) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(RateLimitTarget_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *RateLimitTarget) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := RateLimitTarget_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = RateLimitTarget_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = RateLimitTarget(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = RateLimitTarget(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
 }
 
 var FlowRateLimitAlgorithmStrings = []string{
@@ -1828,13 +2191,11 @@ func (e *FlowRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 var MaxReqsRateLimitAlgorithmStrings = []string{
 	"UNKNOWN_MAX_REQS_ALGORITHM",
 	"FIXED_WINDOW_ALGORITHM",
-	"ROLLING_WINDOW_ALGORITHM",
 }
 
 const (
 	MaxReqsRateLimitAlgorithmUNKNOWN_MAX_REQS_ALGORITHM uint64 = 1 << 0
 	MaxReqsRateLimitAlgorithmFIXED_WINDOW_ALGORITHM     uint64 = 1 << 1
-	MaxReqsRateLimitAlgorithmROLLING_WINDOW_ALGORITHM   uint64 = 1 << 2
 )
 
 var MaxReqsRateLimitAlgorithm_CamelName = map[int32]string{
@@ -1842,13 +2203,10 @@ var MaxReqsRateLimitAlgorithm_CamelName = map[int32]string{
 	0: "UnknownMaxReqsAlgorithm",
 	// FIXED_WINDOW_ALGORITHM -> FixedWindowAlgorithm
 	1: "FixedWindowAlgorithm",
-	// ROLLING_WINDOW_ALGORITHM -> RollingWindowAlgorithm
-	2: "RollingWindowAlgorithm",
 }
 var MaxReqsRateLimitAlgorithm_CamelValue = map[string]int32{
 	"UnknownMaxReqsAlgorithm": 0,
 	"FixedWindowAlgorithm":    1,
-	"RollingWindowAlgorithm":  2,
 }
 
 func (e *MaxReqsRateLimitAlgorithm) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -1905,274 +2263,10 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-
-var ApiEndpointTypeStrings = []string{
-	"UNKNOWN_API_ENDPOINT_TYPE",
-	"CONTROLLER",
-	"DME",
-}
-
-const (
-	ApiEndpointTypeUNKNOWN_API_ENDPOINT_TYPE uint64 = 1 << 0
-	ApiEndpointTypeCONTROLLER                uint64 = 1 << 1
-	ApiEndpointTypeDME                       uint64 = 1 << 2
-)
-
-var ApiEndpointType_CamelName = map[int32]string{
-	// UNKNOWN_API_ENDPOINT_TYPE -> UnknownApiEndpointType
-	0: "UnknownApiEndpointType",
-	// CONTROLLER -> Controller
-	1: "Controller",
-	// DME -> Dme
-	2: "Dme",
-}
-var ApiEndpointType_CamelValue = map[string]int32{
-	"UnknownApiEndpointType": 0,
-	"Controller":             1,
-	"Dme":                    2,
-}
-
-func (e *ApiEndpointType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := ApiEndpointType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ApiEndpointType_CamelName[val]
-		}
-	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = ApiEndpointType(val)
+func (m *RateLimitSettings) IsValidArgsForCreateRateLimitSettings() error {
 	return nil
 }
 
-func (e ApiEndpointType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(ApiEndpointType_CamelName, int32(e)), nil
-}
-
-// custom JSON encoding/decoding
-func (e *ApiEndpointType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
-		val, ok := ApiEndpointType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = ApiEndpointType_CamelName[val]
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
-		}
-		*e = ApiEndpointType(val)
-		return nil
-	}
-	var val int32
-	err = json.Unmarshal(b, &val)
-	if err == nil {
-		*e = ApiEndpointType(val)
-		return nil
-	}
-	return fmt.Errorf("No enum value for %v", b)
-}
-
-var ApiActionTypeStrings = []string{
-	"UNKNOWN_ACTION",
-	"CREATE_ACTION",
-	"DELETE_ACTION",
-	"UPDATE_ACTION",
-	"SHOW_ACTION",
-	"DEFAULT_ACTION",
-}
-
-const (
-	ApiActionTypeUNKNOWN_ACTION uint64 = 1 << 0
-	ApiActionTypeCREATE_ACTION  uint64 = 1 << 1
-	ApiActionTypeDELETE_ACTION  uint64 = 1 << 2
-	ApiActionTypeUPDATE_ACTION  uint64 = 1 << 3
-	ApiActionTypeSHOW_ACTION    uint64 = 1 << 4
-	ApiActionTypeDEFAULT_ACTION uint64 = 1 << 5
-)
-
-var ApiActionType_CamelName = map[int32]string{
-	// UNKNOWN_ACTION -> UnknownAction
-	0: "UnknownAction",
-	// CREATE_ACTION -> CreateAction
-	1: "CreateAction",
-	// DELETE_ACTION -> DeleteAction
-	2: "DeleteAction",
-	// UPDATE_ACTION -> UpdateAction
-	3: "UpdateAction",
-	// SHOW_ACTION -> ShowAction
-	4: "ShowAction",
-	// DEFAULT_ACTION -> DefaultAction
-	5: "DefaultAction",
-}
-var ApiActionType_CamelValue = map[string]int32{
-	"UnknownAction": 0,
-	"CreateAction":  1,
-	"DeleteAction":  2,
-	"UpdateAction":  3,
-	"ShowAction":    4,
-	"DefaultAction": 5,
-}
-
-func (e *ApiActionType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := ApiActionType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ApiActionType_CamelName[val]
-		}
-	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = ApiActionType(val)
-	return nil
-}
-
-func (e ApiActionType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(ApiActionType_CamelName, int32(e)), nil
-}
-
-// custom JSON encoding/decoding
-func (e *ApiActionType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
-		val, ok := ApiActionType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = ApiActionType_CamelName[val]
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
-		}
-		*e = ApiActionType(val)
-		return nil
-	}
-	var val int32
-	err = json.Unmarshal(b, &val)
-	if err == nil {
-		*e = ApiActionType(val)
-		return nil
-	}
-	return fmt.Errorf("No enum value for %v", b)
-}
-
-var RateLimitTargetStrings = []string{
-	"UNKNOWN_TARGET",
-	"ALL_REQUESTS",
-	"PER_IP",
-	"PER_USER",
-	"PER_ORG",
-}
-
-const (
-	RateLimitTargetUNKNOWN_TARGET uint64 = 1 << 0
-	RateLimitTargetALL_REQUESTS   uint64 = 1 << 1
-	RateLimitTargetPER_IP         uint64 = 1 << 2
-	RateLimitTargetPER_USER       uint64 = 1 << 3
-	RateLimitTargetPER_ORG        uint64 = 1 << 4
-)
-
-var RateLimitTarget_CamelName = map[int32]string{
-	// UNKNOWN_TARGET -> UnknownTarget
-	0: "UnknownTarget",
-	// ALL_REQUESTS -> AllRequests
-	1: "AllRequests",
-	// PER_IP -> PerIp
-	2: "PerIp",
-	// PER_USER -> PerUser
-	3: "PerUser",
-	// PER_ORG -> PerOrg
-	4: "PerOrg",
-}
-var RateLimitTarget_CamelValue = map[string]int32{
-	"UnknownTarget": 0,
-	"AllRequests":   1,
-	"PerIp":         2,
-	"PerUser":       3,
-	"PerOrg":        4,
-}
-
-func (e *RateLimitTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := RateLimitTarget_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = RateLimitTarget_CamelName[val]
-		}
-	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = RateLimitTarget(val)
-	return nil
-}
-
-func (e RateLimitTarget) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(RateLimitTarget_CamelName, int32(e)), nil
-}
-
-// custom JSON encoding/decoding
-func (e *RateLimitTarget) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
-		val, ok := RateLimitTarget_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = RateLimitTarget_CamelName[val]
-			}
-		}
-		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
-		}
-		*e = RateLimitTarget(val)
-		return nil
-	}
-	var val int32
-	err = json.Unmarshal(b, &val)
-	if err == nil {
-		*e = RateLimitTarget(val)
-		return nil
-	}
-	return fmt.Errorf("No enum value for %v", b)
-}
 func (m *RateLimitSettings) IsValidArgsForUpdateRateLimitSettings() error {
 	return nil
 }
@@ -2194,11 +2288,48 @@ func (m *RateLimitSettingsKey) Size() (n int) {
 	if m.ApiEndpointType != 0 {
 		n += 1 + sovRatelimit(uint64(m.ApiEndpointType))
 	}
-	if m.ApiActionType != 0 {
-		n += 1 + sovRatelimit(uint64(m.ApiActionType))
-	}
 	if m.RateLimitTarget != 0 {
 		n += 1 + sovRatelimit(uint64(m.RateLimitTarget))
+	}
+	l = len(m.ApiName)
+	if l > 0 {
+		n += 1 + l + sovRatelimit(uint64(l))
+	}
+	return n
+}
+
+func (m *FlowSettings) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.FlowAlgorithm != 0 {
+		n += 1 + sovRatelimit(uint64(m.FlowAlgorithm))
+	}
+	if m.ReqsPerSecond != 0 {
+		n += 9
+	}
+	if m.BurstSize != 0 {
+		n += 1 + sovRatelimit(uint64(m.BurstSize))
+	}
+	return n
+}
+
+func (m *MaxReqsSettings) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MaxReqsAlgorithm != 0 {
+		n += 1 + sovRatelimit(uint64(m.MaxReqsAlgorithm))
+	}
+	if m.MaxRequests != 0 {
+		n += 1 + sovRatelimit(uint64(m.MaxRequests))
+	}
+	if m.Interval != 0 {
+		n += 1 + sovRatelimit(uint64(m.Interval))
 	}
 	return n
 }
@@ -2217,26 +2348,17 @@ func (m *RateLimitSettings) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovRatelimit(uint64(l))
-	if m.FlowAlgorithm != 0 {
-		n += 1 + sovRatelimit(uint64(m.FlowAlgorithm))
+	if len(m.FlowSettings) > 0 {
+		for _, e := range m.FlowSettings {
+			l = e.Size()
+			n += 1 + l + sovRatelimit(uint64(l))
+		}
 	}
-	if m.ReqsPerSecond != 0 {
-		n += 9
-	}
-	if m.BurstSize != 0 {
-		n += 1 + sovRatelimit(uint64(m.BurstSize))
-	}
-	if m.MaxReqsAlgorithm != 0 {
-		n += 1 + sovRatelimit(uint64(m.MaxReqsAlgorithm))
-	}
-	if m.MaxRequestsPerSecond != 0 {
-		n += 1 + sovRatelimit(uint64(m.MaxRequestsPerSecond))
-	}
-	if m.MaxRequestsPerMinute != 0 {
-		n += 1 + sovRatelimit(uint64(m.MaxRequestsPerMinute))
-	}
-	if m.MaxRequestsPerHour != 0 {
-		n += 1 + sovRatelimit(uint64(m.MaxRequestsPerHour))
+	if len(m.MaxReqsSettings) > 0 {
+		for _, e := range m.MaxReqsSettings {
+			l = e.Size()
+			n += 1 + l + sovRatelimit(uint64(l))
+		}
 	}
 	return n
 }
@@ -2312,25 +2434,6 @@ func (m *RateLimitSettingsKey) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiActionType", wireType)
-			}
-			m.ApiActionType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiActionType |= ApiActionType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RateLimitTarget", wireType)
 			}
 			m.RateLimitTarget = 0
@@ -2344,6 +2447,250 @@ func (m *RateLimitSettingsKey) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.RateLimitTarget |= RateLimitTarget(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ApiName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowSettings) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowSettings: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowSettings: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FlowAlgorithm", wireType)
+			}
+			m.FlowAlgorithm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FlowAlgorithm |= FlowRateLimitAlgorithm(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReqsPerSecond", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.ReqsPerSecond = float64(math.Float64frombits(v))
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BurstSize", wireType)
+			}
+			m.BurstSize = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BurstSize |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MaxReqsSettings) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MaxReqsSettings: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MaxReqsSettings: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxReqsAlgorithm", wireType)
+			}
+			m.MaxReqsAlgorithm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxReqsAlgorithm |= MaxReqsRateLimitAlgorithm(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxRequests", wireType)
+			}
+			m.MaxRequests = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxRequests |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			}
+			m.Interval = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Interval |= Duration(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2466,11 +2813,11 @@ func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FlowAlgorithm", wireType)
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FlowSettings", wireType)
 			}
-			m.FlowAlgorithm = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRatelimit
@@ -2480,65 +2827,31 @@ func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.FlowAlgorithm |= FlowRateLimitAlgorithm(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 5:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReqsPerSecond", wireType)
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
 			}
-			var v uint64
-			if (iNdEx + 8) > l {
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.ReqsPerSecond = float64(math.Float64frombits(v))
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BurstSize", wireType)
+			m.FlowSettings = append(m.FlowSettings, &FlowSettings{})
+			if err := m.FlowSettings[len(m.FlowSettings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
-			m.BurstSize = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.BurstSize |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxReqsAlgorithm", wireType)
-			}
-			m.MaxReqsAlgorithm = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxReqsAlgorithm |= MaxReqsRateLimitAlgorithm(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
+			iNdEx = postIndex
 		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxRequestsPerSecond", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxReqsSettings", wireType)
 			}
-			m.MaxRequestsPerSecond = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRatelimit
@@ -2548,49 +2861,26 @@ func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaxRequestsPerSecond |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 9:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxRequestsPerMinute", wireType)
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
 			}
-			m.MaxRequestsPerMinute = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxRequestsPerMinute |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
 			}
-		case 10:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxRequestsPerHour", wireType)
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
 			}
-			m.MaxRequestsPerHour = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxRequestsPerHour |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			m.MaxReqsSettings = append(m.MaxReqsSettings, &MaxReqsSettings{})
+			if err := m.MaxReqsSettings[len(m.MaxReqsSettings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRatelimit(dAtA[iNdEx:])

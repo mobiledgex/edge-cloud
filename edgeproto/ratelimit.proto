@@ -10,16 +10,47 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+enum ApiEndpointType {
+  UNKNOWN_API_ENDPOINT_TYPE = 0;
+  CONTROLLER = 1;
+  DME = 2;
+}
+
+enum RateLimitTarget {
+  UNKNOWN_TARGET = 0;
+  ALL_REQUESTS = 1;
+  PER_IP = 2;
+  PER_USER = 3;
+}
+
 message RateLimitSettingsKey {
   // API Endpoint type
   ApiEndpointType api_endpoint_type = 1 [(protogen.keytag) = "apiendpointtype"];
-  // API Action type (All DME apis are Default)
-  ApiActionType api_action_type = 2 [(protogen.keytag) = "apiactiontype"];
   // Target to rate limit
-  RateLimitTarget rate_limit_target = 3 [(protogen.keytag) = "ratelimittarget"];
+  RateLimitTarget rate_limit_target = 2 [(protogen.keytag) = "ratelimittarget"];
+  // Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)
+  string api_name = 3 [(protogen.keytag) = "apiname"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+}
+
+message FlowSettings {
+  // Flow Rate Limit algorithm
+  FlowRateLimitAlgorithm flow_algorithm = 1;
+  // requests per second for flow rate limiting
+  double reqsPerSecond = 2;
+  // burst size for flow rate limiting
+  int64 burstSize = 3;
+}
+
+message MaxReqsSettings {
+  // MaxReqs Rate Limit Algorithm
+  MaxReqsRateLimitAlgorithm max_reqs_algorithm = 1;
+  // Maximum number of requests for the given Interval
+  int64 max_requests = 2;
+  // Time interval
+  int64 interval = 3 [(gogoproto.casttype) = "Duration"];
 }
 
 enum FlowRateLimitAlgorithm {
@@ -31,7 +62,6 @@ enum FlowRateLimitAlgorithm {
 enum MaxReqsRateLimitAlgorithm {
   UNKNOWN_MAX_REQS_ALGORITHM = 0;
   FIXED_WINDOW_ALGORITHM = 1;
-  ROLLING_WINDOW_ALGORITHM = 2;
 }
 
 message RateLimitSettings {
@@ -40,55 +70,30 @@ message RateLimitSettings {
   // required: true
   // Unique identifier key
   RateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
-  // Flow Rate Limit algorithm - includes NoFlowAlgorithm, TokenBucketAlgorithm, or LeakyBucketAlgorithm 
-  FlowRateLimitAlgorithm flow_algorithm = 4;
-  // requests per second for flow rate limiting. If updating, must provide burstSize as well
-  double reqsPerSecond = 5;
-  // burst size for flow rate limiting. If updating, must provide reqsPerSecond as well
-  int64 burstSize = 6;
-  // MaxReqs Rate Limit Algorithm - includes NoMaxReqsAlgorithm or FixedWindowAlgorithm
-  MaxReqsRateLimitAlgorithm max_reqs_algorithm = 7;
-  // maximum number of requests per second for max reqs rate limiting
-  int64 max_requests_per_second = 8;
-  // maximum number of requests per minute for max reqs rate limiting
-  int64 max_requests_per_minute = 9;
-  // maximum number of requests per hour for max reqs rate limiting
-  int64 max_requests_per_hour = 10;
-  
+  // List of FlowSettings
+  repeated FlowSettings flow_settings = 7;
+  // List of MaxReqsSettings
+  repeated MaxReqsSettings max_reqs_settings = 8;
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.uses_org) = "none";
-  option (protogen.alias) = "apiendpointtype=Key.ApiEndpointType,ratelimittarget=Key.RateLimitTarget,apiactiontype=Key.ApiActionType";
-}
-
-enum ApiEndpointType {
-  UNKNOWN_API_ENDPOINT_TYPE = 0;
-  CONTROLLER = 1;
-  DME = 2;
-}
-
-enum ApiActionType {
-  UNKNOWN_ACTION = 0;
-  CREATE_ACTION = 1;
-  DELETE_ACTION = 2;
-  UPDATE_ACTION = 3;
-  SHOW_ACTION = 4;
-  DEFAULT_ACTION = 5;
-}
-
-enum RateLimitTarget {
-  UNKNOWN_TARGET = 0;
-  ALL_REQUESTS = 1;
-  PER_IP = 2;
-  PER_USER = 3;
-  PER_ORG = 4;
+  option (protogen.alias) = "apiendpointtype=Key.ApiEndpointType,ratelimittarget=Key.RateLimitTarget,apiname=Key.ApiName";
 }
 
 service RateLimitSettingsApi {
-  // Update RateLimit settings for an API endpoint type
+  // Create RateLimitSettings for an API endpoint
+  rpc CreateRateLimitSettings(RateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/ratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Update RateLimit settings for an API endpoint
   rpc UpdateRateLimitSettings(RateLimitSettings) returns (Result) {
     option (google.api.http) = {
       post: "/update/ratelimitsettings"
@@ -96,7 +101,7 @@ service RateLimitSettingsApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
-  // Delete RateLimit settings for an API endpoint type (ie. no rate limiting)
+  // Delete RateLimit settings for an API endpoint (ie. no rate limiting)
   rpc DeleteRateLimitSettings(RateLimitSettings) returns (Result) {
     option (google.api.http) = {
       post: "/delete/ratelimitsettings"
@@ -104,7 +109,7 @@ service RateLimitSettingsApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
-  // Reset RateLimit settings to default for an API endpoint type
+  // Reset RateLimit settings to default for an API endpoint
   rpc ResetRateLimitSettings(RateLimitSettings) returns (Result) {
     option (google.api.http) = {
       post: "/reset/ratelimitsettings"
@@ -112,7 +117,7 @@ service RateLimitSettingsApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
-  // Show RateLimit settings for an API endpoint type
+  // Show RateLimit settings for an API endpoint
   rpc ShowRateLimitSettings(RateLimitSettings) returns (stream RateLimitSettings) {
     option (google.api.http) = {
       post: "/show/ratelimitsettings"

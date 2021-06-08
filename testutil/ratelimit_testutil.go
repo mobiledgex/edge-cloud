@@ -71,6 +71,18 @@ func (r *Run) RateLimitSettingsApi(data *[]edgeproto.RateLimitSettings, dataMap 
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
+		case "create":
+			out, err := r.client.CreateRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "update":
 			// set specified fields
 			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
@@ -131,6 +143,14 @@ func (r *Run) RateLimitSettingsApi(data *[]edgeproto.RateLimitSettings, dataMap 
 	}
 }
 
+func (s *DummyServer) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.RateLimitSettingsCache.Update(ctx, in, 0)
+	return &edgeproto.Result{}, nil
+}
+
 func (s *DummyServer) UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
 	if s.CudNoop {
 		return &edgeproto.Result{}, nil
@@ -167,6 +187,18 @@ func (s *DummyServer) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, ser
 		return err
 	})
 	return err
+}
+
+func (s *ApiClient) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	return api.CreateRateLimitSettings(ctx, in)
+}
+
+func (s *CliClient) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
 }
 
 func (s *ApiClient) UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
@@ -241,6 +273,7 @@ func (s *CliClient) ShowRateLimitSettings(ctx context.Context, in *edgeproto.Rat
 }
 
 type RateLimitSettingsApiClient interface {
+	CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
 	UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
 	DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
 	ResetRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
