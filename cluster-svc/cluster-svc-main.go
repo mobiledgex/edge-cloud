@@ -99,12 +99,12 @@ var MEXPrometheusAppKey = edgeproto.AppKey{
 // Version 8.15.14 tested with helm 3.4.2 and kubernetes 1.16
 var MEXPrometheusApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
-	ImagePath:     "https://charts.helm.sh/stable:stable/prometheus-operator",
+	ImagePath:     "https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack",
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,
 	Trusted:       true,
-	Annotations:   "version=8.15.14",
+	Annotations:   "version=9.4.10",
 }
 
 var dialOpts grpc.DialOption
