@@ -47,6 +47,12 @@ type DmeAppInst struct {
 	TrackedState  edgeproto.TrackedState
 }
 
+type DmeAppInstState struct {
+	CloudletState    dme.CloudletState
+	MaintenanceState dme.MaintenanceState
+	AppInstHealth    dme.HealthCheck
+}
+
 type DmeAppInsts struct {
 	Insts map[edgeproto.VirtualClusterInstKey]*DmeAppInst
 }
@@ -249,9 +255,10 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
 		cl.AppInstHealth = appInst.HealthCheck
-		if cl != nil {
-			go EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+		appinstState := &DmeAppInstState{
+			AppInstHealth: cl.AppInstHealth,
 		}
+		go EEHandler.SendAppInstStateEdgeEvent(ctx, appinstState, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
@@ -307,13 +314,16 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
 				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
+
 				// Remove AppInst from edgeevents plugin
-				go func() {
-					if cl != nil {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, *cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-						EEHandler.RemoveAppInstKey(ctx, appInst.Key)
-					}
-				}()
+				appinstState := &DmeAppInstState{
+					AppInstHealth: cl.AppInstHealth,
+				}
+				go func(a *DmeAppInstState) {
+					EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+					EEHandler.RemoveAppInstKey(ctx, appInst.Key)
+				}(appinstState)
+
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
@@ -368,13 +378,16 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 				key.ClusterInstKey = inst.virtualClusterInstKey
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
+
 					// Remove AppInst from edgeevents plugin
-					go func() {
-						if inst != nil {
-							EEHandler.SendAppInstStateEdgeEvent(ctx, *inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-							EEHandler.RemoveAppInstKey(ctx, key)
-						}
-					}()
+					appinstState := &DmeAppInstState{
+						AppInstHealth: inst.AppInstHealth,
+					}
+					go func(a *DmeAppInstState) {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, a, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+						EEHandler.RemoveAppInstKey(ctx, key)
+					}(appinstState)
+
 					delete(carr.Insts, key.ClusterInstKey)
 				}
 			}
@@ -406,13 +419,15 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 						AppKey:         app.AppKey,
 						ClusterInstKey: clusterInstKey,
 					}
-					go func() {
-						appinst := c.Insts[clusterInstKey]
-						if appinst != nil {
-							EEHandler.SendAppInstStateEdgeEvent(ctx, *appinst, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-							EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
-						}
-					}()
+
+					appinstState := &DmeAppInstState{
+						CloudletState: c.Insts[clusterInstKey].CloudletState,
+					}
+					go func(a *DmeAppInstState) {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+
+					}(appinstState)
 				}
 			}
 		}
@@ -442,13 +457,14 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 						AppKey:         app.AppKey,
 						ClusterInstKey: clusterInstKey,
 					}
-					go func() {
-						appinst := carr.Insts[clusterInstKey]
-						if appinst != nil {
-							EEHandler.SendAppInstStateEdgeEvent(ctx, *appinst, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-							EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
-						}
-					}()
+
+					appinstState := &DmeAppInstState{
+						CloudletState: carr.Insts[clusterInstKey].CloudletState,
+					}
+					go func(a *DmeAppInstState) {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+					}(appinstState)
 
 				}
 			}
@@ -549,9 +565,10 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 	// Check if CloudletMaintenance state has changed
 	if cloudlet.MaintenanceState != in.MaintenanceState {
 		cloudlet.MaintenanceState = in.MaintenanceState
-		if cloudlet != nil {
-			go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, *cloudlet, in.Key)
+		appinstState := &DmeAppInstState{
+			MaintenanceState: cloudlet.MaintenanceState,
 		}
+		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, appinstState, in.Key)
 	}
 	cloudlet.GpsLocation = in.Location
 
@@ -585,9 +602,10 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 	// Check if Cloudlet state has changed
 	if cloudlet.State != info.State {
 		cloudlet.State = info.State
-		if cloudlet != nil {
-			go EEHandler.SendCloudletStateEdgeEvent(ctx, *cloudlet, info.Key)
+		appinstState := &DmeAppInstState{
+			CloudletState: cloudlet.State,
 		}
+		go EEHandler.SendCloudletStateEdgeEvent(ctx, appinstState, info.Key)
 	}
 
 	for _, app := range tbl.Apps {
