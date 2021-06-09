@@ -342,15 +342,15 @@ var RateLimitSettingsApiCmds = []*cobra.Command{
 
 var RateLimitSettingsKeyRequiredArgs = []string{}
 var RateLimitSettingsKeyOptionalArgs = []string{
+	"apiname",
 	"apiendpointtype",
 	"ratelimittarget",
-	"apiname",
 }
 var RateLimitSettingsKeyAliasArgs = []string{}
 var RateLimitSettingsKeyComments = map[string]string{
+	"apiname":         "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
 	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
 	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
-	"apiname":         "Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)",
 }
 var RateLimitSettingsKeySpecialArgs = map[string]string{}
 var FlowSettingsRequiredArgs = []string{}
@@ -380,9 +380,9 @@ var MaxReqsSettingsComments = map[string]string{
 }
 var MaxReqsSettingsSpecialArgs = map[string]string{}
 var RateLimitSettingsRequiredArgs = []string{
+	"apiname",
 	"apiendpointtype",
 	"ratelimittarget",
-	"apiname",
 }
 var RateLimitSettingsOptionalArgs = []string{
 	"flowsettings:#.flowalgorithm",
@@ -393,15 +393,15 @@ var RateLimitSettingsOptionalArgs = []string{
 	"maxreqssettings:#.interval",
 }
 var RateLimitSettingsAliasArgs = []string{
+	"apiname=key.apiname",
 	"apiendpointtype=key.apiendpointtype",
 	"ratelimittarget=key.ratelimittarget",
-	"apiname=key.apiname",
 }
 var RateLimitSettingsComments = map[string]string{
 	"fields":                             "Fields are used for the Update API to specify which fields to apply",
+	"apiname":                            "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
 	"apiendpointtype":                    "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
 	"ratelimittarget":                    "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
-	"apiname":                            "Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)",
 	"flowsettings:#.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"flowsettings:#.reqspersecond":       "requests per second for flow rate limiting",
 	"flowsettings:#.burstsize":           "burst size for flow rate limiting",
@@ -415,9 +415,9 @@ var RateLimitSettingsSpecialArgs = map[string]string{
 var RateLimitSettingsDataRequiredArgs = []string{}
 var RateLimitSettingsDataOptionalArgs = []string{
 	"settings:#.fields",
+	"settings:#.key.apiname",
 	"settings:#.key.apiendpointtype",
 	"settings:#.key.ratelimittarget",
-	"settings:#.key.apiname",
 	"settings:#.flowsettings:#.flowalgorithm",
 	"settings:#.flowsettings:#.reqspersecond",
 	"settings:#.flowsettings:#.burstsize",
@@ -428,9 +428,9 @@ var RateLimitSettingsDataOptionalArgs = []string{
 var RateLimitSettingsDataAliasArgs = []string{}
 var RateLimitSettingsDataComments = map[string]string{
 	"settings:#.fields":                             "Fields are used for the Update API to specify which fields to apply",
+	"settings:#.key.apiname":                        "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
 	"settings:#.key.apiendpointtype":                "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
 	"settings:#.key.ratelimittarget":                "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
-	"settings:#.key.apiname":                        "Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)",
 	"settings:#.flowsettings:#.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"settings:#.flowsettings:#.reqspersecond":       "requests per second for flow rate limiting",
 	"settings:#.flowsettings:#.burstsize":           "burst size for flow rate limiting",

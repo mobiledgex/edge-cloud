@@ -141,7 +141,7 @@ extend google.protobuf.MethodOptions {
   // Typically used for additional show commands that the generator
   // does not recognize as the Show API for a CUD API set.
   bool input_required = 51033;
-  // Generate a hook function for customing the authorization behavior of the
+  // Generate a hook function for customizing the authorization behavior of the
   // API in MC.
   bool mc2_custom_authz = 51034;
   // Same as noconfig option for Message, but overrides it for this API.
@@ -160,6 +160,8 @@ extend google.protobuf.MethodOptions {
   string mc2_api_requires_org = 51045;
   // Override CLI command name
   string cli_cmd = 51050;
+  // Generate a hook function for customizing behavior specific to MC
+  bool mc2_custom_mc = 51051;
 }
 
 extend google.protobuf.ServiceOptions {

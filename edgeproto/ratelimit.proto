@@ -24,12 +24,12 @@ enum RateLimitTarget {
 }
 
 message RateLimitSettingsKey {
+  // Name of API (eg. CreateApp or RegisterClient) (Use "Global" if not a specific API)
+  string api_name = 1 [(protogen.keytag) = "apiname"];
   // API Endpoint type
-  ApiEndpointType api_endpoint_type = 1 [(protogen.keytag) = "apiendpointtype"];
+  ApiEndpointType api_endpoint_type = 2 [(protogen.keytag) = "apiendpointtype"];
   // Target to rate limit
-  RateLimitTarget rate_limit_target = 2 [(protogen.keytag) = "ratelimittarget"];
-  // Name of API (eg. CreateApp or RegisterClient) (Leave empty if not a specific API)
-  string api_name = 3 [(protogen.keytag) = "apiname"];
+  RateLimitTarget rate_limit_target = 3 [(protogen.keytag) = "ratelimittarget"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

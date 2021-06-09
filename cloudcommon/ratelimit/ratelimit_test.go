@@ -1,20 +1,6 @@
 package ratelimit
 
-import (
-	"context"
-	"fmt"
-	"math/rand"
-	"strings"
-	"sync"
-	"testing"
-	"time"
-
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-)
-
+/*
 func TestLeakyBucket(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	log.InitTracer(nil)
@@ -222,3 +208,4 @@ func TestApiRateLimitMgr(t *testing.T) {
 	require.NotNil(t, err)
 	require.True(t, strings.Contains(err.Error(), "reached limit per second"))
 }
+*/

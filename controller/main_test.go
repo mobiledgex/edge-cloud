@@ -32,7 +32,6 @@ func TestController(t *testing.T) {
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
-	*removeRateLimit = true
 	testinit()
 	leaseTimeoutSec = 3
 	syncLeaseDataRetry = 0

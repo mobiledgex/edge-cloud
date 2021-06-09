@@ -20,7 +20,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -68,7 +67,6 @@ var commercialCerts = flag.Bool("commercialCerts", false, "Have CRM grab certs f
 var checkpointInterval = flag.String("checkpointInterval", "MONTH", "Interval at which to checkpoint cluster usage")
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var requireNotifyAccessKey = flag.Bool("requireNotifyAccessKey", false, "Require AccessKey authentication on notify API")
-var removeRateLimit = flag.Bool("removeRateLimit", false, "Do no rate limit public endpoints")
 
 var ControllerId = ""
 var InfluxDBName = cloudcommon.DeveloperMetricsDbName
@@ -100,8 +98,6 @@ type Services struct {
 	accessKeyGrpcServer       node.AccessKeyGrpcServer
 	listeners                 []net.Listener
 	publicCertManager         *node.PublicCertManager
-	unaryRateLimitMgr         *ratelimit.RateLimitManager
-	streamRateLimitMgr        *ratelimit.RateLimitManager
 }
 
 func main() {
@@ -248,11 +244,6 @@ func startServices() error {
 	err = settingsApi.initDefaults(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to init settings, %v", err)
-	}
-
-	err = rateLimitSettingsApi.setControllerDefaults(ctx)
-	if err != nil {
-		return fmt.Errorf("Failed to set rate limit settings defaults, %v", err)
 	}
 
 	// get influxDB credentials from vault
@@ -409,13 +400,9 @@ func startServices() error {
 		return err
 	}
 
-	// Initialize ApiRateLimitManagers
-	services.unaryRateLimitMgr = ratelimit.NewRateLimitManager()
-	services.streamRateLimitMgr = ratelimit.NewRateLimitManager()
-
 	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor, ratelimit.GetControllerUnaryRateLimiterInterceptor(services.unaryRateLimitMgr))),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor, ratelimit.GetControllerStreamRateLimiterInterceptor(services.streamRateLimitMgr))))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor)))
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
@@ -444,35 +431,6 @@ func startServices() error {
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
-
-	// Add ApiEndpointLimiter to each Controller api
-	grpcServices := server.GetServiceInfo()
-	for _, serviceInfo := range grpcServices {
-		for _, methodInfo := range serviceInfo.Methods {
-			// Get RateLimitSettings for all RateLimitTargets (allrequest, perip, peruser, perorg)
-			allReqsRateLimitSettings := &edgeproto.RateLimitSettings{}
-			perIpRateLimitSettings := &edgeproto.RateLimitSettings{}
-			perUserRateLimitSettings := &edgeproto.RateLimitSettings{}
-			perOrgRateLimitSettings := &edgeproto.RateLimitSettings{}
-			if strings.Contains(methodInfo.Name, "Create") {
-				setControllerApiRateLimitSettings(edgeproto.ApiActionType_CREATE_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			} else if strings.Contains(methodInfo.Name, "Delete") {
-				setControllerApiRateLimitSettings(edgeproto.ApiActionType_DELETE_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			} else if strings.Contains(methodInfo.Name, "Show") {
-				setControllerApiRateLimitSettings(edgeproto.ApiActionType_SHOW_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			} else if strings.Contains(methodInfo.Name, "Update") {
-				setControllerApiRateLimitSettings(edgeproto.ApiActionType_UPDATE_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			} else {
-				setControllerApiRateLimitSettings(edgeproto.ApiActionType_DEFAULT_ACTION, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			}
-			// Add RateLimitSettings to correct RateLimitMgr
-			if methodInfo.IsClientStream || methodInfo.IsServerStream {
-				services.streamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			} else {
-				services.unaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allReqsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			}
-		}
-	}
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -599,26 +557,6 @@ func stopServices() {
 		lis.Close()
 	}
 	nodeMgr.Finish()
-}
-
-func setControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, allRequestsRateLimitSettings *edgeproto.RateLimitSettings, perIpRateLimitSettings *edgeproto.RateLimitSettings, perUserRateLimitSettings *edgeproto.RateLimitSettings, perOrgRateLimitSettings *edgeproto.RateLimitSettings) {
-	*allRequestsRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_ALL_REQUESTS)
-	*perIpRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_IP)
-	*perUserRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_USER)
-	*perOrgRateLimitSettings = getControllerApiRateLimitSettings(actionType, edgeproto.RateLimitTarget_PER_ORG)
-}
-
-// Helper function that gets the RateLimitSettings that corresponds to the Controller RateLimitSettingsKey
-func getControllerApiRateLimitSettings(actionType edgeproto.ApiActionType, target edgeproto.RateLimitTarget) edgeproto.RateLimitSettings {
-	key := edgeproto.GetRateLimitSettingsKey(edgeproto.ApiEndpointType_CONTROLLER, actionType, target)
-	settings := rateLimitSettingsApi.Get(key)
-	if settings != nil {
-		return *settings
-	}
-	// Return empty RateLimitSettings with key
-	return edgeproto.RateLimitSettings{
-		Key: key,
-	}
 }
 
 // Helper function to verify the compatibility of etcd version and

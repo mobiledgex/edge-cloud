@@ -59,7 +59,6 @@ var solib = flag.String("plugin", "", "plugin file")
 var eesolib = flag.String("eeplugin", "", "plugin file") // for edge events plugin
 var testMode = flag.Bool("testMode", false, "Run controller in test mode")
 var cloudletDme = flag.Bool("cloudletDme", false, "this is a cloudlet DME deployed on cloudlet infrastructure and uses the crm access key")
-var removeRateLimit = flag.Bool("removeRateLimit", false, "Do no rate limit public endpoints")
 
 // TODO: carrier arg is redundant with Organization in MyCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -427,24 +426,36 @@ func allowCORS(h http.Handler) http.Handler {
 	})
 }
 
-func getDmeApiRateLimitSettings(target edgeproto.RateLimitTarget, settingsMap map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings) *edgeproto.RateLimitSettings {
+// Helper function that creates all the RateLimitSettings for the specified API, updates cache, and then adds to RateLimitManagers
+func addDmeApiRateLimitSettings(ctx context.Context, apiName string, rateLimitMgrs ...*ratelimit.RateLimitManager) {
+	settingsMap := edgeproto.GetDefaultDmeRateLimitSettings()
+	// Get RateLimitSettings that correspond to the key
+	allRequestsRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_ALL_REQUESTS, settingsMap)
+	perIpRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_IP, settingsMap)
+	perUserRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_USER, settingsMap)
+	// Update local cache which will update controller cache
+	rateLimitSettingsCache.Update(ctx, allRequestsRateLimitSettings, 0)
+	rateLimitSettingsCache.Update(ctx, perIpRateLimitSettings, 0)
+	rateLimitSettingsCache.Update(ctx, perUserRateLimitSettings, 0)
+	// Add apiendpoint limiter to RateLimitMgrs
+	for _, rateLimitMgr := range rateLimitMgrs {
+		rateLimitMgr.AddApiEndpointLimiter(allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings)
+	}
+}
+
+// Helper function that generates a RateLimitSettings struct for specified api and target
+func getDmeApiRateLimitSettings(apiName string, target edgeproto.RateLimitTarget, settingsMap map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings) *edgeproto.RateLimitSettings {
 	key := edgeproto.RateLimitSettingsKey{
-		ApiEndpointType: edgeproto.ApiEndpointType_DME,
-		ApiActionType:   edgeproto.ApiActionType_DEFAULT_ACTION,
+		ApiName:         apiName,
 		RateLimitTarget: target,
 	}
-	emptySettings := &edgeproto.RateLimitSettings{
-		Key: key,
-	}
-	if *removeRateLimit {
-		return emptySettings
-	}
-
 	settings, ok := settingsMap[key]
 	if ok && settings != nil {
 		return settings
 	}
-	return emptySettings
+	return &edgeproto.RateLimitSettings{
+		Key: key,
+	}
 }
 
 func main() {
@@ -614,26 +625,16 @@ func main() {
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
 
-	// Add APIs to RateLimitManagers
-	settings := edgeproto.GetDefaultDmeRateLimitSettings()
-	// Get RateLimitSettings that correspond to the key
-	allRequestsRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_ALL_REQUESTS, settings)
-	perIpRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_PER_IP, settings)
-	perUserRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_PER_USER, settings)
-	perOrgRateLimitSettings := getDmeApiRateLimitSettings(edgeproto.RateLimitTarget_PER_ORG, settings)
-	if !*removeRateLimit {
-		// Update local cache which will update controller cache
-		rateLimitSettingsCache.Update(ctx, allRequestsRateLimitSettings, 0)
-		rateLimitSettingsCache.Update(ctx, perIpRateLimitSettings, 0)
-	}
-	// Add ApiEndpointLimiter to each DME api in correct RateLimitMgr
+	// Add Global DME RateLimitSettings
+	addDmeApiRateLimitSettings(ctx, edgeproto.GlobalApiName, dmecommon.UnaryRateLimitMgr, dmecommon.StreamRateLimitMgr)
+	// Search for specific APIs to add RateLimitSettings for
 	grpcServices := s.GetServiceInfo()
 	for _, serviceInfo := range grpcServices {
 		for _, methodInfo := range serviceInfo.Methods {
-			if methodInfo.IsClientStream || methodInfo.IsServerStream {
-				dmecommon.StreamRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
-			} else {
-				dmecommon.UnaryRateLimitMgr.AddApiEndpointLimiter(methodInfo.Name, allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings, perOrgRateLimitSettings)
+			if strings.Contains(methodInfo.Name, "VerifyLocation") {
+				// Add VerifyLocation RateLimitSettings
+				addDmeApiRateLimitSettings(ctx, methodInfo.Name, dmecommon.UnaryRateLimitMgr)
+				break
 			}
 		}
 	}

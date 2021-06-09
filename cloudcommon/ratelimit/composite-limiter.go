@@ -4,7 +4,6 @@ import "context"
 
 /*
  * Composes multiple limiters into one
- * For example...
  */
 type CompositeLimiter struct {
 	limiters []Limiter

@@ -3,6 +3,7 @@ package ratelimit
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -18,8 +19,9 @@ type apiEndpointLimiter struct {
 	// FullLimiter for api endpoint
 	limits *CompositeLimiter
 	// Maps of ip or user to FullLimiters
-	limitsPerIp   map[string]*CompositeLimiter
-	limitsPerUser map[string]*CompositeLimiter
+	limitsPerIp    map[string]*CompositeLimiter
+	limitsPerUser  map[string]*CompositeLimiter
+	maxNumLimiters int64
 }
 
 // Rate Limit Settings for an API endpoint
@@ -35,7 +37,8 @@ func NewApiEndpointLimiter(apiEndpointRateLimitSettings *apiEndpointRateLimitSet
 	}
 	a := &apiEndpointLimiter{}
 	a.apiEndpointRateLimitSettings = apiEndpointRateLimitSettings
-	a.limits = NewCompositeLimiter(getLimitersFromRateLimitSettings(apiEndpointRateLimitSettings.AllRequestsRateLimitSettings))
+	limiters := getLimitersFromRateLimitSettings(apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
+	a.limits = NewCompositeLimiter(limiters...)
 	a.limitsPerIp = make(map[string]*CompositeLimiter)
 	a.limitsPerUser = make(map[string]*CompositeLimiter)
 	return a
@@ -49,13 +52,14 @@ func (a *apiEndpointLimiter) UpdateRateLimitSettings(rateLimitSettings *edgeprot
 	switch key.RateLimitTarget {
 	case edgeproto.RateLimitTarget_ALL_REQUESTS:
 		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = rateLimitSettings
-		a.limits = NewFullLimiter(rateLimitSettings)
+		limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
+		a.limits = NewCompositeLimiter(limiters...)
 	case edgeproto.RateLimitTarget_PER_IP:
 		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = rateLimitSettings
-		a.limitsPerIp = make(map[string]*FullLimiter)
+		a.limitsPerIp = make(map[string]*CompositeLimiter)
 	case edgeproto.RateLimitTarget_PER_USER:
 		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = rateLimitSettings
-		a.limitsPerUser = make(map[string]*FullLimiter)
+		a.limitsPerUser = make(map[string]*CompositeLimiter)
 	default:
 		// log
 	}
@@ -68,10 +72,10 @@ func (a *apiEndpointLimiter) RemoveRateLimitSettings(target edgeproto.RateLimitT
 		a.limits = nil
 	case edgeproto.RateLimitTarget_PER_IP:
 		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = nil
-		a.limitsPerIp = make(map[string]*FullLimiter)
+		a.limitsPerIp = make(map[string]*CompositeLimiter)
 	case edgeproto.RateLimitTarget_PER_USER:
 		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = nil
-		a.limitsPerUser = make(map[string]*FullLimiter)
+		a.limitsPerUser = make(map[string]*CompositeLimiter)
 	default:
 		// log
 	}
@@ -82,7 +86,7 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context, info *CallerInfo) error 
 	// Check for LimiterInfo which provides essential information about the api, ip, user, and org
 	if info == nil {
 		log.DebugLog(log.DebugLevelInfo, "nil CallerInfo - skipping rate limit")
-		return false, fmt.Errorf("nil CallerInfo - skipping rate limit")
+		return fmt.Errorf("nil CallerInfo - skipping rate limit")
 	}
 
 	if a.doesLimitByIp() && info.Ip != "" {
@@ -90,12 +94,13 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context, info *CallerInfo) error 
 		limiter, ok := a.limitsPerIp[info.Ip]
 		if !ok {
 			// add ip
-			limiter = NewCompositeLimiter(getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.PerIpRateLimitSettings))
+			limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.PerIpRateLimitSettings)
+			limiter = NewCompositeLimiter(limiters...)
 			a.limitsPerIp[info.Ip] = limiter
 		}
-		limit, err := limiter.Limit(ctx, info)
-		if limit {
-			return limit, fmt.Errorf("client exceeded api rate limit per ip. %s", err)
+		err := limiter.Limit(ctx, info)
+		if err != nil {
+			return fmt.Errorf("client exceeded api rate limit per ip. %s", err)
 		}
 	}
 	if a.doesLimitByUser() && info.User != "" {
@@ -103,19 +108,20 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context, info *CallerInfo) error 
 		limiter, ok := a.limitsPerUser[info.User]
 		if !ok {
 			// add user
-			limiter = NewCompositeLimiter(getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.PerUserRateLimitSettings))
+			limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.PerUserRateLimitSettings)
+			limiter = NewCompositeLimiter(limiters...)
 			a.limitsPerUser[info.User] = limiter
 		}
-		limit, err := limiter.Limit(ctx, info)
-		if limit {
-			return limit, fmt.Errorf("user \"%s\" exceeded api rate limit per user. %s", info.User, err)
+		err := limiter.Limit(ctx, info)
+		if err != nil {
+			return fmt.Errorf("user \"%s\" exceeded api rate limit per user. %s", info.User, err)
 		}
 	}
 	if a.doesLimitByAllRequests() {
 		// limit for the entire endpoint
 		return a.limits.Limit(ctx, info)
 	}
-	return false, nil
+	return nil
 }
 
 func (a *apiEndpointLimiter) Type() string {
@@ -140,26 +146,28 @@ func (a *apiEndpointLimiter) doesLimitByAllRequests() bool {
 
 // Helper function that creates slice of Limiters to be passed into NewCompositeLimiter
 func getLimitersFromRateLimitSettings(settings *edgeproto.RateLimitSettings) []Limiter {
-	limiters := make([]Limiter)
+	limiters := make([]Limiter, 0)
 
-	// Generate Flow Limiters
-	switch settings.FlowAlgorithm {
-	case edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM:
-		limiters.append(limiters, NewTokenBucketLimiter(settings.ReqsPerSecond, settings.BurstSize))
-	case edgeproto.FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM:
-		limiters.append(limiters, NewLeakyBucketLimiter(settings.ReqsPerSecond))
-	default:
-		// log
+	for _, fsettings := range settings.FlowSettings {
+		// Generate Flow Limiters
+		switch fsettings.FlowAlgorithm {
+		case edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM:
+			limiters = append(limiters, NewTokenBucketLimiter(fsettings.ReqsPerSecond, int(fsettings.BurstSize)))
+		case edgeproto.FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM:
+			limiters = append(limiters, NewLeakyBucketLimiter(fsettings.ReqsPerSecond))
+		default:
+			// log
+		}
 	}
 
-	// Generate MaxReqs Limiters
-	switch settings.MaxReqsAlgorithm {
-	case edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM:
-		for _, maxReqsSettings := settings.MaxReqsSettings {
-			limiters.append(limiters, NewIntervalLimiter(maxReqsSettings.MaxRequests, maxReqsSettings.Interval))
+	for _, msettings := range settings.MaxReqsSettings {
+		// Generate MaxReqs Limiters
+		switch msettings.MaxReqsAlgorithm {
+		case edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM:
+			limiters = append(limiters, NewIntervalLimiter(int(msettings.MaxRequests), time.Duration(msettings.Interval)))
+		default:
+			// log
 		}
-	default:
-		// log
 	}
 
 	return limiters

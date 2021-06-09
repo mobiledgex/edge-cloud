@@ -227,6 +227,7 @@ var SettingsOptionalArgs = []string{
 	"influxdbdownsampledmetricsretention",
 	"influxdbedgeeventsmetricsretention",
 	"appinstclientcleanupinterval",
+	"ratelimitenable",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -262,6 +263,7 @@ var SettingsComments = map[string]string{
 	"influxdbdownsampledmetricsretention":                              "Default retention policy for downsampled influx db (duration)",
 	"influxdbedgeeventsmetricsretention":                               "Default retention policy for edgeevents metrics influx db (duration)",
 	"appinstclientcleanupinterval":                                     "AppInstClient cleanup thread run interval",
+	"ratelimitenable":                                                  "Enable rate limiting (default is true)",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

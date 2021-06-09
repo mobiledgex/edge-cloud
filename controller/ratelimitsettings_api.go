@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -23,21 +24,6 @@ func InitRateLimitSettingsApi(sync *Sync) {
 	sync.RegisterCache(&rateLimitSettingsApi.cache)
 }
 
-// Store Default Controller RateLimitSettings (if removeRateLimit, don't store anything)
-func (r *RateLimitSettingsApi) setControllerDefaults(ctx context.Context) error {
-	if !*removeRateLimit {
-		err := r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			defaults := edgeproto.GetDefaultControllerRateLimitSettings()
-			for _, defaultSettings := range defaults {
-				r.store.STMPut(stm, defaultSettings)
-			}
-			return nil
-		})
-		return err
-	}
-	return nil
-}
-
 // Gets the RateLimitSettings that corresponds to the specified RateLimitSettingsKey
 func (r *RateLimitSettingsApi) Get(key edgeproto.RateLimitSettingsKey) *edgeproto.RateLimitSettings {
 	cacheData, ok := r.cache.Objs[key]
@@ -47,8 +33,15 @@ func (r *RateLimitSettingsApi) Get(key edgeproto.RateLimitSettingsKey) *edgeprot
 	return cacheData.Obj
 }
 
+func (r *RateLimitSettingsApi) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+	return nil, nil
+}
+
 // Update RateLimit settings for an API endpoint type
 func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+	if !settingsApi.Get().RateLimitEnable {
+		return nil, fmt.Errorf("RateLimitEnable must be true in order to UpdateRateLimitSettings")
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "UpdateRateLimitSettings", "ratelimitsettings", in)
 	var err error
 
@@ -72,9 +65,6 @@ func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *
 			return err
 		}
 		r.store.STMPut(stm, &cur)
-		// Update RateLimitMgrs
-		services.unaryRateLimitMgr.UpdateRateLimitSettings(&cur)
-		services.streamRateLimitMgr.UpdateRateLimitSettings(&cur)
 		return nil
 	})
 	return &edgeproto.Result{}, err
@@ -82,6 +72,9 @@ func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *
 
 // Delete RateLimit settings for an API endpoint type (ie. no rate limiting)
 func (r *RateLimitSettingsApi) DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+	if !settingsApi.Get().RateLimitEnable {
+		return nil, fmt.Errorf("RateLimitEnable must be true in order to DeleteRateLimitSettings")
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "DeleteRateLimitSettings", "key", in.Key.String())
 	var err error
 
@@ -97,13 +90,14 @@ func (r *RateLimitSettingsApi) DeleteRateLimitSettings(ctx context.Context, in *
 	in = &edgeproto.RateLimitSettings{
 		Key: in.Key,
 	}
-	services.unaryRateLimitMgr.UpdateRateLimitSettings(in)
-	services.streamRateLimitMgr.UpdateRateLimitSettings(in)
 	return res, err
 }
 
 // Reset RateLimit settings to default for an API endpoint type
 func (r *RateLimitSettingsApi) ResetRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+	if !settingsApi.Get().RateLimitEnable {
+		return nil, fmt.Errorf("RateLimitEnable must be true in order to ResetRateLimitSettings")
+	}
 	log.SpanLog(ctx, log.DebugLevelApi, "ResetRateLimitSettings", "key", in.Key.String())
 	var err error
 
@@ -115,20 +109,13 @@ func (r *RateLimitSettingsApi) ResetRateLimitSettings(ctx context.Context, in *e
 
 	// Get the Default RateLimitSettings associated with the key
 	var newSettings *edgeproto.RateLimitSettings
-	if key.ApiEndpointType == edgeproto.ApiEndpointType_CONTROLLER {
-		ctrldefaults := edgeproto.GetDefaultControllerRateLimitSettings()
-		newSettings, _ = ctrldefaults[in.Key]
-	} else {
-		dmedefaults := edgeproto.GetDefaultDmeRateLimitSettings()
-		newSettings, _ = dmedefaults[in.Key]
-	}
+	dmedefaults := edgeproto.GetDefaultDmeRateLimitSettings()
+	newSettings, _ = dmedefaults[in.Key]
 
 	// Reset to default settings if found
 	if newSettings != nil {
 		err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			r.store.STMPut(stm, newSettings)
-			services.unaryRateLimitMgr.UpdateRateLimitSettings(newSettings)
-			services.streamRateLimitMgr.UpdateRateLimitSettings(newSettings)
 			return nil
 		})
 	}
@@ -137,6 +124,9 @@ func (r *RateLimitSettingsApi) ResetRateLimitSettings(ctx context.Context, in *e
 
 // Show RateLimit settings for an API endpoint type
 func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowRateLimitSettingsServer) error {
+	if !settingsApi.Get().RateLimitEnable {
+		return fmt.Errorf("RateLimitEnable must be true in order to ShowRateLimitSettings")
+	}
 	err := r.cache.Show(in, func(obj *edgeproto.RateLimitSettings) error {
 		err := cb.Send(obj)
 		return err

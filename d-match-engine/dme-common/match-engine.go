@@ -1231,8 +1231,8 @@ loop:
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
 		// Rate limit
-		limit, err := rateLimiter.Limit(ctx)
-		if limit {
+		err = rateLimiter.Limit(ctx, nil)
+		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Limiting client messages", "err", err)
 			sendErrorEventToClient(ctx, fmt.Sprintf("Limiting client messages. Most recent ClientEdgeEvent will not be processed: %v. Error is: %s", cupdate, err), *appInstKey, *sessionCookieKey)
 			continue
@@ -1496,4 +1496,6 @@ func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeprot
 	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
 	clientsMap.UpdateClientTimeout(new.AppinstClientCleanupInterval)
 	EEStats.UpdateSettings(time.Duration(new.EdgeEventsMetricsCollectionInterval))
+	UnaryRateLimitMgr.UpdateRateLimitEnable(new.RateLimitEnable)
+	StreamRateLimitMgr.UpdateRateLimitEnable(new.RateLimitEnable)
 }

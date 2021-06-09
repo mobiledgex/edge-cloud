@@ -45,23 +45,21 @@ type Controller struct {
 	CheckpointInterval   string
 	AppDNSRoot           string
 	ChefServerPath       string
-	RemoveRateLimit      bool
 }
 type Dme struct {
-	Common          `yaml:",inline"`
-	NodeCommon      `yaml:",inline"`
-	ApiAddr         string
-	HttpAddr        string
-	NotifyAddrs     string
-	LocVerUrl       string
-	TokSrvUrl       string
-	QosPosUrl       string
-	Carrier         string
-	CloudletKey     string
-	CookieExpr      string
-	Region          string
-	RemoveRateLimit bool
-	cmd             *exec.Cmd
+	Common      `yaml:",inline"`
+	NodeCommon  `yaml:",inline"`
+	ApiAddr     string
+	HttpAddr    string
+	NotifyAddrs string
+	LocVerUrl   string
+	TokSrvUrl   string
+	QosPosUrl   string
+	Carrier     string
+	CloudletKey string
+	CookieExpr  string
+	Region      string
+	cmd         *exec.Cmd
 }
 type Crm struct {
 	Common              `yaml:",inline"`

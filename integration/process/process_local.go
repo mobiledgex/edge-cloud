@@ -242,9 +242,6 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--chefServerPath")
 		args = append(args, p.ChefServerPath)
 	}
-	if p.RemoveRateLimit {
-		args = append(args, "--removeRateLimit")
-	}
 
 	envs := p.GetEnv()
 	if options.RolesFile != "" {
@@ -376,9 +373,6 @@ func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	}
 	if p.Region != "" {
 		args = append(args, "--region", p.Region)
-	}
-	if p.RemoveRateLimit {
-		args = append(args, "--removeRateLimit")
 	}
 
 	options := StartOptions{}

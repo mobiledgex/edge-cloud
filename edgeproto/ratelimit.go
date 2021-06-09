@@ -4,6 +4,8 @@ import (
 	fmt "fmt"
 )
 
+var GlobalApiName = "Global"
+
 func (r *RateLimitSettings) Validate(fields map[string]struct{}) error {
 	for _, fsettings := range r.FlowSettings {
 		// Validate fields that must be set if FlowAlgorithm is set
@@ -41,8 +43,8 @@ func (key *RateLimitSettingsKey) ValidateKey() error {
 	if key == nil {
 		return fmt.Errorf("Nil key")
 	}
-	if key.ApiEndpointType == ApiEndpointType_UNKNOWN_API_ENDPOINT_TYPE {
-		return fmt.Errorf("Invalid ApiEndpointType")
+	if key.ApiName == "" {
+		return fmt.Errorf("Invalid ApiName")
 	}
 	if key.RateLimitTarget == RateLimitTarget_UNKNOWN_TARGET {
 		return fmt.Errorf("Invalid RateLimitTarget")
@@ -50,162 +52,80 @@ func (key *RateLimitSettingsKey) ValidateKey() error {
 	return nil
 }
 
-func GetRateLimitSettingsKey(apiEndpointType ApiEndpointType, rateLimitTarget RateLimitTarget, apiName string) RateLimitSettingsKey {
+func GetRateLimitSettingsKey(apiName string, apiEndpointType ApiEndpointType, rateLimitTarget RateLimitTarget) RateLimitSettingsKey {
 	return RateLimitSettingsKey{
+		ApiName:         apiName,
 		ApiEndpointType: apiEndpointType,
 		RateLimitTarget: rateLimitTarget,
-		ApiName:         apiName,
 	}
 }
 
 // Returns map of Default DME RateLimitSettings
 func GetDefaultDmeRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 	// Init all AllRequests RateLimitSettings
-	dmeDefaultAllReqs := &RateLimitSettings{
+	dmeGlobalAllReqs := &RateLimitSettings{
 		Key: RateLimitSettingsKey{
 			ApiEndpointType: ApiEndpointType_DME,
-			ApiActionType:   ApiActionType_DEFAULT_ACTION,
 			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
+			ApiName:         GlobalApiName,
 		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 50,
-		BurstSize:     5,
+		FlowSettings: []*FlowSettings{
+			&FlowSettings{
+				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 25000,
+				BurstSize:     250,
+			},
+		},
+	}
+	verifyLocAllReqs := &RateLimitSettings{
+		Key: RateLimitSettingsKey{
+			ApiEndpointType: ApiEndpointType_DME,
+			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
+			ApiName:         "VerifyLocation",
+		},
+		FlowSettings: []*FlowSettings{
+			&FlowSettings{
+				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 5000,
+				BurstSize:     50,
+			},
+		},
 	}
 	// Init all PerIp RateLimitSettings
-	dmeDefaultPerIp := &RateLimitSettings{
+	dmeGlobalPerIp := &RateLimitSettings{
 		Key: RateLimitSettingsKey{
 			ApiEndpointType: ApiEndpointType_DME,
-			ApiActionType:   ApiActionType_DEFAULT_ACTION,
 			RateLimitTarget: RateLimitTarget_PER_IP,
+			ApiName:         GlobalApiName,
 		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 10,
-		BurstSize:     3,
+		FlowSettings: []*FlowSettings{
+			&FlowSettings{
+				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 10000,
+				BurstSize:     100,
+			},
+		},
+	}
+	verifyLocPerIp := &RateLimitSettings{
+		Key: RateLimitSettingsKey{
+			ApiEndpointType: ApiEndpointType_DME,
+			RateLimitTarget: RateLimitTarget_PER_IP,
+			ApiName:         "VerifyLocation",
+		},
+		FlowSettings: []*FlowSettings{
+			&FlowSettings{
+				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 1000,
+				BurstSize:     25,
+			},
+		},
 	}
 	// Assign RateLimitSettings to RateLimitSettingsKey
 	rlMap := make(map[RateLimitSettingsKey]*RateLimitSettings)
-	rlMap[dmeDefaultAllReqs.Key] = dmeDefaultAllReqs
-	rlMap[dmeDefaultPerIp.Key] = dmeDefaultPerIp
-
-	return rlMap
-}
-
-// Returns map of Default Controller RateLimitSettings
-func GetDefaultControllerRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
-	// Init all AllRequests RateLimitSettings
-	ctrlCreateAllReqs := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_CREATE_ACTION,
-			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 50,
-		BurstSize:     5,
-	}
-	ctrlDeleteAllReqs := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_DELETE_ACTION,
-			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 50,
-		BurstSize:     5,
-	}
-	ctrlUpdateAllReqs := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_UPDATE_ACTION,
-			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 50,
-		BurstSize:     5,
-	}
-	ctrlShowAllReqs := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_SHOW_ACTION,
-			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 100,
-		BurstSize:     10,
-	}
-	ctrlDefaultAllReqs := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_DEFAULT_ACTION,
-			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 50,
-		BurstSize:     5,
-	}
-	// Init all PerIp RateLimitSettings
-	ctrlCreatePerIp := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_CREATE_ACTION,
-			RateLimitTarget: RateLimitTarget_PER_IP,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 10,
-		BurstSize:     3,
-	}
-	ctrlDeletePerIp := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_DELETE_ACTION,
-			RateLimitTarget: RateLimitTarget_PER_IP,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 10,
-		BurstSize:     3,
-	}
-	ctrlUpdatePerIp := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_UPDATE_ACTION,
-			RateLimitTarget: RateLimitTarget_PER_IP,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 10,
-		BurstSize:     3,
-	}
-	ctrlShowPerIp := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_SHOW_ACTION,
-			RateLimitTarget: RateLimitTarget_PER_IP,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 15,
-		BurstSize:     3,
-	}
-	ctrlDefaultPerIp := &RateLimitSettings{
-		Key: RateLimitSettingsKey{
-			ApiEndpointType: ApiEndpointType_CONTROLLER,
-			ApiActionType:   ApiActionType_DEFAULT_ACTION,
-			RateLimitTarget: RateLimitTarget_PER_IP,
-		},
-		FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 10,
-		BurstSize:     3,
-	}
-	// Assign RateLimitSettings to RateLimitSettingsKey
-	rlMap := make(map[RateLimitSettingsKey]*RateLimitSettings)
-	rlMap[ctrlCreateAllReqs.Key] = ctrlCreateAllReqs
-	rlMap[ctrlDeleteAllReqs.Key] = ctrlDeleteAllReqs
-	rlMap[ctrlUpdateAllReqs.Key] = ctrlUpdateAllReqs
-	rlMap[ctrlShowAllReqs.Key] = ctrlShowAllReqs
-	rlMap[ctrlDefaultAllReqs.Key] = ctrlDefaultAllReqs
-	rlMap[ctrlCreatePerIp.Key] = ctrlCreatePerIp
-	rlMap[ctrlDeletePerIp.Key] = ctrlDeletePerIp
-	rlMap[ctrlUpdatePerIp.Key] = ctrlUpdatePerIp
-	rlMap[ctrlShowPerIp.Key] = ctrlShowPerIp
-	rlMap[ctrlDefaultPerIp.Key] = ctrlDefaultPerIp
+	rlMap[dmeGlobalAllReqs.Key] = dmeGlobalAllReqs
+	rlMap[verifyLocAllReqs.Key] = verifyLocAllReqs
+	rlMap[dmeGlobalPerIp.Key] = dmeGlobalPerIp
+	rlMap[verifyLocPerIp.Key] = verifyLocPerIp
 
 	return rlMap
 }
