@@ -331,7 +331,7 @@ var xxx_messageInfo_DeviceInfoStatic proto.InternalMessageInfo
 type DeviceInfoDynamic struct {
 	// LTE, 5G, etc.
 	DataNetworkType string `protobuf:"bytes,1,opt,name=data_network_type,json=dataNetworkType,proto3" json:"data_network_type,omitempty"`
-	// Device signal strength (0-5)
+	// Device signal strength
 	SignalStrength uint64 `protobuf:"varint,2,opt,name=signal_strength,json=signalStrength,proto3" json:"signal_strength,omitempty"`
 	// Carrier name (can be different from cloudlet org if using "")
 	CarrierName          string   `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
