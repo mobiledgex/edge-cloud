@@ -49,6 +49,7 @@ func GetGCSCreds(ctx context.Context, vaultConfig *vault.Config) ([]byte, error)
 	return credsObj, nil
 }
 
+// Must call GCSClient.Close() when done
 func NewClient(ctx context.Context, credsObj []byte, bucketName string, timeout time.Duration) (*GCSClient, error) {
 	gcsClient := &GCSClient{}
 

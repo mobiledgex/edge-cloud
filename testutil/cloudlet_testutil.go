@@ -1028,9 +1028,9 @@ func (r *Run) GPUDriverApi_GPUDriverBuildMember(data *[]edgeproto.GPUDriverBuild
 				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
 				r.logErr(fmt.Sprintf("GPUDriverApi_GPUDriverBuildMember[%d]", ii), err)
 			} else {
-				outp, ok := dataOut.(*[]edgeproto.Result)
+				outp, ok := dataOut.(*[]edgeproto.GPUDriverBuildURL)
 				if !ok {
-					panic(fmt.Sprintf("RunGPUDriverApi_GPUDriverBuildMember expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+					panic(fmt.Sprintf("RunGPUDriverApi_GPUDriverBuildMember expected dataOut type *[]edgeproto.GPUDriverBuildURL, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
 			}
@@ -1647,13 +1647,13 @@ func (s *CliClient) RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUD
 	return output, err
 }
 
-func (s *ApiClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
+func (s *ApiClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error) {
 	api := edgeproto.NewGPUDriverApiClient(s.Conn)
 	return api.GetGPUDriverBuildURL(ctx, in)
 }
 
-func (s *CliClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error) {
-	out := edgeproto.Result{}
+func (s *CliClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error) {
+	out := edgeproto.GPUDriverBuildURL{}
 	args := append(s.BaseArgs, "controller", "GetGPUDriverBuildURL")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
@@ -1666,7 +1666,7 @@ type GPUDriverApiClient interface {
 	ShowGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.GPUDriver, error)
 	AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error)
 	RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error)
-	GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.Result, error)
+	GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error)
 }
 
 func (s *ApiClient) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {

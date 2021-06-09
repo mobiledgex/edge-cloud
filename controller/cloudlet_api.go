@@ -397,8 +397,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
 		}
 	}
-
-	if in.GpuConfig.GpuType == edgeproto.GPUType_GPU_TYPE_NONE {
+	if in.GpuConfig.Driver.Name == "" {
 		in.GpuConfig = edgeproto.GPUConfig{}
 	}
 	return s.createCloudletInternal(DefCallContext(), in, cb)
@@ -507,16 +506,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
 	}
 
-	if in.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
-		gpuDrivers, err := gpuDriverApi.GetCloudletGPUDrivers(in.GpuConfig.GpuType, in.GpuConfig.DriverName, in.Key.Organization)
-		if err != nil {
-			return err
-		}
-		if len(gpuDrivers) == 0 {
-			return fmt.Errorf("No GPU drivers found with name %s", in.GpuConfig.DriverName)
-		}
-	}
-
 	vmPool := edgeproto.VMPool{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -542,6 +531,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if !vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
 				return fmt.Errorf("VM Pool %s not found", in.VmPool)
 			}
+		}
+		if in.GpuConfig.Driver.Name != "" {
+			if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.Organization {
+				return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.Organization)
+			}
+			gpuDriver := edgeproto.GPUDriver{}
+			if !gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
+				return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
+			}
+			in.GpuConfig.GpuType = gpuDriver.Type
 		}
 		if in.TrustPolicy != "" {
 			if !supportsTrustPolicy(in.PlatformType) {
@@ -881,19 +880,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		crmUpdateReqd = true
 	}
 
-	if _, found := fmap[edgeproto.CloudletFieldGpuConfig]; found {
-		if in.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
-			gpuDrivers, err := gpuDriverApi.GetCloudletGPUDrivers(in.GpuConfig.GpuType, in.GpuConfig.DriverName, in.Key.Organization)
-			if err != nil {
-				return err
-			}
-			if len(gpuDrivers) == 0 {
-				return fmt.Errorf("No GPU drivers found with name %s", in.GpuConfig.DriverName)
-			}
-		}
-		crmUpdateReqd = true
-	}
-
 	cctx := DefCallContext()
 	cctx.SetOverride(&in.CrmOverride)
 
@@ -961,6 +947,21 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			if err != nil {
 				return err
 			}
+		}
+		if _, found := fmap[edgeproto.CloudletFieldGpuConfig]; found {
+			if in.GpuConfig.Driver.Name == "" {
+				in.GpuConfig = edgeproto.GPUConfig{}
+			} else {
+				if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.Organization {
+					return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.Organization)
+				}
+				gpuDriver := edgeproto.GPUDriver{}
+				if !gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
+					return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
+				}
+				in.GpuConfig.GpuType = gpuDriver.Type
+			}
+			crmUpdateReqd = true
 		}
 
 		oldmstate := cur.MaintenanceState
@@ -1668,14 +1669,9 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for key, data := range s.cache.Objs {
+	for _, data := range s.cache.Objs {
 		val := data.Obj
-		cDriverKey := edgeproto.GPUDriverKey{
-			Organization: key.Organization,
-			Name:         val.GpuConfig.DriverName,
-			Type:         val.GpuConfig.GpuType,
-		}
-		if driverKey.Matches(&cDriverKey) {
+		if driverKey.Matches(&val.GpuConfig.Driver) {
 			return true
 		}
 	}

@@ -261,9 +261,6 @@ func (key *GPUDriverKey) ValidateKey() error {
 	if key.Organization != "" && !util.ValidName(key.Organization) {
 		return errors.New("Invalid organization name")
 	}
-	if key.Type == GPUType_GPU_TYPE_NONE {
-		return fmt.Errorf("GPU type cannot be none")
-	}
 	if key.Name == "" {
 		return errors.New("Missing gpu driver name")
 	}
@@ -293,6 +290,15 @@ func (g *GPUDriverBuild) Validate() error {
 	if g.DriverPath == "" {
 		return fmt.Errorf("Missing driverpath")
 	}
+	if _, err := util.ImagePathParse(g.DriverPath); err != nil {
+		return fmt.Errorf("Invalid driver path(%q): %v", g.DriverPath, err)
+	}
+	if g.DriverPathCreds != "" {
+		out := strings.Split(g.DriverPathCreds, ":")
+		if len(out) != 2 {
+			return fmt.Errorf("Invalid GPU driver build path credentials, should be in format 'username:password'")
+		}
+	}
 	if g.OperatingSystem == OSType_LINUX && g.KernelVersion == "" {
 		return fmt.Errorf("Kernel version is required for Linux build")
 	}
@@ -318,6 +324,9 @@ func (g *GPUDriver) Validate(fields map[string]struct{}) error {
 	}
 	if err := g.ValidateEnums(); err != nil {
 		return err
+	}
+	if g.Type == GPUType_GPU_TYPE_NONE {
+		return fmt.Errorf("GPU type cannot be none")
 	}
 	buildNames := make(map[string]struct{})
 	for _, build := range g.Builds {

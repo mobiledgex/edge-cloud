@@ -47,26 +47,17 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 		cloudlet := edgeproto.Cloudlet{}
 		var modRev int64
 		// also trigger send of vmpool object
-		if s.handler.GetWithRev(key, &cloudlet, &modRev) && cloudlet.VmPool != "" {
-			s.sendrecv.vmPoolSend.updateInternal(ctx, &edgeproto.VMPoolKey{
-				Name:         cloudlet.VmPool,
-				Organization: key.Organization,
-			}, 0)
-		}
-		// also trigger send of GPU driver object
-		if s.handler.GetWithRev(key, &cloudlet, &modRev) && cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
-			// cloudlet can access public GPU driver
-			s.sendrecv.gpuDriverSend.updateInternal(ctx, &edgeproto.GPUDriverKey{
-				Name:         cloudlet.GpuConfig.DriverName,
-				Organization: "",
-				Type:         cloudlet.GpuConfig.GpuType,
-			}, 0)
-			// cloudlet can access GPU driver of its own org
-			s.sendrecv.gpuDriverSend.updateInternal(ctx, &edgeproto.GPUDriverKey{
-				Name:         cloudlet.GpuConfig.DriverName,
-				Organization: key.Organization,
-				Type:         cloudlet.GpuConfig.GpuType,
-			}, 0)
+		if s.handler.GetWithRev(key, &cloudlet, &modRev) {
+			if cloudlet.VmPool != "" {
+				s.sendrecv.vmPoolSend.updateInternal(ctx, &edgeproto.VMPoolKey{
+					Name:         cloudlet.VmPool,
+					Organization: key.Organization,
+				}, 0)
+			}
+			// also trigger send of GPU driver object
+			if cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+				s.sendrecv.gpuDriverSend.updateInternal(ctx, &cloudlet.GpuConfig.Driver, 0)
+			}
 		}
 	}
 	return true
@@ -121,15 +112,10 @@ func (s *GPUDriverSend) UpdateOk(ctx context.Context, key *edgeproto.GPUDriverKe
 		for cKey, _ := range s.sendrecv.cloudletKeys {
 			cloudlet := edgeproto.Cloudlet{}
 			var modRev int64
-			if cKey.Organization != key.Organization &&
-				key.Organization != "" {
-				continue
-			}
 			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
-				if cloudlet.GpuConfig.DriverName != key.Name {
-					continue
+				if cloudlet.GpuConfig.Driver.Matches(key) {
+					return true
 				}
-				return true
 			}
 		}
 		return false

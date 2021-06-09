@@ -340,7 +340,7 @@ func GetGPUDriverStoragePath(key *edgeproto.GPUDriverKey) string {
 	if key.Organization == "" {
 		orgName = OrganizationMobiledgeX
 	}
-	return fmt.Sprintf("%s/%s/%s", orgName, edgeproto.GPUType_CamelName[int32(key.Type)], key.Name)
+	return fmt.Sprintf("%s/%s", orgName, key.Name)
 }
 
 func GetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey) string {
