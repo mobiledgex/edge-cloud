@@ -944,6 +944,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			// don't change maintenance here, we handle it below
 			cur.MaintenanceState = oldmstate
 		}
+		if newMaintenanceState == dme.MaintenanceState_MAINTENANCE_START || newMaintenanceState == dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
+			// return error when trying to put into maintenance but current state is not normal
+			if oldmstate != dme.MaintenanceState_NORMAL_OPERATION {
+				return fmt.Errorf("Cloudlet must be in NormalOperation before starting maintenance")
+			}
+		}
 		if privPolUpdateRequested {
 			if maintenanceChanged {
 				return fmt.Errorf("Cannot change both maintenance state and trust policy at the same time")
@@ -1039,9 +1045,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		cb.Send(&edgeproto.Result{Message: "Cloudlet is back to normal operation"})
 	case dme.MaintenanceState_MAINTENANCE_START:
-		if oldmstate != dme.MaintenanceState_NORMAL_OPERATION {
-			return fmt.Errorf("Cloudlet must be in NormalOperation before starting maintenance")
-		}
 		// This is a state machine to transition into cloudlet
 		// maintenance. Start by triggering AutoProv failovers.
 		log.SpanLog(ctx, log.DebugLevelApi, "Start AutoProv failover")
@@ -1098,9 +1101,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		// proceed to next state
 		fallthrough
 	case dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER:
-		if oldmstate != dme.MaintenanceState_NORMAL_OPERATION {
-			return fmt.Errorf("Cloudlet must be in NormalOperation before starting maintenance with no failover")
-		}
 		log.SpanLog(ctx, log.DebugLevelApi, "Start CRM maintenance")
 		cb.Send(&edgeproto.Result{
 			Message: "Starting CRM maintenance",
