@@ -47,6 +47,12 @@ type DmeAppInst struct {
 	TrackedState  edgeproto.TrackedState
 }
 
+type DmeAppInstState struct {
+	CloudletState    dme.CloudletState
+	MaintenanceState dme.MaintenanceState
+	AppInstHealth    dme.HealthCheck
+}
+
 type DmeAppInsts struct {
 	Insts map[edgeproto.VirtualClusterInstKey]*DmeAppInst
 }
@@ -249,7 +255,10 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	// Check if AppInstHealth has changed
 	if cl.AppInstHealth != appInst.HealthCheck {
 		cl.AppInstHealth = appInst.HealthCheck
-		go EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+		appinstState := &DmeAppInstState{
+			AppInstHealth: cl.AppInstHealth,
+		}
+		go EEHandler.SendAppInstStateEdgeEvent(ctx, appinstState, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
@@ -305,11 +314,16 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
 				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
+
 				// Remove AppInst from edgeevents plugin
-				go func() {
-					EEHandler.SendAppInstStateEdgeEvent(ctx, cl, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+				appinstState := &DmeAppInstState{
+					AppInstHealth: cl.AppInstHealth,
+				}
+				go func(a *DmeAppInstState) {
+					EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 					EEHandler.RemoveAppInstKey(ctx, appInst.Key)
-				}()
+				}(appinstState)
+
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
@@ -364,11 +378,16 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 				key.ClusterInstKey = inst.virtualClusterInstKey
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "pruning app", "key", key)
+
 					// Remove AppInst from edgeevents plugin
-					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, inst, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+					appinstState := &DmeAppInstState{
+						AppInstHealth: inst.AppInstHealth,
+					}
+					go func(a *DmeAppInstState) {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, a, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 						EEHandler.RemoveAppInstKey(ctx, key)
-					}()
+					}(appinstState)
+
 					delete(carr.Insts, key.ClusterInstKey)
 				}
 			}
@@ -400,10 +419,15 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 						AppKey:         app.AppKey,
 						ClusterInstKey: clusterInstKey,
 					}
-					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, c.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+
+					appinstState := &DmeAppInstState{
+						CloudletState: c.Insts[clusterInstKey].CloudletState,
+					}
+					go func(a *DmeAppInstState) {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
 						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
-					}()
+
+					}(appinstState)
 				}
 			}
 		}
@@ -433,10 +457,14 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 						AppKey:         app.AppKey,
 						ClusterInstKey: clusterInstKey,
 					}
-					go func() {
-						EEHandler.SendAppInstStateEdgeEvent(ctx, carr.Insts[clusterInstKey], appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
+
+					appinstState := &DmeAppInstState{
+						CloudletState: carr.Insts[clusterInstKey].CloudletState,
+					}
+					go func(a *DmeAppInstState) {
+						EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
 						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
-					}()
+					}(appinstState)
 
 				}
 			}
@@ -537,7 +565,10 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 	// Check if CloudletMaintenance state has changed
 	if cloudlet.MaintenanceState != in.MaintenanceState {
 		cloudlet.MaintenanceState = in.MaintenanceState
-		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, cloudlet, in.Key)
+		appinstState := &DmeAppInstState{
+			MaintenanceState: cloudlet.MaintenanceState,
+		}
+		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, appinstState, in.Key)
 	}
 	cloudlet.GpsLocation = in.Location
 
@@ -571,7 +602,10 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 	// Check if Cloudlet state has changed
 	if cloudlet.State != info.State {
 		cloudlet.State = info.State
-		go EEHandler.SendCloudletStateEdgeEvent(ctx, cloudlet, info.Key)
+		appinstState := &DmeAppInstState{
+			CloudletState: cloudlet.State,
+		}
+		go EEHandler.SendCloudletStateEdgeEvent(ctx, appinstState, info.Key)
 	}
 
 	for _, app := range tbl.Apps {
@@ -1168,7 +1202,7 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		}
 		updateDeviceInfoStats(ctx, appInstKey, deviceInfo, lastLocation, "event init connection")
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, lastLocation, lastCarrier, sendFunc)
+		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, *lastLocation, lastCarrier, sendFunc)
 		// Remove Client from edgeevents plugin when StreamEdgeEvent exits
 		defer EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
 		// Send successful init response
@@ -1209,8 +1243,8 @@ loop:
 			// Client sent latency samples to be processed
 			err := ValidateLocation(cupdate.GpsLocation)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "No location in EVENT_LATENCY_SAMPLES", "err", err)
-				sendErrorEventToClient(ctx, fmt.Sprintf("No location in EVENT_LATENCY_SAMPLES, error is: %s", err), *appInstKey, *sessionCookieKey)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid EVENT_LATENCY_SAMPLES, invalid location", "err", err)
+				sendErrorEventToClient(ctx, fmt.Sprintf("Invalid EVENT_LATENCY_SAMPLES, invalid location: %s", err), *appInstKey, *sessionCookieKey)
 				continue
 			}
 			// Process latency samples and send results to client
@@ -1260,7 +1294,7 @@ loop:
 			}
 			// Update last client location in plugin if different from lastLocation
 			if cupdate.GpsLocation.Latitude != lastLocation.Latitude || cupdate.GpsLocation.Longitude != lastLocation.Longitude {
-				EEHandler.UpdateClientLastLocation(ctx, *appInstKey, *sessionCookieKey, cupdate.GpsLocation)
+				EEHandler.UpdateClientLastLocation(ctx, *appInstKey, *sessionCookieKey, *cupdate.GpsLocation)
 				lastLocation = cupdate.GpsLocation
 			}
 			// Check if there is a better cloudlet based on location update
