@@ -57,7 +57,7 @@ var DeviceInfoDynamicOptionalArgs = []string{
 var DeviceInfoDynamicAliasArgs = []string{}
 var DeviceInfoDynamicComments = map[string]string{
 	"datanetworktype": "LTE, 5G, etc.",
-	"signalstrength":  "Device signal strength (0-5)",
+	"signalstrength":  "Device signal strength",
 	"carriername":     "Carrier name (can be different from cloudlet org if using )",
 }
 var DeviceInfoDynamicSpecialArgs = map[string]string{}

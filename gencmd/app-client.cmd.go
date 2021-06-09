@@ -1452,7 +1452,7 @@ var ClientEdgeEventComments = map[string]string{
 	"deviceinfostatic.deviceos":         "Android or iOS",
 	"deviceinfostatic.devicemodel":      "Device model",
 	"deviceinfodynamic.datanetworktype": "LTE, 5G, etc.",
-	"deviceinfodynamic.signalstrength":  "Device signal strength (0-5)",
+	"deviceinfodynamic.signalstrength":  "Device signal strength",
 	"deviceinfodynamic.carriername":     "Carrier name (can be different from cloudlet org if using )",
 	"customevent":                       "Custom event specified by the application",
 	"tags":                              "_(optional)_ Vendor specific data",

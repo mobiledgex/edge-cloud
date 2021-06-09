@@ -900,6 +900,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	}
 
 	var newMaintenanceState dme.MaintenanceState
+	var oldmstate dme.MaintenanceState
 	maintenanceChanged := false
 	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldTrustPolicy]
 
@@ -935,13 +936,19 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			}
 		}
 
-		oldmstate := cur.MaintenanceState
+		oldmstate = cur.MaintenanceState
 		cur.CopyInFields(in)
 		newMaintenanceState = cur.MaintenanceState
 		if newMaintenanceState != oldmstate {
 			maintenanceChanged = true
 			// don't change maintenance here, we handle it below
 			cur.MaintenanceState = oldmstate
+		}
+		if newMaintenanceState == dme.MaintenanceState_MAINTENANCE_START || newMaintenanceState == dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
+			// return error when trying to put into maintenance but current state is not normal
+			if oldmstate != dme.MaintenanceState_NORMAL_OPERATION {
+				return fmt.Errorf("Cloudlet must be in NormalOperation before starting maintenance")
+			}
 		}
 		if privPolUpdateRequested {
 			if maintenanceChanged {
