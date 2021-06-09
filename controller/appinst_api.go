@@ -690,12 +690,17 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if app.Deployment == cloudcommon.DeploymentTypeVM && in.AutoClusterIpAccess != edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			return fmt.Errorf("Cannot specify AutoClusterIpAccess if deployment type is VM")
 		}
+		err := validateImageTypeForPlatform(ctx, app.ImageType, cloudlet.PlatformType)
+		if err != nil {
+			return err
+		}
 
 		// Now that we have a cloudlet, and cloudletInfo, we can validate the flavor requested
 		vmFlavor := edgeproto.Flavor{}
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
 			return in.Flavor.NotFoundError()
 		}
+
 		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, vmFlavor, cloudlet, info)
 		if verr != nil {
 			return verr
@@ -706,19 +711,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected AppInst Node Flavor", "vmspec", vmspec.FlavorName)
-
-		if resTagTableApi.UsesGpu(ctx, stm, *vmspec.FlavorInfo, cloudlet) {
-			in.OptRes = "gpu"
-		} else {
-			if app.Deployment == cloudcommon.DeploymentTypeDocker {
-				// allow non-openstack platforms to support docker gpu use
-				if strings.Contains(in.Flavor.Name, "gpu") {
-					log.SpanLog(ctx, log.DebugLevelApi, "support docker gpu on non-openstack platform", "flavor", in.Flavor.Name, "uses gpu", true)
-					in.OptRes = "gpu"
-				}
-			}
-		}
-
+		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
 		in.Revision = app.Revision
 		appDeploymentType = app.Deployment
 		// there may be direct access apps still defined, disallow them from being instantiated.
@@ -1790,6 +1783,17 @@ func isIPAllocatedPerService(platformType edgeproto.PlatformType, operator strin
 	return platformType == edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS ||
 		platformType == edgeproto.PlatformType_PLATFORM_TYPE_AZURE ||
 		platformType == edgeproto.PlatformType_PLATFORM_TYPE_GCP
+}
+
+func validateImageTypeForPlatform(ctx context.Context, imageType edgeproto.ImageType, platformType edgeproto.PlatformType) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validateImageTypeForPlatform", "imageType", imageType, "platformType", platformType)
+	if imageType == edgeproto.ImageType_IMAGE_TYPE_OVF {
+		if platformType != edgeproto.PlatformType_PLATFORM_TYPE_VCD {
+			platName := edgeproto.PlatformType_name[int32(platformType)]
+			return fmt.Errorf("image type %s is not valid for platform type: %s", imageType, platName)
+		}
+	}
+	return nil
 }
 
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, platformType edgeproto.PlatformType, refs *edgeproto.CloudletRefs) error {

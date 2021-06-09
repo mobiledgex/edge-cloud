@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"flag"
+	"fmt"
 	"sync"
 
 	"github.com/elastic/go-elasticsearch/v7"
@@ -13,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/mobiledgex/edge-cloud/version"
 	"github.com/opentracing/opentracing-go"
+	"google.golang.org/grpc"
 )
 
 var NodeTypeCRM = "crm"
@@ -48,7 +50,10 @@ type NodeMgr struct {
 	commonName         string
 	DeploymentTag      string
 	AccessKeyClient    AccessKeyClient
+	AccessApiClient    edgeproto.CloudletAccessApiClient
+	accessApiConn      *grpc.ClientConn // here so crm and cloudlet-dme can close it
 	CloudletPoolLookup CloudletPoolLookup
+	CloudletLookup     CloudletLookup
 
 	unitTestMode bool
 }
@@ -95,18 +100,24 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.Region = opts.region
 	s.tlsClientIssuer = tlsClientIssuer
 	s.CloudletPoolLookup = opts.cloudletPoolLookup
+	s.CloudletLookup = opts.cloudletLookup
 
 	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
 		return initCtx, nil, err
 	}
+	var err error
 	if s.AccessKeyClient.enabled {
-		// no vault, Controller replaces Vault for issuing certs
+		log.SpanLog(initCtx, log.DebugLevelInfo, "Setup persistent access connection to Controller")
+		s.accessApiConn, err = s.AccessKeyClient.ConnectController(initCtx)
+		if err != nil {
+			return initCtx, nil, fmt.Errorf("Failed to connect to controller %v", err)
+		}
+		s.AccessApiClient = edgeproto.NewCloudletAccessApiClient(s.accessApiConn)
 	} else {
 		// init vault before pki
 		s.VaultConfig = opts.vaultConfig
 		if s.VaultConfig == nil {
-			var err error
 			s.VaultConfig, err = vault.BestConfig(s.VaultAddr)
 			if err != nil {
 				return initCtx, nil, err
@@ -117,7 +128,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 
 	// init pki before logging, because access to logger needs pki certs
 	log.SpanLog(initCtx, log.DebugLevelInfo, "init internal pki")
-	err := s.initInternalPki(initCtx)
+	err = s.initInternalPki(initCtx)
 	if err != nil {
 		return initCtx, nil, err
 	}
@@ -146,9 +157,15 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 
 	if s.CloudletPoolLookup == nil {
 		// single region lookup for events
-		lookup := &CloudletPoolCache{}
-		lookup.Init()
-		s.CloudletPoolLookup = lookup
+		cPoolLookup := &CloudletPoolCache{}
+		cPoolLookup.Init()
+		s.CloudletPoolLookup = cPoolLookup
+	}
+
+	if s.CloudletLookup == nil {
+		cloudletLookup := &CloudletCache{}
+		cloudletLookup.Init()
+		s.CloudletLookup = cloudletLookup
 	}
 	err = s.initEvents(ctx, opts)
 	if err != nil {
@@ -170,6 +187,9 @@ func (s *NodeMgr) Name() string {
 }
 
 func (s *NodeMgr) Finish() {
+	if s.accessApiConn != nil {
+		s.accessApiConn.Close()
+	}
 	close(s.esEventsDone)
 	log.FinishTracer()
 }
@@ -205,6 +225,7 @@ type NodeOptions struct {
 	esUrls             string
 	parentSpan         string
 	cloudletPoolLookup CloudletPoolLookup
+	cloudletLookup     CloudletLookup
 }
 
 type CloudletInPoolFunc func(region, key edgeproto.CloudletKey) bool
@@ -245,6 +266,10 @@ func WithParentSpan(parentSpan string) NodeOp {
 
 func WithCloudletPoolLookup(cloudletPoolLookup CloudletPoolLookup) NodeOp {
 	return func(opts *NodeOptions) { opts.cloudletPoolLookup = cloudletPoolLookup }
+}
+
+func WithCloudletLookup(cloudletLookup CloudletLookup) NodeOp {
+	return func(opts *NodeOptions) { opts.cloudletLookup = cloudletLookup }
 }
 
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {

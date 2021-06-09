@@ -82,6 +82,12 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			masterNodeFlavorFound = true
 		}
 	}
+	// platforms with no native flavor support return zero len flavor lists and use our meta flavors only
+	if len(pfFlavorList) == 0 {
+		log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources empty flavor list", "clusterinst key", clusterInst.Key, "platform flavors", pfFlavorList, "root lb flavor", rootLBFlavor)
+		nodeFlavorFound = true
+		masterNodeFlavorFound = true
+	}
 
 	if !nodeFlavorFound {
 		return nil, fmt.Errorf("Node flavor %s does not exist", clusterInst.NodeFlavor)
@@ -145,7 +151,7 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 			break
 		}
 	}
-	if !vmFlavorFound {
+	if !vmFlavorFound && len(pfFlavorList) > 0 {
 		return nil, fmt.Errorf("VM flavor %s does not exist", appInst.VmFlavor)
 	}
 	if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {

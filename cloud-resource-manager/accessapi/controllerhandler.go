@@ -103,6 +103,12 @@ func (s *ControllerHandler) GetAccessData(ctx context.Context, req *edgeproto.Ac
 			return nil, err
 		}
 		out, merr = json.Marshal(*publicCert)
+	case GetKafkaCreds:
+		creds, err := s.vaultClient.GetKafkaCreds(ctx)
+		if err != nil {
+			return nil, err
+		}
+		out, merr = json.Marshal(creds)
 	case GetGCSCreds:
 		creds, err := s.vaultClient.GetGCSCreds(ctx)
 		if err != nil {

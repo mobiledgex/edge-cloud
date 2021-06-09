@@ -8,6 +8,10 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
+	"path"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,6 +27,7 @@ const (
 	ApiKeyAuth        = "apikey"
 	DockerHub         = "docker.io"
 	DockerHubRegistry = "registry-1.docker.io"
+	MaxOvfVmVersion   = 14
 )
 
 type RegistryAuth struct {
@@ -377,6 +382,74 @@ func ValidateVMRegistryPath(ctx context.Context, imgUrl string, authApi Registry
 		return nil
 	}
 	return fmt.Errorf("Invalid image path: %s", http.StatusText(resp.StatusCode))
+}
+
+func ValidateOvfRegistryPath(ctx context.Context, imgUrl string, authApi RegistryAuthApi) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validate ovf path", "path", imgUrl)
+	if imgUrl == "" {
+		return fmt.Errorf("image path is empty")
+	}
+	parsedUrl, err := url.Parse(imgUrl)
+	if err != nil {
+		return fmt.Errorf("cannot parse url %s - %v", imgUrl, err)
+	}
+	urlMinusFile := strings.Replace(imgUrl, path.Base(parsedUrl.Path), "", 1)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, nil, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Error getting OVF - code %d", resp.StatusCode)
+	}
+
+	// get the OVF and find other files referenced in it
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("Unable to read ovf body - %v", err)
+	}
+	vmVersionPattern := "VirtualSystemType>vmx-(\\d+)</vssd:VirtualSystemType>"
+	vreg := regexp.MustCompile(vmVersionPattern)
+	versMatch := vreg.FindAllStringSubmatch(string(bodyBytes), -1)
+	for _, s := range versMatch {
+		if len(s) == 2 {
+			version := s[1]
+			log.SpanLog(ctx, log.DebugLevelApi, "Found VM Version in OVF", "version", version)
+			versionInt, err := strconv.Atoi(version)
+			if err != nil {
+				return fmt.Errorf("Unable to parse VM Version in OVF: %s, %v", version, err)
+			}
+			if versionInt > MaxOvfVmVersion {
+				return fmt.Errorf("Invalid VM version in OVF: %d, max value: %d", versionInt, MaxOvfVmVersion)
+			}
+		}
+	}
+	filePattern := "File ovf:href=\"(\\S+)\""
+	freg := regexp.MustCompile(filePattern)
+
+	fileMatch := freg.FindAllStringSubmatch(string(bodyBytes), -1)
+	filesToCheck := []string{}
+	for _, s := range fileMatch {
+		if len(s) == 2 {
+			file := s[1]
+			fileToCheck := urlMinusFile + file
+			log.SpanLog(ctx, log.DebugLevelApi, "Found file referenced in OVF", "file", file, "fileToCheck", fileToCheck)
+			filesToCheck = append(filesToCheck, fileToCheck)
+
+		}
+	}
+	// check that all referenced files are available
+	for _, f := range filesToCheck {
+		fresp, err := SendHTTPReq(ctx, "HEAD", f, authApi, nil, nil)
+		if err != nil {
+			return fmt.Errorf("unable to get referenced file: %s - %v", f, err)
+		}
+		defer fresp.Body.Close()
+		if fresp.StatusCode != http.StatusOK {
+			return fmt.Errorf("Error getting OVF - code %d", resp.StatusCode)
+		}
+	}
+	return nil
 }
 
 type VaultRegistryAuthApi struct {
