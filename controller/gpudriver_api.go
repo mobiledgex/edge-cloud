@@ -362,7 +362,7 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 			}
 		}
 		buildFiles = []string{}
-		for _, build := range in.Builds {
+		for _, build := range cur.Builds {
 			fileName := cloudcommon.GetGPUDriverBuildPathFromURL(build.DriverPath, nodeMgr.DeploymentTag)
 			buildFiles = append(buildFiles, fileName)
 		}
