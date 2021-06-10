@@ -30,6 +30,352 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
+type ShowGPUDriver struct {
+	Data map[string]edgeproto.GPUDriver
+	grpc.ServerStream
+	Ctx context.Context
+}
+
+func (x *ShowGPUDriver) Init() {
+	x.Data = make(map[string]edgeproto.GPUDriver)
+}
+
+func (x *ShowGPUDriver) Send(m *edgeproto.GPUDriver) error {
+	x.Data[m.GetKey().GetKeyString()] = *m
+	return nil
+}
+
+func (x *ShowGPUDriver) Context() context.Context {
+	return x.Ctx
+}
+
+var GPUDriverShowExtraCount = 0
+
+type CudStreamoutGPUDriver struct {
+	grpc.ServerStream
+	Ctx context.Context
+}
+
+func (x *CudStreamoutGPUDriver) Send(res *edgeproto.Result) error {
+	fmt.Println(res)
+	return nil
+}
+
+func (x *CudStreamoutGPUDriver) Context() context.Context {
+	return x.Ctx
+}
+
+func NewCudStreamoutGPUDriver(ctx context.Context) *CudStreamoutGPUDriver {
+	return &CudStreamoutGPUDriver{
+		Ctx: ctx,
+	}
+}
+
+func GPUDriverReadResultStream(stream ResultStream, err error) error {
+	if err != nil {
+		return err
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(res)
+	}
+}
+
+func (x *ShowGPUDriver) ReadStream(stream edgeproto.GPUDriverApi_ShowGPUDriverClient, err error) {
+	x.Data = make(map[string]edgeproto.GPUDriver)
+	if err != nil {
+		return
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			break
+		}
+		x.Data[obj.GetKey().GetKeyString()] = *obj
+	}
+}
+
+func (x *ShowGPUDriver) CheckFound(obj *edgeproto.GPUDriver) bool {
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	return found
+}
+
+func (x *ShowGPUDriver) AssertFound(t *testing.T, obj *edgeproto.GPUDriver) {
+	check, found := x.Data[obj.GetKey().GetKeyString()]
+	require.True(t, found, "find GPUDriver %s", obj.GetKey().GetKeyString())
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
+		require.Equal(t, *obj, check, "GPUDriver are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.GetKey().GetKeyString())
+	}
+}
+
+func (x *ShowGPUDriver) AssertNotFound(t *testing.T, obj *edgeproto.GPUDriver) {
+	_, found := x.Data[obj.GetKey().GetKeyString()]
+	require.False(t, found, "do not find GPUDriver %s", obj.GetKey().GetKeyString())
+}
+
+func WaitAssertFoundGPUDriver(t *testing.T, api edgeproto.GPUDriverApiClient, obj *edgeproto.GPUDriver, count int, retry time.Duration) {
+	show := ShowGPUDriver{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowGPUDriver(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundGPUDriver(t *testing.T, api edgeproto.GPUDriverApiClient, obj *edgeproto.GPUDriver, count int, retry time.Duration) {
+	show := ShowGPUDriver{}
+	filterNone := edgeproto.GPUDriver{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowGPUDriver(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
+}
+
+// Wrap the api with a common interface
+type GPUDriverCommonApi struct {
+	internal_api edgeproto.GPUDriverApiServer
+	client_api   edgeproto.GPUDriverApiClient
+}
+
+func (x *GPUDriverCommonApi) CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) (*edgeproto.Result, error) {
+	copy := &edgeproto.GPUDriver{}
+	*copy = *in
+	if x.internal_api != nil {
+		err := x.internal_api.CreateGPUDriver(copy, NewCudStreamoutGPUDriver(ctx))
+		return &edgeproto.Result{}, err
+	} else {
+		stream, err := x.client_api.CreateGPUDriver(ctx, copy)
+		err = GPUDriverReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
+	}
+}
+
+func (x *GPUDriverCommonApi) DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) (*edgeproto.Result, error) {
+	copy := &edgeproto.GPUDriver{}
+	*copy = *in
+	if x.internal_api != nil {
+		err := x.internal_api.DeleteGPUDriver(copy, NewCudStreamoutGPUDriver(ctx))
+		return &edgeproto.Result{}, err
+	} else {
+		stream, err := x.client_api.DeleteGPUDriver(ctx, copy)
+		err = GPUDriverReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
+	}
+}
+
+func (x *GPUDriverCommonApi) UpdateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) (*edgeproto.Result, error) {
+	copy := &edgeproto.GPUDriver{}
+	*copy = *in
+	if x.internal_api != nil {
+		err := x.internal_api.UpdateGPUDriver(copy, NewCudStreamoutGPUDriver(ctx))
+		return &edgeproto.Result{}, err
+	} else {
+		stream, err := x.client_api.UpdateGPUDriver(ctx, copy)
+		err = GPUDriverReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
+	}
+}
+
+func (x *GPUDriverCommonApi) ShowGPUDriver(ctx context.Context, filter *edgeproto.GPUDriver, showData *ShowGPUDriver) error {
+	if x.internal_api != nil {
+		showData.Ctx = ctx
+		return x.internal_api.ShowGPUDriver(filter, showData)
+	} else {
+		stream, err := x.client_api.ShowGPUDriver(ctx, filter)
+		showData.ReadStream(stream, err)
+		return err
+	}
+}
+
+func NewInternalGPUDriverApi(api edgeproto.GPUDriverApiServer) *GPUDriverCommonApi {
+	apiWrap := GPUDriverCommonApi{}
+	apiWrap.internal_api = api
+	return &apiWrap
+}
+
+func NewClientGPUDriverApi(api edgeproto.GPUDriverApiClient) *GPUDriverCommonApi {
+	apiWrap := GPUDriverCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+type GPUDriverTestOptions struct {
+	createdData []edgeproto.GPUDriver
+}
+
+type GPUDriverTestOp func(opts *GPUDriverTestOptions)
+
+func WithCreatedGPUDriverTestData(createdData []edgeproto.GPUDriver) GPUDriverTestOp {
+	return func(opts *GPUDriverTestOptions) { opts.createdData = createdData }
+}
+
+func InternalGPUDriverTest(t *testing.T, test string, api edgeproto.GPUDriverApiServer, testData []edgeproto.GPUDriver, ops ...GPUDriverTestOp) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalGPUDriverTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	switch test {
+	case "cud":
+		basicGPUDriverCudTest(t, ctx, NewInternalGPUDriverApi(api), testData, ops...)
+	case "show":
+		basicGPUDriverShowTest(t, ctx, NewInternalGPUDriverApi(api), testData)
+	}
+}
+
+func ClientGPUDriverTest(t *testing.T, test string, api edgeproto.GPUDriverApiClient, testData []edgeproto.GPUDriver, ops ...GPUDriverTestOp) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientGPUDriverTest")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	switch test {
+	case "cud":
+		basicGPUDriverCudTest(t, ctx, NewClientGPUDriverApi(api), testData, ops...)
+	case "show":
+		basicGPUDriverShowTest(t, ctx, NewClientGPUDriverApi(api), testData)
+	}
+}
+
+func basicGPUDriverShowTest(t *testing.T, ctx context.Context, api *GPUDriverCommonApi, testData []edgeproto.GPUDriver) {
+	var err error
+
+	show := ShowGPUDriver{}
+	show.Init()
+	filterNone := edgeproto.GPUDriver{}
+	err = api.ShowGPUDriver(ctx, &filterNone, &show)
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)+GPUDriverShowExtraCount, len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
+
+func GetGPUDriver(t *testing.T, ctx context.Context, api *GPUDriverCommonApi, key *edgeproto.GPUDriverKey, out *edgeproto.GPUDriver) bool {
+	var err error
+
+	show := ShowGPUDriver{}
+	show.Init()
+	filter := edgeproto.GPUDriver{}
+	filter.SetKey(key)
+	err = api.ShowGPUDriver(ctx, &filter, &show)
+	require.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
+func basicGPUDriverCudTest(t *testing.T, ctx context.Context, api *GPUDriverCommonApi, testData []edgeproto.GPUDriver, ops ...GPUDriverTestOp) {
+	var err error
+
+	if len(testData) < 3 {
+		require.True(t, false, "Need at least 3 test data objects")
+		return
+	}
+	options := GPUDriverTestOptions{}
+	for _, op := range ops {
+		op(&options)
+	}
+	createdData := testData
+	if options.createdData != nil {
+		createdData = options.createdData
+	}
+
+	// test create
+	CreateGPUDriverData(t, ctx, api, testData)
+
+	// test duplicate Create - should fail
+	_, err = api.CreateGPUDriver(ctx, &testData[0])
+	require.NotNil(t, err, "Create duplicate GPUDriver")
+
+	// test show all items
+	basicGPUDriverShowTest(t, ctx, api, createdData)
+
+	// test Delete
+	_, err = api.DeleteGPUDriver(ctx, &createdData[0])
+	require.Nil(t, err, "Delete GPUDriver %s", testData[0].GetKey().GetKeyString())
+	show := ShowGPUDriver{}
+	show.Init()
+	filterNone := edgeproto.GPUDriver{}
+	err = api.ShowGPUDriver(ctx, &filterNone, &show)
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(createdData)-1+GPUDriverShowExtraCount, len(show.Data), "Show count")
+	show.AssertNotFound(t, &createdData[0])
+	// test update of missing object
+	_, err = api.UpdateGPUDriver(ctx, &createdData[0])
+	require.NotNil(t, err, "Update missing object")
+	// Create it back
+	_, err = api.CreateGPUDriver(ctx, &testData[0])
+	require.Nil(t, err, "Create GPUDriver %s", testData[0].GetKey().GetKeyString())
+
+	// test invalid keys
+	bad := edgeproto.GPUDriver{}
+	_, err = api.CreateGPUDriver(ctx, &bad)
+	require.NotNil(t, err, "Create GPUDriver with no key info")
+
+}
+
+func InternalGPUDriverCreate(t *testing.T, api edgeproto.GPUDriverApiServer, testData []edgeproto.GPUDriver) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalGPUDriverCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	CreateGPUDriverData(t, ctx, NewInternalGPUDriverApi(api), testData)
+}
+
+func ClientGPUDriverCreate(t *testing.T, api edgeproto.GPUDriverApiClient, testData []edgeproto.GPUDriver) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientGPUDriverCreate")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	CreateGPUDriverData(t, ctx, NewClientGPUDriverApi(api), testData)
+}
+
+func CreateGPUDriverData(t *testing.T, ctx context.Context, api *GPUDriverCommonApi, testData []edgeproto.GPUDriver) {
+	var err error
+
+	for _, obj := range testData {
+		_, err = api.CreateGPUDriver(ctx, &obj)
+		require.Nil(t, err, "Create GPUDriver %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func FindGPUDriverData(key *edgeproto.GPUDriverKey, testData []edgeproto.GPUDriver) (*edgeproto.GPUDriver, bool) {
+	for ii, _ := range testData {
+		if testData[ii].GetKey().Matches(key) {
+			return &testData[ii], true
+		}
+	}
+	return nil, false
+}
+
 type ShowCloudlet struct {
 	Data map[string]edgeproto.Cloudlet
 	grpc.ServerStream
@@ -568,6 +914,178 @@ func FindCloudletInfoData(key *edgeproto.CloudletKey, testData []edgeproto.Cloud
 	return nil, false
 }
 
+func (r *Run) GPUDriverApi(data *[]edgeproto.GPUDriver, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for GPUDriver", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.GPUDriver{}
+		out, err := r.client.ShowGPUDriver(r.ctx, obj)
+		if err != nil {
+			r.logErr("GPUDriverApi", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.GPUDriver)
+			if !ok {
+				panic(fmt.Sprintf("RunGPUDriverApi expected dataOut type *[]edgeproto.GPUDriver, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "create":
+			out, err := r.client.CreateGPUDriver(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("GPUDriverApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
+		case "delete":
+			out, err := r.client.DeleteGPUDriver(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("GPUDriverApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
+		case "update":
+			// set specified fields
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for GPUDriver", "err", err)
+				*r.Rc = false
+				return
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+
+			out, err := r.client.UpdateGPUDriver(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("GPUDriverApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowGPUDriver(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("GPUDriverApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.GPUDriver)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi expected dataOut type *[]edgeproto.GPUDriver, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
+	}
+}
+
+func (r *Run) GPUDriverApi_GPUDriverBuildMember(data *[]edgeproto.GPUDriverBuildMember, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for GPUDriverBuildMember", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "addgpudriverbuild":
+			out, err := r.client.AddGPUDriverBuild(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("GPUDriverApi_GPUDriverBuildMember[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi_GPUDriverBuildMember expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
+		case "removegpudriverbuild":
+			out, err := r.client.RemoveGPUDriverBuild(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("GPUDriverApi_GPUDriverBuildMember[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi_GPUDriverBuildMember expected dataOut type *[][]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
+		case "getgpudriverbuildurl":
+			out, err := r.client.GetGPUDriverBuildURL(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("GPUDriverApi_GPUDriverBuildMember[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.GPUDriverBuildURL)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi_GPUDriverBuildMember expected dataOut type *[]edgeproto.GPUDriverBuildURL, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
+func (s *DummyServer) CreateGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_CreateGPUDriverServer) error {
+	var err error
+	s.GPUDriverCache.Update(server.Context(), in, 0)
+	if true {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
+	}
+	return err
+}
+
+func (s *DummyServer) DeleteGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_DeleteGPUDriverServer) error {
+	var err error
+	s.GPUDriverCache.Delete(server.Context(), in, 0)
+	if true {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
+	}
+	return err
+}
+
+func (s *DummyServer) UpdateGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_UpdateGPUDriverServer) error {
+	var err error
+	s.GPUDriverCache.Update(server.Context(), in, 0)
+	if true {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.Result{})
+		}
+	}
+	return err
+}
+
+func (s *DummyServer) ShowGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_ShowGPUDriverServer) error {
+	var err error
+	obj := &edgeproto.GPUDriver{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.GPUDriver{})
+		}
+	}
+	err = s.GPUDriverCache.Show(in, func(obj *edgeproto.GPUDriver) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
+}
+
 func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for Cloudlet", "mode", r.Mode)
 	if r.Mode == "show" {
@@ -1012,6 +1530,143 @@ func ResultReadStream(stream ResultStream) ([]edgeproto.Result, error) {
 		output = append(output, *obj)
 	}
 	return output, nil
+}
+
+func (s *ApiClient) CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	stream, err := api.CreateGPUDriver(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateGPUDriver")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	stream, err := api.DeleteGPUDriver(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteGPUDriver")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) UpdateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	stream, err := api.UpdateGPUDriver(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) UpdateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateGPUDriver")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+type GPUDriverStream interface {
+	Recv() (*edgeproto.GPUDriver, error)
+}
+
+func GPUDriverReadStream(stream GPUDriverStream) ([]edgeproto.GPUDriver, error) {
+	output := []edgeproto.GPUDriver{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read GPUDriver stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.GPUDriver, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	stream, err := api.ShowGPUDriver(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return GPUDriverReadStream(stream)
+}
+
+func (s *CliClient) ShowGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.GPUDriver, error) {
+	output := []edgeproto.GPUDriver{}
+	args := append(s.BaseArgs, "controller", "ShowGPUDriver")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	stream, err := api.AddGPUDriverBuild(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "AddGPUDriverBuild")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	stream, err := api.RemoveGPUDriverBuild(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ResultReadStream(stream)
+}
+
+func (s *CliClient) RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error) {
+	output := []edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "RemoveGPUDriverBuild")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	return api.GetGPUDriverBuildURL(ctx, in)
+}
+
+func (s *CliClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error) {
+	out := edgeproto.GPUDriverBuildURL{}
+	args := append(s.BaseArgs, "controller", "GetGPUDriverBuildURL")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type GPUDriverApiClient interface {
+	CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error)
+	DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error)
+	UpdateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error)
+	ShowGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.GPUDriver, error)
+	AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error)
+	RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error)
+	GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error)
 }
 
 func (s *ApiClient) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {

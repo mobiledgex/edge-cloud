@@ -45,6 +45,7 @@ var commercialCerts = flag.Bool("commercialCerts", false, "Get TLS certs from Le
 var appDNSRoot = flag.String("appDNSRoot", "mobiledgex.net", "App domain name root")
 var chefServerPath = flag.String("chefServerPath", "", "Chef server path")
 var upgrade = flag.Bool("upgrade", false, "Flag to initiate upgrade run as part of crm bringup")
+var cacheDir = flag.String("cacheDir", "/tmp/", "Cache used by CRM to store frequently accessed data")
 
 // myCloudletInfo is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudletInfo is provided as a configuration - either command line or
@@ -190,6 +191,7 @@ func main() {
 			CloudletInternalCache: &controllerData.CloudletInternalCache,
 			VMPoolCache:           &controllerData.VMPoolCache,
 			VMPoolInfoCache:       &controllerData.VMPoolInfoCache,
+			GPUDriverCache:        &controllerData.GPUDriverCache,
 		}
 
 		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
@@ -345,6 +347,10 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		Upgrade:             *upgrade,
 		AccessApi:           accessApi,
 		TrustPolicy:         cloudlet.TrustPolicy,
+		CacheDir:            *cacheDir,
+	}
+	if cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+		pc.GPUConfig = &cloudlet.GpuConfig
 	}
 	pfType := pf.GetType(cloudlet.PlatformType.String())
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)

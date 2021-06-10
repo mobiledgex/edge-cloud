@@ -37,7 +37,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	defer InfluxUsageUnitTestStop()
 
 	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)
-
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 

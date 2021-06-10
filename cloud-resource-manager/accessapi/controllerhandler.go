@@ -109,6 +109,12 @@ func (s *ControllerHandler) GetAccessData(ctx context.Context, req *edgeproto.Ac
 			return nil, err
 		}
 		out, merr = json.Marshal(creds)
+	case GetGCSCreds:
+		creds, err := s.vaultClient.GetGCSCreds(ctx)
+		if err != nil {
+			return nil, err
+		}
+		out = creds
 	default:
 		return nil, fmt.Errorf("Unexpected request data type %s", req.Type)
 	}

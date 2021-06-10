@@ -1138,6 +1138,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(GPUType(0)):
+		if en, ok := GPUType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(OSType(0)):
+		if en, ok := OSType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(ReportSchedule(0)):
 		if en, ok := ReportSchedule_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1177,6 +1185,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowOperatorCode":    struct{}{},
 	"ShowResTagTable":     struct{}{},
 	"ShowApp":             struct{}{},
+	"ShowGPUDriver":       struct{}{},
 	"ShowCloudlet":        struct{}{},
 	"ShowCloudletInfo":    struct{}{},
 	"ShowCloudletMetrics": struct{}{},
@@ -1219,6 +1228,8 @@ var AllKeyTags = []string{
 	"deviceid",
 	"deviceidtype",
 	"flavor",
+	"gpudriver",
+	"gpudriverorg",
 	"node",
 	"noderegion",
 	"nodetype",
@@ -1247,6 +1258,8 @@ var AllKeyTagsMap = map[string]struct{}{
 	"deviceid":        struct{}{},
 	"deviceidtype":    struct{}{},
 	"flavor":          struct{}{},
+	"gpudriver":       struct{}{},
+	"gpudriverorg":    struct{}{},
 	"node":            struct{}{},
 	"noderegion":      struct{}{},
 	"nodetype":        struct{}{},

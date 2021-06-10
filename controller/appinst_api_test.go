@@ -110,6 +110,7 @@ func TestAppInstApi(t *testing.T) {
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -394,6 +395,7 @@ func TestAutoClusterInst(t *testing.T) {
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)

@@ -113,7 +113,7 @@ func GetAuthToken(ctx context.Context, host string, authApi RegistryAuthApi, use
 	reqConfig.Headers = make(map[string]string)
 	reqConfig.Headers["Content-Type"] = "application/x-www-form-urlencoded"
 
-	resp, err := SendHTTPReq(ctx, "POST", url, authApi, &reqConfig, strings.NewReader("username="+userName+"&scope=member-of-groups:readers"))
+	resp, err := SendHTTPReq(ctx, "POST", url, authApi, NoCreds, &reqConfig, strings.NewReader("username="+userName+"&scope=member-of-groups:readers"))
 	if err != nil {
 		return "", err
 	}
@@ -260,7 +260,7 @@ func handleWWWAuth(ctx context.Context, method, regUrl, authHeader string, auth 
  * - The Registry authorizes the client by validating the Bearer token and the claim set embedded within
  *   it and begins the session as usual
  */
-func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAuthApi, reqConfig *RequestConfig, body io.Reader) (*http.Response, error) {
+func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAuthApi, urlCreds string, reqConfig *RequestConfig, body io.Reader) (*http.Response, error) {
 	var auth *RegistryAuth
 	var err error
 
@@ -273,6 +273,16 @@ func SendHTTPReq(ctx context.Context, method, regUrl string, authApi RegistryAut
 	} else {
 		auth = nil
 		log.SpanLog(ctx, log.DebugLevelApi, "warning, cannot get registry credentials from vault - assume public registry", "err", err)
+	}
+	if urlCreds != "" {
+		out := strings.Split(urlCreds, ":")
+		if len(out) != 2 {
+			return nil, fmt.Errorf("Invalid URL credentials %s, valid format is 'username:password'", urlCreds)
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "using user defined registry credentials")
+		auth.AuthType = BasicAuth
+		auth.Username = out[0]
+		auth.Password = out[1]
 	}
 	resp, err := SendHTTPReqAuth(ctx, method, regUrl, auth, reqConfig, body)
 	if err != nil {
@@ -341,7 +351,7 @@ func ValidateDockerRegistryPath(ctx context.Context, regUrl string, authApi Regi
 	regUrl = fmt.Sprintf("%s://%s/%s%s/tags/list", urlObj.Scheme, urlObj.Host, version, regPath)
 	log.SpanLog(ctx, log.DebugLevelApi, "registry api url", "url", regUrl)
 
-	resp, err := SendHTTPReq(ctx, "GET", regUrl, authApi, nil, nil)
+	resp, err := SendHTTPReq(ctx, "GET", regUrl, authApi, NoCreds, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -373,7 +383,7 @@ func ValidateVMRegistryPath(ctx context.Context, imgUrl string, authApi Registry
 		return fmt.Errorf("image path is empty")
 	}
 
-	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, nil, nil)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, NoCreds, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -394,7 +404,7 @@ func ValidateOvfRegistryPath(ctx context.Context, imgUrl string, authApi Registr
 		return fmt.Errorf("cannot parse url %s - %v", imgUrl, err)
 	}
 	urlMinusFile := strings.Replace(imgUrl, path.Base(parsedUrl.Path), "", 1)
-	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, nil, nil)
+	resp, err := SendHTTPReq(ctx, "GET", imgUrl, authApi, NoCreds, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -440,7 +450,7 @@ func ValidateOvfRegistryPath(ctx context.Context, imgUrl string, authApi Registr
 	}
 	// check that all referenced files are available
 	for _, f := range filesToCheck {
-		fresp, err := SendHTTPReq(ctx, "HEAD", f, authApi, nil, nil)
+		fresp, err := SendHTTPReq(ctx, "HEAD", f, authApi, NoCreds, nil, nil)
 		if err != nil {
 			return fmt.Errorf("unable to get referenced file: %s - %v", f, err)
 		}

@@ -30,6 +30,8 @@ enum VersionHash {
   HASH_a18636af1f4272c38ca72881b2a8bcea = 22 [(protogen.upgrade_func) = "SetTrusted"];
   HASH_efbddcee4ba444e3656f64e430a5e3be = 23; // Add VirtualClusterInstKey
   HASH_c2c322505017054033953f6104002bf5 = 24 [(protogen.upgrade_func) = "CloudletResourceUpgradeFunc"];
+  HASH_facc3c3c9c76463c8d8b3c874ce43487 = 25;
+  HASH_8ba950479a03ab77edfad426ea53c173 = 26;
 
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "1";

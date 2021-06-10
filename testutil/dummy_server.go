@@ -100,6 +100,16 @@ func (s *DummyServer) SetDummyOrgObjs(ctx context.Context, a Action, org string,
 			s.VMPoolCache.Delete(ctx, &vmpool, int64(ii))
 		}
 
+		gpuDriver := edgeproto.GPUDriver{}
+		gpuDriver.Key.Name = name + "gpudriver"
+		gpuDriver.Key.Organization = org
+		gpuDriver.Type = edgeproto.GPUType_GPU_TYPE_PASSTHROUGH
+		if a == Create {
+			s.GPUDriverCache.Update(ctx, &gpuDriver, int64(ii))
+		} else if a == Delete {
+			s.GPUDriverCache.Delete(ctx, &gpuDriver, int64(ii))
+		}
+
 		autoprov := edgeproto.AutoProvPolicy{}
 		autoprov.Key.Name = name + "autoprov"
 		autoprov.Key.Organization = org
