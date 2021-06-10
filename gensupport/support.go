@@ -133,10 +133,13 @@ func (s *PluginSupport) GetPackageName(obj generator.Object) string {
 	return strings.Replace(pkg, ".", "_", -1)
 }
 
-func (s *PluginSupport) GetPackage(obj generator.Object) string {
+func (s *PluginSupport) GetPackage(obj generator.Object, ops ...Op) string {
+	opts := getOptions(ops)
 	pkg := s.GetPackageName(obj)
 	if pkg != "" {
-		s.UsedPkgs[pkg] = obj.File().FileDescriptorProto
+		if !opts.noImport {
+			s.UsedPkgs[pkg] = obj.File().FileDescriptorProto
+		}
 		pkg += "."
 	}
 	return pkg
@@ -145,8 +148,8 @@ func (s *PluginSupport) GetPackage(obj generator.Object) string {
 // FQTypeName returns the fully qualified type name (includes package
 // and parents for nested definitions) for the given generator.Object.
 // This also adds the package to a list of used packages for PrintUsedImports().
-func (s *PluginSupport) FQTypeName(g *generator.Generator, obj generator.Object) string {
-	pkg := s.GetPackage(obj)
+func (s *PluginSupport) FQTypeName(g *generator.Generator, obj generator.Object, ops ...Op) string {
+	pkg := s.GetPackage(obj, ops...)
 	return pkg + generator.CamelCaseSlice(obj.TypeName())
 }
 
@@ -233,9 +236,27 @@ func WasVisited(desc *generator.Descriptor, visited []*generator.Descriptor) boo
 	return false
 }
 
+type Options struct {
+	noImport bool
+}
+
+type Op func(opts *Options)
+
+func WithNoImport() Op {
+	return func(opts *Options) { opts.noImport = true }
+}
+
+func getOptions(ops []Op) *Options {
+	options := Options{}
+	for _, op := range ops {
+		op(&options)
+	}
+	return &options
+}
+
 // Similar to generator.GoType(), but does not prepend any array or pointer
 // references (* or &).
-func (s *PluginSupport) GoType(g *generator.Generator, field *descriptor.FieldDescriptorProto) string {
+func (s *PluginSupport) GoType(g *generator.Generator, field *descriptor.FieldDescriptorProto, ops ...Op) string {
 	typ := ""
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
@@ -262,12 +283,12 @@ func (s *PluginSupport) GoType(g *generator.Generator, field *descriptor.FieldDe
 		g.Fail("group type not allowed")
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		desc := GetDesc(g, field.GetTypeName())
-		typ = s.FQTypeName(g, desc)
+		typ = s.FQTypeName(g, desc, ops...)
 	case descriptor.FieldDescriptorProto_TYPE_BYTES:
 		typ = "[]byte"
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
 		desc := GetEnumDesc(g, field.GetTypeName())
-		typ = s.FQTypeName(g, desc)
+		typ = s.FQTypeName(g, desc, ops...)
 	case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
 		typ = "int32"
 	case descriptor.FieldDescriptorProto_TYPE_SFIXED64:
@@ -445,7 +466,7 @@ type MapType struct {
 	DefValue     string
 }
 
-func (s *PluginSupport) GetMapType(g *generator.Generator, field *descriptor.FieldDescriptorProto) *MapType {
+func (s *PluginSupport) GetMapType(g *generator.Generator, field *descriptor.FieldDescriptorProto, ops ...Op) *MapType {
 	if *field.Type != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 		return nil
 	}
@@ -456,8 +477,8 @@ func (s *PluginSupport) GetMapType(g *generator.Generator, field *descriptor.Fie
 	m := MapType{}
 	m.KeyField = desc.Field[0]
 	m.ValField = desc.Field[1]
-	m.KeyType = s.GoType(g, m.KeyField)
-	m.ValType = s.GoType(g, m.ValField)
+	m.KeyType = s.GoType(g, m.KeyField, ops...)
+	m.ValType = s.GoType(g, m.ValField, ops...)
 	if *m.ValField.Type == descriptor.FieldDescriptorProto_TYPE_STRING &&
 		*m.KeyField.Type == descriptor.FieldDescriptorProto_TYPE_STRING {
 		m.FlagType = "StringToString"
