@@ -82,7 +82,7 @@ path "ssh/sign/machine" {
   capabilities = [ "create", "update" ]
 }
 
-path "secret/data/$REGION/kafka/*" {
+path "secret/data/kafka/$REGION/*" {
   capabilities = [ "create", "update", "delete", "read" ]
 }
 EOF
