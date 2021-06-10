@@ -71,7 +71,7 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 		} else if cloudlet.KafkaCluster == "" {
 			return
 		}
-		producer, err = s.newProducer(ctx, &cloudletKey)
+		producer, err = s.newProducer(ctx, region, &cloudletKey)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to create new producer", "cloudlet", cloudletKey, "error", err)
 			return
@@ -83,14 +83,13 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 			return
 		}
 		if producer.address != cloudlet.KafkaCluster {
-			producer, err = s.newProducer(ctx, &cloudletKey)
+			producer, err = s.newProducer(ctx, region, &cloudletKey)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to create new producer", "cloudlet", cloudletKey, "error", err)
 				return
 			}
 		}
 	}
-
 	//split the events into two main topics, "operator events" and "developer events"
 	// if there are other orgs tagged besides the operator org and "mobiledgex", its a dev event
 	// TODO: add a third prefix (mobiledgex) for events that we do?
@@ -114,16 +113,16 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 		Value:     sarama.StringEncoder(buildMessageBody(event)),
 		Timestamp: event.Timestamp,
 	}
-	go s.sendMessage(ctx, producer.producer, message, &cloudletKey)
+	go s.sendMessage(ctx, producer.producer, message, &cloudletKey, region)
 }
 
-func (s *NodeMgr) sendMessage(ctx context.Context, producer *sarama.AsyncProducer, message *sarama.ProducerMessage, cloudletKey *edgeproto.CloudletKey) {
+func (s *NodeMgr) sendMessage(ctx context.Context, producer *sarama.AsyncProducer, message *sarama.ProducerMessage, cloudletKey *edgeproto.CloudletKey, region string) {
 	(*producer).Input() <- message
 	for {
 		select {
 		case <-(*producer).Errors():
 			// repull the credentials from vault and try it again in case the creds got changed in an UpdateCloudlet
-			newProducer, err := s.newProducer(ctx, cloudletKey)
+			newProducer, err := s.newProducer(ctx, region, cloudletKey)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to create new producer", "cloudlet", cloudletKey, "error", err)
 				return
@@ -143,7 +142,7 @@ func (s *NodeMgr) sendMessage(ctx context.Context, producer *sarama.AsyncProduce
 	}
 }
 
-func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (producer, error) {
+func (s *NodeMgr) newProducer(ctx context.Context, region string, key *edgeproto.CloudletKey) (producer, error) {
 	kafkaCreds := KafkaCreds{}
 	// if youre connected to controller, go through controller
 	if s.MyNode.Key.Type == NodeTypeCRM || s.AccessKeyClient.enabled {
@@ -159,7 +158,7 @@ func (s *NodeMgr) newProducer(ctx context.Context, key *edgeproto.CloudletKey) (
 			return producer{}, err
 		}
 	} else {
-		path := GetKafkaVaultPath(s.Region, key.Name, key.Organization)
+		path := GetKafkaVaultPath(region, key.Name, key.Organization)
 		err := vault.GetData(s.VaultConfig, path, 0, &kafkaCreds)
 		if err != nil {
 			return producer{}, fmt.Errorf("Error pulling kafka credentials from vault: %v", err)
@@ -226,5 +225,5 @@ func buildMessageBody(event EventData) string {
 }
 
 func GetKafkaVaultPath(region, cloudletName, org string) string {
-	return fmt.Sprintf("secret/data/%s/kafka/%s/%s", region, org, cloudletName)
+	return fmt.Sprintf("secret/data/kafka/%s/%s/%s", region, org, cloudletName)
 }
