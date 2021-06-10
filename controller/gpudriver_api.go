@@ -80,11 +80,11 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	//     * Pkg must be deb pkg
 	//     * Pkg control file must have kernel dependency specified
 	if build.OperatingSystem == edgeproto.OSType_LINUX {
-		cb.Send(&edgeproto.Result{Message: "Verify if GPU driver package is a debian package"})
+		cb.Send(&edgeproto.Result{Message: "Verifying if GPU driver package is a debian package"})
 		if ext != ".deb" {
 			return fmt.Errorf("Only supported file extension for Linux GPU driver is '.deb', given %s", ext)
 		}
-		cb.Send(&edgeproto.Result{Message: "Verify if kernel dependency is specified as part of package's control file"})
+		cb.Send(&edgeproto.Result{Message: "Verifying if kernel dependency is specified as part of package's control file"})
 		testFileName := "/tmp/" + strings.ReplaceAll(fileName, "/", "_")
 		err = ioutil.WriteFile(testFileName, []byte(fileContents), 0644)
 		if err != nil {
@@ -103,7 +103,7 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	}
 
 	// Upload the package to GCS
-	cb.Send(&edgeproto.Result{Message: "Upload the GPU driver to secure storage"})
+	cb.Send(&edgeproto.Result{Message: "Uploading the GPU driver to secure storage"})
 	err = storageClient.UploadObject(ctx, fileName, bytes.NewBufferString(fileContents))
 	if err != nil {
 		return fmt.Errorf("Failed to upload GPU driver build to %s, %v", fileName, err)
@@ -113,7 +113,7 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 }
 
 func setupGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey, licenseConfig *string, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) error {
-	cb.Send(&edgeproto.Result{Message: "Upload the GPU driver license config to secure storage"})
+	cb.Send(&edgeproto.Result{Message: "Uploading the GPU driver license config to secure storage"})
 	fileName := cloudcommon.GetGPUDriverLicenseStoragePath(driverKey)
 	err := storageClient.UploadObject(ctx, fileName, bytes.NewBufferString(*licenseConfig))
 	if err != nil {
@@ -130,6 +130,21 @@ func deleteGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSCli
 		return fmt.Errorf("Failed to delete GPU driver license to %s, %v", fileName, err)
 	}
 	return nil
+}
+
+func (s *GPUDriverApi) undoStateChange(ctx context.Context, key *edgeproto.GPUDriverKey) {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		driver := edgeproto.GPUDriver{}
+		if s.store.STMGet(stm, key, &driver) {
+			return key.ExistsError()
+		}
+		driver.State = ""
+		s.store.STMPut(stm, &driver)
+		return nil
+	})
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to undo state change", "key", key, "err", err)
+	}
 }
 
 func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) (reterr error) {
@@ -163,7 +178,7 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	defer func() {
 		if reterr != nil {
 			// undo changes
-			err = s.DeleteGPUDriver(in, cb)
+			err = s.deleteGPUDriverInternal(DefCallContext().WithUndo(), in, cb)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelApi, "failed to undo gpu driver create", "key", in.Key, "err", err)
 			}
@@ -206,7 +221,7 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	return nil
 }
 
-func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_UpdateGPUDriverServer) error {
+func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_UpdateGPUDriverServer) (reterr error) {
 	ctx := cb.Context()
 	err := in.ValidateUpdateFields()
 	if err != nil {
@@ -236,6 +251,8 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		if err := isBusyState(&in.Key, cur.State, ignoreState); err != nil {
 			return err
 		}
+		old := edgeproto.GPUDriver{}
+		old.DeepCopyIn(&cur)
 		changed = cur.CopyInFields(in)
 		if err := cur.Validate(nil); err != nil {
 			return err
@@ -243,8 +260,10 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		if changed == 0 {
 			return nil
 		}
-		cur.State = ChangeInProgress
-		s.store.STMPut(stm, &cur)
+		// we'll only commit state change now,
+		// obj update will happen as part of Step-3
+		old.State = ChangeInProgress
+		s.store.STMPut(stm, &old)
 		return nil
 	})
 	if err != nil {
@@ -253,6 +272,11 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	if changed == 0 {
 		return nil
 	}
+	defer func() {
+		if reterr != nil {
+			s.undoStateChange(ctx, &in.Key)
+		}
+	}()
 
 	// Step-2: Validate and upload the license-config to GCS
 	// If license config is present, upload it to GCS
@@ -280,14 +304,10 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	// Step-3: And then update license config to reflect GCS URL and update it to etcd
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.GPUDriver{}
-		changed := 0
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		changed = cur.CopyInFields(in)
-		if changed == 0 {
-			return nil
-		}
+		cur.CopyInFields(in)
 		cur.State = ""
 		s.store.STMPut(stm, &cur)
 		return nil
@@ -307,6 +327,10 @@ func isBusyState(key *edgeproto.GPUDriverKey, state string, ignoreState bool) er
 }
 
 func (s *GPUDriverApi) DeleteGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_DeleteGPUDriverServer) error {
+	return s.deleteGPUDriverInternal(DefCallContext(), in, cb)
+}
+
+func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_DeleteGPUDriverServer) (reterr error) {
 	ctx := cb.Context()
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
@@ -332,11 +356,13 @@ func (s *GPUDriverApi) DeleteGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		if err := isBusyState(&in.Key, cur.State, ignoreState); err != nil {
-			return err
+		if !cctx.Undo {
+			if err := isBusyState(&in.Key, cur.State, ignoreState); err != nil {
+				return err
+			}
 		}
 		buildFiles = []string{}
-		for _, build := range in.Builds {
+		for _, build := range cur.Builds {
 			fileName := cloudcommon.GetGPUDriverBuildPathFromURL(build.DriverPath, nodeMgr.DeploymentTag)
 			buildFiles = append(buildFiles, fileName)
 		}
@@ -348,6 +374,11 @@ func (s *GPUDriverApi) DeleteGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if reterr != nil {
+			s.undoStateChange(ctx, &in.Key)
+		}
+	}()
 	// Step-2: Delete objects from GCS
 	if len(buildFiles) > 0 || licenseConfig != "" {
 		storageClient, err := getGCSStorageClient(ctx)
@@ -355,16 +386,26 @@ func (s *GPUDriverApi) DeleteGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			return err
 		}
 		defer storageClient.Close()
-		// Delete license config from GCS
-		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.Key)
-		if err != nil {
-			return err
-		}
-		// Delete builds from GCS
-		for _, filename := range buildFiles {
-			err = storageClient.DeleteObject(ctx, filename)
+		if licenseConfig != "" {
+			// Delete license config from GCS
+			err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.Key)
+			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
 			if err != nil {
-				return fmt.Errorf("Failed to delete GPU driver build %s, %v: %v", filename, in.Key, err)
+				cb.Send(&edgeproto.Result{
+					Message: fmt.Sprintf("Unable to delete GPU driver license config from secure storage, %v. Please clean it up manually, continuing", err),
+				})
+			}
+		}
+		if len(buildFiles) > 0 {
+			// Delete builds from GCS
+			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver builds from secure storage"})
+			for _, filename := range buildFiles {
+				err = storageClient.DeleteObject(ctx, filename)
+				if err != nil {
+					cb.Send(&edgeproto.Result{
+						Message: fmt.Sprintf("Unable to delete GPU driver build(%q) from secure storage, %v. Please clean it up manually, continuing", filename, err),
+					})
+				}
 			}
 		}
 	}
@@ -425,7 +466,7 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 	defer func() {
 		if reterr != nil {
 			// undo changes
-			err = s.RemoveGPUDriverBuild(in, cb)
+			err = s.removeGPUDriverBuildInternal(DefCallContext().WithUndo(), in, cb)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelApi, "failed to undo gpu driver build", "key", in.Key, "err", err)
 			}
@@ -473,6 +514,10 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 }
 
 func (s *GPUDriverApi) RemoveGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb edgeproto.GPUDriverApi_RemoveGPUDriverBuildServer) error {
+	return s.removeGPUDriverBuildInternal(DefCallContext(), in, cb)
+}
+
+func (s *GPUDriverApi) removeGPUDriverBuildInternal(cctx *CallContext, in *edgeproto.GPUDriverBuildMember, cb edgeproto.GPUDriverApi_RemoveGPUDriverBuildServer) (reterr error) {
 	ctx := cb.Context()
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
@@ -495,20 +540,21 @@ func (s *GPUDriverApi) RemoveGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, 
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		if err := isBusyState(&in.Key, cur.State, ignoreState); err != nil {
-			return err
+		if !cctx.Undo {
+			if err := isBusyState(&in.Key, cur.State, ignoreState); err != nil {
+				return err
+			}
 		}
-		changed := false
-		for ii, build := range cur.Builds {
+		found := false
+		for _, build := range cur.Builds {
 			if build.Name == in.Build.Name {
-				cur.Builds = append(cur.Builds[:ii], cur.Builds[ii+1:]...)
 				driverURL = build.DriverPath
-				changed = true
+				found = true
 				break
 			}
 		}
-		if !changed {
-			return nil
+		if !found {
+			return fmt.Errorf("Unable to find GPU driver build %s", in.Build.Name)
 		}
 		cur.State = ChangeInProgress
 		s.store.STMPut(stm, &cur)
@@ -517,27 +563,37 @@ func (s *GPUDriverApi) RemoveGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, 
 	if err != nil {
 		return err
 	}
-	if driverURL == "" {
-		return nil
-	}
-	// Step-2: Delete build from GCS
-	cb.Send(&edgeproto.Result{Message: "Deleting GPU driver build from secure storage"})
-	fileName := cloudcommon.GetGPUDriverBuildPathFromURL(driverURL, nodeMgr.DeploymentTag)
-	storageClient, err := getGCSStorageClient(ctx)
-	if err != nil {
-		return err
-	}
-	defer storageClient.Close()
-	err = storageClient.DeleteObject(ctx, fileName)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "failed to delete GCS object", "filename", fileName, "err", err)
-		return err
+	defer func() {
+		if reterr != nil {
+			s.undoStateChange(ctx, &in.Key)
+		}
+	}()
+	if driverURL != "" {
+		// Step-2: Delete build from GCS
+		cb.Send(&edgeproto.Result{Message: "Deleting GPU driver build from secure storage"})
+		fileName := cloudcommon.GetGPUDriverBuildPathFromURL(driverURL, nodeMgr.DeploymentTag)
+		storageClient, err := getGCSStorageClient(ctx)
+		if err != nil {
+			return err
+		}
+		defer storageClient.Close()
+		err = storageClient.DeleteObject(ctx, fileName)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "failed to delete GCS object", "filename", fileName, "err", err)
+			return err
+		}
 	}
 	// Step-3: And then update build details in etcd to reflect build deletion
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.GPUDriver{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
+		}
+		for ii, build := range cur.Builds {
+			if build.Name == in.Build.Name {
+				cur.Builds = append(cur.Builds[:ii], cur.Builds[ii+1:]...)
+				break
+			}
 		}
 		cur.State = ""
 		s.store.STMPut(stm, &cur)
