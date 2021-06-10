@@ -428,6 +428,10 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--chefServerPath")
 		args = append(args, p.ChefServerPath)
 	}
+	if p.CacheDir != "" {
+		args = append(args, "--cacheDir")
+		args = append(args, p.CacheDir)
+	}
 
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
