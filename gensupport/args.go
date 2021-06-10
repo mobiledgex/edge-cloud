@@ -17,6 +17,27 @@ type Arg struct {
 	Comment string
 }
 
+// Get all message types that are used as input to a method in any
+// of the files.
+func GetInputMessages(g *generator.Generator, support *PluginSupport) map[string]*generator.Descriptor {
+	allInputDescs := make(map[string]*generator.Descriptor)
+	for _, protofile := range support.ProtoFiles {
+		if !support.GenFile(protofile.GetName()) {
+			continue
+		}
+		for _, svc := range protofile.GetService() {
+			if len(svc.Method) == 0 {
+				continue
+			}
+			for _, method := range svc.Method {
+				desc := GetDesc(g, method.GetInputType())
+				allInputDescs[*desc.DescriptorProto.Name] = desc
+			}
+		}
+	}
+	return allInputDescs
+}
+
 func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, prefixMessageToAlias bool, count int) {
 	generateArgs(g, support, desc, nil, prefixMessageToAlias, count)
 }
@@ -217,7 +238,7 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			Name:    hierName,
 			Comment: comment,
 		}
-		mapType := support.GetMapType(g, field)
+		mapType := support.GetMapType(g, field, WithNoImport())
 		if mapType != nil && mapType.FlagType != "" {
 			specialArgs[hierName] = mapType.FlagType
 			allargs = append(allargs, arg)
