@@ -46,17 +46,19 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		var modRev int64
-		// also trigger send of vmpool object
 		if s.handler.GetWithRev(key, &cloudlet, &modRev) {
 			if cloudlet.VmPool != "" {
+				// also trigger send of vmpool object
 				s.sendrecv.vmPoolSend.updateInternal(ctx, &edgeproto.VMPoolKey{
 					Name:         cloudlet.VmPool,
 					Organization: key.Organization,
 				}, 0)
 			}
-			// also trigger send of GPU driver object
-			if cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
-				s.sendrecv.gpuDriverSend.updateInternal(ctx, &cloudlet.GpuConfig.Driver, 0)
+			if s.sendrecv.gpuDriverSend != nil {
+				if cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+					// also trigger send of GPU driver object
+					s.sendrecv.gpuDriverSend.updateInternal(ctx, &cloudlet.GpuConfig.Driver, 0)
+				}
 			}
 		}
 	}
