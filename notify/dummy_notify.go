@@ -18,6 +18,7 @@ type DummyHandler struct {
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	VMPoolCache          edgeproto.VMPoolCache
+	GPUDriverCache       edgeproto.GPUDriverCache
 	FlavorCache          edgeproto.FlavorCache
 	ClusterInstCache     edgeproto.ClusterInstCache
 	AppInstInfoCache     edgeproto.AppInstInfoCache
@@ -41,6 +42,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitAppInstCache(&h.AppInstCache)
 	edgeproto.InitCloudletCache(&h.CloudletCache)
 	edgeproto.InitVMPoolCache(&h.VMPoolCache)
+	edgeproto.InitGPUDriverCache(&h.GPUDriverCache)
 	edgeproto.InitAppInstInfoCache(&h.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&h.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
@@ -61,6 +63,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendSettingsCache(&s.SettingsCache)
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
 	mgr.RegisterSendVMPoolCache(&s.VMPoolCache)
+	mgr.RegisterSendGPUDriverCache(&s.GPUDriverCache)
 	mgr.RegisterSendTrustPolicyCache(&s.TrustPolicyCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
@@ -94,6 +97,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
 	cl.RegisterRecvCloudletCache(&s.CloudletCache)
 	cl.RegisterRecvVMPoolCache(&s.VMPoolCache)
+	cl.RegisterRecvGPUDriverCache(&s.GPUDriverCache)
 	cl.RegisterRecvFlavorCache(&s.FlavorCache)
 	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
 	cl.RegisterRecvAutoProvPolicyCache(&s.AutoProvPolicyCache)
@@ -122,6 +126,7 @@ const (
 	FreeReservableClusterInstType
 	VMPoolType
 	VMPoolInfoType
+	GPUDriverType
 )
 
 type WaitForCache interface {
@@ -146,6 +151,8 @@ func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 		cache = &s.CloudletCache
 	case VMPoolType:
 		cache = &s.VMPoolCache
+	case GPUDriverType:
+		cache = &s.GPUDriverCache
 	case FlavorType:
 		cache = &s.FlavorCache
 	case ClusterInstType:
@@ -178,6 +185,8 @@ func (c CacheType) String() string {
 		return "CloudletCache"
 	case VMPoolType:
 		return "VMPoolCache"
+	case GPUDriverType:
+		return "GPUDriverCache"
 	case FlavorType:
 		return "FlavorCache"
 	case ClusterInstType:
@@ -244,6 +253,10 @@ func (s *DummyHandler) WaitForCloudlets(count int) error {
 
 func (s *DummyHandler) WaitForVMPools(count int) error {
 	return WaitFor(&s.VMPoolCache, count)
+}
+
+func (s *DummyHandler) WaitForGPUDrivers(count int) error {
+	return WaitFor(&s.GPUDriverCache, count)
 }
 
 func (s *DummyHandler) WaitForFlavors(count int) error {

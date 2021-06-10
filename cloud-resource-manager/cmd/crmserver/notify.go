@@ -22,6 +22,7 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterRecvClusterInstCache(&cd.ClusterInstCache)
 	client.RegisterRecv(notify.NewExecRequestRecv(cd.ExecReqHandler))
 	client.RegisterRecvResTagTableCache(&cd.ResTagTableCache)
+	client.RegisterRecvGPUDriverCache(&cd.GPUDriverCache)
 	client.RegisterSendCloudletInfoCache(&cd.CloudletInfoCache)
 	client.RegisterSendVMPoolInfoCache(&cd.VMPoolInfoCache)
 	client.RegisterSendAppInstInfoCache(&cd.AppInstInfoCache)
@@ -38,6 +39,7 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 
 func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendSettingsCache(&controllerData.SettingsCache)
+	notifyServer.RegisterSendFlavorCache(&controllerData.FlavorCache)
 	notifyServer.RegisterSendVMPoolCache(&controllerData.VMPoolCache)
 	notifyServer.RegisterSendVMPoolInfoCache(&controllerData.VMPoolInfoCache)
 	notifyServer.RegisterSendCloudletCache(controllerData.CloudletCache)
@@ -46,7 +48,6 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
-	notifyServer.RegisterSendFlavorCache(&controllerData.FlavorCache)
 
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)

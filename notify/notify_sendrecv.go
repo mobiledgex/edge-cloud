@@ -122,6 +122,7 @@ type SendRecv struct {
 	clusterInstSend    *ClusterInstSend
 	appInstSend        *AppInstSend
 	vmPoolSend         *VMPoolSend
+	gpuDriverSend      *GPUDriverSend
 	TrustPolicySend    *TrustPolicySend
 	sendRunning        chan struct{}
 	recvRunning        chan struct{}
@@ -157,6 +158,8 @@ func (s *SendRecv) registerSend(send NotifySend) {
 		s.appSend = v
 	case *VMPoolSend:
 		s.vmPoolSend = v
+	case *GPUDriverSend:
+		s.gpuDriverSend = v
 	case *CloudletSend:
 		s.cloudletSend = v
 	case *ClusterInstSend:

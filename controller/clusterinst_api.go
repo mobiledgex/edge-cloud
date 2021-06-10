@@ -805,6 +805,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
+		if in.OptRes == "gpu" {
+			if cloudlet.GpuConfig.GpuType == edgeproto.GPUType_GPU_TYPE_NONE {
+				return fmt.Errorf("Cloudlet %v doesn't support GPU", cloudlet.Key)
+			}
+		}
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize

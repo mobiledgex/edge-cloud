@@ -26,6 +26,7 @@ const (
 	GetSessionTokens        = "get-session-tokens"
 	GetPublicCert           = "get-public-cert"
 	GetKafkaCreds           = "get-kafka-creds"
+	GetGCSCreds             = "get-gcs-creds"
 )
 
 // ControllerClient implements platform.AccessApi for cloudlet
@@ -234,4 +235,15 @@ func (s *ControllerClient) GetKafkaCreds(ctx context.Context) (*node.KafkaCreds,
 	creds := node.KafkaCreds{}
 	err = json.Unmarshal(reply.Data, &creds)
 	return &creds, err
+}
+
+func (s *ControllerClient) GetGCSCreds(ctx context.Context) ([]byte, error) {
+	req := &edgeproto.AccessDataRequest{
+		Type: GetGCSCreds,
+	}
+	reply, err := s.client.GetAccessData(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return reply.Data, err
 }

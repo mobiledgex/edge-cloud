@@ -35,6 +35,7 @@ type AllDataOut struct {
 	Apps                       []edgeproto.Result
 	AppInstances               [][]edgeproto.Result
 	VmPools                    []edgeproto.Result
+	GpuDrivers                 [][]edgeproto.Result
 	Errors                     []Err
 }
 
@@ -77,10 +78,14 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	apicb("appinstances")
 	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
 	apicb("vmpools")
+	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
+	apicb("gpudrivers")
 	out.Errors = run.Errs
 }
 
 func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut, apicb RunAllDataApiCallback) {
+	apicb("gpudrivers")
+	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
 	apicb("vmpools")
 	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
 	apicb("appinstances")
@@ -133,4 +138,5 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.AppInstApi(&in.AppInstances, nil, &out.AppInstances)
 	run.AppInstRefsApi(&in.AppInstRefs, nil, &out.AppInstRefs)
 	run.VMPoolApi(&in.VmPools, nil, &out.VmPools)
+	run.GPUDriverApi(&in.GpuDrivers, nil, &out.GpuDrivers)
 }

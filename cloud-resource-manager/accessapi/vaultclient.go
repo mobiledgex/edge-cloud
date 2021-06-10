@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/gcs"
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
@@ -157,5 +158,12 @@ func (s *VaultClient) GetKafkaCreds(ctx context.Context) (*node.KafkaCreds, erro
 		return nil, fmt.Errorf("failed to get kafka credentials at %s, %v", path, err)
 	}
 	return &creds, nil
+}
 
+func (s *VaultClient) GetGCSCreds(ctx context.Context) ([]byte, error) {
+	creds, err := gcs.GetGCSCreds(ctx, s.vaultConfig)
+	if err != nil {
+		return nil, err
+	}
+	return creds, nil
 }

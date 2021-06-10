@@ -3,6 +3,7 @@ module github.com/mobiledgex/edge-cloud
 go 1.15
 
 require (
+	cloud.google.com/go v0.39.0
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
@@ -102,6 +103,8 @@ require (
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	google.golang.org/api v0.14.0
 	google.golang.org/genproto v0.0.0-20200305110556-506484158171 // indirect
 	google.golang.org/grpc v1.29.1
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
