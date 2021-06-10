@@ -5,6 +5,7 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "cloudletkey.proto";
 import "flavor.proto";
 import "result.proto";
 import "restagtable.proto";
@@ -17,20 +18,6 @@ import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.prot
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
-
-// Cloudlet unique key
-//
-// CloudletKey uniquely identifies a Cloudlet.
-message CloudletKey {
-  // Organization of the cloudlet site
-  string organization = 1 [(protogen.keytag) = "cloudletorg"];
-  // Name of the cloudlet
-  string name = 2 [(protogen.keytag) = "cloudlet"];
-  option (protogen.generate_matches) = true;
-  option (protogen.obj_key) = true;
-  option (gogoproto.gostring) = true;
-  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
-}
 
 // Operation time limits
 //
@@ -563,6 +550,13 @@ message CloudletResourceUsage {
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
 }
 
+
+message CloudletFlavorMappingResults {
+  // Meta flavors available on given cloudlet xxx maybe flavor keys rather than just string names xxx 
+  repeated string flavors = 1;
+}
+
+
 service CloudletApi {
   // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
   // and integrated as part of MobiledgeX edge resource portfolio.
@@ -673,6 +667,17 @@ service CloudletApi {
   };
   option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
+
+  // Find all flavors viable on cloudlet
+  rpc FindAllFlavorsForCloudlet(Cloudlet) returns (CloudletFlavorMappingResults) {
+    option(google.api.http) = {
+    post: "/findmapping/flavorscloudlets"
+    body: "*"
+  };
+  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+  }
+
+
 
   // Revoke crm access key
   rpc RevokeAccessKey(CloudletKey) returns (Result) {

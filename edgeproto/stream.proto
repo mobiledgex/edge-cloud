@@ -4,6 +4,7 @@ syntax = "proto3";
 package edgeproto;
 
 import "result.proto";
+import "cloudletkey.proto";
 import "appinst.proto";
 import "clusterinst.proto";
 import "cloudlet.proto";
