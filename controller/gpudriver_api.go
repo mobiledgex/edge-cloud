@@ -80,11 +80,11 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	//     * Pkg must be deb pkg
 	//     * Pkg control file must have kernel dependency specified
 	if build.OperatingSystem == edgeproto.OSType_LINUX {
-		cb.Send(&edgeproto.Result{Message: "Verifying GPU driver package is a debian package"})
+		cb.Send(&edgeproto.Result{Message: "Verifying if GPU driver package is a debian package"})
 		if ext != ".deb" {
 			return fmt.Errorf("Only supported file extension for Linux GPU driver is '.deb', given %s", ext)
 		}
-		cb.Send(&edgeproto.Result{Message: "Verifying kernel dependency is specified as part of package's control file"})
+		cb.Send(&edgeproto.Result{Message: "Verifying if kernel dependency is specified as part of package's control file"})
 		testFileName := "/tmp/" + strings.ReplaceAll(fileName, "/", "_")
 		err = ioutil.WriteFile(testFileName, []byte(fileContents), 0644)
 		if err != nil {
