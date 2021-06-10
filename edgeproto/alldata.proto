@@ -45,6 +45,7 @@ message AllData {
   repeated AppInst app_instances = 17 [(gogoproto.nullable) = false];
   repeated AppInstRefs app_inst_refs = 18 [(gogoproto.nullable) = false];
   repeated VMPool vm_pools = 19 [(gogoproto.nullable) = false];
+  repeated GPUDriver gpu_drivers = 21 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }

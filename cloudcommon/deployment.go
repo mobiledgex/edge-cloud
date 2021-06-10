@@ -29,6 +29,7 @@ var DeploymentTypeDocker = "docker"
 
 var Download = "download"
 var NoDownload = "nodownload"
+var NoCreds = ""
 
 var ValidAppDeployments = []string{
 	DeploymentTypeKubernetes,
@@ -322,7 +323,7 @@ func GenerateManifest(app *edgeproto.App) (string, error) {
 
 func GetRemoteManifest(ctx context.Context, authApi RegistryAuthApi, target string) (string, error) {
 	var content string
-	err := DownloadFile(ctx, authApi, target, "", &content)
+	err := DownloadFile(ctx, authApi, target, NoCreds, "", &content)
 	if err != nil {
 		return "", err
 	}
@@ -330,7 +331,7 @@ func GetRemoteManifest(ctx context.Context, authApi RegistryAuthApi, target stri
 }
 
 func GetRemoteManifestToFile(ctx context.Context, authApi RegistryAuthApi, target string, filename string) error {
-	return DownloadFile(ctx, authApi, target, filename, nil)
+	return DownloadFile(ctx, authApi, target, NoCreds, filename, nil)
 }
 
 // 5GB = 10minutes
@@ -343,7 +344,7 @@ func GetTimeout(cLen int) time.Duration {
 	return 15 * time.Minute
 }
 
-func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath string, filePath string, content *string) error {
+func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, urlCreds, filePath string, content *string) error {
 	var reqConfig *RequestConfig
 
 	log.SpanLog(ctx, log.DebugLevelApi, "attempt to download file", "file-url", fileUrlPath)
@@ -351,7 +352,7 @@ func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath stri
 	// Adjust request timeout based on File Size
 	//  - Timeout is increased by 10min for every 5GB
 	//  - If less than 5GB, then use default timeout
-	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, authApi, nil, nil)
+	resp, err := SendHTTPReq(ctx, "HEAD", fileUrlPath, authApi, urlCreds, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -368,7 +369,7 @@ func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath stri
 		}
 	}
 
-	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, authApi, reqConfig, nil)
+	resp, err = SendHTTPReq(ctx, "GET", fileUrlPath, authApi, urlCreds, reqConfig, nil)
 	if err != nil {
 		return err
 	}

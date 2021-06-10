@@ -174,6 +174,82 @@ func (InfraApiAccess) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_3aea31a648a25d86, []int{1}
 }
 
+// GPU Type
+//
+// GPUType is the type of GPU supported by a Cloudlet
+//
+// 0: `GPU_TYPE_NONE`
+// 1: `GPU_TYPE_PASSTHROUGH`
+// 2: `GPU_TYPE_VGPU`
+type GPUType int32
+
+const (
+	// GPU not supported
+	GPUType_GPU_TYPE_NONE GPUType = 0
+	// Passthrough GPU
+	GPUType_GPU_TYPE_PASSTHROUGH GPUType = 1
+	// Virtual GPU
+	GPUType_GPU_TYPE_VGPU GPUType = 2
+)
+
+var GPUType_name = map[int32]string{
+	0: "GPU_TYPE_NONE",
+	1: "GPU_TYPE_PASSTHROUGH",
+	2: "GPU_TYPE_VGPU",
+}
+
+var GPUType_value = map[string]int32{
+	"GPU_TYPE_NONE":        0,
+	"GPU_TYPE_PASSTHROUGH": 1,
+	"GPU_TYPE_VGPU":        2,
+}
+
+func (x GPUType) String() string {
+	return proto.EnumName(GPUType_name, int32(x))
+}
+
+func (GPUType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{2}
+}
+
+// Operating System Type
+//
+// OSType is the type of the Operator System
+//
+//  0: `Linux`
+//  1: `Windows`
+// 20: `Others`
+type OSType int32
+
+const (
+	// Linux Operating System
+	OSType_LINUX OSType = 0
+	// Windows Operating System
+	OSType_WINDOWS OSType = 1
+	// Other Operating Systems
+	OSType_OTHERS OSType = 20
+)
+
+var OSType_name = map[int32]string{
+	0:  "LINUX",
+	1:  "WINDOWS",
+	20: "OTHERS",
+}
+
+var OSType_value = map[string]int32{
+	"LINUX":   0,
+	"WINDOWS": 1,
+	"OTHERS":  20,
+}
+
+func (x OSType) String() string {
+	return proto.EnumName(OSType_name, int32(x))
+}
+
+func (OSType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{3}
+}
+
 // Report Schedule
 //
 // ReportSchedule is the interval for which report is to be generated
@@ -214,7 +290,7 @@ func (x ReportSchedule) String() string {
 }
 
 func (ReportSchedule) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{2}
+	return fileDescriptor_3aea31a648a25d86, []int{4}
 }
 
 // Cloudlet unique key
@@ -397,6 +473,8 @@ type PlatformConfig struct {
 	CrmAccessPrivateKey string `protobuf:"bytes,22,opt,name=crm_access_private_key,json=crmAccessPrivateKey,proto3" json:"crm_access_private_key,omitempty"`
 	// controller access API address
 	AccessApiAddr string `protobuf:"bytes,23,opt,name=access_api_addr,json=accessApiAddr,proto3" json:"access_api_addr,omitempty"`
+	// cache dir
+	CacheDir string `protobuf:"bytes,24,opt,name=cache_dir,json=cacheDir,proto3" json:"cache_dir,omitempty"`
 }
 
 func (m *PlatformConfig) Reset()         { *m = PlatformConfig{} }
@@ -557,6 +635,275 @@ func (m *ResourceQuota) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ResourceQuota proto.InternalMessageInfo
 
+// GPU Driver Key
+//
+// GPUDriverKey uniquely identifies a GPU driver
+type GPUDriverKey struct {
+	// Name of the driver
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Organization to which the driver belongs to
+	Organization string `protobuf:"bytes,2,opt,name=organization,proto3" json:"organization,omitempty"`
+}
+
+func (m *GPUDriverKey) Reset()         { *m = GPUDriverKey{} }
+func (m *GPUDriverKey) String() string { return proto.CompactTextString(m) }
+func (*GPUDriverKey) ProtoMessage()    {}
+func (*GPUDriverKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{7}
+}
+func (m *GPUDriverKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GPUDriverKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GPUDriverKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GPUDriverKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GPUDriverKey.Merge(m, src)
+}
+func (m *GPUDriverKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *GPUDriverKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_GPUDriverKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GPUDriverKey proto.InternalMessageInfo
+
+type GPUDriverBuild struct {
+	// Unique identifier key
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Path where the driver package is located, if it is authenticated path,
+	// then credentials must be passed as part of URL (one-time download path)
+	DriverPath string `protobuf:"bytes,2,opt,name=driver_path,json=driverPath,proto3" json:"driver_path,omitempty"`
+	// Optional credentials (username:password) to access driver path
+	DriverPathCreds string `protobuf:"bytes,3,opt,name=driver_path_creds,json=driverPathCreds,proto3" json:"driver_path_creds,omitempty"`
+	// Operator System supported by GPU driver build
+	OperatingSystem OSType `protobuf:"varint,4,opt,name=operating_system,json=operatingSystem,proto3,enum=edgeproto.OSType" json:"operating_system,omitempty"`
+	// Kernel Version supported by GPU driver build
+	KernelVersion string `protobuf:"bytes,5,opt,name=kernel_version,json=kernelVersion,proto3" json:"kernel_version,omitempty"`
+	// Info on hypervisor supported by vGPU driver
+	HypervisorInfo string `protobuf:"bytes,6,opt,name=hypervisor_info,json=hypervisorInfo,proto3" json:"hypervisor_info,omitempty"`
+}
+
+func (m *GPUDriverBuild) Reset()         { *m = GPUDriverBuild{} }
+func (m *GPUDriverBuild) String() string { return proto.CompactTextString(m) }
+func (*GPUDriverBuild) ProtoMessage()    {}
+func (*GPUDriverBuild) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{8}
+}
+func (m *GPUDriverBuild) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GPUDriverBuild) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GPUDriverBuild.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GPUDriverBuild) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GPUDriverBuild.Merge(m, src)
+}
+func (m *GPUDriverBuild) XXX_Size() int {
+	return m.Size()
+}
+func (m *GPUDriverBuild) XXX_DiscardUnknown() {
+	xxx_messageInfo_GPUDriverBuild.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GPUDriverBuild proto.InternalMessageInfo
+
+type GPUDriverBuildMember struct {
+	// Unique identifier key
+	Key GPUDriverKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
+	// GPU driver build
+	Build GPUDriverBuild `protobuf:"bytes,2,opt,name=build,proto3" json:"build"`
+	// Ignore state will ignore any action in-progress on the GPU driver
+	IgnoreState bool `protobuf:"varint,3,opt,name=ignore_state,json=ignoreState,proto3" json:"ignore_state,omitempty"`
+}
+
+func (m *GPUDriverBuildMember) Reset()         { *m = GPUDriverBuildMember{} }
+func (m *GPUDriverBuildMember) String() string { return proto.CompactTextString(m) }
+func (*GPUDriverBuildMember) ProtoMessage()    {}
+func (*GPUDriverBuildMember) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{9}
+}
+func (m *GPUDriverBuildMember) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GPUDriverBuildMember) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GPUDriverBuildMember.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GPUDriverBuildMember) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GPUDriverBuildMember.Merge(m, src)
+}
+func (m *GPUDriverBuildMember) XXX_Size() int {
+	return m.Size()
+}
+func (m *GPUDriverBuildMember) XXX_DiscardUnknown() {
+	xxx_messageInfo_GPUDriverBuildMember.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GPUDriverBuildMember proto.InternalMessageInfo
+
+type GPUDriverBuildURL struct {
+	// Build URL path
+	BuildUrlPath string `protobuf:"bytes,1,opt,name=build_url_path,json=buildUrlPath,proto3" json:"build_url_path,omitempty"`
+	// Build URL path validity
+	Validity Duration `protobuf:"varint,2,opt,name=validity,proto3,casttype=Duration" json:"validity,omitempty"`
+}
+
+func (m *GPUDriverBuildURL) Reset()         { *m = GPUDriverBuildURL{} }
+func (m *GPUDriverBuildURL) String() string { return proto.CompactTextString(m) }
+func (*GPUDriverBuildURL) ProtoMessage()    {}
+func (*GPUDriverBuildURL) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{10}
+}
+func (m *GPUDriverBuildURL) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GPUDriverBuildURL) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GPUDriverBuildURL.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GPUDriverBuildURL) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GPUDriverBuildURL.Merge(m, src)
+}
+func (m *GPUDriverBuildURL) XXX_Size() int {
+	return m.Size()
+}
+func (m *GPUDriverBuildURL) XXX_DiscardUnknown() {
+	xxx_messageInfo_GPUDriverBuildURL.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GPUDriverBuildURL proto.InternalMessageInfo
+
+type GPUDriver struct {
+	// Fields are used for the Update API to specify which fields to apply
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
+	// Unique identifier key
+	Key GPUDriverKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
+	// Type of GPU hardware
+	Type GPUType `protobuf:"varint,3,opt,name=type,proto3,enum=edgeproto.GPUType" json:"type,omitempty"`
+	// List of GPU driver build
+	Builds []GPUDriverBuild `protobuf:"bytes,4,rep,name=builds,proto3" json:"builds"`
+	// License config to setup license (will be stored in secure storage)
+	LicenseConfig string `protobuf:"bytes,5,opt,name=license_config,json=licenseConfig,proto3" json:"license_config,omitempty"`
+	// Additional properties associated with GPU driver build
+	// For example: license server information, driver release date, etc
+	Properties map[string]string `protobuf:"bytes,6,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// State to figure out if any action on the GPU driver is in-progress
+	State string `protobuf:"bytes,7,opt,name=state,proto3" json:"state,omitempty"`
+	// Ignore state will ignore any action in-progress on the GPU driver
+	IgnoreState bool `protobuf:"varint,8,opt,name=ignore_state,json=ignoreState,proto3" json:"ignore_state,omitempty"`
+}
+
+func (m *GPUDriver) Reset()         { *m = GPUDriver{} }
+func (m *GPUDriver) String() string { return proto.CompactTextString(m) }
+func (*GPUDriver) ProtoMessage()    {}
+func (*GPUDriver) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{11}
+}
+func (m *GPUDriver) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GPUDriver) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GPUDriver.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GPUDriver) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GPUDriver.Merge(m, src)
+}
+func (m *GPUDriver) XXX_Size() int {
+	return m.Size()
+}
+func (m *GPUDriver) XXX_DiscardUnknown() {
+	xxx_messageInfo_GPUDriver.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GPUDriver proto.InternalMessageInfo
+
+type GPUConfig struct {
+	// GPU driver key
+	Driver GPUDriverKey `protobuf:"bytes,1,opt,name=driver,proto3" json:"driver"`
+	// Type of GPU hardware supported by the Cloudlet
+	GpuType GPUType `protobuf:"varint,2,opt,name=gpu_type,json=gpuType,proto3,enum=edgeproto.GPUType" json:"gpu_type,omitempty"`
+	// Properties to identify specifics of GPU
+	Properties map[string]string `protobuf:"bytes,3,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (m *GPUConfig) Reset()         { *m = GPUConfig{} }
+func (m *GPUConfig) String() string { return proto.CompactTextString(m) }
+func (*GPUConfig) ProtoMessage()    {}
+func (*GPUConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3aea31a648a25d86, []int{12}
+}
+func (m *GPUConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GPUConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GPUConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GPUConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GPUConfig.Merge(m, src)
+}
+func (m *GPUConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *GPUConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_GPUConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GPUConfig proto.InternalMessageInfo
+
 // Cloudlet
 //
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator.
@@ -644,13 +991,15 @@ type Cloudlet struct {
 	KafkaUser string `protobuf:"bytes,43,opt,name=kafka_user,json=kafkaUser,proto3" json:"kafka_user,omitempty"`
 	// password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
 	KafkaPassword string `protobuf:"bytes,44,opt,name=kafka_password,json=kafkaPassword,proto3" json:"kafka_password,omitempty"`
+	// GPU Configuration associated with cloudlet
+	GpuConfig GPUConfig `protobuf:"bytes,45,opt,name=gpu_config,json=gpuConfig,proto3" json:"gpu_config"`
 }
 
 func (m *Cloudlet) Reset()         { *m = Cloudlet{} }
 func (m *Cloudlet) String() string { return proto.CompactTextString(m) }
 func (*Cloudlet) ProtoMessage()    {}
 func (*Cloudlet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{7}
+	return fileDescriptor_3aea31a648a25d86, []int{13}
 }
 func (m *Cloudlet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -690,7 +1039,7 @@ func (m *FlavorMatch) Reset()         { *m = FlavorMatch{} }
 func (m *FlavorMatch) String() string { return proto.CompactTextString(m) }
 func (*FlavorMatch) ProtoMessage()    {}
 func (*FlavorMatch) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{8}
+	return fileDescriptor_3aea31a648a25d86, []int{14}
 }
 func (m *FlavorMatch) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -728,7 +1077,7 @@ func (m *CloudletManifest) Reset()         { *m = CloudletManifest{} }
 func (m *CloudletManifest) String() string { return proto.CompactTextString(m) }
 func (*CloudletManifest) ProtoMessage()    {}
 func (*CloudletManifest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{9}
+	return fileDescriptor_3aea31a648a25d86, []int{15}
 }
 func (m *CloudletManifest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -776,7 +1125,7 @@ func (m *PropertyInfo) Reset()         { *m = PropertyInfo{} }
 func (m *PropertyInfo) String() string { return proto.CompactTextString(m) }
 func (*PropertyInfo) ProtoMessage()    {}
 func (*PropertyInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{10}
+	return fileDescriptor_3aea31a648a25d86, []int{16}
 }
 func (m *PropertyInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -818,7 +1167,7 @@ func (m *CloudletProps) Reset()         { *m = CloudletProps{} }
 func (m *CloudletProps) String() string { return proto.CompactTextString(m) }
 func (*CloudletProps) ProtoMessage()    {}
 func (*CloudletProps) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{11}
+	return fileDescriptor_3aea31a648a25d86, []int{17}
 }
 func (m *CloudletProps) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -860,7 +1209,7 @@ func (m *CloudletResourceQuotaProps) Reset()         { *m = CloudletResourceQuot
 func (m *CloudletResourceQuotaProps) String() string { return proto.CompactTextString(m) }
 func (*CloudletResourceQuotaProps) ProtoMessage()    {}
 func (*CloudletResourceQuotaProps) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{12}
+	return fileDescriptor_3aea31a648a25d86, []int{18}
 }
 func (m *CloudletResourceQuotaProps) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -902,7 +1251,7 @@ func (m *CloudletResourceUsage) Reset()         { *m = CloudletResourceUsage{} }
 func (m *CloudletResourceUsage) String() string { return proto.CompactTextString(m) }
 func (*CloudletResourceUsage) ProtoMessage()    {}
 func (*CloudletResourceUsage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{13}
+	return fileDescriptor_3aea31a648a25d86, []int{19}
 }
 func (m *CloudletResourceUsage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -949,7 +1298,7 @@ func (m *FlavorInfo) Reset()         { *m = FlavorInfo{} }
 func (m *FlavorInfo) String() string { return proto.CompactTextString(m) }
 func (*FlavorInfo) ProtoMessage()    {}
 func (*FlavorInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{14}
+	return fileDescriptor_3aea31a648a25d86, []int{20}
 }
 func (m *FlavorInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -987,7 +1336,7 @@ func (m *OSAZone) Reset()         { *m = OSAZone{} }
 func (m *OSAZone) String() string { return proto.CompactTextString(m) }
 func (*OSAZone) ProtoMessage()    {}
 func (*OSAZone) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{15}
+	return fileDescriptor_3aea31a648a25d86, []int{21}
 }
 func (m *OSAZone) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1031,7 +1380,7 @@ func (m *OSImage) Reset()         { *m = OSImage{} }
 func (m *OSImage) String() string { return proto.CompactTextString(m) }
 func (*OSImage) ProtoMessage()    {}
 func (*OSImage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{16}
+	return fileDescriptor_3aea31a648a25d86, []int{22}
 }
 func (m *OSImage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1108,7 +1457,7 @@ func (m *CloudletInfo) Reset()         { *m = CloudletInfo{} }
 func (m *CloudletInfo) String() string { return proto.CompactTextString(m) }
 func (*CloudletInfo) ProtoMessage()    {}
 func (*CloudletInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{17}
+	return fileDescriptor_3aea31a648a25d86, []int{23}
 }
 func (m *CloudletInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1147,7 +1496,7 @@ func (m *CloudletMetrics) Reset()         { *m = CloudletMetrics{} }
 func (m *CloudletMetrics) String() string { return proto.CompactTextString(m) }
 func (*CloudletMetrics) ProtoMessage()    {}
 func (*CloudletMetrics) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3aea31a648a25d86, []int{18}
+	return fileDescriptor_3aea31a648a25d86, []int{24}
 }
 func (m *CloudletMetrics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1179,6 +1528,8 @@ var xxx_messageInfo_CloudletMetrics proto.InternalMessageInfo
 func init() {
 	proto.RegisterEnum("edgeproto.PlatformType", PlatformType_name, PlatformType_value)
 	proto.RegisterEnum("edgeproto.InfraApiAccess", InfraApiAccess_name, InfraApiAccess_value)
+	proto.RegisterEnum("edgeproto.GPUType", GPUType_name, GPUType_value)
+	proto.RegisterEnum("edgeproto.OSType", OSType_name, OSType_value)
 	proto.RegisterEnum("edgeproto.ReportSchedule", ReportSchedule_name, ReportSchedule_value)
 	proto.RegisterType((*CloudletKey)(nil), "edgeproto.CloudletKey")
 	proto.RegisterType((*OperationTimeLimits)(nil), "edgeproto.OperationTimeLimits")
@@ -1190,6 +1541,14 @@ func init() {
 	proto.RegisterMapType((map[string]string)(nil), "edgeproto.CloudletResMap.MappingEntry")
 	proto.RegisterType((*InfraConfig)(nil), "edgeproto.InfraConfig")
 	proto.RegisterType((*ResourceQuota)(nil), "edgeproto.ResourceQuota")
+	proto.RegisterType((*GPUDriverKey)(nil), "edgeproto.GPUDriverKey")
+	proto.RegisterType((*GPUDriverBuild)(nil), "edgeproto.GPUDriverBuild")
+	proto.RegisterType((*GPUDriverBuildMember)(nil), "edgeproto.GPUDriverBuildMember")
+	proto.RegisterType((*GPUDriverBuildURL)(nil), "edgeproto.GPUDriverBuildURL")
+	proto.RegisterType((*GPUDriver)(nil), "edgeproto.GPUDriver")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.GPUDriver.PropertiesEntry")
+	proto.RegisterType((*GPUConfig)(nil), "edgeproto.GPUConfig")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.GPUConfig.PropertiesEntry")
 	proto.RegisterType((*Cloudlet)(nil), "edgeproto.Cloudlet")
 	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Cloudlet.AccessVarsEntry")
 	proto.RegisterMapType((map[string]string)(nil), "edgeproto.Cloudlet.ChefClientKeyEntry")
@@ -1214,264 +1573,315 @@ func init() {
 func init() { proto.RegisterFile("cloudlet.proto", fileDescriptor_3aea31a648a25d86) }
 
 var fileDescriptor_3aea31a648a25d86 = []byte{
-	// 4109 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x3a, 0x5d, 0x6c, 0x1c, 0xd7,
-	0x5a, 0x19, 0xff, 0xc5, 0xfb, 0xad, 0xbd, 0x5e, 0x1f, 0xff, 0x4d, 0x36, 0x89, 0xe3, 0x6c, 0x6f,
-	0x9a, 0xdc, 0x74, 0xe3, 0x6d, 0x1d, 0x15, 0x82, 0xd5, 0xe4, 0x76, 0xbd, 0xde, 0x24, 0xc6, 0x71,
-	0xec, 0x8e, 0x1d, 0x97, 0xdb, 0x07, 0x86, 0xe3, 0x99, 0xe3, 0xf5, 0xe0, 0x99, 0x39, 0xd3, 0x33,
-	0xb3, 0x9b, 0x6e, 0x9f, 0x80, 0x97, 0xbe, 0x5e, 0xb8, 0x20, 0x41, 0xe1, 0xc2, 0x7d, 0xbc, 0x42,
-	0x20, 0x55, 0x57, 0xe2, 0x81, 0x3e, 0x20, 0x1e, 0x78, 0xa8, 0xe0, 0x25, 0xc0, 0x0b, 0xaa, 0xc4,
-	0xd5, 0x25, 0x45, 0x08, 0xf2, 0x84, 0x54, 0xbb, 0xaa, 0x90, 0x40, 0xe8, 0x9c, 0x33, 0xb3, 0x3b,
-	0xb3, 0x3b, 0x9b, 0xc4, 0x6e, 0xe1, 0x65, 0x35, 0xf3, 0xfd, 0x9d, 0xef, 0x7c, 0xe7, 0x3b, 0xdf,
-	0xdf, 0x0e, 0xe4, 0x0c, 0x9b, 0x36, 0x4c, 0x9b, 0x04, 0x8b, 0x1e, 0xa3, 0x01, 0x45, 0x19, 0x62,
-	0xd6, 0x89, 0x78, 0x2c, 0x5c, 0xa8, 0x53, 0x5a, 0xb7, 0x49, 0x19, 0x7b, 0x56, 0x19, 0xbb, 0x2e,
-	0x0d, 0x70, 0x60, 0x51, 0xd7, 0x97, 0x84, 0x85, 0x5b, 0x75, 0x2b, 0x38, 0x68, 0xec, 0x2d, 0x1a,
-	0xd4, 0x29, 0x3b, 0x74, 0xcf, 0xb2, 0x39, 0xe3, 0x07, 0x65, 0xfe, 0x7b, 0x43, 0xc8, 0x2c, 0x0b,
-	0xba, 0x3a, 0x71, 0xdb, 0x0f, 0x21, 0xe7, 0xd8, 0xbe, 0x8d, 0x9b, 0x94, 0x45, 0x6f, 0x8c, 0xf8,
-	0x0d, 0x3b, 0x5c, 0xbe, 0x30, 0xc9, 0x88, 0x1f, 0xe0, 0x7a, 0x80, 0xf7, 0x6c, 0x12, 0x11, 0x18,
-	0xd4, 0x71, 0x68, 0xc4, 0x3c, 0x6d, 0xb9, 0xfb, 0x0c, 0x33, 0xe2, 0xd3, 0x06, 0x33, 0x48, 0xa4,
-	0x4c, 0xf5, 0x85, 0xca, 0x98, 0x37, 0x1c, 0x1c, 0x18, 0x07, 0x37, 0x88, 0x5b, 0xb7, 0x5c, 0x52,
-	0x36, 0x1d, 0x72, 0x43, 0xb0, 0x96, 0x6d, 0x6a, 0x44, 0xa2, 0xeb, 0xb4, 0x4e, 0x25, 0x90, 0x3f,
-	0x85, 0xd0, 0xb5, 0xd3, 0x8b, 0xc6, 0x9e, 0x17, 0xd7, 0xbd, 0xf8, 0x23, 0x05, 0xb2, 0xd5, 0xd0,
-	0xdc, 0xeb, 0xa4, 0x85, 0x6e, 0xc2, 0x18, 0x65, 0x75, 0xec, 0x5a, 0x1f, 0x0a, 0xcb, 0xaa, 0xca,
-	0x82, 0x72, 0x2d, 0xb3, 0x32, 0xf1, 0xe9, 0x57, 0x6a, 0x36, 0x3a, 0x15, 0xca, 0xea, 0x5a, 0x82,
-	0x08, 0x2d, 0xc0, 0x90, 0x8b, 0x1d, 0xa2, 0x0e, 0x08, 0xe2, 0xb1, 0x4f, 0xbf, 0x52, 0x47, 0x23,
-	0x62, 0x4d, 0x60, 0x96, 0x7f, 0xf1, 0xdf, 0xbf, 0x54, 0x95, 0xaf, 0xbf, 0x54, 0x95, 0x8f, 0x8f,
-	0xd5, 0xab, 0x11, 0xee, 0xf6, 0x43, 0xec, 0x90, 0x52, 0xf4, 0x76, 0x83, 0xb2, 0xfa, 0xed, 0xcd,
-	0x98, 0xd8, 0x4f, 0x7e, 0x7c, 0x49, 0x29, 0xfe, 0xdd, 0x20, 0x4c, 0x6d, 0x7a, 0x84, 0x09, 0xc8,
-	0x8e, 0xe5, 0x90, 0x07, 0x96, 0x63, 0x05, 0x3e, 0x5a, 0x87, 0xf3, 0x06, 0x23, 0x38, 0x20, 0xba,
-	0x61, 0x37, 0xfc, 0x80, 0x30, 0xdd, 0x72, 0xfd, 0x40, 0x0f, 0x2c, 0x87, 0xd0, 0x46, 0x20, 0xd4,
-	0x1e, 0x5c, 0x19, 0xfb, 0xaf, 0x9f, 0x5d, 0x1a, 0x5d, 0x6d, 0x48, 0x66, 0x4d, 0x95, 0x0c, 0x55,
-	0x49, 0xbf, 0xe6, 0xfa, 0xc1, 0x8e, 0xa4, 0xe6, 0xc2, 0x1a, 0x9e, 0xd9, 0x57, 0xd8, 0x40, 0x9a,
-	0x30, 0xc9, 0x90, 0x2e, 0xcc, 0x24, 0x36, 0xe9, 0x27, 0x6c, 0x30, 0x4d, 0x98, 0x64, 0x48, 0x11,
-	0x56, 0x85, 0xb9, 0x70, 0x9b, 0xd8, 0xf3, 0x92, 0x82, 0x86, 0x52, 0x04, 0x4d, 0x4b, 0xe2, 0x8a,
-	0xe7, 0x75, 0x09, 0x09, 0xb7, 0xd7, 0x23, 0x64, 0x38, 0x4d, 0x88, 0x24, 0xee, 0x15, 0x12, 0x6e,
-	0xab, 0x47, 0xc8, 0x48, 0x9a, 0x10, 0x49, 0x9c, 0x14, 0x52, 0xfc, 0x5a, 0x81, 0x7c, 0xe4, 0x6d,
-	0x6b, 0x6e, 0x40, 0x98, 0x8b, 0x6d, 0x34, 0x0b, 0x23, 0xfb, 0x16, 0xb1, 0x4d, 0x5f, 0x55, 0x16,
-	0x06, 0xaf, 0x65, 0xb4, 0xf0, 0x0d, 0x2d, 0xc2, 0xe0, 0x21, 0x69, 0x09, 0xeb, 0x67, 0x97, 0x66,
-	0x17, 0xdb, 0x41, 0x60, 0x31, 0xe6, 0xaf, 0x2b, 0x43, 0x9f, 0xfd, 0xec, 0xd2, 0x19, 0x8d, 0x13,
-	0xa2, 0xb7, 0x60, 0xd8, 0x63, 0xd4, 0xf3, 0xd5, 0xc1, 0x85, 0xc1, 0x6b, 0xd9, 0xa5, 0x57, 0x53,
-	0x38, 0xa2, 0x35, 0x17, 0xb7, 0x38, 0x61, 0xcd, 0x0d, 0x58, 0x4b, 0x93, 0x4c, 0x85, 0x5b, 0x00,
-	0x1d, 0x20, 0xca, 0xcb, 0xb5, 0x85, 0xf7, 0x4b, 0xe9, 0xd3, 0x30, 0xdc, 0xc4, 0x76, 0x23, 0x74,
-	0x72, 0x4d, 0xbe, 0x2c, 0x0f, 0xdc, 0x52, 0x96, 0xbf, 0xc3, 0x7d, 0xfb, 0x3f, 0xbf, 0x54, 0x95,
-	0xdf, 0x38, 0x52, 0x95, 0x1f, 0x1c, 0xa9, 0xca, 0x4f, 0xbf, 0x52, 0xf3, 0x87, 0xa4, 0x95, 0x70,
-	0xe6, 0xe2, 0xd7, 0x23, 0x90, 0xdb, 0xb2, 0x71, 0xb0, 0x4f, 0x99, 0x53, 0xa5, 0xee, 0xbe, 0x55,
-	0x47, 0xbf, 0x00, 0x73, 0x06, 0x75, 0x03, 0x6c, 0xb9, 0x84, 0xe9, 0x8c, 0xd4, 0x2d, 0x3f, 0x60,
-	0x2d, 0xdd, 0xc3, 0xc1, 0x41, 0xb8, 0xf0, 0x4c, 0x1b, 0xad, 0x85, 0xd8, 0x2d, 0x1c, 0x1c, 0xa0,
-	0x9b, 0x30, 0x1b, 0x5d, 0x1a, 0xbd, 0xe9, 0xe8, 0x96, 0x83, 0xeb, 0x44, 0xb2, 0x49, 0xdd, 0xa6,
-	0x22, 0xec, 0xae, 0xb3, 0xc6, 0x71, 0x82, 0xe9, 0x3a, 0x4c, 0xba, 0x34, 0xb0, 0xf6, 0x5b, 0xba,
-	0x11, 0x30, 0x5b, 0xc7, 0xa6, 0xc9, 0x7c, 0xe1, 0x8c, 0x19, 0x6d, 0x42, 0x22, 0xaa, 0x01, 0xb3,
-	0x2b, 0x1c, 0x8c, 0x8a, 0x30, 0x1e, 0xd8, 0xbe, 0x6e, 0x10, 0x16, 0xe8, 0xfb, 0x96, 0x4d, 0x84,
-	0x9b, 0x64, 0xb4, 0x6c, 0x60, 0xfb, 0x55, 0xc2, 0x82, 0xbb, 0x96, 0x4d, 0xd0, 0x02, 0x8c, 0x71,
-	0x9a, 0x43, 0xd2, 0x92, 0x24, 0xd3, 0x82, 0x04, 0x02, 0xdb, 0x5f, 0x27, 0x2d, 0x41, 0x31, 0x0f,
-	0x59, 0x21, 0x05, 0x4b, 0x82, 0x19, 0x41, 0x90, 0xe1, 0x32, 0xb0, 0xc0, 0xdf, 0x81, 0xb3, 0xc4,
-	0x6d, 0xea, 0x4d, 0xcc, 0xd4, 0x11, 0x71, 0x62, 0x57, 0x62, 0x27, 0x96, 0x34, 0xd5, 0x62, 0xcd,
-	0x6d, 0xee, 0x62, 0x26, 0x0f, 0x6c, 0x84, 0x88, 0x17, 0x74, 0x19, 0xc6, 0xbc, 0x90, 0x4a, 0x0f,
-	0x70, 0x5d, 0x1d, 0x95, 0x4a, 0x46, 0xb0, 0x1d, 0x5c, 0x47, 0xe7, 0x21, 0x13, 0x10, 0x3f, 0xd0,
-	0x1d, 0x6a, 0x12, 0x35, 0xb3, 0xa0, 0x5c, 0x1b, 0xd5, 0x46, 0x39, 0x60, 0x83, 0x9a, 0x04, 0x21,
-	0x18, 0xf2, 0x3d, 0xec, 0xaa, 0x20, 0xf8, 0xc4, 0x33, 0x97, 0x69, 0xd8, 0x04, 0xbb, 0x0d, 0x4f,
-	0xf2, 0x64, 0x05, 0x4f, 0x36, 0x84, 0x09, 0xb6, 0x59, 0x18, 0xe1, 0x67, 0x45, 0x5d, 0x75, 0x4c,
-	0x30, 0x86, 0x6f, 0xe8, 0xbb, 0x90, 0xe7, 0x91, 0x95, 0x30, 0xc3, 0xc2, 0xb6, 0xb0, 0x9d, 0xaf,
-	0x8e, 0x0b, 0xf6, 0x89, 0x0e, 0x9c, 0x9b, 0x4f, 0xd8, 0xb7, 0xe1, 0x13, 0xbd, 0x89, 0x1b, 0x76,
-	0xa0, 0x7b, 0x87, 0x96, 0x9a, 0x93, 0xcb, 0x34, 0x7c, 0xb2, 0xcb, 0x61, 0x5b, 0x87, 0x16, 0xb7,
-	0x2f, 0xbf, 0x68, 0xa6, 0xeb, 0xeb, 0x8c, 0xd2, 0x40, 0xcd, 0x4b, 0xfb, 0x62, 0xcf, 0x5b, 0x75,
-	0x7d, 0x8d, 0xd2, 0x00, 0x5d, 0x83, 0xbc, 0x71, 0x40, 0xf6, 0x75, 0x9f, 0xb0, 0x26, 0x61, 0xd2,
-	0x01, 0x26, 0x05, 0x55, 0x8e, 0xc3, 0xb7, 0x05, 0x58, 0x9c, 0xfd, 0x1d, 0x98, 0x16, 0x94, 0x86,
-	0x6d, 0x11, 0x37, 0xd0, 0x2d, 0x7e, 0x0b, 0x9a, 0xd8, 0x56, 0xd1, 0x82, 0x72, 0x6d, 0xb8, 0xeb,
-	0xe2, 0x22, 0x4e, 0x59, 0x15, 0x84, 0x6b, 0x21, 0x1d, 0xba, 0x02, 0x39, 0x93, 0x78, 0x36, 0x6d,
-	0x39, 0x9c, 0x9d, 0xdb, 0x7a, 0x4a, 0xac, 0x33, 0xde, 0x81, 0x72, 0x6b, 0x73, 0xbf, 0x64, 0x8e,
-	0x8e, 0x0d, 0x83, 0xf8, 0xbe, 0xee, 0x31, 0xab, 0xc9, 0x63, 0x0e, 0xbf, 0x47, 0xb3, 0xa1, 0x5f,
-	0x32, 0xa7, 0x22, 0x90, 0x5b, 0x12, 0xc7, 0x13, 0xce, 0xab, 0x30, 0x11, 0x32, 0x60, 0xcf, 0x12,
-	0x6e, 0xa9, 0xce, 0x49, 0xe1, 0x12, 0x5c, 0xf1, 0x2c, 0xee, 0x94, 0x85, 0x5f, 0x82, 0x6c, 0xcc,
-	0x09, 0x4e, 0x72, 0x41, 0x8b, 0xff, 0xa3, 0x40, 0x2e, 0x8a, 0x00, 0x1a, 0xf1, 0x37, 0xb0, 0x17,
-	0xc5, 0x16, 0xe5, 0x65, 0x63, 0xcb, 0xdb, 0x70, 0xd6, 0xc1, 0x9e, 0x67, 0xb9, 0x75, 0x75, 0xa0,
-	0x6f, 0x74, 0x91, 0xb2, 0x17, 0x37, 0x24, 0xa1, 0x74, 0xd6, 0x88, 0xad, 0xb0, 0x0c, 0x63, 0x71,
-	0xc4, 0x89, 0x22, 0xcc, 0x9d, 0x8f, 0x8f, 0xd5, 0x72, 0x3b, 0x6b, 0xae, 0x93, 0xd6, 0x62, 0x6f,
-	0xe6, 0xe4, 0xd0, 0x78, 0xc0, 0xf9, 0xdb, 0x63, 0xf5, 0x6c, 0xb8, 0x60, 0x71, 0x0f, 0xb2, 0x6b,
-	0xbc, 0x44, 0x09, 0xe3, 0xce, 0x12, 0xcc, 0x90, 0x0f, 0x64, 0x20, 0xd4, 0x5d, 0x12, 0x3c, 0xa6,
-	0xec, 0x50, 0x17, 0xf9, 0x5b, 0x2a, 0x33, 0x15, 0x21, 0x1f, 0x4a, 0x1c, 0x5f, 0x0b, 0x5d, 0x82,
-	0xac, 0x2c, 0x91, 0xf4, 0x4e, 0xa6, 0xd7, 0x40, 0x82, 0x38, 0x41, 0x71, 0x0f, 0xc6, 0xb5, 0xb0,
-	0x02, 0x7a, 0xa7, 0x41, 0x03, 0xcc, 0xaf, 0x57, 0x4c, 0xa8, 0x78, 0x4e, 0x6e, 0x71, 0x28, 0xdc,
-	0x22, 0xba, 0x0a, 0x13, 0xd8, 0xe6, 0xb1, 0x26, 0x38, 0x60, 0xc4, 0x3f, 0xa0, 0xb6, 0x29, 0x02,
-	0xd3, 0xb0, 0x96, 0x13, 0xe0, 0x9d, 0x08, 0x5a, 0xfc, 0x48, 0x85, 0xd1, 0xc8, 0xd8, 0xdf, 0x5a,
-	0xda, 0xf8, 0x1e, 0x8c, 0xda, 0xd4, 0x90, 0xd5, 0xce, 0xb0, 0x60, 0xba, 0xb8, 0x68, 0xf2, 0x60,
-	0x6b, 0xed, 0x35, 0x02, 0x62, 0xea, 0xa2, 0x90, 0xd2, 0x65, 0x21, 0xb5, 0xf8, 0x80, 0x1a, 0x21,
-	0x6f, 0x9b, 0x09, 0xdd, 0x04, 0xb0, 0x3c, 0xdd, 0x6f, 0x78, 0x1e, 0x65, 0x32, 0x19, 0xe6, 0x96,
-	0xa6, 0x63, 0xeb, 0xae, 0x79, 0xdb, 0x12, 0xa7, 0x65, 0xac, 0xe8, 0x11, 0x5d, 0x04, 0xf0, 0x79,
-	0xf1, 0x6a, 0xe8, 0x96, 0xe7, 0xab, 0x67, 0x65, 0x6c, 0x94, 0x90, 0x35, 0xcf, 0xe7, 0xb7, 0xc2,
-	0x6d, 0x38, 0xba, 0xd9, 0x72, 0xb1, 0x13, 0xd2, 0x8c, 0x0a, 0x93, 0x8c, 0xbb, 0x0d, 0x67, 0x55,
-	0x42, 0x39, 0x5d, 0x0d, 0xb2, 0x3c, 0x0b, 0xeb, 0xb6, 0xa8, 0x8a, 0x44, 0x88, 0xcb, 0x2e, 0xcd,
-	0xc7, 0x16, 0x4f, 0xa9, 0x9d, 0xc2, 0x0d, 0x40, 0xd0, 0xa9, 0xa6, 0xae, 0xc0, 0x08, 0x61, 0x8c,
-	0x32, 0x5f, 0x05, 0x6e, 0xcb, 0x95, 0xf1, 0x9f, 0x1c, 0xa9, 0xca, 0xef, 0xfc, 0xf4, 0xdc, 0xb0,
-	0x4b, 0x0d, 0xc7, 0xd3, 0x42, 0x24, 0x7a, 0x1b, 0x46, 0xb8, 0x8a, 0x0d, 0x5f, 0xc4, 0xc5, 0xec,
-	0xd2, 0x4c, 0x6c, 0xa1, 0x6d, 0x81, 0x58, 0x73, 0xf7, 0xe9, 0xca, 0x64, 0x82, 0x5b, 0x2c, 0x16,
-	0xf2, 0xf1, 0x1c, 0xcd, 0x9f, 0x88, 0x88, 0x9d, 0xb9, 0xa5, 0xb9, 0x98, 0x80, 0x1d, 0x86, 0x8d,
-	0x43, 0x62, 0x72, 0x39, 0xa4, 0x5b, 0x01, 0xc9, 0x84, 0xee, 0xc3, 0x18, 0x0f, 0x30, 0xb4, 0x49,
-	0x18, 0xb3, 0x4c, 0x22, 0xc2, 0x6b, 0x2e, 0x79, 0xc6, 0xda, 0xc6, 0x66, 0x88, 0xed, 0x96, 0x91,
-	0x35, 0x98, 0x13, 0xe1, 0xd0, 0x2d, 0xc8, 0xc7, 0x22, 0x1a, 0x3f, 0x4a, 0x5b, 0x06, 0xe1, 0x6e,
-	0xae, 0x89, 0x0e, 0xd9, 0x03, 0x4e, 0x85, 0xde, 0x82, 0xf1, 0x4e, 0xd6, 0x69, 0x79, 0x44, 0x9d,
-	0xe8, 0xd9, 0x49, 0x94, 0xbb, 0x76, 0x5a, 0x1e, 0xd1, 0xda, 0x39, 0x8a, 0xbf, 0xa1, 0x37, 0x20,
-	0x4c, 0xb6, 0xba, 0xcf, 0x9a, 0x32, 0xda, 0x89, 0xc0, 0xbe, 0x92, 0xe9, 0x2c, 0x39, 0x2e, 0x29,
-	0xb6, 0x59, 0x93, 0x07, 0x3e, 0xb4, 0x04, 0x23, 0xf2, 0x9a, 0x89, 0xe0, 0x9e, 0x4d, 0xb8, 0xd6,
-	0x5d, 0x81, 0xe8, 0x38, 0x74, 0x48, 0x89, 0x5e, 0x81, 0x71, 0xef, 0xa0, 0xe5, 0x5b, 0x06, 0xbf,
-	0xe1, 0xfc, 0x12, 0x22, 0xe1, 0x60, 0x63, 0x11, 0x50, 0x5c, 0xe9, 0x5b, 0x9d, 0xfc, 0x3b, 0x25,
-	0x62, 0xda, 0xa5, 0x94, 0xcb, 0x92, 0x9a, 0x79, 0x5f, 0x83, 0xc9, 0x4e, 0xe1, 0xd2, 0x24, 0xcc,
-	0xe7, 0x77, 0x47, 0x16, 0x00, 0xf9, 0x36, 0x62, 0x57, 0xc2, 0xd1, 0x2a, 0x8c, 0x18, 0x22, 0xee,
-	0x88, 0x0a, 0x20, 0xbb, 0x74, 0xae, 0x6f, 0x96, 0x4f, 0x75, 0x1c, 0xc9, 0x8b, 0xee, 0x43, 0x96,
-	0x11, 0x9f, 0xe7, 0x1e, 0xdd, 0xc1, 0x9e, 0x3a, 0x2b, 0x14, 0x2e, 0xa6, 0x29, 0xac, 0x11, 0x7f,
-	0x07, 0xd7, 0x37, 0xb0, 0x27, 0x74, 0x5e, 0x19, 0xe2, 0x32, 0xb5, 0x0c, 0x8b, 0xa0, 0x68, 0x15,
-	0xb2, 0x61, 0xc2, 0x69, 0x62, 0xe6, 0xab, 0x73, 0x42, 0xd2, 0x2b, 0x69, 0x92, 0x64, 0xae, 0xda,
-	0xc5, 0x2c, 0xac, 0x14, 0x01, 0xb7, 0x01, 0x3c, 0xf9, 0xb6, 0x4b, 0xaf, 0xc8, 0x02, 0xaa, 0x4c,
-	0xbe, 0x4d, 0x59, 0x75, 0x45, 0xfb, 0xff, 0x2e, 0x40, 0xc7, 0x87, 0xd4, 0x42, 0xf7, 0x69, 0xc7,
-	0x90, 0xa8, 0x0a, 0x79, 0xd1, 0x4a, 0xca, 0x54, 0x28, 0x16, 0x53, 0xcf, 0x0b, 0xf7, 0x8a, 0x1b,
-	0x4d, 0x84, 0x72, 0x9e, 0x16, 0x05, 0x81, 0x96, 0xb3, 0x12, 0xef, 0xe8, 0x7b, 0x30, 0x26, 0x85,
-	0x84, 0x56, 0xbf, 0xd0, 0x13, 0x08, 0x63, 0xb9, 0x20, 0xf4, 0x9b, 0xac, 0x15, 0x4b, 0x0f, 0x3b,
-	0x30, 0x11, 0xaf, 0x16, 0x78, 0x30, 0xbd, 0xd8, 0x37, 0xe7, 0x2d, 0x56, 0xdb, 0xe5, 0xc2, 0x3a,
-	0x69, 0xc5, 0x4d, 0x3e, 0x6e, 0xc4, 0x31, 0xe8, 0x5d, 0x98, 0x74, 0x30, 0xaf, 0x3c, 0x5c, 0xec,
-	0x1a, 0x44, 0x97, 0x51, 0x60, 0x5e, 0x6c, 0xee, 0x7a, 0xff, 0x78, 0xbb, 0xd1, 0x61, 0x11, 0x81,
-	0x41, 0xcb, 0x3b, 0x5d, 0x10, 0xb4, 0x06, 0x97, 0xa3, 0x80, 0xa0, 0x7b, 0xd4, 0xb6, 0x8c, 0x96,
-	0xde, 0xeb, 0x9c, 0x97, 0x44, 0x81, 0x35, 0x1f, 0x11, 0x6e, 0x09, 0xba, 0x6a, 0xb7, 0xab, 0xce,
-	0xc1, 0xd9, 0xa6, 0xa3, 0x7b, 0x94, 0xda, 0xea, 0x82, 0xac, 0xed, 0x9a, 0xce, 0x16, 0xa5, 0x36,
-	0x7a, 0x1b, 0x66, 0xe2, 0x95, 0x4d, 0x63, 0xcf, 0xb6, 0x0c, 0x61, 0x98, 0xcb, 0xe2, 0x38, 0xbb,
-	0x62, 0x06, 0xea, 0xd4, 0x39, 0x82, 0x92, 0x6f, 0xff, 0x97, 0xe1, 0x52, 0x4c, 0x02, 0xaf, 0x9a,
-	0x1b, 0x5e, 0x9d, 0x61, 0x93, 0xe8, 0x8c, 0xbc, 0xdf, 0xb0, 0x18, 0x31, 0xd5, 0xa2, 0x88, 0x3f,
-	0xd2, 0x78, 0xe7, 0xdb, 0x22, 0xd6, 0x49, 0xeb, 0x91, 0xa4, 0xd4, 0x42, 0x42, 0xf4, 0x7d, 0x00,
-	0xd9, 0xe7, 0x99, 0x3a, 0x0e, 0xd4, 0x57, 0xc4, 0xf9, 0xbe, 0xd2, 0xdf, 0x86, 0x3c, 0xf2, 0xfb,
-	0x01, 0x76, 0xbc, 0x95, 0x99, 0x50, 0xcf, 0x4c, 0x10, 0x81, 0xc4, 0xe9, 0x67, 0x42, 0x69, 0x95,
-	0x80, 0x8b, 0x96, 0xdd, 0x9f, 0x10, 0xfd, 0x9d, 0x6f, 0x2e, 0x3a, 0x94, 0x56, 0x09, 0x78, 0x69,
-	0x1d, 0xb0, 0x86, 0x1f, 0x84, 0x87, 0xa4, 0x5e, 0x09, 0x7b, 0x0a, 0x0e, 0x93, 0xe7, 0x81, 0x76,
-	0x00, 0xc5, 0x49, 0x42, 0x27, 0x79, 0xf5, 0x44, 0xa9, 0x22, 0x1f, 0x13, 0x28, 0x1d, 0xe4, 0x1e,
-	0x4c, 0x44, 0xb3, 0x19, 0xfd, 0x7d, 0x5e, 0x9a, 0xf8, 0xea, 0x55, 0xe1, 0xcf, 0x6a, 0x4c, 0x64,
-	0xa2, 0x76, 0x09, 0x6f, 0x45, 0x8e, 0xc5, 0x81, 0x3e, 0xd2, 0x60, 0xc1, 0x24, 0xfb, 0xa2, 0x68,
-	0x6f, 0x0b, 0xec, 0x2e, 0x5c, 0xae, 0x89, 0x92, 0x3a, 0x76, 0xbf, 0x2f, 0x86, 0x2c, 0xd1, 0x02,
-	0x95, 0x44, 0x49, 0x83, 0xde, 0x84, 0xdc, 0x7d, 0xea, 0x07, 0xdc, 0x15, 0x19, 0xb5, 0x6d, 0xc2,
-	0xd4, 0xef, 0xa6, 0xb9, 0x54, 0x17, 0x11, 0x0f, 0xf0, 0x87, 0x78, 0xff, 0x10, 0x47, 0x33, 0x06,
-	0xf5, 0xba, 0x0c, 0xf0, 0x02, 0x18, 0xce, 0x11, 0x78, 0x8d, 0x21, 0x89, 0x1a, 0x3e, 0x61, 0xea,
-	0x6b, 0xb2, 0xc6, 0x10, 0x90, 0x47, 0x3e, 0x61, 0xbc, 0xaa, 0x97, 0x68, 0x0f, 0xfb, 0xfe, 0x63,
-	0xca, 0x4c, 0xb5, 0x24, 0x0b, 0x6f, 0x01, 0xdd, 0x0a, 0x81, 0xdf, 0xa0, 0xf0, 0x2e, 0xbc, 0x0b,
-	0xb9, 0x64, 0x34, 0x4e, 0xe1, 0x2e, 0xc7, 0xb9, 0x93, 0xd9, 0x41, 0xf2, 0xee, 0xe0, 0x3d, 0x9b,
-	0x77, 0x0a, 0x71, 0xc1, 0xb7, 0x61, 0xa2, 0x2b, 0x38, 0x9f, 0x48, 0xaf, 0xb7, 0x01, 0xf5, 0x86,
-	0xad, 0x13, 0x55, 0xe4, 0xff, 0x3d, 0xd0, 0xdd, 0xf4, 0xff, 0xfe, 0x91, 0xaa, 0x7c, 0x72, 0xa4,
-	0x2a, 0x9f, 0x1e, 0xa9, 0x63, 0x71, 0xff, 0xfc, 0xec, 0x48, 0x55, 0x9e, 0xf0, 0xb3, 0x3c, 0x56,
-	0x7f, 0x73, 0xe0, 0x41, 0x58, 0x33, 0x2e, 0xde, 0xa7, 0xcc, 0xfa, 0x90, 0x87, 0x1f, 0xbb, 0x62,
-	0x18, 0x0d, 0x86, 0x8d, 0x56, 0xa9, 0x8d, 0xdb, 0x25, 0x2c, 0xe0, 0x49, 0xba, 0x17, 0x53, 0xa5,
-	0x0d, 0xe6, 0x93, 0xce, 0xfb, 0xb6, 0x47, 0x88, 0xd9, 0x79, 0x6d, 0xdf, 0xc6, 0x92, 0x2c, 0xc6,
-	0x4a, 0x32, 0xa0, 0x97, 0x1e, 0xc6, 0xeb, 0x89, 0x52, 0x62, 0xe7, 0x82, 0x92, 0x94, 0x6a, 0xa2,
-	0xbe, 0x2b, 0x55, 0x7b, 0xe2, 0x56, 0x07, 0xd4, 0x1b, 0x87, 0x4a, 0xd5, 0x28, 0x6c, 0x94, 0x1e,
-	0x45, 0xb7, 0xbc, 0xb4, 0xd3, 0x75, 0xfb, 0x4a, 0x49, 0xc7, 0x3d, 0x45, 0x23, 0x93, 0x3a, 0x4d,
-	0xf9, 0x07, 0x05, 0xb2, 0xb2, 0xf8, 0xd9, 0xe0, 0xf1, 0xe8, 0xc4, 0xfd, 0x5c, 0x57, 0x3b, 0x33,
-	0xd8, 0xdd, 0xce, 0xf0, 0x12, 0x07, 0x37, 0xb1, 0x65, 0xe3, 0x3d, 0xcb, 0xb6, 0x82, 0x96, 0xfe,
-	0x21, 0x75, 0x89, 0x18, 0xb9, 0x65, 0xb4, 0x7c, 0x1c, 0xf1, 0x1e, 0x75, 0xc9, 0x72, 0xed, 0xe3,
-	0x63, 0xb5, 0x72, 0xc2, 0x6d, 0x95, 0xe4, 0x62, 0xb7, 0xef, 0x76, 0x5a, 0xa8, 0xc5, 0xce, 0x70,
-	0x6c, 0x03, 0xbb, 0xd6, 0x3e, 0xf1, 0x03, 0x54, 0x80, 0x51, 0x27, 0x7c, 0x0e, 0xbd, 0xb0, 0xfd,
-	0x5e, 0xfc, 0x33, 0x05, 0xc6, 0xb6, 0x18, 0xf5, 0x08, 0x0b, 0x5a, 0xbc, 0xf0, 0x4e, 0x6d, 0xb9,
-	0x16, 0x20, 0x6b, 0x12, 0xdf, 0x60, 0x96, 0x27, 0x3a, 0x1c, 0x29, 0x23, 0x0e, 0xea, 0x78, 0xf9,
-	0x60, 0xcc, 0xcb, 0x79, 0x7b, 0xe5, 0x13, 0x83, 0x11, 0x39, 0x68, 0x1c, 0xd5, 0xc2, 0x37, 0x74,
-	0x01, 0x32, 0x0e, 0x76, 0x4d, 0x1c, 0x50, 0xd6, 0x12, 0xfd, 0xd2, 0xa8, 0xd6, 0x01, 0x70, 0x75,
-	0xad, 0x70, 0xc6, 0x26, 0x3a, 0xa1, 0x51, 0xad, 0xfd, 0x5e, 0xfc, 0xe1, 0x00, 0x8c, 0x47, 0xfb,
-	0x13, 0xa3, 0xb6, 0xde, 0x5a, 0x5a, 0x39, 0x49, 0x2d, 0x7d, 0x1f, 0xc0, 0x93, 0xbb, 0xb7, 0x88,
-	0x1f, 0xb6, 0xe5, 0xd7, 0x52, 0x8e, 0x5e, 0xac, 0xb5, 0xb8, 0xd5, 0x26, 0x0d, 0x8b, 0xb9, 0x0e,
-	0x2f, 0x2a, 0x76, 0x0d, 0xbd, 0xa5, 0x21, 0x12, 0xb0, 0xc2, 0x2e, 0x4c, 0x74, 0x89, 0x48, 0x09,
-	0x18, 0x37, 0x92, 0xc1, 0x2c, 0xb1, 0x91, 0xd8, 0x41, 0xc5, 0x87, 0x13, 0x7f, 0xa5, 0x40, 0x21,
-	0x36, 0x40, 0xe8, 0xe4, 0x9b, 0x6f, 0xc3, 0x44, 0x77, 0x52, 0x4c, 0xa4, 0x76, 0x57, 0x82, 0xd1,
-	0xaa, 0x51, 0x5f, 0x78, 0x32, 0xc3, 0x14, 0xff, 0x5e, 0x81, 0x99, 0xee, 0x0d, 0x3c, 0xf2, 0x71,
-	0x9d, 0x9c, 0xe6, 0x52, 0xca, 0xca, 0xb5, 0xc1, 0xd9, 0x85, 0x0d, 0x47, 0x35, 0x10, 0x20, 0x29,
-	0x70, 0x09, 0x86, 0x2c, 0x77, 0x9f, 0x86, 0x03, 0xde, 0x17, 0x6d, 0x44, 0xd0, 0x2e, 0xdf, 0x3c,
-	0x45, 0xc8, 0x29, 0xfe, 0xb3, 0x02, 0x20, 0x2f, 0x66, 0xdf, 0x7b, 0xc5, 0x6f, 0x8d, 0xe1, 0x35,
-	0xfc, 0xf6, 0x28, 0x83, 0xbf, 0x70, 0x97, 0x60, 0xd8, 0x11, 0x76, 0x1a, 0xd2, 0xf8, 0x23, 0xe7,
-	0x35, 0x2d, 0xff, 0x50, 0xdc, 0xa2, 0x21, 0x4d, 0x3c, 0xa3, 0x2a, 0x8c, 0x72, 0x23, 0x8b, 0x4e,
-	0x66, 0xb8, 0xa7, 0x93, 0xe9, 0x2c, 0x2c, 0x9c, 0xa6, 0xab, 0x93, 0x39, 0xeb, 0x49, 0x58, 0x61,
-	0x59, 0x5e, 0xfe, 0xe7, 0xa4, 0xd6, 0xfe, 0x13, 0xb1, 0x37, 0xe1, 0xec, 0xe6, 0x76, 0x85, 0xc7,
-	0xae, 0xd4, 0xbd, 0xcd, 0xb6, 0xfb, 0x7c, 0xc9, 0x19, 0xbe, 0x15, 0x19, 0x67, 0x13, 0xcd, 0x4d,
-	0x2a, 0x1b, 0x82, 0xa1, 0x00, 0xd7, 0x23, 0x26, 0xf1, 0x8c, 0xe6, 0x13, 0x1e, 0x18, 0xc6, 0xd9,
-	0x98, 0x87, 0x5d, 0x82, 0x2c, 0x37, 0x89, 0xce, 0x5d, 0x16, 0x07, 0x61, 0x84, 0x05, 0x0e, 0xba,
-	0x2b, 0x20, 0xc5, 0x7f, 0xcb, 0xc0, 0x58, 0x67, 0x7c, 0xbf, 0x4f, 0xbf, 0xb5, 0xb9, 0xcf, 0xed,
-	0x68, 0x14, 0x31, 0x28, 0x6e, 0xd4, 0xd5, 0xfe, 0x55, 0x6e, 0x24, 0x40, 0x76, 0x20, 0xe1, 0x2c,
-	0xe2, 0x55, 0xc8, 0x84, 0x9d, 0xbc, 0x65, 0x86, 0xff, 0xc5, 0xc4, 0xaa, 0xbe, 0x51, 0x89, 0x5b,
-	0x33, 0x79, 0xfb, 0x67, 0x74, 0x8a, 0xbb, 0xe1, 0x9e, 0xf6, 0xaf, 0x83, 0x44, 0x17, 0x00, 0xa8,
-	0xaf, 0x3b, 0xf8, 0x03, 0x9d, 0xfb, 0xd0, 0x88, 0x70, 0x98, 0x51, 0xea, 0x6f, 0xe0, 0x0f, 0x34,
-	0xec, 0xa0, 0x22, 0x8c, 0x87, 0xd8, 0xa6, 0x41, 0x19, 0x91, 0x43, 0xa3, 0x21, 0x2d, 0x2b, 0x08,
-	0x76, 0x05, 0x08, 0x5d, 0xee, 0xd0, 0x50, 0x5b, 0xaf, 0xef, 0x89, 0xa1, 0xd1, 0x90, 0x06, 0x92,
-	0x86, 0xda, 0xf7, 0xf6, 0xb8, 0xf9, 0xc2, 0x51, 0x4f, 0x46, 0x9a, 0x2f, 0x9c, 0xed, 0x94, 0xe1,
-	0xac, 0xcc, 0x48, 0x72, 0x06, 0x94, 0x1c, 0xee, 0x74, 0x5c, 0x52, 0x8b, 0xa8, 0xd0, 0x5b, 0x2f,
-	0x37, 0x0c, 0x1a, 0x4f, 0x1f, 0x04, 0xa5, 0x8e, 0x10, 0xc6, 0xfa, 0x8c, 0x10, 0x2a, 0x80, 0x7a,
-	0x92, 0xb1, 0xaf, 0x8e, 0x0b, 0x35, 0x51, 0x7c, 0xd8, 0x25, 0x7d, 0x5a, 0x9b, 0xec, 0xce, 0xd0,
-	0x7c, 0x7b, 0x19, 0xea, 0xcb, 0x7e, 0xdd, 0x57, 0x73, 0x29, 0x9c, 0xc2, 0xad, 0xb9, 0xb9, 0xc5,
-	0x83, 0x8f, 0x96, 0xe1, 0x5c, 0xe7, 0x68, 0x74, 0x03, 0x1b, 0x07, 0xbc, 0x55, 0x33, 0x88, 0xd5,
-	0x24, 0xa6, 0x98, 0xf9, 0x8c, 0x6a, 0x73, 0x1d, 0x82, 0x2a, 0xc7, 0x6b, 0x21, 0x3a, 0xbd, 0xd7,
-	0xcd, 0x7f, 0x0b, 0xbd, 0xee, 0x7b, 0x80, 0xda, 0x7f, 0x33, 0xeb, 0xbe, 0x8b, 0x3d, 0xff, 0x80,
-	0x06, 0xe1, 0x5c, 0xe8, 0x72, 0xbf, 0x70, 0xe8, 0x6f, 0x87, 0x84, 0x2b, 0xa3, 0x3c, 0x82, 0x88,
-	0x63, 0x98, 0x64, 0xdd, 0x48, 0xb4, 0x95, 0xda, 0x7c, 0xa1, 0xe7, 0x37, 0x5f, 0x99, 0xe7, 0x35,
-	0x5e, 0x77, 0x60, 0xc6, 0xa0, 0x8e, 0x87, 0x03, 0x2b, 0x3c, 0xb7, 0xe8, 0x9c, 0xa7, 0x16, 0x94,
-	0x6b, 0xe3, 0x71, 0xde, 0xe9, 0x04, 0x5d, 0x74, 0xec, 0xf7, 0x12, 0xb1, 0x63, 0x5a, 0x1c, 0xda,
-	0xd5, 0xd4, 0x7f, 0xf5, 0xf6, 0xe9, 0xf3, 0xf2, 0x3b, 0x6f, 0x17, 0x5e, 0x9c, 0xbb, 0xfb, 0x17,
-	0xfb, 0x66, 0x77, 0xad, 0xff, 0xe3, 0xb0, 0xa6, 0xff, 0xb9, 0xac, 0xeb, 0x33, 0x6d, 0x4b, 0x9f,
-	0xae, 0xbc, 0x1d, 0x72, 0xa9, 0x4b, 0x8a, 0xaf, 0xc0, 0x44, 0xbb, 0xfa, 0x23, 0x01, 0xb3, 0x0c,
-	0x91, 0x4d, 0xf6, 0x29, 0x15, 0x41, 0x63, 0x48, 0xe3, 0x8f, 0xd7, 0x7f, 0x34, 0x08, 0x63, 0xf1,
-	0x7c, 0x8f, 0x66, 0x01, 0x6d, 0x3d, 0xa8, 0xec, 0xdc, 0xdd, 0xd4, 0x36, 0xf4, 0x9d, 0xef, 0x6f,
-	0xd5, 0xf4, 0xbb, 0x95, 0xf5, 0x5a, 0xfe, 0x4c, 0x2f, 0x7c, 0x75, 0xed, 0xe1, 0x6a, 0x5e, 0x41,
-	0xe7, 0x61, 0x2e, 0x09, 0xdf, 0xdc, 0xaa, 0x3d, 0xdc, 0xde, 0xa9, 0x54, 0xd7, 0xf3, 0x03, 0x68,
-	0x0e, 0xa6, 0x92, 0xc8, 0xca, 0x7b, 0x8f, 0xb4, 0x5a, 0x7e, 0x10, 0xcd, 0xc0, 0x64, 0x12, 0x71,
-	0xaf, 0xba, 0x95, 0x1f, 0x42, 0xe7, 0x60, 0x26, 0x09, 0xae, 0xad, 0xde, 0xab, 0xad, 0x6c, 0xfe,
-	0x4a, 0x7e, 0xb8, 0x77, 0x1d, 0xae, 0xd7, 0xda, 0xc3, 0xbb, 0x5a, 0x25, 0x3f, 0xd2, 0xcb, 0xb7,
-	0xbb, 0xbd, 0x75, 0xbf, 0xa6, 0xd5, 0xf2, 0x67, 0x7b, 0x51, 0x95, 0x77, 0xb7, 0xf5, 0xda, 0xfa,
-	0x76, 0x7e, 0x34, 0x85, 0x6b, 0x43, 0xdf, 0xda, 0xdc, 0x7c, 0x90, 0xcf, 0xf4, 0xe1, 0xaa, 0x2e,
-	0xe5, 0xa1, 0x57, 0xf5, 0xdd, 0xea, 0x6a, 0x3e, 0x8b, 0x16, 0xe0, 0x42, 0x12, 0xbc, 0x7e, 0x6b,
-	0x5b, 0x5f, 0xa9, 0x68, 0x35, 0x7d, 0xa3, 0xb6, 0x53, 0x79, 0x90, 0x1f, 0xeb, 0xb5, 0xe0, 0x3a,
-	0xb7, 0xe0, 0x78, 0xef, 0xce, 0x38, 0x5c, 0xee, 0x2c, 0x77, 0x7d, 0x19, 0x72, 0xc9, 0xf1, 0x1c,
-	0x9a, 0x84, 0xf1, 0xd5, 0x35, 0xad, 0x56, 0xdd, 0xd1, 0x2b, 0xd5, 0x6a, 0x6d, 0x7b, 0x3b, 0x7f,
-	0x86, 0xab, 0xa4, 0xd5, 0xb6, 0x77, 0xb4, 0xb5, 0xea, 0x4e, 0x6d, 0x35, 0x02, 0x2b, 0xd7, 0xdf,
-	0xe1, 0xdd, 0xb2, 0x47, 0x59, 0xb0, 0x6d, 0x1c, 0x10, 0xb3, 0x61, 0x13, 0x34, 0x0e, 0x99, 0x5a,
-	0x93, 0xb0, 0xd6, 0xbb, 0x84, 0x1c, 0xe6, 0xcf, 0xa0, 0x09, 0xc8, 0x8a, 0xd7, 0x37, 0xde, 0x5c,
-	0xc5, 0x2d, 0x3f, 0xaf, 0xb4, 0x01, 0x37, 0x5f, 0x17, 0x80, 0x01, 0x94, 0x03, 0x10, 0x80, 0x0d,
-	0xea, 0x06, 0x07, 0xf9, 0xc1, 0xa5, 0xbf, 0x98, 0xea, 0x7c, 0xdd, 0x51, 0xf1, 0x2c, 0xf4, 0x4c,
-	0x81, 0x5c, 0x35, 0xfc, 0x0a, 0x22, 0xfc, 0x1b, 0x65, 0x2a, 0xe5, 0x42, 0x15, 0x26, 0x93, 0x5d,
-	0x78, 0xc3, 0x0e, 0x8a, 0x7f, 0xae, 0x3c, 0x3b, 0x52, 0xcb, 0x91, 0xa7, 0x47, 0x94, 0x7e, 0xa9,
-	0x62, 0x70, 0x2f, 0xde, 0xc0, 0x2e, 0xae, 0x93, 0x52, 0xb7, 0x73, 0xff, 0xe4, 0x58, 0x55, 0x9e,
-	0x1c, 0xab, 0xca, 0xe7, 0xf2, 0x92, 0xc8, 0x49, 0xc0, 0xd3, 0x63, 0x75, 0xe9, 0x61, 0xfc, 0x5f,
-	0x8c, 0x4e, 0x07, 0xfb, 0x00, 0x07, 0x56, 0xd0, 0x30, 0x63, 0x2d, 0xee, 0x03, 0xea, 0xd6, 0x05,
-	0xe8, 0x4f, 0xbf, 0x52, 0xf3, 0xdd, 0xe2, 0x7f, 0xeb, 0x1f, 0xff, 0xf5, 0x87, 0x03, 0x33, 0xc5,
-	0x7c, 0x59, 0x0e, 0xb0, 0xda, 0x57, 0x6f, 0x59, 0xb9, 0xfe, 0xba, 0x82, 0x3e, 0x56, 0x20, 0xb7,
-	0x1a, 0x7e, 0x58, 0x71, 0xc2, 0xcd, 0xfe, 0xea, 0x29, 0xf7, 0x9a, 0xd8, 0xa7, 0xd0, 0x6e, 0xba,
-	0x38, 0x51, 0x96, 0x9f, 0x42, 0x48, 0xed, 0x22, 0xe5, 0xfe, 0x66, 0x00, 0x72, 0x8f, 0xc2, 0x4f,
-	0x48, 0x4e, 0xa8, 0xdc, 0x47, 0x03, 0xa7, 0xd7, 0xee, 0x13, 0x25, 0x1e, 0x3d, 0x4a, 0xab, 0xc9,
-	0x3f, 0x37, 0x4a, 0x32, 0xcf, 0x97, 0xb6, 0x62, 0x7f, 0x13, 0x94, 0xba, 0xa7, 0xa4, 0xa5, 0xf6,
-	0x06, 0x4b, 0xbb, 0x89, 0x49, 0x77, 0x4c, 0x5a, 0x29, 0x79, 0x09, 0x4a, 0xb1, 0x89, 0x73, 0x69,
-	0xf3, 0xb9, 0x33, 0xd8, 0xd2, 0xae, 0x98, 0xb8, 0x96, 0x92, 0x56, 0xe4, 0x67, 0x2c, 0x27, 0x89,
-	0x5d, 0x67, 0xfc, 0x91, 0x02, 0x63, 0xdb, 0x07, 0xf4, 0xf1, 0xf3, 0x8d, 0x98, 0x06, 0x2c, 0xae,
-	0x3f, 0x3b, 0x52, 0x2f, 0xf6, 0xb3, 0xe2, 0xae, 0x45, 0x1e, 0x97, 0x9e, 0xa4, 0x9e, 0xe8, 0x54,
-	0x31, 0x57, 0xf6, 0x0f, 0xe8, 0xe3, 0x2e, 0x4d, 0xfe, 0x48, 0x81, 0xa9, 0x7b, 0x24, 0xe8, 0x69,
-	0xe0, 0xfb, 0x54, 0xa2, 0x85, 0xf3, 0x29, 0xf0, 0x88, 0xa9, 0xb8, 0xf5, 0xec, 0x48, 0x7d, 0xed,
-	0x05, 0x27, 0xdc, 0x73, 0x11, 0xce, 0x17, 0x67, 0xcb, 0x75, 0x12, 0xb4, 0xf5, 0x2a, 0x47, 0x83,
-	0x82, 0x65, 0xe5, 0x3a, 0xfa, 0x4b, 0x05, 0xf2, 0x31, 0xf5, 0x64, 0x73, 0xa9, 0xf6, 0xeb, 0x96,
-	0x0b, 0x7d, 0x31, 0xc5, 0xf7, 0x9f, 0x1d, 0xa9, 0x6f, 0x74, 0xab, 0x56, 0x71, 0xb1, 0xdd, 0x0a,
-	0x2c, 0x23, 0x61, 0xbe, 0xb8, 0x82, 0x9f, 0x1f, 0xab, 0xd0, 0x49, 0xc1, 0x4f, 0x8f, 0xd5, 0x44,
-	0x16, 0x13, 0xea, 0xab, 0xc5, 0xa9, 0xa4, 0xfa, 0xe2, 0xbb, 0x1c, 0xae, 0xfb, 0x7f, 0x28, 0x70,
-	0x31, 0xa6, 0x7b, 0x4a, 0x97, 0x7c, 0x25, 0xfd, 0xdf, 0xf8, 0x2e, 0xb2, 0xc2, 0xcb, 0x91, 0x15,
-	0x3f, 0xfc, 0xbf, 0xda, 0xe2, 0xe5, 0xe2, 0x85, 0xe4, 0x16, 0xa3, 0x2a, 0xac, 0xb3, 0xd7, 0xbf,
-	0x56, 0x40, 0x4d, 0xd9, 0xab, 0xec, 0x7f, 0x17, 0x9e, 0xa3, 0xbf, 0xa0, 0x28, 0xbc, 0x90, 0xa2,
-	0xf8, 0x6b, 0xcf, 0x8e, 0xd4, 0x1b, 0xcf, 0x75, 0xfb, 0xee, 0xd0, 0xf1, 0xf9, 0xb1, 0x3a, 0xc4,
-	0x4b, 0xac, 0x17, 0x6c, 0x41, 0x34, 0xed, 0x7c, 0x0b, 0x7f, 0xa0, 0xc0, 0x4c, 0xc5, 0x34, 0x93,
-	0x5f, 0x45, 0x78, 0x96, 0x5b, 0x47, 0xe7, 0xfa, 0x7e, 0x34, 0x91, 0x16, 0xe7, 0xb4, 0x53, 0x84,
-	0x39, 0xa1, 0xe3, 0xb9, 0xe2, 0x74, 0x19, 0x9b, 0x66, 0xf8, 0xe5, 0x45, 0xfc, 0x9e, 0xa2, 0x3f,
-	0x54, 0x40, 0xd5, 0x88, 0x43, 0x9b, 0xe4, 0x1b, 0xab, 0xf7, 0xce, 0x69, 0xd5, 0xe3, 0x8e, 0xce,
-	0x9c, 0x34, 0xed, 0x7e, 0x57, 0x81, 0x89, 0xbb, 0x96, 0x6b, 0xc6, 0x27, 0x9b, 0xb3, 0x3d, 0x6d,
-	0x98, 0x80, 0x17, 0xfa, 0xc0, 0x85, 0x5a, 0x27, 0x3b, 0x5f, 0xa1, 0x54, 0xa1, 0x38, 0x53, 0xde,
-	0xb7, 0xdc, 0x54, 0xa3, 0xfd, 0xb6, 0x02, 0x13, 0x1a, 0x69, 0xd2, 0x43, 0xd2, 0x1e, 0x05, 0xf7,
-	0x0d, 0x6b, 0x29, 0x86, 0xda, 0x3e, 0x4d, 0x30, 0x9b, 0x2f, 0x9e, 0x2b, 0x33, 0xb1, 0x66, 0x5b,
-	0x15, 0xf9, 0xdf, 0xd9, 0x21, 0x69, 0x71, 0x9d, 0x7e, 0x4f, 0x81, 0xc9, 0x7b, 0xc4, 0x25, 0x0c,
-	0x07, 0xa7, 0xd3, 0xea, 0xd1, 0x69, 0xb4, 0x5a, 0x28, 0x9e, 0x2f, 0xd7, 0xc3, 0x55, 0xd3, 0xf5,
-	0x5a, 0x85, 0xd9, 0xe8, 0xda, 0x9f, 0xb2, 0xf6, 0x38, 0xf3, 0xba, 0xb2, 0xf4, 0x27, 0x83, 0x9d,
-	0x66, 0x80, 0x5f, 0x3d, 0x5e, 0xbb, 0xfd, 0xb1, 0x02, 0xf9, 0x78, 0xaa, 0x13, 0xc3, 0x90, 0xb9,
-	0x3e, 0xed, 0x50, 0xa1, 0x1f, 0xa2, 0xb8, 0xfb, 0xec, 0x48, 0x7d, 0xf3, 0xa5, 0x82, 0x5b, 0xaa,
-	0x9f, 0xcc, 0x15, 0x51, 0x32, 0xfb, 0x89, 0x21, 0x9b, 0xc8, 0x80, 0x0d, 0x40, 0x6b, 0xee, 0xaf,
-	0x13, 0x23, 0x78, 0x39, 0x0d, 0x53, 0xb6, 0x7e, 0xf3, 0x14, 0x57, 0x0a, 0x05, 0x30, 0x59, 0x6b,
-	0x5a, 0xff, 0xcf, 0xab, 0x2e, 0x7d, 0xa4, 0x00, 0xea, 0x6a, 0xd7, 0xf8, 0x21, 0xbd, 0x0f, 0x53,
-	0xf1, 0x33, 0x8a, 0x1a, 0xb9, 0x42, 0x5a, 0xb2, 0x97, 0xb8, 0xc2, 0x73, 0x70, 0xc5, 0x85, 0xf6,
-	0xdd, 0x4c, 0xd8, 0xdc, 0x91, 0x68, 0x61, 0xf6, 0x95, 0x0b, 0x9f, 0xfd, 0xcb, 0xfc, 0x99, 0xcf,
-	0x9e, 0xce, 0x2b, 0x4f, 0x9e, 0xce, 0x2b, 0x3f, 0x7f, 0x3a, 0xaf, 0xfc, 0xe0, 0x8b, 0xf9, 0x33,
-	0x4f, 0xbe, 0x98, 0x3f, 0xf3, 0x4f, 0x5f, 0xcc, 0x9f, 0xd9, 0x1b, 0x11, 0x82, 0x6f, 0xfe, 0x6f,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x8a, 0xa2, 0xba, 0x71, 0x54, 0x2f, 0x00, 0x00,
+	// 4913 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x7a, 0x5d, 0x6c, 0x1b, 0x49,
+	0x72, 0xb0, 0x47, 0xbf, 0x64, 0x51, 0xa2, 0xa8, 0xd6, 0x8f, 0xc7, 0xb4, 0x2d, 0xcb, 0xb3, 0x7f,
+	0x3e, 0x1f, 0x2d, 0xee, 0xca, 0x9f, 0xbf, 0xf3, 0x09, 0xeb, 0xbd, 0xa5, 0x28, 0x5a, 0x56, 0x24,
+	0x59, 0xda, 0xa1, 0x24, 0xdf, 0x2d, 0x90, 0x4c, 0x46, 0x33, 0x2d, 0x6a, 0xa2, 0xe1, 0xcc, 0x6c,
+	0xcf, 0x90, 0xbb, 0xdc, 0xa7, 0x20, 0x0f, 0xd9, 0x20, 0x2f, 0x77, 0xb9, 0xcd, 0x01, 0xc9, 0x26,
+	0x97, 0x1c, 0x12, 0x04, 0x38, 0x04, 0x09, 0xb0, 0x38, 0x20, 0x08, 0x6e, 0x1f, 0x82, 0x3c, 0xe4,
+	0x61, 0x91, 0xbc, 0x38, 0x3f, 0x08, 0x82, 0x05, 0x72, 0xb8, 0x78, 0x83, 0x20, 0xf1, 0xd3, 0x01,
+	0x6b, 0x19, 0x87, 0x3c, 0x24, 0x41, 0xff, 0x0c, 0x39, 0x43, 0x0e, 0x6d, 0x4b, 0xbb, 0x77, 0x2f,
+	0x04, 0xa7, 0xba, 0xaa, 0xba, 0xba, 0xba, 0xaa, 0xba, 0xaa, 0xba, 0x21, 0x6b, 0xd8, 0x6e, 0xc3,
+	0xb4, 0x71, 0xb0, 0xe0, 0x11, 0x37, 0x70, 0x51, 0x1a, 0x9b, 0x35, 0xcc, 0xfe, 0xe6, 0x2f, 0xd4,
+	0x5c, 0xb7, 0x66, 0xe3, 0xa2, 0xee, 0x59, 0x45, 0xdd, 0x71, 0xdc, 0x40, 0x0f, 0x2c, 0xd7, 0xf1,
+	0x39, 0x62, 0xfe, 0x66, 0xcd, 0x0a, 0x0e, 0x1b, 0xfb, 0x0b, 0x86, 0x5b, 0x2f, 0xd6, 0xdd, 0x7d,
+	0xcb, 0xa6, 0x84, 0xef, 0x14, 0xe9, 0xef, 0x35, 0xc6, 0xb3, 0xc8, 0xf0, 0x6a, 0xd8, 0x69, 0xff,
+	0x11, 0x94, 0x63, 0x07, 0xb6, 0xde, 0x74, 0x49, 0xf8, 0x45, 0xb0, 0xdf, 0xb0, 0xc5, 0xf4, 0xf9,
+	0x49, 0x82, 0xfd, 0x40, 0xaf, 0x05, 0xfa, 0xbe, 0x8d, 0x43, 0x04, 0xc3, 0xad, 0xd7, 0xdd, 0x90,
+	0x78, 0xda, 0x72, 0x0e, 0x88, 0x4e, 0xb0, 0xef, 0x36, 0x88, 0x81, 0x43, 0x61, 0xca, 0x4f, 0x15,
+	0xc6, 0xbc, 0x56, 0xd7, 0x03, 0xe3, 0xf0, 0x1a, 0x76, 0x6a, 0x96, 0x83, 0x8b, 0x66, 0x1d, 0x5f,
+	0x63, 0xa4, 0x45, 0xdb, 0x35, 0x42, 0xd6, 0x35, 0xb7, 0xe6, 0x72, 0x20, 0xfd, 0x27, 0xa0, 0x6b,
+	0xa7, 0x67, 0xad, 0x7b, 0x5e, 0x54, 0x76, 0xe5, 0xbb, 0x12, 0x64, 0xca, 0x42, 0xdd, 0xeb, 0xb8,
+	0x85, 0xae, 0xc3, 0x98, 0x4b, 0x6a, 0xba, 0x63, 0xbd, 0xcb, 0x34, 0x2b, 0x4b, 0xf3, 0xd2, 0x95,
+	0xf4, 0xf2, 0xc4, 0x47, 0x8f, 0xe5, 0x4c, 0xb8, 0x2b, 0x2e, 0xa9, 0xa9, 0x31, 0x24, 0x34, 0x0f,
+	0x43, 0x8e, 0x5e, 0xc7, 0xf2, 0x00, 0x43, 0x1e, 0xfb, 0xe8, 0xb1, 0x9c, 0x0a, 0x91, 0x55, 0x36,
+	0xb2, 0xf4, 0x95, 0xff, 0xfc, 0x4c, 0x96, 0x7e, 0xfa, 0x99, 0x2c, 0x7d, 0x70, 0x2c, 0xbf, 0x14,
+	0x8e, 0xdd, 0xba, 0xab, 0xd7, 0x71, 0x21, 0xfc, 0xba, 0xe6, 0x92, 0xda, 0xad, 0xad, 0x08, 0xdb,
+	0x0f, 0xbf, 0x77, 0x49, 0x52, 0xfe, 0x6e, 0x10, 0xa6, 0xb6, 0x3c, 0x4c, 0x18, 0x64, 0xc7, 0xaa,
+	0xe3, 0x0d, 0xab, 0x6e, 0x05, 0x3e, 0x5a, 0x87, 0xf3, 0x06, 0xc1, 0x7a, 0x80, 0x35, 0xc3, 0x6e,
+	0xf8, 0x01, 0x26, 0x9a, 0xe5, 0xf8, 0x81, 0x16, 0x58, 0x75, 0xec, 0x36, 0x02, 0x26, 0xf6, 0xe0,
+	0xf2, 0xd8, 0x7f, 0xff, 0xe8, 0x52, 0x6a, 0xa5, 0xc1, 0x89, 0x55, 0x99, 0x13, 0x94, 0x39, 0xfe,
+	0x9a, 0xe3, 0x07, 0x3b, 0x1c, 0x9b, 0x32, 0x6b, 0x78, 0x66, 0x5f, 0x66, 0x03, 0x49, 0xcc, 0x38,
+	0x41, 0x32, 0x33, 0x13, 0xdb, 0xb8, 0x1f, 0xb3, 0xc1, 0x24, 0x66, 0x9c, 0x20, 0x81, 0x59, 0x19,
+	0xce, 0x8a, 0x65, 0xea, 0x9e, 0x17, 0x67, 0x34, 0x94, 0xc0, 0x68, 0x9a, 0x23, 0x97, 0x3c, 0xaf,
+	0x8b, 0x89, 0x58, 0x5e, 0x0f, 0x93, 0xe1, 0x24, 0x26, 0x1c, 0xb9, 0x97, 0x89, 0x58, 0x56, 0x0f,
+	0x93, 0x91, 0x24, 0x26, 0x1c, 0x39, 0xce, 0x44, 0xf9, 0xa9, 0x04, 0xb9, 0xd0, 0xda, 0xd6, 0x9c,
+	0x00, 0x13, 0x47, 0xb7, 0xd1, 0x2c, 0x8c, 0x1c, 0x58, 0xd8, 0x36, 0x7d, 0x59, 0x9a, 0x1f, 0xbc,
+	0x92, 0x56, 0xc5, 0x17, 0x5a, 0x80, 0xc1, 0x23, 0xdc, 0x62, 0xda, 0xcf, 0x2c, 0xce, 0x2e, 0xb4,
+	0x83, 0xc0, 0x42, 0xc4, 0x5e, 0x97, 0x87, 0x3e, 0xfe, 0xd1, 0xa5, 0x33, 0x2a, 0x45, 0x44, 0xaf,
+	0xc2, 0xb0, 0x47, 0x5c, 0xcf, 0x97, 0x07, 0xe7, 0x07, 0xaf, 0x64, 0x16, 0x5f, 0x4c, 0xa0, 0x08,
+	0xe7, 0x5c, 0xd8, 0xa6, 0x88, 0x15, 0x27, 0x20, 0x2d, 0x95, 0x13, 0xe5, 0x6f, 0x02, 0x74, 0x80,
+	0x28, 0xc7, 0xe7, 0x66, 0xd6, 0xcf, 0xb9, 0x4f, 0xc3, 0x70, 0x53, 0xb7, 0x1b, 0xc2, 0xc8, 0x55,
+	0xfe, 0xb1, 0x34, 0x70, 0x53, 0x5a, 0x7a, 0x9e, 0xda, 0xf6, 0x4f, 0x3e, 0x93, 0xa5, 0x5f, 0x7d,
+	0x24, 0x4b, 0xdf, 0x7a, 0x24, 0x4b, 0x3f, 0x78, 0x2c, 0xe7, 0x8e, 0x70, 0x2b, 0x66, 0xcc, 0xca,
+	0x77, 0x46, 0x21, 0xbb, 0x6d, 0xeb, 0xc1, 0x81, 0x4b, 0xea, 0x65, 0xd7, 0x39, 0xb0, 0x6a, 0xe8,
+	0xff, 0xc3, 0x59, 0xc3, 0x75, 0x02, 0xdd, 0x72, 0x30, 0xd1, 0x08, 0xae, 0x59, 0x7e, 0x40, 0x5a,
+	0x9a, 0xa7, 0x07, 0x87, 0x62, 0xe2, 0x99, 0xf6, 0xb0, 0x2a, 0x46, 0xb7, 0xf5, 0xe0, 0x10, 0x5d,
+	0x87, 0xd9, 0xd0, 0x69, 0xb4, 0x66, 0x5d, 0xb3, 0xea, 0x7a, 0x0d, 0x73, 0x32, 0x2e, 0xdb, 0x54,
+	0x38, 0xba, 0x57, 0x5f, 0xa3, 0x63, 0x8c, 0xe8, 0x2a, 0x4c, 0x3a, 0x6e, 0x60, 0x1d, 0xb4, 0x34,
+	0x23, 0x20, 0xb6, 0xa6, 0x9b, 0x26, 0xf1, 0x99, 0x31, 0xa6, 0xd5, 0x09, 0x3e, 0x50, 0x0e, 0x88,
+	0x5d, 0xa2, 0x60, 0xa4, 0xc0, 0x78, 0x60, 0xfb, 0x9a, 0x81, 0x49, 0xa0, 0x1d, 0x58, 0x36, 0x66,
+	0x66, 0x92, 0x56, 0x33, 0x81, 0xed, 0x97, 0x31, 0x09, 0x6e, 0x5b, 0x36, 0x46, 0xf3, 0x30, 0x46,
+	0x71, 0x8e, 0x70, 0x8b, 0xa3, 0x4c, 0x33, 0x14, 0x08, 0x6c, 0x7f, 0x1d, 0xb7, 0x18, 0xc6, 0x1c,
+	0x64, 0x18, 0x17, 0x9d, 0x23, 0xcc, 0x30, 0x84, 0x34, 0xe5, 0xa1, 0xb3, 0xf1, 0xd7, 0x60, 0x14,
+	0x3b, 0x4d, 0xad, 0xa9, 0x13, 0x79, 0x84, 0xed, 0xd8, 0x0b, 0x91, 0x1d, 0x8b, 0xab, 0x6a, 0xa1,
+	0xe2, 0x34, 0xf7, 0x74, 0xc2, 0x37, 0x6c, 0x04, 0xb3, 0x0f, 0x74, 0x19, 0xc6, 0x3c, 0x81, 0xa5,
+	0x05, 0x7a, 0x4d, 0x4e, 0x71, 0x21, 0x43, 0xd8, 0x8e, 0x5e, 0x43, 0xe7, 0x21, 0x1d, 0x60, 0x3f,
+	0xd0, 0xea, 0xae, 0x89, 0xe5, 0xf4, 0xbc, 0x74, 0x25, 0xa5, 0xa6, 0x28, 0x60, 0xd3, 0x35, 0x31,
+	0x42, 0x30, 0xe4, 0x7b, 0xba, 0x23, 0x03, 0xa3, 0x63, 0xff, 0x29, 0x4f, 0xc3, 0xc6, 0xba, 0xd3,
+	0xf0, 0x38, 0x4d, 0x86, 0xd1, 0x64, 0x04, 0x8c, 0x91, 0xcd, 0xc2, 0x08, 0xdd, 0x2b, 0xd7, 0x91,
+	0xc7, 0x18, 0xa1, 0xf8, 0x42, 0x5f, 0x82, 0x1c, 0x8d, 0xac, 0x98, 0x18, 0x96, 0x6e, 0x33, 0xdd,
+	0xf9, 0xf2, 0x38, 0x23, 0x9f, 0xe8, 0xc0, 0xa9, 0xfa, 0x98, 0x7e, 0x1b, 0x3e, 0xd6, 0x9a, 0x7a,
+	0xc3, 0x0e, 0x34, 0xef, 0xc8, 0x92, 0xb3, 0x7c, 0x9a, 0x86, 0x8f, 0xf7, 0x28, 0x6c, 0xfb, 0xc8,
+	0xa2, 0xfa, 0xa5, 0x8e, 0x66, 0x3a, 0xbe, 0x46, 0x5c, 0x37, 0x90, 0x73, 0x5c, 0xbf, 0xba, 0xe7,
+	0xad, 0x38, 0xbe, 0xea, 0xba, 0x01, 0xba, 0x02, 0x39, 0xe3, 0x10, 0x1f, 0x68, 0x3e, 0x26, 0x4d,
+	0x4c, 0xb8, 0x01, 0x4c, 0x32, 0xac, 0x2c, 0x85, 0x57, 0x19, 0x98, 0xed, 0xfd, 0x6b, 0x30, 0xcd,
+	0x30, 0x0d, 0xdb, 0xc2, 0x4e, 0xa0, 0x59, 0xd4, 0x0b, 0x9a, 0xba, 0x2d, 0xa3, 0x79, 0xe9, 0xca,
+	0x70, 0x97, 0xe3, 0x22, 0x8a, 0x59, 0x66, 0x88, 0x6b, 0x02, 0x0f, 0xbd, 0x00, 0x59, 0x13, 0x7b,
+	0xb6, 0xdb, 0xaa, 0x53, 0x72, 0xaa, 0xeb, 0x29, 0x36, 0xcf, 0x78, 0x07, 0x4a, 0xb5, 0x4d, 0xed,
+	0x92, 0xd4, 0x35, 0xdd, 0x30, 0xb0, 0xef, 0x6b, 0x1e, 0xb1, 0x9a, 0x34, 0xe6, 0x50, 0x3f, 0x9a,
+	0x15, 0x76, 0x49, 0xea, 0x25, 0x36, 0xb8, 0xcd, 0xc7, 0xe8, 0x81, 0xf3, 0x22, 0x4c, 0x08, 0x02,
+	0xdd, 0xb3, 0x98, 0x59, 0xca, 0x67, 0x39, 0x73, 0x0e, 0x2e, 0x79, 0x16, 0x35, 0x4a, 0xba, 0x95,
+	0x86, 0x6e, 0x1c, 0x62, 0xcd, 0xb4, 0x88, 0x2c, 0x33, 0x8c, 0x14, 0x03, 0xac, 0x58, 0x24, 0xff,
+	0x55, 0xc8, 0x44, 0x2c, 0xe4, 0x24, 0xde, 0xab, 0xfc, 0x8f, 0x04, 0xd9, 0x30, 0x3c, 0xa8, 0xd8,
+	0xdf, 0xd4, 0xbd, 0x30, 0xf0, 0x48, 0xcf, 0x1a, 0x78, 0x5e, 0x87, 0xd1, 0xba, 0xee, 0x79, 0x96,
+	0x53, 0x93, 0x07, 0xfa, 0x86, 0x1e, 0xce, 0x7b, 0x61, 0x93, 0x23, 0x72, 0x4b, 0x0e, 0xc9, 0xf2,
+	0x4b, 0x30, 0x16, 0x1d, 0x38, 0x51, 0xf8, 0x79, 0xed, 0x83, 0x63, 0xb9, 0xd8, 0x3e, 0x52, 0xd7,
+	0x71, 0x6b, 0xa1, 0xf7, 0x58, 0xa5, 0xd0, 0x68, 0x34, 0xfa, 0xdb, 0x63, 0x79, 0x54, 0x4c, 0xa8,
+	0xec, 0x43, 0x66, 0x8d, 0xe6, 0x2f, 0x22, 0x28, 0x2d, 0xc2, 0x0c, 0x7e, 0x87, 0x47, 0x49, 0xcd,
+	0xc1, 0xc1, 0xdb, 0x2e, 0x39, 0xd2, 0xd8, 0xe1, 0xce, 0x85, 0x99, 0x0a, 0x07, 0xef, 0xf2, 0x31,
+	0x3a, 0x17, 0xba, 0x04, 0x19, 0x9e, 0x3f, 0x69, 0x9d, 0x34, 0x40, 0x05, 0x0e, 0xa2, 0x08, 0xca,
+	0x3e, 0x8c, 0xab, 0x22, 0x3d, 0x7a, 0xa3, 0xe1, 0x06, 0x3a, 0xf5, 0xbd, 0x08, 0x53, 0xf6, 0x3f,
+	0xbe, 0xc4, 0x21, 0xb1, 0x44, 0xf4, 0x12, 0x4c, 0xe8, 0x36, 0x0d, 0x44, 0xc1, 0x21, 0xc1, 0xfe,
+	0xa1, 0x6b, 0x9b, 0x2c, 0x6a, 0x0d, 0xab, 0x59, 0x06, 0xde, 0x09, 0xa1, 0x4a, 0x03, 0xc6, 0x56,
+	0xb7, 0x77, 0x57, 0x88, 0xd5, 0xc4, 0x84, 0x1a, 0xd6, 0xe5, 0xe8, 0x14, 0xcb, 0xe3, 0x1f, 0x3d,
+	0x96, 0xd3, 0x35, 0xaf, 0x61, 0xb2, 0x71, 0x31, 0xe3, 0xff, 0xeb, 0x4a, 0x76, 0x78, 0xfe, 0x92,
+	0xfb, 0xe8, 0xb1, 0x3c, 0xd6, 0x46, 0xed, 0xc9, 0x76, 0x96, 0xc6, 0xc2, 0x5c, 0x86, 0x25, 0x28,
+	0xff, 0x2b, 0x41, 0xb6, 0x3d, 0xef, 0x72, 0xc3, 0xb2, 0xcd, 0xc4, 0xc5, 0x5d, 0x82, 0x0c, 0xe7,
+	0x17, 0x0d, 0xd4, 0xc0, 0x41, 0x61, 0x7c, 0x8e, 0x20, 0x68, 0x06, 0xc1, 0x66, 0x3b, 0x3e, 0x77,
+	0xd0, 0xca, 0x14, 0x8c, 0x5e, 0x85, 0x9c, 0xcb, 0x73, 0x22, 0xa7, 0xa6, 0xf9, 0x2d, 0x3f, 0xc0,
+	0x75, 0x96, 0x0e, 0x64, 0x17, 0x27, 0x23, 0x96, 0xb7, 0x55, 0xdd, 0x69, 0x79, 0x58, 0x9d, 0x68,
+	0xa3, 0x56, 0x19, 0x26, 0xf5, 0xe6, 0x23, 0x4c, 0x1c, 0x6c, 0x6b, 0x4d, 0x4c, 0x7c, 0xba, 0x6e,
+	0x1e, 0xde, 0xc7, 0x39, 0x74, 0x8f, 0x03, 0xa9, 0xe2, 0x0f, 0x5b, 0x1e, 0x26, 0x4d, 0xcb, 0x77,
+	0x69, 0x0e, 0x73, 0xe0, 0xb2, 0x83, 0x3e, 0xad, 0x66, 0x3b, 0xe0, 0x35, 0xe7, 0xc0, 0x55, 0x7e,
+	0x22, 0xc1, 0x74, 0x5c, 0x03, 0x9b, 0xb8, 0xbe, 0x8f, 0x09, 0x2a, 0x46, 0xfd, 0xe8, 0x6c, 0x44,
+	0xb2, 0xe8, 0x3e, 0x45, 0x1d, 0xe9, 0x06, 0x0c, 0xef, 0x53, 0x7a, 0x71, 0xe6, 0x9f, 0x4b, 0x22,
+	0x61, 0x13, 0x08, 0x22, 0x8e, 0x4d, 0x83, 0xb6, 0x55, 0x73, 0x5c, 0x82, 0x35, 0x3f, 0xd0, 0x03,
+	0xcc, 0xb4, 0x96, 0x52, 0x33, 0x1c, 0x56, 0xa5, 0xa0, 0xa5, 0xcd, 0x0f, 0x8e, 0xe5, 0x1b, 0xed,
+	0x3d, 0xa5, 0x3b, 0xd2, 0xf1, 0x94, 0x36, 0x38, 0xd1, 0x55, 0x12, 0x0f, 0x73, 0x03, 0x26, 0xe3,
+	0x02, 0xed, 0xaa, 0x1b, 0xe8, 0x79, 0xc8, 0x32, 0x79, 0xb4, 0x06, 0xb1, 0xa3, 0xa7, 0xf8, 0x18,
+	0x83, 0xee, 0x12, 0x9b, 0xed, 0xf3, 0x15, 0x48, 0x35, 0x75, 0xdb, 0x32, 0xad, 0xa0, 0x95, 0x98,
+	0x58, 0xb6, 0x47, 0x95, 0x3f, 0x1e, 0x82, 0x74, 0x7b, 0x96, 0xbe, 0x59, 0x52, 0x31, 0x9a, 0x25,
+	0x3d, 0x8b, 0x92, 0x5f, 0x84, 0xa1, 0xa0, 0xe5, 0x71, 0x2d, 0x65, 0x17, 0x51, 0x9c, 0x82, 0x59,
+	0x0c, 0x1b, 0x47, 0x5f, 0x81, 0x11, 0x26, 0xb8, 0x2f, 0x0f, 0xb1, 0xa0, 0xf6, 0xd4, 0xdd, 0x10,
+	0xe8, 0xd4, 0xbe, 0x6c, 0xcb, 0xc0, 0x8e, 0x8f, 0x35, 0x83, 0xc5, 0x94, 0xd0, 0xbe, 0x04, 0x54,
+	0x04, 0x9a, 0x15, 0x00, 0x9a, 0x79, 0x61, 0x12, 0x58, 0xd8, 0x17, 0x19, 0xc0, 0xf3, 0x49, 0x73,
+	0xb0, 0x64, 0x8d, 0xa3, 0xf1, 0xb0, 0x19, 0xa1, 0xa3, 0x41, 0x83, 0x6f, 0xfa, 0x28, 0x8f, 0x8b,
+	0xec, 0xa3, 0xc7, 0x22, 0x52, 0x3d, 0x16, 0x91, 0xbf, 0x05, 0x13, 0x5d, 0x7c, 0x4f, 0x14, 0x75,
+	0x7f, 0x5d, 0xea, 0xce, 0xfa, 0x7e, 0xe7, 0x91, 0x2c, 0x7d, 0xf8, 0x48, 0x96, 0x3e, 0x7e, 0x24,
+	0x4b, 0xdf, 0x3e, 0x96, 0x87, 0xd9, 0x34, 0xa7, 0x36, 0xbb, 0x3f, 0x3a, 0x96, 0x73, 0xcf, 0x64,
+	0x8a, 0x8f, 0x25, 0x66, 0x25, 0x42, 0xa9, 0x37, 0x60, 0x84, 0x33, 0x7d, 0x36, 0xaf, 0x13, 0xc8,
+	0xe8, 0x1a, 0xa4, 0x6a, 0x5e, 0x43, 0x63, 0x76, 0x31, 0xd0, 0xd7, 0x2e, 0x46, 0x6b, 0x5e, 0x83,
+	0xfe, 0xe9, 0xda, 0xba, 0xc1, 0xa4, 0xad, 0x13, 0x79, 0xdb, 0x13, 0xb6, 0xee, 0x73, 0xee, 0x80,
+	0xf2, 0x4f, 0x32, 0xa4, 0xc2, 0xc3, 0xf5, 0x0b, 0xab, 0x21, 0xbe, 0x06, 0x29, 0xdb, 0x35, 0xf8,
+	0x69, 0x30, 0xcc, 0x88, 0x2e, 0x2e, 0x98, 0x34, 0xf3, 0xb6, 0xf6, 0x1b, 0x01, 0x36, 0x35, 0x56,
+	0x55, 0x6b, 0xbc, 0xaa, 0x5e, 0xd8, 0x70, 0x0d, 0x41, 0xdb, 0x26, 0x42, 0xd7, 0x01, 0x2c, 0x4f,
+	0xf3, 0x1b, 0x9e, 0xe7, 0x12, 0x5e, 0x19, 0x65, 0x17, 0xa7, 0x23, 0xf3, 0xae, 0x79, 0x55, 0x3e,
+	0xa6, 0xa6, 0xad, 0xf0, 0x2f, 0xba, 0x08, 0x40, 0xed, 0xd4, 0x32, 0x34, 0xcb, 0xf3, 0x85, 0x25,
+	0xa7, 0x39, 0x64, 0xcd, 0xf3, 0x69, 0x8a, 0xe4, 0x34, 0xea, 0x9a, 0xd9, 0x72, 0xf4, 0xba, 0xc0,
+	0x49, 0xb1, 0x23, 0x70, 0xdc, 0x69, 0xd4, 0x57, 0x38, 0x94, 0xe2, 0x55, 0x20, 0x43, 0x4b, 0x32,
+	0xcd, 0x66, 0x25, 0x32, 0xcb, 0x77, 0x33, 0x8b, 0x73, 0xd1, 0x13, 0xa1, 0xb7, 0x90, 0x16, 0x0b,
+	0x80, 0xa0, 0x53, 0x5a, 0xbf, 0x00, 0x23, 0x98, 0x10, 0x97, 0xf8, 0x32, 0x50, 0x5d, 0x2e, 0x8f,
+	0x7f, 0x9f, 0x5a, 0xf4, 0x0f, 0xce, 0x0d, 0x3b, 0xae, 0x51, 0xf7, 0x54, 0x31, 0x88, 0x5e, 0x87,
+	0x11, 0x2a, 0x62, 0xc3, 0x67, 0x49, 0x72, 0x66, 0x71, 0x26, 0x32, 0x51, 0x95, 0x0d, 0xd0, 0xd3,
+	0x61, 0x79, 0x32, 0x46, 0xcd, 0xad, 0x8e, 0xd3, 0xd1, 0x82, 0x8d, 0xbb, 0xe7, 0x18, 0x53, 0x53,
+	0xd4, 0x56, 0x77, 0x88, 0x6e, 0x1c, 0x61, 0x93, 0xf9, 0x50, 0xb7, 0x00, 0xc2, 0xc7, 0xef, 0xc0,
+	0x18, 0xcd, 0x36, 0xdd, 0x26, 0x26, 0xc4, 0x32, 0x31, 0xcb, 0xb5, 0xb3, 0xf1, 0x3d, 0x56, 0x37,
+	0xb7, 0xc4, 0x68, 0x37, 0x8f, 0x8c, 0x41, 0xea, 0xe1, 0x18, 0xba, 0x09, 0xb9, 0x48, 0x7a, 0x4b,
+	0xb7, 0xd2, 0xe6, 0x19, 0x79, 0x37, 0xd5, 0x44, 0x07, 0x6d, 0x83, 0x62, 0xa1, 0x57, 0x61, 0xbc,
+	0x53, 0x82, 0x50, 0xe7, 0x99, 0xe8, 0x59, 0x49, 0x58, 0xc8, 0x30, 0x0f, 0x6a, 0x17, 0x2c, 0xcc,
+	0x8d, 0x5e, 0x01, 0x51, 0x79, 0x69, 0x3e, 0x69, 0xf2, 0xd4, 0x97, 0x65, 0xf9, 0xcb, 0xe9, 0xce,
+	0x94, 0xe3, 0x1c, 0xa3, 0x4a, 0x9a, 0x2c, 0x0b, 0x5e, 0x84, 0x11, 0x9e, 0x56, 0xb1, 0x4c, 0x3f,
+	0x13, 0x33, 0xad, 0xdb, 0x6c, 0x20, 0xe2, 0xdc, 0x1c, 0x13, 0x3d, 0x07, 0xe3, 0xde, 0x61, 0xcb,
+	0xb7, 0x0c, 0x9a, 0xd1, 0xd1, 0xbc, 0x04, 0xf1, 0x63, 0x29, 0x04, 0xb2, 0x14, 0xee, 0x66, 0xa7,
+	0x18, 0x9b, 0x62, 0xfe, 0x7c, 0x29, 0xc1, 0x59, 0x12, 0xcb, 0xb0, 0x2f, 0xc3, 0x64, 0xa7, 0x8a,
+	0x0d, 0x33, 0x0a, 0x5e, 0x0d, 0xe6, 0xda, 0x03, 0x61, 0x52, 0xb1, 0x02, 0x23, 0xe2, 0x4c, 0x98,
+	0xe9, 0x39, 0xe2, 0xe3, 0x25, 0x5f, 0xa2, 0xe1, 0x70, 0x5a, 0x74, 0x07, 0x32, 0x04, 0xfb, 0xb4,
+	0x10, 0xd1, 0xea, 0xba, 0x27, 0xcf, 0x32, 0x81, 0x95, 0x24, 0x81, 0x55, 0xec, 0xef, 0xe8, 0xb5,
+	0x4d, 0xdd, 0x63, 0x32, 0x2f, 0x0f, 0x51, 0x9e, 0x6a, 0x9a, 0x84, 0x50, 0xb4, 0x02, 0x19, 0x51,
+	0x7d, 0x34, 0x75, 0xe2, 0xcb, 0x67, 0x19, 0xa7, 0xe7, 0x92, 0x38, 0xf1, 0xc2, 0x65, 0x4f, 0x27,
+	0x61, 0x24, 0xd3, 0xdb, 0x00, 0x5a, 0x89, 0xb5, 0xeb, 0xf0, 0x50, 0x03, 0xbc, 0x44, 0xc9, 0x36,
+	0x79, 0x09, 0x1e, 0xae, 0xff, 0x4b, 0x00, 0x1d, 0x1b, 0x92, 0xf3, 0xdd, 0xbb, 0x1d, 0x19, 0x44,
+	0x65, 0xc8, 0xb1, 0xbe, 0x22, 0xaf, 0x8b, 0xd8, 0x64, 0xf2, 0x79, 0x66, 0x5e, 0x51, 0xa5, 0xb1,
+	0xd4, 0x9d, 0xd6, 0x48, 0x0c, 0x41, 0xcd, 0x5a, 0xb1, 0x6f, 0xf4, 0x35, 0x18, 0xe3, 0x4c, 0x84,
+	0xd6, 0x2f, 0xf4, 0x04, 0xc2, 0x48, 0xee, 0x2f, 0xec, 0x26, 0x63, 0x45, 0xca, 0x81, 0x1d, 0x98,
+	0x88, 0x96, 0x8e, 0x34, 0x98, 0x5e, 0xec, 0x5b, 0xe3, 0x2c, 0x94, 0xdb, 0xb5, 0xe3, 0x3a, 0x6e,
+	0x45, 0x55, 0x3e, 0x6e, 0x44, 0x47, 0xd0, 0x3d, 0x98, 0xac, 0xeb, 0xb4, 0x0c, 0x75, 0x74, 0xc7,
+	0x08, 0x0f, 0xe9, 0x39, 0xb6, 0xb8, 0xab, 0xfd, 0xe3, 0xed, 0x66, 0x87, 0x84, 0x05, 0x06, 0x35,
+	0x57, 0xef, 0x82, 0xa0, 0x35, 0xb8, 0x1c, 0x06, 0x04, 0xcd, 0x73, 0x6d, 0xcb, 0x68, 0x69, 0xbd,
+	0xc6, 0x79, 0x89, 0x65, 0x03, 0x73, 0x21, 0xe2, 0x36, 0xc3, 0x2b, 0x77, 0x9b, 0xea, 0x59, 0x18,
+	0x6d, 0xd6, 0x35, 0xcf, 0x75, 0x6d, 0x79, 0x9e, 0x17, 0xfa, 0xcd, 0xfa, 0xb6, 0xeb, 0xda, 0xe8,
+	0x75, 0x98, 0x89, 0x96, 0xb9, 0x8d, 0x7d, 0xdb, 0x32, 0x98, 0x62, 0x2e, 0xf3, 0x4a, 0x23, 0x1e,
+	0x33, 0x50, 0xa7, 0xe8, 0x65, 0x98, 0x74, 0xf9, 0xbf, 0x00, 0x97, 0x22, 0x1c, 0x8e, 0x70, 0x4b,
+	0x6b, 0x78, 0x35, 0xa2, 0x9b, 0x58, 0x23, 0xf8, 0xad, 0x86, 0x45, 0xb0, 0x29, 0x2b, 0x2c, 0xfe,
+	0x70, 0xe5, 0x9d, 0x6f, 0xb3, 0x58, 0xc7, 0xad, 0x5d, 0x8e, 0xa9, 0x0a, 0x44, 0xf4, 0x0d, 0x00,
+	0xde, 0xf4, 0x33, 0x35, 0x3d, 0x90, 0x9f, 0x63, 0xfb, 0xfb, 0x5c, 0x7f, 0x1d, 0xd2, 0xc8, 0xef,
+	0x07, 0x7a, 0xdd, 0x5b, 0x9e, 0x11, 0x72, 0xa6, 0x83, 0x10, 0xc4, 0x76, 0x3f, 0x2d, 0xb8, 0x95,
+	0x02, 0xca, 0x9a, 0xb7, 0x02, 0x19, 0xeb, 0xe7, 0x3f, 0x3f, 0x6b, 0xc1, 0xad, 0x14, 0xd0, 0x04,
+	0x2d, 0x20, 0x0d, 0x3f, 0x10, 0x9b, 0x24, 0xbf, 0x20, 0x1a, 0x4c, 0x14, 0xc6, 0xf7, 0x03, 0xed,
+	0x00, 0x8a, 0xa2, 0x08, 0x23, 0x79, 0xf1, 0x44, 0x47, 0x45, 0x2e, 0xc2, 0x90, 0x1b, 0xc8, 0x2a,
+	0x4c, 0x84, 0x8d, 0x7a, 0xed, 0x2d, 0x5a, 0x8a, 0xfa, 0xf2, 0x4b, 0xcc, 0x9e, 0xe5, 0x08, 0xcb,
+	0x58, 0xad, 0x2a, 0xbc, 0x22, 0x4b, 0xa2, 0x40, 0x1f, 0xa9, 0x30, 0x6f, 0xe2, 0x03, 0xd6, 0xc1,
+	0x69, 0x33, 0xec, 0x2e, 0x54, 0xaf, 0xb0, 0xfe, 0x4a, 0xc4, 0xbf, 0x2f, 0x0a, 0x92, 0x70, 0x82,
+	0x52, 0xac, 0x84, 0x45, 0x37, 0x20, 0x7b, 0xc7, 0xf5, 0x03, 0x6a, 0x8a, 0xc4, 0xb5, 0x6d, 0x4c,
+	0xe4, 0x2f, 0x25, 0x99, 0x54, 0x17, 0x12, 0x0d, 0xf0, 0x47, 0xfa, 0xc1, 0x91, 0x1e, 0x36, 0x9c,
+	0xe5, 0xab, 0x3c, 0xc0, 0x33, 0xa0, 0x68, 0x2a, 0xd3, 0x1c, 0x83, 0x23, 0x35, 0x7c, 0x4c, 0xe4,
+	0x2f, 0xf3, 0x1c, 0x83, 0x41, 0x76, 0x7d, 0x4c, 0x58, 0x51, 0xc8, 0x86, 0x3d, 0xdd, 0xf7, 0xdf,
+	0x76, 0x89, 0x29, 0x17, 0x44, 0x51, 0x48, 0xa1, 0xdb, 0x02, 0x88, 0xbe, 0x0a, 0x40, 0x13, 0x45,
+	0x11, 0x4d, 0xae, 0xf5, 0x9c, 0x41, 0xed, 0xcc, 0x4f, 0x68, 0x8d, 0x96, 0xdc, 0x1c, 0xf0, 0x39,
+	0x7a, 0x34, 0xf9, 0x7b, 0x90, 0x8d, 0x07, 0xf2, 0x04, 0xea, 0x62, 0x94, 0x3a, 0x7e, 0xb0, 0x70,
+	0xda, 0x1d, 0x7d, 0xdf, 0xc6, 0xeb, 0xb8, 0x15, 0x65, 0x7c, 0x0b, 0x26, 0xba, 0xe2, 0xfa, 0x89,
+	0xe4, 0x7a, 0x1d, 0x50, 0x6f, 0xc4, 0x3b, 0x51, 0x19, 0xf1, 0xcd, 0xc1, 0x7e, 0x65, 0xc4, 0x47,
+	0x8f, 0xe4, 0xb1, 0xa8, 0x69, 0xd3, 0xb2, 0xe2, 0x3e, 0x2f, 0x2d, 0xde, 0x1f, 0xd8, 0x10, 0xe9,
+	0xe6, 0xc2, 0x1d, 0x97, 0x58, 0xef, 0xd2, 0xc8, 0x65, 0x97, 0x0c, 0xa3, 0x41, 0x74, 0xa3, 0x55,
+	0x68, 0x8f, 0xed, 0xd1, 0xcc, 0xda, 0x48, 0x1a, 0x29, 0xbb, 0x0d, 0xe2, 0xe3, 0xce, 0x77, 0xd5,
+	0xc3, 0xd8, 0xec, 0x7c, 0xb6, 0x1d, 0xb9, 0xc0, 0xf3, 0xb8, 0x02, 0xdf, 0xc1, 0xc2, 0xdd, 0x68,
+	0x2a, 0x52, 0x88, 0xad, 0x9c, 0x61, 0xe2, 0x42, 0x85, 0xa5, 0x86, 0x85, 0x72, 0x4f, 0xc8, 0xeb,
+	0x80, 0x7a, 0x43, 0x58, 0xa1, 0x1c, 0x46, 0x9c, 0xc2, 0x6e, 0x18, 0x20, 0x0a, 0x3b, 0x5d, 0x8e,
+	0x5b, 0x88, 0xdb, 0x7c, 0x61, 0x35, 0xb4, 0xab, 0x85, 0x55, 0x5e, 0x94, 0x9c, 0xa2, 0x0b, 0x96,
+	0x58, 0x4f, 0xfd, 0x83, 0x04, 0x19, 0x9e, 0x49, 0x6d, 0xd2, 0xe0, 0x76, 0xe2, 0x66, 0x60, 0x57,
+	0x2f, 0x6c, 0xb0, 0xbb, 0x17, 0x46, 0xf3, 0x25, 0xbd, 0xa9, 0x5b, 0xb6, 0xbe, 0x6f, 0xd9, 0x56,
+	0xd0, 0xd2, 0xde, 0x75, 0x1d, 0xcc, 0xba, 0x37, 0x69, 0x35, 0x17, 0x1d, 0x78, 0xd3, 0x75, 0xf0,
+	0x52, 0xe5, 0x83, 0x63, 0xb9, 0x74, 0xc2, 0x65, 0x15, 0xf8, 0x64, 0xb7, 0x6e, 0x77, 0xfa, 0x6f,
+	0x0b, 0x9d, 0x6b, 0x97, 0x4d, 0xdd, 0xb1, 0x0e, 0xb0, 0x1f, 0xa0, 0x3c, 0xa4, 0xea, 0xe2, 0xbf,
+	0xb0, 0xcb, 0xf6, 0xb7, 0xf2, 0x67, 0x12, 0x8c, 0x89, 0xda, 0xac, 0x45, 0xb3, 0xf8, 0xc4, 0x96,
+	0xd6, 0x3c, 0x64, 0x4c, 0xec, 0x1b, 0xc4, 0xf2, 0x3a, 0xcd, 0x33, 0x35, 0x0a, 0xea, 0xd8, 0xfd,
+	0x60, 0xc4, 0xee, 0x69, 0xad, 0xe6, 0x63, 0x83, 0x60, 0x7e, 0x85, 0x95, 0x52, 0xc5, 0x17, 0xba,
+	0x00, 0xe9, 0xba, 0xee, 0x98, 0x7a, 0xe0, 0x92, 0x16, 0x2b, 0xbe, 0x52, 0x6a, 0x07, 0x40, 0xc5,
+	0xb5, 0xc4, 0xed, 0x0d, 0x2b, 0xab, 0x52, 0x6a, 0xfb, 0x5b, 0x79, 0x7f, 0x00, 0xc6, 0xc3, 0xf5,
+	0xb1, 0x4b, 0x9c, 0xde, 0xc4, 0x5c, 0x3a, 0x49, 0x62, 0x7e, 0x27, 0x56, 0xdf, 0xf2, 0x9e, 0xee,
+	0x95, 0x84, 0xad, 0x67, 0x73, 0x3d, 0xb1, 0x3d, 0xa1, 0x74, 0x75, 0x18, 0xb9, 0x22, 0x62, 0xb0,
+	0xfc, 0xde, 0xb3, 0xd4, 0xc1, 0xd7, 0xe2, 0xe1, 0x2d, 0xb6, 0x90, 0xc8, 0x46, 0x45, 0x0b, 0xe4,
+	0xbf, 0x92, 0x20, 0x1f, 0xe9, 0x3e, 0x77, 0x0e, 0xaf, 0x2f, 0x42, 0x45, 0xaf, 0x25, 0xa8, 0x48,
+	0xee, 0x4e, 0x2b, 0xc3, 0x59, 0xc3, 0x22, 0xf3, 0x64, 0x8a, 0x51, 0xfe, 0x5e, 0x82, 0x99, 0xee,
+	0x05, 0xec, 0xfa, 0x7a, 0x0d, 0x9f, 0xc6, 0x29, 0x79, 0x1a, 0xdc, 0xa0, 0xe4, 0x4c, 0x87, 0x29,
+	0x15, 0x18, 0x88, 0x33, 0x5c, 0x84, 0x21, 0xd6, 0xe1, 0x1c, 0x7c, 0xa6, 0x85, 0x30, 0xdc, 0xa5,
+	0xeb, 0xa7, 0x08, 0x39, 0xca, 0xbf, 0x4a, 0x00, 0xdc, 0x31, 0xfb, 0xfa, 0x15, 0xf5, 0x1a, 0xc3,
+	0x6b, 0xf8, 0xed, 0x3e, 0x38, 0xfd, 0xa0, 0x26, 0x41, 0xf4, 0x3a, 0xd3, 0xd3, 0x90, 0x4a, 0xff,
+	0x52, 0x5a, 0xd3, 0xf2, 0x8f, 0x98, 0x17, 0x0d, 0xa9, 0xec, 0x3f, 0x2a, 0x43, 0x8a, 0x2a, 0x99,
+	0x95, 0x45, 0xc3, 0x3d, 0x65, 0x51, 0x67, 0x62, 0x66, 0x34, 0x5d, 0x65, 0xd1, 0xa8, 0xc7, 0x61,
+	0xf9, 0x25, 0xee, 0xfc, 0x4f, 0x38, 0x6c, 0xfb, 0x77, 0x65, 0x6e, 0xc0, 0xe8, 0x56, 0xb5, 0x44,
+	0x63, 0x57, 0xe2, 0xda, 0x66, 0xdb, 0x4d, 0x03, 0x4e, 0x29, 0xbe, 0x14, 0x42, 0xc9, 0x58, 0xa5,
+	0x94, 0x48, 0x86, 0x60, 0x28, 0xd0, 0x6b, 0x21, 0x11, 0xfb, 0x8f, 0xe6, 0xba, 0x9a, 0x50, 0x2c,
+	0xce, 0x46, 0x2c, 0xec, 0x12, 0x64, 0xa8, 0x4a, 0x34, 0x6a, 0xb2, 0x7a, 0x20, 0x22, 0x2c, 0x50,
+	0xd0, 0x6d, 0x06, 0x51, 0xfe, 0x23, 0x0d, 0x63, 0x9d, 0x8b, 0xe1, 0x03, 0xf7, 0x0b, 0x6b, 0x22,
+	0xdd, 0x0a, 0xfb, 0x1a, 0xbc, 0xc5, 0xfa, 0x52, 0xff, 0x94, 0x39, 0x64, 0xc0, 0xcb, 0x19, 0xd1,
+	0xd8, 0x78, 0x11, 0xd2, 0xa2, 0x2d, 0x60, 0x99, 0xe2, 0x96, 0x3f, 0x92, 0x42, 0xa6, 0xf8, 0xd8,
+	0x9a, 0x49, 0x6b, 0x49, 0xa3, 0x93, 0x29, 0x0e, 0xf7, 0xd4, 0x92, 0x9d, 0x41, 0x74, 0x01, 0xc0,
+	0xf5, 0xb5, 0xba, 0xfe, 0x8e, 0x46, 0x6d, 0x68, 0x84, 0x19, 0x4c, 0xca, 0xf5, 0x37, 0xf5, 0x77,
+	0x54, 0xbd, 0x8e, 0x14, 0x18, 0x17, 0xa3, 0x4d, 0xc3, 0x25, 0x98, 0x77, 0xa0, 0x86, 0xd4, 0x0c,
+	0x43, 0xd8, 0x63, 0x20, 0x74, 0xb9, 0x83, 0xe3, 0xda, 0x5a, 0x6d, 0x9f, 0x75, 0xa0, 0x86, 0x54,
+	0xe0, 0x38, 0xae, 0xbd, 0xba, 0x4f, 0xd5, 0x27, 0xfa, 0x46, 0x69, 0xae, 0x3e, 0xd1, 0x28, 0x2a,
+	0xc2, 0x28, 0x3f, 0x91, 0x78, 0x43, 0x29, 0xde, 0x29, 0xea, 0x98, 0xa4, 0x1a, 0x62, 0xa1, 0x57,
+	0x9f, 0xad, 0xb3, 0x34, 0x9e, 0xdc, 0x55, 0x4a, 0xec, 0x47, 0x8c, 0xf5, 0xe9, 0x47, 0x94, 0x00,
+	0xf5, 0x1c, 0xc6, 0xbe, 0x3c, 0xce, 0xc4, 0x44, 0xb1, 0xbb, 0x14, 0x66, 0xd3, 0xea, 0x64, 0xf7,
+	0x09, 0x4d, 0x97, 0x97, 0x76, 0x7d, 0x5e, 0xfc, 0xfb, 0x72, 0x36, 0x81, 0x92, 0x99, 0x35, 0x55,
+	0x37, 0xfb, 0xe3, 0xa3, 0x25, 0x38, 0xd7, 0xd9, 0x1a, 0x8d, 0x5f, 0x6a, 0x12, 0x6c, 0x60, 0xab,
+	0x89, 0x4d, 0xd6, 0x40, 0x4a, 0xa9, 0x67, 0x3b, 0x08, 0x65, 0x3a, 0xae, 0x8a, 0xe1, 0xe4, 0xc2,
+	0x39, 0xf7, 0x05, 0x14, 0xce, 0x6f, 0x02, 0x6a, 0x3f, 0x60, 0xd2, 0x7c, 0x47, 0xf7, 0xfc, 0x43,
+	0x37, 0x10, 0x4d, 0xa6, 0xcb, 0xfd, 0xc2, 0xa1, 0x5f, 0x15, 0x88, 0xcb, 0x29, 0x1a, 0x41, 0xd8,
+	0x36, 0x4c, 0x92, 0xee, 0x41, 0xb4, 0x9d, 0x58, 0xc9, 0xa1, 0x27, 0x57, 0x72, 0xe9, 0x27, 0x55,
+	0x71, 0xaf, 0xc1, 0x8c, 0xe1, 0xd6, 0x3d, 0x3d, 0xb0, 0xc4, 0xbe, 0x85, 0xfb, 0x3c, 0x35, 0x2f,
+	0x5d, 0x19, 0x8f, 0xd2, 0x4e, 0xc7, 0xf0, 0xc2, 0x6d, 0x5f, 0x8d, 0xc5, 0x8e, 0x69, 0xb6, 0x69,
+	0x2f, 0x25, 0xbe, 0x17, 0x39, 0x70, 0x7f, 0x86, 0x3d, 0xec, 0x25, 0xb3, 0x3b, 0xfb, 0xff, 0x9e,
+	0xc8, 0xf2, 0x7f, 0xcc, 0x33, 0xfd, 0x74, 0x5b, 0xd3, 0xa7, 0x4b, 0x6f, 0x87, 0x1c, 0xd7, 0xc1,
+	0xca, 0x73, 0x30, 0xd1, 0xce, 0xfe, 0x70, 0x40, 0x2c, 0x83, 0x9d, 0x26, 0x07, 0xae, 0xcb, 0x82,
+	0xc6, 0x90, 0x4a, 0xff, 0x5e, 0xfd, 0xee, 0x20, 0x8c, 0x45, 0xcf, 0x7b, 0x34, 0x0b, 0x68, 0x7b,
+	0xa3, 0xb4, 0x73, 0x7b, 0x4b, 0xdd, 0xd4, 0x76, 0xbe, 0xb1, 0x5d, 0xd1, 0x6e, 0x97, 0xd6, 0x2b,
+	0xb9, 0x33, 0xbd, 0xf0, 0x95, 0xb5, 0xbb, 0x2b, 0x39, 0x09, 0x9d, 0x87, 0xb3, 0x71, 0xf8, 0xd6,
+	0x76, 0xe5, 0x6e, 0x75, 0xa7, 0x54, 0x5e, 0xcf, 0x0d, 0xa0, 0xb3, 0x30, 0x15, 0x1f, 0x2c, 0xbd,
+	0xb9, 0xab, 0x56, 0x72, 0x83, 0x68, 0x06, 0x26, 0xe3, 0x03, 0xab, 0xe5, 0xed, 0xdc, 0x10, 0x3a,
+	0x07, 0x33, 0x71, 0x70, 0x65, 0x65, 0xb5, 0xb2, 0xbc, 0xf5, 0xf5, 0xdc, 0x70, 0xef, 0x3c, 0x54,
+	0xae, 0xb5, 0xbb, 0xb7, 0xd5, 0x52, 0x6e, 0xa4, 0x97, 0x6e, 0xaf, 0xba, 0x7d, 0xa7, 0xa2, 0x56,
+	0x72, 0xa3, 0xbd, 0x43, 0xa5, 0x7b, 0x55, 0xad, 0xb2, 0x5e, 0xcd, 0xa5, 0x12, 0xa8, 0x36, 0xb5,
+	0xed, 0xad, 0xad, 0x8d, 0x5c, 0xba, 0x0f, 0x55, 0x79, 0x31, 0x07, 0xbd, 0xa2, 0xef, 0x95, 0x57,
+	0x72, 0x19, 0x34, 0x0f, 0x17, 0xe2, 0xe0, 0xf5, 0x9b, 0x55, 0x6d, 0xb9, 0xa4, 0x56, 0xb4, 0xcd,
+	0xca, 0x4e, 0x69, 0x23, 0x37, 0xd6, 0xab, 0xc1, 0x75, 0xaa, 0xc1, 0xf1, 0xde, 0x95, 0x51, 0x38,
+	0x5f, 0x59, 0xf6, 0xea, 0x12, 0x64, 0xe3, 0xbd, 0x3e, 0x34, 0x09, 0xe3, 0x2b, 0x6b, 0x6a, 0xa5,
+	0xbc, 0xa3, 0x95, 0xca, 0xe5, 0x4a, 0xb5, 0x9a, 0x3b, 0x43, 0x45, 0x52, 0x2b, 0xd5, 0x1d, 0x75,
+	0xad, 0xbc, 0x53, 0x59, 0x09, 0xc1, 0xd2, 0xd5, 0x35, 0x18, 0x15, 0x77, 0x38, 0x94, 0x68, 0x75,
+	0x7b, 0x97, 0xb3, 0xbf, 0xbb, 0x75, 0x97, 0x6e, 0xa8, 0xcc, 0xae, 0x6f, 0x39, 0x68, 0xbb, 0x54,
+	0xad, 0xee, 0xdc, 0x51, 0xb7, 0x76, 0x57, 0xef, 0xe4, 0xa4, 0x18, 0xf2, 0xde, 0xea, 0xf6, 0x6e,
+	0x6e, 0xe0, 0x6a, 0x01, 0x46, 0xf8, 0xbd, 0x32, 0x4a, 0xc3, 0xf0, 0xc6, 0xda, 0xdd, 0xdd, 0xaf,
+	0xe7, 0xce, 0xa0, 0x0c, 0x8c, 0xde, 0x5b, 0xbb, 0xbb, 0xb2, 0x75, 0xaf, 0x9a, 0x93, 0x10, 0xc0,
+	0xc8, 0xd6, 0xce, 0x9d, 0x8a, 0x5a, 0xcd, 0x4d, 0x5f, 0x7d, 0x83, 0x16, 0xee, 0x9e, 0x4b, 0x82,
+	0xaa, 0x71, 0x88, 0xcd, 0x86, 0x8d, 0xd1, 0x38, 0xa4, 0x2b, 0x4d, 0x4c, 0x5a, 0xf7, 0x30, 0x3e,
+	0xca, 0x9d, 0x41, 0x13, 0x90, 0x61, 0x9f, 0xaf, 0xdc, 0x58, 0xd1, 0x5b, 0x7e, 0x4e, 0x6a, 0x03,
+	0xae, 0xbf, 0xcc, 0x00, 0x03, 0x28, 0x0b, 0xc0, 0x00, 0x9b, 0xae, 0x13, 0x1c, 0xe6, 0x06, 0x17,
+	0x3f, 0x83, 0xc8, 0x3d, 0x7f, 0xc9, 0xb3, 0xd0, 0x9f, 0x48, 0x30, 0xc1, 0x2b, 0xc8, 0xce, 0x65,
+	0xe9, 0x74, 0xd2, 0xb5, 0x57, 0x7e, 0x32, 0xde, 0x13, 0x68, 0xd8, 0x81, 0x52, 0x7b, 0xf8, 0x48,
+	0x2e, 0x86, 0x4e, 0x16, 0x3a, 0x89, 0x5f, 0x28, 0x19, 0xd4, 0x81, 0x36, 0x75, 0x47, 0xaf, 0xe1,
+	0x42, 0xb7, 0x5f, 0x7d, 0xff, 0x58, 0x96, 0xfe, 0xf4, 0x71, 0xef, 0xf5, 0xdc, 0xaf, 0xfd, 0xe3,
+	0xbf, 0xbf, 0x3f, 0x30, 0xab, 0x4c, 0x16, 0x79, 0x07, 0xad, 0xd8, 0xbe, 0xe0, 0x5b, 0x92, 0xae,
+	0xbe, 0x2c, 0xa1, 0xdf, 0x92, 0x60, 0x62, 0x85, 0x3d, 0x8a, 0x3b, 0x85, 0x9c, 0xd5, 0x53, 0xca,
+	0xd9, 0x96, 0x89, 0x3f, 0xc7, 0xeb, 0x96, 0xe9, 0xf7, 0x24, 0x98, 0xe0, 0x35, 0xf7, 0x29, 0x64,
+	0xfa, 0xc5, 0x53, 0xca, 0xf4, 0xc9, 0xb1, 0x3c, 0xc2, 0xee, 0x8d, 0xfd, 0xb6, 0x74, 0xbc, 0x31,
+	0xd8, 0x2d, 0xdd, 0xb7, 0x25, 0x18, 0xaf, 0x1e, 0xba, 0x6f, 0x3f, 0x4d, 0xb6, 0x44, 0x28, 0x53,
+	0xd9, 0xb5, 0x7e, 0xe2, 0xed, 0x59, 0xf8, 0xed, 0x44, 0xe1, 0xee, 0x87, 0x4a, 0x9b, 0x56, 0x26,
+	0x8a, 0xfe, 0xa1, 0xfb, 0x76, 0xb7, 0x50, 0xff, 0x2c, 0xc1, 0x64, 0xc9, 0x34, 0xbb, 0x9e, 0x7c,
+	0x5c, 0xea, 0x7b, 0x39, 0xce, 0xdf, 0x42, 0x24, 0xe9, 0xef, 0x37, 0xa5, 0x53, 0x2a, 0xf0, 0xc1,
+	0xb1, 0xfc, 0x0a, 0xe3, 0xcd, 0x0f, 0x01, 0xfe, 0x77, 0xa5, 0xfd, 0x46, 0x44, 0x00, 0xb6, 0xe2,
+	0xcf, 0x3e, 0xd8, 0xa2, 0x64, 0x65, 0xaa, 0xa8, 0x9b, 0x66, 0x67, 0x4d, 0xec, 0xca, 0x9e, 0x2f,
+	0xec, 0x37, 0x06, 0x60, 0x5a, 0xc5, 0x75, 0xb7, 0x89, 0xbf, 0x80, 0xb5, 0xfd, 0x50, 0x3a, 0xbd,
+	0x71, 0x6c, 0x3d, 0xdb, 0x82, 0x04, 0x74, 0x3d, 0xfa, 0x68, 0x45, 0xc0, 0xee, 0xc4, 0x1e, 0xa8,
+	0x3c, 0x38, 0x96, 0xa1, 0xa3, 0x2e, 0xa6, 0x87, 0xf3, 0xca, 0x6c, 0x91, 0xb0, 0xb5, 0x26, 0xaa,
+	0xe2, 0x9b, 0x03, 0x30, 0xbd, 0x8a, 0x83, 0xde, 0x27, 0x1e, 0x4f, 0x55, 0xc5, 0x85, 0xbe, 0x08,
+	0xbb, 0xea, 0x86, 0xf2, 0x97, 0xd2, 0x89, 0x6d, 0xf2, 0xfe, 0xcf, 0x55, 0x27, 0x35, 0x1c, 0x74,
+	0x29, 0xa4, 0x41, 0xec, 0x25, 0xe9, 0xea, 0xe2, 0x5f, 0x4c, 0x75, 0x9e, 0x89, 0xd3, 0xa0, 0xfb,
+	0x50, 0x82, 0x6c, 0x59, 0x3c, 0xa7, 0x16, 0x57, 0xf0, 0x53, 0x09, 0xf9, 0x53, 0x92, 0x69, 0xfc,
+	0xf9, 0x69, 0x4d, 0x43, 0xa8, 0x22, 0xdd, 0x6e, 0x05, 0x3f, 0x38, 0x96, 0x17, 0xef, 0x46, 0x6f,
+	0xc0, 0x3b, 0x2d, 0xcc, 0x0d, 0x3d, 0xb0, 0x82, 0x86, 0x19, 0xe9, 0x71, 0x6e, 0xb8, 0x4e, 0x8d,
+	0x81, 0xfa, 0x86, 0xee, 0x19, 0x25, 0x17, 0x86, 0xee, 0x30, 0xaf, 0xe2, 0xe6, 0xf0, 0x81, 0x04,
+	0xd9, 0x15, 0xf1, 0x42, 0xfb, 0x84, 0x8b, 0xfd, 0xa5, 0xd3, 0xbb, 0x41, 0x67, 0x9d, 0xed, 0x78,
+	0x24, 0x82, 0x38, 0x93, 0x2e, 0x14, 0xee, 0x6f, 0x06, 0x20, 0xbb, 0x2b, 0xde, 0xa2, 0x9f, 0x50,
+	0xb8, 0xf7, 0x06, 0x4e, 0x2f, 0xdd, 0x87, 0x52, 0x34, 0x59, 0x2c, 0xac, 0xc4, 0x2f, 0xc6, 0x0b,
+	0xbc, 0xac, 0x2b, 0x6c, 0x47, 0xae, 0x98, 0x0b, 0xdd, 0x37, 0x6c, 0x85, 0xf6, 0x02, 0x0b, 0x7b,
+	0xb1, 0x5b, 0xd2, 0x08, 0xb7, 0x42, 0x3c, 0xe7, 0x29, 0x44, 0x6e, 0x2b, 0x0b, 0x5b, 0x4f, 0xbc,
+	0xbf, 0x2b, 0xec, 0xb1, 0xdb, 0xba, 0x42, 0x5c, 0x8b, 0x74, 0x8f, 0xc5, 0x61, 0x13, 0xdf, 0xe3,
+	0xf7, 0x24, 0x18, 0xa3, 0x67, 0xcd, 0x93, 0x95, 0x98, 0x04, 0x54, 0xd6, 0x1f, 0x3e, 0x92, 0x2f,
+	0x3e, 0xd1, 0xa9, 0xef, 0x27, 0xee, 0xe8, 0x94, 0x92, 0xe5, 0x27, 0x4c, 0x5c, 0x92, 0xdf, 0x97,
+	0x60, 0x6a, 0x15, 0x07, 0x3d, 0xfd, 0xda, 0x3e, 0x8d, 0x87, 0xfc, 0xf9, 0x04, 0x78, 0x48, 0xa4,
+	0x6c, 0x3f, 0x7c, 0x24, 0x7f, 0xf9, 0x29, 0x3b, 0xdc, 0xe3, 0x08, 0x61, 0x24, 0x08, 0xe5, 0x2a,
+	0x86, 0x7d, 0xe1, 0x25, 0xe9, 0x2a, 0xfa, 0xa1, 0x04, 0xb9, 0x88, 0x78, 0xbc, 0x97, 0x28, 0xf7,
+	0x6b, 0x8e, 0xe6, 0xfb, 0x8e, 0x28, 0x6f, 0x3d, 0x7c, 0x24, 0xbf, 0xd2, 0x2d, 0x5a, 0xc9, 0xd1,
+	0xed, 0x56, 0x60, 0x19, 0x31, 0xf5, 0x45, 0x05, 0xfc, 0xe4, 0x58, 0x86, 0x4e, 0xc5, 0xf5, 0xe0,
+	0x58, 0x8e, 0x15, 0x2d, 0xed, 0x43, 0x2e, 0x26, 0x3e, 0x7b, 0xe0, 0x4f, 0x65, 0xff, 0x2f, 0x09,
+	0x2e, 0x46, 0x64, 0x4f, 0x68, 0x8a, 0xbe, 0x90, 0xfc, 0x72, 0xb7, 0x0b, 0x2d, 0xff, 0x6c, 0x68,
+	0xca, 0xbb, 0x3f, 0xab, 0x25, 0x5e, 0x56, 0x2e, 0xc4, 0x97, 0x18, 0x16, 0xdd, 0x9d, 0xb5, 0xfe,
+	0xb5, 0x04, 0x72, 0xc2, 0x5a, 0x79, 0xbb, 0x73, 0xfe, 0x09, 0xf2, 0x33, 0x8c, 0xfc, 0x53, 0x31,
+	0x94, 0x5f, 0x3e, 0xf1, 0x59, 0xf6, 0xc9, 0xb1, 0x3c, 0x44, 0x0f, 0x9f, 0xa7, 0x2c, 0x81, 0xf5,
+	0x68, 0xe9, 0x12, 0x7e, 0x57, 0x82, 0x99, 0x92, 0x69, 0xc6, 0x5f, 0x50, 0x7b, 0x96, 0x53, 0x43,
+	0xe7, 0xfa, 0x3e, 0xb0, 0x4e, 0x8a, 0x73, 0xea, 0x29, 0xc2, 0x1c, 0x93, 0xf1, 0x9c, 0x32, 0x4d,
+	0xd3, 0x25, 0xf1, 0x4a, 0x3b, 0xea, 0xa7, 0x34, 0x73, 0x96, 0x79, 0xb6, 0xf4, 0xb9, 0xc5, 0x7b,
+	0xe3, 0xb4, 0xe2, 0x51, 0x43, 0x27, 0xf5, 0x24, 0xe9, 0x7e, 0x5b, 0x82, 0x89, 0xdb, 0x96, 0x63,
+	0x46, 0x2f, 0xb2, 0x66, 0x7b, 0xba, 0x6e, 0x0c, 0x9e, 0xef, 0x03, 0x67, 0x62, 0x9d, 0x6c, 0x7f,
+	0x99, 0x50, 0x79, 0x65, 0xa6, 0x78, 0x60, 0x39, 0x89, 0x4a, 0xa3, 0x25, 0x90, 0x8a, 0x9b, 0xee,
+	0x11, 0x6e, 0xdf, 0x05, 0xf6, 0x0d, 0x6b, 0x7d, 0x8a, 0xa0, 0x13, 0x07, 0xb3, 0x39, 0xe5, 0x5c,
+	0x91, 0xb0, 0x39, 0xdb, 0xa2, 0xf0, 0x77, 0x17, 0x47, 0xb8, 0x45, 0x65, 0xfa, 0x8e, 0x04, 0x93,
+	0xab, 0xd8, 0xa1, 0x69, 0xd4, 0xe9, 0xa4, 0xda, 0x3d, 0x8d, 0x54, 0xf3, 0xca, 0xf9, 0x62, 0x4d,
+	0xcc, 0x9a, 0x2c, 0xd7, 0x0a, 0xcc, 0x86, 0x6e, 0x7f, 0xca, 0xdc, 0xe3, 0xcc, 0xcb, 0xd2, 0xe2,
+	0x1f, 0x0e, 0x76, 0x7a, 0x3f, 0xd4, 0xf5, 0x68, 0xee, 0xf6, 0x07, 0x12, 0xe4, 0xa2, 0x47, 0x1d,
+	0xeb, 0x7d, 0x9f, 0xed, 0xd3, 0xfd, 0xca, 0xf7, 0x1b, 0x50, 0xf6, 0x1e, 0x3e, 0x92, 0x6f, 0x3c,
+	0x53, 0x70, 0x4b, 0xb4, 0x93, 0xb3, 0x0a, 0x8a, 0x9f, 0x7e, 0xec, 0x4e, 0x85, 0x9d, 0x80, 0x0d,
+	0x40, 0x6b, 0xce, 0xaf, 0x60, 0x23, 0x78, 0x36, 0x09, 0x13, 0x96, 0x7e, 0xfd, 0x14, 0x2e, 0x85,
+	0x02, 0x98, 0xac, 0x34, 0xad, 0x9f, 0xf3, 0xac, 0x8b, 0xef, 0x49, 0x80, 0xba, 0xba, 0x73, 0x74,
+	0x93, 0xde, 0x82, 0xa9, 0xe8, 0x1e, 0x85, 0x7d, 0xbb, 0x7c, 0xd2, 0x61, 0xcf, 0xc7, 0xf2, 0x4f,
+	0x18, 0x53, 0xe6, 0xdb, 0xbe, 0x19, 0xd3, 0x79, 0x9d, 0x0f, 0x33, 0xb5, 0x2f, 0x5f, 0xf8, 0xf8,
+	0xdf, 0xe6, 0xce, 0x7c, 0xfc, 0x60, 0x4e, 0xba, 0xff, 0x60, 0x4e, 0xfa, 0xf1, 0x83, 0x39, 0xe9,
+	0x5b, 0x9f, 0xce, 0x9d, 0xb9, 0xff, 0xe9, 0xdc, 0x99, 0x7f, 0xf9, 0x74, 0xee, 0xcc, 0xfe, 0x08,
+	0x63, 0x7c, 0xfd, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x30, 0x3d, 0x7a, 0x65, 0x9d, 0x3b, 0x00,
+	0x00,
 }
 
 func (this *CloudletKey) GoString() string {
@@ -1482,6 +1892,17 @@ func (this *CloudletKey) GoString() string {
 	s = append(s, "&edgeproto.CloudletKey{")
 	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
 	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *GPUDriverKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&edgeproto.GPUDriverKey{")
+	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
+	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1501,6 +1922,477 @@ var _ grpc.ClientConn
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
+
+// GPUDriverApiClient is the client API for GPUDriverApi service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type GPUDriverApiClient interface {
+	// Create GPU Driver. Creates GPU driver with all the config
+	// required to install it.
+	CreateGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_CreateGPUDriverClient, error)
+	// Delete GPU Driver. Deletes GPU driver given that it is not
+	// used by any cloudlet.
+	DeleteGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_DeleteGPUDriverClient, error)
+	// Update GPU Driver. Updates GPU driver config.
+	UpdateGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_UpdateGPUDriverClient, error)
+	// Show GPU Drivers. Lists all the MobiledgeX created GPU drivers and operator
+	// created GPU drivers.
+	ShowGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_ShowGPUDriverClient, error)
+	// Add GPU Driver Build. Adds new build to GPU driver.
+	AddGPUDriverBuild(ctx context.Context, in *GPUDriverBuildMember, opts ...grpc.CallOption) (GPUDriverApi_AddGPUDriverBuildClient, error)
+	// Remove GPU Driver Build. Removes build from GPU driver.
+	RemoveGPUDriverBuild(ctx context.Context, in *GPUDriverBuildMember, opts ...grpc.CallOption) (GPUDriverApi_RemoveGPUDriverBuildClient, error)
+	// Get GPU Driver Build URL. Returns a time-limited signed URL to download GPU driver.
+	GetGPUDriverBuildURL(ctx context.Context, in *GPUDriverBuildMember, opts ...grpc.CallOption) (*GPUDriverBuildURL, error)
+}
+
+type gPUDriverApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewGPUDriverApiClient(cc *grpc.ClientConn) GPUDriverApiClient {
+	return &gPUDriverApiClient{cc}
+}
+
+func (c *gPUDriverApiClient) CreateGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_CreateGPUDriverClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GPUDriverApi_serviceDesc.Streams[0], "/edgeproto.GPUDriverApi/CreateGPUDriver", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gPUDriverApiCreateGPUDriverClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GPUDriverApi_CreateGPUDriverClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type gPUDriverApiCreateGPUDriverClient struct {
+	grpc.ClientStream
+}
+
+func (x *gPUDriverApiCreateGPUDriverClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gPUDriverApiClient) DeleteGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_DeleteGPUDriverClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GPUDriverApi_serviceDesc.Streams[1], "/edgeproto.GPUDriverApi/DeleteGPUDriver", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gPUDriverApiDeleteGPUDriverClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GPUDriverApi_DeleteGPUDriverClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type gPUDriverApiDeleteGPUDriverClient struct {
+	grpc.ClientStream
+}
+
+func (x *gPUDriverApiDeleteGPUDriverClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gPUDriverApiClient) UpdateGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_UpdateGPUDriverClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GPUDriverApi_serviceDesc.Streams[2], "/edgeproto.GPUDriverApi/UpdateGPUDriver", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gPUDriverApiUpdateGPUDriverClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GPUDriverApi_UpdateGPUDriverClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type gPUDriverApiUpdateGPUDriverClient struct {
+	grpc.ClientStream
+}
+
+func (x *gPUDriverApiUpdateGPUDriverClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gPUDriverApiClient) ShowGPUDriver(ctx context.Context, in *GPUDriver, opts ...grpc.CallOption) (GPUDriverApi_ShowGPUDriverClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GPUDriverApi_serviceDesc.Streams[3], "/edgeproto.GPUDriverApi/ShowGPUDriver", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gPUDriverApiShowGPUDriverClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GPUDriverApi_ShowGPUDriverClient interface {
+	Recv() (*GPUDriver, error)
+	grpc.ClientStream
+}
+
+type gPUDriverApiShowGPUDriverClient struct {
+	grpc.ClientStream
+}
+
+func (x *gPUDriverApiShowGPUDriverClient) Recv() (*GPUDriver, error) {
+	m := new(GPUDriver)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gPUDriverApiClient) AddGPUDriverBuild(ctx context.Context, in *GPUDriverBuildMember, opts ...grpc.CallOption) (GPUDriverApi_AddGPUDriverBuildClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GPUDriverApi_serviceDesc.Streams[4], "/edgeproto.GPUDriverApi/AddGPUDriverBuild", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gPUDriverApiAddGPUDriverBuildClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GPUDriverApi_AddGPUDriverBuildClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type gPUDriverApiAddGPUDriverBuildClient struct {
+	grpc.ClientStream
+}
+
+func (x *gPUDriverApiAddGPUDriverBuildClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gPUDriverApiClient) RemoveGPUDriverBuild(ctx context.Context, in *GPUDriverBuildMember, opts ...grpc.CallOption) (GPUDriverApi_RemoveGPUDriverBuildClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_GPUDriverApi_serviceDesc.Streams[5], "/edgeproto.GPUDriverApi/RemoveGPUDriverBuild", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gPUDriverApiRemoveGPUDriverBuildClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GPUDriverApi_RemoveGPUDriverBuildClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type gPUDriverApiRemoveGPUDriverBuildClient struct {
+	grpc.ClientStream
+}
+
+func (x *gPUDriverApiRemoveGPUDriverBuildClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gPUDriverApiClient) GetGPUDriverBuildURL(ctx context.Context, in *GPUDriverBuildMember, opts ...grpc.CallOption) (*GPUDriverBuildURL, error) {
+	out := new(GPUDriverBuildURL)
+	err := c.cc.Invoke(ctx, "/edgeproto.GPUDriverApi/GetGPUDriverBuildURL", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// GPUDriverApiServer is the server API for GPUDriverApi service.
+type GPUDriverApiServer interface {
+	// Create GPU Driver. Creates GPU driver with all the config
+	// required to install it.
+	CreateGPUDriver(*GPUDriver, GPUDriverApi_CreateGPUDriverServer) error
+	// Delete GPU Driver. Deletes GPU driver given that it is not
+	// used by any cloudlet.
+	DeleteGPUDriver(*GPUDriver, GPUDriverApi_DeleteGPUDriverServer) error
+	// Update GPU Driver. Updates GPU driver config.
+	UpdateGPUDriver(*GPUDriver, GPUDriverApi_UpdateGPUDriverServer) error
+	// Show GPU Drivers. Lists all the MobiledgeX created GPU drivers and operator
+	// created GPU drivers.
+	ShowGPUDriver(*GPUDriver, GPUDriverApi_ShowGPUDriverServer) error
+	// Add GPU Driver Build. Adds new build to GPU driver.
+	AddGPUDriverBuild(*GPUDriverBuildMember, GPUDriverApi_AddGPUDriverBuildServer) error
+	// Remove GPU Driver Build. Removes build from GPU driver.
+	RemoveGPUDriverBuild(*GPUDriverBuildMember, GPUDriverApi_RemoveGPUDriverBuildServer) error
+	// Get GPU Driver Build URL. Returns a time-limited signed URL to download GPU driver.
+	GetGPUDriverBuildURL(context.Context, *GPUDriverBuildMember) (*GPUDriverBuildURL, error)
+}
+
+// UnimplementedGPUDriverApiServer can be embedded to have forward compatible implementations.
+type UnimplementedGPUDriverApiServer struct {
+}
+
+func (*UnimplementedGPUDriverApiServer) CreateGPUDriver(req *GPUDriver, srv GPUDriverApi_CreateGPUDriverServer) error {
+	return status.Errorf(codes.Unimplemented, "method CreateGPUDriver not implemented")
+}
+func (*UnimplementedGPUDriverApiServer) DeleteGPUDriver(req *GPUDriver, srv GPUDriverApi_DeleteGPUDriverServer) error {
+	return status.Errorf(codes.Unimplemented, "method DeleteGPUDriver not implemented")
+}
+func (*UnimplementedGPUDriverApiServer) UpdateGPUDriver(req *GPUDriver, srv GPUDriverApi_UpdateGPUDriverServer) error {
+	return status.Errorf(codes.Unimplemented, "method UpdateGPUDriver not implemented")
+}
+func (*UnimplementedGPUDriverApiServer) ShowGPUDriver(req *GPUDriver, srv GPUDriverApi_ShowGPUDriverServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowGPUDriver not implemented")
+}
+func (*UnimplementedGPUDriverApiServer) AddGPUDriverBuild(req *GPUDriverBuildMember, srv GPUDriverApi_AddGPUDriverBuildServer) error {
+	return status.Errorf(codes.Unimplemented, "method AddGPUDriverBuild not implemented")
+}
+func (*UnimplementedGPUDriverApiServer) RemoveGPUDriverBuild(req *GPUDriverBuildMember, srv GPUDriverApi_RemoveGPUDriverBuildServer) error {
+	return status.Errorf(codes.Unimplemented, "method RemoveGPUDriverBuild not implemented")
+}
+func (*UnimplementedGPUDriverApiServer) GetGPUDriverBuildURL(ctx context.Context, req *GPUDriverBuildMember) (*GPUDriverBuildURL, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGPUDriverBuildURL not implemented")
+}
+
+func RegisterGPUDriverApiServer(s *grpc.Server, srv GPUDriverApiServer) {
+	s.RegisterService(&_GPUDriverApi_serviceDesc, srv)
+}
+
+func _GPUDriverApi_CreateGPUDriver_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GPUDriver)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GPUDriverApiServer).CreateGPUDriver(m, &gPUDriverApiCreateGPUDriverServer{stream})
+}
+
+type GPUDriverApi_CreateGPUDriverServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type gPUDriverApiCreateGPUDriverServer struct {
+	grpc.ServerStream
+}
+
+func (x *gPUDriverApiCreateGPUDriverServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _GPUDriverApi_DeleteGPUDriver_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GPUDriver)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GPUDriverApiServer).DeleteGPUDriver(m, &gPUDriverApiDeleteGPUDriverServer{stream})
+}
+
+type GPUDriverApi_DeleteGPUDriverServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type gPUDriverApiDeleteGPUDriverServer struct {
+	grpc.ServerStream
+}
+
+func (x *gPUDriverApiDeleteGPUDriverServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _GPUDriverApi_UpdateGPUDriver_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GPUDriver)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GPUDriverApiServer).UpdateGPUDriver(m, &gPUDriverApiUpdateGPUDriverServer{stream})
+}
+
+type GPUDriverApi_UpdateGPUDriverServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type gPUDriverApiUpdateGPUDriverServer struct {
+	grpc.ServerStream
+}
+
+func (x *gPUDriverApiUpdateGPUDriverServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _GPUDriverApi_ShowGPUDriver_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GPUDriver)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GPUDriverApiServer).ShowGPUDriver(m, &gPUDriverApiShowGPUDriverServer{stream})
+}
+
+type GPUDriverApi_ShowGPUDriverServer interface {
+	Send(*GPUDriver) error
+	grpc.ServerStream
+}
+
+type gPUDriverApiShowGPUDriverServer struct {
+	grpc.ServerStream
+}
+
+func (x *gPUDriverApiShowGPUDriverServer) Send(m *GPUDriver) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _GPUDriverApi_AddGPUDriverBuild_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GPUDriverBuildMember)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GPUDriverApiServer).AddGPUDriverBuild(m, &gPUDriverApiAddGPUDriverBuildServer{stream})
+}
+
+type GPUDriverApi_AddGPUDriverBuildServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type gPUDriverApiAddGPUDriverBuildServer struct {
+	grpc.ServerStream
+}
+
+func (x *gPUDriverApiAddGPUDriverBuildServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _GPUDriverApi_RemoveGPUDriverBuild_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GPUDriverBuildMember)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GPUDriverApiServer).RemoveGPUDriverBuild(m, &gPUDriverApiRemoveGPUDriverBuildServer{stream})
+}
+
+type GPUDriverApi_RemoveGPUDriverBuildServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type gPUDriverApiRemoveGPUDriverBuildServer struct {
+	grpc.ServerStream
+}
+
+func (x *gPUDriverApiRemoveGPUDriverBuildServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _GPUDriverApi_GetGPUDriverBuildURL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GPUDriverBuildMember)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GPUDriverApiServer).GetGPUDriverBuildURL(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.GPUDriverApi/GetGPUDriverBuildURL",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GPUDriverApiServer).GetGPUDriverBuildURL(ctx, req.(*GPUDriverBuildMember))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _GPUDriverApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.GPUDriverApi",
+	HandlerType: (*GPUDriverApiServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetGPUDriverBuildURL",
+			Handler:    _GPUDriverApi_GetGPUDriverBuildURL_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateGPUDriver",
+			Handler:       _GPUDriverApi_CreateGPUDriver_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "DeleteGPUDriver",
+			Handler:       _GPUDriverApi_DeleteGPUDriver_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "UpdateGPUDriver",
+			Handler:       _GPUDriverApi_UpdateGPUDriver_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ShowGPUDriver",
+			Handler:       _GPUDriverApi_ShowGPUDriver_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AddGPUDriverBuild",
+			Handler:       _GPUDriverApi_AddGPUDriverBuild_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "RemoveGPUDriverBuild",
+			Handler:       _GPUDriverApi_RemoveGPUDriverBuild_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "cloudlet.proto",
+}
 
 // CloudletApiClient is the client API for CloudletApi service.
 //
@@ -2662,6 +3554,15 @@ func (m *PlatformConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.CacheDir) > 0 {
+		i -= len(m.CacheDir)
+		copy(dAtA[i:], m.CacheDir)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CacheDir)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc2
+	}
 	if len(m.AccessApiAddr) > 0 {
 		i -= len(m.AccessApiAddr)
 		copy(dAtA[i:], m.AccessApiAddr)
@@ -2972,6 +3873,355 @@ func (m *ResourceQuota) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *GPUDriverKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GPUDriverKey) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GPUDriverKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Organization) > 0 {
+		i -= len(m.Organization)
+		copy(dAtA[i:], m.Organization)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Organization)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GPUDriverBuild) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GPUDriverBuild) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GPUDriverBuild) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.HypervisorInfo) > 0 {
+		i -= len(m.HypervisorInfo)
+		copy(dAtA[i:], m.HypervisorInfo)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.HypervisorInfo)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.KernelVersion) > 0 {
+		i -= len(m.KernelVersion)
+		copy(dAtA[i:], m.KernelVersion)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.KernelVersion)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.OperatingSystem != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.OperatingSystem))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.DriverPathCreds) > 0 {
+		i -= len(m.DriverPathCreds)
+		copy(dAtA[i:], m.DriverPathCreds)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DriverPathCreds)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.DriverPath) > 0 {
+		i -= len(m.DriverPath)
+		copy(dAtA[i:], m.DriverPath)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DriverPath)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GPUDriverBuildMember) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GPUDriverBuildMember) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GPUDriverBuildMember) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.IgnoreState {
+		i--
+		if m.IgnoreState {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Build.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *GPUDriverBuildURL) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GPUDriverBuildURL) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GPUDriverBuildURL) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Validity != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.Validity))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.BuildUrlPath) > 0 {
+		i -= len(m.BuildUrlPath)
+		copy(dAtA[i:], m.BuildUrlPath)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.BuildUrlPath)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GPUDriver) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GPUDriver) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GPUDriver) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.IgnoreState {
+		i--
+		if m.IgnoreState {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x40
+	}
+	if len(m.State) > 0 {
+		i -= len(m.State)
+		copy(dAtA[i:], m.State)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.State)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.Properties) > 0 {
+		for k := range m.Properties {
+			v := m.Properties[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if len(m.LicenseConfig) > 0 {
+		i -= len(m.LicenseConfig)
+		copy(dAtA[i:], m.LicenseConfig)
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.LicenseConfig)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Builds) > 0 {
+		for iNdEx := len(m.Builds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Builds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCloudlet(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if m.Type != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.Type))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GPUConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GPUConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GPUConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Properties) > 0 {
+		for k := range m.Properties {
+			v := m.Properties[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintCloudlet(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.GpuType != 0 {
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.GpuType))
+		i--
+		dAtA[i] = 0x10
+	}
+	{
+		size, err := m.Driver.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func (m *Cloudlet) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2992,6 +4242,18 @@ func (m *Cloudlet) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size, err := m.GpuConfig.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintCloudlet(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2
+	i--
+	dAtA[i] = 0xea
 	if len(m.KafkaPassword) > 0 {
 		i -= len(m.KafkaPassword)
 		copy(dAtA[i:], m.KafkaPassword)
@@ -5033,6 +6295,10 @@ func (m *PlatformConfig) CopyInFields(src *PlatformConfig) int {
 		m.AccessApiAddr = src.AccessApiAddr
 		changed++
 	}
+	if m.CacheDir != src.CacheDir {
+		m.CacheDir = src.CacheDir
+		changed++
+	}
 	return changed
 }
 
@@ -5064,6 +6330,7 @@ func (m *PlatformConfig) DeepCopyIn(src *PlatformConfig) {
 	m.TlsCaFile = src.TlsCaFile
 	m.CrmAccessPrivateKey = src.CrmAccessPrivateKey
 	m.AccessApiAddr = src.AccessApiAddr
+	m.CacheDir = src.CacheDir
 }
 
 // Helper method to check that enums have valid values
@@ -5181,6 +6448,1165 @@ func (m *ResourceQuota) DeepCopyIn(src *ResourceQuota) {
 
 // Helper method to check that enums have valid values
 func (m *ResourceQuota) ValidateEnums() error {
+	return nil
+}
+
+func (m *GPUDriverKey) Matches(o *GPUDriverKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !opts.Filter || o.Name != "" {
+		if o.Name != m.Name {
+			return false
+		}
+	}
+	if !opts.Filter || o.Organization != "" {
+		if o.Organization != m.Organization {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *GPUDriverKey) CopyInFields(src *GPUDriverKey) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.Organization != src.Organization {
+		m.Organization = src.Organization
+		changed++
+	}
+	return changed
+}
+
+func (m *GPUDriverKey) DeepCopyIn(src *GPUDriverKey) {
+	m.Name = src.Name
+	m.Organization = src.Organization
+}
+
+func (m *GPUDriverKey) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal GPUDriverKey key string", "obj", m)
+	}
+	return string(key)
+}
+
+func GPUDriverKeyStringParse(str string, key *GPUDriverKey) {
+	err := json.Unmarshal([]byte(str), key)
+	if err != nil {
+		log.FatalLog("Failed to unmarshal GPUDriverKey key string", "str", str)
+	}
+}
+
+func (m *GPUDriverKey) NotFoundError() error {
+	return fmt.Errorf("GPUDriver key %s not found", m.GetKeyString())
+}
+
+func (m *GPUDriverKey) ExistsError() error {
+	return fmt.Errorf("GPUDriver key %s already exists", m.GetKeyString())
+}
+
+var GPUDriverKeyTagName = "gpudriver"
+var GPUDriverKeyTagOrganization = "gpudriverorg"
+
+func (m *GPUDriverKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["gpudriver"] = m.Name
+	tags["gpudriverorg"] = m.Organization
+	return tags
+}
+
+// Helper method to check that enums have valid values
+func (m *GPUDriverKey) ValidateEnums() error {
+	return nil
+}
+
+func (m *GPUDriverBuild) CopyInFields(src *GPUDriverBuild) int {
+	changed := 0
+	if m.Name != src.Name {
+		m.Name = src.Name
+		changed++
+	}
+	if m.DriverPath != src.DriverPath {
+		m.DriverPath = src.DriverPath
+		changed++
+	}
+	if m.DriverPathCreds != src.DriverPathCreds {
+		m.DriverPathCreds = src.DriverPathCreds
+		changed++
+	}
+	if m.OperatingSystem != src.OperatingSystem {
+		m.OperatingSystem = src.OperatingSystem
+		changed++
+	}
+	if m.KernelVersion != src.KernelVersion {
+		m.KernelVersion = src.KernelVersion
+		changed++
+	}
+	if m.HypervisorInfo != src.HypervisorInfo {
+		m.HypervisorInfo = src.HypervisorInfo
+		changed++
+	}
+	return changed
+}
+
+func (m *GPUDriverBuild) DeepCopyIn(src *GPUDriverBuild) {
+	m.Name = src.Name
+	m.DriverPath = src.DriverPath
+	m.DriverPathCreds = src.DriverPathCreds
+	m.OperatingSystem = src.OperatingSystem
+	m.KernelVersion = src.KernelVersion
+	m.HypervisorInfo = src.HypervisorInfo
+}
+
+// Helper method to check that enums have valid values
+func (m *GPUDriverBuild) ValidateEnums() error {
+	if _, ok := OSType_name[int32(m.OperatingSystem)]; !ok {
+		return errors.New("invalid OperatingSystem")
+	}
+	return nil
+}
+
+func (m *GPUDriverBuildMember) CopyInFields(src *GPUDriverBuildMember) int {
+	changed := 0
+	if m.Key.Name != src.Key.Name {
+		m.Key.Name = src.Key.Name
+		changed++
+	}
+	if m.Key.Organization != src.Key.Organization {
+		m.Key.Organization = src.Key.Organization
+		changed++
+	}
+	if m.Build.Name != src.Build.Name {
+		m.Build.Name = src.Build.Name
+		changed++
+	}
+	if m.Build.DriverPath != src.Build.DriverPath {
+		m.Build.DriverPath = src.Build.DriverPath
+		changed++
+	}
+	if m.Build.DriverPathCreds != src.Build.DriverPathCreds {
+		m.Build.DriverPathCreds = src.Build.DriverPathCreds
+		changed++
+	}
+	if m.Build.OperatingSystem != src.Build.OperatingSystem {
+		m.Build.OperatingSystem = src.Build.OperatingSystem
+		changed++
+	}
+	if m.Build.KernelVersion != src.Build.KernelVersion {
+		m.Build.KernelVersion = src.Build.KernelVersion
+		changed++
+	}
+	if m.Build.HypervisorInfo != src.Build.HypervisorInfo {
+		m.Build.HypervisorInfo = src.Build.HypervisorInfo
+		changed++
+	}
+	if m.IgnoreState != src.IgnoreState {
+		m.IgnoreState = src.IgnoreState
+		changed++
+	}
+	return changed
+}
+
+func (m *GPUDriverBuildMember) DeepCopyIn(src *GPUDriverBuildMember) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.Build.DeepCopyIn(&src.Build)
+	m.IgnoreState = src.IgnoreState
+}
+
+func (m *GPUDriverBuildMember) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *GPUDriverBuildMember) GetKey() *GPUDriverKey {
+	return &m.Key
+}
+
+func (m *GPUDriverBuildMember) GetKeyVal() GPUDriverKey {
+	return m.Key
+}
+
+func (m *GPUDriverBuildMember) SetKey(key *GPUDriverKey) {
+	m.Key = *key
+}
+
+func CmpSortGPUDriverBuildMember(a GPUDriverBuildMember, b GPUDriverBuildMember) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+func (m *GPUDriverBuildMember) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Build.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *GPUDriverBuildURL) CopyInFields(src *GPUDriverBuildURL) int {
+	changed := 0
+	if m.BuildUrlPath != src.BuildUrlPath {
+		m.BuildUrlPath = src.BuildUrlPath
+		changed++
+	}
+	if m.Validity != src.Validity {
+		m.Validity = src.Validity
+		changed++
+	}
+	return changed
+}
+
+func (m *GPUDriverBuildURL) DeepCopyIn(src *GPUDriverBuildURL) {
+	m.BuildUrlPath = src.BuildUrlPath
+	m.Validity = src.Validity
+}
+
+// Helper method to check that enums have valid values
+func (m *GPUDriverBuildURL) ValidateEnums() error {
+	return nil
+}
+
+func (m *GPUDriver) Matches(o *GPUDriver, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.Type != 0 {
+		if o.Type != m.Type {
+			return false
+		}
+	}
+	if !opts.Filter || o.Builds != nil {
+		if len(m.Builds) == 0 && len(o.Builds) > 0 || len(m.Builds) > 0 && len(o.Builds) == 0 {
+			return false
+		} else if m.Builds != nil && o.Builds != nil {
+			if !opts.Filter && len(m.Builds) != len(o.Builds) {
+				return false
+			}
+		}
+	}
+	if !opts.Filter || o.LicenseConfig != "" {
+		if o.LicenseConfig != m.LicenseConfig {
+			return false
+		}
+	}
+	if !opts.Filter || o.Properties != nil {
+		if len(m.Properties) == 0 && len(o.Properties) > 0 || len(m.Properties) > 0 && len(o.Properties) == 0 {
+			return false
+		} else if m.Properties != nil && o.Properties != nil {
+			if !opts.Filter && len(m.Properties) != len(o.Properties) {
+				return false
+			}
+			for k, _ := range o.Properties {
+				_, ok := m.Properties[k]
+				if !ok {
+					return false
+				}
+				if o.Properties[k] != m.Properties[k] {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.State != "" {
+		if o.State != m.State {
+			return false
+		}
+	}
+	if !opts.Filter || o.IgnoreState != false {
+		if o.IgnoreState != m.IgnoreState {
+			return false
+		}
+	}
+	return true
+}
+
+const GPUDriverFieldKey = "2"
+const GPUDriverFieldKeyName = "2.1"
+const GPUDriverFieldKeyOrganization = "2.2"
+const GPUDriverFieldType = "3"
+const GPUDriverFieldBuilds = "4"
+const GPUDriverFieldBuildsName = "4.1"
+const GPUDriverFieldBuildsDriverPath = "4.2"
+const GPUDriverFieldBuildsDriverPathCreds = "4.3"
+const GPUDriverFieldBuildsOperatingSystem = "4.4"
+const GPUDriverFieldBuildsKernelVersion = "4.5"
+const GPUDriverFieldBuildsHypervisorInfo = "4.6"
+const GPUDriverFieldLicenseConfig = "5"
+const GPUDriverFieldProperties = "6"
+const GPUDriverFieldPropertiesKey = "6.1"
+const GPUDriverFieldPropertiesValue = "6.2"
+const GPUDriverFieldState = "7"
+const GPUDriverFieldIgnoreState = "8"
+
+var GPUDriverAllFields = []string{
+	GPUDriverFieldKeyName,
+	GPUDriverFieldKeyOrganization,
+	GPUDriverFieldType,
+	GPUDriverFieldBuildsName,
+	GPUDriverFieldBuildsDriverPath,
+	GPUDriverFieldBuildsDriverPathCreds,
+	GPUDriverFieldBuildsOperatingSystem,
+	GPUDriverFieldBuildsKernelVersion,
+	GPUDriverFieldBuildsHypervisorInfo,
+	GPUDriverFieldLicenseConfig,
+	GPUDriverFieldPropertiesKey,
+	GPUDriverFieldPropertiesValue,
+	GPUDriverFieldState,
+	GPUDriverFieldIgnoreState,
+}
+
+var GPUDriverAllFieldsMap = map[string]struct{}{
+	GPUDriverFieldKeyName:               struct{}{},
+	GPUDriverFieldKeyOrganization:       struct{}{},
+	GPUDriverFieldType:                  struct{}{},
+	GPUDriverFieldBuildsName:            struct{}{},
+	GPUDriverFieldBuildsDriverPath:      struct{}{},
+	GPUDriverFieldBuildsDriverPathCreds: struct{}{},
+	GPUDriverFieldBuildsOperatingSystem: struct{}{},
+	GPUDriverFieldBuildsKernelVersion:   struct{}{},
+	GPUDriverFieldBuildsHypervisorInfo:  struct{}{},
+	GPUDriverFieldLicenseConfig:         struct{}{},
+	GPUDriverFieldPropertiesKey:         struct{}{},
+	GPUDriverFieldPropertiesValue:       struct{}{},
+	GPUDriverFieldState:                 struct{}{},
+	GPUDriverFieldIgnoreState:           struct{}{},
+}
+
+var GPUDriverAllFieldsStringMap = map[string]string{
+	GPUDriverFieldKeyName:               "Key Name",
+	GPUDriverFieldKeyOrganization:       "Key Organization",
+	GPUDriverFieldType:                  "Type",
+	GPUDriverFieldBuildsName:            "Builds Name",
+	GPUDriverFieldBuildsDriverPath:      "Builds Driver Path",
+	GPUDriverFieldBuildsDriverPathCreds: "Builds Driver Path Creds",
+	GPUDriverFieldBuildsOperatingSystem: "Builds Operating System",
+	GPUDriverFieldBuildsKernelVersion:   "Builds Kernel Version",
+	GPUDriverFieldBuildsHypervisorInfo:  "Builds Hypervisor Info",
+	GPUDriverFieldLicenseConfig:         "License Config",
+	GPUDriverFieldPropertiesKey:         "Properties Key",
+	GPUDriverFieldPropertiesValue:       "Properties Value",
+	GPUDriverFieldState:                 "State",
+	GPUDriverFieldIgnoreState:           "Ignore State",
+}
+
+func (m *GPUDriver) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, GPUDriverFieldKey+".") || s == GPUDriverFieldKey
+}
+
+func (m *GPUDriver) DiffFields(o *GPUDriver, fields map[string]struct{}) {
+	if m.Key.Name != o.Key.Name {
+		fields[GPUDriverFieldKeyName] = struct{}{}
+		fields[GPUDriverFieldKey] = struct{}{}
+	}
+	if m.Key.Organization != o.Key.Organization {
+		fields[GPUDriverFieldKeyOrganization] = struct{}{}
+		fields[GPUDriverFieldKey] = struct{}{}
+	}
+	if m.Type != o.Type {
+		fields[GPUDriverFieldType] = struct{}{}
+	}
+	if len(m.Builds) != len(o.Builds) {
+		fields[GPUDriverFieldBuilds] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Builds); i0++ {
+			if m.Builds[i0].Name != o.Builds[i0].Name {
+				fields[GPUDriverFieldBuildsName] = struct{}{}
+				fields[GPUDriverFieldBuilds] = struct{}{}
+			}
+			if m.Builds[i0].DriverPath != o.Builds[i0].DriverPath {
+				fields[GPUDriverFieldBuildsDriverPath] = struct{}{}
+				fields[GPUDriverFieldBuilds] = struct{}{}
+			}
+			if m.Builds[i0].DriverPathCreds != o.Builds[i0].DriverPathCreds {
+				fields[GPUDriverFieldBuildsDriverPathCreds] = struct{}{}
+				fields[GPUDriverFieldBuilds] = struct{}{}
+			}
+			if m.Builds[i0].OperatingSystem != o.Builds[i0].OperatingSystem {
+				fields[GPUDriverFieldBuildsOperatingSystem] = struct{}{}
+				fields[GPUDriverFieldBuilds] = struct{}{}
+			}
+			if m.Builds[i0].KernelVersion != o.Builds[i0].KernelVersion {
+				fields[GPUDriverFieldBuildsKernelVersion] = struct{}{}
+				fields[GPUDriverFieldBuilds] = struct{}{}
+			}
+			if m.Builds[i0].HypervisorInfo != o.Builds[i0].HypervisorInfo {
+				fields[GPUDriverFieldBuildsHypervisorInfo] = struct{}{}
+				fields[GPUDriverFieldBuilds] = struct{}{}
+			}
+		}
+	}
+	if m.LicenseConfig != o.LicenseConfig {
+		fields[GPUDriverFieldLicenseConfig] = struct{}{}
+	}
+	if m.Properties != nil && o.Properties != nil {
+		if len(m.Properties) != len(o.Properties) {
+			fields[GPUDriverFieldProperties] = struct{}{}
+		} else {
+			for k0, _ := range m.Properties {
+				_, vok0 := o.Properties[k0]
+				if !vok0 {
+					fields[GPUDriverFieldProperties] = struct{}{}
+				} else {
+					if m.Properties[k0] != o.Properties[k0] {
+						fields[GPUDriverFieldProperties] = struct{}{}
+						break
+					}
+				}
+			}
+		}
+	} else if (m.Properties != nil && o.Properties == nil) || (m.Properties == nil && o.Properties != nil) {
+		fields[GPUDriverFieldProperties] = struct{}{}
+	}
+	if m.State != o.State {
+		fields[GPUDriverFieldState] = struct{}{}
+	}
+	if m.IgnoreState != o.IgnoreState {
+		fields[GPUDriverFieldIgnoreState] = struct{}{}
+	}
+}
+
+var UpdateGPUDriverFieldsMap = map[string]struct{}{
+	GPUDriverFieldType:            struct{}{},
+	GPUDriverFieldLicenseConfig:   struct{}{},
+	GPUDriverFieldProperties:      struct{}{},
+	GPUDriverFieldPropertiesValue: struct{}{},
+	GPUDriverFieldIgnoreState:     struct{}{},
+}
+
+func (m *GPUDriver) ValidateUpdateFields() error {
+	if m.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	fmap := MakeFieldMap(m.Fields)
+	badFieldStrs := []string{}
+	for field, _ := range fmap {
+		if m.IsKeyField(field) {
+			continue
+		}
+		if _, ok := UpdateGPUDriverFieldsMap[field]; !ok {
+			if _, ok := GPUDriverAllFieldsStringMap[field]; !ok {
+				continue
+			}
+			badFieldStrs = append(badFieldStrs, GPUDriverAllFieldsStringMap[field])
+		}
+	}
+	if len(badFieldStrs) > 0 {
+		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+	}
+	return nil
+}
+
+func (m *GPUDriver) CopyInFields(src *GPUDriver) int {
+	changed := 0
+	fmap := MakeFieldMap(src.Fields)
+	if _, set := fmap["2"]; set {
+		if _, set := fmap["2.1"]; set {
+			if m.Key.Name != src.Key.Name {
+				m.Key.Name = src.Key.Name
+				changed++
+			}
+		}
+		if _, set := fmap["2.2"]; set {
+			if m.Key.Organization != src.Key.Organization {
+				m.Key.Organization = src.Key.Organization
+				changed++
+			}
+		}
+	}
+	if _, set := fmap["3"]; set {
+		if m.Type != src.Type {
+			m.Type = src.Type
+			changed++
+		}
+	}
+	if _, set := fmap["4"]; set {
+		if src.Builds != nil {
+			m.Builds = src.Builds
+			changed++
+		} else if m.Builds != nil {
+			m.Builds = nil
+			changed++
+		}
+	}
+	if _, set := fmap["5"]; set {
+		if m.LicenseConfig != src.LicenseConfig {
+			m.LicenseConfig = src.LicenseConfig
+			changed++
+		}
+	}
+	if _, set := fmap["6"]; set {
+		if src.Properties != nil {
+			m.Properties = make(map[string]string)
+			for k0, _ := range src.Properties {
+				m.Properties[k0] = src.Properties[k0]
+			}
+		} else if m.Properties != nil {
+			m.Properties = nil
+			changed++
+		}
+	}
+	if _, set := fmap["7"]; set {
+		if m.State != src.State {
+			m.State = src.State
+			changed++
+		}
+	}
+	if _, set := fmap["8"]; set {
+		if m.IgnoreState != src.IgnoreState {
+			m.IgnoreState = src.IgnoreState
+			changed++
+		}
+	}
+	return changed
+}
+
+func (m *GPUDriver) DeepCopyIn(src *GPUDriver) {
+	m.Key.DeepCopyIn(&src.Key)
+	m.Type = src.Type
+	if src.Builds != nil {
+		m.Builds = make([]GPUDriverBuild, len(src.Builds), len(src.Builds))
+		for ii, s := range src.Builds {
+			m.Builds[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Builds = nil
+	}
+	m.LicenseConfig = src.LicenseConfig
+	if src.Properties != nil {
+		m.Properties = make(map[string]string)
+		for k, v := range src.Properties {
+			m.Properties[k] = v
+		}
+	} else {
+		m.Properties = nil
+	}
+	m.State = src.State
+	m.IgnoreState = src.IgnoreState
+}
+
+func (s *GPUDriver) HasFields() bool {
+	return true
+}
+
+type GPUDriverStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewGPUDriverStore(kvstore objstore.KVStore) GPUDriverStore {
+	return GPUDriverStore{kvstore: kvstore}
+}
+
+func (s *GPUDriverStore) Create(ctx context.Context, m *GPUDriver, wait func(int64)) (*Result, error) {
+	err := m.Validate(GPUDriverAllFieldsMap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("GPUDriver", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *GPUDriverStore) Update(ctx context.Context, m *GPUDriver, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("GPUDriver", m.GetKey())
+	var vers int64 = 0
+	curBytes, vers, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	var cur GPUDriver
+	err = json.Unmarshal(curBytes, &cur)
+	if err != nil {
+		return nil, err
+	}
+	cur.CopyInFields(m)
+	// never save fields
+	cur.Fields = nil
+	val, err := json.Marshal(cur)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *GPUDriverStore) Put(ctx context.Context, m *GPUDriver, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(GPUDriverAllFieldsMap)
+	m.Fields = nil
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("GPUDriver", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *GPUDriverStore) Delete(ctx context.Context, m *GPUDriver, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("GPUDriver", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *GPUDriverStore) LoadOne(key string) (*GPUDriver, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj GPUDriver
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse GPUDriver data", "val", string(val), "err", err)
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *GPUDriverStore) STMGet(stm concurrency.STM, key *GPUDriverKey, buf *GPUDriver) bool {
+	keystr := objstore.DbKeyString("GPUDriver", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *GPUDriverStore) STMPut(stm concurrency.STM, obj *GPUDriver, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("GPUDriver", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("GPUDriver json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *GPUDriverStore) STMDel(stm concurrency.STM, key *GPUDriverKey) {
+	keystr := objstore.DbKeyString("GPUDriver", key)
+	stm.Del(keystr)
+}
+
+type GPUDriverKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+type GPUDriverCacheData struct {
+	Obj    *GPUDriver
+	ModRev int64
+}
+
+// GPUDriverCache caches GPUDriver objects in memory in a hash table
+// and keeps them in sync with the database.
+type GPUDriverCache struct {
+	Objs          map[GPUDriverKey]*GPUDriverCacheData
+	Mux           util.Mutex
+	List          map[GPUDriverKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *GPUDriverKey, old *GPUDriver, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *GPUDriver, new *GPUDriver)
+	DeletedCbs    []func(ctx context.Context, old *GPUDriver)
+	KeyWatchers   map[GPUDriverKey][]*GPUDriverKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *GPUDriverKey)
+	DeletedKeyCbs []func(ctx context.Context, key *GPUDriverKey)
+}
+
+func NewGPUDriverCache() *GPUDriverCache {
+	cache := GPUDriverCache{}
+	InitGPUDriverCache(&cache)
+	return &cache
+}
+
+func InitGPUDriverCache(cache *GPUDriverCache) {
+	cache.Objs = make(map[GPUDriverKey]*GPUDriverCacheData)
+	cache.KeyWatchers = make(map[GPUDriverKey][]*GPUDriverKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
+}
+
+func (c *GPUDriverCache) GetTypeString() string {
+	return "GPUDriver"
+}
+
+func (c *GPUDriverCache) Get(key *GPUDriverKey, valbuf *GPUDriver) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *GPUDriverCache) GetWithRev(key *GPUDriverKey, valbuf *GPUDriver, modRev *int64) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
+	}
+	return found
+}
+
+func (c *GPUDriverCache) HasKey(key *GPUDriverKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *GPUDriverCache) GetAllKeys(ctx context.Context, cb func(key *GPUDriverKey, modRev int64)) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
+	}
+}
+
+func (c *GPUDriverCache) Update(ctx context.Context, in *GPUDriver, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *GPUDriver) (*GPUDriver, bool) {
+		return in, true
+	})
+}
+
+func (c *GPUDriverCache) UpdateModFunc(ctx context.Context, key *GPUDriverKey, modRev int64, modFunc func(old *GPUDriver) (new *GPUDriver, changed bool)) {
+	c.Mux.Lock()
+	var old *GPUDriver
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &GPUDriver{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
+	}
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &GPUDriver{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &GPUDriverCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *GPUDriverCache) Delete(ctx context.Context, in *GPUDriver, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *GPUDriver) bool {
+		return true
+	})
+}
+
+func (c *GPUDriverCache) DeleteCondFunc(ctx context.Context, in *GPUDriver, modRev int64, condFunc func(old *GPUDriver) bool) {
+	c.Mux.Lock()
+	var old *GPUDriver
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
+	}
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	c.Mux.Unlock()
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *GPUDriverCache) Prune(ctx context.Context, validKeys map[GPUDriverKey]struct{}) {
+	notify := make(map[GPUDriverKey]*GPUDriverCacheData)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *GPUDriverCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *GPUDriverCache) Flush(ctx context.Context, notifyId int64) {
+}
+
+func (c *GPUDriverCache) Show(filter *GPUDriver, cb func(ret *GPUDriver) error) error {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, data := range c.Objs {
+		if !data.Obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		err := cb(data.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GPUDriverGenericNotifyCb(fn func(key *GPUDriverKey, old *GPUDriver)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*GPUDriverKey), obj.(*GPUDriver))
+	}
+}
+
+func (c *GPUDriverCache) SetNotifyCb(fn func(ctx context.Context, obj *GPUDriverKey, old *GPUDriver, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *GPUDriverKey, old *GPUDriver, modRev int64){fn}
+}
+
+func (c *GPUDriverCache) SetUpdatedCb(fn func(ctx context.Context, old *GPUDriver, new *GPUDriver)) {
+	c.UpdatedCbs = []func(ctx context.Context, old *GPUDriver, new *GPUDriver){fn}
+}
+
+func (c *GPUDriverCache) SetDeletedCb(fn func(ctx context.Context, old *GPUDriver)) {
+	c.DeletedCbs = []func(ctx context.Context, old *GPUDriver){fn}
+}
+
+func (c *GPUDriverCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *GPUDriverKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *GPUDriverKey){fn}
+}
+
+func (c *GPUDriverCache) SetDeletedKeyCb(fn func(ctx context.Context, key *GPUDriverKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *GPUDriverKey){fn}
+}
+
+func (c *GPUDriverCache) AddUpdatedCb(fn func(ctx context.Context, old *GPUDriver, new *GPUDriver)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *GPUDriverCache) AddDeletedCb(fn func(ctx context.Context, old *GPUDriver)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *GPUDriverCache) AddNotifyCb(fn func(ctx context.Context, obj *GPUDriverKey, old *GPUDriver, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *GPUDriverCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *GPUDriverKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *GPUDriverCache) AddDeletedKeyCb(fn func(ctx context.Context, key *GPUDriverKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *GPUDriverCache) SetFlushAll() {
+	c.FlushAll = true
+}
+
+func (c *GPUDriverCache) WatchKey(key *GPUDriverKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*GPUDriverKeyWatcher, 0)
+	}
+	watcher := GPUDriverKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching GPUDriver", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *GPUDriverCache) TriggerKeyWatchers(ctx context.Context, key *GPUDriverKey) {
+	watchers := make([]*GPUDriverKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *GPUDriverCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := GPUDriver{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse GPUDriver data", "val", string(val), "err", err)
+		return
+	}
+	c.Update(ctx, &obj, modRev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *GPUDriverCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := GPUDriver{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	GPUDriverKeyStringParse(keystr, obj.GetKey())
+	c.Delete(ctx, &obj, modRev)
+}
+
+func (c *GPUDriverCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[GPUDriverKey]struct{})
+}
+
+func (c *GPUDriverCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[GPUDriverKey]*GPUDriverCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *GPUDriverCache) UsesOrg(org string) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if key.Organization == org {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *GPUDriver) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *GPUDriver) GetKey() *GPUDriverKey {
+	return &m.Key
+}
+
+func (m *GPUDriver) GetKeyVal() GPUDriverKey {
+	return m.Key
+}
+
+func (m *GPUDriver) SetKey(key *GPUDriverKey) {
+	m.Key = *key
+}
+
+func CmpSortGPUDriver(a GPUDriver, b GPUDriver) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *GPUDriver) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := GPUType_name[int32(m.Type)]; !ok {
+		return errors.New("invalid Type")
+	}
+	for _, e := range m.Builds {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *GPUConfig) CopyInFields(src *GPUConfig) int {
+	changed := 0
+	if m.Driver.Name != src.Driver.Name {
+		m.Driver.Name = src.Driver.Name
+		changed++
+	}
+	if m.Driver.Organization != src.Driver.Organization {
+		m.Driver.Organization = src.Driver.Organization
+		changed++
+	}
+	if m.GpuType != src.GpuType {
+		m.GpuType = src.GpuType
+		changed++
+	}
+	if src.Properties != nil {
+		m.Properties = make(map[string]string)
+		for k0, _ := range src.Properties {
+			m.Properties[k0] = src.Properties[k0]
+		}
+	} else if m.Properties != nil {
+		m.Properties = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *GPUConfig) DeepCopyIn(src *GPUConfig) {
+	m.Driver.DeepCopyIn(&src.Driver)
+	m.GpuType = src.GpuType
+	if src.Properties != nil {
+		m.Properties = make(map[string]string)
+		for k, v := range src.Properties {
+			m.Properties[k] = v
+		}
+	} else {
+		m.Properties = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *GPUConfig) ValidateEnums() error {
+	if err := m.Driver.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := GPUType_name[int32(m.GpuType)]; !ok {
+		return errors.New("invalid GpuType")
+	}
 	return nil
 }
 
@@ -5524,6 +7950,7 @@ const CloudletFieldConfigTlsKeyFile = "21.20"
 const CloudletFieldConfigTlsCaFile = "21.21"
 const CloudletFieldConfigCrmAccessPrivateKey = "21.22"
 const CloudletFieldConfigAccessApiAddr = "21.23"
+const CloudletFieldConfigCacheDir = "21.24"
 const CloudletFieldResTagMap = "22"
 const CloudletFieldResTagMapKey = "22.1"
 const CloudletFieldResTagMapValue = "22.2"
@@ -5563,6 +7990,14 @@ const CloudletFieldHostController = "41"
 const CloudletFieldKafkaCluster = "42"
 const CloudletFieldKafkaUser = "43"
 const CloudletFieldKafkaPassword = "44"
+const CloudletFieldGpuConfig = "45"
+const CloudletFieldGpuConfigDriver = "45.1"
+const CloudletFieldGpuConfigDriverName = "45.1.1"
+const CloudletFieldGpuConfigDriverOrganization = "45.1.2"
+const CloudletFieldGpuConfigGpuType = "45.2"
+const CloudletFieldGpuConfigProperties = "45.3"
+const CloudletFieldGpuConfigPropertiesKey = "45.3.1"
+const CloudletFieldGpuConfigPropertiesValue = "45.3.2"
 
 var CloudletAllFields = []string{
 	CloudletFieldKeyOrganization,
@@ -5623,6 +8058,7 @@ var CloudletAllFields = []string{
 	CloudletFieldConfigTlsCaFile,
 	CloudletFieldConfigCrmAccessPrivateKey,
 	CloudletFieldConfigAccessApiAddr,
+	CloudletFieldConfigCacheDir,
 	CloudletFieldResTagMapKey,
 	CloudletFieldResTagMapValueName,
 	CloudletFieldResTagMapValueOrganization,
@@ -5654,6 +8090,11 @@ var CloudletAllFields = []string{
 	CloudletFieldKafkaCluster,
 	CloudletFieldKafkaUser,
 	CloudletFieldKafkaPassword,
+	CloudletFieldGpuConfigDriverName,
+	CloudletFieldGpuConfigDriverOrganization,
+	CloudletFieldGpuConfigGpuType,
+	CloudletFieldGpuConfigPropertiesKey,
+	CloudletFieldGpuConfigPropertiesValue,
 }
 
 var CloudletAllFieldsMap = map[string]struct{}{
@@ -5715,6 +8156,7 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldConfigTlsCaFile:                    struct{}{},
 	CloudletFieldConfigCrmAccessPrivateKey:          struct{}{},
 	CloudletFieldConfigAccessApiAddr:                struct{}{},
+	CloudletFieldConfigCacheDir:                     struct{}{},
 	CloudletFieldResTagMapKey:                       struct{}{},
 	CloudletFieldResTagMapValueName:                 struct{}{},
 	CloudletFieldResTagMapValueOrganization:         struct{}{},
@@ -5746,6 +8188,11 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldKafkaCluster:                       struct{}{},
 	CloudletFieldKafkaUser:                          struct{}{},
 	CloudletFieldKafkaPassword:                      struct{}{},
+	CloudletFieldGpuConfigDriverName:                struct{}{},
+	CloudletFieldGpuConfigDriverOrganization:        struct{}{},
+	CloudletFieldGpuConfigGpuType:                   struct{}{},
+	CloudletFieldGpuConfigPropertiesKey:             struct{}{},
+	CloudletFieldGpuConfigPropertiesValue:           struct{}{},
 }
 
 var CloudletAllFieldsStringMap = map[string]string{
@@ -5807,6 +8254,7 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldConfigTlsCaFile:                    "Config Tls Ca File",
 	CloudletFieldConfigCrmAccessPrivateKey:          "Config Crm Access Private Key",
 	CloudletFieldConfigAccessApiAddr:                "Config Access Api Addr",
+	CloudletFieldConfigCacheDir:                     "Config Cache Dir",
 	CloudletFieldResTagMapKey:                       "Res Tag Map Key",
 	CloudletFieldResTagMapValueName:                 "Res Tag Map Value Name",
 	CloudletFieldResTagMapValueOrganization:         "Res Tag Map Value Organization",
@@ -5838,6 +8286,11 @@ var CloudletAllFieldsStringMap = map[string]string{
 	CloudletFieldKafkaCluster:                       "Kafka Cluster",
 	CloudletFieldKafkaUser:                          "Kafka User",
 	CloudletFieldKafkaPassword:                      "Kafka Password",
+	CloudletFieldGpuConfigDriverName:                "Gpu Config Driver Name",
+	CloudletFieldGpuConfigDriverOrganization:        "Gpu Config Driver Organization",
+	CloudletFieldGpuConfigGpuType:                   "Gpu Config Gpu Type",
+	CloudletFieldGpuConfigPropertiesKey:             "Gpu Config Properties Key",
+	CloudletFieldGpuConfigPropertiesValue:           "Gpu Config Properties Value",
 }
 
 func (m *Cloudlet) IsKeyField(s string) bool {
@@ -6114,6 +8567,10 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 		fields[CloudletFieldConfigAccessApiAddr] = struct{}{}
 		fields[CloudletFieldConfig] = struct{}{}
 	}
+	if m.Config.CacheDir != o.Config.CacheDir {
+		fields[CloudletFieldConfigCacheDir] = struct{}{}
+		fields[CloudletFieldConfig] = struct{}{}
+	}
 	if m.ResTagMap != nil && o.ResTagMap != nil {
 		if len(m.ResTagMap) != len(o.ResTagMap) {
 			fields[CloudletFieldResTagMap] = struct{}{}
@@ -6264,6 +8721,43 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 	if m.KafkaPassword != o.KafkaPassword {
 		fields[CloudletFieldKafkaPassword] = struct{}{}
 	}
+	if m.GpuConfig.Driver.Name != o.GpuConfig.Driver.Name {
+		fields[CloudletFieldGpuConfigDriverName] = struct{}{}
+		fields[CloudletFieldGpuConfigDriver] = struct{}{}
+		fields[CloudletFieldGpuConfig] = struct{}{}
+	}
+	if m.GpuConfig.Driver.Organization != o.GpuConfig.Driver.Organization {
+		fields[CloudletFieldGpuConfigDriverOrganization] = struct{}{}
+		fields[CloudletFieldGpuConfigDriver] = struct{}{}
+		fields[CloudletFieldGpuConfig] = struct{}{}
+	}
+	if m.GpuConfig.GpuType != o.GpuConfig.GpuType {
+		fields[CloudletFieldGpuConfigGpuType] = struct{}{}
+		fields[CloudletFieldGpuConfig] = struct{}{}
+	}
+	if m.GpuConfig.Properties != nil && o.GpuConfig.Properties != nil {
+		if len(m.GpuConfig.Properties) != len(o.GpuConfig.Properties) {
+			fields[CloudletFieldGpuConfigProperties] = struct{}{}
+			fields[CloudletFieldGpuConfig] = struct{}{}
+		} else {
+			for k1, _ := range m.GpuConfig.Properties {
+				_, vok1 := o.GpuConfig.Properties[k1]
+				if !vok1 {
+					fields[CloudletFieldGpuConfigProperties] = struct{}{}
+					fields[CloudletFieldGpuConfig] = struct{}{}
+				} else {
+					if m.GpuConfig.Properties[k1] != o.GpuConfig.Properties[k1] {
+						fields[CloudletFieldGpuConfigProperties] = struct{}{}
+						fields[CloudletFieldGpuConfig] = struct{}{}
+						break
+					}
+				}
+			}
+		}
+	} else if (m.GpuConfig.Properties != nil && o.GpuConfig.Properties == nil) || (m.GpuConfig.Properties == nil && o.GpuConfig.Properties != nil) {
+		fields[CloudletFieldGpuConfigProperties] = struct{}{}
+		fields[CloudletFieldGpuConfig] = struct{}{}
+	}
 }
 
 var UpdateCloudletFieldsMap = map[string]struct{}{
@@ -6296,6 +8790,12 @@ var UpdateCloudletFieldsMap = map[string]struct{}{
 	CloudletFieldKafkaCluster:                       struct{}{},
 	CloudletFieldKafkaUser:                          struct{}{},
 	CloudletFieldKafkaPassword:                      struct{}{},
+	CloudletFieldGpuConfig:                          struct{}{},
+	CloudletFieldGpuConfigDriver:                    struct{}{},
+	CloudletFieldGpuConfigDriverName:                struct{}{},
+	CloudletFieldGpuConfigDriverOrganization:        struct{}{},
+	CloudletFieldGpuConfigProperties:                struct{}{},
+	CloudletFieldGpuConfigPropertiesValue:           struct{}{},
 }
 
 func (m *Cloudlet) ValidateUpdateFields() error {
@@ -6695,6 +9195,12 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 				changed++
 			}
 		}
+		if _, set := fmap["21.24"]; set {
+			if m.Config.CacheDir != src.Config.CacheDir {
+				m.Config.CacheDir = src.Config.CacheDir
+				changed++
+			}
+		}
 	}
 	if _, set := fmap["22"]; set {
 		if src.ResTagMap != nil {
@@ -6882,6 +9388,39 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) int {
 			changed++
 		}
 	}
+	if _, set := fmap["45"]; set {
+		if _, set := fmap["45.1"]; set {
+			if _, set := fmap["45.1.1"]; set {
+				if m.GpuConfig.Driver.Name != src.GpuConfig.Driver.Name {
+					m.GpuConfig.Driver.Name = src.GpuConfig.Driver.Name
+					changed++
+				}
+			}
+			if _, set := fmap["45.1.2"]; set {
+				if m.GpuConfig.Driver.Organization != src.GpuConfig.Driver.Organization {
+					m.GpuConfig.Driver.Organization = src.GpuConfig.Driver.Organization
+					changed++
+				}
+			}
+		}
+		if _, set := fmap["45.2"]; set {
+			if m.GpuConfig.GpuType != src.GpuConfig.GpuType {
+				m.GpuConfig.GpuType = src.GpuConfig.GpuType
+				changed++
+			}
+		}
+		if _, set := fmap["45.3"]; set {
+			if src.GpuConfig.Properties != nil {
+				m.GpuConfig.Properties = make(map[string]string)
+				for k1, _ := range src.GpuConfig.Properties {
+					m.GpuConfig.Properties[k1] = src.GpuConfig.Properties[k1]
+				}
+			} else if m.GpuConfig.Properties != nil {
+				m.GpuConfig.Properties = nil
+				changed++
+			}
+		}
+	}
 	return changed
 }
 
@@ -6970,6 +9509,7 @@ func (m *Cloudlet) DeepCopyIn(src *Cloudlet) {
 	m.KafkaCluster = src.KafkaCluster
 	m.KafkaUser = src.KafkaUser
 	m.KafkaPassword = src.KafkaPassword
+	m.GpuConfig.DeepCopyIn(&src.GpuConfig)
 }
 
 func (s *Cloudlet) HasFields() bool {
@@ -7680,6 +10220,9 @@ func (m *Cloudlet) ValidateEnums() error {
 		if err := e.ValidateEnums(); err != nil {
 			return err
 		}
+	}
+	if err := m.GpuConfig.ValidateEnums(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -10072,6 +12615,168 @@ func (e *InfraApiAccess) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+var GPUTypeStrings = []string{
+	"GPU_TYPE_NONE",
+	"GPU_TYPE_PASSTHROUGH",
+	"GPU_TYPE_VGPU",
+}
+
+const (
+	GPUTypeGPU_TYPE_NONE        uint64 = 1 << 0
+	GPUTypeGPU_TYPE_PASSTHROUGH uint64 = 1 << 1
+	GPUTypeGPU_TYPE_VGPU        uint64 = 1 << 2
+)
+
+var GPUType_CamelName = map[int32]string{
+	// GPU_TYPE_NONE -> GpuTypeNone
+	0: "GpuTypeNone",
+	// GPU_TYPE_PASSTHROUGH -> GpuTypePassthrough
+	1: "GpuTypePassthrough",
+	// GPU_TYPE_VGPU -> GpuTypeVgpu
+	2: "GpuTypeVgpu",
+}
+var GPUType_CamelValue = map[string]int32{
+	"GpuTypeNone":        0,
+	"GpuTypePassthrough": 1,
+	"GpuTypeVgpu":        2,
+}
+
+func (e *GPUType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := GPUType_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = GPUType_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = GPUType(val)
+	return nil
+}
+
+func (e GPUType) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(GPUType_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *GPUType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := GPUType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = GPUType_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = GPUType(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = GPUType(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+var OSTypeStrings = []string{
+	"LINUX",
+	"WINDOWS",
+	"OTHERS",
+}
+
+const (
+	OSTypeLINUX   uint64 = 1 << 0
+	OSTypeWINDOWS uint64 = 1 << 1
+	OSTypeOTHERS  uint64 = 1 << 2
+)
+
+var OSType_CamelName = map[int32]string{
+	// LINUX -> Linux
+	0: "Linux",
+	// WINDOWS -> Windows
+	1: "Windows",
+	// OTHERS -> Others
+	20: "Others",
+}
+var OSType_CamelValue = map[string]int32{
+	"Linux":   0,
+	"Windows": 1,
+	"Others":  20,
+}
+
+func (e *OSType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := OSType_CamelValue[util.CamelCase(str)]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = OSType_CamelName[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = OSType(val)
+	return nil
+}
+
+func (e OSType) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(OSType_CamelName, int32(e)), nil
+}
+
+// custom JSON encoding/decoding
+func (e *OSType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := OSType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = OSType_CamelName[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = OSType(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = OSType(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
 var ReportScheduleStrings = []string{
 	"EveryWeek",
 	"Every15Days",
@@ -10157,6 +12862,66 @@ func (e *ReportSchedule) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+func (m *GPUDriver) IsValidArgsForCreateGPUDriver() error {
+	if m.State != "" {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *GPUDriver) IsValidArgsForDeleteGPUDriver() error {
+	if m.State != "" {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *GPUDriver) IsValidArgsForUpdateGPUDriver() error {
+	if m.Builds != nil {
+		return fmt.Errorf("Invalid field specified: Builds, this field is only for internal use")
+	}
+	if m.State != "" {
+		return fmt.Errorf("Invalid field specified: State, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *GPUDriverBuildMember) IsValidArgsForAddGPUDriverBuild() error {
+	return nil
+}
+
+func (m *GPUDriverBuildMember) IsValidArgsForRemoveGPUDriverBuild() error {
+	if m.Build.DriverPath != "" {
+		return fmt.Errorf("Invalid field specified: Build.DriverPath, this field is only for internal use")
+	}
+	if m.Build.OperatingSystem != 0 {
+		return fmt.Errorf("Invalid field specified: Build.OperatingSystem, this field is only for internal use")
+	}
+	if m.Build.KernelVersion != "" {
+		return fmt.Errorf("Invalid field specified: Build.KernelVersion, this field is only for internal use")
+	}
+	if m.Build.HypervisorInfo != "" {
+		return fmt.Errorf("Invalid field specified: Build.HypervisorInfo, this field is only for internal use")
+	}
+	return nil
+}
+
+func (m *GPUDriverBuildMember) IsValidArgsForGetGPUDriverBuildURL() error {
+	if m.Build.DriverPath != "" {
+		return fmt.Errorf("Invalid field specified: Build.DriverPath, this field is only for internal use")
+	}
+	if m.Build.OperatingSystem != 0 {
+		return fmt.Errorf("Invalid field specified: Build.OperatingSystem, this field is only for internal use")
+	}
+	if m.Build.KernelVersion != "" {
+		return fmt.Errorf("Invalid field specified: Build.KernelVersion, this field is only for internal use")
+	}
+	if m.Build.HypervisorInfo != "" {
+		return fmt.Errorf("Invalid field specified: Build.HypervisorInfo, this field is only for internal use")
+	}
+	return nil
+}
+
 func (m *Cloudlet) IsValidArgsForCreateCloudlet() error {
 	if m.Errors != nil {
 		return fmt.Errorf("Invalid field specified: Errors, this field is only for internal use")
@@ -10244,6 +13009,9 @@ func (m *Cloudlet) IsValidArgsForCreateCloudlet() error {
 	}
 	if m.Config.AccessApiAddr != "" {
 		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.Config.CacheDir != "" {
+		return fmt.Errorf("Invalid field specified: Config.CacheDir, this field is only for internal use")
 	}
 	if m.ResTagMap != nil {
 		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
@@ -10365,6 +13133,9 @@ func (m *Cloudlet) IsValidArgsForDeleteCloudlet() error {
 	}
 	if m.Config.AccessApiAddr != "" {
 		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.Config.CacheDir != "" {
+		return fmt.Errorf("Invalid field specified: Config.CacheDir, this field is only for internal use")
 	}
 	if m.ResTagMap != nil {
 		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
@@ -10501,6 +13272,9 @@ func (m *Cloudlet) IsValidArgsForUpdateCloudlet() error {
 	}
 	if m.Config.AccessApiAddr != "" {
 		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.Config.CacheDir != "" {
+		return fmt.Errorf("Invalid field specified: Config.CacheDir, this field is only for internal use")
 	}
 	if m.ResTagMap != nil {
 		return fmt.Errorf("Invalid field specified: ResTagMap, this field is only for internal use")
@@ -10688,6 +13462,9 @@ func (m *Cloudlet) IsValidArgsForPlatformDeleteCloudlet() error {
 	}
 	if m.Config.AccessApiAddr != "" {
 		return fmt.Errorf("Invalid field specified: Config.AccessApiAddr, this field is only for internal use")
+	}
+	if m.Config.CacheDir != "" {
+		return fmt.Errorf("Invalid field specified: Config.CacheDir, this field is only for internal use")
 	}
 	if m.ChefClientKey != nil {
 		return fmt.Errorf("Invalid field specified: ChefClientKey, this field is only for internal use")
@@ -10881,6 +13658,10 @@ func (m *PlatformConfig) Size() (n int) {
 	if l > 0 {
 		n += 2 + l + sovCloudlet(uint64(l))
 	}
+	l = len(m.CacheDir)
+	if l > 0 {
+		n += 2 + l + sovCloudlet(uint64(l))
+	}
 	return n
 }
 
@@ -10935,6 +13716,154 @@ func (m *ResourceQuota) Size() (n int) {
 	}
 	if m.AlertThreshold != 0 {
 		n += 1 + sovCloudlet(uint64(m.AlertThreshold))
+	}
+	return n
+}
+
+func (m *GPUDriverKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.Organization)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	return n
+}
+
+func (m *GPUDriverBuild) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.DriverPath)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.DriverPathCreds)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if m.OperatingSystem != 0 {
+		n += 1 + sovCloudlet(uint64(m.OperatingSystem))
+	}
+	l = len(m.KernelVersion)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.HypervisorInfo)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	return n
+}
+
+func (m *GPUDriverBuildMember) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovCloudlet(uint64(l))
+	l = m.Build.Size()
+	n += 1 + l + sovCloudlet(uint64(l))
+	if m.IgnoreState {
+		n += 2
+	}
+	return n
+}
+
+func (m *GPUDriverBuildURL) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.BuildUrlPath)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if m.Validity != 0 {
+		n += 1 + sovCloudlet(uint64(m.Validity))
+	}
+	return n
+}
+
+func (m *GPUDriver) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			l = len(s)
+			n += 1 + l + sovCloudlet(uint64(l))
+		}
+	}
+	l = m.Key.Size()
+	n += 1 + l + sovCloudlet(uint64(l))
+	if m.Type != 0 {
+		n += 1 + sovCloudlet(uint64(m.Type))
+	}
+	if len(m.Builds) > 0 {
+		for _, e := range m.Builds {
+			l = e.Size()
+			n += 1 + l + sovCloudlet(uint64(l))
+		}
+	}
+	l = len(m.LicenseConfig)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if len(m.Properties) > 0 {
+		for k, v := range m.Properties {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
+			n += mapEntrySize + 1 + sovCloudlet(uint64(mapEntrySize))
+		}
+	}
+	l = len(m.State)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if m.IgnoreState {
+		n += 2
+	}
+	return n
+}
+
+func (m *GPUConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Driver.Size()
+	n += 1 + l + sovCloudlet(uint64(l))
+	if m.GpuType != 0 {
+		n += 1 + sovCloudlet(uint64(m.GpuType))
+	}
+	if len(m.Properties) > 0 {
+		for k, v := range m.Properties {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
+			n += mapEntrySize + 1 + sovCloudlet(uint64(mapEntrySize))
+		}
 	}
 	return n
 }
@@ -11106,6 +14035,8 @@ func (m *Cloudlet) Size() (n int) {
 	if l > 0 {
 		n += 2 + l + sovCloudlet(uint64(l))
 	}
+	l = m.GpuConfig.Size()
+	n += 2 + l + sovCloudlet(uint64(l))
 	return n
 }
 
@@ -12652,6 +15583,38 @@ func (m *PlatformConfig) Unmarshal(dAtA []byte) error {
 			}
 			m.AccessApiAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 24:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CacheDir", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CacheDir = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCloudlet(dAtA[iNdEx:])
@@ -13105,6 +16068,1212 @@ func (m *ResourceQuota) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GPUDriverKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GPUDriverKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GPUDriverKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Organization", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Organization = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GPUDriverBuild) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GPUDriverBuild: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GPUDriverBuild: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DriverPath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DriverPath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DriverPathCreds", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DriverPathCreds = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OperatingSystem", wireType)
+			}
+			m.OperatingSystem = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OperatingSystem |= OSType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KernelVersion", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.KernelVersion = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HypervisorInfo", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HypervisorInfo = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GPUDriverBuildMember) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GPUDriverBuildMember: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GPUDriverBuildMember: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Build", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Build.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IgnoreState", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IgnoreState = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GPUDriverBuildURL) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GPUDriverBuildURL: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GPUDriverBuildURL: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BuildUrlPath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BuildUrlPath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Validity", wireType)
+			}
+			m.Validity = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Validity |= Duration(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GPUDriver) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GPUDriver: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GPUDriver: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= GPUType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Builds", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Builds = append(m.Builds, GPUDriverBuild{})
+			if err := m.Builds[len(m.Builds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LicenseConfig", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LicenseConfig = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Properties == nil {
+				m.Properties = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowCloudlet
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipCloudlet(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Properties[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.State = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IgnoreState", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IgnoreState = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GPUConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GPUConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GPUConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Driver", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Driver.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GpuType", wireType)
+			}
+			m.GpuType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GpuType |= GPUType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Properties == nil {
+				m.Properties = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowCloudlet
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipCloudlet(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Properties[mapkey] = mapvalue
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCloudlet(dAtA[iNdEx:])
@@ -14709,6 +18878,39 @@ func (m *Cloudlet) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.KafkaPassword = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 45:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GpuConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.GpuConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
