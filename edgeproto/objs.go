@@ -26,6 +26,8 @@ const (
 	AppConfigHelmYaml      = "helmCustomizationYaml"
 	AppAccessCustomization = "appAccessCustomization"
 	AppConfigEnvYaml       = "envVarsYaml"
+
+	GPUDriverLicenseConfig = "license.conf"
 )
 
 var ValidConfigKinds = map[string]struct{}{
@@ -251,6 +253,90 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	}
 	if err = validateCustomizationConfigs(s.Configs); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (key *GPUDriverKey) ValidateKey() error {
+	if key.Organization != "" && !util.ValidName(key.Organization) {
+		return errors.New("Invalid organization name")
+	}
+	if key.Name == "" {
+		return errors.New("Missing gpu driver name")
+	}
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid gpu driver name")
+	}
+	return nil
+}
+
+func (g *GPUDriverBuild) ValidateName() error {
+	if g.Name == "" {
+		return errors.New("Missing gpu driver build name")
+	}
+	if g.Name == GPUDriverLicenseConfig {
+		return fmt.Errorf("%s is a reserved name and hence cannot be used as a build name", g.Name)
+	}
+	if !util.ValidName(g.Name) {
+		return fmt.Errorf("Invalid gpu driver build name: %s", g.Name)
+	}
+	return nil
+}
+
+func (g *GPUDriverBuild) Validate() error {
+	if err := g.ValidateName(); err != nil {
+		return err
+	}
+	if g.DriverPath == "" {
+		return fmt.Errorf("Missing driverpath")
+	}
+	if _, err := util.ImagePathParse(g.DriverPath); err != nil {
+		return fmt.Errorf("Invalid driver path(%q): %v", g.DriverPath, err)
+	}
+	if g.DriverPathCreds != "" {
+		out := strings.Split(g.DriverPathCreds, ":")
+		if len(out) != 2 {
+			return fmt.Errorf("Invalid GPU driver build path credentials, should be in format 'username:password'")
+		}
+	}
+	if g.OperatingSystem == OSType_LINUX && g.KernelVersion == "" {
+		return fmt.Errorf("Kernel version is required for Linux build")
+	}
+	if err := g.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *GPUDriverBuildMember) Validate() error {
+	if err := g.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := g.Build.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *GPUDriver) Validate(fields map[string]struct{}) error {
+	if err := g.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if err := g.ValidateEnums(); err != nil {
+		return err
+	}
+	if g.Type == GPUType_GPU_TYPE_NONE {
+		return fmt.Errorf("GPU type cannot be none")
+	}
+	buildNames := make(map[string]struct{})
+	for _, build := range g.Builds {
+		if err := build.Validate(); err != nil {
+			return err
+		}
+		if _, ok := buildNames[build.Name]; ok {
+			return fmt.Errorf("GPU driver build with name %s already exists", build.Name)
+		}
+		buildNames[build.Name] = struct{}{}
 	}
 	return nil
 }

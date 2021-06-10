@@ -47,6 +47,7 @@ func TestClusterInstApi(t *testing.T) {
 
 	// create support data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)

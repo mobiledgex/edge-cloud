@@ -31,6 +31,9 @@ cloudlets:
     organization: DMUUS
     name: cloud2
   vmpool: vmpool1
+  gpuconfig:
+    drivername: gpudriver1
+    gputype: GpuTypePassthrough
 
 flavors:
 - key:
@@ -136,6 +139,19 @@ vmpools:
     netinfo:
       externalip: 192.168.2.101
       internalip: 192.168.200.101
+
+gpudrivers:
+- key:
+    organization: DMUUS
+    name: gpudriver1
+    type: GpuTypePassthrough
+- key:
+    organization: DMUUS
+    name: gpudriver1
+    type: GpuTypeVgpu
+- key:
+    name: gpudriver2
+    type: GpuTypeVgpu
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
@@ -201,6 +217,11 @@ func TestCRM(t *testing.T) {
 		ctrlHandler.VMPoolCache.Update(ctx, &data.VmPools[ii], 0)
 	}
 
+	// update GPUDriver object before creating cloudlet
+	for ii := range data.GpuDrivers {
+		ctrlHandler.GPUDriverCache.Update(ctx, &data.GpuDrivers[ii], 0)
+	}
+
 	// set Cloudlet state to CRM_INIT to allow crm notify exchange to proceed
 	cdata := data.Cloudlets[0]
 	cdata.State = edgeproto.TrackedState_CRM_INITOK
@@ -245,6 +266,8 @@ func TestCRM(t *testing.T) {
 	notify.WaitFor(&controllerData.AppInstCache, 2)
 	// ensure that only vmpool object associated with cloudlet is received
 	notify.WaitFor(&controllerData.VMPoolCache, 1)
+	// ensure that only gpudriver object associated with cloudlet is received
+	notify.WaitFor(&controllerData.GPUDriverCache, 1)
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
@@ -253,12 +276,16 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 1, len(controllerData.VMPoolCache.Objs))
+	require.Equal(t, 1, len(controllerData.GPUDriverCache.Objs))
 
 	testVMPoolUpdates(t, ctx, &data.VmPools[0], ctrlHandler)
 
 	// delete
 	for ii := range data.VmPools {
 		ctrlHandler.VMPoolCache.Delete(ctx, &data.VmPools[ii], 0)
+	}
+	for ii := range data.GpuDrivers {
+		ctrlHandler.GPUDriverCache.Delete(ctx, &data.GpuDrivers[ii], 0)
 	}
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Delete(ctx, &data.AppInstances[ii], 0)
@@ -279,6 +306,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 0, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 0, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 0, len(controllerData.VMPoolCache.Objs))
+	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)

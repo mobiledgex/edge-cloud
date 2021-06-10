@@ -28,6 +28,7 @@ func TestCloudletPoolApi(t *testing.T) {
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 
 	testutil.InternalCloudletPoolTest(t, "cud", &cloudletPoolApi, testutil.CloudletPoolData)

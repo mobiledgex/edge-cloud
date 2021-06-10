@@ -285,6 +285,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.VmPools[i0].CrmOverride = 0
 		}
 	}
+	for i0 := 0; i0 < len(in.GpuDrivers); i0++ {
+		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
+		}
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -398,6 +402,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.deploymenttag",
 	"cloudlets:#.config.crmaccessprivatekey",
 	"cloudlets:#.config.accessapiaddr",
+	"cloudlets:#.config.cachedir",
 	"cloudlets:#.restagmap:#.key",
 	"cloudlets:#.restagmap:#.value.name",
 	"cloudlets:#.restagmap:#.value.organization",
@@ -427,6 +432,10 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.kafkacluster",
 	"cloudlets:#.kafkauser",
 	"cloudlets:#.kafkapassword",
+	"cloudlets:#.gpuconfig.driver.name",
+	"cloudlets:#.gpuconfig.driver.organization",
+	"cloudlets:#.gpuconfig.gputype",
+	"cloudlets:#.gpuconfig.properties",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -704,6 +713,20 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.status.msgcount",
 	"vmpools:#.status.msgs",
 	"vmpools:#.crmoverride",
+	"gpudrivers:#.fields",
+	"gpudrivers:#.key.name",
+	"gpudrivers:#.key.organization",
+	"gpudrivers:#.type",
+	"gpudrivers:#.builds:#.name",
+	"gpudrivers:#.builds:#.driverpath",
+	"gpudrivers:#.builds:#.driverpathcreds",
+	"gpudrivers:#.builds:#.operatingsystem",
+	"gpudrivers:#.builds:#.kernelversion",
+	"gpudrivers:#.builds:#.hypervisorinfo",
+	"gpudrivers:#.licenseconfig",
+	"gpudrivers:#.properties",
+	"gpudrivers:#.state",
+	"gpudrivers:#.ignorestate",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -807,6 +830,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.deploymenttag":                                              "Deployment Tag",
 	"cloudlets:#.config.crmaccessprivatekey":                                        "crm access private key",
 	"cloudlets:#.config.accessapiaddr":                                              "controller access API address",
+	"cloudlets:#.config.cachedir":                                                   "cache dir",
 	"cloudlets:#.restagmap:#.value.name":                                            "Resource Table Name",
 	"cloudlets:#.restagmap:#.value.organization":                                    "Operator organization of the cloudlet site.",
 	"cloudlets:#.accessvars":                                                        "Variables required to access cloudlet",
@@ -831,6 +855,10 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.kafkacluster":                                                      "operator provided kafka cluster endpoint to push events to",
 	"cloudlets:#.kafkauser":                                                         "username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
 	"cloudlets:#.kafkapassword":                                                     "password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
+	"cloudlets:#.gpuconfig.driver.name":                                             "Name of the driver",
+	"cloudlets:#.gpuconfig.driver.organization":                                     "Organization to which the driver belongs to",
+	"cloudlets:#.gpuconfig.gputype":                                                 "Type of GPU hardware supported by the Cloudlet, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
+	"cloudlets:#.gpuconfig.properties":                                              "Properties to identify specifics of GPU",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",
@@ -1054,6 +1082,20 @@ var AllDataComments = map[string]string{
 	"vmpools:#.state":                                                               "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"vmpools:#.errors":                                                              "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"gpudrivers:#.fields":                                                           "Fields are used for the Update API to specify which fields to apply",
+	"gpudrivers:#.key.name":                                                         "Name of the driver",
+	"gpudrivers:#.key.organization":                                                 "Organization to which the driver belongs to",
+	"gpudrivers:#.type":                                                             "Type of GPU hardware, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
+	"gpudrivers:#.builds:#.name":                                                    "Unique identifier key",
+	"gpudrivers:#.builds:#.driverpath":                                              "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
+	"gpudrivers:#.builds:#.driverpathcreds":                                         "Optional credentials (username:password) to access driver path",
+	"gpudrivers:#.builds:#.operatingsystem":                                         "Operator System supported by GPU driver build, one of Linux, Windows, Others",
+	"gpudrivers:#.builds:#.kernelversion":                                           "Kernel Version supported by GPU driver build",
+	"gpudrivers:#.builds:#.hypervisorinfo":                                          "Info on hypervisor supported by vGPU driver",
+	"gpudrivers:#.licenseconfig":                                                    "License config to setup license (will be stored in secure storage)",
+	"gpudrivers:#.properties":                                                       "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
+	"gpudrivers:#.state":                                                            "State to figure out if any action on the GPU driver is in-progress",
+	"gpudrivers:#.ignorestate":                                                      "Ignore state will ignore any action in-progress on the GPU driver",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -1077,12 +1119,15 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudlets:#.envvar":                      "StringToString",
 	"cloudlets:#.errors":                      "StringArray",
 	"cloudlets:#.fields":                      "StringArray",
+	"cloudlets:#.gpuconfig.properties":        "StringToString",
 	"cloudlets:#.status.msgs":                 "StringArray",
 	"clusterinsts:#.errors":                   "StringArray",
 	"clusterinsts:#.fields":                   "StringArray",
 	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
+	"gpudrivers:#.fields":                     "StringArray",
+	"gpudrivers:#.properties":                 "StringToString",
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",

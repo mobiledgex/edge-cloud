@@ -66,6 +66,10 @@ path "secret/data/accounts/chef" {
   capabilities = [ "read" ]
 }
 
+path "secret/data/accounts/gcs" {
+  capabilities = [ "read" ]
+}
+
 path "pki-regional/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }

@@ -53,6 +53,7 @@ func TestStreamObjApi(t *testing.T) {
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 
 	// ensure that streamObj is cleaned up after removal of parent object
 	exists := true
