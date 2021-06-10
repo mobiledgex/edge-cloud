@@ -4,6 +4,7 @@ skipmethods:
   GetFqdnList:
   GetLocation:
   GetQosPositionKpi:
+  PlatformFindCloudlet:
 info:
   app-client.proto:
     version: "2.0"

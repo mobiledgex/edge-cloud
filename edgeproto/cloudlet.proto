@@ -110,6 +110,8 @@ message PlatformConfig {
   string crm_access_private_key = 22;
   // controller access API address
   string access_api_addr = 23;
+  // cache dir
+  string cache_dir = 24;
 }
 
 // Platform Type
@@ -205,6 +207,203 @@ message ResourceQuota {
   int32 alert_threshold = 3;
 }
 
+// GPU Type
+//
+// GPUType is the type of GPU supported by a Cloudlet
+//
+// 0: `GPU_TYPE_NONE`
+// 1: `GPU_TYPE_PASSTHROUGH`
+// 2: `GPU_TYPE_VGPU`
+enum GPUType {
+  // GPU not supported
+  GPU_TYPE_NONE = 0;
+  // Passthrough GPU
+  GPU_TYPE_PASSTHROUGH = 1;
+  // Virtual GPU
+  GPU_TYPE_VGPU = 2;
+}
+
+// Operating System Type
+//
+// OSType is the type of the Operator System
+//
+//  0: `Linux`
+//  1: `Windows`
+// 20: `Others`
+enum OSType {
+  // Linux Operating System
+  LINUX = 0;
+  // Windows Operating System
+  WINDOWS = 1;
+  // Other Operating Systems
+  OTHERS = 20;
+}
+
+// GPU Driver Key
+//
+// GPUDriverKey uniquely identifies a GPU driver
+message GPUDriverKey {
+  // Name of the driver
+  string name = 1 [(protogen.keytag) = "gpudriver"];
+  // Organization to which the driver belongs to
+  string organization = 2 [(protogen.keytag) = "gpudriverorg"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message GPUDriverBuild {
+  // Unique identifier key
+  string name = 1;
+  // Path where the driver package is located, if it is authenticated path,
+  // then credentials must be passed as part of URL (one-time download path)
+  string driver_path = 2;
+  // Optional credentials (username:password) to access driver path
+  string driver_path_creds = 3;
+  // Operator System supported by GPU driver build
+  OSType operating_system = 4;
+  // Kernel Version supported by GPU driver build
+  string kernel_version = 5;
+  // Info on hypervisor supported by vGPU driver
+  string hypervisor_info = 6;
+}
+
+message GPUDriverBuildMember {
+  // Unique identifier key
+  GPUDriverKey key = 1 [(gogoproto.nullable) = false];
+  // GPU driver build
+  GPUDriverBuild build = 2 [(gogoproto.nullable) = false];
+  // Ignore state will ignore any action in-progress on the GPU driver
+  bool ignore_state = 3;
+  option (protogen.alias) = "gpudrivername=Key.Name,gpudriver-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
+}
+
+message GPUDriverBuildURL {
+  // Build URL path
+  string build_url_path = 1;
+  // Build URL path validity
+  int64 validity = 2 [(gogoproto.casttype) = "Duration"];
+}
+
+message GPUDriver {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  GPUDriverKey key = 2 [(gogoproto.nullable) = false];
+  // Type of GPU hardware
+  GPUType type = 3;
+  // List of GPU driver build
+  repeated GPUDriverBuild builds = 4 [(gogoproto.nullable) = false];
+  // License config to setup license (will be stored in secure storage)
+  string license_config = 5;
+  // Additional properties associated with GPU driver build
+  // For example: license server information, driver release date, etc
+  map<string, string> properties = 6;
+  // State to figure out if any action on the GPU driver is in-progress
+  string state = 7;
+  // Ignore state will ignore any action in-progress on the GPU driver
+  bool ignore_state = 8;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_custom_update) = true;
+  option (protogen.alias) = "gpudrivername=Key.Name,gpudriver-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
+  option (protogen.noconfig) = "State";
+  option (protogen.not_required) = "Key.Organization";
+}
+
+service GPUDriverApi {
+  // Create GPU Driver. Creates GPU driver with all the config
+  // required to install it.
+  rpc CreateGPUDriver(GPUDriver) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/create/gpudriver"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
+  }
+  // Delete GPU Driver. Deletes GPU driver given that it is not
+  // used by any cloudlet.
+  rpc DeleteGPUDriver(GPUDriver) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/delete/gpudriver"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Update GPU Driver. Updates GPU driver config.
+  rpc UpdateGPUDriver(GPUDriver) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/update/gpudriver"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_noconfig) = "Builds";
+  }
+  // Show GPU Drivers. Lists all the MobiledgeX created GPU drivers and operator
+  // created GPU drivers.
+  rpc ShowGPUDriver(GPUDriver) returns (stream GPUDriver) {
+    option (google.api.http) = {
+      post: "/show/gpudriver"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
+  }
+
+  // Add GPU Driver Build. Adds new build to GPU driver.
+  rpc AddGPUDriverBuild(GPUDriverBuildMember) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/add/gpudriverbuild"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_also_required) = "Build.Name,Build.DriverPath,Build.OperatingSystem";
+  }
+  // Remove GPU Driver Build. Removes build from GPU driver.
+  rpc RemoveGPUDriverBuild(GPUDriverBuildMember) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/remove/gpudriverbuild"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.method_also_required) = "Build.Name";
+    option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.HypervisorInfo";
+  }
+  // Get GPU Driver Build URL. Returns a time-limited signed URL to download GPU driver.
+  rpc GetGPUDriverBuildURL(GPUDriverBuildMember) returns (GPUDriverBuildURL) {
+    option (google.api.http) = {
+      post: "/get/gpudriverbuildurl"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.method_also_required) = "Build.Name";
+    option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.HypervisorInfo";
+    option (protogen.mc2_custom_authz) = true;
+  }
+}
+
+message GPUConfig {
+  // GPU driver key
+  GPUDriverKey driver = 1 [(gogoproto.nullable) = false];
+  // Type of GPU hardware supported by the Cloudlet
+  GPUType gpu_type = 2;
+  // Properties to identify specifics of GPU
+  map<string, string> properties = 3;
+}
+
 // Cloudlet
 //
 // A Cloudlet is a set of compute resources at a particular location, provided by an Operator. 
@@ -292,6 +491,8 @@ message Cloudlet {
   string kafka_user = 43;
   // password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
   string kafka_password = 44;
+  // GPU Configuration associated with cloudlet
+  GPUConfig gpu_config = 45 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -301,7 +502,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,GpuConfig.GpuType";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }

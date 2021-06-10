@@ -160,9 +160,15 @@ func TestNotifyBasic(t *testing.T) {
 	// crm must send cloudletinfo to receive clusterInsts and appInsts
 	serverHandler.VMPoolCache.Update(ctx, &testutil.VMPoolData[0], 0)
 	serverHandler.VMPoolCache.Update(ctx, &testutil.VMPoolData[1], 0)
+	serverHandler.GPUDriverCache.Update(ctx, &testutil.GPUDriverData[0], 0)
+	serverHandler.GPUDriverCache.Update(ctx, &testutil.GPUDriverData[1], 0)
+	serverHandler.GPUDriverCache.Update(ctx, &testutil.GPUDriverData[2], 0)
 	// add vmpool for cloudlet
 	vmpoolCloudlet := testutil.CloudletData[0]
 	vmpoolCloudlet.VmPool = testutil.VMPoolData[0].Key.Name
+	vmpoolCloudlet.GpuConfig = edgeproto.GPUConfig{
+		Driver: testutil.GPUDriverData[0].Key,
+	}
 	serverHandler.CloudletCache.Update(ctx, &vmpoolCloudlet, 6)
 	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 7)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[0], 8)
@@ -190,12 +196,14 @@ func TestNotifyBasic(t *testing.T) {
 	crmHandler.WaitForApps(1)
 	crmHandler.WaitForAppInsts(2)
 	crmHandler.WaitForVMPools(1)
+	crmHandler.WaitForGPUDrivers(1)
 	require.Equal(t, 1, len(crmHandler.CloudletCache.Objs), "num cloudlets")
 	require.Equal(t, 3, len(crmHandler.FlavorCache.Objs), "num flavors")
 	require.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
 	require.Equal(t, 1, len(crmHandler.AppCache.Objs), "num apps")
 	require.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	require.Equal(t, 1, len(crmHandler.VMPoolCache.Objs), "num vmPools")
+	require.Equal(t, 1, len(crmHandler.GPUDriverCache.Objs), "num gpuDrivers")
 	// verify modRef values
 	appBuf := edgeproto.App{}
 	flavorBuf := edgeproto.Flavor{}

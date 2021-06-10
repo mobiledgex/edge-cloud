@@ -67,6 +67,7 @@ func TestController(t *testing.T) {
 	defer dmeClient.Stop()
 
 	appClient := edgeproto.NewAppApiClient(conn)
+	gpuDriverClient := edgeproto.NewGPUDriverApiClient(conn)
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
@@ -86,6 +87,7 @@ func TestController(t *testing.T) {
 	testutil.ClientAutoProvPolicyTest(t, "cud", autoProvPolicyClient, testutil.AutoProvPolicyData)
 	testutil.ClientAutoScalePolicyTest(t, "cud", autoScalePolicyClient, testutil.AutoScalePolicyData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
+	testutil.ClientGPUDriverTest(t, "cud", gpuDriverClient, testutil.GPUDriverData)
 	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
 	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData, testutil.WithCreatedAppInstTestData(testutil.CreatedAppInstData()))

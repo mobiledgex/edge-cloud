@@ -155,7 +155,7 @@ func TestCloudletApi(t *testing.T) {
 
 	// create flavors
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-
+	testutil.InternalGPUDriverTest(t, "cud", &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalCloudletTest(t, "cud", &cloudletApi, testutil.CloudletData)
 
 	// test invalid location values

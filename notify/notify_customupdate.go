@@ -46,12 +46,20 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		var modRev int64
-		// also trigger send of vmpool object
-		if s.handler.GetWithRev(key, &cloudlet, &modRev) && cloudlet.VmPool != "" {
-			s.sendrecv.vmPoolSend.updateInternal(ctx, &edgeproto.VMPoolKey{
-				Name:         cloudlet.VmPool,
-				Organization: key.Organization,
-			}, 0)
+		if s.handler.GetWithRev(key, &cloudlet, &modRev) {
+			if cloudlet.VmPool != "" {
+				// also trigger send of vmpool object
+				s.sendrecv.vmPoolSend.updateInternal(ctx, &edgeproto.VMPoolKey{
+					Name:         cloudlet.VmPool,
+					Organization: key.Organization,
+				}, 0)
+			}
+			if s.sendrecv.gpuDriverSend != nil {
+				if cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+					// also trigger send of GPU driver object
+					s.sendrecv.gpuDriverSend.updateInternal(ctx, &cloudlet.GpuConfig.Driver, 0)
+				}
+			}
 		}
 	}
 	return true
@@ -101,6 +109,22 @@ func (s *VMPoolSend) UpdateOk(ctx context.Context, key *edgeproto.VMPoolKey) boo
 	return true
 }
 
+func (s *GPUDriverSend) UpdateOk(ctx context.Context, key *edgeproto.GPUDriverKey) bool {
+	if s.sendrecv.filterCloudletKeys {
+		for cKey, _ := range s.sendrecv.cloudletKeys {
+			cloudlet := edgeproto.Cloudlet{}
+			var modRev int64
+			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
+				if cloudlet.GpuConfig.Driver.Matches(key) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	return true
+}
+
 func (s *AppSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
@@ -118,6 +142,10 @@ func (s *ClusterInstSend) UpdateAllOk() bool {
 }
 
 func (s *VMPoolSend) UpdateAllOk() bool {
+	return !s.sendrecv.filterCloudletKeys
+}
+
+func (s *GPUDriverSend) UpdateAllOk() bool {
 	return !s.sendrecv.filterCloudletKeys
 }
 
