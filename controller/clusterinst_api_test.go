@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -421,6 +422,197 @@ func testClusterInstOverrideTransientDelete(t *testing.T, ctx context.Context, a
 	clusterInstApi.cleanupWorkers.WaitIdle()
 }
 
+func getMetricCounts(t *testing.T, ctx context.Context, cloudlet *edgeproto.Cloudlet) *ResourceMetrics {
+	var metrics []*edgeproto.Metric
+	var err error
+	err = clusterInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		metrics, err = getCloudletResourceMetric(ctx, stm, &cloudlet.Key)
+		require.Nil(t, err, "get cloudlet resource metrics")
+		require.Greater(t, len(metrics), 0, "metrics")
+		return nil
+	})
+	require.Nil(t, err)
+	pfType := pf.GetType(cloudlet.PlatformType.String())
+	resMeasurement := cloudcommon.GetCloudletResourceUsageMeasurement(pfType)
+	ramUsed := uint64(0)
+	vcpusUsed := uint64(0)
+	gpusUsed := uint64(0)
+	externalIPsUsed := uint64(0)
+	flavorCnt := make(map[string]uint64)
+	for _, metric := range metrics {
+		if metric.Name == resMeasurement {
+			for _, val := range metric.Vals {
+				switch val.Name {
+				case cloudcommon.ResourceMetricRamMB:
+					out := val.Value.(*edgeproto.MetricVal_Ival)
+					ramUsed = out.Ival
+				case cloudcommon.ResourceMetricVcpus:
+					out := val.Value.(*edgeproto.MetricVal_Ival)
+					vcpusUsed = out.Ival
+				case cloudcommon.ResourceMetricsGpus:
+					out := val.Value.(*edgeproto.MetricVal_Ival)
+					gpusUsed = out.Ival
+				case cloudcommon.ResourceMetricExternalIPs:
+					out := val.Value.(*edgeproto.MetricVal_Ival)
+					externalIPsUsed = out.Ival
+				}
+			}
+		} else if metric.Name == cloudcommon.CloudletFlavorUsageMeasurement {
+			fName := ""
+			for _, tag := range metric.Tags {
+				if tag.Name != "flavor" {
+					continue
+				}
+				fName = tag.Val
+				if _, ok := flavorCnt[fName]; !ok {
+					flavorCnt[fName] = uint64(0)
+				}
+				break
+			}
+			require.NotEmpty(t, fName, "flavor name found")
+			for _, val := range metric.Vals {
+				if val.Name != "count" {
+					continue
+				}
+				out := val.Value.(*edgeproto.MetricVal_Ival)
+				_, ok := flavorCnt[fName]
+				require.True(t, ok, "flavor name found")
+				flavorCnt[fName] += out.Ival
+				break
+			}
+		}
+	}
+	return &ResourceMetrics{
+		ramUsed:         ramUsed,
+		vcpusUsed:       vcpusUsed,
+		gpusUsed:        gpusUsed,
+		externalIpsUsed: externalIPsUsed,
+		flavorCnt:       flavorCnt,
+	}
+}
+
+func getMetricsDiff(old *ResourceMetrics, new *ResourceMetrics) *ResourceMetrics {
+	diffRam := new.ramUsed - old.ramUsed
+	diffVcpus := new.vcpusUsed - old.vcpusUsed
+	diffGpus := new.gpusUsed - old.gpusUsed
+	diffExternalIps := new.externalIpsUsed - old.externalIpsUsed
+	diffFlavorCnt := make(map[string]uint64)
+	for fName, fCnt := range new.flavorCnt {
+		if oldVal, ok := old.flavorCnt[fName]; ok {
+			diffCnt := fCnt - oldVal
+			if diffCnt > 0 {
+				diffFlavorCnt[fName] = diffCnt
+			}
+		} else {
+			diffFlavorCnt[fName] = fCnt
+		}
+	}
+	return &ResourceMetrics{
+		ramUsed:         diffRam,
+		vcpusUsed:       diffVcpus,
+		gpusUsed:        diffGpus,
+		externalIpsUsed: diffExternalIps,
+		flavorCnt:       diffFlavorCnt,
+	}
+}
+
+func getClusterInstMetricCounts(t *testing.T, ctx context.Context, clusterInst *edgeproto.ClusterInst) *ResourceMetrics {
+	var err error
+	var nodeFlavor *edgeproto.FlavorInfo
+	var masterNodeFlavor *edgeproto.FlavorInfo
+	var lbFlavor *edgeproto.FlavorInfo
+	err = clusterInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		existingCl := edgeproto.ClusterInst{}
+		found := clusterInstApi.store.STMGet(stm, &clusterInst.Key, &existingCl)
+		require.True(t, found, "cluster inst exists")
+
+		cloudletKey := existingCl.Key.CloudletKey
+		cloudlet := edgeproto.Cloudlet{}
+		found = cloudletApi.store.STMGet(stm, &cloudletKey, &cloudlet)
+		require.True(t, found, "cloudlet exists")
+
+		cloudletInfo := edgeproto.CloudletInfo{}
+		found = cloudletInfoApi.store.STMGet(stm, &cloudletKey, &cloudletInfo)
+		require.True(t, found, "cloudlet info exists")
+
+		for _, flavor := range cloudletInfo.Flavors {
+			if flavor.Name == existingCl.NodeFlavor {
+				nodeFlavor = flavor
+			}
+			if flavor.Name == existingCl.MasterNodeFlavor {
+				masterNodeFlavor = flavor
+			}
+		}
+		lbFlavor, err = GetRootLBFlavorInfo(ctx, stm, &cloudlet, &cloudletInfo)
+		require.Nil(t, err, "found rootlb flavor")
+		return nil
+	})
+	require.Nil(t, err)
+	require.NotNil(t, nodeFlavor, "found node flavor")
+	require.NotNil(t, masterNodeFlavor, "found master node flavor")
+	require.NotNil(t, lbFlavor, "found rootlb flavor")
+	ramUsed := uint64(clusterInst.NumNodes)*nodeFlavor.Ram +
+		uint64(clusterInst.NumMasters)*masterNodeFlavor.Ram +
+		lbFlavor.Ram
+	vcpusUsed := uint64(clusterInst.NumNodes)*nodeFlavor.Vcpus +
+		uint64(clusterInst.NumMasters)*masterNodeFlavor.Vcpus +
+		lbFlavor.Vcpus
+	externalIPsUsed := uint64(1) // 1 dedicated Flavor
+	gpusUsed := uint64(0)
+	if clusterInst.OptRes == "gpu" {
+		gpusUsed = uint64(clusterInst.NumNodes)
+		if clusterInst.NodeFlavor == clusterInst.MasterNodeFlavor {
+			gpusUsed += uint64(clusterInst.NumMasters)
+		}
+	}
+	flavorCnt := make(map[string]uint64)
+	if _, ok := flavorCnt[nodeFlavor.Name]; !ok {
+		flavorCnt[nodeFlavor.Name] = uint64(0)
+	}
+	flavorCnt[nodeFlavor.Name] += uint64(clusterInst.NumNodes)
+	if _, ok := flavorCnt[masterNodeFlavor.Name]; !ok {
+		flavorCnt[masterNodeFlavor.Name] = uint64(0)
+	}
+	flavorCnt[masterNodeFlavor.Name] += uint64(clusterInst.NumMasters)
+	if _, ok := flavorCnt[lbFlavor.Name]; !ok {
+		flavorCnt[lbFlavor.Name] = uint64(0)
+	}
+	flavorCnt[lbFlavor.Name] += uint64(1)
+	return &ResourceMetrics{
+		ramUsed:         ramUsed,
+		vcpusUsed:       vcpusUsed,
+		gpusUsed:        gpusUsed,
+		externalIpsUsed: externalIPsUsed,
+		flavorCnt:       flavorCnt,
+	}
+}
+
+type ResourceMetrics struct {
+	ramUsed         uint64
+	vcpusUsed       uint64
+	gpusUsed        uint64
+	externalIpsUsed uint64
+	flavorCnt       map[string]uint64
+}
+
+func validateClusterInstMetrics(t *testing.T, ctx context.Context, cloudlet *edgeproto.Cloudlet, clusterInst *edgeproto.ClusterInst, oldResUsage *ResourceMetrics) {
+	// get resource usage after clusterInst creation
+	newResUsage := getMetricCounts(t, ctx, cloudlet)
+	// get resource usage of clusterInst
+	actualResUsage := getMetricsDiff(oldResUsage, newResUsage)
+	// validate that metrics output shows expected clusterinst resources
+	expectedResUsage := getClusterInstMetricCounts(t, ctx, clusterInst)
+	require.Equal(t, actualResUsage.ramUsed, expectedResUsage.ramUsed, "ram metric matches")
+	require.Equal(t, actualResUsage.vcpusUsed, expectedResUsage.vcpusUsed, "vcpus metric matches")
+	require.Equal(t, actualResUsage.gpusUsed, expectedResUsage.gpusUsed, "gpus metric matches")
+	require.Equal(t, actualResUsage.externalIpsUsed, expectedResUsage.externalIpsUsed, "externalips metric matches")
+	for efName, efCnt := range expectedResUsage.flavorCnt {
+		afCnt, found := actualResUsage.flavorCnt[efName]
+		require.True(t, found, "expected flavor found")
+		require.Equal(t, afCnt, efCnt, "flavor count matches")
+	}
+}
+
 func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 	obj := testutil.ClusterInstData[0]
 	obj.NumNodes = 10
@@ -435,11 +627,63 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 	testutil.InternalAppCreate(t, &appApi, []edgeproto.App{
 		testutil.AppData[0], testutil.AppData[12],
 	})
+
+	// Update settings to empty master node flavor, so that we can use GPU flavor for master node
+	settingsApi.initDefaults(ctx)
+	settings, err := settingsApi.ShowSettings(ctx, &edgeproto.Settings{})
+	require.Nil(t, err)
+	settings.MasterNodeFlavor = ""
+	settings.Fields = []string{edgeproto.SettingsFieldMasterNodeFlavor}
+	_, err = settingsApi.UpdateSettings(ctx, settings)
+	require.Nil(t, err)
+
+	// get resource usage before clusterInst creation
+	oldResUsage := getMetricCounts(t, ctx, &testutil.CloudletData[0])
+
+	// create clusterInst1
 	clusterInstObj := testutil.ClusterInstData[0]
 	clusterInstObj.Key.ClusterKey.Name = "GPUCluster"
 	clusterInstObj.Flavor = testutil.FlavorData[4].Key
 	err = clusterInstApi.CreateClusterInst(&clusterInstObj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "create cluster inst with gpu flavor")
+	// validate clusterinst resource metrics
+	validateClusterInstMetrics(t, ctx, &testutil.CloudletData[0], &clusterInstObj, oldResUsage)
+
+	// get resource usage before clusterInst creation
+	oldResUsage = getMetricCounts(t, ctx, &testutil.CloudletData[0])
+
+	// create clusterInst2
+	clusterInstObj2 := testutil.ClusterInstData[0]
+	clusterInstObj2.Key.ClusterKey.Name = "NonGPUCluster1"
+	err = clusterInstApi.CreateClusterInst(&clusterInstObj2, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "create cluster inst")
+	// validate clusterinst resource metrics
+	validateClusterInstMetrics(t, ctx, &testutil.CloudletData[0], &clusterInstObj2, oldResUsage)
+
+	// delete clusterInst2
+	err = clusterInstApi.DeleteClusterInst(&clusterInstObj2, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "delete cluster inst")
+	// validate clusterinst resource metrics post deletion
+	delResUsage := getMetricCounts(t, ctx, &testutil.CloudletData[0])
+	require.Equal(t, oldResUsage.ramUsed, delResUsage.ramUsed, "ram used is same as old value")
+	require.Equal(t, oldResUsage.vcpusUsed, delResUsage.vcpusUsed, "vcpus used is same as old value")
+	require.Equal(t, oldResUsage.gpusUsed, delResUsage.gpusUsed, "gpus used is same as old value")
+	require.Equal(t, oldResUsage.externalIpsUsed, delResUsage.externalIpsUsed, "externalIpsUsed used is same as old value")
+	for efName, efCnt := range delResUsage.flavorCnt {
+		afCnt, found := oldResUsage.flavorCnt[efName]
+		require.True(t, found, "expected flavor found")
+		require.Equal(t, afCnt, efCnt, "flavor count matches")
+	}
+
+	// get resource usage before clusterInst creation
+	oldResUsage = getMetricCounts(t, ctx, &testutil.CloudletData[0])
+
+	// create clusterInst2 again
+	err = clusterInstApi.CreateClusterInst(&clusterInstObj2, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "create cluster inst")
+	// validate clusterinst resource metrics
+	validateClusterInstMetrics(t, ctx, &testutil.CloudletData[0], &clusterInstObj2, oldResUsage)
+
 	appInstObj := testutil.AppInstData[0]
 	appInstObj.Key.ClusterInstKey = *clusterInstObj.Key.Virtual("")
 	testutil.InternalAppInstCreate(t, &appInstApi, []edgeproto.AppInst{
@@ -587,7 +831,6 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 				require.Contains(t, warning, fmt.Sprintf("%d%%", cloudlet.DefaultResourceAlertThreshold))
 			}
 		}
-
 		return nil
 	})
 	require.Nil(t, err)
