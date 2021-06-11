@@ -305,12 +305,12 @@ apps:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
-  imagepath: stable/prometheus-operator
+  imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
   imagetype: ImageTypeHelm
   accessports: tcp:9090
   defaultflavor:
     name: x1.medium
-  annotations: version=7.1.1
+  annotations: version=9.4.10
   deployment: helm
   delopt: AutoDelete
   configs:
