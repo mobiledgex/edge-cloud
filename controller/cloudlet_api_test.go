@@ -829,3 +829,150 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		return nil
 	})
 }
+func TestFindCloudlets(t *testing.T) {
+	// Unit test for FindCloudletForAppDeployment cli in app_api.go
+	// Given an App, find all cloudlets that support the App.DefaultFlavor.
+	// Extra credit, if TestDeployNow is on, it attempts to determine if a candidate
+	// cloudlet actually has the reources to support an appInstance of this app, and if not,
+	// removes the candidate from the returned list of cloudlets. Fuzzy.
+	//
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelEvents)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+	testinit()
+
+	dummy := dummyEtcd{}
+	dummy.Start()
+
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	// mock http to redirect requests
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	// any requests that don't have a registered URL will be fetched normally
+	httpmock.RegisterNoResponder(httpmock.InitialTransport.RoundTrip)
+
+	esURL := "http://dummy-es"
+	eMock = NewEventMock(esURL)
+	eMock.registerResponders(t)
+
+	// setup nodeMgr for events
+	nodeMgr = node.NodeMgr{}
+	ctx, _, err := nodeMgr.Init(node.NodeTypeController, "", node.WithRegion("unit-test"),
+		node.WithESUrls(esURL))
+	require.Nil(t, err)
+	require.NotNil(t, nodeMgr.ESClient)
+	defer nodeMgr.Finish()
+
+	// create flavors
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	// create cloudlets
+	testclds := testutil.CloudletData
+	for _, cld := range testclds {
+		cld.GpuConfig.Driver = edgeproto.GPUDriverKey{}
+		cld.GpuConfig.GpuType = 0
+
+		err := cloudletApi.CreateCloudlet(&cld, testutil.NewCudStreamoutCloudlet(ctx))
+		if err != nil {
+			fmt.Printf("\n\nError create test cloudlet %s err: %s\n\n", cld.Key.Name, err.Error())
+		}
+
+		require.Nil(t, err)
+	}
+	// create cloudletInfo objects, as FindFlavorMatch/GetVMSpec needs the info for flavors
+	testcldsinfo := testutil.CloudletInfoData
+	for _, cldInfo := range testcldsinfo {
+		_, err := cloudletInfoApi.InjectCloudletInfo(ctx, &cldInfo)
+		require.Nil(t, err)
+	}
+
+	// Need an app to test
+	// AppData[0] uses a DefaultFlavor of FlavorData[0].key which is x1.tiny
+	// AppData[1] also uses x1.tiny, but [2] uses x1.small
+	//
+	appFindSpec := edgeproto.DeploymentCloudletRequest{
+		App:           &testutil.AppData[2],
+		TestDeployNow: false,
+	}
+	// find all cloudlets that have a resolution for app.DefaultFlavor
+	cloudlets, err := appApi.FindCloudletsForAppDeployment(ctx, &appFindSpec)
+	require.Nil(t, err)
+	// all cloudlets can support small
+	require.Equal(t, 4, len(cloudlets.Cloudlets))
+	// increase the size of the flavor in App
+	appFindSpec.App.DefaultFlavor = testutil.FlavorData[3].Key // x1.large
+	fmt.Printf("Test2-Default Flavor now %+v\n", appFindSpec)
+	cloudlets, err = appApi.FindCloudletsForAppDeployment(ctx, &appFindSpec)
+	require.Nil(t, err)
+	// only the san jose site should match
+	require.Equal(t, 1, len(cloudlets.Cloudlets))
+
+	// once we turn TestDeployNow on, it will use validateResources to attempt to qualify
+	// the cloudlets with a flavor match.
+
+	// docker
+	appFindSpec.TestDeployNow = true
+	appFindSpec.App.Deployment = cloudcommon.DeploymentTypeDocker
+	cloudlets, err = appApi.FindCloudletsForAppDeployment(ctx, &appFindSpec)
+	require.Nil(t, err)
+
+	// kube
+	appFindSpec.App.Deployment = cloudcommon.DeploymentTypeKubernetes
+	cloudlets, err = appApi.FindCloudletsForAppDeployment(ctx, &appFindSpec)
+	require.Nil(t, err)
+}
+
+func TestFindAllFlavorsForCloudlets(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelEvents)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+	testinit()
+
+	dummy := dummyEtcd{}
+	dummy.Start()
+
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	// mock http to redirect requests
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	// any requests that don't have a registered URL will be fetched normally
+	httpmock.RegisterNoResponder(httpmock.InitialTransport.RoundTrip)
+
+	esURL := "http://dummy-es"
+	eMock = NewEventMock(esURL)
+	eMock.registerResponders(t)
+
+	// setup nodeMgr for events
+	nodeMgr = node.NodeMgr{}
+	ctx, _, err := nodeMgr.Init(node.NodeTypeController, "", node.WithRegion("unit-test"),
+		node.WithESUrls(esURL))
+	require.Nil(t, err)
+	require.NotNil(t, nodeMgr.ESClient)
+	defer nodeMgr.Finish()
+
+	// create flavors
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	fmt.Printf("\n\nSetup complete start creating test cloudlets from test_data\n\n")
+
+	// Use a  clouldet with no ResourceTagMap
+	cld := testutil.CloudletData[1]
+	err = cloudletApi.CreateCloudlet(&cld, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+
+	cldInfo := testutil.CloudletInfoData[1]
+	_, err = cloudletInfoApi.InjectCloudletInfo(ctx, &cldInfo)
+	require.Nil(t, err)
+
+	flavorResults, err := cloudletApi.FindAllFlavorsForCloudlet(ctx, &cld)
+	require.Nil(t, err)
+	require.Equal(t, 2, len(flavorResults.Flavors))
+}

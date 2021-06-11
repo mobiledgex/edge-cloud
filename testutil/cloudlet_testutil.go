@@ -1161,6 +1161,18 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 				}
 				*outp = append(*outp, out...)
 			}
+		case "findallflavorsforcloudlet":
+			out, err := r.client.FindAllFlavorsForCloudlet(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletFlavorMappingResults)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.CloudletFlavorMappingResults, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
 		case "platformdeletecloudlet":
 			out, err := r.client.PlatformDeleteCloudlet(r.ctx, obj)
 			if err != nil {
@@ -1380,6 +1392,13 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 		return err
 	})
 	return err
+}
+
+func (s *DummyServer) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
+	if s.CudNoop {
+		return &edgeproto.CloudletFlavorMappingResults{}, nil
+	}
+	return &edgeproto.CloudletFlavorMappingResults{}, nil
 }
 
 func (s *DummyServer) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_PlatformDeleteCloudletServer) error {
@@ -1836,6 +1855,18 @@ func (s *CliClient) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMat
 	return &out, err
 }
 
+func (s *ApiClient) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.FindAllFlavorsForCloudlet(ctx, in)
+}
+
+func (s *CliClient) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
+	out := edgeproto.CloudletFlavorMappingResults{}
+	args := append(s.BaseArgs, "controller", "FindAllFlavorsForCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 func (s *ApiClient) RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	return api.RevokeAccessKey(ctx, in)
@@ -1888,6 +1919,7 @@ type CloudletApiClient interface {
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)
+	FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error)
 	RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	GenerateAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)

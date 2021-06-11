@@ -7,7 +7,6 @@ import "result.proto";
 import "cloudletkey.proto";
 import "appinst.proto";
 import "clusterinst.proto";
-import "cloudlet.proto";
 import "common.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "google/api/annotations.proto";

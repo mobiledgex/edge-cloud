@@ -242,6 +242,21 @@ message AppAutoProvPolicy {
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
 }
 
+message DeploymentCloudletResults {
+   //	
+ //Cloudlets available for App deployment
+ repeated CloudletKey cloudlets = 1;
+   //map<string,string> Cloudlets = 1;
+}
+message DeploymentCloudletRequest {
+   AppKey key = 1 [(gogoproto.nullable) = false];
+   // Discover potential App Cloudlets
+   App app = 2;
+   // Attempt to qualify cloudlet resources for deployment
+   bool test_deploy_now = 3;
+}
+
+
 service AppApi {
   // Create Application. Creates a definition for an application instance for Cloudlet deployment.
   rpc CreateApp(App) returns (Result) {
@@ -297,4 +312,14 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
+  // Find cloudlets that can support Apps Detault Flavor
+  rpc FindCloudletsForAppDeployment(DeploymentCloudletRequest) returns (DeploymentCloudletResults) {
+    option(google.api.http) = {
+    post: "/findmapping/deploymentcloudlets"
+    body: "*"
+    };
+  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+
+  }   
+
 }

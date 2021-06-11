@@ -5,10 +5,10 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "cloudletkey.proto";
 import "result.proto";
 import "flavor.proto";
 import "cluster.proto";
-import "cloudlet.proto";
 import "common.proto";
 import "infraresources.proto";
 import "gogoproto/gogo.proto";

@@ -441,6 +441,27 @@ func (r *Run) AppApi_AppAutoProvPolicy(data *[]edgeproto.AppAutoProvPolicy, data
 	}
 }
 
+func (r *Run) AppApi_DeploymentCloudletRequest(data *[]edgeproto.DeploymentCloudletRequest, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for DeploymentCloudletRequest", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "findcloudletsforappdeployment":
+			out, err := r.client.FindCloudletsForAppDeployment(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("AppApi_DeploymentCloudletRequest[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.DeploymentCloudletResults)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_DeploymentCloudletRequest expected dataOut type *[]edgeproto.DeploymentCloudletResults, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
 func (s *DummyServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if s.CudNoop {
 		return &edgeproto.Result{}, nil
@@ -575,6 +596,18 @@ func (s *CliClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.A
 	return &out, err
 }
 
+func (s *ApiClient) FindCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) (*edgeproto.DeploymentCloudletResults, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.FindCloudletsForAppDeployment(ctx, in)
+}
+
+func (s *CliClient) FindCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) (*edgeproto.DeploymentCloudletResults, error) {
+	out := edgeproto.DeploymentCloudletResults{}
+	args := append(s.BaseArgs, "controller", "FindCloudletsForAppDeployment")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 type AppApiClient interface {
 	CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
 	DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
@@ -582,4 +615,5 @@ type AppApiClient interface {
 	ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error)
 	AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
 	RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
+	FindCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) (*edgeproto.DeploymentCloudletResults, error)
 }

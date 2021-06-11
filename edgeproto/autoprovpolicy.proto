@@ -5,10 +5,10 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "result.proto";
+import "cloudletkey.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "autoscalepolicy.proto";
-import "cloudlet.proto";
 import "app.proto";
 import "clusterinst.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";

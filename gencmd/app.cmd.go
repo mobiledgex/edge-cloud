@@ -62,6 +62,41 @@ func AppHideTags(in *edgeproto.App) {
 	}
 }
 
+func DeploymentCloudletRequestHideTags(in *edgeproto.DeploymentCloudletRequest) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.App.DeploymentManifest = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.App.DeploymentGenerator = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.App.DelOpt = 0
+	}
+	for i1 := 0; i1 < len(in.App.Configs); i1++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.App.Revision = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.App.DeletePrepare = false
+	}
+	if _, found := tags["timestamp"]; found {
+		in.App.CreatedAt = distributed_match_engine.Timestamp{}
+	}
+	if _, found := tags["timestamp"]; found {
+		in.App.UpdatedAt = distributed_match_engine.Timestamp{}
+	}
+	for i1 := 0; i1 < len(in.App.RequiredOutboundConnections); i1++ {
+	}
+}
+
 var AppApiCmd edgeproto.AppApiClient
 
 var CreateAppCmd = &cli.Command{
@@ -427,6 +462,63 @@ func RemoveAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy
 	}
 }
 
+var FindCloudletsForAppDeploymentCmd = &cli.Command{
+	Use:          "FindCloudletsForAppDeployment",
+	RequiredArgs: strings.Join(DeploymentCloudletRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(DeploymentCloudletRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(DeploymentCloudletRequestAliasArgs, " "),
+	SpecialArgs:  &DeploymentCloudletRequestSpecialArgs,
+	Comments:     DeploymentCloudletRequestComments,
+	ReqData:      &edgeproto.DeploymentCloudletRequest{},
+	ReplyData:    &edgeproto.DeploymentCloudletResults{},
+	Run:          runFindCloudletsForAppDeployment,
+}
+
+func runFindCloudletsForAppDeployment(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.DeploymentCloudletRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return FindCloudletsForAppDeployment(c, obj)
+}
+
+func FindCloudletsForAppDeployment(c *cli.Command, in *edgeproto.DeploymentCloudletRequest) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.FindCloudletsForAppDeployment(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("FindCloudletsForAppDeployment failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func FindCloudletsForAppDeployments(c *cli.Command, data []edgeproto.DeploymentCloudletRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("FindCloudletsForAppDeployment %v\n", data[ii])
+		myerr := FindCloudletsForAppDeployment(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var AppApiCmds = []*cobra.Command{
 	CreateAppCmd.GenCmd(),
 	DeleteAppCmd.GenCmd(),
@@ -434,6 +526,7 @@ var AppApiCmds = []*cobra.Command{
 	ShowAppCmd.GenCmd(),
 	AddAppAutoProvPolicyCmd.GenCmd(),
 	RemoveAppAutoProvPolicyCmd.GenCmd(),
+	FindCloudletsForAppDeploymentCmd.GenCmd(),
 }
 
 var RemoteConnectionRequiredArgs = []string{}
@@ -593,3 +686,113 @@ var AppAutoProvPolicyComments = map[string]string{
 	"autoprovpolicy": "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}
+var DeploymentCloudletResultsRequiredArgs = []string{}
+var DeploymentCloudletResultsOptionalArgs = []string{
+	"cloudlets:#.organization",
+	"cloudlets:#.name",
+}
+var DeploymentCloudletResultsAliasArgs = []string{}
+var DeploymentCloudletResultsComments = map[string]string{
+	"cloudlets:#.organization": "Organization of the cloudlet site",
+	"cloudlets:#.name":         "Name of the cloudlet",
+}
+var DeploymentCloudletResultsSpecialArgs = map[string]string{}
+var DeploymentCloudletRequestRequiredArgs = []string{
+	"key.organization",
+	"key.name",
+	"key.version",
+}
+var DeploymentCloudletRequestOptionalArgs = []string{
+	"app.fields",
+	"app.key.organization",
+	"app.key.name",
+	"app.key.version",
+	"app.imagepath",
+	"app.imagetype",
+	"app.accessports",
+	"app.defaultflavor.name",
+	"app.authpublickey",
+	"app.command",
+	"app.annotations",
+	"app.deployment",
+	"app.deploymentmanifest",
+	"app.deploymentgenerator",
+	"app.androidpackagename",
+	"app.delopt",
+	"app.configs:#.kind",
+	"app.configs:#.config",
+	"app.scalewithcluster",
+	"app.internalports",
+	"app.revision",
+	"app.officialfqdn",
+	"app.md5sum",
+	"app.autoprovpolicy",
+	"app.accesstype",
+	"app.deleteprepare",
+	"app.autoprovpolicies",
+	"app.templatedelimiter",
+	"app.skiphcports",
+	"app.createdat.seconds",
+	"app.createdat.nanos",
+	"app.updatedat.seconds",
+	"app.updatedat.nanos",
+	"app.trusted",
+	"app.requiredoutboundconnections:#.protocol",
+	"app.requiredoutboundconnections:#.port",
+	"app.requiredoutboundconnections:#.remoteip",
+	"app.allowserverless",
+	"app.serverlessconfig.vcpus",
+	"app.serverlessconfig.ram",
+	"app.serverlessconfig.minreplicas",
+	"app.vmappostype",
+	"testdeploynow",
+}
+var DeploymentCloudletRequestAliasArgs = []string{}
+var DeploymentCloudletRequestComments = map[string]string{
+	"key.organization":        "App developer organization",
+	"key.name":                "App name",
+	"key.version":             "App version",
+	"app.fields":              "Fields are used for the Update API to specify which fields to apply",
+	"app.key.organization":    "App developer organization",
+	"app.key.name":            "App name",
+	"app.key.version":         "App version",
+	"app.imagepath":           "URI of where image resides",
+	"app.imagetype":           "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm, ImageTypeOvf",
+	"app.accessports":         "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
+	"app.defaultflavor.name":  "Flavor name",
+	"app.authpublickey":       "Public key used for authentication",
+	"app.command":             "Command that the container runs to start service",
+	"app.annotations":         "Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=val 3",
+	"app.deployment":          "Deployment type (kubernetes, docker, or vm)",
+	"app.deploymentmanifest":  "Deployment manifest is the deployment specific manifest file/config. For docker deployment, this can be a docker-compose or docker run file. For kubernetes deployment, this can be a kubernetes yaml or helm chart file.",
+	"app.deploymentgenerator": "Deployment generator target to generate a basic deployment manifest",
+	"app.androidpackagename":  "Android package name used to match the App name from the Android package",
+	"app.delopt":              "Override actions to Controller, one of NoAutoDelete, AutoDelete",
+	"app.configs:#.kind":      "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
+	"app.configs:#.config":    "Config file contents or URI reference",
+	"app.scalewithcluster":    "Option to run App on all nodes of the cluster",
+	"app.internalports":       "Should this app have access to outside world?",
+	"app.revision":            "Revision can be specified or defaults to current timestamp when app is updated",
+	"app.officialfqdn":        "Official FQDN is the FQDN that the app uses to connect by default",
+	"app.md5sum":              "MD5Sum of the VM-based app image",
+	"app.autoprovpolicy":      "(_deprecated_) Auto provisioning policy name",
+	"app.accesstype":          "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"app.deleteprepare":       "Preparing to be deleted",
+	"app.autoprovpolicies":    "Auto provisioning policy names, may be specified multiple times",
+	"app.templatedelimiter":   "Delimiter to be used for template parsing, defaults to [[ ]]",
+	"app.skiphcports":         "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443.",
+	"app.trusted":             "Indicates that an instance of this app can be started on a trusted cloudlet",
+	"app.requiredoutboundconnections:#.protocol": "tcp, udp or icmp",
+	"app.requiredoutboundconnections:#.port":     "TCP or UDP port",
+	"app.requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
+	"app.allowserverless":                        "App is allowed to deploy as serverless containers",
+	"app.serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"app.serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
+	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
+	"app.vmappostype":                            "OS Type for VM Apps, one of VmAppOsUnknown, VmAppOsLinux, VmAppOsWindows10, VmAppOsWindows2012, VmAppOsWindows2016, VmAppOsWindows2019",
+	"testdeploynow":                              "Attempt to qualify cloudlet resources for deployment",
+}
+var DeploymentCloudletRequestSpecialArgs = map[string]string{
+	"app.autoprovpolicies": "StringArray",
+	"app.fields":           "StringArray",
+}

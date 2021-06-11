@@ -149,7 +149,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			}
 			cloudletRefs := edgeproto.CloudletRefs{}
 			cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
-			return validateResources(ctx, stm, nil, nil, &cloudlet, in, &cloudletRefs)
+			return validateResources(ctx, stm, nil, nil, nil, &cloudlet, in, &cloudletRefs, true)
 		})
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to validate cloudlet resources",
