@@ -11,7 +11,7 @@ import (
 
 var oldPrometheusControllerApp = edgeproto.App{
 	Key:           MEXPrometheusAppKey,
-	ImagePath:     "stable/prometheus-operator",
+	ImagePath:     "https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack",
 	Deployment:    cloudcommon.DeploymentTypeHelm,
 	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 	InternalPorts: true,

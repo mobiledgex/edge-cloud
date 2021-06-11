@@ -136,10 +136,7 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 	cmd := fmt.Sprintf("%s helm version", names.KconfEnv)
 	out, err := client.Output(cmd)
 	if err != nil {
-		err = InstallHelm(ctx, client, names)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	// get helm repository config for the app
@@ -156,6 +153,13 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "added helm repository")
 	}
+	cmd = fmt.Sprintf("%s helm repo update", names.KconfEnv)
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("updating helm repos, %s, %s, %v", cmd, out, err)
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "helm repos updated")
+
 	helmArgs, err := getHelmInstallOptsString(app.Annotations)
 	if err != nil {
 		return err
@@ -166,8 +170,8 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts)
-	cmd = fmt.Sprintf("%s helm install %s %s --name %s %s", names.KconfEnv, chart, helmArgs,
-		names.HelmAppName, helmOpts)
+	cmd = fmt.Sprintf("%s helm install %s %s %s %s", names.KconfEnv, names.HelmAppName, chart,
+		helmArgs, helmOpts)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
@@ -199,7 +203,7 @@ func UpdateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 
 func DeleteHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames, clusterInst *edgeproto.ClusterInst) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "delete kubernetes helm app")
-	cmd := fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, names.HelmAppName)
+	cmd := fmt.Sprintf("%s helm delete %s", names.KconfEnv, names.HelmAppName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		if !strings.Contains(out, "not found") {
@@ -209,32 +213,6 @@ func DeleteHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 			"out", out, "err", err)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "removed helm chart")
-	return nil
-}
-
-func InstallHelm(ctx context.Context, client ssh.Client, names *KubeNames) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "installing helm into cluster", "kconf", names.KconfName)
-
-	// Add service account for tiller
-	cmd := fmt.Sprintf("%s kubectl create serviceaccount --namespace kube-system tiller", names.KconfEnv)
-	out, err := client.Output(cmd)
-	if err != nil && !strings.Contains(out, "already exists") {
-		return fmt.Errorf("error creating tiller service account, %s, %s, %v", cmd, out, err)
-	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "setting service acct", "kconf", names.KconfName)
-
-	cmd = fmt.Sprintf("%s kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller", names.KconfEnv)
-	out, err = client.Output(cmd)
-	if err != nil && !strings.Contains(out, "already exists") {
-		return fmt.Errorf("error creating role binding, %s, %s, %v", cmd, out, err)
-	}
-
-	cmd = fmt.Sprintf("%s helm init --wait --service-account tiller", names.KconfEnv)
-	out, err = client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("error initializing tiller for app, %s, %s, %v", cmd, out, err)
-	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "helm tiller initialized")
 	return nil
 }
 
