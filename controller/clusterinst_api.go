@@ -629,7 +629,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		flavorMetric.Timestamp = *ts
 		flavorMetric.AddTag("cloudletorg", cloudlet.Key.Organization)
 		flavorMetric.AddTag("cloudlet", cloudlet.Key.Name)
-		flavorMetric.AddStringVal("flavor", fName)
+		flavorMetric.AddTag("flavor", fName)
 		flavorMetric.AddIntVal("count", fCount)
 		metrics = append(metrics, &flavorMetric)
 	}
