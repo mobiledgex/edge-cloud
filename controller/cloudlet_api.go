@@ -961,6 +961,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 					return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
 				}
 				in.GpuConfig.GpuType = gpuDriver.Type
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigGpuType)
 			}
 			crmUpdateReqd = true
 		}
