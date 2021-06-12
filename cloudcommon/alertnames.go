@@ -55,6 +55,15 @@ func IsMonitoredAlert(alertName string) bool {
 	return false
 }
 
+func IsInternalAlert(alertName string) bool {
+	if alertName == AlertAppInstDown ||
+		alertName == AlertCloudletDown ||
+		alertName == AlertCloudletResourceUsage {
+		return false
+	}
+	return true
+}
+
 func IsAlertSeverityValid(severity string) bool {
 	if _, found := AlertSeverityTypes[severity]; found {
 		return true
