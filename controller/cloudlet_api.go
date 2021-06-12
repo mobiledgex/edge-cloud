@@ -951,7 +951,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		if _, found := fmap[edgeproto.CloudletFieldGpuConfig]; found {
 			if in.GpuConfig.Driver.Name == "" {
+				// clear GPU config
 				in.GpuConfig = edgeproto.GPUConfig{}
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverName)
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverOrganization)
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigProperties)
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigGpuType)
 			} else {
 				if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.Organization {
 					return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.Organization)
