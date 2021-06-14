@@ -2071,16 +2071,12 @@ func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 	return &quotaProps, nil
 }
 
-// Return a map of our meta flavors to os flavors
-// If the platform supports no native flavors, the map will be metaflavor/metaflavor
 func (s *CloudletApi) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
 	// map[metaflavor]osflavor for the given cloudlet, maybe for another api for admin use only xxx
 	var flavors []string
-	//	allMetaFlavors := []*edgeproto.FlavorKey{}
 	allMetaFlavors := make(map[string]string)
 	flavorCache := &flavorApi.cache
 	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
-		fmt.Printf("FinaAllFalvorsForCld next flv: %s\n", k.Name)
 		allMetaFlavors[k.Name] = ""
 	})
 
@@ -2089,7 +2085,6 @@ func (s *CloudletApi) FindAllFlavorsForCloudlet(ctx context.Context, in *edgepro
 			Key:        in.Key,
 			FlavorName: flavor,
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "FindAllFlavors consider", "metaflavor", flavor)
 		match, err := s.FindFlavorMatch(ctx, &fm)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "FindAllFlavors not match for", "metaflavor", flavor)
@@ -2101,10 +2096,13 @@ func (s *CloudletApi) FindAllFlavorsForCloudlet(ctx context.Context, in *edgepro
 			allMetaFlavors[flavor] = match.FlavorName
 		}
 	}
-	// While we maintain the complete list of meta to OS flavor types, we shed the os flavors
+	// While we maintain the complete list of meta to OS flavors, we shed the OS flavors
 	// for user consumption. If desired, an admin only version can be offered with the complete mapping.
 	results := edgeproto.CloudletFlavorMappingResults{
 		Flavors: flavors,
+	}
+	for _, flav := range flavors {
+		fmt.Printf("\n\tNext match for cld %s : %s\n", in.Key.Name, flav)
 	}
 	return &results, nil
 }

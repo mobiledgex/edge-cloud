@@ -912,8 +912,6 @@ func (s *AppApi) FindCloudletsForAppDeployment(ctx context.Context, in *edgeprot
 		}
 		_, err := cloudletApi.FindFlavorMatch(ctx, &fm)
 		if err != nil {
-			// too verbose, remove xxx
-			log.SpanLog(ctx, log.DebugLevelApi, "GetCloudletsForAppDeployment failed match remove", "cloudlet", cldkey, "flavor", flavor.Name)
 			continue
 		}
 		allmatches = append(allmatches, cldkey)
@@ -921,8 +919,6 @@ func (s *AppApi) FindCloudletsForAppDeployment(ctx context.Context, in *edgeprot
 	// If an instance of this App were to be deploymed now, check if our resource mgr thinks
 	// there are sufficient resources to support the creation. Assumes the app instance
 	// would use the App templates default falvor. Other considerations see mock appInst object creation.
-	// The general idea as an interactive tool, the more the dev specifies in the App, the better
-	// approximation of deployment options becomes. We'll see. Might want something similar for appInsts.
 	if in.TestDeployNow {
 		allclds = nil
 		appInst, err := s.mockAppInstForValidation(ctx, in.App)

@@ -243,8 +243,7 @@ message AppAutoProvPolicy {
 }
 
 message DeploymentCloudletResults {
-   //	
- //Cloudlets available for App deployment
+ // Cloudlets available for App deployment
  repeated CloudletKey cloudlets = 1;
    //map<string,string> Cloudlets = 1;
 }
@@ -255,7 +254,6 @@ message DeploymentCloudletRequest {
    // Attempt to qualify cloudlet resources for deployment
    bool test_deploy_now = 3;
 }
-
 
 service AppApi {
   // Create Application. Creates a definition for an application instance for Cloudlet deployment.
@@ -319,7 +317,7 @@ service AppApi {
     body: "*"
     };
   option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
-
+  option (protogen.mc2_custom_authz) = true;
   }   
 
 }

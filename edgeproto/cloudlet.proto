@@ -677,8 +677,6 @@ service CloudletApi {
   option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
 
-
-
   // Revoke crm access key
   rpc RevokeAccessKey(CloudletKey) returns (Result) {
     option (google.api.http) = {

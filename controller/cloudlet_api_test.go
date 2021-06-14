@@ -932,10 +932,8 @@ func TestFindAllFlavorsForCloudlets(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
-
 	dummy := dummyEtcd{}
 	dummy.Start()
-
 	sync := InitSync(&dummy)
 	InitApis(sync)
 	sync.Start()
