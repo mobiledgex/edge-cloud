@@ -2053,6 +2053,7 @@ var GPUDriverBuildOptionalArgs = []string{
 	"operatingsystem",
 	"kernelversion",
 	"hypervisorinfo",
+	"md5sum",
 }
 var GPUDriverBuildAliasArgs = []string{}
 var GPUDriverBuildComments = map[string]string{
@@ -2062,6 +2063,7 @@ var GPUDriverBuildComments = map[string]string{
 	"operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
 	"kernelversion":   "Kernel Version supported by GPU driver build",
 	"hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
+	"md5sum":          "Driver package md5sum to ensure package is not corrupted",
 }
 var GPUDriverBuildSpecialArgs = map[string]string{}
 var GPUDriverBuildMemberRequiredArgs = []string{
@@ -2075,6 +2077,7 @@ var GPUDriverBuildMemberOptionalArgs = []string{
 	"build.operatingsystem",
 	"build.kernelversion",
 	"build.hypervisorinfo",
+	"build.md5sum",
 	"ignorestate",
 }
 var GPUDriverBuildMemberAliasArgs = []string{
@@ -2090,6 +2093,7 @@ var GPUDriverBuildMemberComments = map[string]string{
 	"build.operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
 	"build.kernelversion":   "Kernel Version supported by GPU driver build",
 	"build.hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
+	"build.md5sum":          "Driver package md5sum to ensure package is not corrupted",
 	"ignorestate":           "Ignore state will ignore any action in-progress on the GPU driver",
 }
 var GPUDriverBuildMemberSpecialArgs = map[string]string{}
@@ -2116,7 +2120,9 @@ var GPUDriverOptionalArgs = []string{
 	"builds:#.operatingsystem",
 	"builds:#.kernelversion",
 	"builds:#.hypervisorinfo",
+	"builds:#.md5sum",
 	"licenseconfig",
+	"licenseconfigmd5sum",
 	"properties",
 	"ignorestate",
 }
@@ -2135,7 +2141,9 @@ var GPUDriverComments = map[string]string{
 	"builds:#.operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
 	"builds:#.kernelversion":   "Kernel Version supported by GPU driver build",
 	"builds:#.hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
+	"builds:#.md5sum":          "Driver package md5sum to ensure package is not corrupted",
 	"licenseconfig":            "License config to setup license (will be stored in secure storage)",
+	"licenseconfigmd5sum":      "License config md5sum, to ensure integrity of license config",
 	"properties":               "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
 	"state":                    "State to figure out if any action on the GPU driver is in-progress",
 	"ignorestate":              "Ignore state will ignore any action in-progress on the GPU driver",
@@ -2609,6 +2617,7 @@ var UpdateGPUDriverOptionalArgs = []string{
 	"gpudriver-org",
 	"type",
 	"licenseconfig",
+	"licenseconfigmd5sum",
 	"properties",
 	"ignorestate",
 }
@@ -2618,6 +2627,7 @@ var AddGPUDriverBuildRequiredArgs = []string{
 	"build.name",
 	"build.driverpath",
 	"build.operatingsystem",
+	"build.md5sum",
 }
 var AddGPUDriverBuildOptionalArgs = []string{
 	"build.driverpathcreds",
@@ -2632,6 +2642,7 @@ var RemoveGPUDriverBuildRequiredArgs = []string{
 }
 var RemoveGPUDriverBuildOptionalArgs = []string{
 	"build.driverpathcreds",
+	"build.md5sum",
 	"ignorestate",
 }
 var GetGPUDriverBuildURLRequiredArgs = []string{
@@ -2641,6 +2652,7 @@ var GetGPUDriverBuildURLRequiredArgs = []string{
 }
 var GetGPUDriverBuildURLOptionalArgs = []string{
 	"build.driverpathcreds",
+	"build.md5sum",
 	"ignorestate",
 }
 var CreateCloudletRequiredArgs = []string{
