@@ -266,6 +266,8 @@ message GPUDriverBuild {
   string kernel_version = 5;
   // Info on hypervisor supported by vGPU driver
   string hypervisor_info = 6;
+  // Driver package md5sum to ensure package is not corrupted
+  string md5sum = 7;
 }
 
 message GPUDriverBuildMember {
@@ -297,6 +299,8 @@ message GPUDriver {
   repeated GPUDriverBuild builds = 4 [(gogoproto.nullable) = false];
   // License config to setup license (will be stored in secure storage)
   string license_config = 5;
+  // License config md5sum, to ensure integrity of license config
+  string license_config_md5sum = 9;
   // Additional properties associated with GPU driver build
   // For example: license server information, driver release date, etc
   map<string, string> properties = 6;
@@ -313,7 +317,7 @@ message GPUDriver {
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "gpudrivername=Key.Name,gpudriver-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
-  option (protogen.noconfig) = "State";
+  option (protogen.noconfig) = "State,LicenseConfigMd5sum";
   option (protogen.not_required) = "Key.Organization";
 }
 
@@ -369,7 +373,7 @@ service GPUDriverApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_also_required) = "Build.Name,Build.DriverPath,Build.OperatingSystem";
+    option (protogen.method_also_required) = "Build.Name,Build.DriverPath,Build.Md5Sum,Build.OperatingSystem";
   }
   // Remove GPU Driver Build. Removes build from GPU driver.
   rpc RemoveGPUDriverBuild(GPUDriverBuildMember) returns (stream Result) {
