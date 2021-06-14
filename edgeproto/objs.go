@@ -290,6 +290,9 @@ func (g *GPUDriverBuild) Validate() error {
 	if g.DriverPath == "" {
 		return fmt.Errorf("Missing driverpath")
 	}
+	if g.Md5Sum == "" {
+		return fmt.Errorf("Missing md5sum")
+	}
 	if _, err := util.ImagePathParse(g.DriverPath); err != nil {
 		return fmt.Errorf("Invalid driver path(%q): %v", g.DriverPath, err)
 	}
@@ -325,8 +328,10 @@ func (g *GPUDriver) Validate(fields map[string]struct{}) error {
 	if err := g.ValidateEnums(); err != nil {
 		return err
 	}
-	if g.Type == GPUType_GPU_TYPE_NONE {
-		return fmt.Errorf("GPU type cannot be none")
+	if _, found := fields[GPUDriverFieldType]; found {
+		if g.Type == GPUType_GPU_TYPE_NONE {
+			return fmt.Errorf("GPU type cannot be none")
+		}
 	}
 	buildNames := make(map[string]struct{})
 	for _, build := range g.Builds {

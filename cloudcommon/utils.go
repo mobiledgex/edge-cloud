@@ -1,6 +1,8 @@
 package cloudcommon
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -128,4 +130,10 @@ func LookupDNS(name string) (string, error) {
 		return ip.String(), nil //XXX return only first one
 	}
 	return "", fmt.Errorf("no IP in DNS record for %s", name)
+}
+
+func Md5SumStr(data string) string {
+	h := md5.New()
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
 }
