@@ -373,7 +373,7 @@ service GPUDriverApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_also_required) = "Build.Name,Build.DriverPath,Build.Md5sum,Build.OperatingSystem";
+    option (protogen.method_also_required) = "Build.Name,Build.DriverPath,Build.Md5Sum,Build.OperatingSystem";
   }
   // Remove GPU Driver Build. Removes build from GPU driver.
   rpc RemoveGPUDriverBuild(GPUDriverBuildMember) returns (stream Result) {
