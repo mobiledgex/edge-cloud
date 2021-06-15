@@ -14,6 +14,7 @@ enum ApiEndpointType {
   UNKNOWN_API_ENDPOINT_TYPE = 0;
   CONTROLLER = 1;
   DME = 2;
+  //MC = 3;
 }
 
 enum RateLimitTarget {
@@ -92,6 +93,7 @@ service RateLimitSettingsApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+    //option (protogen.mc2_custom_mc_handler) = true;
   }
   // Update RateLimit settings for an API endpoint
   rpc UpdateRateLimitSettings(RateLimitSettings) returns (Result) {
@@ -100,6 +102,7 @@ service RateLimitSettingsApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+    //option (protogen.mc2_custom_mc_handler) = true;
   }
   // Delete RateLimit settings for an API endpoint (ie. no rate limiting)
   rpc DeleteRateLimitSettings(RateLimitSettings) returns (Result) {
@@ -108,14 +111,7 @@ service RateLimitSettingsApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
-  }
-  // Reset RateLimit settings to default for an API endpoint
-  rpc ResetRateLimitSettings(RateLimitSettings) returns (Result) {
-    option (google.api.http) = {
-      post: "/reset/ratelimitsettings"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+    //option (protogen.mc2_custom_mc_handler) = true;
   }
   // Show RateLimit settings for an API endpoint
   rpc ShowRateLimitSettings(RateLimitSettings) returns (stream RateLimitSettings) {
@@ -124,6 +120,7 @@ service RateLimitSettingsApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+    //option (protogen.mc2_custom_mc_handler) = true;
   }
 }
 

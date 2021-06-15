@@ -79,8 +79,12 @@ message Settings {
   int64 influx_db_edge_events_metrics_retention = 32 [(gogoproto.casttype) = "Duration"];
   // AppInstClient cleanup thread run interval
   int64 appinst_client_cleanup_interval = 33 [(gogoproto.casttype) = "Duration"];
-  // Enable rate limiting (default is true)
-  bool rate_limit_enable = 34;
+  // Disable rate limiting for DME APIs (default is false)
+  bool disable_dme_rate_limit = 34;
+  // Disable rate limiting for Controller APIs (default is true)
+  bool disable_ctrl_rate_limit = 35;
+  // Maximum number of limiters... TODO...
+  int64 max_num_rate_limiters = 36;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

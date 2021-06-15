@@ -11,17 +11,17 @@ import (
 
 /*
  * Handles all the rate limiting for an API
- * Can limit all requests coming into an enpoint, per IP, and/or per User
+ * Can limit all requests coming into an endpoint, per IP, and/or per User
  */
 type apiEndpointLimiter struct {
+	apiName string
 	// Rate limit settings for an api endpoint
 	apiEndpointRateLimitSettings *apiEndpointRateLimitSettings
-	// FullLimiter for api endpoint
-	limits *CompositeLimiter
+	// Limiter for all requests that come into the api endpoint
+	limitAllRequests *CompositeLimiter
 	// Maps of ip or user to FullLimiters
-	limitsPerIp    map[string]*CompositeLimiter
-	limitsPerUser  map[string]*CompositeLimiter
-	maxNumLimiters int64
+	limitsPerIp   map[string]*CompositeLimiter
+	limitsPerUser map[string]*CompositeLimiter
 }
 
 // Rate Limit Settings for an API endpoint
@@ -31,20 +31,21 @@ type apiEndpointRateLimitSettings struct {
 	PerUserRateLimitSettings     *edgeproto.RateLimitSettings
 }
 
-func NewApiEndpointLimiter(apiEndpointRateLimitSettings *apiEndpointRateLimitSettings) *apiEndpointLimiter {
+func newApiEndpointLimiter(apiName string, apiEndpointRateLimitSettings *apiEndpointRateLimitSettings) *apiEndpointLimiter {
 	if apiEndpointRateLimitSettings == nil {
 		return nil
 	}
 	a := &apiEndpointLimiter{}
+	a.apiName = apiName
 	a.apiEndpointRateLimitSettings = apiEndpointRateLimitSettings
 	limiters := getLimitersFromRateLimitSettings(apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
-	a.limits = NewCompositeLimiter(limiters...)
+	a.limitAllRequests = NewCompositeLimiter(limiters...)
 	a.limitsPerIp = make(map[string]*CompositeLimiter)
 	a.limitsPerUser = make(map[string]*CompositeLimiter)
 	return a
 }
 
-func (a *apiEndpointLimiter) UpdateRateLimitSettings(rateLimitSettings *edgeproto.RateLimitSettings) {
+func (a *apiEndpointLimiter) updateRateLimitSettings(rateLimitSettings *edgeproto.RateLimitSettings) {
 	if rateLimitSettings == nil {
 		return
 	}
@@ -53,7 +54,7 @@ func (a *apiEndpointLimiter) UpdateRateLimitSettings(rateLimitSettings *edgeprot
 	case edgeproto.RateLimitTarget_ALL_REQUESTS:
 		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = rateLimitSettings
 		limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
-		a.limits = NewCompositeLimiter(limiters...)
+		a.limitAllRequests = NewCompositeLimiter(limiters...)
 	case edgeproto.RateLimitTarget_PER_IP:
 		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = rateLimitSettings
 		a.limitsPerIp = make(map[string]*CompositeLimiter)
@@ -65,11 +66,11 @@ func (a *apiEndpointLimiter) UpdateRateLimitSettings(rateLimitSettings *edgeprot
 	}
 }
 
-func (a *apiEndpointLimiter) RemoveRateLimitSettings(target edgeproto.RateLimitTarget) {
+func (a *apiEndpointLimiter) removeRateLimitSettings(target edgeproto.RateLimitTarget) {
 	switch target {
 	case edgeproto.RateLimitTarget_ALL_REQUESTS:
 		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = nil
-		a.limits = nil
+		a.limitAllRequests = nil
 	case edgeproto.RateLimitTarget_PER_IP:
 		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = nil
 		a.limitsPerIp = make(map[string]*CompositeLimiter)
@@ -119,7 +120,7 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context, info *CallerInfo) error 
 	}
 	if a.doesLimitByAllRequests() {
 		// limit for the entire endpoint
-		return a.limits.Limit(ctx, info)
+		return a.limitAllRequests.Limit(ctx, info)
 	}
 	return nil
 }
@@ -147,6 +148,9 @@ func (a *apiEndpointLimiter) doesLimitByAllRequests() bool {
 // Helper function that creates slice of Limiters to be passed into NewCompositeLimiter
 func getLimitersFromRateLimitSettings(settings *edgeproto.RateLimitSettings) []Limiter {
 	limiters := make([]Limiter, 0)
+	if settings == nil {
+		return limiters
+	}
 
 	for _, fsettings := range settings.FlowSettings {
 		// Generate Flow Limiters

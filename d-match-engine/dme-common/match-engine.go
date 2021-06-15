@@ -121,9 +121,8 @@ var StatKeyContextKey = StatKeyContextType("statKey")
 // EdgeEventsHandler implementation (loaded from Plugin)
 var EEHandler EdgeEventsHandler
 
-// RateLimitManagers
-var UnaryRateLimitMgr *ratelimit.RateLimitManager
-var StreamRateLimitMgr *ratelimit.RateLimitManager
+// RateLimitManager
+var RateLimitMgr *ratelimit.RateLimitManager
 
 func SetupMatchEngine(eehandler EdgeEventsHandler) {
 	DmeAppTbl = new(DmeApps)
@@ -133,9 +132,6 @@ func SetupMatchEngine(eehandler EdgeEventsHandler) {
 	DmeAppTbl.FreeReservableClusterInsts.Init()
 	edgeproto.InitOperatorCodeCache(&DmeAppTbl.OperatorCodes)
 	EEHandler = eehandler
-	// Initialize API RateLimitManagers
-	UnaryRateLimitMgr = ratelimit.NewRateLimitManager()
-	StreamRateLimitMgr = ratelimit.NewRateLimitManager()
 }
 
 // AppInst state is a superset of the cloudlet state and appInst state
@@ -1496,6 +1492,6 @@ func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeprot
 	Stats.UpdateSettings(time.Duration(new.DmeApiMetricsCollectionInterval))
 	clientsMap.UpdateClientTimeout(new.AppinstClientCleanupInterval)
 	EEStats.UpdateSettings(time.Duration(new.EdgeEventsMetricsCollectionInterval))
-	UnaryRateLimitMgr.UpdateRateLimitEnable(new.RateLimitEnable)
-	StreamRateLimitMgr.UpdateRateLimitEnable(new.RateLimitEnable)
+	RateLimitMgr.UpdateDisableRateLimit(new.DisableDmeRateLimit)
+	RateLimitMgr.UpdateMaxNumRateLimiters(int(new.MaxNumRateLimiters))
 }

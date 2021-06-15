@@ -116,18 +116,6 @@ func (r *Run) RateLimitSettingsApi(data *[]edgeproto.RateLimitSettings, dataMap 
 				}
 				*outp = append(*outp, *out)
 			}
-		case "reset":
-			out, err := r.client.ResetRateLimitSettings(r.ctx, obj)
-			if err != nil {
-				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
-				r.logErr(fmt.Sprintf("RateLimitSettingsApi[%d]", ii), err)
-			} else {
-				outp, ok := dataOut.(*[]edgeproto.Result)
-				if !ok {
-					panic(fmt.Sprintf("RunRateLimitSettingsApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
-				}
-				*outp = append(*outp, *out)
-			}
 		case "showfiltered":
 			out, err := r.client.ShowRateLimitSettings(r.ctx, obj)
 			if err != nil {
@@ -164,13 +152,6 @@ func (s *DummyServer) DeleteRateLimitSettings(ctx context.Context, in *edgeproto
 		return &edgeproto.Result{}, nil
 	}
 	s.RateLimitSettingsCache.Delete(ctx, in, 0)
-	return &edgeproto.Result{}, nil
-}
-
-func (s *DummyServer) ResetRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	if s.CudNoop {
-		return &edgeproto.Result{}, nil
-	}
 	return &edgeproto.Result{}, nil
 }
 
@@ -225,18 +206,6 @@ func (s *CliClient) DeleteRateLimitSettings(ctx context.Context, in *edgeproto.R
 	return &out, err
 }
 
-func (s *ApiClient) ResetRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
-	return api.ResetRateLimitSettings(ctx, in)
-}
-
-func (s *CliClient) ResetRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "ResetRateLimitSettings")
-	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
-	return &out, err
-}
-
 type RateLimitSettingsStream interface {
 	Recv() (*edgeproto.RateLimitSettings, error)
 }
@@ -276,6 +245,5 @@ type RateLimitSettingsApiClient interface {
 	CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
 	UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
 	DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
-	ResetRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
 	ShowRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) ([]edgeproto.RateLimitSettings, error)
 }

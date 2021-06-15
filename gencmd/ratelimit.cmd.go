@@ -199,63 +199,6 @@ func DeleteRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings
 	}
 }
 
-var ResetRateLimitSettingsCmd = &cli.Command{
-	Use:          "ResetRateLimitSettings",
-	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
-	OptionalArgs: strings.Join(RateLimitSettingsOptionalArgs, " "),
-	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
-	SpecialArgs:  &RateLimitSettingsSpecialArgs,
-	Comments:     RateLimitSettingsComments,
-	ReqData:      &edgeproto.RateLimitSettings{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runResetRateLimitSettings,
-}
-
-func runResetRateLimitSettings(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.RateLimitSettings)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return ResetRateLimitSettings(c, obj)
-}
-
-func ResetRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
-	if RateLimitSettingsApiCmd == nil {
-		return fmt.Errorf("RateLimitSettingsApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := RateLimitSettingsApiCmd.ResetRateLimitSettings(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("ResetRateLimitSettings failed: %s", errstr)
-	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func ResetRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("ResetRateLimitSettings %v\n", data[ii])
-		myerr := ResetRateLimitSettings(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var ShowRateLimitSettingsCmd = &cli.Command{
 	Use:          "ShowRateLimitSettings",
 	OptionalArgs: strings.Join(append(RateLimitSettingsRequiredArgs, RateLimitSettingsOptionalArgs...), " "),
@@ -336,7 +279,6 @@ var RateLimitSettingsApiCmds = []*cobra.Command{
 	CreateRateLimitSettingsCmd.GenCmd(),
 	UpdateRateLimitSettingsCmd.GenCmd(),
 	DeleteRateLimitSettingsCmd.GenCmd(),
-	ResetRateLimitSettingsCmd.GenCmd(),
 	ShowRateLimitSettingsCmd.GenCmd(),
 }
 

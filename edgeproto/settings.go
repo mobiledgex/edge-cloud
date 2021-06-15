@@ -126,8 +126,12 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			// no validation
 		case SettingsFieldLocationTileSideLengthKm:
 			v.CheckGT(f, s.LocationTileSideLengthKm, int64(0))
-		case SettingsFieldRateLimitEnable:
+		case SettingsFieldDisableDmeRateLimit:
 			// no validation
+		case SettingsFieldDisableCtrlRateLimit:
+			// no validation
+		case SettingsFieldMaxNumRateLimiters:
+			// TODO VALIDATE
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -184,7 +188,9 @@ func GetDefaultSettings() *Settings {
 		},
 	}
 	s.InfluxDbDownsampledMetricsRetention = Duration(8760 * time.Hour) // 1 year
-	s.RateLimitEnable = true
+	s.DisableDmeRateLimit = false
+	s.DisableCtrlRateLimit = true
+	s.MaxNumRateLimiters = 10000
 	return &s
 }
 

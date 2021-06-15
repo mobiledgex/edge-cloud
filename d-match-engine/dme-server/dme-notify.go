@@ -105,31 +105,20 @@ func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 func (r *RateLimitSettingsHandler) Update(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
 	if in.Key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
 		// Update RateLimitMgr with updated RateLimitSettings
-		dmecommon.UnaryRateLimitMgr.UpdateRateLimitSettings(in)
-		dmecommon.StreamRateLimitMgr.UpdateRateLimitSettings(in)
+		dmecommon.RateLimitMgr.UpdateRateLimitSettings(in)
 	}
 }
 
 func (r *RateLimitSettingsHandler) Delete(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
 	if in.Key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
-		// "Remove" RateLimitSettings from RateLimitMgr (ie. remove settings but keep the key)
-		in = &edgeproto.RateLimitSettings{
-			Key: in.Key,
-		}
-		dmecommon.UnaryRateLimitMgr.UpdateRateLimitSettings(in)
-		dmecommon.StreamRateLimitMgr.UpdateRateLimitSettings(in)
+		dmecommon.RateLimitMgr.RemoveRateLimitSettings(in.Key)
 	}
 }
 
 func (r *RateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto.RateLimitSettingsKey]struct{}) {
 	for key, _ := range keys {
 		if key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
-			// "Remove" RateLimitSettings from RateLimitMgr (ie. remove settings but keep the key)
-			in := &edgeproto.RateLimitSettings{
-				Key: key,
-			}
-			dmecommon.UnaryRateLimitMgr.UpdateRateLimitSettings(in)
-			dmecommon.StreamRateLimitMgr.UpdateRateLimitSettings(in)
+			dmecommon.RateLimitMgr.RemoveRateLimitSettings(key)
 		}
 	}
 }
