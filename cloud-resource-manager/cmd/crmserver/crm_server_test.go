@@ -32,7 +32,9 @@ cloudlets:
     name: cloud2
   vmpool: vmpool1
   gpuconfig:
-    drivername: gpudriver1
+    driver:
+      name: gpudriver1
+      organization: TMUS
     gputype: GpuTypePassthrough
 
 flavors:
@@ -144,14 +146,14 @@ gpudrivers:
 - key:
     organization: TMUS
     name: gpudriver1
-    type: GpuTypePassthrough
+  type: GpuTypePassthrough
 - key:
     organization: TMUS
-    name: gpudriver1
-    type: GpuTypeVgpu
+    name: gpudriver2
+  type: GpuTypeVgpu
 - key:
     name: gpudriver2
-    type: GpuTypeVgpu
+  type: GpuTypeVgpu
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
