@@ -1134,6 +1134,18 @@ func GetStreamKeyFromCloudletKey(key *CloudletKey) AppInstKey {
 	}
 }
 
+// Temporary way to get unique stream key for GPU driver object
+// This will be fixed as part of 3rd-party in-memory DB changes
+func GetStreamKeyFromGPUDriverKey(key *GPUDriverKey) AppInstKey {
+	return AppInstKey{
+		ClusterInstKey: VirtualClusterInstKey{
+			CloudletKey: CloudletKey{
+				Name: key.Name + "_" + key.Organization,
+			},
+		},
+	}
+}
+
 func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
 	if inRes == nil || len(inRes.Vms) == 0 {
 		return false

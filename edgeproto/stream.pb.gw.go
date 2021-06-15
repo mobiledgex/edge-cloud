@@ -106,6 +106,31 @@ func request_StreamObjApi_StreamCloudlet_0(ctx context.Context, marshaler runtim
 
 }
 
+func request_StreamObjApi_StreamGPUDriver_0(ctx context.Context, marshaler runtime.Marshaler, client StreamObjApiClient, req *http.Request, pathParams map[string]string) (StreamObjApi_StreamGPUDriverClient, runtime.ServerMetadata, error) {
+	var protoReq GPUDriverKey
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.StreamGPUDriver(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
 // RegisterStreamObjApiHandlerServer registers the http handlers for service StreamObjApi to "mux".
 // UnaryRPC     :call StreamObjApiServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -126,6 +151,13 @@ func RegisterStreamObjApiHandlerServer(ctx context.Context, mux *runtime.ServeMu
 	})
 
 	mux.Handle("POST", pattern_StreamObjApi_StreamCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
+	mux.Handle("POST", pattern_StreamObjApi_StreamGPUDriver_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
 		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -233,6 +265,26 @@ func RegisterStreamObjApiHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
+	mux.Handle("POST", pattern_StreamObjApi_StreamGPUDriver_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StreamObjApi_StreamGPUDriver_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StreamObjApi_StreamGPUDriver_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -242,6 +294,8 @@ var (
 	pattern_StreamObjApi_StreamClusterInst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"stream", "clusterinst"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_StreamObjApi_StreamCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"stream", "cloudlet"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_StreamObjApi_StreamGPUDriver_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"stream", "gpudriver"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -250,4 +304,6 @@ var (
 	forward_StreamObjApi_StreamClusterInst_0 = runtime.ForwardResponseStream
 
 	forward_StreamObjApi_StreamCloudlet_0 = runtime.ForwardResponseStream
+
+	forward_StreamObjApi_StreamGPUDriver_0 = runtime.ForwardResponseStream
 )
