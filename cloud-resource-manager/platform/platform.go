@@ -58,15 +58,16 @@ type Caches struct {
 
 // Features that the platform supports or enables
 type Features struct {
-	SupportsMultiTenantCluster bool
-	SupportsSharedVolume       bool
-	SupportsTrustPolicy        bool
-	SupportsKubernetesOnly     bool // does not support docker/VM
-	CloudletServicesLocal      bool // cloudlet services running locally to controller
-	IPAllocatedPerService      bool // Every k8s service gets a public IP (GCP/etc)
-	SupportsImageTypeOVF       bool // Supports OVF images for VM deployments
-	IsVMPool                   bool // cloudlet is just a pool of pre-existing VMs
-	IsFake                     bool // Just for unit-testing/e2e-testing
+	SupportsMultiTenantCluster    bool
+	SupportsSharedVolume          bool
+	SupportsTrustPolicy           bool
+	SupportsKubernetesOnly        bool // does not support docker/VM
+	KubernetesRequiresWorkerNodes bool // k8s cluster cannot be master only
+	CloudletServicesLocal         bool // cloudlet services running locally to controller
+	IPAllocatedPerService         bool // Every k8s service gets a public IP (GCP/etc)
+	SupportsImageTypeOVF          bool // Supports OVF images for VM deployments
+	IsVMPool                      bool // cloudlet is just a pool of pre-existing VMs
+	IsFake                        bool // Just for unit-testing/e2e-testing
 }
 
 // Platform abstracts the underlying cloudlet platform.

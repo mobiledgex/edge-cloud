@@ -186,7 +186,7 @@ func validateAndDefaultIPAccess(ctx context.Context, clusterInst *edgeproto.Clus
 	return clusterInst.IpAccess, nil
 }
 
-func validateNumNodesForKubernetes(ctx context.Context, platformType edgeproto.PlatformType, numnodes uint32) error {
+func validateNumNodesForKubernetes(ctx context.Context, platformType edgeproto.PlatformType, features *platform.Features, numnodes uint32) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validateNumNodesForKubernetes", "platformType", platformType.String(), "numnodes", numnodes)
 	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL {
 		// Special case for k8s baremetal because multi-tenanancy is
@@ -199,7 +199,7 @@ func validateNumNodesForKubernetes(ctx context.Context, platformType edgeproto.P
 			return fmt.Errorf("NumNodes must be 0 for %s", platformType.String())
 		}
 	}
-	if numnodes == 0 {
+	if numnodes == 0 && features.KubernetesRequiresWorkerNodes {
 		return fmt.Errorf("NumNodes cannot be 0 for %s", platformType.String())
 	}
 	return nil
@@ -759,7 +759,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("Platform %s only supports kubernetes-based deployments", cloudlet.PlatformType.String())
 		}
 		if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
-			err = validateNumNodesForKubernetes(ctx, cloudlet.PlatformType, in.NumNodes)
+			err = validateNumNodesForKubernetes(ctx, cloudlet.PlatformType, features, in.NumNodes)
 			if err != nil {
 				return err
 			}
