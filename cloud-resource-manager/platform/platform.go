@@ -56,10 +56,26 @@ type Caches struct {
 	VMPoolMux *sync.Mutex
 }
 
+// Features that the platform supports or enables
+type Features struct {
+	SupportsMultiTenantCluster    bool
+	SupportsSharedVolume          bool
+	SupportsTrustPolicy           bool
+	SupportsKubernetesOnly        bool // does not support docker/VM
+	KubernetesRequiresWorkerNodes bool // k8s cluster cannot be master only
+	CloudletServicesLocal         bool // cloudlet services running locally to controller
+	IPAllocatedPerService         bool // Every k8s service gets a public IP (GCP/etc)
+	SupportsImageTypeOVF          bool // Supports OVF images for VM deployments
+	IsVMPool                      bool // cloudlet is just a pool of pre-existing VMs
+	IsFake                        bool // Just for unit-testing/e2e-testing
+}
+
 // Platform abstracts the underlying cloudlet platform.
 type Platform interface {
 	// GetVersionProperties returns properties related to the platform version
 	GetVersionProperties() map[string]string
+	// Get platform features
+	GetFeatures() *Features
 	// Init is called once during CRM startup.
 	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
@@ -102,8 +118,6 @@ type Platform interface {
 	GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error)
 	// Set power state of the AppInst
 	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
-	// Is cloudlet services running locally to controller on the given platform
-	IsCloudletServicesLocal() bool
 	// Create Cloudlet
 	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error

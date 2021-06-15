@@ -194,7 +194,8 @@ func main() {
 			GPUDriverCache:        &controllerData.GPUDriverCache,
 		}
 
-		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+		features := platform.GetFeatures()
+		if features.IsVMPool {
 			if cloudlet.VmPool == "" {
 				log.FatalLog("Cloudlet is missing VM pool name")
 			}

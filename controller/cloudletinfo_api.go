@@ -67,17 +67,21 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		s.store.STMPut(stm, in)
 		return nil
 	})
-	if changedToOnline {
-		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "version", in.ContainerVersion)
-		if cloudletSupportsMultiTenant(in) {
-			go createDefaultMultiTenantCluster(ctx, in.Key)
-		}
-	}
 
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(&in.Key, &cloudlet) {
 		return
 	}
+	if changedToOnline {
+		nodeMgr.Event(ctx, "Cloudlet online", in.Key.Organization, in.Key.GetTags(), nil, "state", in.State.String(), "version", in.ContainerVersion)
+		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+		if err == nil {
+			if features.SupportsMultiTenantCluster && cloudlet.EnableDefaultServerlessCluster {
+				go createDefaultMultiTenantCluster(ctx, in.Key)
+			}
+		}
+	}
+
 	newState := edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
 	switch in.State {
 	case dme.CloudletState_CLOUDLET_STATE_INIT:
@@ -406,12 +410,4 @@ func getCloudletPropertyBool(info *edgeproto.CloudletInfo, prop string, def bool
 		return def
 	}
 	return val
-}
-
-// Most cloudlets should support creating a multi-tenant cluster.
-// However special cases like Anthos which are emulating clusters by using
-// a hidden multi-tenant cluster, cannot.
-// For now, however, we leave the default as false.
-func cloudletSupportsMultiTenant(info *edgeproto.CloudletInfo) bool {
-	return getCloudletPropertyBool(info, cloudcommon.CloudletSupportsMT, false)
 }
