@@ -137,6 +137,16 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	return nil
 }
 
+func (s *Platform) GetFeatures() *platform.Features {
+	return &platform.Features{
+		SupportsMultiTenantCluster: true,
+		SupportsSharedVolume:       true,
+		SupportsTrustPolicy:        true,
+		CloudletServicesLocal:      true,
+		IsFake:                     true,
+	}
+}
+
 func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
 	info.OsMaxRam = FakeRamMax
 	info.OsMaxVcores = FakeVcpusMax
@@ -497,10 +507,6 @@ func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (strin
 		return s.consoleServer.URL + "?token=xyz", nil
 	}
 	return "", fmt.Errorf("no console server to fetch URL from")
-}
-
-func (s *Platform) IsCloudletServicesLocal() bool {
-	return true
 }
 
 func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {

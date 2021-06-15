@@ -416,6 +416,7 @@ func TestAutoClusterInst(t *testing.T) {
 	err = clusterInstApi.CreateClusterInst(&mtBad, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Multi-tenant clusters must be of deployment type Kubernetes")
+
 	// Create multi-tenant ClusterInst before reservable tests.
 	// Reservable tests should pass without using multi-tenant because
 	// the App's SupportMultiTenant is false.

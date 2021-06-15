@@ -10,6 +10,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -99,6 +100,12 @@ func (s *ClusterInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.C
 			dynInsts[ci.Key] = struct{}{}
 			continue
 		}
+		if ci.Key.Matches(getDefaultMTClustKey(refs.Key)) {
+			// delete default multi-tenant cluster
+			dynInsts[ci.Key] = struct{}{}
+			continue
+		}
+
 		// report usage of reservable ClusterInst by the reservation owner.
 		if ci.Reservable && ci.ReservedBy != "" {
 			return fmt.Errorf("Cloudlet in use by ClusterInst name %s, reserved by Organization %s", ciRefKey.ClusterKey.Name, ci.ReservedBy)
@@ -137,12 +144,12 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 
 // validateAndDefaultIPAccess checks that the IP access type is valid if it is set.  If it is not set
 // it returns the new value based on the other parameters
-func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType edgeproto.PlatformType, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (edgeproto.IpAccess, error) {
+func validateAndDefaultIPAccess(ctx context.Context, clusterInst *edgeproto.ClusterInst, platformType edgeproto.PlatformType, features *platform.Features, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (edgeproto.IpAccess, error) {
 
 	platName := edgeproto.PlatformType_name[int32(platformType)]
 
 	// Operators such as GCP and Azure must be dedicated as they allocate a new IP per service
-	if isIPAllocatedPerService(platformType, clusterInst.Key.CloudletKey.Organization) {
+	if isIPAllocatedPerService(ctx, platformType, features, clusterInst.Key.CloudletKey.Organization) {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessDedicated for platform: " + platName})
 			return edgeproto.IpAccess_IP_ACCESS_DEDICATED, nil
@@ -152,7 +159,7 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 		}
 		return clusterInst.IpAccess, nil
 	}
-	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_DIND || platformType == edgeproto.PlatformType_PLATFORM_TYPE_EDGEBOX {
+	if features.CloudletServicesLocal && !features.IsFake {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 			cb.Send(&edgeproto.Result{Message: "Defaulting IpAccess to IpAccessShared for platform " + platName})
 			return edgeproto.IpAccess_IP_ACCESS_SHARED, nil
@@ -179,40 +186,21 @@ func validateAndDefaultIPAccess(clusterInst *edgeproto.ClusterInst, platformType
 	return clusterInst.IpAccess, nil
 }
 
-func validatePlatformForDeployment(ctx context.Context, platformType edgeproto.PlatformType, deploymentType string) error {
-	log.DebugLog(log.DebugLevelApi, "validatePlatformForDeployment", "platformType", platformType.String(), "deploymentType", deploymentType)
-
-	switch platformType {
-	case edgeproto.PlatformType_PLATFORM_TYPE_GCP:
-		fallthrough
-	case edgeproto.PlatformType_PLATFORM_TYPE_AZURE:
-		fallthrough
-	case edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
-		fallthrough
-	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
-		if deploymentType != cloudcommon.DeploymentTypeKubernetes {
-			return fmt.Errorf("Only kubernetes clusters can be deployed in cloudlet platform: %s", platformType.String())
-		}
-	}
-	return nil
-}
-
-func validateNumNodesForDeployment(ctx context.Context, platformType edgeproto.PlatformType, numnodes uint32) error {
-	log.DebugLog(log.DebugLevelApi, "validatePlatformForDeployment", "platformType", platformType.String(), "numnodes", numnodes)
-
-	switch platformType {
-	case edgeproto.PlatformType_PLATFORM_TYPE_GCP:
-		fallthrough
-	case edgeproto.PlatformType_PLATFORM_TYPE_AZURE:
-		fallthrough
-	case edgeproto.PlatformType_PLATFORM_TYPE_AWS_EKS:
-		if numnodes == 0 {
-			return fmt.Errorf("NumNodes cannot be 0 for %s", platformType.String())
-		}
-	case edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL:
+func validateNumNodesForKubernetes(ctx context.Context, platformType edgeproto.PlatformType, features *platform.Features, numnodes uint32) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validateNumNodesForKubernetes", "platformType", platformType.String(), "numnodes", numnodes)
+	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL {
+		// Special case for k8s baremetal because multi-tenanancy is
+		// managed by the platform, not the Controller. There is no
+		// real cluster, just pods, so numnodes is not used. Once we
+		// consolidate the code so that the Controller manages it,
+		// then there will no longer be any ClusterInst object created
+		// (it will be AppInst only), so this check can be removed.
 		if numnodes != 0 {
 			return fmt.Errorf("NumNodes must be 0 for %s", platformType.String())
 		}
+	}
+	if numnodes == 0 && features.KubernetesRequiresWorkerNodes {
+		return fmt.Errorf("NumNodes cannot be 0 for %s", platformType.String())
 	}
 	return nil
 }
@@ -756,25 +744,25 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
-		var err error
+		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+		if err != nil {
+			return fmt.Errorf("Failed to get features for platform: %s", err)
+		}
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-		if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK &&
-			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_FAKE &&
-			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VSPHERE &&
-			cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VCD &&
-			in.SharedVolumeSize != 0 {
+		if in.SharedVolumeSize != 0 && !features.SupportsSharedVolume {
 			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
 			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
-		err = validatePlatformForDeployment(ctx, cloudlet.PlatformType, in.Deployment)
-		if err != nil {
-			return err
+		if features.SupportsKubernetesOnly && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
+			return fmt.Errorf("Platform %s only supports kubernetes-based deployments", cloudlet.PlatformType.String())
 		}
-		err = validateNumNodesForDeployment(ctx, cloudlet.PlatformType, in.NumNodes)
-		if err != nil {
-			return err
+		if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
+			err = validateNumNodesForKubernetes(ctx, cloudlet.PlatformType, features, in.NumNodes)
+			if err != nil {
+				return err
+			}
 		}
 		if err := validateClusterInstUpdates(ctx, stm, in); err != nil {
 			return err
@@ -791,7 +779,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.Flavor.Name == "" {
 			return errors.New("No Flavor specified")
 		}
-		if in.MultiTenant && !cloudletSupportsMultiTenant(&info) {
+		if in.MultiTenant && !features.SupportsMultiTenantCluster {
 			return fmt.Errorf("Cloudlet does not support multi-tenant Clusters")
 		}
 
@@ -841,7 +829,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		in.IpAccess, err = validateAndDefaultIPAccess(in, cloudlet.PlatformType, cb)
+		in.IpAccess, err = validateAndDefaultIPAccess(ctx, in, cloudlet.PlatformType, features, cb)
 		if err != nil {
 			return err
 		}
@@ -849,7 +837,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
-		err = allocateIP(in, &cloudlet, cloudlet.PlatformType, &refs)
+		err = allocateIP(ctx, in, &cloudlet, cloudlet.PlatformType, features, &refs)
 		if err != nil {
 			return err
 		}
@@ -1574,9 +1562,7 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	flavorApi.cache.Mux.Unlock()
 
 	clusterInst := edgeproto.ClusterInst{}
-	clusterInst.Key.CloudletKey = cloudletKey
-	clusterInst.Key.ClusterKey.Name = cloudcommon.DefaultMultiTenantCluster
-	clusterInst.Key.Organization = cloudcommon.OrganizationMobiledgeX
+	clusterInst.Key = *getDefaultMTClustKey(cloudletKey)
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
 	clusterInst.MultiTenant = true
 	clusterInst.Flavor = largest.Key
@@ -1594,5 +1580,32 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	if err != nil && err.Error() == clusterInst.Key.ExistsError().Error() {
 		return
 	}
-	nodeMgr.TimedEvent(ctx, "default multi-tenant cluster create", clusterInst.Key.Organization, node.EventType, clusterInst.Key.GetTags(), err, start, time.Now())
+	nodeMgr.TimedEvent(ctx, "default multi-tenant cluster created", clusterInst.Key.Organization, node.EventType, clusterInst.Key.GetTags(), err, start, time.Now())
+}
+
+func deleteDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.CloudletKey) {
+	clusterInst := edgeproto.ClusterInst{}
+	clusterInst.Key = *getDefaultMTClustKey(cloudletKey)
+	cb := StreamoutCb{
+		ctx: ctx,
+	}
+	start := time.Now()
+
+	err := clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clusterInst, &cb)
+	log.SpanLog(ctx, log.DebugLevelApi, "delete default multi-tenant ClusterInst", "cluster", clusterInst, "err", err)
+
+	if err != nil && err.Error() == clusterInst.Key.NotFoundError().Error() {
+		return
+	}
+	nodeMgr.TimedEvent(ctx, "default multi-tenant cluster deleted", clusterInst.Key.Organization, node.EventType, clusterInst.Key.GetTags(), err, start, time.Now())
+}
+
+func getDefaultMTClustKey(cloudletKey edgeproto.CloudletKey) *edgeproto.ClusterInstKey {
+	return &edgeproto.ClusterInstKey{
+		CloudletKey: cloudletKey,
+		ClusterKey: edgeproto.ClusterKey{
+			Name: cloudcommon.DefaultMultiTenantCluster,
+		},
+		Organization: cloudcommon.OrganizationMobiledgeX,
+	}
 }

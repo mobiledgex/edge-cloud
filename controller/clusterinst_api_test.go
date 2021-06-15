@@ -12,6 +12,7 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -868,4 +869,73 @@ func InfluxUsageUnitTestStop() {
 	if testInfluxProc != nil {
 		testInfluxProc.StopLocal()
 	}
+}
+
+func TestDefaultMTCluster(t *testing.T) {
+	log.InitTracer(nil)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+	testinit()
+
+	dummy := dummyEtcd{}
+	dummy.Start()
+
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
+		&appInstInfoApi, &clusterInstInfoApi)
+
+	reduceInfoTimeouts(t, ctx)
+
+	testutil.InternalFlavorTest(t, "cud", &flavorApi, testutil.FlavorData)
+
+	cloudlet := testutil.CloudletData[0]
+	cloudlet.EnableDefaultServerlessCluster = true
+	cloudlet.GpuConfig = edgeproto.GPUConfig{}
+	cloudletInfo := testutil.CloudletInfoData[0]
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
+	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
+
+	// create cloudlet, should create cluster
+	err := cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	// simulate ready state in info, which triggers cluster create
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
+	waitDefaultMTClust(t, cloudlet.Key, true)
+
+	// update to off, should delete cluster
+	cloudlet.EnableDefaultServerlessCluster = false
+	cloudlet.Fields = []string{edgeproto.CloudletFieldEnableDefaultServerlessCluster}
+	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	waitDefaultMTClust(t, cloudlet.Key, false)
+
+	// update to on, should create cluster
+	cloudlet.EnableDefaultServerlessCluster = true
+	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	waitDefaultMTClust(t, cloudlet.Key, true)
+
+	// delete cloudlet, should auto-delete cluster
+	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	waitDefaultMTClust(t, cloudlet.Key, false)
+}
+
+func waitDefaultMTClust(t *testing.T, cloudletKey edgeproto.CloudletKey, present bool) {
+	key := getDefaultMTClustKey(cloudletKey)
+	cinst := edgeproto.ClusterInst{}
+	var found bool
+	for ii := 0; ii < 40; ii++ {
+		found = clusterInstApi.Get(key, &cinst)
+		if present == found {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.Equal(t, present, found, "DefaultMTCluster presence incorrect")
 }
