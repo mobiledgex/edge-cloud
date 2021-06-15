@@ -497,6 +497,8 @@ message Cloudlet {
   string kafka_password = 44;
   // GPU Configuration associated with cloudlet
   GPUConfig gpu_config = 45 [(gogoproto.nullable) = false];
+  // Enable experimental default multitenant (serverless) cluster
+  bool enable_default_serverless_cluster = 46;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
