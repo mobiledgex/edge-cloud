@@ -11,10 +11,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
-func (s *Xind) IsCloudletServicesLocal() bool {
-	return true
-}
-
 func (s *Xind) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, acccessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "create cloudlet for xind")
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
