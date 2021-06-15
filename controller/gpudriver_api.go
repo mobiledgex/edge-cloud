@@ -153,6 +153,31 @@ func (s *GPUDriverApi) undoStateChange(ctx context.Context, key *edgeproto.GPUDr
 	}
 }
 
+func startGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, inCb edgeproto.GPUDriverApi_CreateGPUDriverServer) (*streamSend, edgeproto.GPUDriverApi_CreateGPUDriverServer, error) {
+	streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(key)
+	streamSendObj, err := streamObjApi.startStream(ctx, &streamKey, inCb)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to start GPU driver stream", "err", err)
+		return nil, inCb, err
+	}
+	return streamSendObj, &CbWrapper{
+		streamSendObj: streamSendObj,
+		GenericCb:     inCb,
+	}, nil
+}
+
+func stopGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error) {
+	streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(key)
+	if err := streamObjApi.stopStream(ctx, &streamKey, streamSendObj, objErr); err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop GPU driver stream", "err", err)
+	}
+}
+
+func (s *StreamObjApi) StreamGPUDriver(key *edgeproto.GPUDriverKey, cb edgeproto.StreamObjApi_StreamGPUDriverServer) error {
+	streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(key)
+	return s.StreamMsgs(&streamKey, cb)
+}
+
 func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) (reterr error) {
 	ctx := cb.Context()
 	if err := in.Validate(edgeproto.GPUDriverAllFieldsMap); err != nil {
@@ -163,13 +188,21 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		// Public GPU drivers have no org associated with them
 	}
 
+	gpuDriverKey := in.Key
+	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	if err == nil {
+		defer func() {
+			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		}()
+	}
+
 	// To ensure updates to etcd and GCS happens atomically:
 	// Step-1: First commit to etcd
 	// Step-2: Validate and upload the builds/license-config to GCS
 	// Step-3: And then update build details to reflect GCS URL and update it to etcd
 
 	// Step-1: First commit to etcd
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
@@ -237,6 +270,14 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	fmap := edgeproto.MakeFieldMap(in.Fields)
 	if err := in.Validate(fmap); err != nil {
 		return err
+	}
+
+	gpuDriverKey := in.Key
+	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	if err == nil {
+		defer func() {
+			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		}()
 	}
 
 	ignoreState := in.IgnoreState
@@ -350,6 +391,14 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		return fmt.Errorf("GPU driver in use by Cloudlet")
 	}
 
+	gpuDriverKey := in.Key
+	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	if err == nil {
+		defer func() {
+			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		}()
+	}
+
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
 
@@ -361,7 +410,7 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 	// Step-1: First update state in etcd
 	buildFiles := []string{}
 	licenseConfig := ""
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.GPUDriver{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
@@ -421,7 +470,14 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 	}
 
 	// Step-3: And then delete obj from etcd
-	_, err = s.store.Delete(ctx, in, s.sync.syncWait)
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		// delete GPU driver obj
+		s.store.STMDel(stm, &in.Key)
+		// delete associated streamobj as well
+		streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(&in.Key)
+		streamObjApi.store.STMDel(stm, &streamKey)
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -442,6 +498,14 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 		return err
 	}
 
+	gpuDriverKey := in.Key
+	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	if err == nil {
+		defer func() {
+			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		}()
+	}
+
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
 
@@ -451,7 +515,7 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 	// Step-3: And then update build details to reflect GCS URL and update it to etcd
 
 	// Step-1: First commit to etcd
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.GPUDriver{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
@@ -535,6 +599,15 @@ func (s *GPUDriverApi) removeGPUDriverBuildInternal(cctx *CallContext, in *edgep
 	if err := in.Build.ValidateName(); err != nil {
 		return err
 	}
+
+	gpuDriverKey := in.Key
+	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	if err == nil {
+		defer func() {
+			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		}()
+	}
+
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
 
@@ -545,7 +618,7 @@ func (s *GPUDriverApi) removeGPUDriverBuildInternal(cctx *CallContext, in *edgep
 
 	// Step-1: First commit to etcd
 	driverURL := ""
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.GPUDriver{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()

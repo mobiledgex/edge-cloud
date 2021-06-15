@@ -540,6 +540,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if !gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
 				return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
 			}
+			if gpuDriver.State == ChangeInProgress {
+				return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
+			}
 			in.GpuConfig.GpuType = gpuDriver.Type
 		}
 		if in.TrustPolicy != "" {
@@ -964,6 +967,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				gpuDriver := edgeproto.GPUDriver{}
 				if !gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
 					return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
+				}
+				if gpuDriver.State == ChangeInProgress {
+					return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
 				}
 				in.GpuConfig.GpuType = gpuDriver.Type
 				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigGpuType)

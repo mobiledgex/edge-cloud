@@ -270,6 +270,87 @@ func StreamCloudlets(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
 	}
 }
 
+var StreamGPUDriverCmd = &cli.Command{
+	Use:          "StreamGPUDriver",
+	RequiredArgs: strings.Join(GPUDriverKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(GPUDriverKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverKeyAliasArgs, " "),
+	SpecialArgs:  &GPUDriverKeySpecialArgs,
+	Comments:     GPUDriverKeyComments,
+	ReqData:      &edgeproto.GPUDriverKey{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runStreamGPUDriver,
+}
+
+func runStreamGPUDriver(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriverKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return StreamGPUDriver(c, obj)
+}
+
+func StreamGPUDriver(c *cli.Command, in *edgeproto.GPUDriverKey) error {
+	if StreamObjApiCmd == nil {
+		return fmt.Errorf("StreamObjApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := StreamObjApiCmd.StreamGPUDriver(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("StreamGPUDriver failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("StreamGPUDriver recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func StreamGPUDrivers(c *cli.Command, data []edgeproto.GPUDriverKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("StreamGPUDriver %v\n", data[ii])
+		myerr := StreamGPUDriver(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var StreamLocalMsgsCmd = &cli.Command{
 	Use:          "StreamLocalMsgs",
 	RequiredArgs: strings.Join(AppInstKeyRequiredArgs, " "),
@@ -351,6 +432,7 @@ var StreamObjApiCmds = []*cobra.Command{
 	StreamAppInstCmd.GenCmd(),
 	StreamClusterInstCmd.GenCmd(),
 	StreamCloudletCmd.GenCmd(),
+	StreamGPUDriverCmd.GenCmd(),
 	StreamLocalMsgsCmd.GenCmd(),
 }
 
