@@ -16,6 +16,7 @@ type Limiter interface {
 	Type() string
 }
 
+// Struct used to supply client/caller information to Limiters
 type CallerInfo struct {
 	Api  string
 	User string

@@ -1,7 +1,22 @@
 package ratelimit
 
-/*
-func TestLeakyBucket(t *testing.T) {
+import (
+	"context"
+	"fmt"
+	"math/rand"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestLeakyBucketLimiter(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
@@ -16,7 +31,7 @@ func TestLeakyBucket(t *testing.T) {
 	done := make(chan bool, numClients)
 	for i := 0; i < numClients; i++ {
 		go func() {
-			leakyBucket.Limit(ctx)
+			leakyBucket.Limit(ctx, nil)
 			done <- true
 		}()
 	}
@@ -27,7 +42,7 @@ func TestLeakyBucket(t *testing.T) {
 	require.True(t, time.Since(before) > expectedTime*time.Second)
 }
 
-func TestTokenBucket(t *testing.T) {
+func TestTokenBucketLimiter(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
@@ -35,11 +50,9 @@ func TestTokenBucket(t *testing.T) {
 
 	// test that TokenBucket rejects requests that come in too quickly
 	tokenBucket := NewTokenBucketLimiter(1, 1)
-	limit, err := tokenBucket.Limit(ctx)
-	require.False(t, limit)
+	err := tokenBucket.Limit(ctx, nil)
 	require.Nil(t, err)
-	limit, err = tokenBucket.Limit(ctx)
-	require.True(t, limit)
+	err = tokenBucket.Limit(ctx, nil)
 	require.NotNil(t, err)
 	require.True(t, strings.Contains(err.Error(), "Exceeded rate"))
 
@@ -51,7 +64,7 @@ func TestTokenBucket(t *testing.T) {
 	for i := 0; i < numClients; i++ {
 		go func() {
 			<-start
-			limit, err = tokenBucket.Limit(ctx)
+			err = tokenBucket.Limit(ctx, nil)
 			done <- err
 		}()
 	}
@@ -64,7 +77,7 @@ func TestTokenBucket(t *testing.T) {
 	}
 }
 
-func TestFixedWindow(t *testing.T) {
+func TestIntervalLimiter(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
@@ -72,23 +85,21 @@ func TestFixedWindow(t *testing.T) {
 
 	// test fixed number of requests that come in serially
 	numRequestsPerSecond := 3
-	fixedWindow := NewFixedWindowLimiter(numRequestsPerSecond, 0, 0)
+	intervalLimiter := NewIntervalLimiter(numRequestsPerSecond, time.Duration(time.Second))
 	for i := 0; i < numRequestsPerSecond; i++ {
-		limit, err := fixedWindow.Limit(ctx)
-		assert.False(t, limit)
+		err := intervalLimiter.Limit(ctx, nil)
 		assert.Nil(t, err)
 	}
-	limit, err := fixedWindow.Limit(ctx)
-	assert.True(t, limit)
+	err := intervalLimiter.Limit(ctx, nil)
 	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "reached limit per second"))
+	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
 
 	// test fixed number of requests that come in concurrently
-	fixedWindow = NewFixedWindowLimiter(numRequestsPerSecond, 0, 0)
+	intervalLimiter = NewIntervalLimiter(numRequestsPerSecond, time.Duration(time.Second))
 	done := make(chan error, numRequestsPerSecond+1)
 	for i := 0; i < numRequestsPerSecond+1; i++ {
 		go func() {
-			_, err := fixedWindow.Limit(ctx)
+			err := intervalLimiter.Limit(ctx, nil)
 			done <- err
 		}()
 	}
@@ -98,58 +109,81 @@ func TestFixedWindow(t *testing.T) {
 	}
 	err = <-done
 	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "reached limit per second"))
+	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
 }
 
 func TestApiRateLimitMgr(t *testing.T) {
 	// init ratelimitmgr
-	mgr := NewRateLimitManager()
+	mgr := NewRateLimitManager(false, 100, 100)
 	// init apis
 	api1 := "api1"
 	api2 := "api2"
 	api3 := "api3"
-	api4 := "api4"
-	api5 := "api5"
-	api6 := "api6"
-	api7 := "api7"
-	apis := []string{api1, api2, api3, api4, api5, api6, api7}
-	// init rate limit settings (similar to controller and dme settings)
-	createLimitSettings := edgeproto.RateLimitSettings{
+	global := edgeproto.GlobalApiName
+	apis := []string{api1, api2, api3, global}
+	// init rate limit settings (similar dme settings)
+	settings1 := &edgeproto.RateLimitSettings{
 		Key: edgeproto.RateLimitSettingsKey{
-			ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
-			ApiActionType:   edgeproto.ApiActionType_CREATE_ACTION,
+			ApiName:         api1,
+			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 100,
-		BurstSize:     100,
+		FlowSettings: []*edgeproto.FlowSettings{
+			&edgeproto.FlowSettings{
+				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 100,
+				BurstSize:     100,
+			},
+		},
 	}
-	deleteLimitSettings := edgeproto.RateLimitSettings{
+	settings2 := &edgeproto.RateLimitSettings{
 		Key: edgeproto.RateLimitSettingsKey{
-			ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
-			ApiActionType:   edgeproto.ApiActionType_DELETE_ACTION,
+			ApiName:         api2,
+			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 200,
-		BurstSize:     100,
+		FlowSettings: []*edgeproto.FlowSettings{
+			&edgeproto.FlowSettings{
+				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 200,
+				BurstSize:     100,
+			},
+		},
 	}
-	showLimitSettings := edgeproto.RateLimitSettings{
+	settings3 := &edgeproto.RateLimitSettings{
 		Key: edgeproto.RateLimitSettingsKey{
-			ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
-			ApiActionType:   edgeproto.ApiActionType_SHOW_ACTION,
+			ApiName:         api3,
+			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
-		ReqsPerSecond: 300,
-		BurstSize:     100,
+		FlowSettings: []*edgeproto.FlowSettings{
+			&edgeproto.FlowSettings{
+				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 300,
+				BurstSize:     100,
+			},
+		},
+	}
+	settingsGlobal := &edgeproto.RateLimitSettings{
+		Key: edgeproto.RateLimitSettingsKey{
+			ApiName:         global,
+			ApiEndpointType: edgeproto.ApiEndpointType_DME,
+			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
+		},
+		FlowSettings: []*edgeproto.FlowSettings{
+			&edgeproto.FlowSettings{
+				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 1000,
+				BurstSize:     100,
+			},
+		},
 	}
 
-	settings := []edgeproto.RateLimitSettings{createLimitSettings, deleteLimitSettings, showLimitSettings}
+	allsettings := []*edgeproto.RateLimitSettings{settings1, settings2, settings3, settingsGlobal}
 
 	// Add apis and their rate limit settings to mgr
-	for i, api := range apis {
-		mgr.AddApiEndpointLimiter(api, &settings[i%len(settings)], nil, nil, nil)
+	for _, settings := range allsettings {
+		mgr.CreateApiEndpointLimiter(settings, nil, nil)
 	}
 
 	// Spawn fake clients that "call" the apis (all should pass)
@@ -161,14 +195,12 @@ func TestApiRateLimitMgr(t *testing.T) {
 			defer wg.Done()
 			time.Sleep(time.Duration(rand.Intn(10)) * time.Millisecond)
 			ctx := context.Background()
-			rateLimitInfo := &LimiterInfo{
+			callerInfo := &CallerInfo{
 				Api: apis[rand.Intn(len(apis))],
 				Ip:  fmt.Sprintf("client%d", idx),
 			}
-			ctx = NewLimiterInfoContext(ctx, rateLimitInfo)
-			limit, err := mgr.Limit(ctx)
+			err := mgr.Limit(ctx, callerInfo)
 			require.Nil(t, err)
-			require.False(t, limit)
 		}(i)
 	}
 	wg.Wait()
@@ -180,13 +212,12 @@ func TestApiRateLimitMgr(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			ctx := context.Background()
-			rateLimitInfo := &LimiterInfo{
+			callerInfo := &CallerInfo{
 				Api: apis[0],
 				Ip:  fmt.Sprintf("client%d", idx),
 			}
-			ctx = NewLimiterInfoContext(ctx, rateLimitInfo)
-			limit, e := mgr.Limit(ctx)
-			if limit && e != nil {
+			e := mgr.Limit(ctx, callerInfo)
+			if e != nil {
 				err = e
 			}
 		}(i)
@@ -194,18 +225,22 @@ func TestApiRateLimitMgr(t *testing.T) {
 		if i == numClients/2 {
 			newCreateLimitSettings := &edgeproto.RateLimitSettings{
 				Key: edgeproto.RateLimitSettingsKey{
-					ApiEndpointType: edgeproto.ApiEndpointType_CONTROLLER,
-					ApiActionType:   edgeproto.ApiActionType_CREATE_ACTION,
+					ApiName:         apis[0],
+					ApiEndpointType: edgeproto.ApiEndpointType_DME,
 					RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 				},
-				MaxReqsAlgorithm:     edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
-				MaxRequestsPerSecond: 1,
+				MaxReqsSettings: []*edgeproto.MaxReqsSettings{
+					&edgeproto.MaxReqsSettings{
+						MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+						MaxRequests:      1,
+						Interval:         edgeproto.Duration(time.Second),
+					},
+				},
 			}
 			mgr.UpdateRateLimitSettings(newCreateLimitSettings)
 		}
 	}
 	wg.Wait()
 	require.NotNil(t, err)
-	require.True(t, strings.Contains(err.Error(), "reached limit per second"))
+	require.True(t, strings.Contains(err.Error(), "exceeded limit"))
 }
-*/

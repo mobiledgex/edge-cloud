@@ -160,8 +160,6 @@ extend google.protobuf.MethodOptions {
   string mc2_api_requires_org = 51045;
   // Override CLI command name
   string cli_cmd = 51050;
-  // Generate a handler function for customizing behavior specific to MC
-  //bool mc2_custom_mc_handler = 51051;
 }
 
 extend google.protobuf.ServiceOptions {

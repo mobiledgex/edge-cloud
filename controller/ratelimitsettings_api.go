@@ -24,6 +24,18 @@ func InitRateLimitSettingsApi(sync *Sync) {
 	sync.RegisterCache(&rateLimitSettingsApi.cache)
 }
 
+// Store initial default RateLimitSettings
+func (r *RateLimitSettingsApi) initDefaultRateLimitSettings(ctx context.Context) error {
+	err := r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		defaultsettings := edgeproto.GetDefaultRateLimitSettings()
+		for _, settings := range defaultsettings {
+			r.store.STMPut(stm, settings)
+		}
+		return nil
+	})
+	return err
+}
+
 // Gets the RateLimitSettings that corresponds to the specified RateLimitSettingsKey
 func (r *RateLimitSettingsApi) Get(key edgeproto.RateLimitSettingsKey) *edgeproto.RateLimitSettings {
 	cacheData, ok := r.cache.Objs[key]
@@ -33,6 +45,7 @@ func (r *RateLimitSettingsApi) Get(key edgeproto.RateLimitSettingsKey) *edgeprot
 	return cacheData.Obj
 }
 
+// Update RateLimit settings for an API endpoint type
 func (r *RateLimitSettingsApi) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
 	err := validateRateLimitSettings(in)
 	if err != nil {
@@ -58,10 +71,6 @@ func (r *RateLimitSettingsApi) CreateRateLimitSettings(ctx context.Context, in *
 		r.store.STMPut(stm, &cur)
 		return nil
 	})
-	if err == nil {
-		// Add RateLimitSettings in RateLimitMgr
-		services.rateLimitManager.UpdateRateLimitSettings(&cur)
-	}
 	return &edgeproto.Result{}, err
 }
 
@@ -80,6 +89,7 @@ func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *
 			return fmt.Errorf("Unable to UpdateRateLimitSettings - key %v not found", in.Key)
 		}
 
+		// Copy updated fields into cur
 		cur.CopyInFields(in)
 		log.SpanLog(ctx, log.DebugLevelApi, "Updating previous RateLimitSettings", "key", in.Key.String(), "updated settings", cur)
 
@@ -90,10 +100,6 @@ func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *
 		r.store.STMPut(stm, &cur)
 		return nil
 	})
-	if err == nil {
-		// Update RateLimitSettings in RateLimitMgr
-		services.rateLimitManager.UpdateRateLimitSettings(&cur)
-	}
 	return &edgeproto.Result{}, err
 }
 
@@ -110,8 +116,6 @@ func (r *RateLimitSettingsApi) DeleteRateLimitSettings(ctx context.Context, in *
 	if err != nil {
 		return res, err
 	}
-	// Remove RateLimitSettings from RateLimitMgr
-	services.rateLimitManager.RemoveRateLimitSettings(in.Key)
 	return res, err
 }
 
@@ -131,11 +135,6 @@ func validateRateLimitSettings(in *edgeproto.RateLimitSettings) error {
 		return fmt.Errorf("DisableDmeRateLimit in settings must be false for ApiEndpointType Dme")
 	}
 
-	// Check that DisableCtrlRateLimit is false if ApiEndpointType is Controller
-	if settingsApi.Get().DisableCtrlRateLimit && in.Key.ApiEndpointType == edgeproto.ApiEndpointType_CONTROLLER {
-		return fmt.Errorf("DisableCtrlRateLimit in settings must be false for ApiEndpointType Controller")
-	}
-
 	if in.Key.RateLimitTarget == edgeproto.RateLimitTarget_PER_USER {
 		return fmt.Errorf("PerUser rate limiting is not implemented for %v apis", in.Key.ApiEndpointType)
 	}
@@ -147,9 +146,7 @@ func validateRateLimitSettings(in *edgeproto.RateLimitSettings) error {
 
 // Notify callbacks
 
-// This should only be called when DME updates its RateLimitSettings based on
 func (r *RateLimitSettingsApi) Update(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
-	r.CreateRateLimitSettings(ctx, in)
 }
 
 func (r *RateLimitSettingsApi) Delete(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {

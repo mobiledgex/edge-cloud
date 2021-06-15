@@ -20,7 +20,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -99,7 +98,6 @@ type Services struct {
 	accessKeyGrpcServer       node.AccessKeyGrpcServer
 	listeners                 []net.Listener
 	publicCertManager         *node.PublicCertManager
-	rateLimitManager          *ratelimit.RateLimitManager
 }
 
 func main() {
@@ -402,10 +400,6 @@ func startServices() error {
 		return err
 	}
 
-	// Initialize RateLimitManager (rate limiting is disabled by default for Controller)
-	services.rateLimitManager = ratelimit.NewRateLimitManager(settingsApi.Get().DisableCtrlRateLimit, int(settingsApi.Get().MaxNumRateLimiters))
-	// TODO: Add to interceptor
-
 	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor)))
@@ -551,9 +545,6 @@ func stopServices() {
 	}
 	if services.downsampledMetricsInfluxQ != nil {
 		services.downsampledMetricsInfluxQ.Stop()
-	}
-	if services.rateLimitManager != nil {
-		services.rateLimitManager.UpdateDisableRateLimit(true)
 	}
 	syncLeaseData.Stop()
 	if services.sync != nil {

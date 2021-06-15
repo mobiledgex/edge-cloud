@@ -33,6 +33,8 @@ settings:
   - interval: 24h0m0s
   - interval: 168h0m0s
   - interval: 672h0m0s
+  disabledmeratelimit: true
+  maxnumperipratelimiters: 10000
 cloudlets:
 - key:
     organization: tmus

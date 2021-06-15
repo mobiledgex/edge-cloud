@@ -426,33 +426,13 @@ func allowCORS(h http.Handler) http.Handler {
 	})
 }
 
-func isEmptyRateLimitSettings(settings *edgeproto.RateLimitSettings) bool {
-	if settings.FlowSettings == nil && settings.MaxReqsSettings == nil {
-		return true
-	}
-	if len(settings.FlowSettings) == 0 && len(settings.MaxReqsSettings) == 0 {
-		return true
-	}
-	return false
-}
-
 // Helper function that creates all the RateLimitSettings for the specified API, updates cache, and then adds to RateLimitMgr
 func addDmeApiRateLimitSettings(ctx context.Context, apiName string) {
-	settingsMap := edgeproto.GetDefaultDmeRateLimitSettings()
+	settingsMap := edgeproto.GetDefaultRateLimitSettings()
 	// Get RateLimitSettings that correspond to the key
 	allRequestsRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_ALL_REQUESTS, settingsMap)
 	perIpRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_IP, settingsMap)
 	perUserRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_USER, settingsMap)
-	// Update local cache which will update controller cache
-	if !isEmptyRateLimitSettings(allRequestsRateLimitSettings) {
-		rateLimitSettingsCache.Update(ctx, allRequestsRateLimitSettings, 0)
-	}
-	if !isEmptyRateLimitSettings(allRequestsRateLimitSettings) {
-		rateLimitSettingsCache.Update(ctx, perIpRateLimitSettings, 0)
-	}
-	if !isEmptyRateLimitSettings(allRequestsRateLimitSettings) {
-		rateLimitSettingsCache.Update(ctx, perUserRateLimitSettings, 0)
-	}
 	// Add apiendpoint limiter to RateLimitMgrs
 	dmecommon.RateLimitMgr.CreateApiEndpointLimiter(allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings)
 }
@@ -464,13 +444,8 @@ func getDmeApiRateLimitSettings(apiName string, target edgeproto.RateLimitTarget
 		RateLimitTarget: target,
 		ApiEndpointType: edgeproto.ApiEndpointType_DME,
 	}
-	settings, ok := settingsMap[key]
-	if ok && settings != nil {
-		return settings
-	}
-	return &edgeproto.RateLimitSettings{
-		Key: key,
-	}
+	settings, _ := settingsMap[key]
+	return settings
 }
 
 func main() {
@@ -581,7 +556,11 @@ func main() {
 	defer dmecommon.StopAppInstClients()
 
 	// Initialize API RateLimitManager
-	dmecommon.RateLimitMgr = ratelimit.NewRateLimitManager(dmecommon.Settings.DisableDmeRateLimit, int(dmecommon.Settings.MaxNumRateLimiters))
+	disableRateLimit := dmecommon.Settings.DisableDmeRateLimit
+	if *testMode {
+		disableRateLimit = true
+	}
+	dmecommon.RateLimitMgr = ratelimit.NewRateLimitManager(disableRateLimit, int(dmecommon.Settings.MaxNumPerIpRateLimiters), 0)
 
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(ratelimit.GetDmeUnaryRateLimiterInterceptor(dmecommon.RateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),

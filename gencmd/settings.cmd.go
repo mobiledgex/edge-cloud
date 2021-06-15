@@ -228,8 +228,7 @@ var SettingsOptionalArgs = []string{
 	"influxdbedgeeventsmetricsretention",
 	"appinstclientcleanupinterval",
 	"disabledmeratelimit",
-	"disablectrlratelimit",
-	"maxnumratelimiters",
+	"maxnumperipratelimiters",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -266,8 +265,7 @@ var SettingsComments = map[string]string{
 	"influxdbedgeeventsmetricsretention":                               "Default retention policy for edgeevents metrics influx db (duration)",
 	"appinstclientcleanupinterval":                                     "AppInstClient cleanup thread run interval",
 	"disabledmeratelimit":                                              "Disable rate limiting for DME APIs (default is false)",
-	"disablectrlratelimit":                                             "Disable rate limiting for Controller APIs (default is true)",
-	"maxnumratelimiters":                                               "Maximum number of limiters... TODO...",
+	"maxnumperipratelimiters":                                          "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

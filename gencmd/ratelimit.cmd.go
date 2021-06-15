@@ -291,7 +291,7 @@ var RateLimitSettingsKeyOptionalArgs = []string{
 var RateLimitSettingsKeyAliasArgs = []string{}
 var RateLimitSettingsKeyComments = map[string]string{
 	"apiname":         "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
-	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Dme",
 	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 }
 var RateLimitSettingsKeySpecialArgs = map[string]string{}
@@ -342,7 +342,7 @@ var RateLimitSettingsAliasArgs = []string{
 var RateLimitSettingsComments = map[string]string{
 	"fields":                             "Fields are used for the Update API to specify which fields to apply",
 	"apiname":                            "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
-	"apiendpointtype":                    "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"apiendpointtype":                    "API Endpoint type, one of UnknownApiEndpointType, Dme",
 	"ratelimittarget":                    "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"flowsettings:#.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"flowsettings:#.reqspersecond":       "requests per second for flow rate limiting",
@@ -371,7 +371,7 @@ var RateLimitSettingsDataAliasArgs = []string{}
 var RateLimitSettingsDataComments = map[string]string{
 	"settings:#.fields":                             "Fields are used for the Update API to specify which fields to apply",
 	"settings:#.key.apiname":                        "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
-	"settings:#.key.apiendpointtype":                "API Endpoint type, one of UnknownApiEndpointType, Controller, Dme",
+	"settings:#.key.apiendpointtype":                "API Endpoint type, one of UnknownApiEndpointType, Dme",
 	"settings:#.key.ratelimittarget":                "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"settings:#.flowsettings:#.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"settings:#.flowsettings:#.reqspersecond":       "requests per second for flow rate limiting",

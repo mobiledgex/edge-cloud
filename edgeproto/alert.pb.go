@@ -1166,6 +1166,22 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := NoticeAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(ApiEndpointType(0)):
+		if en, ok := ApiEndpointType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(RateLimitTarget(0)):
+		if en, ok := RateLimitTarget_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(FlowRateLimitAlgorithm(0)):
+		if en, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)):
+		if en, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(StreamState(0)):
 		if en, ok := StreamState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1179,33 +1195,34 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 }
 
 var ShowMethodNames = map[string]struct{}{
-	"ShowAlert":           struct{}{},
-	"ShowSettings":        struct{}{},
-	"ShowFlavor":          struct{}{},
-	"ShowOperatorCode":    struct{}{},
-	"ShowResTagTable":     struct{}{},
-	"ShowApp":             struct{}{},
-	"ShowGPUDriver":       struct{}{},
-	"ShowCloudlet":        struct{}{},
-	"ShowCloudletInfo":    struct{}{},
-	"ShowCloudletMetrics": struct{}{},
-	"ShowCloudletPool":    struct{}{},
-	"ShowVMPool":          struct{}{},
-	"ShowAutoScalePolicy": struct{}{},
-	"ShowClusterInst":     struct{}{},
-	"ShowClusterInstInfo": struct{}{},
-	"ShowAutoProvPolicy":  struct{}{},
-	"ShowTrustPolicy":     struct{}{},
-	"ShowAppInst":         struct{}{},
-	"ShowAppInstInfo":     struct{}{},
-	"ShowAppInstMetrics":  struct{}{},
-	"ShowCloudletRefs":    struct{}{},
-	"ShowClusterRefs":     struct{}{},
-	"ShowAppInstRefs":     struct{}{},
-	"ShowController":      struct{}{},
-	"ShowNode":            struct{}{},
-	"ShowDevice":          struct{}{},
-	"ShowDeviceReport":    struct{}{},
+	"ShowAlert":             struct{}{},
+	"ShowSettings":          struct{}{},
+	"ShowFlavor":            struct{}{},
+	"ShowOperatorCode":      struct{}{},
+	"ShowResTagTable":       struct{}{},
+	"ShowApp":               struct{}{},
+	"ShowGPUDriver":         struct{}{},
+	"ShowCloudlet":          struct{}{},
+	"ShowCloudletInfo":      struct{}{},
+	"ShowCloudletMetrics":   struct{}{},
+	"ShowCloudletPool":      struct{}{},
+	"ShowVMPool":            struct{}{},
+	"ShowAutoScalePolicy":   struct{}{},
+	"ShowClusterInst":       struct{}{},
+	"ShowClusterInstInfo":   struct{}{},
+	"ShowAutoProvPolicy":    struct{}{},
+	"ShowTrustPolicy":       struct{}{},
+	"ShowAppInst":           struct{}{},
+	"ShowAppInstInfo":       struct{}{},
+	"ShowAppInstMetrics":    struct{}{},
+	"ShowCloudletRefs":      struct{}{},
+	"ShowClusterRefs":       struct{}{},
+	"ShowAppInstRefs":       struct{}{},
+	"ShowController":        struct{}{},
+	"ShowNode":              struct{}{},
+	"ShowDevice":            struct{}{},
+	"ShowDeviceReport":      struct{}{},
+	"ShowRateLimitSettings": struct{}{},
 }
 
 func IsShow(cmd string) bool {
@@ -1214,6 +1231,8 @@ func IsShow(cmd string) bool {
 }
 
 var AllKeyTags = []string{
+	"apiendpointtype",
+	"apiname",
 	"app",
 	"apporg",
 	"appver",
@@ -1235,6 +1254,7 @@ var AllKeyTags = []string{
 	"nodetype",
 	"policy",
 	"policyorg",
+	"ratelimittarget",
 	"restagtable",
 	"restagtableorg",
 	"uniqueid",
@@ -1244,6 +1264,8 @@ var AllKeyTags = []string{
 }
 
 var AllKeyTagsMap = map[string]struct{}{
+	"apiendpointtype": struct{}{},
+	"apiname":         struct{}{},
 	"app":             struct{}{},
 	"apporg":          struct{}{},
 	"appver":          struct{}{},
@@ -1265,6 +1287,7 @@ var AllKeyTagsMap = map[string]struct{}{
 	"nodetype":        struct{}{},
 	"policy":          struct{}{},
 	"policyorg":       struct{}{},
+	"ratelimittarget": struct{}{},
 	"restagtable":     struct{}{},
 	"restagtableorg":  struct{}{},
 	"uniqueid":        struct{}{},

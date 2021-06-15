@@ -108,8 +108,8 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.AppinstClientCleanupInterval = edgeproto.GetDefaultSettings().AppinstClientCleanupInterval
 			modified = true
 		}
-		if cur.MaxNumRateLimiters == 0 {
-			cur.MaxNumRateLimiters = edgeproto.GetDefaultSettings().MaxNumRateLimiters
+		if cur.MaxNumPerIpRateLimiters == 0 {
+			cur.MaxNumPerIpRateLimiters = edgeproto.GetDefaultSettings().MaxNumPerIpRateLimiters
 			modified = true
 		}
 
@@ -193,10 +193,6 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 						return resd.Err
 					}
 				}
-			} else if field == edgeproto.SettingsFieldDisableCtrlRateLimit {
-				services.rateLimitManager.UpdateDisableRateLimit(in.DisableCtrlRateLimit)
-			} else if field == edgeproto.SettingsFieldMaxNumRateLimiters {
-				services.rateLimitManager.UpdateMaxNumRateLimiters(int(in.MaxNumRateLimiters))
 			}
 		}
 		s.store.STMPut(stm, &cur)

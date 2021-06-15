@@ -49,6 +49,9 @@ func (key *RateLimitSettingsKey) ValidateKey() error {
 	if key.RateLimitTarget == RateLimitTarget_UNKNOWN_TARGET {
 		return fmt.Errorf("Invalid RateLimitTarget")
 	}
+	if key.ApiEndpointType == ApiEndpointType_UNKNOWN_API_ENDPOINT_TYPE {
+		return fmt.Errorf("Invalid ApiEndpointType")
+	}
 	return nil
 }
 
@@ -60,8 +63,8 @@ func GetRateLimitSettingsKey(apiName string, apiEndpointType ApiEndpointType, ra
 	}
 }
 
-// Returns map of Default DME RateLimitSettings
-func GetDefaultDmeRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
+// Returns map of Default RateLimitSettings
+func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 	// Init all AllRequests RateLimitSettings
 	dmeGlobalAllReqs := &RateLimitSettings{
 		Key: RateLimitSettingsKey{

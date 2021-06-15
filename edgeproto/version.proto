@@ -32,7 +32,7 @@ enum VersionHash {
   HASH_c2c322505017054033953f6104002bf5 = 24 [(protogen.upgrade_func) = "CloudletResourceUpgradeFunc"];
   HASH_facc3c3c9c76463c8d8b3c874ce43487 = 25;
   HASH_8ba950479a03ab77edfad426ea53c173 = 26;
-  HASH_2a45f04cf5d36272a348eb8a1c122906 = 27;
+  HASH_8ba148e0fa88ab06ce2885cb742791a6 = 27;
 
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "1";
