@@ -32,7 +32,9 @@ cloudlets:
     name: cloud2
   vmpool: vmpool1
   gpuconfig:
-    drivername: gpudriver1
+    driver:
+      name: gpudriver1
+      organization: DMUUS
     gputype: GpuTypePassthrough
 
 flavors:
@@ -144,14 +146,14 @@ gpudrivers:
 - key:
     organization: DMUUS
     name: gpudriver1
-    type: GpuTypePassthrough
+  type: GpuTypePassthrough
 - key:
     organization: DMUUS
-    name: gpudriver1
-    type: GpuTypeVgpu
+    name: gpudriver2
+  type: GpuTypeVgpu
 - key:
     name: gpudriver2
-    type: GpuTypeVgpu
+  type: GpuTypeVgpu
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
@@ -242,6 +244,13 @@ func TestCRM(t *testing.T) {
 		require.Nil(t, err, "start main")
 		return
 	}
+	defer func() {
+		// closing the signal channel triggers main to exit
+		close(sigChan)
+		// wait until main is done so it can clean up properly
+		<-mainDone
+		ctrlMgr.Stop()
+	}()
 
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}
@@ -300,6 +309,7 @@ func TestCRM(t *testing.T) {
 	notify.WaitFor(&controllerData.ClusterInstCache, 0)
 	notify.WaitFor(&controllerData.AppInstCache, 0)
 	notify.WaitFor(&controllerData.VMPoolCache, 0)
+	notify.WaitFor(&controllerData.GPUDriverCache, 0)
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
 	require.Equal(t, 0, len(controllerData.FlavorCache.Objs))
@@ -307,12 +317,6 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 0, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 0, len(controllerData.VMPoolCache.Objs))
 	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
-
-	// closing the signal channel triggers main to exit
-	close(sigChan)
-	// wait until main is done so it can clean up properly
-	<-mainDone
-	ctrlMgr.Stop()
 }
 
 func TestNotifyOrder(t *testing.T) {
