@@ -2216,6 +2216,7 @@ var CloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -2300,6 +2301,7 @@ var CloudletComments = map[string]string{
 	"gpuconfig.driver.organization":       "Organization to which the driver belongs to",
 	"gpuconfig.gputype":                   "Type of GPU hardware supported by the Cloudlet, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
 	"gpuconfig.properties":                "Properties to identify specifics of GPU",
+	"enabledefaultserverlesscluster":      "Enable experimental default multitenant (serverless) cluster",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":           "StringToString",
@@ -2699,6 +2701,7 @@ var CreateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2744,6 +2747,7 @@ var DeleteCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2777,6 +2781,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2822,6 +2827,7 @@ var ShowCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",
