@@ -462,19 +462,18 @@ func RemoveAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy
 	}
 }
 
-var FindCloudletsForAppDeploymentCmd = &cli.Command{
-	Use:          "FindCloudletsForAppDeployment",
-	RequiredArgs: strings.Join(DeploymentCloudletRequestRequiredArgs, " "),
-	OptionalArgs: strings.Join(DeploymentCloudletRequestOptionalArgs, " "),
+var ShowCloudletsForAppDeploymentCmd = &cli.Command{
+	Use:          "ShowCloudletsForAppDeployment",
+	OptionalArgs: strings.Join(append(DeploymentCloudletRequestRequiredArgs, DeploymentCloudletRequestOptionalArgs...), " "),
 	AliasArgs:    strings.Join(DeploymentCloudletRequestAliasArgs, " "),
 	SpecialArgs:  &DeploymentCloudletRequestSpecialArgs,
 	Comments:     DeploymentCloudletRequestComments,
 	ReqData:      &edgeproto.DeploymentCloudletRequest{},
-	ReplyData:    &edgeproto.DeploymentCloudletResults{},
-	Run:          runFindCloudletsForAppDeployment,
+	ReplyData:    &edgeproto.CloudletKey{},
+	Run:          runShowCloudletsForAppDeployment,
 }
 
-func runFindCloudletsForAppDeployment(c *cli.Command, args []string) error {
+func runShowCloudletsForAppDeployment(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -483,35 +482,55 @@ func runFindCloudletsForAppDeployment(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return FindCloudletsForAppDeployment(c, obj)
+	return ShowCloudletsForAppDeployment(c, obj)
 }
 
-func FindCloudletsForAppDeployment(c *cli.Command, in *edgeproto.DeploymentCloudletRequest) error {
+func ShowCloudletsForAppDeployment(c *cli.Command, in *edgeproto.DeploymentCloudletRequest) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := AppApiCmd.FindCloudletsForAppDeployment(ctx, in)
+	stream, err := AppApiCmd.ShowCloudletsForAppDeployment(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("FindCloudletsForAppDeployment failed: %s", errstr)
+		return fmt.Errorf("ShowCloudletsForAppDeployment failed: %s", errstr)
 	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.CloudletKey, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletsForAppDeployment recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func FindCloudletsForAppDeployments(c *cli.Command, data []edgeproto.DeploymentCloudletRequest, err *error) {
+func ShowCloudletsForAppDeployments(c *cli.Command, data []edgeproto.DeploymentCloudletRequest, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("FindCloudletsForAppDeployment %v\n", data[ii])
-		myerr := FindCloudletsForAppDeployment(c, &data[ii])
+		fmt.Printf("ShowCloudletsForAppDeployment %v\n", data[ii])
+		myerr := ShowCloudletsForAppDeployment(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -526,7 +545,7 @@ var AppApiCmds = []*cobra.Command{
 	ShowAppCmd.GenCmd(),
 	AddAppAutoProvPolicyCmd.GenCmd(),
 	RemoveAppAutoProvPolicyCmd.GenCmd(),
-	FindCloudletsForAppDeploymentCmd.GenCmd(),
+	ShowCloudletsForAppDeploymentCmd.GenCmd(),
 }
 
 var RemoteConnectionRequiredArgs = []string{}
@@ -686,27 +705,12 @@ var AppAutoProvPolicyComments = map[string]string{
 	"autoprovpolicy": "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}
-var DeploymentCloudletResultsRequiredArgs = []string{}
-var DeploymentCloudletResultsOptionalArgs = []string{
-	"cloudlets:#.organization",
-	"cloudlets:#.name",
-}
-var DeploymentCloudletResultsAliasArgs = []string{}
-var DeploymentCloudletResultsComments = map[string]string{
-	"cloudlets:#.organization": "Organization of the cloudlet site",
-	"cloudlets:#.name":         "Name of the cloudlet",
-}
-var DeploymentCloudletResultsSpecialArgs = map[string]string{}
-var DeploymentCloudletRequestRequiredArgs = []string{
-	"key.organization",
-	"key.name",
-	"key.version",
-}
+var DeploymentCloudletRequestRequiredArgs = []string{}
 var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.fields",
 	"app.key.organization",
-	"app.key.name",
-	"app.key.version",
+	"appname",
+	"appvers",
 	"app.imagepath",
 	"app.imagetype",
 	"app.accessports",
@@ -718,7 +722,6 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.deploymentmanifest",
 	"app.deploymentgenerator",
 	"app.androidpackagename",
-	"app.delopt",
 	"app.configs:#.kind",
 	"app.configs:#.config",
 	"app.scalewithcluster",
@@ -726,16 +729,10 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.revision",
 	"app.officialfqdn",
 	"app.md5sum",
-	"app.autoprovpolicy",
 	"app.accesstype",
-	"app.deleteprepare",
 	"app.autoprovpolicies",
 	"app.templatedelimiter",
 	"app.skiphcports",
-	"app.createdat.seconds",
-	"app.createdat.nanos",
-	"app.updatedat.seconds",
-	"app.updatedat.nanos",
 	"app.trusted",
 	"app.requiredoutboundconnections:#.protocol",
 	"app.requiredoutboundconnections:#.port",
@@ -745,17 +742,17 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.serverlessconfig.ram",
 	"app.serverlessconfig.minreplicas",
 	"app.vmappostype",
-	"testdeploynow",
+	"dryrundeploy",
 }
-var DeploymentCloudletRequestAliasArgs = []string{}
+var DeploymentCloudletRequestAliasArgs = []string{
+	"appname=app.key.name",
+	"appvers=app.key.version",
+}
 var DeploymentCloudletRequestComments = map[string]string{
-	"key.organization":        "App developer organization",
-	"key.name":                "App name",
-	"key.version":             "App version",
 	"app.fields":              "Fields are used for the Update API to specify which fields to apply",
 	"app.key.organization":    "App developer organization",
-	"app.key.name":            "App name",
-	"app.key.version":         "App version",
+	"appname":                 "App name",
+	"appvers":                 "App version",
 	"app.imagepath":           "URI of where image resides",
 	"app.imagetype":           "Image type (see ImageType), one of ImageTypeUnknown, ImageTypeDocker, ImageTypeQcow, ImageTypeHelm, ImageTypeOvf",
 	"app.accessports":         "Comma separated list of protocol:port pairs that the App listens on. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443",
@@ -790,7 +787,7 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"app.vmappostype":                            "OS Type for VM Apps, one of VmAppOsUnknown, VmAppOsLinux, VmAppOsWindows10, VmAppOsWindows2012, VmAppOsWindows2016, VmAppOsWindows2019",
-	"testdeploynow":                              "Attempt to qualify cloudlet resources for deployment",
+	"dryrundeploy":                               "Attempt to qualify cloudlet resources for deployment",
 }
 var DeploymentCloudletRequestSpecialArgs = map[string]string{
 	"app.autoprovpolicies": "StringArray",

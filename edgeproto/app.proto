@@ -242,17 +242,13 @@ message AppAutoProvPolicy {
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
 }
 
-message DeploymentCloudletResults {
- // Cloudlets available for App deployment
- repeated CloudletKey cloudlets = 1;
-   //map<string,string> Cloudlets = 1;
-}
 message DeploymentCloudletRequest {
-   AppKey key = 1 [(gogoproto.nullable) = false];
    // Discover potential App Cloudlets
-   App app = 2;
+   App app = 1;
    // Attempt to qualify cloudlet resources for deployment
-   bool test_deploy_now = 3;
+   bool dry_run_deploy = 2;
+   option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,App.app-org=Key.Organization,App.defaultflavor=DefaultFlavor.Name";
+   option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
 }
 
 service AppApi {
@@ -310,14 +306,18 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
-  // Find cloudlets that can support Apps Detault Flavor
-  rpc FindCloudletsForAppDeployment(DeploymentCloudletRequest) returns (DeploymentCloudletResults) {
-    option(google.api.http) = {
-    post: "/findmapping/deploymentcloudlets"
-    body: "*"
+  // Show cloudlets that can support Apps Default Flavor
+ rpc ShowCloudletsForAppDeployment(DeploymentCloudletRequest) returns (stream CloudletKey) {
+   option (google.api.http) =  {
+     post: "/findmapping/deploymentcloudlets"
+     body: "*"
     };
-  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
-  option (protogen.mc2_custom_authz) = true;
-  }   
-
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+  }
 }
+
+
+
+
+
+

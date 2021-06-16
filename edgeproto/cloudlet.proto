@@ -551,12 +551,6 @@ message CloudletResourceUsage {
 }
 
 
-message CloudletFlavorMappingResults {
-  // Meta flavors available on given cloudlet xxx maybe flavor keys rather than just string names xxx 
-  repeated string flavors = 1;
-}
-
-
 service CloudletApi {
   // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
   // and integrated as part of MobiledgeX edge resource portfolio.
@@ -669,9 +663,9 @@ service CloudletApi {
   }
 
   // Find all flavors viable on cloudlet
-  rpc FindAllFlavorsForCloudlet(Cloudlet) returns (CloudletFlavorMappingResults) {
+  rpc ShowFlavorsForCloudlet(CloudletKey) returns (stream FlavorKey) {
     option(google.api.http) = {
-    post: "/findmapping/flavorscloudlets"
+    post: "/showmapping/cloudletflavors"
     body: "*"
   };
   option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";

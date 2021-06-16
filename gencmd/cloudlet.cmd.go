@@ -1401,56 +1401,75 @@ func FindFlavorMatchs(c *cli.Command, data []edgeproto.FlavorMatch, err *error) 
 	}
 }
 
-var FindAllFlavorsForCloudletCmd = &cli.Command{
-	Use:          "FindAllFlavorsForCloudlet",
-	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletOptionalArgs, " "),
-	AliasArgs:    strings.Join(CloudletAliasArgs, " "),
-	SpecialArgs:  &CloudletSpecialArgs,
-	Comments:     CloudletComments,
-	ReqData:      &edgeproto.Cloudlet{},
-	ReplyData:    &edgeproto.CloudletFlavorMappingResults{},
-	Run:          runFindAllFlavorsForCloudlet,
+var ShowFlavorsForCloudletCmd = &cli.Command{
+	Use:          "ShowFlavorsForCloudlet",
+	OptionalArgs: strings.Join(append(CloudletKeyRequiredArgs, CloudletKeyOptionalArgs...), " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.FlavorKey{},
+	Run:          runShowFlavorsForCloudlet,
 }
 
-func runFindAllFlavorsForCloudlet(c *cli.Command, args []string) error {
+func runShowFlavorsForCloudlet(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.Cloudlet)
+	obj := c.ReqData.(*edgeproto.CloudletKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return FindAllFlavorsForCloudlet(c, obj)
+	return ShowFlavorsForCloudlet(c, obj)
 }
 
-func FindAllFlavorsForCloudlet(c *cli.Command, in *edgeproto.Cloudlet) error {
+func ShowFlavorsForCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
 	if CloudletApiCmd == nil {
 		return fmt.Errorf("CloudletApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := CloudletApiCmd.FindAllFlavorsForCloudlet(ctx, in)
+	stream, err := CloudletApiCmd.ShowFlavorsForCloudlet(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("FindAllFlavorsForCloudlet failed: %s", errstr)
+		return fmt.Errorf("ShowFlavorsForCloudlet failed: %s", errstr)
 	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+
+	objs := make([]*edgeproto.FlavorKey, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowFlavorsForCloudlet recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func FindAllFlavorsForCloudlets(c *cli.Command, data []edgeproto.Cloudlet, err *error) {
+func ShowFlavorsForCloudlets(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("FindAllFlavorsForCloudlet %v\n", data[ii])
-		myerr := FindAllFlavorsForCloudlet(c, &data[ii])
+		fmt.Printf("ShowFlavorsForCloudlet %v\n", data[ii])
+		myerr := ShowFlavorsForCloudlet(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -1661,7 +1680,7 @@ var CloudletApiCmds = []*cobra.Command{
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
-	FindAllFlavorsForCloudletCmd.GenCmd(),
+	ShowFlavorsForCloudletCmd.GenCmd(),
 	RevokeAccessKeyCmd.GenCmd(),
 	GenerateAccessKeyCmd.GenCmd(),
 	PlatformDeleteCloudletCmd.GenCmd(),
@@ -2473,17 +2492,6 @@ var CloudletResourceUsageComments = map[string]string{
 	"info:#.alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var CloudletResourceUsageSpecialArgs = map[string]string{}
-var CloudletFlavorMappingResultsRequiredArgs = []string{}
-var CloudletFlavorMappingResultsOptionalArgs = []string{
-	"flavors",
-}
-var CloudletFlavorMappingResultsAliasArgs = []string{}
-var CloudletFlavorMappingResultsComments = map[string]string{
-	"flavors": "Meta flavors available on given cloudlet xxx maybe flavor keys rather than just string names xxx",
-}
-var CloudletFlavorMappingResultsSpecialArgs = map[string]string{
-	"flavors": "StringArray",
-}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",

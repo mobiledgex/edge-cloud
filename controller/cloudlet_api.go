@@ -2071,38 +2071,36 @@ func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 	return &quotaProps, nil
 }
 
-func (s *CloudletApi) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
-	// map[metaflavor]osflavor for the given cloudlet, maybe for another api for admin use only xxx
-	var flavors []string
-	allMetaFlavors := make(map[string]string)
+func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletApi_ShowFlavorsForCloudletServer) error {
+	ctx := log.StartTestSpan(context.Background())
+	flavors := []*edgeproto.FlavorKey{}
 	flavorCache := &flavorApi.cache
 	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
-		allMetaFlavors[k.Name] = ""
+		flavors = append(flavors, k)
 	})
-
-	for flavor, _ := range allMetaFlavors {
+	fmt.Printf("\n\nall flavors:\n")
+	for _, flavor := range flavors {
+		fmt.Printf("\t%+v\n", flavor)
+	}
+	for ii, flavorKey := range flavors {
 		fm := edgeproto.FlavorMatch{
-			Key:        in.Key,
-			FlavorName: flavor,
+			Key:        *in,
+			FlavorName: flavorKey.Name,
 		}
 		match, err := s.FindFlavorMatch(ctx, &fm)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "FindAllFlavors not match for", "metaflavor", flavor)
-			delete(allMetaFlavors, flavor)
+			flavors = append(flavors[:ii], flavors[ii+1:]...)
 			continue
-		} else {
-			log.SpanLog(ctx, log.DebugLevelApi, "FindAllFlavors match", "metaflavor", flavor, "with", match.FlavorName)
-			flavors = append(flavors, flavor)
-			allMetaFlavors[flavor] = match.FlavorName
 		}
+		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavorKey, "with", match.FlavorName)
 	}
+	fmt.Printf("\n\nShowFlavors  returning stream:\n")
+	for _, flavor := range flavors {
+		fmt.Printf("\t%+v\n", flavor)
+		cb.Send(flavor)
+	}
+
 	// While we maintain the complete list of meta to OS flavors, we shed the OS flavors
 	// for user consumption. If desired, an admin only version can be offered with the complete mapping.
-	results := edgeproto.CloudletFlavorMappingResults{
-		Flavors: flavors,
-	}
-	for _, flav := range flavors {
-		fmt.Printf("\n\tNext match for cld %s : %s\n", in.Key.Name, flav)
-	}
-	return &results, nil
+	return nil
 }

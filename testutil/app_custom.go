@@ -14,6 +14,10 @@ func (s *DummyServer) RemoveAppAutoProvPolicy(ctx context.Context, apppolicy *ed
 	return &edgeproto.Result{}, nil
 }
 
-func (s *DummyServer) FindCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) (*edgeproto.DeploymentCloudletResults, error) {
-	return &edgeproto.DeploymentCloudletResults{}, nil
+func (s *DummyServer) ShowCloudletsForAppDeployment(*edgeproto.DeploymentCloudletRequest, edgeproto.AppApi_ShowCloudletsForAppDeploymentServer) error {
+	return nil
+}
+
+func (s *DummyServer) ShowFlavorsForCloudlet(*edgeproto.CloudletKey, edgeproto.CloudletApi_ShowFlavorsForCloudletServer) error {
+	return /*&[]edgeproto.FlavorKey{},*/ nil
 }

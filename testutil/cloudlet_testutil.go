@@ -1161,18 +1161,6 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 				}
 				*outp = append(*outp, out...)
 			}
-		case "findallflavorsforcloudlet":
-			out, err := r.client.FindAllFlavorsForCloudlet(r.ctx, obj)
-			if err != nil {
-				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
-				r.logErr(fmt.Sprintf("CloudletApi[%d]", ii), err)
-			} else {
-				outp, ok := dataOut.(*[]edgeproto.CloudletFlavorMappingResults)
-				if !ok {
-					panic(fmt.Sprintf("RunCloudletApi expected dataOut type *[]edgeproto.CloudletFlavorMappingResults, but was %T", dataOut))
-				}
-				*outp = append(*outp, *out)
-			}
 		case "platformdeletecloudlet":
 			out, err := r.client.PlatformDeleteCloudlet(r.ctx, obj)
 			if err != nil {
@@ -1191,6 +1179,20 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 
 func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for CloudletKey", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.CloudletKey{}
+		out, err := r.client.ShowFlavorsForCloudlet(r.ctx, obj)
+		if err != nil {
+			r.logErr("CloudletApi_CloudletKey", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.FlavorKey)
+			if !ok {
+				panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[]edgeproto.FlavorKey, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
@@ -1204,6 +1206,17 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[]edgeproto.CloudletManifest, but was %T", dataOut))
 				}
 				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowFlavorsForCloudlet(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.FlavorKey)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[]edgeproto.FlavorKey, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
 			}
 		case "revokeaccesskey":
 			out, err := r.client.RevokeAccessKey(r.ctx, obj)
@@ -1392,13 +1405,6 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 		return err
 	})
 	return err
-}
-
-func (s *DummyServer) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
-	if s.CudNoop {
-		return &edgeproto.CloudletFlavorMappingResults{}, nil
-	}
-	return &edgeproto.CloudletFlavorMappingResults{}, nil
 }
 
 func (s *DummyServer) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_PlatformDeleteCloudletServer) error {
@@ -1855,16 +1861,39 @@ func (s *CliClient) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMat
 	return &out, err
 }
 
-func (s *ApiClient) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
-	api := edgeproto.NewCloudletApiClient(s.Conn)
-	return api.FindAllFlavorsForCloudlet(ctx, in)
+type FlavorKeyStream interface {
+	Recv() (*edgeproto.FlavorKey, error)
 }
 
-func (s *CliClient) FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error) {
-	out := edgeproto.CloudletFlavorMappingResults{}
-	args := append(s.BaseArgs, "controller", "FindAllFlavorsForCloudlet")
-	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
-	return &out, err
+func FlavorKeyReadStream(stream FlavorKeyStream) ([]edgeproto.FlavorKey, error) {
+	output := []edgeproto.FlavorKey{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read FlavorKey stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.FlavorKey, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.ShowFlavorsForCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return FlavorKeyReadStream(stream)
+}
+
+func (s *CliClient) ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.FlavorKey, error) {
+	output := []edgeproto.FlavorKey{}
+	args := append(s.BaseArgs, "controller", "ShowFlavorsForCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
 }
 
 func (s *ApiClient) RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
@@ -1919,7 +1948,7 @@ type CloudletApiClient interface {
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)
-	FindAllFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.CloudletFlavorMappingResults, error)
+	ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.FlavorKey, error)
 	RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	GenerateAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
