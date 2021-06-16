@@ -142,6 +142,8 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 				// while our manifest exhaustively enumerates each as a kubePort
 				start := appPort.InternalPort
 				end := appPort.EndPort
+				// This is Kubernetes specific port range check, which is different only for UDP
+				// Parseports() still checks for default range of ports (maxTcpPorts, maxUdpPorts, maxEnvoyUdpPorts)
 				if appPort.Proto == dme.LProto_L_PROTO_UDP {
 					portCount := end - start + 1
 					if portCount > int32(util.MaxK8sUdpPorts) {
