@@ -9,6 +9,7 @@ import (
 var maxTcpPorts int = 1000
 var maxUdpPorts int = 10000
 var maxEnvoyUdpPorts int = 1000
+var MaxK8sUdpPorts int = 1000
 
 type PortSpec struct {
 	Proto   string
