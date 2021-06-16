@@ -108,6 +108,11 @@ func (s *Platform) CreateDINDCluster(ctx context.Context, clusterName, kconfName
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
+	// xind is looking for config in /tmp dir
+	out, err = sh.Command("cp", home+"/.kube/config", "/tmp/"+kconfName).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s %v", out, err)
+	}
 	out, err = sh.Command("cat", home+"/.kube/config").CombinedOutput()
 	log.SpanLog(ctx, log.DebugLevelInfra, "config file", "home", home, "out", string(out), "err", err)
 

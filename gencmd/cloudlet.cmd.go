@@ -2116,6 +2116,7 @@ var GPUDriverBuildOptionalArgs = []string{
 	"operatingsystem",
 	"kernelversion",
 	"hypervisorinfo",
+	"md5sum",
 }
 var GPUDriverBuildAliasArgs = []string{}
 var GPUDriverBuildComments = map[string]string{
@@ -2125,6 +2126,7 @@ var GPUDriverBuildComments = map[string]string{
 	"operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
 	"kernelversion":   "Kernel Version supported by GPU driver build",
 	"hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
+	"md5sum":          "Driver package md5sum to ensure package is not corrupted",
 }
 var GPUDriverBuildSpecialArgs = map[string]string{}
 var GPUDriverBuildMemberRequiredArgs = []string{
@@ -2138,6 +2140,7 @@ var GPUDriverBuildMemberOptionalArgs = []string{
 	"build.operatingsystem",
 	"build.kernelversion",
 	"build.hypervisorinfo",
+	"build.md5sum",
 	"ignorestate",
 }
 var GPUDriverBuildMemberAliasArgs = []string{
@@ -2153,6 +2156,7 @@ var GPUDriverBuildMemberComments = map[string]string{
 	"build.operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
 	"build.kernelversion":   "Kernel Version supported by GPU driver build",
 	"build.hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
+	"build.md5sum":          "Driver package md5sum to ensure package is not corrupted",
 	"ignorestate":           "Ignore state will ignore any action in-progress on the GPU driver",
 }
 var GPUDriverBuildMemberSpecialArgs = map[string]string{}
@@ -2179,7 +2183,9 @@ var GPUDriverOptionalArgs = []string{
 	"builds:#.operatingsystem",
 	"builds:#.kernelversion",
 	"builds:#.hypervisorinfo",
+	"builds:#.md5sum",
 	"licenseconfig",
+	"licenseconfigmd5sum",
 	"properties",
 	"ignorestate",
 }
@@ -2198,7 +2204,9 @@ var GPUDriverComments = map[string]string{
 	"builds:#.operatingsystem": "Operator System supported by GPU driver build, one of Linux, Windows, Others",
 	"builds:#.kernelversion":   "Kernel Version supported by GPU driver build",
 	"builds:#.hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
+	"builds:#.md5sum":          "Driver package md5sum to ensure package is not corrupted",
 	"licenseconfig":            "License config to setup license (will be stored in secure storage)",
+	"licenseconfigmd5sum":      "License config md5sum, to ensure integrity of license config",
 	"properties":               "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
 	"state":                    "State to figure out if any action on the GPU driver is in-progress",
 	"ignorestate":              "Ignore state will ignore any action in-progress on the GPU driver",
@@ -2271,6 +2279,7 @@ var CloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -2355,6 +2364,7 @@ var CloudletComments = map[string]string{
 	"gpuconfig.driver.organization":       "Organization to which the driver belongs to",
 	"gpuconfig.gputype":                   "Type of GPU hardware supported by the Cloudlet, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
 	"gpuconfig.properties":                "Properties to identify specifics of GPU",
+	"enabledefaultserverlesscluster":      "Enable experimental default multitenant (serverless) cluster",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":           "StringToString",
@@ -2672,6 +2682,7 @@ var UpdateGPUDriverOptionalArgs = []string{
 	"gpudriver-org",
 	"type",
 	"licenseconfig",
+	"licenseconfigmd5sum",
 	"properties",
 	"ignorestate",
 }
@@ -2681,6 +2692,7 @@ var AddGPUDriverBuildRequiredArgs = []string{
 	"build.name",
 	"build.driverpath",
 	"build.operatingsystem",
+	"build.md5sum",
 }
 var AddGPUDriverBuildOptionalArgs = []string{
 	"build.driverpathcreds",
@@ -2695,6 +2707,7 @@ var RemoveGPUDriverBuildRequiredArgs = []string{
 }
 var RemoveGPUDriverBuildOptionalArgs = []string{
 	"build.driverpathcreds",
+	"build.md5sum",
 	"ignorestate",
 }
 var GetGPUDriverBuildURLRequiredArgs = []string{
@@ -2704,6 +2717,7 @@ var GetGPUDriverBuildURLRequiredArgs = []string{
 }
 var GetGPUDriverBuildURLOptionalArgs = []string{
 	"build.driverpathcreds",
+	"build.md5sum",
 	"ignorestate",
 }
 var CreateCloudletRequiredArgs = []string{
@@ -2750,6 +2764,7 @@ var CreateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2795,6 +2810,7 @@ var DeleteCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2828,6 +2844,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2873,6 +2890,7 @@ var ShowCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"enabledefaultserverlesscluster",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",
