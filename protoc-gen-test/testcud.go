@@ -777,15 +777,13 @@ type methodArgs struct {
 	CacheFunc      string
 	OutData        string
 	RecvStreamFunc bool
+	StreamOutData  string
 }
 
 var methodTmpl = `
 {{- if .Outstream}}
 func (s *DummyServer) {{.Method}}(in *{{.Pkg}}.{{.InName}}, server {{.Pkg}}.{{.Service}}_{{.Method}}Server) error {
 	var err error
-{{- if .CacheFunc}}
-	s.{{.InName}}Cache.{{.CacheFunc}}(server.Context(), in, 0)
-{{- end}}
 {{- if (eq .InName .OutName)}}
 	obj := &{{.Pkg}}.{{.OutName}}{}
 	if obj.Matches(in, {{.Pkg}}.MatchFilter()) {
@@ -793,9 +791,21 @@ func (s *DummyServer) {{.Method}}(in *{{.Pkg}}.{{.InName}}, server {{.Pkg}}.{{.S
 	if true {
 {{- end}}
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&{{.Pkg}}.{{.OutName}}{})
+			server.Send(&{{.Pkg}}.{{.OutName}}{{.StreamOutData}})
+		}
+		if ch, ok := s.MidstreamFailChs["{{.Method}}"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5*time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+{{- if .CacheFunc}}
+	s.{{.InName}}Cache.{{.CacheFunc}}(server.Context(), in, 0)
+{{- end}}
 {{- if and .OutList .HasCache}}
 	err = s.{{.InName}}Cache.Show(in, func(obj *{{.Pkg}}.{{.InName}}) error {
 		err := server.Send(obj)
@@ -832,18 +842,27 @@ func (t *TestCud) getMethodArgs(service string, method *descriptor.MethodDescrip
 		HasCache:  GetGenerateCache(in.DescriptorProto),
 		Show:      gensupport.IsShow(method),
 	}
+	cud := false // create/update/delete
 	if args.HasCache {
 		if strings.HasPrefix(*method.Name, "Create") {
 			args.CacheFunc = "Update"
+			cud = true
 		} else if strings.HasPrefix(*method.Name, "Delete") {
 			args.CacheFunc = "Delete"
+			cud = true
 		} else if strings.HasPrefix(*method.Name, "Update") {
 			args.CacheFunc = "Update"
+			cud = true
 		}
 	}
 	args.OutData = "*" + args.Pkg + "." + args.OutName
 	if args.Outstream {
 		args.OutData = "[]" + args.Pkg + "." + args.OutName
+		args.StreamOutData = "{}"
+		if cud && args.Pkg == "edgeproto" && args.OutName == "Result" {
+			// send some message
+			args.StreamOutData = `{Message: "some message"}`
+		}
 	}
 	return &args
 }
@@ -859,7 +878,9 @@ func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescri
 		t.Fail("Failed to execute method template: ", err.Error())
 	}
 	t.importProtoPkg = true
-	if !args.Outstream {
+	if args.Outstream {
+		t.importTime = true
+	} else {
 		t.importContext = true
 	}
 }
@@ -880,11 +901,13 @@ func (t *TestCud) genDummyServer() {
 	}
 	t.P("ShowDummyCount int")
 	t.P("CudNoop bool")
+	t.P("MidstreamFailChs map[string]chan bool")
 	t.P("}")
 	t.P()
 
 	t.P("func RegisterDummyServer(server *grpc.Server) *DummyServer {")
 	t.P("d := &DummyServer{}")
+	t.P("d.MidstreamFailChs = make(map[string]chan bool)")
 
 	for _, file := range t.Generator.Request.ProtoFile {
 		for _, desc := range file.MessageType {
@@ -924,6 +947,15 @@ func (t *TestCud) genDummyServer() {
 		}
 	}
 	t.P("return d")
+	t.P("}")
+	t.P()
+
+	t.P("func (s *DummyServer) EnableMidstreamFailure(api string, syncCh chan bool) {")
+	t.P("s.MidstreamFailChs[api] = syncCh")
+	t.P("}")
+	t.P()
+	t.P("func (s *DummyServer) DisableMidstreamFailure(api string) {")
+	t.P("delete(s.MidstreamFailChs, api)")
 	t.P("}")
 	t.P()
 	t.importGrpc = true
