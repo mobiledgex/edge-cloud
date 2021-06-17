@@ -130,6 +130,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 			log.SpanLog(ctx, log.DebugLevelApi, "settings not found")
 			return in.GetKey().NotFoundError()
 		}
+		oldSettings := cur
 		changeCount := cur.CopyInFields(in)
 		log.SpanLog(ctx, log.DebugLevelApi, "update settings", "changed", changeCount)
 		if changeCount == 0 {
@@ -176,6 +177,19 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 					return res.Err
 				}
 			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals {
+				// Drop old cqs
+				for _, collectioninterval := range oldSettings.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+					interval := collectioninterval.Interval
+					latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+					if errl := services.edgeEventsInfluxQ.DropContinuousQuery(latencyCqSettings); errl != nil {
+						return errl
+					}
+					deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+					if errd := services.edgeEventsInfluxQ.DropContinuousQuery(deviceCqSettings); errd != nil {
+						return errd
+					}
+				}
+				// Create new cqs
 				for _, collectioninterval := range in.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
 					interval := collectioninterval.Interval
 					latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
