@@ -18,6 +18,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
 	v1 "k8s.io/api/core/v1"
 )
@@ -141,6 +142,14 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 				// while our manifest exhaustively enumerates each as a kubePort
 				start := appPort.InternalPort
 				end := appPort.EndPort
+				// This is Kubernetes specific port range check, which is different only for UDP
+				// Parseports() still checks for default range of ports (maxTcpPorts, maxUdpPorts, maxEnvoyUdpPorts)
+				if appPort.Proto == dme.LProto_L_PROTO_UDP {
+					portCount := end - start + 1
+					if portCount > int32(util.MaxK8sUdpPorts) {
+						return fmt.Errorf("Kubernetes deployment not allowed to specify more than %d udp ports", util.MaxK8sUdpPorts)
+					}
+				}
 				for i := start; i <= end; i++ {
 					// expand short hand notation to test membership in map
 					tp := dme.AppPort{
