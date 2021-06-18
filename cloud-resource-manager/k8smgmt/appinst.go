@@ -301,7 +301,10 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 		if name == "" {
 			continue
 		}
-		cmd := fmt.Sprintf("%s kubectl get pods -o custom-columns=NAME:.metadata.name --sort-by=.metadata.name --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+		// Returns list of pods and its containers in the format: "<PodName>/<ContainerName>"
+		cmd := fmt.Sprintf("%s kubectl get pods -o json --sort-by=.metadata.name --selector=%s=%s "+
+			"| jq -r '.items[] | .metadata.name as $podName | .spec.containers[] | "+
+			"($podName+\"/\"+.name)'", names.KconfEnv, MexAppLabel, name)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return nil, fmt.Errorf("error getting kubernetes pods, %s, %s, %s", cmd, out, err.Error())
@@ -328,13 +331,30 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		}
 		req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
 	}
+	podName := ""
+	containerName := ""
+	parts := strings.Split(req.ContainerId, "/")
+	if len(parts) == 1 {
+		// old way
+		podName = parts[0]
+	} else if len(parts) == 2 {
+		// new way
+		podName = parts[0]
+		containerName = parts[1]
+	} else {
+		return "", fmt.Errorf("invalid containerID, expected to be of format <PodName>/<ContainerName>")
+	}
 	names, err := GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return "", fmt.Errorf("failed to get kube names, %v", err)
 	}
 	if req.Cmd != nil {
-		cmdStr := fmt.Sprintf("%s kubectl exec -it %s -- %s",
-			names.KconfEnv, req.ContainerId, req.Cmd.Command)
+		containerCmd := ""
+		if containerName != "" {
+			containerCmd = fmt.Sprintf("-c %s ", containerName)
+		}
+		cmdStr := fmt.Sprintf("%s kubectl exec -it %s%s -- %s",
+			names.KconfEnv, containerCmd, podName, req.Cmd.Command)
 		return cmdStr, nil
 	}
 	if req.Log != nil {
@@ -356,8 +376,12 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		if req.Log.Follow {
 			cmdStr += "-f "
 		}
-		cmdStr += req.ContainerId
-		cmdStr += " --all-containers"
+		cmdStr += podName
+		if containerName != "" {
+			cmdStr += " -c " + containerName
+		} else {
+			cmdStr += " --all-containers"
+		}
 		return cmdStr, nil
 	}
 	return "", fmt.Errorf("no command or log specified with the exec request")
