@@ -61,13 +61,23 @@ type TestApiClient interface {
 }
 
 type DummyServer struct {
-	ShowDummyCount int
-	CudNoop        bool
+	ShowDummyCount   int
+	CudNoop          bool
+	MidstreamFailChs map[string]chan bool
 }
 
 func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d := &DummyServer{}
+	d.MidstreamFailChs = make(map[string]chan bool)
 	return d
+}
+
+func (s *DummyServer) EnableMidstreamFailure(api string, syncCh chan bool) {
+	s.MidstreamFailChs[api] = syncCh
+}
+
+func (s *DummyServer) DisableMidstreamFailure(api string) {
+	delete(s.MidstreamFailChs, api)
 }
 
 type ApiClient struct {

@@ -669,34 +669,61 @@ func (r *Run) ClusterInstApi_IdleReservableClusterInsts(obj *edgeproto.IdleReser
 
 func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	var err error
-	s.ClusterInstCache.Update(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["CreateClusterInst"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.ClusterInstCache.Update(server.Context(), in, 0)
 	return err
 }
 
 func (s *DummyServer) DeleteClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	var err error
-	s.ClusterInstCache.Delete(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["DeleteClusterInst"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.ClusterInstCache.Delete(server.Context(), in, 0)
 	return err
 }
 
 func (s *DummyServer) UpdateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
 	var err error
-	s.ClusterInstCache.Update(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["UpdateClusterInst"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.ClusterInstCache.Update(server.Context(), in, 0)
 	return err
 }
 
@@ -706,6 +733,15 @@ func (s *DummyServer) ShowClusterInst(in *edgeproto.ClusterInst, server edgeprot
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.ClusterInst{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowClusterInst"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.ClusterInstCache.Show(in, func(obj *edgeproto.ClusterInst) error {
@@ -755,6 +791,15 @@ func (s *DummyServer) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, server 
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.ClusterInstInfo{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowClusterInstInfo"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.ClusterInstInfoCache.Show(in, func(obj *edgeproto.ClusterInstInfo) error {
