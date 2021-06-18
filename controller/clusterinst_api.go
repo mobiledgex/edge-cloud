@@ -294,7 +294,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 			thAvailableResVal = max - resInfo.Value
 		}
 		if float64(resInfo.Value*100)/float64(max) > float64(resInfo.AlertThreshold) {
-			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used", resInfo.AlertThreshold, resName))
+			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used by the cloudlet", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > thAvailableResVal {
 			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s out of %d%s is available", resName, resReqd.Value, resInfo.Units, thAvailableResVal, resInfo.Units, max, resInfo.Units))
@@ -348,7 +348,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		}
 		infraAvailableResVal := resInfo.InfraMaxValue - resInfo.Value
 		if float64(resInfo.Value*100)/float64(resInfo.InfraMaxValue) > float64(resInfo.AlertThreshold) {
-			warnings = append(warnings, fmt.Sprintf("[Infra] More than %d%% of %s is used", resInfo.AlertThreshold, resName))
+			warnings = append(warnings, fmt.Sprintf("More than %d%% of %s is used on the infra managed by the cloudlet", resInfo.AlertThreshold, resName))
 		}
 		if resReqd.Value > infraAvailableResVal {
 			errsStr = append(errsStr, fmt.Sprintf("required %s is %d%s but only %d%s out of %d%s is available", resName, resReqd.Value, resInfo.Units, infraAvailableResVal, resInfo.Units, resInfo.InfraMaxValue, resInfo.Units))
@@ -804,28 +804,34 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
 
 		// check if MasterNodeFlavor required
-		if in.Deployment == cloudcommon.DeploymentTypeKubernetes && in.NumNodes > 0 {
-			masterFlavor := edgeproto.Flavor{}
-			masterFlavorKey := edgeproto.FlavorKey{}
-			settings := settingsApi.Get()
-			masterFlavorKey.Name = settings.MasterNodeFlavor
-
-			if flavorApi.store.STMGet(stm, &masterFlavorKey, &masterFlavor) {
-				log.SpanLog(ctx, log.DebugLevelApi, "MasterNodeFlavor found ", "MasterNodeFlavor", settings.MasterNodeFlavor)
-				vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, masterFlavor, cloudlet, info)
-				if err != nil {
-					// Unlikely with reasonably modest settings.MasterNodeFlavor sized flavor
-					log.SpanLog(ctx, log.DebugLevelApi, "Error K8s Master Node Flavor matches no eixsting OS flavor", "nodeFlavor", in.NodeFlavor)
-					return err
-				} else {
-					in.MasterNodeFlavor = vmspec.FlavorName
-					log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Master Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
-				}
-			} else {
-				// should never be non empty and not found due to validation in update
-				// revert to using NodeFlavor (pre EC-1767) and log warning
+		if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
+			if in.NumNodes == 0 {
+				// if numnodes is 0, then developer will run its application on master node.
+				// Hence master node flavor should match user given flavor i.e. node flavor
 				in.MasterNodeFlavor = in.NodeFlavor
-				log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
+			} else {
+				masterFlavor := edgeproto.Flavor{}
+				masterFlavorKey := edgeproto.FlavorKey{}
+				settings := settingsApi.Get()
+				masterFlavorKey.Name = settings.MasterNodeFlavor
+
+				if flavorApi.store.STMGet(stm, &masterFlavorKey, &masterFlavor) {
+					log.SpanLog(ctx, log.DebugLevelApi, "MasterNodeFlavor found ", "MasterNodeFlavor", settings.MasterNodeFlavor)
+					vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, masterFlavor, cloudlet, info)
+					if err != nil {
+						// Unlikely with reasonably modest settings.MasterNodeFlavor sized flavor
+						log.SpanLog(ctx, log.DebugLevelApi, "Error K8s Master Node Flavor matches no eixsting OS flavor", "nodeFlavor", in.NodeFlavor)
+						return err
+					} else {
+						in.MasterNodeFlavor = vmspec.FlavorName
+						log.SpanLog(ctx, log.DebugLevelApi, "Selected Cloudlet Master Node Flavor", "vmspec", vmspec, "master flavor", in.MasterNodeFlavor)
+					}
+				} else {
+					// should never be non empty and not found due to validation in update
+					// revert to using NodeFlavor (pre EC-1767) and log warning
+					in.MasterNodeFlavor = in.NodeFlavor
+					log.SpanLog(ctx, log.DebugLevelApi, "Warning : Master Node Flavor does not exist using", "master flavor", in.MasterNodeFlavor)
+				}
 			}
 		}
 
