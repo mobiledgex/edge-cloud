@@ -472,6 +472,15 @@ func (s *DummyServer) ShowApp(in *edgeproto.App, server edgeproto.AppApi_ShowApp
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.App{})
 		}
+		if ch, ok := s.MidstreamFailChs["ShowApp"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
+		}
 	}
 	err = s.AppCache.Show(in, func(obj *edgeproto.App) error {
 		err := server.Send(obj)

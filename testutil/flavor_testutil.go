@@ -464,6 +464,15 @@ func (s *DummyServer) ShowFlavor(in *edgeproto.Flavor, server edgeproto.FlavorAp
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.Flavor{})
 		}
+		if ch, ok := s.MidstreamFailChs["ShowFlavor"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
+		}
 	}
 	err = s.FlavorCache.Show(in, func(obj *edgeproto.Flavor) error {
 		err := server.Send(obj)
