@@ -40,7 +40,7 @@ func (s *DummyEventsES) InitHttpMock(addr string) {
 func (s *DummyEventsES) Handle(req *http.Request) (*http.Response, error) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		fmt.Printf("failed to read body from request %s: %v", req.URL.String(), err)
+		fmt.Printf("failed to read body from request %s: %v\n", req.URL.String(), err)
 		return httpmock.NewStringResponse(400, "failed to read body"), nil
 	}
 	// data is {{index{}}}\ndata\n
