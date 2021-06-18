@@ -1303,7 +1303,7 @@ func (cd *ControllerData) RefreshAppInstRuntime(ctx context.Context) {
 	var clusterInst edgeproto.ClusterInst
 	cd.AppInstCache.Show(&edgeproto.AppInst{}, func(obj *edgeproto.AppInst) error {
 		if obj.State != edgeproto.TrackedState_READY {
-			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get runtime info, as AppInst is not in Ready state", "key", obj.Key)
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get runtime info, as AppInst is not in Ready state", "key", obj.Key, "state", obj.State)
 			return nil
 		}
 		if !cd.AppCache.Get(&obj.Key.AppKey, &app) {
