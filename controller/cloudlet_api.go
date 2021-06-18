@@ -491,6 +491,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	kafkaDetails := node.KafkaCreds{}
 	if (in.KafkaUser != "") != (in.KafkaPassword != "") {
 		return errors.New("Must specify both kafka username and password, or neither")
+	} else if in.KafkaCluster == "" && in.KafkaUser != "" {
+		return errors.New("Must specify a kafka cluster endpoint in addition to kafka credentials")
 	}
 	if in.KafkaCluster != "" {
 		kafkaDetails.Endpoint = in.KafkaCluster
