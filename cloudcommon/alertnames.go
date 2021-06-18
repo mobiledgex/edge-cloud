@@ -16,6 +16,7 @@ const (
 	AlertAnnotationTitle       = "title"
 	AlertAnnotationDescription = "description"
 	AlertScopeTypeTag          = "scope"
+	AlertSeverityLabel         = "severity"
 	AlertScopeApp              = "Application"
 	AlertScopeCloudlet         = "Cloudlet"
 )
@@ -41,6 +42,21 @@ var AlertSeverityTypes = map[string]struct{}{
 	AlertSeverityError: struct{}{},
 	AlertSeverityWarn:  struct{}{},
 	AlertSeverityInfo:  struct{}{},
+}
+
+// Map represents severities for the specific alerts that the platfrom generates
+var AlertSeverityValues = map[string]string{
+	AlertAppInstDown:           AlertSeverityError,
+	AlertCloudletDown:          AlertSeverityError,
+	AlertCloudletResourceUsage: AlertSeverityWarn,
+}
+
+func GetSeverityForAlert(alertname string) string {
+	if severity, found := AlertSeverityValues[alertname]; found {
+		return severity
+	}
+	// default to "info"
+	return AlertSeverityInfo
 }
 
 func IsMonitoredAlert(alertName string) bool {
