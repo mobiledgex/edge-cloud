@@ -243,12 +243,12 @@ message AppAutoProvPolicy {
 }
 
 message DeploymentCloudletRequest {
-   //Discover potential App Cloudlets
+   // Discover potential App Cloudlets
    App app = 1;
    //Attempt to qualify cloudlet resources for deployment
    bool dry_run_deploy = 2;
-   //option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,App.app-org=Key.Organization,App.defaultflavor=DefaultFlavor.Name";
-   //option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
+   option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,App.app-org=Key.Organization,App.defaultflavor=DefaultFlavor.Name";
+   option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
 }
 
 service AppApi {
@@ -313,7 +313,10 @@ service AppApi {
      body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.mc2_custom_authz) = true;
+    option (protogen.stream_out_incremental) = true;
   }
+
 }
 
 

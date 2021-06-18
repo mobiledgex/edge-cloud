@@ -19,5 +19,5 @@ func (s *DummyServer) ShowCloudletsForAppDeployment(*edgeproto.DeploymentCloudle
 }
 
 func (s *DummyServer) ShowFlavorsForCloudlet(*edgeproto.CloudletKey, edgeproto.CloudletApi_ShowFlavorsForCloudletServer) error {
-	return /*&[]edgeproto.FlavorKey{},*/ nil
+	return nil
 }

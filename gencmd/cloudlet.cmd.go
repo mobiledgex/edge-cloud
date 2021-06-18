@@ -1403,7 +1403,8 @@ func FindFlavorMatchs(c *cli.Command, data []edgeproto.FlavorMatch, err *error) 
 
 var ShowFlavorsForCloudletCmd = &cli.Command{
 	Use:          "ShowFlavorsForCloudlet",
-	OptionalArgs: strings.Join(append(CloudletKeyRequiredArgs, CloudletKeyOptionalArgs...), " "),
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
 	SpecialArgs:  &CloudletKeySpecialArgs,
 	Comments:     CloudletKeyComments,
@@ -1452,6 +1453,10 @@ func ShowFlavorsForCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
 				errstr = st.Message()
 			}
 			return fmt.Errorf("ShowFlavorsForCloudlet recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
 		}
 		objs = append(objs, obj)
 	}

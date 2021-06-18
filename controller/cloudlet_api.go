@@ -2116,33 +2116,34 @@ func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 
 func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletApi_ShowFlavorsForCloudletServer) error {
 	ctx := log.StartTestSpan(context.Background())
-	flavors := []*edgeproto.FlavorKey{}
+	flavors := []edgeproto.FlavorKey{}
+	allMetaFlavors := make(map[edgeproto.FlavorKey]string)
 	flavorCache := &flavorApi.cache
 	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
-		flavors = append(flavors, k)
+		allMetaFlavors[*k] = ""
 	})
 	fmt.Printf("\n\nall flavors:\n")
 	for _, flavor := range flavors {
 		fmt.Printf("\t%+v\n", flavor)
 	}
-	for ii, flavorKey := range flavors {
+	for flavor, _ := range allMetaFlavors {
 		fm := edgeproto.FlavorMatch{
 			Key:        *in,
-			FlavorName: flavorKey.Name,
+			FlavorName: flavor.Name,
 		}
 		match, err := s.FindFlavorMatch(ctx, &fm)
 		if err != nil {
-			flavors = append(flavors[:ii], flavors[ii+1:]...)
+			fmt.Printf("\n\nwant to remove flavor %s\n\n", flavor.Name)
+			delete(allMetaFlavors, flavor)
 			continue
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavorKey, "with", match.FlavorName)
+		flavors = append(flavors, flavor)
+		allMetaFlavors[flavor] = match.FlavorName
+		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", in)
 	}
-	fmt.Printf("\n\nShowFlavors  returning stream:\n")
-	for _, flavor := range flavors {
-		fmt.Printf("\t%+v\n", flavor)
-		cb.Send(flavor)
+	for k, _ := range allMetaFlavors {
+		cb.Send(&k)
 	}
-
 	// While we maintain the complete list of meta to OS flavors, we shed the OS flavors
 	// for user consumption. If desired, an admin only version can be offered with the complete mapping.
 	return nil

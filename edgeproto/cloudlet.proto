@@ -674,7 +674,10 @@ service CloudletApi {
     post: "/showmapping/cloudletflavors"
     body: "*"
   };
-  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+  option (protogen.mc2_custom_authz) = true;
+  option (protogen.non_standard_show) = true;
+  option (protogen.stream_out_incremental) = true;
   }
 
   // Revoke crm access key

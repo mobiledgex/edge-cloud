@@ -1179,20 +1179,6 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 
 func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for CloudletKey", "mode", r.Mode)
-	if r.Mode == "show" {
-		obj := &edgeproto.CloudletKey{}
-		out, err := r.client.ShowFlavorsForCloudlet(r.ctx, obj)
-		if err != nil {
-			r.logErr("CloudletApi_CloudletKey", err)
-		} else {
-			outp, ok := dataOut.(*[]edgeproto.FlavorKey)
-			if !ok {
-				panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[]edgeproto.FlavorKey, but was %T", dataOut))
-			}
-			*outp = append(*outp, out...)
-		}
-		return
-	}
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
@@ -1207,16 +1193,16 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 				}
 				*outp = append(*outp, *out)
 			}
-		case "showfiltered":
+		case "showflavorsforcloudlet":
 			out, err := r.client.ShowFlavorsForCloudlet(r.ctx, obj)
 			if err != nil {
 				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
 			} else {
-				outp, ok := dataOut.(*[]edgeproto.FlavorKey)
+				outp, ok := dataOut.(*[][]edgeproto.FlavorKey)
 				if !ok {
-					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[]edgeproto.FlavorKey, but was %T", dataOut))
+					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[][]edgeproto.FlavorKey, but was %T", dataOut))
 				}
-				*outp = append(*outp, out...)
+				*outp = append(*outp, out)
 			}
 		case "revokeaccesskey":
 			out, err := r.client.RevokeAccessKey(r.ctx, obj)
