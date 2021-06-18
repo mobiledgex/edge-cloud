@@ -76,6 +76,7 @@ func (s *DummyEventsES) WaitLastEventMatches(matchFunc func(e *node.EventData) b
 		s.Mux.Lock()
 		if len(s.Events) == 0 {
 			s.Mux.Unlock()
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		matches = matchFunc(s.Events[len(s.Events)-1])
