@@ -249,6 +249,10 @@ func main() {
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
+
+				// Update AppInst runtime info in case it has changed
+				controllerData.RefreshAppInstRuntime(ctx)
+
 				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
 				if resources != nil {
 					resMap := make(map[string]edgeproto.InfraResource)
