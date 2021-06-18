@@ -51,7 +51,7 @@ var AlertSeverityValues = map[string]string{
 	AlertCloudletResourceUsage: AlertSeverityWarn,
 }
 
-func GetAlertSeverityForAlert(alertname string) string {
+func GetSeverityForAlert(alertname string) string {
 	if severity, found := AlertSeverityValues[alertname]; found {
 		return severity
 	}
