@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestDecodeK8S(t *testing.T) {
 	objs, _, err := DecodeK8SYaml(testKubeManifest)
 	require.Nil(t, err)
-	require.Equal(t, 3, len(objs))
+	require.Equal(t, 4, len(objs))
 	_, ok := objs[0].(*v1.Service)
 	require.True(t, ok)
 	_, ok = objs[1].(*v1.Service)
@@ -97,7 +97,26 @@ spec:
           protocol: TCP
         - containerPort: 27276
           protocol: UDP
-`
+# adding nested 'yaml document separator' inside mqtt_params_robot.yaml below
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-bridge-cfg-files-configmap
+data:
+  mqtt_params_robot.yaml: |
+    ---
+    mqtt:
+      client:
+        protocol: $(arg mqtt_protocol)      # MQTTv311
+      connection:
+        host: $(arg mqtt_host)
+        port: $(arg mqtt_port)
+        keepalive: $(arg mqtt_keepalive)
+      private_path: device/001
+    serializer: json:dumps
+    deserializer: json:loads
+    `
 
 var testDockerComposeManifest = `version: '3.3'
 
