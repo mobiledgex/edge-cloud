@@ -65,36 +65,11 @@ var (
 	}
 )
 
-func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, pfFlavorList []*edgeproto.FlavorInfo, rootLBFlavor *edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
-	log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources", "clusterinst key", clusterInst.Key, "platform flavors", pfFlavorList, "root lb flavor", rootLBFlavor)
+// GetClusterInstVMRequirements uses the nodeFlavor and masterNodeFlavor if it cannot find a platform flavor
+func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, nodeFlavor, masterNodeFlavor, rootLBFlavor *edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources", "clusterinst key", clusterInst.Key, "nodeFlavor", nodeFlavor.Name, "masterNodeFlavor", masterNodeFlavor.Name, "root lb flavor", rootLBFlavor)
 	vmResources := []edgeproto.VMResource{}
-	nodeFlavor := &edgeproto.FlavorInfo{}
-	masterNodeFlavor := &edgeproto.FlavorInfo{}
-	nodeFlavorFound := false
-	masterNodeFlavorFound := false
-	for _, flavor := range pfFlavorList {
-		if flavor.Name == clusterInst.NodeFlavor {
-			nodeFlavor = flavor
-			nodeFlavorFound = true
-		}
-		if flavor.Name == clusterInst.MasterNodeFlavor {
-			masterNodeFlavor = flavor
-			masterNodeFlavorFound = true
-		}
-	}
-	// platforms with no native flavor support return zero len flavor lists and use our meta flavors only
-	if len(pfFlavorList) == 0 {
-		log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources empty flavor list", "clusterinst key", clusterInst.Key, "platform flavors", pfFlavorList, "root lb flavor", rootLBFlavor)
-		nodeFlavorFound = true
-		masterNodeFlavorFound = true
-	}
 
-	if !nodeFlavorFound {
-		return nil, fmt.Errorf("Node flavor %s does not exist", clusterInst.NodeFlavor)
-	}
-	if clusterInst.MasterNodeFlavor != "" && !masterNodeFlavorFound {
-		return nil, fmt.Errorf("Master node flavor %s does not exist", clusterInst.MasterNodeFlavor)
-	}
 	if clusterInst.Deployment == DeploymentTypeDocker {
 		vmResources = append(vmResources, edgeproto.VMResource{
 			Key:      clusterInst.Key,
