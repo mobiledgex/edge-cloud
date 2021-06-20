@@ -139,7 +139,7 @@ var xxx_messageInfo_Settings proto.InternalMessageInfo
 
 // Collection interval for Influxdb (Specifically used for cq intervals, because cannot gogoproto.casttype to Duration for repeated fields otherwise)
 type CollectionInterval struct {
-	// Collection interval for Influxdb (Specifically used for continuous query intervals)
+	// Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)
 	Interval Duration `protobuf:"varint,1,opt,name=interval,proto3,casttype=Duration" json:"interval,omitempty"`
 }
 
