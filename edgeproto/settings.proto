@@ -90,7 +90,7 @@ message Settings {
 
 // Collection interval for Influxdb (Specifically used for cq intervals, because cannot gogoproto.casttype to Duration for repeated fields otherwise)
 message CollectionInterval {
-  // Collection interval for Influxdb (Specifically used for continuous query intervals)
+  // Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)
   int64 interval = 1 [(gogoproto.casttype) = "Duration"];
 }
 
