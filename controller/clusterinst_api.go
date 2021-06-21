@@ -363,6 +363,63 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	return warnings, err
 }
 
+// getClusterFlavorInfo returns nodeFlavorInfo, masterNodeFlavorInfo.  It first looks at platform flavors and if not found there gets it from
+// the cache
+func getClusterFlavorInfo(ctx context.Context, stm concurrency.STM, pfFlavorList []*edgeproto.FlavorInfo, clusterInst *edgeproto.ClusterInst) (*edgeproto.FlavorInfo, *edgeproto.FlavorInfo, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "getClusterFlavorInfo", "clusterinst", clusterInst)
+
+	var nodeFlavorInfo *edgeproto.FlavorInfo
+	var masterFlavorInfo *edgeproto.FlavorInfo
+
+	for _, flavor := range pfFlavorList {
+		if flavor.Name == clusterInst.NodeFlavor {
+			nodeFlavorInfo = flavor
+			log.SpanLog(ctx, log.DebugLevelApi, "found node flavor from platform list", "nodeFlavor", nodeFlavorInfo.Name)
+		}
+		if flavor.Name == clusterInst.MasterNodeFlavor {
+			masterFlavorInfo = flavor
+			log.SpanLog(ctx, log.DebugLevelApi, "found master flavor from platform list", "masterFlavorInfo", masterFlavorInfo.Name)
+
+		}
+	}
+	if nodeFlavorInfo == nil {
+		// get from stm
+		nodeFlavor := edgeproto.Flavor{}
+		nodeFlavorKey := edgeproto.FlavorKey{}
+		nodeFlavorKey.Name = clusterInst.NodeFlavor
+		if !flavorApi.store.STMGet(stm, &nodeFlavorKey, &nodeFlavor) {
+			return nil, nil, fmt.Errorf("node flavor %s not found", clusterInst.MasterNodeFlavor)
+		}
+		nodeFlavorInfo = &edgeproto.FlavorInfo{
+			Name:  nodeFlavor.Key.Name,
+			Vcpus: nodeFlavor.Vcpus,
+			Ram:   nodeFlavor.Ram,
+			Disk:  nodeFlavor.Disk,
+		}
+	}
+	if masterFlavorInfo == nil {
+		if clusterInst.MasterNodeFlavor == "" {
+			// use node flavor
+			masterFlavorInfo = nodeFlavorInfo
+		} else {
+			// get from stm
+			masterNodeFlavor := edgeproto.Flavor{}
+			masterNodeFlavorKey := edgeproto.FlavorKey{}
+			masterNodeFlavorKey.Name = clusterInst.MasterNodeFlavor
+			if !flavorApi.store.STMGet(stm, &masterNodeFlavorKey, &masterNodeFlavor) {
+				return nil, nil, fmt.Errorf("master node flavor %s not found", clusterInst.MasterNodeFlavor)
+			}
+			masterFlavorInfo = &edgeproto.FlavorInfo{
+				Name:  masterNodeFlavor.Key.Name,
+				Vcpus: masterNodeFlavor.Vcpus,
+				Ram:   masterNodeFlavor.Ram,
+				Disk:  masterNodeFlavor.Disk,
+			}
+		}
+	}
+	return nodeFlavorInfo, masterFlavorInfo, nil
+}
+
 func GetRootLBFlavorInfo(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo) (*edgeproto.FlavorInfo, error) {
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
@@ -422,7 +479,11 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if edgeproto.IsDeleteState(ci.State) {
 			continue
 		}
-		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, cloudletInfo.Flavors, lbFlavor)
+		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &ci)
+		if err != nil {
+			return nil, nil, err
+		}
+		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -508,7 +569,11 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 	}
 	reqdVmResources := []edgeproto.VMResource{}
 	if clusterInst != nil {
-		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, clusterInst, cloudletInfo.Flavors, lbFlavor)
+		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, clusterInst)
+		if err != nil {
+			return err
+		}
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		if err != nil {
 			return err
 		}

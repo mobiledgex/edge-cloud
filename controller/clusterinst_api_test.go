@@ -745,7 +745,9 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		clusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
 		clusterInst.Flavor = testutil.FlavorData[4].Key
 		clusterInst.NodeFlavor = "flavor.large"
-		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, cloudletInfo.Flavors, lbFlavor)
+		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &clusterInst)
+		require.Nil(t, err, "get cluster flavor info")
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		require.Nil(t, err, "get cluster inst vm requirements")
 		// number of vm resources = num_nodes + num_masters + num_of_rootLBs
 		require.Equal(t, 5, len(ciResources), "matches number of vm resources")
