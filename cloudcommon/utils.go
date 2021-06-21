@@ -137,3 +137,7 @@ func Md5SumStr(data string) string {
 	h.Write([]byte(data))
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+func CreateInfluxMeasurementName(measurement string, interval time.Duration) string {
+	return measurement + "-" + interval.String()
+}

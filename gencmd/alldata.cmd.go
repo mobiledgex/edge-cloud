@@ -767,7 +767,7 @@ var AllDataComments = map[string]string{
 	"settings.createcloudlettimeout":                                                "Create Cloudlet timeout (duration)",
 	"settings.updatecloudlettimeout":                                                "Update Cloudlet timeout (duration)",
 	"settings.locationtilesidelengthkm":                                             "Length of location tiles side for latency metrics (km)",
-	"settings.edgeeventsmetricscontinuousqueriescollectionintervals:#.interval":     "Collection interval for Influxdb (Specifically used for continuous query intervals)",
+	"settings.edgeeventsmetricscontinuousqueriescollectionintervals:#.interval":     "Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)",
 	"settings.influxdbdownsampledmetricsretention":                                  "Default retention policy for downsampled influx db (duration)",
 	"settings.influxdbedgeeventsmetricsretention":                                   "Default retention policy for edgeevents metrics influx db (duration)",
 	"settings.appinstclientcleanupinterval":                                         "AppInstClient cleanup thread run interval",
