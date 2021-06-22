@@ -1168,3 +1168,14 @@ func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
 	}
 	return false
 }
+
+func (key *UserAlertKey) ValidateKey() error {
+	if key.Name == "" || key.Organization == "" {
+		return errors.New("Missing name, or organization of alert")
+	}
+	return nil
+}
+
+func (a *UserAlert) Validate(fields map[string]struct{}) error {
+	return a.GetKey().ValidateKey()
+}

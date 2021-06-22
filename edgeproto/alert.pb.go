@@ -1170,6 +1170,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := StreamState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(AlertSeverity(0)):
+		if en, ok := AlertSeverity_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VersionHash(0)):
 		if en, ok := VersionHash_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1206,6 +1210,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowNode":            struct{}{},
 	"ShowDevice":          struct{}{},
 	"ShowDeviceReport":    struct{}{},
+	"ShowUserAlert":       struct{}{},
 }
 
 func IsShow(cmd string) bool {
@@ -1214,6 +1219,8 @@ func IsShow(cmd string) bool {
 }
 
 var AllKeyTags = []string{
+	"alert",
+	"alertorg",
 	"app",
 	"apporg",
 	"appver",
@@ -1244,6 +1251,8 @@ var AllKeyTags = []string{
 }
 
 var AllKeyTagsMap = map[string]struct{}{
+	"alert":           struct{}{},
+	"alertorg":        struct{}{},
 	"app":             struct{}{},
 	"apporg":          struct{}{},
 	"appver":          struct{}{},
