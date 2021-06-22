@@ -196,6 +196,15 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		}()
 	}
 
+	credsMap := make(map[string]string)
+	for ii, build := range in.Builds {
+		credsMap[build.Name] = build.DriverPathCreds
+		// driverpath creds are used one-time only to download the package,
+		// once it is downloaded, we upload it to GCS and hence it is no longer
+		// required. Hence, do not store it in etcd
+		in.Builds[ii].DriverPathCreds = ""
+	}
+
 	// To ensure updates to etcd and GCS happens atomically:
 	// Step-1: First commit to etcd
 	// Step-2: Validate and upload the builds/license-config to GCS
@@ -234,13 +243,14 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		// Step-2: Validate and upload the builds/license-config to GCS
 		for ii, build := range in.Builds {
 			cb.Send(&edgeproto.Result{Message: "Setting up GPU driver build " + build.Name})
+			if creds, ok := credsMap[build.Name]; ok {
+				build.DriverPathCreds = creds
+			}
 			err := setupGPUDriver(ctx, storageClient, &in.Key, &build, cb)
 			if err != nil {
 				return err
 			}
 			in.Builds[ii].DriverPath = build.DriverPath
-			// clear out driver path creds, as it is no longer required
-			in.Builds[ii].DriverPathCreds = ""
 		}
 
 		// If license config is present, upload it to GCS
@@ -515,6 +525,12 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
 
+	driverPathCreds := in.Build.DriverPathCreds
+	// driverpath creds are used one-time only to download the package,
+	// once it is downloaded, we upload it to GCS and hence it is no longer
+	// required. Hence, do not store it in etcd
+	in.Build.DriverPathCreds = ""
+
 	// To ensure updates to etcd and GCS happens atomically:
 	// Step-1: First commit to etcd
 	// Step-2: Validate and upload the build to GCS
@@ -560,7 +576,11 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 	}
 	defer storageClient.Close()
 
-	err = setupGPUDriver(ctx, storageClient, &in.Key, &in.Build, cb)
+	// pass driver path creds to download GPU driver package
+	build := edgeproto.GPUDriverBuild{}
+	build.DeepCopyIn(&in.Build)
+	build.DriverPathCreds = driverPathCreds
+	err = setupGPUDriver(ctx, storageClient, &in.Key, &build, cb)
 	if err != nil {
 		return err
 	}
@@ -580,8 +600,6 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 			}
 		}
 		if !found {
-			// empty out driver path creds, as it is no longer required
-			in.Build.DriverPathCreds = ""
 			cur.Builds = append(cur.Builds, in.Build)
 		}
 		cur.State = ""
