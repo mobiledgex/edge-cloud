@@ -226,7 +226,7 @@ func local_request_AppApi_RemoveAppAutoProvPolicy_0(ctx context.Context, marshal
 
 }
 
-func request_AppApi_AddUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, client AppApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AppApi_AddAppUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, client AppApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AppUserDefinedAlert
 	var metadata runtime.ServerMetadata
 
@@ -238,12 +238,12 @@ func request_AppApi_AddUserDefinedAlert_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AddUserDefinedAlert(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AddAppUserDefinedAlert(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_AppApi_AddUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, server AppApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_AppApi_AddAppUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, server AppApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AppUserDefinedAlert
 	var metadata runtime.ServerMetadata
 
@@ -255,12 +255,12 @@ func local_request_AppApi_AddUserDefinedAlert_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.AddUserDefinedAlert(ctx, &protoReq)
+	msg, err := server.AddAppUserDefinedAlert(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_AppApi_RemoveUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, client AppApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AppApi_RemoveAppUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, client AppApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AppUserDefinedAlert
 	var metadata runtime.ServerMetadata
 
@@ -272,12 +272,12 @@ func request_AppApi_RemoveUserDefinedAlert_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.RemoveUserDefinedAlert(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.RemoveAppUserDefinedAlert(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_AppApi_RemoveUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, server AppApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_AppApi_RemoveAppUserDefinedAlert_0(ctx context.Context, marshaler runtime.Marshaler, server AppApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AppUserDefinedAlert
 	var metadata runtime.ServerMetadata
 
@@ -289,7 +289,7 @@ func local_request_AppApi_RemoveUserDefinedAlert_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.RemoveUserDefinedAlert(ctx, &protoReq)
+	msg, err := server.RemoveAppUserDefinedAlert(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -406,7 +406,7 @@ func RegisterAppApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("POST", pattern_AppApi_AddUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AppApi_AddAppUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -415,18 +415,18 @@ func RegisterAppApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AppApi_AddUserDefinedAlert_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AppApi_AddAppUserDefinedAlert_0(rctx, inboundMarshaler, server, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_AppApi_AddUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AppApi_AddAppUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_AppApi_RemoveUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AppApi_RemoveAppUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -435,14 +435,14 @@ func RegisterAppApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AppApi_RemoveUserDefinedAlert_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AppApi_RemoveAppUserDefinedAlert_0(rctx, inboundMarshaler, server, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_AppApi_RemoveUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AppApi_RemoveAppUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -607,7 +607,7 @@ func RegisterAppApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("POST", pattern_AppApi_AddUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AppApi_AddAppUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -616,18 +616,18 @@ func RegisterAppApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AppApi_AddUserDefinedAlert_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AppApi_AddAppUserDefinedAlert_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_AppApi_AddUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AppApi_AddAppUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_AppApi_RemoveUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_AppApi_RemoveAppUserDefinedAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -636,14 +636,14 @@ func RegisterAppApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AppApi_RemoveUserDefinedAlert_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AppApi_RemoveAppUserDefinedAlert_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_AppApi_RemoveUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AppApi_RemoveAppUserDefinedAlert_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -663,9 +663,9 @@ var (
 
 	pattern_AppApi_RemoveAppAutoProvPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"remove", "appautoprovpolicy"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AppApi_AddUserDefinedAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"add", "appuseralert"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_AppApi_AddAppUserDefinedAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"add", "appuseralert"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_AppApi_RemoveUserDefinedAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"remove", "appuseralert"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_AppApi_RemoveAppUserDefinedAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"remove", "appuseralert"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -681,7 +681,7 @@ var (
 
 	forward_AppApi_RemoveAppAutoProvPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_AppApi_AddUserDefinedAlert_0 = runtime.ForwardResponseMessage
+	forward_AppApi_AddAppUserDefinedAlert_0 = runtime.ForwardResponseMessage
 
-	forward_AppApi_RemoveUserDefinedAlert_0 = runtime.ForwardResponseMessage
+	forward_AppApi_RemoveAppUserDefinedAlert_0 = runtime.ForwardResponseMessage
 )

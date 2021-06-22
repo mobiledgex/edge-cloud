@@ -309,7 +309,7 @@ service AppApi {
     option (protogen.input_required) = true;
   }
   // Add an UserAlert to the App
-  rpc AddUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
+  rpc AddAppUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
     option (google.api.http) = {
       post: "/add/appuseralert"
       body: "*"
@@ -318,7 +318,7 @@ service AppApi {
     option (protogen.input_required) = true;
   }
   // Remove an UserAlert from the App
-  rpc RemoveUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
+  rpc RemoveAppUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
     option (google.api.http) = {
       post: "/remove/appuseralert"
       body: "*"

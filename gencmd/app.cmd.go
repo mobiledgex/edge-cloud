@@ -427,8 +427,8 @@ func RemoveAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy
 	}
 }
 
-var AddUserDefinedAlertCmd = &cli.Command{
-	Use:          "AddUserDefinedAlert",
+var AddAppUserDefinedAlertCmd = &cli.Command{
+	Use:          "AddAppUserDefinedAlert",
 	RequiredArgs: strings.Join(AppUserDefinedAlertRequiredArgs, " "),
 	OptionalArgs: strings.Join(AppUserDefinedAlertOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppUserDefinedAlertAliasArgs, " "),
@@ -436,10 +436,10 @@ var AddUserDefinedAlertCmd = &cli.Command{
 	Comments:     AppUserDefinedAlertComments,
 	ReqData:      &edgeproto.AppUserDefinedAlert{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runAddUserDefinedAlert,
+	Run:          runAddAppUserDefinedAlert,
 }
 
-func runAddUserDefinedAlert(c *cli.Command, args []string) error {
+func runAddAppUserDefinedAlert(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -448,35 +448,35 @@ func runAddUserDefinedAlert(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return AddUserDefinedAlert(c, obj)
+	return AddAppUserDefinedAlert(c, obj)
 }
 
-func AddUserDefinedAlert(c *cli.Command, in *edgeproto.AppUserDefinedAlert) error {
+func AddAppUserDefinedAlert(c *cli.Command, in *edgeproto.AppUserDefinedAlert) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := AppApiCmd.AddUserDefinedAlert(ctx, in)
+	obj, err := AppApiCmd.AddAppUserDefinedAlert(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("AddUserDefinedAlert failed: %s", errstr)
+		return fmt.Errorf("AddAppUserDefinedAlert failed: %s", errstr)
 	}
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func AddUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAlert, err *error) {
+func AddAppUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAlert, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("AddUserDefinedAlert %v\n", data[ii])
-		myerr := AddUserDefinedAlert(c, &data[ii])
+		fmt.Printf("AddAppUserDefinedAlert %v\n", data[ii])
+		myerr := AddAppUserDefinedAlert(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -484,8 +484,8 @@ func AddUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAlert, 
 	}
 }
 
-var RemoveUserDefinedAlertCmd = &cli.Command{
-	Use:          "RemoveUserDefinedAlert",
+var RemoveAppUserDefinedAlertCmd = &cli.Command{
+	Use:          "RemoveAppUserDefinedAlert",
 	RequiredArgs: strings.Join(AppUserDefinedAlertRequiredArgs, " "),
 	OptionalArgs: strings.Join(AppUserDefinedAlertOptionalArgs, " "),
 	AliasArgs:    strings.Join(AppUserDefinedAlertAliasArgs, " "),
@@ -493,10 +493,10 @@ var RemoveUserDefinedAlertCmd = &cli.Command{
 	Comments:     AppUserDefinedAlertComments,
 	ReqData:      &edgeproto.AppUserDefinedAlert{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runRemoveUserDefinedAlert,
+	Run:          runRemoveAppUserDefinedAlert,
 }
 
-func runRemoveUserDefinedAlert(c *cli.Command, args []string) error {
+func runRemoveAppUserDefinedAlert(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
@@ -505,35 +505,35 @@ func runRemoveUserDefinedAlert(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return RemoveUserDefinedAlert(c, obj)
+	return RemoveAppUserDefinedAlert(c, obj)
 }
 
-func RemoveUserDefinedAlert(c *cli.Command, in *edgeproto.AppUserDefinedAlert) error {
+func RemoveAppUserDefinedAlert(c *cli.Command, in *edgeproto.AppUserDefinedAlert) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := AppApiCmd.RemoveUserDefinedAlert(ctx, in)
+	obj, err := AppApiCmd.RemoveAppUserDefinedAlert(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("RemoveUserDefinedAlert failed: %s", errstr)
+		return fmt.Errorf("RemoveAppUserDefinedAlert failed: %s", errstr)
 	}
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func RemoveUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAlert, err *error) {
+func RemoveAppUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAlert, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("RemoveUserDefinedAlert %v\n", data[ii])
-		myerr := RemoveUserDefinedAlert(c, &data[ii])
+		fmt.Printf("RemoveAppUserDefinedAlert %v\n", data[ii])
+		myerr := RemoveAppUserDefinedAlert(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -548,8 +548,8 @@ var AppApiCmds = []*cobra.Command{
 	ShowAppCmd.GenCmd(),
 	AddAppAutoProvPolicyCmd.GenCmd(),
 	RemoveAppAutoProvPolicyCmd.GenCmd(),
-	AddUserDefinedAlertCmd.GenCmd(),
-	RemoveUserDefinedAlertCmd.GenCmd(),
+	AddAppUserDefinedAlertCmd.GenCmd(),
+	RemoveAppUserDefinedAlertCmd.GenCmd(),
 }
 
 var RemoteConnectionRequiredArgs = []string{}

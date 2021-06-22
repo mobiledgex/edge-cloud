@@ -446,8 +446,8 @@ func (r *Run) AppApi_AppUserDefinedAlert(data *[]edgeproto.AppUserDefinedAlert, 
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
-		case "adduserdefinedalert":
-			out, err := r.client.AddUserDefinedAlert(r.ctx, obj)
+		case "add":
+			out, err := r.client.AddAppUserDefinedAlert(r.ctx, obj)
 			if err != nil {
 				r.logErr(fmt.Sprintf("AppApi_AppUserDefinedAlert[%d]", ii), err)
 			} else {
@@ -457,8 +457,8 @@ func (r *Run) AppApi_AppUserDefinedAlert(data *[]edgeproto.AppUserDefinedAlert, 
 				}
 				*outp = append(*outp, *out)
 			}
-		case "removeuserdefinedalert":
-			out, err := r.client.RemoveUserDefinedAlert(r.ctx, obj)
+		case "remove":
+			out, err := r.client.RemoveAppUserDefinedAlert(r.ctx, obj)
 			if err != nil {
 				r.logErr(fmt.Sprintf("AppApi_AppUserDefinedAlert[%d]", ii), err)
 			} else {
@@ -615,26 +615,26 @@ func (s *CliClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.A
 	return &out, err
 }
 
-func (s *ApiClient) AddUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+func (s *ApiClient) AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
 	api := edgeproto.NewAppApiClient(s.Conn)
-	return api.AddUserDefinedAlert(ctx, in)
+	return api.AddAppUserDefinedAlert(ctx, in)
 }
 
-func (s *CliClient) AddUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+func (s *CliClient) AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
 	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "AddUserDefinedAlert")
+	args := append(s.BaseArgs, "controller", "AddAppUserDefinedAlert")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
 }
 
-func (s *ApiClient) RemoveUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+func (s *ApiClient) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
 	api := edgeproto.NewAppApiClient(s.Conn)
-	return api.RemoveUserDefinedAlert(ctx, in)
+	return api.RemoveAppUserDefinedAlert(ctx, in)
 }
 
-func (s *CliClient) RemoveUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+func (s *CliClient) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
 	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "RemoveUserDefinedAlert")
+	args := append(s.BaseArgs, "controller", "RemoveAppUserDefinedAlert")
 	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
 	return &out, err
 }
@@ -646,6 +646,6 @@ type AppApiClient interface {
 	ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error)
 	AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
 	RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
-	AddUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error)
-	RemoveUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error)
+	AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error)
+	RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error)
 }
