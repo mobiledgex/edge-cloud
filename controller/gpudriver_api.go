@@ -487,7 +487,11 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 
 func (s *GPUDriverApi) ShowGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_ShowGPUDriverServer) error {
 	return s.cache.Show(in, func(obj *edgeproto.GPUDriver) error {
-		err := cb.Send(obj)
+		copy := *obj
+		for ii, _ := range copy.Builds {
+			copy.Builds[ii].DriverPathCreds = ""
+		}
+		err := cb.Send(&copy)
 		return err
 	})
 }
