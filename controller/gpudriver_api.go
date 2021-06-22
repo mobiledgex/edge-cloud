@@ -239,6 +239,8 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 				return err
 			}
 			in.Builds[ii].DriverPath = build.DriverPath
+			// clear out driver path creds, as it is no longer required
+			in.Builds[ii].DriverPathCreds = ""
 		}
 
 		// If license config is present, upload it to GCS
@@ -578,6 +580,8 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 			}
 		}
 		if !found {
+			// empty out driver path creds, as it is no longer required
+			in.Build.DriverPathCreds = ""
 			cur.Builds = append(cur.Builds, in.Build)
 		}
 		cur.State = ""
