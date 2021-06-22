@@ -200,10 +200,13 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	for ii, build := range in.Builds {
 		credsMap[build.Name] = build.DriverPathCreds
 		// driverpath creds are used one-time only to download the package,
-		// once it is downloaded, we upload it to GCS and hence it is no longer
+		// once it is downloaded, we upload it to GCS and then it is no longer
 		// required. Hence, do not store it in etcd
 		in.Builds[ii].DriverPathCreds = ""
 	}
+	// do not store license config in etcd, as we upload it to GCS
+	licenseConfig := in.LicenseConfig
+	in.LicenseConfig = ""
 
 	// To ensure updates to etcd and GCS happens atomically:
 	// Step-1: First commit to etcd
@@ -233,7 +236,7 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		}
 	}()
 
-	if len(in.Builds) > 0 || in.LicenseConfig != "" {
+	if len(in.Builds) > 0 || licenseConfig != "" {
 		storageClient, err := getGCSStorageClient(ctx)
 		if err != nil {
 			return err
@@ -254,11 +257,13 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		}
 
 		// If license config is present, upload it to GCS
-		if in.LicenseConfig != "" {
-			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &in.LicenseConfig, cb)
+		if licenseConfig != "" {
+			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &licenseConfig, cb)
 			if err != nil {
 				return err
 			}
+			// store the GCS path to license config
+			in.LicenseConfig = licenseConfig
 			in.LicenseConfigMd5Sum = md5sum
 		}
 	}
@@ -294,6 +299,10 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
+
+	// do not store license config in etcd, as we upload it to GCS
+	licenseConfig := in.LicenseConfig
+	in.LicenseConfig = ""
 
 	// To ensure updates to etcd and GCS happens atomically:
 	// Step-1: First commit to etcd
@@ -346,7 +355,7 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			return err
 		}
 		defer storageClient.Close()
-		if in.LicenseConfig == "" {
+		if licenseConfig == "" {
 			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
 			// Delete license config from GCS
 			err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.Key)
@@ -355,10 +364,12 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			}
 			in.LicenseConfigMd5Sum = ""
 		} else {
-			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &in.LicenseConfig, cb)
+			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &licenseConfig, cb)
 			if err != nil {
 				return err
 			}
+			// store the GCS path to license config
+			in.LicenseConfig = licenseConfig
 			in.LicenseConfigMd5Sum = md5sum
 		}
 		in.Fields = append(in.Fields, edgeproto.GPUDriverFieldLicenseConfigMd5Sum)
@@ -527,7 +538,7 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 
 	driverPathCreds := in.Build.DriverPathCreds
 	// driverpath creds are used one-time only to download the package,
-	// once it is downloaded, we upload it to GCS and hence it is no longer
+	// once it is downloaded, we upload it to GCS and then it is no longer
 	// required. Hence, do not store it in etcd
 	in.Build.DriverPathCreds = ""
 
