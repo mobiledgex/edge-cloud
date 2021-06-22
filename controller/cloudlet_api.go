@@ -1710,16 +1710,19 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 	return false
 }
 
-func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) bool {
+func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) (bool, []string) {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
+	cloudlets := []string{}
+	inUse := false
 	for _, data := range s.cache.Objs {
 		val := data.Obj
 		if driverKey.Matches(&val.GpuConfig.Driver) {
-			return true
+			cloudlets = append(cloudlets, val.Key.Name)
+			inUse = true
 		}
 	}
-	return false
+	return inUse, cloudlets
 }
 
 func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {

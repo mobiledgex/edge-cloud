@@ -317,7 +317,7 @@ message GPUDriver {
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "gpudrivername=Key.Name,gpudriver-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
-  option (protogen.noconfig) = "State,LicenseConfigMd5sum";
+  option (protogen.noconfig) = "State,LicenseConfigMd5Sum";
   option (protogen.not_required) = "Key.Organization";
 }
 
@@ -351,7 +351,7 @@ service GPUDriverApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "Builds";
+    option (protogen.method_noconfig) = "Builds,Type,IgnoreState";
   }
   // Show GPU Drivers. Lists all the MobiledgeX created GPU drivers and operator
   // created GPU drivers.
@@ -394,7 +394,7 @@ service GPUDriverApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
     option (protogen.method_also_required) = "Build.Name";
-    option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.HypervisorInfo";
+    option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.HypervisorInfo,Build.DriverPathCreds,Build.Md5Sum";
     option (protogen.mc2_custom_authz) = true;
   }
 }
