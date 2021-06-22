@@ -30,6 +30,9 @@ func GetInputMessages(g *generator.Generator, support *PluginSupport) map[string
 				continue
 			}
 			for _, method := range svc.Method {
+				if GetStringExtension(method.Options, protogen.E_Mc2Api, "") == "" {
+					continue
+				}
 				desc := GetDesc(g, method.GetInputType())
 				allInputDescs[*desc.DescriptorProto.Name] = desc
 			}
