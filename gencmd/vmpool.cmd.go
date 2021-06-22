@@ -623,6 +623,8 @@ var VMSpecOptionalArgs = []string{
 	"flavor.ram",
 	"flavor.vcpus",
 	"flavor.disk",
+	"flavor.type",
+	"flavor.gputype",
 	"flavor.optresmap",
 }
 var VMSpecAliasArgs = []string{}
@@ -635,6 +637,8 @@ var VMSpecComments = map[string]string{
 	"flavor.ram":       "RAM in megabytes",
 	"flavor.vcpus":     "Number of virtual CPUs",
 	"flavor.disk":      "Amount of disk space in gigabytes",
+	"flavor.type":      "Type of flavor, one of FlavorTypeGeneral, FlavorTypeGpu",
+	"flavor.gputype":   "GPU Type of flavor, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
 	"flavor.optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
 }
 var VMSpecSpecialArgs = map[string]string{

@@ -8,6 +8,7 @@ import "appinst.proto";
 import "clusterinst.proto";
 import "cloudlet.proto";
 import "common.proto";
+import "gpu.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";

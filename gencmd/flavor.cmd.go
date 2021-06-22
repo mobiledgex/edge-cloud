@@ -414,6 +414,8 @@ var FlavorOptionalArgs = []string{
 	"ram",
 	"vcpus",
 	"disk",
+	"type",
+	"gputype",
 	"optresmap",
 }
 var FlavorAliasArgs = []string{
@@ -425,6 +427,8 @@ var FlavorComments = map[string]string{
 	"ram":       "RAM in megabytes",
 	"vcpus":     "Number of virtual CPUs",
 	"disk":      "Amount of disk space in gigabytes",
+	"type":      "Type of flavor, one of FlavorTypeGeneral, FlavorTypeGpu",
+	"gputype":   "GPU Type of flavor, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
 	"optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
 }
 var FlavorSpecialArgs = map[string]string{
@@ -438,5 +442,7 @@ var CreateFlavorRequiredArgs = []string{
 	"disk",
 }
 var CreateFlavorOptionalArgs = []string{
+	"type",
+	"gputype",
 	"optresmap",
 }

@@ -9,6 +9,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
+import "gpu.proto";
 import "gogoproto/gogo.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
@@ -26,6 +27,19 @@ message FlavorKey {
   option (gogoproto.gostring) = true;
 }
 
+// Flavor Type
+//
+// FlavorType is the type of flavor
+//
+// 0: `FLAVOR_TYPE_GENERAL`
+// 1: `FLAVOR_TYPE_GPU`
+enum FlavorType {
+  // General compute flavor
+  FLAVOR_TYPE_GENERAL = 0;
+  // GPU flavor
+  FLAVOR_TYPE_GPU = 1;
+}
+
 //Flavors define the compute, memory, and storage capacity of computing instances. 
 //To put it simply, a flavor is an available hardware configuration for a server. 
 //It defines the size of a virtual server that can be launched.
@@ -40,6 +54,10 @@ message Flavor {
   uint64 vcpus = 4;
   // Amount of disk space in gigabytes
   uint64 disk = 5;
+  // Type of flavor
+  FlavorType type = 7;
+  // GPU Type of flavor
+  GPUType gpu_type = 8;
   // Optional Resources request, key = gpu
   // form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1
   map<string, string> opt_res_map = 6;

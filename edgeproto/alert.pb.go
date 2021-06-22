@@ -1090,6 +1090,18 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		return data, nil
 	}
 	switch to {
+	case reflect.TypeOf(GPUType(0)):
+		if en, ok := GPUType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(OSType(0)):
+		if en, ok := OSType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(FlavorType(0)):
+		if en, ok := FlavorType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(OptResNames(0)):
 		if en, ok := OptResNames_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1138,14 +1150,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(GPUType(0)):
-		if en, ok := GPUType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(OSType(0)):
-		if en, ok := OSType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
 	case reflect.TypeOf(ReportSchedule(0)):
 		if en, ok := ReportSchedule_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1181,11 +1185,11 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 var ShowMethodNames = map[string]struct{}{
 	"ShowAlert":           struct{}{},
 	"ShowSettings":        struct{}{},
+	"ShowGPUDriver":       struct{}{},
 	"ShowFlavor":          struct{}{},
 	"ShowOperatorCode":    struct{}{},
 	"ShowResTagTable":     struct{}{},
 	"ShowApp":             struct{}{},
-	"ShowGPUDriver":       struct{}{},
 	"ShowCloudlet":        struct{}{},
 	"ShowCloudletInfo":    struct{}{},
 	"ShowCloudletMetrics": struct{}{},

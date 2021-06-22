@@ -198,6 +198,16 @@ func (s *Flavor) Validate(fields map[string]struct{}) error {
 	if _, found := fields[FlavorFieldDisk]; found && s.Disk == 0 {
 		return errors.New("Disk cannot be 0")
 	}
+	if _, found := fields[FlavorFieldType]; found && s.Type == FlavorType_FLAVOR_TYPE_GPU {
+		if s.GpuType == GPUType_GPU_TYPE_NONE {
+			return errors.New("Please specify appropriate GPU type")
+		}
+	}
+	if _, found := fields[FlavorFieldGpuType]; found && s.Type != FlavorType_FLAVOR_TYPE_GPU {
+		if s.GpuType != GPUType_GPU_TYPE_NONE {
+			return errors.New("Flavor type must be GPU if GPU type is specified")
+		}
+	}
 	return nil
 }
 

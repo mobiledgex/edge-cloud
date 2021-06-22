@@ -2921,6 +2921,14 @@ func (m *VMSpec) CopyInFields(src *VMSpec) int {
 		m.Flavor.OptResMap = nil
 		changed++
 	}
+	if m.Flavor.Type != src.Flavor.Type {
+		m.Flavor.Type = src.Flavor.Type
+		changed++
+	}
+	if m.Flavor.GpuType != src.Flavor.GpuType {
+		m.Flavor.GpuType = src.Flavor.GpuType
+		changed++
+	}
 	return changed
 }
 
