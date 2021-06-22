@@ -1032,6 +1032,7 @@ func (m *Node) CopyInFields(src *Node) int {
 			m.Properties = make(map[string]string)
 			for k0, _ := range src.Properties {
 				m.Properties[k0] = src.Properties[k0]
+				changed++
 			}
 		} else if m.Properties != nil {
 			m.Properties = nil

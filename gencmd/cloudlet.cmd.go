@@ -2122,7 +2122,6 @@ var GPUDriverOptionalArgs = []string{
 	"builds:#.hypervisorinfo",
 	"builds:#.md5sum",
 	"licenseconfig",
-	"licenseconfigmd5sum",
 	"properties",
 	"ignorestate",
 }
@@ -2617,11 +2616,8 @@ var UpdateGPUDriverRequiredArgs = []string{
 }
 var UpdateGPUDriverOptionalArgs = []string{
 	"gpudriver-org",
-	"type",
 	"licenseconfig",
-	"licenseconfigmd5sum",
 	"properties",
-	"ignorestate",
 }
 var AddGPUDriverBuildRequiredArgs = []string{
 	"gpudrivername",
@@ -2653,8 +2649,6 @@ var GetGPUDriverBuildURLRequiredArgs = []string{
 	"build.name",
 }
 var GetGPUDriverBuildURLOptionalArgs = []string{
-	"build.driverpathcreds",
-	"build.md5sum",
 	"ignorestate",
 }
 var CreateCloudletRequiredArgs = []string{

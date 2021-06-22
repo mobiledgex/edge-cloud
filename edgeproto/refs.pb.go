@@ -938,6 +938,7 @@ func (m *VMResource) CopyInFields(src *VMResource) int {
 			m.VmFlavor.PropMap = make(map[string]string)
 			for k1, _ := range src.VmFlavor.PropMap {
 				m.VmFlavor.PropMap[k1] = src.VmFlavor.PropMap[k1]
+				changed++
 			}
 		} else if m.VmFlavor.PropMap != nil {
 			m.VmFlavor.PropMap = nil
@@ -1119,6 +1120,7 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		m.RootLbPorts = make(map[int32]int32)
 		for k0, _ := range src.RootLbPorts {
 			m.RootLbPorts[k0] = src.RootLbPorts[k0]
+			changed++
 		}
 	} else if m.RootLbPorts != nil {
 		m.RootLbPorts = nil
@@ -1136,6 +1138,7 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 		m.OptResUsedMap = make(map[string]uint32)
 		for k0, _ := range src.OptResUsedMap {
 			m.OptResUsedMap[k0] = src.OptResUsedMap[k0]
+			changed++
 		}
 	} else if m.OptResUsedMap != nil {
 		m.OptResUsedMap = nil
@@ -2437,6 +2440,7 @@ func (m *AppInstRefs) CopyInFields(src *AppInstRefs) int {
 		m.Insts = make(map[string]uint32)
 		for k0, _ := range src.Insts {
 			m.Insts[k0] = src.Insts[k0]
+			changed++
 		}
 	} else if m.Insts != nil {
 		m.Insts = nil

@@ -410,8 +410,9 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		return err
 	}
 	// Validate if driver is in use by Cloudlet
-	if cloudletApi.UsesGPUDriver(&in.Key) {
-		return fmt.Errorf("GPU driver in use by Cloudlet")
+	inUse, cloudlets := cloudletApi.UsesGPUDriver(&in.Key)
+	if inUse {
+		return fmt.Errorf("GPU driver in use by Cloudlet(s): %s", strings.Join(cloudlets, ","))
 	}
 
 	gpuDriverKey := in.Key
