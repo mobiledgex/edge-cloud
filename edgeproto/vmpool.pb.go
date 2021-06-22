@@ -1415,6 +1415,7 @@ func (m *VM) CopyInFields(src *VM) int {
 			m.Flavor.PropMap = make(map[string]string)
 			for k1, _ := range src.Flavor.PropMap {
 				m.Flavor.PropMap[k1] = src.Flavor.PropMap[k1]
+				changed++
 			}
 		} else if m.Flavor.PropMap != nil {
 			m.Flavor.PropMap = nil
@@ -2811,6 +2812,7 @@ func (m *VMPoolMember) CopyInFields(src *VMPoolMember) int {
 			m.Vm.Flavor.PropMap = make(map[string]string)
 			for k2, _ := range src.Vm.Flavor.PropMap {
 				m.Vm.Flavor.PropMap[k2] = src.Vm.Flavor.PropMap[k2]
+				changed++
 			}
 		} else if m.Vm.Flavor.PropMap != nil {
 			m.Vm.Flavor.PropMap = nil
@@ -2916,6 +2918,7 @@ func (m *VMSpec) CopyInFields(src *VMSpec) int {
 		m.Flavor.OptResMap = make(map[string]string)
 		for k1, _ := range src.Flavor.OptResMap {
 			m.Flavor.OptResMap[k1] = src.Flavor.OptResMap[k1]
+			changed++
 		}
 	} else if m.Flavor.OptResMap != nil {
 		m.Flavor.OptResMap = nil
