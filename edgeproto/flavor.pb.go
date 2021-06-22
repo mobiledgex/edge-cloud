@@ -47,7 +47,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type FlavorType int32
 
 const (
-	// General compute flavor
+	// General purpose flavor
 	FlavorType_FLAVOR_TYPE_GENERAL FlavorType = 0
 	// GPU flavor
 	FlavorType_FLAVOR_TYPE_GPU FlavorType = 1

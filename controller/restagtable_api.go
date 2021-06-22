@@ -231,6 +231,14 @@ func (s *ResTagTableApi) UsesGpu(ctx context.Context, stm concurrency.STM, flavo
 
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
 func (s *ResTagTableApi) GetVMSpec(ctx context.Context, stm concurrency.STM, nodeflavor edgeproto.Flavor, cl edgeproto.Cloudlet, cli edgeproto.CloudletInfo) (*vmspec.VMCreationSpec, error) {
+	if nodeflavor.Type == edgeproto.FlavorType_FLAVOR_TYPE_GPU {
+		if nodeflavor.GpuType != cl.GpuConfig.GpuType {
+			return nil, fmt.Errorf("Cloudlet doesn't support %s, it only supports %s. "+
+				"Please specify appropriate flavor",
+				edgeproto.GPUType_CamelName[int32(nodeflavor.GpuType)],
+				edgeproto.GPUType_CamelName[int32(cl.GpuConfig.GpuType)])
+		}
+	}
 	// for those platforms with no concept of a quantized set of resources (flavors)
 	// return a VMCreationSpec  based on the our meta-flavor resource request.
 	if len(cli.Flavors) == 0 {

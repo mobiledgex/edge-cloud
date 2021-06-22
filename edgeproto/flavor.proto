@@ -34,7 +34,7 @@ message FlavorKey {
 // 0: `FLAVOR_TYPE_GENERAL`
 // 1: `FLAVOR_TYPE_GPU`
 enum FlavorType {
-  // General compute flavor
+  // General purpose flavor
   FLAVOR_TYPE_GENERAL = 0;
   // GPU flavor
   FLAVOR_TYPE_GPU = 1;
