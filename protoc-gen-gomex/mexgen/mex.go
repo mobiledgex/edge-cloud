@@ -919,6 +919,9 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 			if mapType != nil {
+				if !mapType.ValIsMessage {
+					m.P("changed++")
+				}
 				m.P("}")
 			}
 		}
