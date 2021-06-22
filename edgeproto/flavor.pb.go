@@ -871,6 +871,7 @@ func (m *Flavor) CopyInFields(src *Flavor) int {
 			m.OptResMap = make(map[string]string)
 			for k0, _ := range src.OptResMap {
 				m.OptResMap[k0] = src.OptResMap[k0]
+				changed++
 			}
 		} else if m.OptResMap != nil {
 			m.OptResMap = nil
