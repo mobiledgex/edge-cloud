@@ -164,6 +164,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 5
     clusterinsts:
     - clusterkey:
         name: cluster1
@@ -214,6 +216,8 @@ cloudletinfos:
     - name: External IPs
       value: 2
       inframaxvalue: 30
+    - name: Instances
+      value: 6
     clusterinsts:
     - clusterkey:
         name: cluster2
