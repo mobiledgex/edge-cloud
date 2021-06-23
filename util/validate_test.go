@@ -180,3 +180,22 @@ func TestImagePath(t *testing.T) {
 		require.NotNil(t, err, "invalid image path")
 	}
 }
+
+func TestK8SContainerName(t *testing.T) {
+	validNames := []string{
+		"testapp-12334",
+		"testpod-123/testcontainer-1234",
+	}
+	inValidNames := []string{
+		"testapp-12334; rm -rf .",
+		"testpod-123/testcontainer-1234 && rm -rf .",
+	}
+	for _, name := range validNames {
+		err := ValidK8SContainerName(name)
+		require.Nil(t, err, "valid k8s container name")
+	}
+	for _, name := range inValidNames {
+		err := ValidK8SContainerName(name)
+		require.NotNil(t, err, "invalid k8s container name")
+	}
+}
