@@ -50,6 +50,24 @@ func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
 	return nil
 }
 
+func ValidateContainerName(deployment, name string) error {
+	if deployment == cloudcommon.DeploymentTypeDocker {
+		if name != "" && !util.ValidDockerName(name) {
+			return fmt.Errorf("Invalid docker container name")
+		}
+	} else if deployment == cloudcommon.DeploymentTypeKubernetes {
+		if name != "" {
+			err := util.ValidK8SContainerName(name)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		return fmt.Errorf("Command not supported for %s deployments", deployment)
+	}
+	return nil
+}
+
 func (s *ExecApi) ShowLogs(ctx context.Context, req *edgeproto.ExecRequest) (*edgeproto.ExecRequest, error) {
 	if req.Log == nil {
 		// defaults
@@ -63,16 +81,8 @@ func (s *ExecApi) ShowLogs(ctx context.Context, req *edgeproto.ExecRequest) (*ed
 	// Be very careful about validating string input. These arguments
 	// will be passed to the command line in the VM, which user should
 	// not have access to.
-	if app.Deployment == cloudcommon.DeploymentTypeDocker {
-		if req.ContainerId != "" && !util.ValidDockerName(req.ContainerId) {
-			return nil, fmt.Errorf("Invalid docker container name")
-		}
-	} else if app.Deployment == cloudcommon.DeploymentTypeKubernetes {
-		if req.ContainerId != "" && !util.ValidKubernetesName(req.ContainerId) {
-			return nil, fmt.Errorf("Invalid kubernetes container name")
-		}
-	} else {
-		return nil, fmt.Errorf("ShowLogs not available for %s deployments", app.Deployment)
+	if err := ValidateContainerName(app.Deployment, req.ContainerId); err != nil {
+		return nil, err
 	}
 	if req.Log.Since != "" {
 		_, err := time.ParseDuration(req.Log.Since)
@@ -97,6 +107,12 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 	}
 	if app.Deployment == cloudcommon.DeploymentTypeVM {
 		return nil, fmt.Errorf("RunCommand not available for VM deployments, use RunConsole instead")
+	}
+	// Be very careful about validating string input. These arguments
+	// will be passed to the command line in the VM, which user should
+	// not have access to.
+	if err := ValidateContainerName(app.Deployment, req.ContainerId); err != nil {
+		return nil, err
 	}
 	req.Timeout = ShortTimeout
 	if cmd.Command == "" {
