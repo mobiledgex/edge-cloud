@@ -13,14 +13,14 @@ import (
 
 var (
 	// Common platform resources
-	ResourceRamMb = "RAM"
-	ResourceVcpus = "vCPUs"
-	ResourceGpus  = "GPUs"
+	ResourceRamMb       = "RAM"
+	ResourceVcpus       = "vCPUs"
+	ResourceGpus        = "GPUs"
+	ResourceExternalIPs = "External IPs"
 
 	// Platform specific resources
 	ResourceInstances   = "Instances"
 	ResourceFloatingIPs = "Floating IPs"
-	ResourceExternalIPs = "External IPs"
 
 	// Resource units
 	ResourceRamUnits = "MB"
@@ -47,12 +47,15 @@ var (
 			Name:        ResourceGpus,
 			Description: "Limit on GPUs available",
 		},
+		edgeproto.InfraResource{
+			Name:        ResourceExternalIPs,
+			Description: "Limit on external IPs available",
+		},
 	}
 
 	ResourceQuotaDesc = map[string]string{
 		ResourceInstances:   "Limit on number of instances that can be provisioned",
 		ResourceFloatingIPs: "Limit on number of floating IPs that can be created",
-		ResourceExternalIPs: "Limit on how many external IPs are available",
 	}
 
 	ResourceMetricsDesc = map[string]string{
