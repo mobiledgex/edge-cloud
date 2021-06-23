@@ -201,3 +201,22 @@ func ValidateImageVersion(imgVersion string) error {
 	}
 	return nil
 }
+
+func ValidK8SContainerName(name string) error {
+	parts := strings.Split(name, "/")
+	if len(parts) == 1 {
+		if !ValidKubernetesName(name) {
+			return fmt.Errorf("Invalid kubernetes container name")
+		}
+	} else if len(parts) == 2 {
+		if !ValidKubernetesName(parts[0]) {
+			return fmt.Errorf("Invalid kubernetes pod name")
+		}
+		if !ValidKubernetesName(parts[1]) {
+			return fmt.Errorf("Invalid kubernetes container name")
+		}
+	} else {
+		return fmt.Errorf("Invalid kubernetes container name, should be of format '<PodName>/<ContainerName>'")
+	}
+	return nil
+}
