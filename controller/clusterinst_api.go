@@ -635,10 +635,24 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 
 	ramUsed := uint64(0)
 	vcpusUsed := uint64(0)
+	gpusUsed := uint64(0)
+	externalIPsUsed := uint64(0)
+	flavorCount := make(map[string]uint64)
 	for _, vmRes := range allResources {
 		if vmRes.VmFlavor != nil {
 			ramUsed += vmRes.VmFlavor.Ram
 			vcpusUsed += vmRes.VmFlavor.Vcpus
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, cloudlet) {
+				gpusUsed += 1
+			}
+			if _, ok := flavorCount[vmRes.VmFlavor.Name]; ok {
+				flavorCount[vmRes.VmFlavor.Name] += 1
+			} else {
+				flavorCount[vmRes.VmFlavor.Name] = 1
+			}
+		}
+		if vmRes.Type == cloudcommon.VMTypeRootLB || vmRes.Type == cloudcommon.VMTypePlatform {
+			externalIPsUsed += 1
 		}
 	}
 
@@ -650,6 +664,8 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	resMetric.AddTag("cloudlet", key.Name)
 	resMetric.AddIntVal(cloudcommon.ResourceMetricRamMB, ramUsed)
 	resMetric.AddIntVal(cloudcommon.ResourceMetricVcpus, vcpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricsGpus, gpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricExternalIPs, externalIPsUsed)
 
 	// get additional infra specific metric
 	err = cloudletPlatform.GetClusterAdditionalResourceMetric(ctx, &cloudlet, &resMetric, allResources)
@@ -657,22 +673,6 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		return nil, err
 	}
 
-	// get cloudlet metric
-	gpusUsed := uint64(0)
-	flavorCount := make(map[string]uint64)
-	for _, vmRes := range allResources {
-		if vmRes.VmFlavor != nil {
-			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, cloudlet) {
-				gpusUsed += 1
-			}
-			if _, ok := flavorCount[vmRes.VmFlavor.Name]; ok {
-				flavorCount[vmRes.VmFlavor.Name] += 1
-			} else {
-				flavorCount[vmRes.VmFlavor.Name] = 1
-			}
-		}
-	}
-	resMetric.AddIntVal(cloudcommon.ResourceMetricsGpus, gpusUsed)
 	metrics := []*edgeproto.Metric{}
 	metrics = append(metrics, &resMetric)
 
