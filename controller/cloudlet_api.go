@@ -1917,9 +1917,10 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 	}
 	cloudletRes := map[string]string{
 		// Common Cloudlet Resources
-		cloudcommon.ResourceRamMb: cloudcommon.ResourceRamUnits,
-		cloudcommon.ResourceVcpus: "",
-		cloudcommon.ResourceGpus:  "",
+		cloudcommon.ResourceRamMb:       cloudcommon.ResourceRamUnits,
+		cloudcommon.ResourceVcpus:       "",
+		cloudcommon.ResourceGpus:        "",
+		cloudcommon.ResourceExternalIPs: "",
 	}
 	resInfo := make(map[string]edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
@@ -1965,6 +1966,13 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 				if ok {
 					gpusInfo.Value += 1
 					resInfo[cloudcommon.ResourceGpus] = gpusInfo
+				}
+			}
+			if vmRes.Type == cloudcommon.VMTypeRootLB || vmRes.Type == cloudcommon.VMTypePlatform {
+				externalIPInfo, ok := resInfo[cloudcommon.ResourceExternalIPs]
+				if ok {
+					externalIPInfo.Value += 1
+					resInfo[cloudcommon.ResourceExternalIPs] = externalIPInfo
 				}
 			}
 		}
