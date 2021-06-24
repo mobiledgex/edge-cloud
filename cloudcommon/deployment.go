@@ -398,7 +398,7 @@ func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, url
 			out.Close()
 			if reterr != nil {
 				// Stale file might be present if download fails/succeeds, deleting it
-				os.Remove(filePath)
+				DeleteFile(filePath)
 			}
 		}()
 		_, err = io.Copy(out, resp.Body)
