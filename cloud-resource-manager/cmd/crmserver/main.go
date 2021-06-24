@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -277,6 +279,7 @@ func main() {
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
 		nodeMgr.MyNode.ContainerVersion = cloudletContainerVersion
+		getMexReleaseInfo(ctx)
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
@@ -356,4 +359,77 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
 	err := platform.Init(ctx, &pc, caches, updateCallback)
 	return err
+}
+
+// Run  "dpkg-query" to get actual runtime package version which may be different from base VM version.
+func getRuntimeVersion(ctx context.Context) (string, error) {
+	cmd := "/usr/bin/dpkg-query"
+	arg0 := `-f='${Version}'`
+	arg1 := "--show"
+	arg2 := "mobiledgex"
+	cexec := exec.Command(cmd, arg0, arg1, arg2)
+	o, err := cexec.Output()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Running dpkg-query failed", "err", err)
+		return string(o), err
+	}
+	out := string(o)
+	return out, nil
+}
+
+// Read file "/etc/mex-release" from original base vm image and parse certain env variables.
+func readMexReleaseFileVars(ctx context.Context) (map[string]string, error) {
+	filePath := "/etc/mex-release"
+	m := make(map[string]string)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Opening file /etc/mex-release failed", "err", err)
+		return m, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		env := scanner.Text()
+		envPair := strings.SplitN(env, "=", 2)
+		key := envPair[0]
+		value := envPair[1]
+		if key == "MEX_BUILD" || key == "MEX_BUILD_TAG" || key == "MEX_BUILD_FLAVOR" {
+			m[key] = value
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Scanner failed on file /etc/mex-release", "err", err)
+	}
+	return m, nil
+}
+
+func getMexReleaseInfo(ctx context.Context) {
+	m, err := readMexReleaseFileVars(ctx)
+	if err != nil {
+		return
+	}
+	k := "MEX_BUILD"
+	v, ok := m[k]
+	if ok {
+		nodeMgr.MyNode.Properties[k] = v
+	}
+	k = "MEX_BUILD_TAG"
+	v, ok = m[k]
+	if ok {
+		nodeMgr.MyNode.Properties[k] = v
+	}
+	k = "MEX_BUILD_FLAVOR"
+	v, ok = m[k]
+	if ok {
+		nodeMgr.MyNode.Properties[k] = v
+	}
+
+	runtimeVersion, e := getRuntimeVersion(ctx)
+	if e == nil {
+		nodeMgr.MyNode.Properties["runtimeVersion"] = runtimeVersion
+	}
+
 }
