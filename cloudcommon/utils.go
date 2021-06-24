@@ -4,10 +4,12 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -138,6 +140,28 @@ func Md5SumStr(data string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+func Md5SumFile(filePath string) (string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("Failed to open file %s, %v", filePath, err)
+	}
+	defer f.Close()
+
+	h := md5.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", fmt.Errorf("Failed to calculate md5sum of file %s, %v", filePath, err)
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
 func CreateInfluxMeasurementName(measurement string, interval time.Duration) string {
 	return measurement + "-" + interval.String()
+}
+
+func DeleteFile(filePath string) error {
+	if err := os.Remove(filePath); !os.IsNotExist(err) {
+		return err
+	}
+	return nil
 }
