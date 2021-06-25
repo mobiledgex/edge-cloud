@@ -614,11 +614,11 @@ func MarshalArgs(obj interface{}, ignore []string, aliases []string) ([]string, 
 
 func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]struct{}, specialArgs map[string]string, aliases map[string]string) []string {
 	args := []string{}
-	for k, v := range dat {
+	for kK, v := range dat {
 		if v == nil {
 			continue
 		}
-		k = strings.ToLower(k)
+		k := strings.ToLower(kK)
 		if sub, ok := v.(map[string]interface{}); ok {
 			subargs := MapToArgs(append(prefix, k), sub, ignore, specialArgs, aliases)
 			args = append(args, subargs...)
@@ -657,7 +657,7 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 		}
 		var arg string
 		if sparg == "StringToString" {
-			arg = fmt.Sprintf("%s=%s=%s", name, k, val)
+			arg = fmt.Sprintf("%s=%s=%s", name, kK, val)
 		} else {
 			arg = fmt.Sprintf("%s=%s", name, val)
 		}
