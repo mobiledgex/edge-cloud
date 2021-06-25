@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -361,22 +360,6 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 	return err
 }
 
-// Run  "dpkg-query" to get actual runtime package version which may be different from base VM version.
-func getRuntimeVersion(ctx context.Context) (string, error) {
-	cmd := "/usr/bin/dpkg-query"
-	arg0 := `-f='${Version}'`
-	arg1 := "--show"
-	arg2 := "mobiledgex"
-	cexec := exec.Command(cmd, arg0, arg1, arg2)
-	o, err := cexec.Output()
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Running dpkg-query failed", "err", err)
-		return string(o), err
-	}
-	out := string(o)
-	return out, nil
-}
-
 // Read file "/etc/mex-release" from original base vm image and parse certain env variables.
 func readMexReleaseFileVars(ctx context.Context) (map[string]string, error) {
 	filePath := "/etc/mex-release"
@@ -426,10 +409,4 @@ func getMexReleaseInfo(ctx context.Context) {
 	if ok {
 		nodeMgr.MyNode.Properties[k] = v
 	}
-
-	runtimeVersion, e := getRuntimeVersion(ctx)
-	if e == nil {
-		nodeMgr.MyNode.Properties["runtimeVersion"] = runtimeVersion
-	}
-
 }
