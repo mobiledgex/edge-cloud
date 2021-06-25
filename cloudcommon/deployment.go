@@ -353,7 +353,7 @@ func GetTimeout(cLen int) time.Duration {
 	return 15 * time.Minute
 }
 
-func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, urlCreds, filePath string, content *string) error {
+func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, urlCreds, filePath string, content *string) (reterr error) {
 	var reqConfig *RequestConfig
 
 	log.SpanLog(ctx, log.DebugLevelApi, "attempt to download file", "file-url", fileUrlPath)
@@ -394,8 +394,15 @@ func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, url
 		if err != nil {
 			return err
 		}
-		defer out.Close()
-
+		defer func() {
+			out.Close()
+			if reterr != nil {
+				// Stale file might be present if download fails/succeeds, deleting it
+				if delerr := DeleteFile(filePath); delerr != nil {
+					log.SpanLog(ctx, log.DebugLevelApi, "file cleanup failed", "filePath", filePath)
+				}
+			}
+		}()
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed to download file %v", err)
