@@ -54,9 +54,13 @@ message UserAlert {
   uint32 active_conn_limit = 6;
   // Alert Severity
   AlertSeverity severity = 7;
-  // TODO - add extra labels
-  // map<string><string> extra_labels = 8;
-
+  // Trigger threshold interval
+  int64 trigger_time = 8 [(gogoproto.casttype) = "Duration"];
+  // Additional Labels
+  map <string, string> labels = 9;
+  // Additional Annotations for extra information about the alert
+  map <string, string> annotations = 10;
+  
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

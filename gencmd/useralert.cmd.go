@@ -303,6 +303,9 @@ var UserAlertOptionalArgs = []string{
 	"disklimit",
 	"activeconnlimit",
 	"severity",
+	"triggertime",
+	"labels",
+	"annotations",
 }
 var UserAlertAliasArgs = []string{
 	"alert-org=key.organization",
@@ -316,9 +319,14 @@ var UserAlertComments = map[string]string{
 	"disklimit":       "Disk",
 	"activeconnlimit": "Active Connections",
 	"severity":        "Alert Severity, one of AlertSeverityUnknown, AlertSeveityInfo, AlertSeveityWarning, AlertSeverityError",
+	"triggertime":     "Trigger threshold interval",
+	"labels":          "Additional Labels",
+	"annotations":     "Additional Annotations for extra information about the alert",
 }
 var UserAlertSpecialArgs = map[string]string{
-	"fields": "StringArray",
+	"annotations": "StringToString",
+	"fields":      "StringArray",
+	"labels":      "StringToString",
 }
 var CreateUserAlertRequiredArgs = []string{
 	"alert-org",
@@ -330,4 +338,7 @@ var CreateUserAlertOptionalArgs = []string{
 	"memlimit",
 	"disklimit",
 	"activeconnlimit",
+	"triggertime",
+	"labels",
+	"annotations",
 }
