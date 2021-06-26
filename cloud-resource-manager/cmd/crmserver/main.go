@@ -62,11 +62,11 @@ var platform pf.Platform
 
 const ControllerTimeout = 1 * time.Minute
 
-const {
-	envMexBuild 		= "MEX_BUILD"
-	envMexBuildTag 		= "MEX_BUILD_TAG"
-	envMexBuildFlavor 	= "MEX_BUILD_FLAVOR"
-}
+const (
+	envMexBuild       = "MEX_BUILD"
+	envMexBuildTag    = "MEX_BUILD_TAG"
+	envMexBuildFlavor = "MEX_BUILD_FLAVOR"
+)
 
 func main() {
 	nodeMgr.InitFlags()
