@@ -644,6 +644,15 @@ func (s *DummyServer) ShowCloudletRefs(in *edgeproto.CloudletRefs, server edgepr
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.CloudletRefs{})
 		}
+		if ch, ok := s.MidstreamFailChs["ShowCloudletRefs"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
+		}
 	}
 	err = s.CloudletRefsCache.Show(in, func(obj *edgeproto.CloudletRefs) error {
 		err := server.Send(obj)
@@ -693,6 +702,15 @@ func (s *DummyServer) ShowClusterRefs(in *edgeproto.ClusterRefs, server edgeprot
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.ClusterRefs{})
 		}
+		if ch, ok := s.MidstreamFailChs["ShowClusterRefs"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
+		}
 	}
 	err = s.ClusterRefsCache.Show(in, func(obj *edgeproto.ClusterRefs) error {
 		err := server.Send(obj)
@@ -741,6 +759,15 @@ func (s *DummyServer) ShowAppInstRefs(in *edgeproto.AppInstRefs, server edgeprot
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.AppInstRefs{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowAppInstRefs"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.AppInstRefsCache.Show(in, func(obj *edgeproto.AppInstRefs) error {

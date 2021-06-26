@@ -606,6 +606,10 @@ func Cleanup(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	err = process.CleanupEtcdRamDisk()
+	if err != nil {
+		return err
+	}
 	return CleanupLocalProxies()
 }
 

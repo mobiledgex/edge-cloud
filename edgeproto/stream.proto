@@ -75,6 +75,15 @@ service StreamObjApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Organization";
   }
+  // Stream GPU driver current progress
+  rpc StreamGPUDriver(GPUDriverKey) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/stream/gpudriver"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
+  }
   // This is used internally to forward requests to other Controllers
   rpc StreamLocalMsgs(AppInstKey) returns (stream Result) {}
 }

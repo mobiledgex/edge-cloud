@@ -2836,6 +2836,7 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			m.IntMap = make(map[int32]int32)
 			for k0, _ := range src.IntMap {
 				m.IntMap[k0] = src.IntMap[k0]
+				changed++
 			}
 		} else if m.IntMap != nil {
 			m.IntMap = nil

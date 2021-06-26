@@ -1296,3 +1296,33 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 
 }
+
+func (cd *ControllerData) RefreshAppInstRuntime(ctx context.Context) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "Refresh appinst runtime info")
+	var app edgeproto.App
+	var clusterInst edgeproto.ClusterInst
+	cd.AppInstCache.Show(&edgeproto.AppInst{}, func(obj *edgeproto.AppInst) error {
+		if obj.State != edgeproto.TrackedState_READY {
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get runtime info, as AppInst is not in Ready state", "key", obj.Key, "state", obj.State)
+			return nil
+		}
+		if !cd.AppCache.Get(&obj.Key.AppKey, &app) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get runtime info, as app definition is missing", "key", obj.Key)
+			return nil
+		}
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			return nil
+		}
+		if !cd.ClusterInstCache.Get(obj.ClusterInstKey(), &clusterInst) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get runtime info, as ClusterInst is missing", "key", obj.Key)
+			return nil
+		}
+		rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, obj)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", obj.Key, "err", err)
+		} else {
+			cd.AppInstInfoCache.SetStateRuntime(ctx, &obj.Key, obj.State, rt)
+		}
+		return nil
+	})
+}

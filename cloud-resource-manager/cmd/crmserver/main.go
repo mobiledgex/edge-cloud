@@ -201,7 +201,8 @@ func main() {
 			GPUDriverCache:        &controllerData.GPUDriverCache,
 		}
 
-		if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+		features := platform.GetFeatures()
+		if features.IsVMPool {
 			if cloudlet.VmPool == "" {
 				log.FatalLog("Cloudlet is missing VM pool name")
 			}
@@ -255,6 +256,10 @@ func main() {
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
+
+				// Update AppInst runtime info in case it has changed
+				controllerData.RefreshAppInstRuntime(ctx)
+
 				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
 				if resources != nil {
 					resMap := make(map[string]edgeproto.InfraResource)

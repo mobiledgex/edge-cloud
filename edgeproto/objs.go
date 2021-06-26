@@ -290,6 +290,9 @@ func (g *GPUDriverBuild) Validate() error {
 	if g.DriverPath == "" {
 		return fmt.Errorf("Missing driverpath")
 	}
+	if g.Md5Sum == "" {
+		return fmt.Errorf("Missing md5sum")
+	}
 	if _, err := util.ImagePathParse(g.DriverPath); err != nil {
 		return fmt.Errorf("Invalid driver path(%q): %v", g.DriverPath, err)
 	}
@@ -325,8 +328,10 @@ func (g *GPUDriver) Validate(fields map[string]struct{}) error {
 	if err := g.ValidateEnums(); err != nil {
 		return err
 	}
-	if g.Type == GPUType_GPU_TYPE_NONE {
-		return fmt.Errorf("GPU type cannot be none")
+	if _, found := fields[GPUDriverFieldType]; found {
+		if g.Type == GPUType_GPU_TYPE_NONE {
+			return fmt.Errorf("GPU type cannot be none")
+		}
 	}
 	buildNames := make(map[string]struct{})
 	for _, build := range g.Builds {
@@ -1125,6 +1130,18 @@ func GetStreamKeyFromCloudletKey(key *CloudletKey) AppInstKey {
 	return AppInstKey{
 		ClusterInstKey: VirtualClusterInstKey{
 			CloudletKey: *key,
+		},
+	}
+}
+
+// Temporary way to get unique stream key for GPU driver object
+// This will be fixed as part of 3rd-party in-memory DB changes
+func GetStreamKeyFromGPUDriverKey(key *GPUDriverKey) AppInstKey {
+	return AppInstKey{
+		ClusterInstKey: VirtualClusterInstKey{
+			CloudletKey: CloudletKey{
+				Name: key.Name + "_" + key.Organization,
+			},
 		},
 	}
 }

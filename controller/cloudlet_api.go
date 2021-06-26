@@ -14,6 +14,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -89,15 +90,6 @@ func (s *updateCloudletCallback) cb(updateType edgeproto.CacheUpdateType, value 
 func ignoreCRMState(cctx *CallContext) bool {
 	if cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
-		return true
-	}
-	return false
-}
-
-func supportsTrustPolicy(platformType edgeproto.PlatformType) bool {
-	if platformType == edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK ||
-		platformType == edgeproto.PlatformType_PLATFORM_TYPE_FAKE ||
-		platformType == edgeproto.PlatformType_PLATFORM_TYPE_VCD {
 		return true
 	}
 	return false
@@ -371,32 +363,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		}
 	}
 
-	if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS &&
-		in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
-		if in.InfraConfig.FlavorName == "" {
-			return errors.New("Infra flavor name is required for private deployments")
-		}
-		if in.InfraConfig.ExternalNetworkName == "" {
-			return errors.New("Infra external network is required for private deployments")
-		}
-	}
-
-	if in.VmPool != "" {
-		if in.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
-			return errors.New("VM Pool is only valid for PlatformTypeVmPool")
-		}
-		vmPoolKey := edgeproto.VMPoolKey{
-			Name:         in.VmPool,
-			Organization: in.Key.Organization,
-		}
-		if s.UsesVMPool(&vmPoolKey) {
-			return errors.New("VM Pool with this name is already in use by some other Cloudlet")
-		}
-	} else {
-		if in.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
-			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
-		}
-	}
 	if in.GpuConfig.Driver.Name == "" {
 		in.GpuConfig = edgeproto.GPUConfig{}
 	}
@@ -448,6 +414,44 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := inCb.Context()
 
+	platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
+	features, err := GetCloudletFeatures(ctx, in.PlatformType)
+	if err != nil {
+		return fmt.Errorf("Failed to get features for platform: %s", err)
+	}
+
+	if in.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS &&
+		!features.IsVMPool {
+		if in.InfraConfig.FlavorName == "" {
+			return errors.New("Infra flavor name is required for private deployments")
+		}
+		if in.InfraConfig.ExternalNetworkName == "" {
+			return errors.New("Infra external network is required for private deployments")
+		}
+	}
+	if in.VmPool != "" {
+		if !features.IsVMPool {
+			return errors.New("VM Pool is only valid for PlatformTypeVmPool")
+		}
+		vmPoolKey := edgeproto.VMPoolKey{
+			Name:         in.VmPool,
+			Organization: in.Key.Organization,
+		}
+		if s.UsesVMPool(&vmPoolKey) {
+			return errors.New("VM Pool with this name is already in use by some other Cloudlet")
+		}
+	} else {
+		if features.IsVMPool {
+			return errors.New("VM Pool is mandatory for PlatformTypeVmPool")
+		}
+	}
+	if in.EnableDefaultServerlessCluster && !features.SupportsMultiTenantCluster {
+		return fmt.Errorf("Serverless cluster not supported on %s", platName)
+	}
+	if in.TrustPolicy != "" && !features.SupportsTrustPolicy {
+		return fmt.Errorf("Trust Policy not supported on %s", platName)
+	}
+
 	cloudletKey := in.Key
 	sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
 	if err == nil {
@@ -487,6 +491,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	kafkaDetails := node.KafkaCreds{}
 	if (in.KafkaUser != "") != (in.KafkaPassword != "") {
 		return errors.New("Must specify both kafka username and password, or neither")
+	} else if in.KafkaCluster == "" && in.KafkaUser != "" {
+		return errors.New("Must specify a kafka cluster endpoint in addition to kafka credentials")
 	}
 	if in.KafkaCluster != "" {
 		kafkaDetails.Endpoint = in.KafkaCluster
@@ -540,13 +546,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if !gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
 				return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
 			}
+			if gpuDriver.State == ChangeInProgress {
+				return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
+			}
 			in.GpuConfig.GpuType = gpuDriver.Type
 		}
 		if in.TrustPolicy != "" {
-			if !supportsTrustPolicy(in.PlatformType) {
-				platName := edgeproto.PlatformType_name[int32(in.PlatformType)]
-				return fmt.Errorf("Trust Policy not supported on %s", platName)
-			}
 			policy := edgeproto.TrustPolicy{}
 			if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
 				return err
@@ -639,7 +644,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				cloudlet.ChefClientKey = in.ChefClientKey
 				saveCloudlet = true
 			}
-			if in.DeploymentLocal || cloudletPlatform.IsCloudletServicesLocal() {
+			if in.DeploymentLocal || features.CloudletServicesLocal {
 				// Store controller address if crmserver is started locally
 				cloudlet.HostController = *externalApiAddr
 				saveCloudlet = true
@@ -819,6 +824,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	if !cloudletApi.cache.Get(&in.Key, cur) {
 		return in.Key.NotFoundError()
 	}
+	features, err := GetCloudletFeatures(ctx, cur.PlatformType)
+	if err != nil {
+		return fmt.Errorf("Failed to get features for platform: %s", err)
+	}
 
 	accessVars := make(map[string]string)
 	if _, found := fmap[edgeproto.CloudletFieldAccessVars]; found {
@@ -914,7 +923,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	}
 
 	var newMaintenanceState dme.MaintenanceState
-	var oldmstate dme.MaintenanceState
 	maintenanceChanged := false
 	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldTrustPolicy]
 
@@ -951,7 +959,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		if _, found := fmap[edgeproto.CloudletFieldGpuConfig]; found {
 			if in.GpuConfig.Driver.Name == "" {
+				// clear GPU config
 				in.GpuConfig = edgeproto.GPUConfig{}
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverName)
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverOrganization)
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigProperties)
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigGpuType)
 			} else {
 				if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.Organization {
 					return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.Organization)
@@ -960,25 +973,31 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				if !gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
 					return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
 				}
+				if gpuDriver.State == ChangeInProgress {
+					return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
+				}
 				in.GpuConfig.GpuType = gpuDriver.Type
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigGpuType)
 			}
 			crmUpdateReqd = true
 		}
 
-		oldmstate = cur.MaintenanceState
+		old := edgeproto.Cloudlet{}
+		old.DeepCopyIn(cur)
 		cur.CopyInFields(in)
 		newMaintenanceState = cur.MaintenanceState
-		if newMaintenanceState != oldmstate {
+		if newMaintenanceState != old.MaintenanceState {
 			maintenanceChanged = true
 			// don't change maintenance here, we handle it below
-			cur.MaintenanceState = oldmstate
+			cur.MaintenanceState = old.MaintenanceState
 		}
 		if newMaintenanceState == dme.MaintenanceState_MAINTENANCE_START || newMaintenanceState == dme.MaintenanceState_MAINTENANCE_START_NO_FAILOVER {
 			// return error when trying to put into maintenance but current state is not normal
-			if oldmstate != dme.MaintenanceState_NORMAL_OPERATION {
+			if old.MaintenanceState != dme.MaintenanceState_NORMAL_OPERATION {
 				return fmt.Errorf("Cloudlet must be in NormalOperation before starting maintenance")
 			}
 		}
+		platName := edgeproto.PlatformType_name[int32(cur.PlatformType)]
 		if privPolUpdateRequested {
 			if maintenanceChanged {
 				return fmt.Errorf("Cannot change both maintenance state and trust policy at the same time")
@@ -989,8 +1008,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				}
 			}
 			if in.TrustPolicy != "" {
-				if !supportsTrustPolicy(cur.PlatformType) {
-					platName := edgeproto.PlatformType_name[int32(cur.PlatformType)]
+				if !features.SupportsTrustPolicy {
 					return fmt.Errorf("Trust Policy not supported on %s", platName)
 				}
 				policy := edgeproto.TrustPolicy{}
@@ -1002,6 +1020,20 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				}
 			}
 		}
+		if old.EnableDefaultServerlessCluster != cur.EnableDefaultServerlessCluster {
+			if maintenanceChanged {
+				return fmt.Errorf("Cannot change both enable default serverless cluster and maintenance state")
+			}
+			if cur.EnableDefaultServerlessCluster {
+				if !features.SupportsMultiTenantCluster {
+					return fmt.Errorf("Serverless cluster not supported on %s", platName)
+				}
+				go createDefaultMultiTenantCluster(ctx, cur.Key)
+			} else {
+				go deleteDefaultMultiTenantCluster(ctx, cur.Key)
+			}
+		}
+
 		if crmUpdateReqd && !ignoreCRM(cctx) {
 			cur.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
@@ -1606,8 +1638,13 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, key *edgeproto.Cl
 		return nil, key.NotFoundError()
 	}
 
+	features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get features for platform: %s", err)
+	}
+
 	pfFlavor := edgeproto.Flavor{}
-	if cloudlet.PlatformType != edgeproto.PlatformType_PLATFORM_TYPE_VM_POOL {
+	if !features.IsVMPool {
 		if cloudlet.Flavor.Name == "" || cloudlet.Flavor.Name == DefaultPlatformFlavor.Key.Name {
 			cloudlet.Flavor = DefaultPlatformFlavor.Key
 			pfFlavor = DefaultPlatformFlavor
@@ -1673,16 +1710,19 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 	return false
 }
 
-func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) bool {
+func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) (bool, []string) {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
+	cloudlets := []string{}
+	inUse := false
 	for _, data := range s.cache.Objs {
 		val := data.Obj
 		if driverKey.Matches(&val.GpuConfig.Driver) {
-			return true
+			cloudlets = append(cloudlets, val.Key.Name)
+			inUse = true
 		}
 	}
-	return false
+	return inUse, cloudlets
 }
 
 func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
@@ -1693,6 +1733,14 @@ func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.Cloudl
 	}
 
 	return cloudletPlatform.GetCloudletProps(ctx)
+}
+
+func GetCloudletFeatures(ctx context.Context, platformType edgeproto.PlatformType) (*platform.Features, error) {
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, platformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return nil, err
+	}
+	return cloudletPlatform.GetFeatures(), nil
 }
 
 func (s *CloudletApi) RevokeAccessKey(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
@@ -1869,9 +1917,10 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 	}
 	cloudletRes := map[string]string{
 		// Common Cloudlet Resources
-		cloudcommon.ResourceRamMb: cloudcommon.ResourceRamUnits,
-		cloudcommon.ResourceVcpus: "",
-		cloudcommon.ResourceGpus:  "",
+		cloudcommon.ResourceRamMb:       cloudcommon.ResourceRamUnits,
+		cloudcommon.ResourceVcpus:       "",
+		cloudcommon.ResourceGpus:        "",
+		cloudcommon.ResourceExternalIPs: "",
 	}
 	resInfo := make(map[string]edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
@@ -1917,6 +1966,13 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 				if ok {
 					gpusInfo.Value += 1
 					resInfo[cloudcommon.ResourceGpus] = gpusInfo
+				}
+			}
+			if vmRes.Type == cloudcommon.VMTypeRootLB || vmRes.Type == cloudcommon.VMTypePlatform {
+				externalIPInfo, ok := resInfo[cloudcommon.ResourceExternalIPs]
+				if ok {
+					externalIPInfo.Value += 1
+					resInfo[cloudcommon.ResourceExternalIPs] = externalIPInfo
 				}
 			}
 		}

@@ -32,6 +32,7 @@ var (
 	FakeVcpusUsed       = uint64(0)
 	FakeDiskUsed        = uint64(0)
 	FakeExternalIpsUsed = uint64(0)
+	FakeInstancesUsed   = uint64(0)
 
 	FakeRamMax         = uint64(40960)
 	FakeVcpusMax       = uint64(50)
@@ -128,6 +129,7 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	FakeVcpusUsed += 2 + 2
 	FakeDiskUsed += 40 + 40
 	FakeExternalIpsUsed += 1
+	FakeInstancesUsed += 2
 
 	err := UpdateResourcesMax()
 	if err != nil {
@@ -135,6 +137,16 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	}
 
 	return nil
+}
+
+func (s *Platform) GetFeatures() *platform.Features {
+	return &platform.Features{
+		SupportsMultiTenantCluster: true,
+		SupportsSharedVolume:       true,
+		SupportsTrustPolicy:        true,
+		CloudletServicesLocal:      true,
+		IsFake:                     true,
+	}
 }
 
 func (s *Platform) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
@@ -166,6 +178,11 @@ func UpdateCommonResourcesUsed(flavor string, add bool) {
 			FakeVcpusUsed -= FakeFlavorList[1].Vcpus
 			FakeDiskUsed -= FakeFlavorList[1].Disk
 		}
+	}
+	if add {
+		FakeInstancesUsed += 1
+	} else {
+		FakeInstancesUsed -= 1
 	}
 }
 
@@ -359,6 +376,10 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 			Value:         FakeExternalIpsUsed,
 			InfraMaxValue: FakeExternalIpsMax,
 		},
+		edgeproto.InfraResource{
+			Name:  cloudcommon.ResourceInstances,
+			Value: FakeInstancesUsed,
+		},
 	}
 
 	return &resources, nil
@@ -368,7 +389,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *edgeproto.Cloudlet, vmResources []edgeproto.VMResource, infraResMap map[string]edgeproto.InfraResource) map[string]edgeproto.InfraResource {
 	// resource name -> resource units
 	cloudletRes := map[string]string{
-		cloudcommon.ResourceExternalIPs: "",
+		cloudcommon.ResourceInstances: "",
 	}
 	resInfo := make(map[string]edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
@@ -383,14 +404,10 @@ func (s *Platform) GetClusterAdditionalResources(ctx context.Context, cloudlet *
 		}
 	}
 
-	for _, vmRes := range vmResources {
-		if vmRes.Type == cloudcommon.VMTypeRootLB {
-			out, ok := resInfo[cloudcommon.ResourceExternalIPs]
-			if ok {
-				out.Value += 1
-				resInfo[cloudcommon.ResourceExternalIPs] = out
-			}
-		}
+	out, ok := resInfo[cloudcommon.ResourceInstances]
+	if ok {
+		out.Value += uint64(len(vmResources))
+		resInfo[cloudcommon.ResourceInstances] = out
 	}
 	return resInfo
 }
@@ -399,22 +416,16 @@ func (s *Platform) GetCloudletResourceQuotaProps(ctx context.Context) (*edgeprot
 	return &edgeproto.CloudletResourceQuotaProps{
 		Properties: []edgeproto.InfraResource{
 			edgeproto.InfraResource{
-				Name:        cloudcommon.ResourceExternalIPs,
-				Description: cloudcommon.ResourceQuotaDesc[cloudcommon.ResourceExternalIPs],
+				Name:        cloudcommon.ResourceInstances,
+				Description: cloudcommon.ResourceQuotaDesc[cloudcommon.ResourceInstances],
 			},
 		},
 	}, nil
 }
 
 func (s *Platform) GetClusterAdditionalResourceMetric(ctx context.Context, cloudlet *edgeproto.Cloudlet, resMetric *edgeproto.Metric, resources []edgeproto.VMResource) error {
-	externalIpsUsed := uint64(0)
-	for _, vmRes := range resources {
-		if vmRes.Type == cloudcommon.VMTypeRootLB {
-			externalIpsUsed += 1
-		}
-	}
-
-	resMetric.AddIntVal(cloudcommon.ResourceMetricExternalIPs, externalIpsUsed)
+	instancesUsed := uint64(len(resources))
+	resMetric.AddIntVal(cloudcommon.ResourceMetricInstances, instancesUsed)
 	return nil
 }
 
@@ -497,10 +508,6 @@ func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (strin
 		return s.consoleServer.URL + "?token=xyz", nil
 	}
 	return "", fmt.Errorf("no console server to fetch URL from")
-}
-
-func (s *Platform) IsCloudletServicesLocal() bool {
-	return true
 }
 
 func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {

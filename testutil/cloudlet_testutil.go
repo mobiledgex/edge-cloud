@@ -1040,34 +1040,61 @@ func (r *Run) GPUDriverApi_GPUDriverBuildMember(data *[]edgeproto.GPUDriverBuild
 
 func (s *DummyServer) CreateGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_CreateGPUDriverServer) error {
 	var err error
-	s.GPUDriverCache.Update(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["CreateGPUDriver"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.GPUDriverCache.Update(server.Context(), in, 0)
 	return err
 }
 
 func (s *DummyServer) DeleteGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_DeleteGPUDriverServer) error {
 	var err error
-	s.GPUDriverCache.Delete(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["DeleteGPUDriver"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.GPUDriverCache.Delete(server.Context(), in, 0)
 	return err
 }
 
 func (s *DummyServer) UpdateGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_UpdateGPUDriverServer) error {
 	var err error
-	s.GPUDriverCache.Update(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["UpdateGPUDriver"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.GPUDriverCache.Update(server.Context(), in, 0)
 	return err
 }
 
@@ -1077,6 +1104,15 @@ func (s *DummyServer) ShowGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GP
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.GPUDriver{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowGPUDriver"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.GPUDriverCache.Show(in, func(obj *edgeproto.GPUDriver) error {
@@ -1336,34 +1372,61 @@ func (r *Run) CloudletApi_FlavorMatch(data *[]edgeproto.FlavorMatch, dataMap int
 
 func (s *DummyServer) CreateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_CreateCloudletServer) error {
 	var err error
-	s.CloudletCache.Update(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["CreateCloudlet"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.CloudletCache.Update(server.Context(), in, 0)
 	return err
 }
 
 func (s *DummyServer) DeleteCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_DeleteCloudletServer) error {
 	var err error
-	s.CloudletCache.Delete(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["DeleteCloudlet"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.CloudletCache.Delete(server.Context(), in, 0)
 	return err
 }
 
 func (s *DummyServer) UpdateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_UpdateCloudletServer) error {
 	var err error
-	s.CloudletCache.Update(server.Context(), in, 0)
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
-			server.Send(&edgeproto.Result{})
+			server.Send(&edgeproto.Result{Message: "some message"})
+		}
+		if ch, ok := s.MidstreamFailChs["UpdateCloudlet"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
+	s.CloudletCache.Update(server.Context(), in, 0)
 	return err
 }
 
@@ -1373,6 +1436,15 @@ func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.Clou
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.Cloudlet{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowCloudlet"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.CloudletCache.Show(in, func(obj *edgeproto.Cloudlet) error {
@@ -1387,6 +1459,15 @@ func (s *DummyServer) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, server edge
 	if true {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.Result{})
+		}
+		if ch, ok := s.MidstreamFailChs["PlatformDeleteCloudlet"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	return err
@@ -1456,6 +1537,15 @@ func (s *DummyServer) ShowCloudletInfo(in *edgeproto.CloudletInfo, server edgepr
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.CloudletInfo{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowCloudletInfo"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.CloudletInfoCache.Show(in, func(obj *edgeproto.CloudletInfo) error {

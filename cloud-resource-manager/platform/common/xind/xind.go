@@ -35,6 +35,12 @@ func (s *Xind) Init(ctx context.Context, platformConfig *platform.PlatformConfig
 	return nil
 }
 
+func (s *Xind) GetFeatures() *platform.Features {
+	return &platform.Features{
+		CloudletServicesLocal: true,
+	}
+}
+
 func (s *Xind) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
 	client, err := s.GetClient(ctx)
 	if err != nil {

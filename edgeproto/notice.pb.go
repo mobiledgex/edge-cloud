@@ -424,6 +424,7 @@ func (m *Notice) CopyInFields(src *Notice) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil

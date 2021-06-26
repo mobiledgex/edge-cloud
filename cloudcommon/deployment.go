@@ -18,6 +18,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
 	v1 "k8s.io/api/core/v1"
 )
@@ -141,6 +142,14 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 				// while our manifest exhaustively enumerates each as a kubePort
 				start := appPort.InternalPort
 				end := appPort.EndPort
+				// This is Kubernetes specific port range check, which is different only for UDP
+				// Parseports() still checks for default range of ports (maxTcpPorts, maxUdpPorts, maxEnvoyUdpPorts)
+				if appPort.Proto == dme.LProto_L_PROTO_UDP {
+					portCount := end - start + 1
+					if portCount > int32(util.MaxK8sUdpPorts) {
+						return fmt.Errorf("Kubernetes deployment not allowed to specify more than %d udp ports", util.MaxK8sUdpPorts)
+					}
+				}
 				for i := start; i <= end; i++ {
 					// expand short hand notation to test membership in map
 					tp := dme.AppPort{
@@ -344,7 +353,7 @@ func GetTimeout(cLen int) time.Duration {
 	return 15 * time.Minute
 }
 
-func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, urlCreds, filePath string, content *string) error {
+func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, urlCreds, filePath string, content *string) (reterr error) {
 	var reqConfig *RequestConfig
 
 	log.SpanLog(ctx, log.DebugLevelApi, "attempt to download file", "file-url", fileUrlPath)
@@ -385,8 +394,15 @@ func DownloadFile(ctx context.Context, authApi RegistryAuthApi, fileUrlPath, url
 		if err != nil {
 			return err
 		}
-		defer out.Close()
-
+		defer func() {
+			out.Close()
+			if reterr != nil {
+				// Stale file might be present if download fails/succeeds, deleting it
+				if delerr := DeleteFile(filePath); delerr != nil {
+					log.SpanLog(ctx, log.DebugLevelApi, "file cleanup failed", "filePath", filePath)
+				}
+			}
+		}()
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed to download file %v", err)

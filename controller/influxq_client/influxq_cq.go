@@ -46,7 +46,6 @@ func (q *InfluxQ) AddContinuousQuery(cq *ContinuousQuerySettings, numReceivers i
 }
 
 // Create a continuous query
-// TODO: Update CQs by dropping unwanted cqs
 func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *ContinuousQueryCreationResult {
 	res := &ContinuousQueryCreationResult{}
 	if q.done {
@@ -82,14 +81,13 @@ func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *Continuous
 		}
 		selectors += fmt.Sprintf(layout, aggfunction, newfield)
 	}
-	collectionIntervalName := cq.CollectionInterval.String()
-	newMeasurementName := cq.Measurement + "-" + collectionIntervalName
+	newMeasurementName := cloudcommon.CreateInfluxMeasurementName(cq.Measurement, cq.CollectionInterval)
 	fullyQualifiedMeasurementName := fmt.Sprintf("\"%s\".\"%s\".\"%s\"", cq.NewDbName, cq.RetentionPolicyName, newMeasurementName)
 	cqName := newMeasurementName
 	res.CqName = cqName
 	res.CqTime = cq.CollectionInterval
 	res.NewMeasurement = fullyQualifiedMeasurementName
-	query := fmt.Sprintf(ContinuousQueryTemplate, cqName, q.dbName, selectors, fullyQualifiedMeasurementName, cq.Measurement, collectionIntervalName)
+	query := fmt.Sprintf(ContinuousQueryTemplate, cqName, q.dbName, selectors, fullyQualifiedMeasurementName, cq.Measurement, cq.CollectionInterval.String())
 	_, err := q.QueryDB(query)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMetrics,
@@ -98,6 +96,17 @@ func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *Continuous
 		return res
 	}
 	return res
+}
+
+// Parameters: continuous query name and DbName
+var DropContinuousQueryTemplate = "DROP CONTINUOUS QUERY \"%s\" ON \"%s\" "
+
+// Drop ContinuousQuery
+func (q *InfluxQ) DropContinuousQuery(cq *ContinuousQuerySettings) error {
+	cqName := cloudcommon.CreateInfluxMeasurementName(cq.Measurement, cq.CollectionInterval)
+	query := fmt.Sprintf(DropContinuousQueryTemplate, cqName, q.dbName)
+	_, err := q.QueryDB(query)
+	return err
 }
 
 // Aggregation functions for EdgeEvents latency stats continuous queries

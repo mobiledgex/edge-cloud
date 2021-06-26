@@ -205,6 +205,8 @@ cloudletinfos:
     - name: External IPs
       value: 2
       inframaxvalue: 30
+    - name: Instances
+      value: 6
     clusterinsts:
     - clusterkey:
         name: SmallCluster
@@ -266,6 +268,8 @@ cloudletinfos:
     - name: External IPs
       value: 3
       inframaxvalue: 30
+    - name: Instances
+      value: 7
     clusterinsts:
     - clusterkey:
         name: SmallCluster
@@ -327,6 +331,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 2
 - key:
     organization: azure
     name: azure-cloud-4
@@ -375,6 +381,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 2
 - key:
     organization: gcp
     name: gcp-cloud-5
@@ -423,6 +431,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 2
 apps:
 - key:
     organization: AcmeAppCo
