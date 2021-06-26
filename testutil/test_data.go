@@ -1894,6 +1894,13 @@ var GPUDriverData = []edgeproto.GPUDriver{
 		},
 		Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 	},
+	edgeproto.GPUDriver{
+		Key: edgeproto.GPUDriverKey{
+			Organization: OperatorData[0],
+			Name:         "nvidia-vgpu",
+		},
+		Type: edgeproto.GPUType_GPU_TYPE_VGPU,
+	},
 }
 
 func GetTimestamp(t time.Time) *types.Timestamp {
