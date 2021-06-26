@@ -62,6 +62,12 @@ var platform pf.Platform
 
 const ControllerTimeout = 1 * time.Minute
 
+const {
+	envMexBuild 		= "MEX_BUILD"
+	envMexBuildTag 		= "MEX_BUILD_TAG"
+	envMexBuildFlavor 	= "MEX_BUILD_FLAVOR"
+}
+
 func main() {
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
@@ -376,9 +382,12 @@ func readMexReleaseFileVars(ctx context.Context) (map[string]string, error) {
 	for scanner.Scan() {
 		env := scanner.Text()
 		envPair := strings.SplitN(env, "=", 2)
+		if len(envPair) != 2 {
+			continue
+		}
 		key := envPair[0]
 		value := envPair[1]
-		if key == "MEX_BUILD" || key == "MEX_BUILD_TAG" || key == "MEX_BUILD_FLAVOR" {
+		if key == envMexBuild || key == envMexBuildTag || key == envMexBuildFlavor {
 			m[key] = value
 		}
 	}
@@ -394,17 +403,17 @@ func getMexReleaseInfo(ctx context.Context) {
 	if err != nil {
 		return
 	}
-	k := "MEX_BUILD"
+	k := envMexBuild
 	v, ok := m[k]
 	if ok {
 		nodeMgr.MyNode.Properties[k] = v
 	}
-	k = "MEX_BUILD_TAG"
+	k = envMexBuildTag
 	v, ok = m[k]
 	if ok {
 		nodeMgr.MyNode.Properties[k] = v
 	}
-	k = "MEX_BUILD_FLAVOR"
+	k = envMexBuildFlavor
 	v, ok = m[k]
 	if ok {
 		nodeMgr.MyNode.Properties[k] = v
