@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
@@ -60,6 +61,12 @@ var notifyClient *notify.Client
 var platform pf.Platform
 
 const ControllerTimeout = 1 * time.Minute
+
+const (
+	envMexBuild       = "MEX_BUILD"
+	envMexBuildTag    = "MEX_BUILD_TAG"
+	envMexBuildFlavor = "MEX_BUILD_FLAVOR"
+)
 
 func main() {
 	nodeMgr.InitFlags()
@@ -282,6 +289,7 @@ func main() {
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
 		nodeMgr.MyNode.ContainerVersion = cloudletContainerVersion
+		getMexReleaseInfo(ctx)
 		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
@@ -361,4 +369,58 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
 	err := platform.Init(ctx, &pc, caches, updateCallback)
 	return err
+}
+
+// Read file "/etc/mex-release" from original base vm image and parse certain env variables.
+func readMexReleaseFileVars(ctx context.Context) (map[string]string, error) {
+	filePath := "/etc/mex-release"
+	m := make(map[string]string)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Opening file /etc/mex-release failed", "err", err)
+		return m, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		env := scanner.Text()
+		envPair := strings.SplitN(env, "=", 2)
+		if len(envPair) != 2 {
+			continue
+		}
+		key := envPair[0]
+		value := envPair[1]
+		if key == envMexBuild || key == envMexBuildTag || key == envMexBuildFlavor {
+			m[key] = value
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Scanner failed on file /etc/mex-release", "err", err)
+	}
+	return m, nil
+}
+
+func getMexReleaseInfo(ctx context.Context) {
+	m, err := readMexReleaseFileVars(ctx)
+	if err != nil {
+		return
+	}
+	k := envMexBuild
+	v, ok := m[k]
+	if ok {
+		nodeMgr.MyNode.Properties[k] = v
+	}
+	k = envMexBuildTag
+	v, ok = m[k]
+	if ok {
+		nodeMgr.MyNode.Properties[k] = v
+	}
+	k = envMexBuildFlavor
+	v, ok = m[k]
+	if ok {
+		nodeMgr.MyNode.Properties[k] = v
+	}
 }
