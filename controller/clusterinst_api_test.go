@@ -204,6 +204,7 @@ func TestClusterInstApi(t *testing.T) {
 	testClusterInstOverrideTransientDelete(t, ctx, commonApi, responder)
 
 	testClusterInstResourceUsage(t, ctx)
+	testClusterInstGPUFlavor(t, ctx)
 
 	dummy.Stop()
 }
@@ -940,4 +941,34 @@ func waitDefaultMTClust(t *testing.T, cloudletKey edgeproto.CloudletKey, present
 		time.Sleep(100 * time.Millisecond)
 	}
 	require.Equal(t, present, found, "DefaultMTCluster presence incorrect")
+}
+
+func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
+	vgpuCloudlet := testutil.CloudletData[0]
+	vgpuCloudlet.Key.Name = "VGPUCloudlet"
+	vgpuCloudlet.GpuConfig.Driver = testutil.GPUDriverData[3].Key
+	err := cloudletApi.CreateCloudlet(&vgpuCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	cloudletInfo := testutil.CloudletInfoData[0]
+	cloudletInfo.Key = vgpuCloudlet.Key
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
+
+	obj := testutil.ClusterInstData[0]
+	obj.Key.ClusterKey.Name = "GPUTestClusterFlavor"
+	obj.Key.CloudletKey = vgpuCloudlet.Key
+	obj.Flavor = testutil.FlavorData[4].Key // GPU Passthrough flavor
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
+	require.Contains(t, err.Error(), "must have 'vgpu' as resmap tag to use vGPU")
+
+	vgpuFlavor := testutil.FlavorData[4]
+	vgpuFlavor.Key.Name = "mex-vgpu-flavor"
+	vgpuFlavor.OptResMap["vgpu"] = "resources:VGPU:1"
+	_, err = flavorApi.CreateFlavor(ctx, &vgpuFlavor)
+	require.Nil(t, err, "create flavor as vgpu flavor")
+
+	obj.Flavor = vgpuFlavor.Key
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "create cluster inst with vgpu flavor on vgpu cloudlet")
 }

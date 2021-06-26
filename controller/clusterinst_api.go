@@ -689,6 +689,24 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	return metrics, nil
 }
 
+func isGPUFlavorValidForCloudlet(ctx context.Context, nodeFlavor *edgeproto.Flavor, cloudlet *edgeproto.Cloudlet) error {
+	switch cloudlet.GpuConfig.GpuType {
+	case edgeproto.GPUType_GPU_TYPE_PASSTHROUGH:
+		if _, ok := nodeFlavor.OptResMap["gpu"]; ok {
+			return nil
+		}
+		return fmt.Errorf("Invalid node flavor %s, must have 'gpu' as resmap tag to use GPU passthrough based cloudlet", nodeFlavor.Key.String())
+	case edgeproto.GPUType_GPU_TYPE_VGPU:
+		if _, ok := nodeFlavor.OptResMap["vgpu"]; ok {
+			return nil
+		}
+		return fmt.Errorf("Invalid node flavor %s, must have 'vgpu' as resmap tag to use vGPU based cloudlet", nodeFlavor.Key.String())
+	case edgeproto.GPUType_GPU_TYPE_NONE:
+		return fmt.Errorf("Cloudlet %v doesn't support GPU", cloudlet.Key)
+	}
+	return nil
+}
+
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (reterr error) {
@@ -859,8 +877,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
 		if in.OptRes == "gpu" {
-			if cloudlet.GpuConfig.GpuType == edgeproto.GPUType_GPU_TYPE_NONE {
-				return fmt.Errorf("Cloudlet %v doesn't support GPU", cloudlet.Key)
+			if err := isGPUFlavorValidForCloudlet(ctx, &nodeFlavor, &cloudlet); err != nil {
+				return err
 			}
 		}
 		in.NodeFlavor = vmspec.FlavorName
