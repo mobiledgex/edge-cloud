@@ -28,8 +28,9 @@ type runCommandData struct {
 	ExpectedOutput string
 }
 
-func readAppDataFile(file string) {
-	err := util.ReadYamlFile(file, &appData, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
+func readAppDataFile(file string, vars map[string]string) {
+	vars = util.AddVars(util.DeploymentReplacementVars, vars)
+	err := util.ReadYamlFile(file, &appData, util.WithVars(vars), util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "appdata") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", file)
@@ -38,8 +39,9 @@ func readAppDataFile(file string) {
 	}
 }
 
-func readAppDataFileGeneric(file string) {
-	err := util.ReadYamlFile(file, &appDataMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
+func readAppDataFileGeneric(file string, vars map[string]string) {
+	vars = util.AddVars(util.DeploymentReplacementVars, vars)
+	err := util.ReadYamlFile(file, &appDataMap, util.WithVars(vars), util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "appdata") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", file)
@@ -48,7 +50,7 @@ func readAppDataFileGeneric(file string) {
 	}
 }
 
-func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string, mods []string, retry *bool) bool {
+func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars map[string]string, outputDir string, mods []string, retry *bool) bool {
 	runCLI := false
 	for _, mod := range mods {
 		if mod == "cli" {
@@ -119,22 +121,22 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		testutil.RunNodeDataShowApis(run, filter, output)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "debug") {
-		runDebug(run, api, apiFile, outputDir)
+		runDebug(run, api, apiFile, apiFileVars, outputDir)
 	} else if api == "deviceshow" {
 		output := &edgeproto.DeviceData{}
 		run.Mode = "show"
 		run.DeviceApi(nil, nil, &output.Devices)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "organization") {
-		runOrg(run, api, apiFile, outputDir)
+		runOrg(run, api, apiFile, apiFileVars, outputDir)
 	} else {
 		if apiFile == "" {
 			log.Println("Error: Cannot run controller APIs without API file")
 			return false
 		}
 
-		readAppDataFile(apiFile)
-		readAppDataFileGeneric(apiFile)
+		readAppDataFile(apiFile, apiFileVars)
+		readAppDataFileGeneric(apiFile, apiFileVars)
 
 		switch api {
 		case "delete":
@@ -172,7 +174,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	return rc
 }
 
-func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
+func RunCommandAPI(api string, ctrlname string, apiFile string, apiFileVars map[string]string, outputDir string) bool {
 	log.Printf("Exec %s using %s\n", api, apiFile)
 
 	ctrl := util.GetController(ctrlname)
@@ -182,7 +184,7 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 		log.Printf("Error: Cannot exec %s API without API file\n", api)
 		return false
 	}
-	err := util.ReadYamlFile(apiFile, &data)
+	err := util.ReadYamlFile(apiFile, &data, util.WithVars(apiFileVars))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s, %v\n", apiFile, err)
 		return false
@@ -261,12 +263,12 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, outputDir string
 	return true
 }
 
-func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, outputDir string) error {
+func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string, outputDir string) error {
 	if apiFile == "" {
 		log.Println("Error: Cannot run RunCommand API without API file")
 		return fmt.Errorf("Error: Cannot run controller APIs without API file")
 	}
-	readAppDataFile(apiFile)
+	readAppDataFile(apiFile, apiFileVars)
 
 	ctrl := util.GetController("")
 
@@ -310,12 +312,12 @@ func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, ou
 }
 
 // Walk through all the secified cloudlets and stop CRM procecess for them
-func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string) error {
+func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string) error {
 	if apiFile == "" {
 		log.Println("Error: Cannot run RunCommand API without API file")
 		return fmt.Errorf("Error: Cannot run controller APIs without API file")
 	}
-	readAppDataFile(apiFile)
+	readAppDataFile(apiFile, apiFileVars)
 
 	for _, c := range appData.Cloudlets {
 		if err := cloudcommon.StopCRMService(ctx, &c); err != nil {
@@ -325,7 +327,7 @@ func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string) err
 	return nil
 }
 
-func runDebug(run *testutil.Run, api, apiFile, outputDir string) {
+func runDebug(run *testutil.Run, api, apiFile string, apiFileVars map[string]string, outputDir string) {
 	data := edgeproto.DebugData{}
 
 	if apiFile == "" {
@@ -333,7 +335,7 @@ func runDebug(run *testutil.Run, api, apiFile, outputDir string) {
 		*run.Rc = false
 		return
 	}
-	err := util.ReadYamlFile(apiFile, &data)
+	err := util.ReadYamlFile(apiFile, &data, util.WithVars(apiFileVars))
 	if err != nil {
 		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
 		os.Exit(1)
@@ -358,7 +360,7 @@ func runDebug(run *testutil.Run, api, apiFile, outputDir string) {
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }
 
-func runOrg(run *testutil.Run, api, apiFile, outputDir string) {
+func runOrg(run *testutil.Run, api, apiFile string, apiFileVars map[string]string, outputDir string) {
 	data := edgeproto.OrganizationData{}
 
 	if apiFile == "" {
@@ -366,7 +368,7 @@ func runOrg(run *testutil.Run, api, apiFile, outputDir string) {
 		*run.Rc = false
 		return
 	}
-	err := util.ReadYamlFile(apiFile, &data)
+	err := util.ReadYamlFile(apiFile, &data, util.WithVars(apiFileVars))
 	if err != nil {
 		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
 		os.Exit(1)

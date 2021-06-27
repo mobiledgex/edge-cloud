@@ -1650,6 +1650,22 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	}
 	flavorApi.cache.Mux.Unlock()
 
+	// default autoscale policy
+	// TODO: make these settings configurable
+	policy := edgeproto.AutoScalePolicy{}
+	policy.Key.Organization = cloudcommon.OrganizationMobiledgeX
+	policy.Key.Name = cloudcommon.DefaultMultiTenantCluster
+	policy.TargetCpu = 70
+	policy.TargetMem = 80
+	policy.StabilizationWindowSec = 300
+	policy.MinNodes = 1
+	policy.MaxNodes = 4
+	_, err := autoScalePolicyApi.CreateAutoScalePolicy(ctx, &policy)
+	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst autoscale policy", "policy", policy, "err", err)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		return
+	}
+
 	clusterInst := edgeproto.ClusterInst{}
 	clusterInst.Key = *getDefaultMTClustKey(cloudletKey)
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
@@ -1658,12 +1674,13 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	// TODO: custom settings or per-cloudlet config for the below fields?
 	clusterInst.NumMasters = 1
 	clusterInst.NumNodes = 3
+	clusterInst.AutoScalePolicy = policy.Key.Name
 	cb := StreamoutCb{
 		ctx: ctx,
 	}
 	start := time.Now()
 
-	err := clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
+	err = clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst", "cluster", clusterInst, "err", err)
 
 	if err != nil && err.Error() == clusterInst.Key.ExistsError().Error() {

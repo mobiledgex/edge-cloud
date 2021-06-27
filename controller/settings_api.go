@@ -29,83 +29,92 @@ func InitSettingsApi(sync *Sync) {
 }
 
 func (s *SettingsApi) initDefaults(ctx context.Context) error {
+	def := edgeproto.GetDefaultSettings()
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := &edgeproto.Settings{}
 		modified := false
 		if !s.store.STMGet(stm, &edgeproto.SettingsKeySingular, cur) {
-			cur = edgeproto.GetDefaultSettings()
+			cur = def
 			modified = true
 		}
 		if cur.ChefClientInterval == 0 {
-			cur.ChefClientInterval = edgeproto.GetDefaultSettings().ChefClientInterval
+			cur.ChefClientInterval = def.ChefClientInterval
 			modified = true
 		}
 		if cur.CloudletMaintenanceTimeout == 0 {
-			cur.CloudletMaintenanceTimeout = edgeproto.GetDefaultSettings().CloudletMaintenanceTimeout
+			cur.CloudletMaintenanceTimeout = def.CloudletMaintenanceTimeout
 			modified = true
 		}
 		if cur.ShepherdAlertEvaluationInterval == 0 {
-			cur.ShepherdAlertEvaluationInterval = edgeproto.GetDefaultSettings().ShepherdAlertEvaluationInterval
+			cur.ShepherdAlertEvaluationInterval = def.ShepherdAlertEvaluationInterval
 			modified = true
 		}
 		if cur.UpdateVmPoolTimeout == 0 {
-			cur.UpdateVmPoolTimeout = edgeproto.GetDefaultSettings().UpdateVmPoolTimeout
+			cur.UpdateVmPoolTimeout = def.UpdateVmPoolTimeout
 			modified = true
 		}
 		if cur.UpdateTrustPolicyTimeout == 0 {
-			cur.UpdateTrustPolicyTimeout = edgeproto.GetDefaultSettings().UpdateTrustPolicyTimeout
+			cur.UpdateTrustPolicyTimeout = def.UpdateTrustPolicyTimeout
 			modified = true
 		}
 		if cur.InfluxDbMetricsRetention == 0 {
-			cur.InfluxDbMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbMetricsRetention
+			cur.InfluxDbMetricsRetention = def.InfluxDbMetricsRetention
 			modified = true
 		}
 		if cur.CleanupReservableAutoClusterIdletime == 0 {
-			cur.CleanupReservableAutoClusterIdletime = edgeproto.GetDefaultSettings().CleanupReservableAutoClusterIdletime
+			cur.CleanupReservableAutoClusterIdletime = def.CleanupReservableAutoClusterIdletime
 			modified = true
 		}
 		if cur.InfluxDbCloudletUsageMetricsRetention == 0 {
-			cur.InfluxDbCloudletUsageMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbCloudletUsageMetricsRetention
+			cur.InfluxDbCloudletUsageMetricsRetention = def.InfluxDbCloudletUsageMetricsRetention
 			modified = true
 		}
 		if cur.MaxTrackedDmeClients == 0 {
-			cur.MaxTrackedDmeClients = edgeproto.GetDefaultSettings().MaxTrackedDmeClients
+			cur.MaxTrackedDmeClients = def.MaxTrackedDmeClients
 			modified = true
 		}
 		if cur.DmeApiMetricsCollectionInterval == 0 {
-			cur.DmeApiMetricsCollectionInterval = edgeproto.GetDefaultSettings().DmeApiMetricsCollectionInterval
+			cur.DmeApiMetricsCollectionInterval = def.DmeApiMetricsCollectionInterval
 			modified = true
 		}
 		if cur.EdgeEventsMetricsCollectionInterval == 0 {
-			cur.EdgeEventsMetricsCollectionInterval = edgeproto.GetDefaultSettings().EdgeEventsMetricsCollectionInterval
+			cur.EdgeEventsMetricsCollectionInterval = def.EdgeEventsMetricsCollectionInterval
 			modified = true
 		}
 		if cur.InfluxDbEdgeEventsMetricsRetention == 0 {
-			cur.InfluxDbEdgeEventsMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbEdgeEventsMetricsRetention
+			cur.InfluxDbEdgeEventsMetricsRetention = def.InfluxDbEdgeEventsMetricsRetention
 			modified = true
 		}
 		if cur.InfluxDbDownsampledMetricsRetention == 0 {
-			cur.InfluxDbDownsampledMetricsRetention = edgeproto.GetDefaultSettings().InfluxDbDownsampledMetricsRetention
+			cur.InfluxDbDownsampledMetricsRetention = def.InfluxDbDownsampledMetricsRetention
 			modified = true
 		}
 		if cur.LocationTileSideLengthKm == 0 {
-			cur.LocationTileSideLengthKm = edgeproto.GetDefaultSettings().LocationTileSideLengthKm
+			cur.LocationTileSideLengthKm = def.LocationTileSideLengthKm
 			modified = true
 		}
 		if cur.EdgeEventsMetricsContinuousQueriesCollectionIntervals == nil || len(cur.EdgeEventsMetricsContinuousQueriesCollectionIntervals) == 0 {
-			cur.EdgeEventsMetricsContinuousQueriesCollectionIntervals = edgeproto.GetDefaultSettings().EdgeEventsMetricsContinuousQueriesCollectionIntervals
+			cur.EdgeEventsMetricsContinuousQueriesCollectionIntervals = def.EdgeEventsMetricsContinuousQueriesCollectionIntervals
 			modified = true
 		}
 		if cur.CreateCloudletTimeout == 0 {
-			cur.CreateCloudletTimeout = edgeproto.GetDefaultSettings().CreateCloudletTimeout
+			cur.CreateCloudletTimeout = def.CreateCloudletTimeout
 			modified = true
 		}
 		if cur.UpdateCloudletTimeout == 0 {
-			cur.UpdateCloudletTimeout = edgeproto.GetDefaultSettings().UpdateCloudletTimeout
+			cur.UpdateCloudletTimeout = def.UpdateCloudletTimeout
 			modified = true
 		}
 		if cur.AppinstClientCleanupInterval == 0 {
-			cur.AppinstClientCleanupInterval = edgeproto.GetDefaultSettings().AppinstClientCleanupInterval
+			cur.AppinstClientCleanupInterval = def.AppinstClientCleanupInterval
+			modified = true
+		}
+		if cur.ClusterAutoScaleAveragingDurationSec == 0 {
+			cur.ClusterAutoScaleAveragingDurationSec = def.ClusterAutoScaleAveragingDurationSec
+			modified = true
+		}
+		if cur.ClusterAutoScaleRetryDelay == 0 {
+			cur.ClusterAutoScaleRetryDelay = def.ClusterAutoScaleRetryDelay
 			modified = true
 		}
 
