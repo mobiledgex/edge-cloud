@@ -119,6 +119,7 @@ var LatencyAggregationFunctions = map[string]string{
 	"100ms":      "sum(\"100ms\")",
 	"min":        "min(\"min\")",
 	"max":        "max(\"max\")",
+	"total":      "sum(\"total\")",
 	"avg":        "sum(\"total\") / sum(\"numsamples\")",
 	"numsamples": "sum(\"numsamples\")",
 }
