@@ -116,12 +116,7 @@ func (r *RateLimitSettingsHandler) Delete(ctx context.Context, in *edgeproto.Rat
 }
 
 func (r *RateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto.RateLimitSettingsKey]struct{}) {
-	for key, _ := range keys {
-		if key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
-			if dmecommon.RateLimitMgr.GetRateLimitSettings(key) == nil {
-			dmecommon.RateLimitMgr.RemoveRateLimitSettings(key)
-		}
-	}
+	dmecommon.RateLimitMgr.PruneRateLimitSettings(keys)
 }
 
 func (r *RateLimitSettingsHandler) Flush(ctx context.Context, notifyId int64) {}

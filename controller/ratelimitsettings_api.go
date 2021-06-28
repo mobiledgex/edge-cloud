@@ -39,7 +39,10 @@ func (r *RateLimitSettingsApi) initDefaultRateLimitSettings(ctx context.Context)
 // Gets the RateLimitSettings that corresponds to the specified RateLimitSettingsKey
 func (r *RateLimitSettingsApi) Get(key edgeproto.RateLimitSettingsKey) *edgeproto.RateLimitSettings {
 	buf := &edgeproto.RateLimitSettings{}
-	return r.cache.Get(&key, buf)
+	if !r.cache.Get(&key, buf) {
+		return nil
+	}
+	return buf
 }
 
 // Update RateLimit settings for an API endpoint type
@@ -107,8 +110,9 @@ func (r *RateLimitSettingsApi) DeleteRateLimitSettings(ctx context.Context, in *
 
 	log.SpanLog(ctx, log.DebugLevelApi, "DeleteRateLimitSettings", "key", in.Key.String())
 
-	if !r.cache.Get(&in.Key, &buf) {
-		return in.Key.NotFoundError()
+	buf := &edgeproto.RateLimitSettings{}
+	if !r.cache.Get(&in.Key, buf) {
+		return nil, in.Key.NotFoundError()
 	}
 	return r.store.Delete(ctx, in, r.sync.syncWait)
 }

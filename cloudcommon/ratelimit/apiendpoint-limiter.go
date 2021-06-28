@@ -135,15 +135,24 @@ func (a *apiEndpointLimiter) removeApiEndpointLimiterSettings(target edgeproto.R
 	}
 }
 
-// Get the RateLimitSettings for the corresponding RateLimitTarget
-func (a *apiEndpointLimiter) getApiEndpointLimiterSettings(target edgeproto.RateLimitTarget) {
-	switch target {
-	case edgeproto.RateLimitTarget_ALL_REQUESTS:
-		return a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings
-	case edgeproto.RateLimitTarget_PER_IP:
-		return a.apiEndpointRateLimitSettings.PerIpRateLimitSettings
-	case edgeproto.RateLimitTarget_PER_USER:
-		return a.apiEndpointRateLimitSettings.PerUserRateLimitSettings
+// Prune the RateLimitSettings that are not in the keys map
+func (a *apiEndpointLimiter) pruneApiEndpointLimiterSettings(keys map[edgeproto.RateLimitSettingsKey]struct{}) {
+	if a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings != nil {
+		if _, ok := keys[a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.Key]; !ok {
+			a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = nil
+		}
+	}
+
+	if a.apiEndpointRateLimitSettings.PerIpRateLimitSettings != nil {
+		if _, ok := keys[a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.Key]; !ok {
+			a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = nil
+		}
+	}
+
+	if a.apiEndpointRateLimitSettings.PerUserRateLimitSettings != nil {
+		if _, ok := keys[a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.Key]; !ok {
+			a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = nil
+		}
 	}
 }
 

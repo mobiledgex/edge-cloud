@@ -77,16 +77,13 @@ func (r *RateLimitManager) RemoveRateLimitSettings(key edgeproto.RateLimitSettin
 	limiter.removeApiEndpointLimiterSettings(key.RateLimitTarget)
 }
 
-// Get RateLimitSettings associated with key. If none, return nil
-func (r *RateLimitManager) GetRateLimitSettings(key edgeproto.RateLimitSettingsKey) *edgeproto.RateLimitSettings {
+// Remove RateLimitSettings whose keys are not in the keys map
+func (r *RateLimitManager) PruneRateLimitSettings(keys map[edgeproto.RateLimitSettingsKey]struct{}) {
 	r.Lock()
 	defer r.Unlock()
-	api := key.ApiName
-	limiter, ok := r.limitsPerApi[api]
-	if !ok || limiter == nil {
-		return nil
+	for _, limiter := range r.limitsPerApi {
+		limiter.pruneApiEndpointLimiterSettings(keys)
 	}
-	return limiter.getApiEndpointLimiterSettings(key.RateLimitTarget)
 }
 
 // Update DisableRateLimit when settings are updated
