@@ -116,11 +116,20 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 		// XXX in all cases?
 		return false, fmt.Errorf("invalid optresmap request %s", request)
 	}
+
+	reqResType := ""
+	reqResSpec := ""
 	if len(request) == 2 {
-		// generic request for res type, no res specifier present
-		wildcard = true
+		// format "resType:resCnt"
+		reqResType = request[0]
+		if reqResType == "gpu" {
+			wildcard = true
+		}
 		count = request[1]
 	} else if len(request) == 3 {
+		// format "resType:resSpec:resCnt"
+		reqResType = request[0]
+		reqResSpec = request[1]
 		count = request[2]
 	}
 	if reqcnt, err = strconv.Atoi(count); err != nil {
@@ -191,7 +200,7 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 				if verbose {
 					log.SpanLog(ctx, log.DebugLevelApi, "Match qualified ", "flavor", flavor.Name, "request[0]", request[0], "tag_key", tag_key)
 				}
-				if request[0] == tag_key {
+				if reqResType == tag_key {
 					if verbose {
 						log.SpanLog(ctx, log.DebugLevelApi, "Match qualified", "flavor", flavor.Name, "tag_key", tag_key, "in flav_key?", flav_key, "flavcnt >=", flavcnt, "reqcnt", reqcnt)
 					}
@@ -200,6 +209,12 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 							log.SpanLog(ctx, log.DebugLevelApi, "Match qualified", "flavor", flavor.Name, "tag_val", tag_val, "in flav_val?", flav_val, "flavcnt >=", flavcnt, "reqcnt", reqcnt)
 						}
 						if strings.Contains(flav_val, tag_val) && flavcnt >= reqcnt {
+							if reqResSpec != "" && !strings.Contains(flav_val, reqResSpec) {
+								if verbose {
+									log.SpanLog(ctx, log.DebugLevelApi, "Match skipping due to spec mismatch", "flavor", flavor.Name, "fkey", flav_key, "fval", flav_val, "tval", tag_val, "spec", reqResSpec)
+								}
+								continue
+							}
 							if verbose {
 								log.SpanLog(ctx, log.DebugLevelApi, "Match qualified!", "flavor", flavor.Name, "fkey", flav_key, "fval", flav_val, "tval", tag_val)
 							}

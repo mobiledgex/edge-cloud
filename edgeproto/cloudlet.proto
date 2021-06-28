@@ -207,22 +207,6 @@ message ResourceQuota {
   int32 alert_threshold = 3;
 }
 
-// GPU Type
-//
-// GPUType is the type of GPU supported by a Cloudlet
-//
-// 0: `GPU_TYPE_NONE`
-// 1: `GPU_TYPE_PASSTHROUGH`
-// 2: `GPU_TYPE_VGPU`
-enum GPUType {
-  // GPU not supported
-  GPU_TYPE_NONE = 0;
-  // Passthrough GPU
-  GPU_TYPE_PASSTHROUGH = 1;
-  // Virtual GPU
-  GPU_TYPE_VGPU = 2;
-}
-
 // Operating System Type
 //
 // OSType is the type of the Operator System
@@ -293,14 +277,12 @@ message GPUDriver {
   repeated string fields = 1;
   // Unique identifier key
   GPUDriverKey key = 2 [(gogoproto.nullable) = false];
-  // Type of GPU hardware
-  GPUType type = 3;
   // List of GPU driver build
-  repeated GPUDriverBuild builds = 4 [(gogoproto.nullable) = false];
+  repeated GPUDriverBuild builds = 3 [(gogoproto.nullable) = false];
   // License config to setup license (will be stored in secure storage)
-  string license_config = 5;
+  string license_config = 4;
   // License config md5sum, to ensure integrity of license config
-  string license_config_md5sum = 9;
+  string license_config_md5sum = 5;
   // Additional properties associated with GPU driver build
   // For example: license server information, driver release date, etc
   map<string, string> properties = 6;
@@ -402,10 +384,8 @@ service GPUDriverApi {
 message GPUConfig {
   // GPU driver key
   GPUDriverKey driver = 1 [(gogoproto.nullable) = false];
-  // Type of GPU hardware supported by the Cloudlet
-  GPUType gpu_type = 2;
   // Properties to identify specifics of GPU
-  map<string, string> properties = 3;
+  map<string, string> properties = 2;
 }
 
 // Cloudlet
@@ -508,7 +488,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,GpuConfig.GpuType";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }

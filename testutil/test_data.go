@@ -52,7 +52,7 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 1,
 		Disk:  1,
 		OptResMap: map[string]string{
-			"gpu": "gpu:1",
+			"gpu": "pci:1",
 		},
 	},
 }
@@ -344,8 +344,7 @@ var CloudletData = []edgeproto.Cloudlet{
 			"gpu": &Restblkeys[3],
 		},
 		GpuConfig: edgeproto.GPUConfig{
-			Driver:  GPUDriverData[0].Key,
-			GpuType: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
+			Driver: GPUDriverData[0].Key,
 		},
 	},
 	edgeproto.Cloudlet{
@@ -1879,27 +1878,23 @@ var GPUDriverData = []edgeproto.GPUDriver{
 			Organization: OperatorData[0],
 			Name:         "nvidia-450",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 	},
 	edgeproto.GPUDriver{
 		Key: edgeproto.GPUDriverKey{
 			Name: "nvidia-490",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 	},
 	edgeproto.GPUDriver{
 		Key: edgeproto.GPUDriverKey{
 			Organization: OperatorData[1],
 			Name:         "nvidia-999",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 	},
 	edgeproto.GPUDriver{
 		Key: edgeproto.GPUDriverKey{
 			Organization: OperatorData[0],
 			Name:         "nvidia-vgpu",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_VGPU,
 	},
 }
 

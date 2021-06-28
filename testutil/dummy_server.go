@@ -103,7 +103,6 @@ func (s *DummyServer) SetDummyOrgObjs(ctx context.Context, a Action, org string,
 		gpuDriver := edgeproto.GPUDriver{}
 		gpuDriver.Key.Name = name + "gpudriver"
 		gpuDriver.Key.Organization = org
-		gpuDriver.Type = edgeproto.GPUType_GPU_TYPE_PASSTHROUGH
 		if a == Create {
 			s.GPUDriverCache.Update(ctx, &gpuDriver, int64(ii))
 		} else if a == Delete {

@@ -947,6 +947,7 @@ func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
 	vgpuCloudlet := testutil.CloudletData[0]
 	vgpuCloudlet.Key.Name = "VGPUCloudlet"
 	vgpuCloudlet.GpuConfig.Driver = testutil.GPUDriverData[3].Key
+	vgpuCloudlet.ResTagMap["gpu"] = &testutil.Restblkeys[0]
 	err := cloudletApi.CreateCloudlet(&vgpuCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 	cloudletInfo := testutil.CloudletInfoData[0]
@@ -960,7 +961,7 @@ func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
 	obj.Flavor = testutil.FlavorData[4].Key // GPU Passthrough flavor
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
-	require.Contains(t, err.Error(), "must have 'vgpu' as resmap tag to use vGPU")
+	require.Contains(t, err.Error(), "a a a must have 'vgpu' as resmap tag to use vGPU")
 
 	vgpuFlavor := testutil.FlavorData[4]
 	vgpuFlavor.Key.Name = "mex-vgpu-flavor"

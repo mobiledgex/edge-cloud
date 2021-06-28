@@ -689,20 +689,38 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	return metrics, nil
 }
 
-func isGPUFlavorValidForCloudlet(ctx context.Context, nodeFlavor *edgeproto.Flavor, cloudlet *edgeproto.Cloudlet) error {
-	switch cloudlet.GpuConfig.GpuType {
-	case edgeproto.GPUType_GPU_TYPE_PASSTHROUGH:
-		if _, ok := nodeFlavor.OptResMap["gpu"]; ok {
-			return nil
+func isGPUFlavorValidForCloudlet(ctx context.Context, stm concurrency.STM, nodeFlavor *edgeproto.Flavor, cloudlet *edgeproto.Cloudlet) error {
+	flavorRes, ok := nodeFlavor.OptResMap["gpu"]
+	if !ok {
+		return fmt.Errorf("Invalid node flavor %s, must have 'gpu' as optresmap tag to use any GPU based cloudlet", nodeFlavor.Key.String())
+	}
+	if _, ok := cloudlet.ResTagMap["gpu"]; !ok {
+		return fmt.Errorf("Cloudlet %s doesn't support GPU", cloudlet.Key.Name)
+	}
+	// break flavor request into spec and count
+	var request []string
+	if strings.Contains(flavorRes, ":") {
+		request = strings.Split(flavorRes, ":")
+	} else if strings.Contains(flavorRes, "=") {
+		// VIO syntax uses =
+		request = strings.Split(flavorRes, "=")
+	}
+	if len(request) < 2 {
+		return fmt.Errorf("Invalid optresmap %s found in flavor %s", request, nodeFlavor.Key.String())
+	}
+	resType := request[0]
+	tbls, err := resTagTableApi.GetResTablesForCloudlet(ctx, stm, cloudlet)
+	if err != nil {
+		return err
+	}
+	tblTagKeys := make(map[string]struct{})
+	for _, resTagTable := range tbls {
+		for tagKey, _ := range resTagTable.Tags {
+			tblTagKeys[tagKey] = struct{}{}
 		}
-		return fmt.Errorf("Invalid node flavor %s, must have 'gpu' as resmap tag to use GPU passthrough based cloudlet", nodeFlavor.Key.String())
-	case edgeproto.GPUType_GPU_TYPE_VGPU:
-		if _, ok := nodeFlavor.OptResMap["vgpu"]; ok {
-			return nil
-		}
-		return fmt.Errorf("Invalid node flavor %s, must have 'vgpu' as resmap tag to use vGPU based cloudlet", nodeFlavor.Key.String())
-	case edgeproto.GPUType_GPU_TYPE_NONE:
-		return fmt.Errorf("Cloudlet %v doesn't support GPU", cloudlet.Key)
+	}
+	if _, ok := tblTagKeys[resType]; !ok {
+		return fmt.Errorf("Invalid node flavor %s, cloudlet %q doesn't support GPU resource '%s'", nodeFlavor.Key.String(), cloudlet.Key.Name, resType)
 	}
 	return nil
 }
@@ -877,7 +895,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
 		if in.OptRes == "gpu" {
-			if err := isGPUFlavorValidForCloudlet(ctx, &nodeFlavor, &cloudlet); err != nil {
+			if err := isGPUFlavorValidForCloudlet(ctx, stm, &nodeFlavor, &cloudlet); err != nil {
 				return err
 			}
 		}
