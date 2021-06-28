@@ -193,7 +193,7 @@ func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey,
 }
 
 func FqdnPrefix(svcName string) string {
-	return svcName + "."
+	return svcName + "-"
 }
 
 func ServiceFQDN(svcName, baseFQDN string) string {
