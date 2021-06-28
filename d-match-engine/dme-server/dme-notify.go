@@ -118,6 +118,7 @@ func (r *RateLimitSettingsHandler) Delete(ctx context.Context, in *edgeproto.Rat
 func (r *RateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto.RateLimitSettingsKey]struct{}) {
 	for key, _ := range keys {
 		if key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+			if dmecommon.RateLimitMgr.GetRateLimitSettings(key) == nil {
 			dmecommon.RateLimitMgr.RemoveRateLimitSettings(key)
 		}
 	}
@@ -151,7 +152,6 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	notifyClient.RegisterRecv(notify.NewCloudletInfoRecv(&CloudletInfoHandler{}))
 	dmecommon.ClientSender = notify.NewAppInstClientSend()
 	notifyClient.RegisterSend(dmecommon.ClientSender)
-	notifyClient.RegisterSendRateLimitSettingsCache(&rateLimitSettingsCache)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient

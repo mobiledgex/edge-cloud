@@ -38,11 +38,8 @@ func (r *RateLimitSettingsApi) initDefaultRateLimitSettings(ctx context.Context)
 
 // Gets the RateLimitSettings that corresponds to the specified RateLimitSettingsKey
 func (r *RateLimitSettingsApi) Get(key edgeproto.RateLimitSettingsKey) *edgeproto.RateLimitSettings {
-	cacheData, ok := r.cache.Objs[key]
-	if !ok {
-		return nil
-	}
-	return cacheData.Obj
+	buf := &edgeproto.RateLimitSettings{}
+	return r.cache.Get(&key, buf)
 }
 
 // Update RateLimit settings for an API endpoint type
@@ -52,23 +49,21 @@ func (r *RateLimitSettingsApi) CreateRateLimitSettings(ctx context.Context, in *
 		return nil, err
 	}
 
-	log.SpanLog(ctx, log.DebugLevelApi, "UpdateRateLimitSettings", "ratelimitsettings", in)
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateRateLimitSettings", "ratelimitsettings", in)
 
-	cur := edgeproto.RateLimitSettings{}
 	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.RateLimitSettings{}
 		if r.store.STMGet(stm, &in.Key, &cur) {
-			return fmt.Errorf("Unable to CreateRateLimitSettings - key %v already exists", in.Key)
+			return in.Key.ExistsError()
 		}
 
-		// Set cur to the incoming RateLimitSettings struct
-		cur = *in
 		log.SpanLog(ctx, log.DebugLevelApi, "Adding new RateLimitSettings", "key", in.Key.String(), "settings", in)
 
 		// Validate fields and key before storing
-		if err = cur.Validate(edgeproto.RateLimitSettingsAllFieldsMap); err != nil {
+		if err = in.Validate(edgeproto.RateLimitSettingsAllFieldsMap); err != nil {
 			return err
 		}
-		r.store.STMPut(stm, &cur)
+		r.store.STMPut(stm, in)
 		return nil
 	})
 	return &edgeproto.Result{}, err
@@ -86,7 +81,7 @@ func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *
 	cur := edgeproto.RateLimitSettings{}
 	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !r.store.STMGet(stm, &in.Key, &cur) {
-			return fmt.Errorf("Unable to UpdateRateLimitSettings - key %v not found", in.Key)
+			return in.Key.NotFoundError()
 		}
 
 		// Copy updated fields into cur
@@ -105,18 +100,17 @@ func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *
 
 // Delete RateLimit settings for an API endpoint type (ie. no rate limiting)
 func (r *RateLimitSettingsApi) DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	err := validateRateLimitSettings(in)
+	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
 	}
 
 	log.SpanLog(ctx, log.DebugLevelApi, "DeleteRateLimitSettings", "key", in.Key.String())
 
-	res, err := r.store.Delete(ctx, in, r.sync.syncWait)
-	if err != nil {
-		return res, err
+	if !r.cache.Get(&in.Key, &buf) {
+		return in.Key.NotFoundError()
 	}
-	return res, err
+	return r.store.Delete(ctx, in, r.sync.syncWait)
 }
 
 // Show RateLimit settings for an API endpoint type
@@ -140,20 +134,5 @@ func validateRateLimitSettings(in *edgeproto.RateLimitSettings) error {
 	}
 
 	// Validate key
-	key := in.Key
-	return key.ValidateKey()
-}
-
-// Notify callbacks
-
-func (r *RateLimitSettingsApi) Update(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
-}
-
-func (r *RateLimitSettingsApi) Delete(ctx context.Context, in *edgeproto.RateLimitSettings, rev int64) {
-}
-
-func (r *RateLimitSettingsApi) Prune(ctx context.Context, keys map[edgeproto.RateLimitSettingsKey]struct{}) {
-}
-
-func (r *RateLimitSettingsApi) Flush(ctx context.Context, notifyId int64) {
+	return in.Key.ValidateKey()
 }

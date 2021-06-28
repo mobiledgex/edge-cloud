@@ -655,7 +655,6 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(NewControllerMetricsReceiver(metricsInflux, edgeEventsInflux)))
-	notify.ServerMgrOne.RegisterRecv(notify.NewRateLimitSettingsRecvMany(&rateLimitSettingsApi))
 }
 
 type ControllerMetricsReceiver struct {

@@ -77,6 +77,18 @@ func (r *RateLimitManager) RemoveRateLimitSettings(key edgeproto.RateLimitSettin
 	limiter.removeApiEndpointLimiterSettings(key.RateLimitTarget)
 }
 
+// Get RateLimitSettings associated with key. If none, return nil
+func (r *RateLimitManager) GetRateLimitSettings(key edgeproto.RateLimitSettingsKey) *edgeproto.RateLimitSettings {
+	r.Lock()
+	defer r.Unlock()
+	api := key.ApiName
+	limiter, ok := r.limitsPerApi[api]
+	if !ok || limiter == nil {
+		return nil
+	}
+	return limiter.getApiEndpointLimiterSettings(key.RateLimitTarget)
+}
+
 // Update DisableRateLimit when settings are updated
 func (r *RateLimitManager) UpdateDisableRateLimit(disable bool) {
 	r.Lock()

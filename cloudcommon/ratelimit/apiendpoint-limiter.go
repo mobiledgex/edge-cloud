@@ -135,6 +135,18 @@ func (a *apiEndpointLimiter) removeApiEndpointLimiterSettings(target edgeproto.R
 	}
 }
 
+// Get the RateLimitSettings for the corresponding RateLimitTarget
+func (a *apiEndpointLimiter) getApiEndpointLimiterSettings(target edgeproto.RateLimitTarget) {
+	switch target {
+	case edgeproto.RateLimitTarget_ALL_REQUESTS:
+		return a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings
+	case edgeproto.RateLimitTarget_PER_IP:
+		return a.apiEndpointRateLimitSettings.PerIpRateLimitSettings
+	case edgeproto.RateLimitTarget_PER_USER:
+		return a.apiEndpointRateLimitSettings.PerUserRateLimitSettings
+	}
+}
+
 // TODO: Remove Ips and Users by oldest modified or inserted
 // TODO: Remove Users that have been deleted
 
