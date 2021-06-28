@@ -569,7 +569,7 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: trustedapp10-tcp.
+    fqdnprefix: trustedapp10-tcp-
   flavor:
     name: x1.small
   state: Ready
@@ -604,7 +604,7 @@ appinstances:
   - proto: LProtoTcp
     internalport: 90
     publicport: 90
-    fqdnprefix: nontrustedapp10-tcp.
+    fqdnprefix: nontrustedapp10-tcp-
   flavor:
     name: x1.small
   state: Ready

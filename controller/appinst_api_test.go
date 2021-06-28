@@ -283,7 +283,7 @@ func TestAppInstApi(t *testing.T) {
 			if lproto == "http" {
 				continue
 			}
-			test_prefix := fmt.Sprintf("%s-%s.", util.DNSSanitize(app_name), lproto)
+			test_prefix := fmt.Sprintf("%s-%s-", util.DNSSanitize(app_name), lproto)
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}
