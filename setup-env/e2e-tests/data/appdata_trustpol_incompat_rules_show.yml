@@ -48,6 +48,8 @@ settings:
   influxdbdownsampledmetricsretention: 8760h0m0s
   influxdbedgeeventsmetricsretention: 672h0m0s
   appinstclientcleanupinterval: 24h0m0s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
 trustpolicies:
 - key:
     organization: dmuus

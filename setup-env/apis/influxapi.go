@@ -15,7 +15,7 @@ type influxData struct {
 	Cmd      string
 }
 
-func RunInfluxAPI(api, influxname, apiFile, outputDir string) bool {
+func RunInfluxAPI(api, influxname, apiFile string, apiFileVars map[string]string, outputDir string) bool {
 	log.Printf("Running influx APIs for %s\n", apiFile)
 
 	if apiFile == "" {
@@ -24,7 +24,7 @@ func RunInfluxAPI(api, influxname, apiFile, outputDir string) bool {
 	}
 
 	data := influxData{}
-	err := util.ReadYamlFile(apiFile, &data)
+	err := util.ReadYamlFile(apiFile, &data, util.WithVars(apiFileVars))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error in unmarshal for file %s", apiFile)
 		os.Exit(1)

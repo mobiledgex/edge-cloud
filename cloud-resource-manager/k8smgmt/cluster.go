@@ -98,7 +98,7 @@ func ClearCluster(ctx context.Context, client ssh.Client, clusterInst *edgeproto
 		if name == "" {
 			continue
 		}
-		cmd = fmt.Sprintf("%s helm delete --purge %s", names.KconfEnv, name)
+		cmd = fmt.Sprintf("%s helm delete %s", names.KconfEnv, name)
 		log.SpanLog(ctx, log.DebugLevelInfra, "deleting helm install", "cmd", cmd)
 		out, err = client.Output(cmd)
 		if err != nil && !strings.Contains(out, "not found") {
@@ -118,7 +118,7 @@ func ClearCluster(ctx context.Context, client ssh.Client, clusterInst *edgeproto
 	}
 	// If helm prometheus-operator was installed, CRDs will be leftover.
 	// Need to delete manually.
-	cmd = fmt.Sprintf("%s kubectl delete --ignore-not-found customresourcedefinitions prometheuses.monitoring.coreos.com servicemonitors.monitoring.coreos.com podmonitors.monitoring.coreos.com alertmanagers.monitoring.coreos.com prometheusrules.monitoring.coreos.com", names.KconfEnv)
+	cmd = fmt.Sprintf("%s kubectl delete --ignore-not-found customresourcedefinitions prometheuses.monitoring.coreos.com servicemonitors.monitoring.coreos.com podmonitors.monitoring.coreos.com alertmanagers.monitoring.coreos.com alertmanagerconfigs.monitoring.coreos.com prometheusrules.monitoring.coreos.com probes.monitoring.coreos.com thanosrulers.monitoring.coreos.com", names.KconfEnv)
 	log.SpanLog(ctx, log.DebugLevelInfra, "deleting prometheus CRDs", "cmd", cmd)
 	out, err = client.Output(cmd)
 	if err != nil {

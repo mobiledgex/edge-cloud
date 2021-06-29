@@ -33,6 +33,8 @@ settings:
   - interval: 24h0m0s
   - interval: 168h0m0s
   - interval: 672h0m0s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
 cloudlets:
 - key:
     organization: dmuus

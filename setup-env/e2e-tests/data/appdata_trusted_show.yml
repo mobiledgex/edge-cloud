@@ -48,6 +48,8 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
 trustpolicies:
 - key:
     organization: dmuus

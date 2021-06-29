@@ -79,6 +79,10 @@ message Settings {
   int64 influx_db_edge_events_metrics_retention = 32 [(gogoproto.casttype) = "Duration"];
   // AppInstClient cleanup thread run interval
   int64 appinst_client_cleanup_interval = 33 [(gogoproto.casttype) = "Duration"];
+  // Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average
+  int64 cluster_auto_scale_averaging_duration_sec = 34;
+  // Cluster auto scale retry delay if scaling failed
+  int64 cluster_auto_scale_retry_delay = 35 [(gogoproto.casttype) = "Duration"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
