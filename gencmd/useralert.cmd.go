@@ -318,7 +318,7 @@ var UserAlertComments = map[string]string{
 	"memlimit":        "Mem",
 	"disklimit":       "Disk",
 	"activeconnlimit": "Active Connections",
-	"severity":        "Alert Severity, one of AlertSeverityUnknown, AlertSeveityInfo, AlertSeveityWarning, AlertSeverityError",
+	"severity":        "Alert Severity, one of AlertSeverityUnknown, AlertSeverityInfo, AlertSeverityWarning, AlertSeverityError",
 	"triggertime":     "Trigger threshold interval",
 	"labels":          "Additional Labels",
 	"annotations":     "Additional Annotations for extra information about the alert",

@@ -69,6 +69,6 @@ func (a *UserAlertApi) ShowUserAlert(in *edgeproto.UserAlert, cb edgeproto.UserA
 }
 
 func (a *UserAlertApi) UpdateUserAlert(ctx context.Context, in *edgeproto.UserAlert) (*edgeproto.Result, error) {
-	// TODO
+	// TODO - fix unit tests
 	return &edgeproto.Result{}, nil
 }

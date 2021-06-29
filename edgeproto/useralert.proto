@@ -22,9 +22,9 @@ enum AlertSeverity {
   // Unknown
   ALERT_SEVERITY_UNKNOWN = 0;
   // Info
-  ALERT_SEVEITY_INFO = 1;
+  ALERT_SEVERITY_INFO = 1;
   // Warning
-  ALERT_SEVEITY_WARNING = 2;
+  ALERT_SEVERITY_WARNING = 2;
   // Error
   ALERT_SEVERITY_ERROR = 3;
 }

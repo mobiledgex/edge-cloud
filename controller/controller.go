@@ -614,6 +614,7 @@ func InitApis(sync *Sync) {
 	InitOrganizationApi(sync)
 	InitAppInstLatencyApi(sync)
 	InitGPUDriverApi(sync)
+	InitUserAlertApi(sync)
 }
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
@@ -634,6 +635,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
+	notify.ServerMgrOne.RegisterSendUserAlertCache(&userAlertApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
