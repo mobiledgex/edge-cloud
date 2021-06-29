@@ -23,6 +23,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	uutil "github.com/mobiledgex/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -602,7 +603,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 
 	act, actionParam := GetActionParam(actionSpec)
 	action, actionSubtype := GetActionSubtype(act)
-	vars = util.AddVars(vars, spec.ApiFileVars)
+	vars = uutil.AddMaps(vars, spec.ApiFileVars)
 
 	errors := []string{}
 	switch action {

@@ -15,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	uutil "github.com/mobiledgex/edge-cloud/util"
 )
 
 var appData edgeproto.AllData
@@ -29,7 +30,7 @@ type runCommandData struct {
 }
 
 func readAppDataFile(file string, vars map[string]string) {
-	vars = util.AddVars(util.DeploymentReplacementVars, vars)
+	vars = uutil.AddMaps(util.DeploymentReplacementVars, vars)
 	err := util.ReadYamlFile(file, &appData, util.WithVars(vars), util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "appdata") {
@@ -40,7 +41,7 @@ func readAppDataFile(file string, vars map[string]string) {
 }
 
 func readAppDataFileGeneric(file string, vars map[string]string) {
-	vars = util.AddVars(util.DeploymentReplacementVars, vars)
+	vars = uutil.AddMaps(util.DeploymentReplacementVars, vars)
 	err := util.ReadYamlFile(file, &appDataMap, util.WithVars(vars), util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "appdata") {

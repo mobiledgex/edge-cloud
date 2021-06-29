@@ -190,16 +190,6 @@ func GetProcessByName(processName string) process.Process {
 	return nil
 }
 
-func AddVars(maps ...map[string]string) map[string]string {
-	vars := make(map[string]string)
-	for _, m := range maps {
-		for k, v := range m {
-			vars[k] = v
-		}
-	}
-	return vars
-}
-
 //these are strings which may be present in the yaml but not in the corresponding data structures.
 //These are the only allowed exceptions to the strict yaml unmarshalling
 var yamlExceptions = map[string]map[string]bool{
