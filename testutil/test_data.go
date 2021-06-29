@@ -1338,7 +1338,7 @@ var ResTagTableData = []edgeproto.ResTagTable{
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[0],
-		Tags: map[string]string{"vgpu": "tesla-p4"},
+		Tags: map[string]string{"vmware": "vgpu=1"},
 	},
 
 	edgeproto.ResTagTable{

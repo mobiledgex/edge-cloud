@@ -271,11 +271,49 @@ func resLookup(ctx context.Context, nodeflavor edgeproto.Flavor, flavor edgeprot
 	return az, img, true, nil
 }
 
+func ValidateGPUResource(ctx context.Context, nodeflavor edgeproto.Flavor, cli edgeproto.CloudletInfo, tbls map[string]*edgeproto.ResTagTable) error {
+	flavorRes, ok := nodeflavor.OptResMap["gpu"]
+	if !ok {
+		// GPU is not requested, hence no need to perform any GPU based validation
+		return nil
+	}
+	if _, ok := tbls["gpu"]; !ok {
+		return fmt.Errorf("Cloudlet %s doesn't support GPU", cli.Key.Name)
+	}
+	// break flavor request into spec and count
+	var request []string
+	if strings.Contains(flavorRes, ":") {
+		request = strings.Split(flavorRes, ":")
+	} else if strings.Contains(flavorRes, "=") {
+		// VIO syntax uses =
+		request = strings.Split(flavorRes, "=")
+	}
+	if len(request) < 2 {
+		return fmt.Errorf("Invalid optresmap %s found in flavor %s", request, nodeflavor.Key.String())
+	}
+	resType := request[0]
+	tblTagKeys := make(map[string]struct{})
+	for _, resTagTable := range tbls {
+		for tagKey, _ := range resTagTable.Tags {
+			tblTagKeys[tagKey] = struct{}{}
+		}
+	}
+	if _, ok := tblTagKeys[resType]; !ok {
+		return fmt.Errorf("Invalid node flavor %s, cloudlet %q doesn't support GPU resource '%s'", nodeflavor.Key.String(), cli.Key.Name, resType)
+	}
+	return nil
+}
+
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
 func GetVMSpec(ctx context.Context, nodeflavor edgeproto.Flavor, cli edgeproto.CloudletInfo, tbls map[string]*edgeproto.ResTagTable) (*VMCreationSpec, error) {
 	var flavorList []*edgeproto.FlavorInfo
 	var vmspec VMCreationSpec
 	var az, img string
+
+	err := ValidateGPUResource(ctx, nodeflavor, cli, tbls)
+	if err != nil {
+		return nil, err
+	}
 
 	// If nodeflavor requests an optional resource, and there is no OptResMap in cl (tbls = nil) to support it, don't bother looking.
 	if nodeflavor.OptResMap != nil && tbls == nil {
