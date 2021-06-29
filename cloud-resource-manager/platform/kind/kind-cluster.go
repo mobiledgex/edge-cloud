@@ -20,7 +20,7 @@ import (
 
 // See https://hub.docker.com/r/kindest/node/tags for all available versions
 // Use env var KIND_IMAGE to override default below.
-var DefaultNodeImage = "kindest/node:v1.16.15"
+var DefaultNodeImage = "kindest/node:v1.17.17"
 
 func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback, timeout time.Duration) error {
 	var err error

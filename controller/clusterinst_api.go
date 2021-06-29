@@ -1021,6 +1021,19 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
 		}
+		if inbuf.AutoScalePolicy == "" && in.AutoScalePolicy != "" {
+			if inbuf.Deployment != cloudcommon.DeploymentTypeKubernetes {
+				return fmt.Errorf("Cannot add auto scale policy to non-kubernetes ClusterInst")
+			}
+			if inbuf.NumNodes == 0 {
+				// this restriction is because we do not adjust
+				// the taints when switching from 1master/0nodes
+				// to 1master/Xnodes. This check can be removed
+				// if we fix the tainting.
+				return fmt.Errorf("Cannot add auto scale policy to master-only ClusterInst")
+			}
+		}
+
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Update); err != nil {
 			return err
 		}
@@ -1650,6 +1663,22 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	}
 	flavorApi.cache.Mux.Unlock()
 
+	// default autoscale policy
+	// TODO: make these settings configurable
+	policy := edgeproto.AutoScalePolicy{}
+	policy.Key.Organization = cloudcommon.OrganizationMobiledgeX
+	policy.Key.Name = cloudcommon.DefaultMultiTenantCluster
+	policy.TargetCpu = 70
+	policy.TargetMem = 80
+	policy.StabilizationWindowSec = 300
+	policy.MinNodes = 1
+	policy.MaxNodes = 4
+	_, err := autoScalePolicyApi.CreateAutoScalePolicy(ctx, &policy)
+	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst autoscale policy", "policy", policy, "err", err)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		return
+	}
+
 	clusterInst := edgeproto.ClusterInst{}
 	clusterInst.Key = *getDefaultMTClustKey(cloudletKey)
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
@@ -1658,12 +1687,13 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	// TODO: custom settings or per-cloudlet config for the below fields?
 	clusterInst.NumMasters = 1
 	clusterInst.NumNodes = 3
+	clusterInst.AutoScalePolicy = policy.Key.Name
 	cb := StreamoutCb{
 		ctx: ctx,
 	}
 	start := time.Now()
 
-	err := clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
+	err = clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst", "cluster", clusterInst, "err", err)
 
 	if err != nil && err.Error() == clusterInst.Key.ExistsError().Error() {

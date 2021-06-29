@@ -34,6 +34,7 @@ type ControllerData struct {
 	ClusterInstInfoCache        edgeproto.ClusterInstInfoCache
 	TrustPolicyCache            edgeproto.TrustPolicyCache
 	AutoProvPolicyCache         edgeproto.AutoProvPolicyCache
+	AutoScalePolicyCache        edgeproto.AutoScalePolicyCache
 	AlertCache                  edgeproto.AlertCache
 	SettingsCache               edgeproto.SettingsCache
 	ResTagTableCache            edgeproto.ResTagTableCache
@@ -83,6 +84,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	edgeproto.InitAlertCache(&cd.AlertCache)
 	edgeproto.InitTrustPolicyCache(&cd.TrustPolicyCache)
 	edgeproto.InitAutoProvPolicyCache(&cd.AutoProvPolicyCache)
+	edgeproto.InitAutoScalePolicyCache(&cd.AutoScalePolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
 	edgeproto.InitGPUDriverCache(&cd.GPUDriverCache)

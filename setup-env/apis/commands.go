@@ -9,17 +9,18 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
-func RunCommands(apiFile, outputDir string, retry *bool) bool {
+func RunCommands(apiFile string, apiFileVars map[string]string, outputDir string, retry *bool) bool {
 	log.Printf("Running commands from %s\n", apiFile)
-
 	if apiFile == "" {
 		log.Printf("Error: cmds without API file\n")
 		return false
 	}
 
-	dat, err := ioutil.ReadFile(apiFile)
+	dat, err := util.ReadFile(apiFile, apiFileVars)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to read file %s: %s\n", apiFile, err)
 		return false
