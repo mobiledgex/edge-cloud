@@ -61,6 +61,18 @@ func (s *DummyServer) SetDummyOrgObjs(ctx context.Context, a Action, org string,
 			s.ClusterInstCache.Delete(ctx, &cinst, int64(ii))
 		}
 
+		resTagTbl := edgeproto.ResTagTable{}
+		resTagTbl.Key.Name = name + "resTagTbl"
+		resTagTbl.Key.Organization = org
+		resTagTbl.Tags = map[string]string{
+			"pci": "t4gpu:1",
+		}
+		if a == Create {
+			s.ResTagTableCache.Update(ctx, &resTagTbl, int64(ii))
+		} else if a == Delete {
+			s.ResTagTableCache.Delete(ctx, &resTagTbl, int64(ii))
+		}
+
 		cloudlet := edgeproto.Cloudlet{}
 		cloudlet.Key.Organization = org
 		cloudlet.Key.Name = name
