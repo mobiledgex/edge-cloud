@@ -198,7 +198,7 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 				}
 			} else {
 				if verbose {
-					log.SpanLog(ctx, log.DebugLevelApi, "Match qualified ", "flavor", flavor.Name, "request[0]", request[0], "tag_key", tag_key)
+					log.SpanLog(ctx, log.DebugLevelApi, "Match qualified ", "flavor", flavor.Name, "resType", reqResType, "resSpec", reqResSpec, "tag_key", tag_key)
 				}
 				if reqResType == tag_key {
 					if verbose {
@@ -289,7 +289,7 @@ func ValidateGPUResource(ctx context.Context, nodeflavor edgeproto.Flavor, cli e
 		request = strings.Split(flavorRes, "=")
 	}
 	if len(request) < 2 {
-		return fmt.Errorf("Invalid optresmap %s found in flavor %s", request, nodeflavor.Key.String())
+		return fmt.Errorf("Invalid optresmap %q found in flavor %s", request, nodeflavor.Key.Name)
 	}
 	resType := request[0]
 	tblTagKeys := make(map[string]struct{})
@@ -299,7 +299,7 @@ func ValidateGPUResource(ctx context.Context, nodeflavor edgeproto.Flavor, cli e
 		}
 	}
 	if _, ok := tblTagKeys[resType]; !ok {
-		return fmt.Errorf("Invalid node flavor %s, cloudlet %q doesn't support GPU resource '%s'", nodeflavor.Key.String(), cli.Key.Name, resType)
+		return fmt.Errorf("Invalid node flavor %s, cloudlet %q doesn't support GPU resource %q", nodeflavor.Key.Name, cli.Key.Name, resType)
 	}
 	return nil
 }

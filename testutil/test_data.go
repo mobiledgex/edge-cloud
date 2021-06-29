@@ -885,7 +885,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Vcpus:   uint64(10),
 				Ram:     uint64(8192),
 				Disk:    uint64(40),
-				PropMap: map[string]string{"pci_passthrough": "alias=t4:1", "nas": "ceph:1"},
+				PropMap: map[string]string{"pci_passthrough": "alias=t4:1", "nas": "ceph-20:1"},
 			},
 			&edgeproto.FlavorInfo{
 				Name:    "flavor.large-pci",

@@ -969,7 +969,7 @@ func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
 	obj.Key.CloudletKey = vgpuCloudlet.Key
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
-	require.Contains(t, err.Error(), "doesn't support GPU resource 'pci'")
+	require.Contains(t, err.Error(), "doesn't support GPU resource \"pci\"")
 
 	vgpuFlavor := testutil.FlavorData[4]
 	vgpuFlavor.Key.Name = "mex-vgpu-flavor"

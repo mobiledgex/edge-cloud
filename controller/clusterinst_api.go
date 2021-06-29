@@ -858,6 +858,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
+		if in.OptRes == "gpu" {
+			if cloudlet.GpuConfig.Driver.Name == "" {
+				return fmt.Errorf("No GPU driver associated with cloudlet %s", cloudlet.Key)
+			}
+		}
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
