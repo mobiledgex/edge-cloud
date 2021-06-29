@@ -632,6 +632,22 @@ func (s *AppInstClientKey) Validate(fields map[string]struct{}) error {
 	return s.ValidateKey()
 }
 
+func (s *AutoScalePolicy) HasV0Config() bool {
+	if s.ScaleUpCpuThresh > 0 || s.ScaleDownCpuThresh > 0 {
+		return true
+	}
+	return false
+}
+
+func (s *AutoScalePolicy) HasV1Config() bool {
+	if s.TargetCpu > 0 || s.TargetMem > 0 || s.TargetActiveConnections > 0 {
+		return true
+	}
+	return false
+}
+
+const DefaultStabilizationWindowSec = 300
+
 // Validate fields. Note that specified fields is ignored, so this function
 // must be used only in the context when all fields are present (i.e. after
 // CopyInFields for an update).
@@ -647,17 +663,39 @@ func (s *AutoScalePolicy) Validate(fields map[string]struct{}) error {
 		// when going up/down from 0, so min supported is 1.
 		return errors.New("Min nodes cannot be less than 1")
 	}
-	if s.ScaleUpCpuThresh < 0 || s.ScaleUpCpuThresh > 100 {
-		return errors.New("Scale up CPU threshold must be between 0 and 100")
+	if s.HasV0Config() && s.HasV1Config() {
+		return errors.New("The new target cpu/mem/active-connections can only be used once the old cpu threshold settings have been disabled (set to 0)")
 	}
-	if s.ScaleDownCpuThresh < 0 || s.ScaleDownCpuThresh > 100 {
-		return errors.New("Scale down CPU threshold must be between 0 and 100")
+	if s.HasV0Config() {
+		if s.ScaleUpCpuThresh < 0 || s.ScaleUpCpuThresh > 100 {
+			return errors.New("Scale up CPU threshold must be between 0 and 100")
+		}
+		if s.ScaleDownCpuThresh < 0 || s.ScaleDownCpuThresh > 100 {
+			return errors.New("Scale down CPU threshold must be between 0 and 100")
+		}
+		if s.ScaleUpCpuThresh <= s.ScaleDownCpuThresh {
+			return fmt.Errorf("Scale down cpu threshold must be less than scale up cpu threshold")
+		}
+	} else if !s.HasV1Config() {
+		return fmt.Errorf("One of target cpu or target mem or target active connections must be specified")
+	} else {
+		// v1 config
+		if s.StabilizationWindowSec == 0 {
+			s.StabilizationWindowSec = DefaultStabilizationWindowSec
+		}
+		if s.TargetCpu < 0 || s.TargetCpu > 100 {
+			return fmt.Errorf("Target cpu must be between 0 (disabled) and 100")
+		}
+		if s.TargetMem < 0 || s.TargetMem > 100 {
+			return fmt.Errorf("Target mem must be between 0 (disabled) and 100")
+		}
+		maxActiveConnections := uint64(1e12)
+		if s.TargetActiveConnections < 0 || s.TargetActiveConnections > maxActiveConnections {
+			return fmt.Errorf("Target active connections must be between 0 (disabled) and %d", maxActiveConnections)
+		}
 	}
 	if s.MaxNodes <= s.MinNodes {
 		return fmt.Errorf("Max nodes must be greater than Min nodes")
-	}
-	if s.ScaleUpCpuThresh <= s.ScaleDownCpuThresh {
-		return fmt.Errorf("Scale down cpu threshold must be less than scale up cpu threshold")
 	}
 	return nil
 }

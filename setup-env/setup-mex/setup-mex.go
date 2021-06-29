@@ -23,24 +23,9 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	uutil "github.com/mobiledgex/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
 )
-
-type TestSpec struct {
-	Name             string      `json:"name" yaml:"name"`
-	ApiType          string      `json:"api" yaml:"api"`
-	ApiFile          string      `json:"apifile" yaml:"apifile"`
-	Actions          []string    `json:"actions" yaml:"actions"`
-	RetryCount       int         `json:"retrycount" yaml:"retrycount"`
-	RetryIntervalSec float64     `json:"retryintervalsec" yaml:"retryintervalsec"`
-	CompareYaml      CompareYaml `json:"compareyaml" yaml:"compareyaml"`
-}
-
-type CompareYaml struct {
-	Yaml1    string `json:"yaml1" yaml:"yaml1"`
-	Yaml2    string `json:"yaml2" yaml:"yaml2"`
-	FileType string `json:"filetype" yaml:"filetype"`
-}
 
 //root TLS Dir
 var tlsDir = ""
@@ -613,11 +598,12 @@ func Cleanup(ctx context.Context) error {
 	return CleanupLocalProxies()
 }
 
-func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec, mods []string, vars map[string]string, retry *bool) []string {
+func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.TestSpec, mods []string, vars map[string]string, retry *bool) []string {
 	var actionArgs []string
 
 	act, actionParam := GetActionParam(actionSpec)
 	action, actionSubtype := GetActionSubtype(act)
+	vars = uutil.AddMaps(vars, spec.ApiFileVars)
 
 	errors := []string{}
 	switch action {
@@ -642,7 +628,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 		}
 		if actionSubtype == "crm" {
 			// read the apifile and start crm with the details
-			err := apis.StartCrmsLocal(ctx, actionParam, spec.ApiFile, outputDir)
+			err := apis.StartCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars, outputDir)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}
@@ -668,7 +654,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 		}
 	case "stop":
 		if actionSubtype == "crm" {
-			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile); err != nil {
+			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars); err != nil {
 				errors = append(errors, err.Error())
 			}
 		} else {
@@ -678,7 +664,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			}
 		}
 	case "ctrlapi":
-		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir, mods, retry) {
+		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiFileVars, outputDir, mods, retry) {
 			log.Printf("Unable to run api for %s, %v\n", action, mods)
 			errors = append(errors, "controller api failed")
 		}
@@ -688,22 +674,22 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *TestSpec
 			errors = append(errors, "ShowAppInstClient api failed")
 		}
 	case "exec":
-		if !apis.RunCommandAPI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
+		if !apis.RunCommandAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiFileVars, outputDir) {
 			log.Printf("Unable to run RunCommand api for %s, %v\n", action, mods)
 			errors = append(errors, "controller RunCommand api failed")
 		}
 	case "dmeapi":
-		if !apis.RunDmeAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiType, outputDir) {
+		if !apis.RunDmeAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiFileVars, spec.ApiType, outputDir) {
 			log.Printf("Unable to run api for %s\n", action)
 			errors = append(errors, "dme api failed")
 		}
 	case "influxapi":
-		if !apis.RunInfluxAPI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
+		if !apis.RunInfluxAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiFileVars, outputDir) {
 			log.Printf("Unable to run influx api for %s\n", action)
 			errors = append(errors, "influx api failed")
 		}
 	case "cmds":
-		if !apis.RunCommands(spec.ApiFile, outputDir, retry) {
+		if !apis.RunCommands(spec.ApiFile, spec.ApiFileVars, outputDir, retry) {
 			log.Printf("Unable to run commands for %s\n", action)
 			errors = append(errors, "commands failed")
 		}
