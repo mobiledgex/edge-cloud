@@ -747,6 +747,7 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.serverlessconfig.minreplicas",
 	"app.vmappostype",
 	"dryrundeploy",
+	"vmapptest",
 }
 var DeploymentCloudletRequestAliasArgs = []string{
 	"appname=app.key.name",

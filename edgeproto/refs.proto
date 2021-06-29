@@ -35,7 +35,7 @@ message VMResource {
 // and we don't need these fields being sent via the notify protocol
 // to the CRM.
 // On CloudletRefs, CloudletKey will be the same for all cluster insts,
-// so we use the cluster key rather than the cluster inst key.
+// so we use the cloudlet key rather than the cluster inst key.
 
 // CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.
 message CloudletRefs {

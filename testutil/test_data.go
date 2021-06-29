@@ -12,7 +12,7 @@ import (
 )
 
 var FlavorData = []edgeproto.Flavor{
-	edgeproto.Flavor{
+	edgeproto.Flavor{ // 0
 		Key: edgeproto.FlavorKey{
 			Name: "x1.tiny",
 		},
@@ -20,7 +20,7 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 1,
 		Disk:  1,
 	},
-	edgeproto.Flavor{
+	edgeproto.Flavor{ // 1
 		Key: edgeproto.FlavorKey{
 			Name: "x1.small",
 		},
@@ -28,7 +28,7 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 2,
 		Disk:  2,
 	},
-	edgeproto.Flavor{
+	edgeproto.Flavor{ // 2
 		Key: edgeproto.FlavorKey{
 			Name: "x1.medium",
 		},
@@ -36,7 +36,7 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 4,
 		Disk:  4,
 	},
-	edgeproto.Flavor{
+	edgeproto.Flavor{ // 3
 		Key: edgeproto.FlavorKey{
 			Name: "x1.large",
 		},
@@ -44,7 +44,7 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 10,
 		Disk:  40,
 	},
-	edgeproto.Flavor{
+	edgeproto.Flavor{ // 4
 		Key: edgeproto.FlavorKey{
 			Name: "x1.tiny.gpu",
 		},
@@ -306,7 +306,7 @@ var OperatorCodeData = []edgeproto.OperatorCode{
 }
 
 var CloudletData = []edgeproto.Cloudlet{
-	edgeproto.Cloudlet{
+	edgeproto.Cloudlet{ // 0
 		Key: edgeproto.CloudletKey{
 			Organization: OperatorData[0],
 			Name:         "San Jose Site",
@@ -348,7 +348,7 @@ var CloudletData = []edgeproto.Cloudlet{
 			GpuType: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 		},
 	},
-	edgeproto.Cloudlet{
+	edgeproto.Cloudlet{ // 1
 		Key: edgeproto.CloudletKey{
 			Organization: OperatorData[0],
 			Name:         "New York Site",
@@ -367,7 +367,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		Deployment:                    "docker",
 		DefaultResourceAlertThreshold: 80,
 	},
-	edgeproto.Cloudlet{
+	edgeproto.Cloudlet{ // 2
 		Key: edgeproto.CloudletKey{
 			Organization: OperatorData[1],
 			Name:         "San Francisco Site",
@@ -390,7 +390,7 @@ var CloudletData = []edgeproto.Cloudlet{
 		Deployment:                    "docker",
 		DefaultResourceAlertThreshold: 80,
 	},
-	edgeproto.Cloudlet{
+	edgeproto.Cloudlet{ // 3
 		Key: edgeproto.CloudletKey{
 			Organization: OperatorData[2],
 			Name:         "Hawaii Site",
@@ -836,7 +836,7 @@ func GetAppInstRefsData() []edgeproto.AppInstRefs {
 }
 
 var CloudletInfoData = []edgeproto.CloudletInfo{
-	edgeproto.CloudletInfo{
+	edgeproto.CloudletInfo{ // 0
 		Key:         CloudletData[0].Key,
 		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
@@ -961,7 +961,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			"supports-mt": "true", // cloudcommon.CloudletSupportsMT
 		},
 	},
-	edgeproto.CloudletInfo{
+	edgeproto.CloudletInfo{ // 1
 		Key:         CloudletData[1].Key,
 		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
@@ -1013,7 +1013,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		},
 		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
 	},
-	edgeproto.CloudletInfo{
+	edgeproto.CloudletInfo{ // 2
 		Key:         CloudletData[2].Key,
 		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,
@@ -1065,7 +1065,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		},
 		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
 	},
-	edgeproto.CloudletInfo{
+	edgeproto.CloudletInfo{ // 3
 		Key:         CloudletData[3].Key,
 		State:       dme.CloudletState_CLOUDLET_STATE_READY,
 		OsMaxRam:    65536,

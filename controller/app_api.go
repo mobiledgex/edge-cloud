@@ -869,15 +869,6 @@ func manifestContainsDaemonSet(manifest string) bool {
 	}
 	return false
 }
-func (s *AppApi) mockAppInstForValidation(ctx context.Context, app *edgeproto.App) (edgeproto.AppInst, error) {
-	appInst := edgeproto.AppInst{}
-	if app.Deployment == "" {
-		return appInst, fmt.Errorf("No deployment found on candiate App with deploy now true")
-	}
-	appInst.Flavor = app.DefaultFlavor
-	// what else?
-	return appInst, nil
-}
 
 func validateVMAppResourceUsage(ctx context.Context, stm concurrency.STM, app *edgeproto.App, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validate app resource usage", "cloudlet", cloudlet.Key, "app", app)
@@ -921,56 +912,54 @@ func validateVMAppResourceUsage(ctx context.Context, stm concurrency.STM, app *e
 	return err
 }
 
-func (s *AppApi) checkTestAppResources(ctx context.Context, stm concurrency.STM, app edgeproto.App, cloudlet *edgeproto.Cloudlet, cloudletInfo edgeproto.CloudletInfo,
-	cloudletRefs *edgeproto.CloudletRefs, appInst *edgeproto.AppInst) error {
-
-	// Tell validate not to raise any alerts
-	return nil
-}
-
 func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletRequest, cb edgeproto.AppApi_ShowCloudletsForAppDeploymentServer) error {
-	ctx := log.StartTestSpan(context.Background())
-	log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment", "in", in)
-	//	var cloudlets []*edgeproto.CloudletKey
-	var allclds []edgeproto.CloudletKey
-	var allmatches []edgeproto.CloudletKey
+
+	ctx := cb.Context()
+	var allclds = make(map[edgeproto.CloudletKey]string)
 	app := in.App
 	flavor := in.App.DefaultFlavor
 
 	if flavor.Name == "" {
-		return /*cloudlets,*/ fmt.Errorf("No flavor specified for App")
+		return fmt.Errorf("No flavor specified for App")
 	}
 	cloudletApi.cache.GetAllKeys(ctx, func(k *edgeproto.CloudletKey, modRev int64) {
-		allclds = append(allclds, *k)
+		allclds[*k] = ""
 	})
+
 	// Generate a list of all cloudlets that find a match for app.DefaultFlavor
-	for ii, cldkey := range allclds {
+	for cldkey, _ := range allclds {
 		fm := edgeproto.FlavorMatch{
 			Key:        cldkey,
 			FlavorName: flavor.Name,
 		}
-		_, err := cloudletApi.FindFlavorMatch(ctx, &fm)
+		// since the validate is going to consider the appInst.VmFlavor, we'll need spec.FlavorName set in the mock
+		// AppInst object, not the meta flavor.
+		spec, err := cloudletApi.FindFlavorMatch(ctx, &fm)
 		if err != nil {
-			allclds = append(allclds[:ii], allclds[ii+1:]...)
+			delete(allclds, cldkey)
 			continue
+		} else {
+			// need the mapped FlavorName for appInst.VmFlavor
+			allclds[cldkey] = spec.FlavorName
 		}
-		//allmatches = append(allmatches, cldkey)
 	}
 	// If an instance of this App were to be deploymed now, check if our resource mgr thinks
-	// there are sufficient resources to support the creation. Assumes the app instance
-	// would use the App templates default falvor. Other considerations see mock appInst object creation.
+	// there are sufficient resources to support the creation. Assumes the appInst.Flavor  and appInst.VmFlavor
+	// would use the App templates default falvor. Other considerations TBD
 	if in.DryRunDeploy {
-		appInst, err := s.mockAppInstForValidation(ctx, in.App)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment mock appinst failed", "error", err)
-			allclds = nil
-			return /*cloudlets,*/ err
+		var err error
+		appInst := edgeproto.AppInst{}
+		if app.Deployment == "" {
+			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy manditory app  Deployment not found for App")
+			return fmt.Errorf("No deployment found on candidate App")
 		}
+		appInst.Flavor = app.DefaultFlavor
+
+		log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run depoloyment")
 		// For all remaining cloudlets, check available resources
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			// now we'll run all matches found so far and ask for resources
-			// accumulate into allclds
-			for _, key := range allmatches {
+			for key, _ := range allclds {
+				appInst.VmFlavor = allclds[key]
 				cloudlet := edgeproto.Cloudlet{}
 				if !cloudletApi.store.STMGet(stm, &key, &cloudlet) {
 					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cld not found", "cloudlet", key)
@@ -984,13 +973,19 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 				if !cloudletInfoApi.store.STMGet(stm, &key, &cloudletInfo) {
 					return fmt.Errorf("No resource information found for Cloudlet %s", key.Name)
 				}
-				err := validateResources(ctx, stm, nil, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs, NoGenResourceAlerts)
-				if err != nil {
-
-					log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy failed", "cloudlet", cloudlet.Key, "error", err)
-					return err
+				// xxx toggle which validation rtn to use, likely remove one after real testing? xxx
+				if !in.VmAppTest {
+					err = validateResources(ctx, stm, nil, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs, NoGenResourceAlerts)
+				} else {
+					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run vmAppTest", "cloudlet", key)
+					err = validateVMAppResourceUsage(ctx, stm, app, &cloudlet, &cloudletInfo, &cloudletRefs)
 				}
-				allclds = append(allclds, key)
+				if err != nil {
+					delete(allclds, key)
+					log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy failed for", "cloudlet", cloudlet.Key, "error", err)
+					continue
+				}
+				log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run depoloyment succeeded for", "cloudlet", cloudlet.Key.Name)
 			}
 			return err
 		})
@@ -999,10 +994,8 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 			return err
 		}
 	}
-	fmt.Printf("\n\nShowCloudlets returning stream:\n")
-	for _, cld := range allclds {
-		fmt.Printf("\t%+v\n", cld)
-		cb.Send(&cld)
+	for key, _ := range allclds {
+		cb.Send(&key)
 	}
 	return nil
 }

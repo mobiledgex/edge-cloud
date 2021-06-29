@@ -3,7 +3,9 @@
 syntax = "proto3";
 package edgeproto;
 
+//import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+//import "result.proto";
 import "gogoproto/gogo.proto";
 
 //
@@ -18,8 +20,18 @@ message CloudletKey {
   string organization = 1 [(protogen.keytag) = "cloudletorg"];
   // Name of the cloudlet
   string name = 2 [(protogen.keytag) = "cloudlet"];
+
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
   option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
+  option (protogen.custom_key_type) = "CloudletKey";
+  //option (protogen.generate_cud) = true;
+  //option (protogen.generate_cud_test) = true;
+  //option (protogen.generate_cache) = true;
+  //option (protogen.notify_cache) = true;
+  option (protogen.generate_show_test) = true; 
+  option (protogen.uses_org) = "none";
 }
+
+

@@ -13,7 +13,7 @@ import (
 // Used for unit testing without a real CRM present.
 // Functionality here emulates crmutil/controller-data.go.
 
-// Add in a little day to allow intermediate state changes to be seen.
+// Add in a little delay to allow intermediate state changes to be seen.
 // But don't add too much because it increases the unit test run time.
 const DummyInfoDelay = 10 * time.Millisecond
 

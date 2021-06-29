@@ -247,6 +247,7 @@ message DeploymentCloudletRequest {
    App app = 1;
    //Attempt to qualify cloudlet resources for deployment
    bool dry_run_deploy = 2;
+   bool vm_app_test  = 3;
    option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,App.app-org=Key.Organization,App.defaultflavor=DefaultFlavor.Name";
    option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
 }
@@ -306,18 +307,18 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
-  // Show cloudlets that can support Apps Default Flavor
- rpc ShowCloudletsForAppDeployment(DeploymentCloudletRequest) returns (stream CloudletKey) {
+  // Discover cloudlets supporting depoloyments of App.DefaultFlavor
+rpc ShowCloudletsForAppDeployment(DeploymentCloudletRequest) returns (stream CloudletKey) {
    option (google.api.http) =  {
      post: "/findmapping/deploymentcloudlets"
      body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
-     // option (protogen.mc2_custom_authz) = true;
+    option (protogen.mc2_custom_authz) = true;
     option (protogen.stream_out_incremental) = true;
   }
-
 }
+
 
 
 
