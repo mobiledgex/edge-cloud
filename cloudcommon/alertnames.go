@@ -4,6 +4,7 @@ package cloudcommon
 const (
 	AlertAutoScaleUp             = "AutoScaleUp"
 	AlertAutoScaleDown           = "AutoScaleDown"
+	AlertClusterAutoScale        = "ClusterAutoScale"
 	AlertAppInstDown             = "AppInstDown"
 	AlertAutoUndeploy            = "AutoProvUndeploy"
 	AlertCloudletDown            = "CloudletDown"
@@ -60,7 +61,8 @@ func GetSeverityForAlert(alertname string) string {
 }
 
 func IsMonitoredAlert(alertName string) bool {
-	if alertName == AlertAutoScaleUp ||
+	if alertName == AlertClusterAutoScale ||
+		alertName == AlertAutoScaleUp ||
 		alertName == AlertAutoScaleDown ||
 		alertName == AlertAppInstDown ||
 		alertName == AlertCloudletDown ||

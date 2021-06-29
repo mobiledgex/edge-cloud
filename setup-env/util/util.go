@@ -32,6 +32,25 @@ import (
 	"google.golang.org/grpc"
 )
 
+type TestSpec struct {
+	Name             string            `json:"name" yaml:"name"`
+	ApiType          string            `json:"api" yaml:"api"`
+	ApiFile          string            `json:"apifile" yaml:"apifile"`
+	ApiFileVars      map[string]string `json:"apifilevars" yaml:"apifilevars"`
+	Actions          []string          `json:"actions" yaml:"actions"`
+	RetryCount       int               `json:"retrycount" yaml:"retrycount"`
+	RetryIntervalSec float64           `json:"retryintervalsec" yaml:"retryintervalsec"`
+	CompareYaml      CompareYaml       `json:"compareyaml" yaml:"compareyaml"`
+}
+
+type CompareYaml struct {
+	Yaml1     string            `json:"yaml1" yaml:"yaml1"`
+	Yaml2     string            `json:"yaml2" yaml:"yaml2"`
+	FileType  string            `json:"filetype" yaml:"filetype"`
+	Yaml1Vars map[string]string `json:"yaml1vars" yaml:"yaml1vars"`
+	Yaml2Vars map[string]string `json:"yaml2vars" yaml:"yaml2vars"`
+}
+
 var Deployment DeploymentData
 var ApiAddrNone = "NONE"
 
@@ -424,21 +443,11 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 		return fmt.Errorf("error reading yaml file: %v err: %v\n", filename, err)
 	}
 	if opts.vars != nil {
-		//replace variables denoted as {{variablename}}
-		yamlstr := string(yamlFile)
-		for k, v := range opts.vars {
-			if strings.HasPrefix(v, "ENV=") {
-				// environment variable replacement var
-				envVarName := strings.Replace(v, "ENV=", "", 1)
-				envVarVal := os.Getenv(envVarName)
-				if envVarVal == "" {
-					return fmt.Errorf("environment variable not set: %s", envVarName)
-				}
-				v = envVarVal
-			}
-			yamlstr = strings.Replace(yamlstr, "{{"+k+"}}", v, -1)
+		yamlStr, err := ReplaceVars(string(yamlFile), opts.vars)
+		if err != nil {
+			return err
 		}
-		yamlFile = []byte(yamlstr)
+		yamlFile = []byte(yamlStr)
 	}
 	if opts.validateReplacedVars {
 		//make sure there are no unreplaced variables left and inform the user if so
@@ -460,6 +469,38 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 	return nil
 }
 
+func ReadFile(filename string, replaceVars map[string]string) (string, error) {
+	dat, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	str, err := ReplaceVars(string(dat), replaceVars)
+	if err != nil {
+		return "", err
+	}
+	return str, nil
+}
+
+// Replace variables denoted as {{variablename}}
+func ReplaceVars(contents string, replaceVars map[string]string) (string, error) {
+	if replaceVars == nil {
+		return contents, nil
+	}
+	for k, v := range replaceVars {
+		if strings.HasPrefix(v, "ENV=") {
+			// environment variable replacement var
+			envVarName := strings.Replace(v, "ENV=", "", 1)
+			envVarVal := os.Getenv(envVarName)
+			if envVarVal == "" {
+				return "", fmt.Errorf("environment variable not set: %s", envVarName)
+			}
+			v = envVarVal
+		}
+		contents = strings.Replace(contents, "{{"+k+"}}", v, -1)
+	}
+	return contents, nil
+}
+
 func WithVars(vars map[string]string) ReadYamlOp {
 	return func(opts *ReadYamlOptions) {
 		opts.vars = vars
@@ -478,10 +519,25 @@ func WithStrict() ReadYamlOp {
 	}
 }
 
+func (c *CompareYaml) GetReadYamlOps() ([]ReadYamlOp, []ReadYamlOp) {
+	yaml1Ops := []ReadYamlOp{}
+	yaml2Ops := []ReadYamlOp{}
+	if c.Yaml1Vars != nil {
+		yaml1Ops = append(yaml1Ops, WithVars(c.Yaml1Vars))
+	}
+	if c.Yaml2Vars != nil {
+		yaml2Ops = append(yaml2Ops, WithVars(c.Yaml2Vars))
+	}
+	return yaml1Ops, yaml2Ops
+}
+
 //compares two yaml files for equivalence
 //TODO need to handle different types of interfaces besides appdata, currently using
 //that to sort
-func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType string) bool {
+func CompareYamlFiles(compare *CompareYaml) bool {
+	firstYamlFile := compare.Yaml1
+	secondYamlFile := compare.Yaml2
+	fileType := compare.FileType
 
 	PrintStepBanner("running compareYamlFiles")
 
@@ -492,14 +548,15 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	var y1 interface{}
 	var y2 interface{}
 	copts := []cmp.Option{}
+	yaml1Ops, yaml2Ops := compare.GetReadYamlOps()
 
 	if fileType == "appdata" || fileType == "appdata-showcmp" {
 		//for appdata, use the AllData type so we can sort it
 		var a1 edgeproto.AllData
 		var a2 edgeproto.AllData
 
-		err1 = ReadYamlFile(firstYamlFile, &a1)
-		err2 = ReadYamlFile(secondYamlFile, &a2)
+		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &a2, yaml2Ops...)
 		a1.Sort()
 		a2.Sort()
 
@@ -520,8 +577,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var a1 testutil.AllDataOut
 		var a2 testutil.AllDataOut
 
-		err1 = ReadYamlFile(firstYamlFile, &a1)
-		err2 = ReadYamlFile(secondYamlFile, &a2)
+		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &a2, yaml2Ops...)
 		// remove results for AppInst/ClusterInst/Cloudlet because
 		// they are non-deterministic
 		ClearAppDataOutputStatus(&a1)
@@ -533,8 +590,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var f1 dmeproto.FindCloudletReply
 		var f2 dmeproto.FindCloudletReply
 
-		err1 = ReadYamlFile(firstYamlFile, &f1)
-		err2 = ReadYamlFile(secondYamlFile, &f2)
+		err1 = ReadYamlFile(firstYamlFile, &f1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &f2, yaml2Ops...)
 
 		// Ignore EdgeEventsCookie
 		copts = []cmp.Option{
@@ -551,8 +608,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var f1 []*dmeproto.FindCloudletReply
 		var f2 []*dmeproto.FindCloudletReply
 
-		err1 = ReadYamlFile(firstYamlFile, &f1)
-		err2 = ReadYamlFile(secondYamlFile, &f2)
+		err1 = ReadYamlFile(firstYamlFile, &f1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &f2, yaml2Ops...)
 
 		// Ignore EdgeEventsCookie
 		copts = []cmp.Option{
@@ -573,8 +630,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var a1 *dmeproto.AppInstListReply
 		var a2 *dmeproto.AppInstListReply
 
-		err1 = ReadYamlFile(firstYamlFile, &a1)
-		err2 = ReadYamlFile(secondYamlFile, &a2)
+		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &a2, yaml1Ops...)
 
 		clearAppInstEdgeEventsCookies(a1)
 		clearAppInstEdgeEventsCookies(a2)
@@ -585,8 +642,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var q1 dmeproto.QosPositionKpiReply
 		var q2 dmeproto.QosPositionKpiReply
 
-		err1 = ReadYamlFile(firstYamlFile, &q1)
-		err2 = ReadYamlFile(secondYamlFile, &q2)
+		err1 = ReadYamlFile(firstYamlFile, &q1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &q2, yaml1Ops...)
 
 		qs := []dmeproto.QosPositionKpiReply{q1, q2}
 		for _, q := range qs {
@@ -611,8 +668,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var r1 []influxclient.Result
 		var r2 []influxclient.Result
 
-		err1 = ReadYamlFile(firstYamlFile, &r1)
-		err2 = ReadYamlFile(secondYamlFile, &r2)
+		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
 		clearInfluxTime(r1)
 		clearInfluxTime(r2)
 
@@ -622,8 +679,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var r1 edgeproto.DeviceData
 		var r2 edgeproto.DeviceData
 
-		err1 = ReadYamlFile(firstYamlFile, &r1)
-		err2 = ReadYamlFile(secondYamlFile, &r2)
+		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
 		copts = []cmp.Option{
 			edgeproto.IgnoreDeviceFields("nocmp"),
 			cmpopts.SortSlices(func(a edgeproto.Device, b edgeproto.Device) bool {
@@ -636,8 +693,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var r1 testutil.DebugDataOut
 		var r2 testutil.DebugDataOut
 
-		err1 = ReadYamlFile(firstYamlFile, &r1)
-		err2 = ReadYamlFile(secondYamlFile, &r2)
+		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
 		copts = append(copts, edgeproto.IgnoreDebugReplyFields("nocmp"))
 		copts = append(copts, cmpopts.SortSlices(edgeproto.CmpSortDebugReply))
 		y1 = r1
@@ -646,8 +703,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var r1 edgeproto.NodeData
 		var r2 edgeproto.NodeData
 
-		err1 = ReadYamlFile(firstYamlFile, &r1)
-		err2 = ReadYamlFile(secondYamlFile, &r2)
+		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
 		// Only compare keys of properties, since Node Property values
 		// are not constant.
 		for ii, _ := range r1.Nodes {
@@ -676,23 +733,23 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var a1 testutil.AllDataStreamOut
 		var a2 testutil.AllDataStreamOut
 
-		err1 = ReadYamlFile(firstYamlFile, &a1)
-		err2 = ReadYamlFile(secondYamlFile, &a2)
+		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &a2, yaml2Ops...)
 
 		y1 = a1
 		y2 = a2
 	} else if fileType == "raw" {
-		var dat1, dat2 []byte
-		dat1, err1 = ioutil.ReadFile(firstYamlFile)
-		dat2, err2 = ioutil.ReadFile(secondYamlFile)
-		y1 = string(dat1)
-		y2 = string(dat2)
+		var dat1, dat2 string
+		dat1, err1 = ReadFile(firstYamlFile, compare.Yaml1Vars)
+		dat2, err2 = ReadFile(secondYamlFile, compare.Yaml2Vars)
+		y1 = dat1
+		y2 = dat2
 	} else if fileType == "streamedgeevent" {
 		var s1 dmeproto.ServerEdgeEvent
 		var s2 dmeproto.ServerEdgeEvent
 
-		err1 = ReadYamlFile(firstYamlFile, &s1)
-		err2 = ReadYamlFile(secondYamlFile, &s2)
+		err1 = ReadYamlFile(firstYamlFile, &s1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &s2, yaml2Ops...)
 
 		// Ignore dynamic fields (timestamp in statistics, and edgeeventscookie + public ports in newcloudlet)
 		ss := []dmeproto.ServerEdgeEvent{s1, s2}
@@ -711,8 +768,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		y1 = s1
 		y2 = s2
 	} else {
-		err1 = ReadYamlFile(firstYamlFile, &y1)
-		err2 = ReadYamlFile(secondYamlFile, &y2)
+		err1 = ReadYamlFile(firstYamlFile, &y1, yaml1Ops...)
+		err2 = ReadYamlFile(secondYamlFile, &y2, yaml2Ops...)
 	}
 	if err1 != nil {
 		log.Printf("Error in reading yaml file %v -- %v\n", firstYamlFile, err1)

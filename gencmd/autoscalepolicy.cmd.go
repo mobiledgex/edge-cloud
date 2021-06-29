@@ -303,20 +303,28 @@ var AutoScalePolicyOptionalArgs = []string{
 	"scaleupcputhresh",
 	"scaledowncputhresh",
 	"triggertimesec",
+	"stabilizationwindowsec",
+	"targetcpu",
+	"targetmem",
+	"targetactiveconnections",
 }
 var AutoScalePolicyAliasArgs = []string{
 	"cluster-org=key.organization",
 	"name=key.name",
 }
 var AutoScalePolicyComments = map[string]string{
-	"fields":             "Fields are used for the Update API to specify which fields to apply",
-	"cluster-org":        "Name of the organization for the cluster that this policy will apply to",
-	"name":               "Policy name",
-	"minnodes":           "Minimum number of cluster nodes",
-	"maxnodes":           "Maximum number of cluster nodes",
-	"scaleupcputhresh":   "Scale up cpu threshold (percentage 1 to 100)",
-	"scaledowncputhresh": "Scale down cpu threshold (percentage 1 to 100)",
-	"triggertimesec":     "Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.",
+	"fields":                  "Fields are used for the Update API to specify which fields to apply",
+	"cluster-org":             "Name of the organization for the cluster that this policy will apply to",
+	"name":                    "Policy name",
+	"minnodes":                "Minimum number of cluster nodes",
+	"maxnodes":                "Maximum number of cluster nodes",
+	"scaleupcputhresh":        "(Deprecated) Scale up cpu threshold (percentage 1 to 100), 0 means disabled",
+	"scaledowncputhresh":      "(Deprecated) Scale down cpu threshold (percentage 1 to 100), 0 means disabled",
+	"triggertimesec":          "(Deprecated) Trigger time defines how long the target must be satified in seconds before acting upon it.",
+	"stabilizationwindowsec":  "Stabilization window is the time for which past triggers are considered; the largest scale factor is always taken.",
+	"targetcpu":               "Target per-node cpu utilization (percentage 1 to 100), 0 means disabled",
+	"targetmem":               "Target per-node memory utilization (percentage 1 to 100), 0 means disabled",
+	"targetactiveconnections": "Target per-node number of active connections, 0 means disabled",
 }
 var AutoScalePolicySpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -331,4 +339,8 @@ var CreateAutoScalePolicyOptionalArgs = []string{
 	"scaleupcputhresh",
 	"scaledowncputhresh",
 	"triggertimesec",
+	"stabilizationwindowsec",
+	"targetcpu",
+	"targetmem",
+	"targetactiveconnections",
 }

@@ -33,12 +33,20 @@ message AutoScalePolicy {
   uint32 min_nodes = 3;
   // Maximum number of cluster nodes
   uint32 max_nodes = 4;
-  // Scale up cpu threshold (percentage 1 to 100)
+  // (Deprecated) Scale up cpu threshold (percentage 1 to 100), 0 means disabled
   uint32 scale_up_cpu_thresh = 5;
-  // Scale down cpu threshold (percentage 1 to 100)
+  // (Deprecated) Scale down cpu threshold (percentage 1 to 100), 0 means disabled
   uint32 scale_down_cpu_thresh = 6;
-  // Trigger time defines how long trigger threshold must be satified in seconds before acting upon it.
+  // (Deprecated) Trigger time defines how long the target must be satified in seconds before acting upon it.
   uint32 trigger_time_sec = 7 [(protogen.test_update) = true];
+  // Stabilization window is the time for which past triggers are considered; the largest scale factor is always taken.
+  uint32 stabilization_window_sec = 8;
+  // Target per-node cpu utilization (percentage 1 to 100), 0 means disabled
+  uint32 target_cpu = 9;
+  // Target per-node memory utilization (percentage 1 to 100), 0 means disabled
+  uint32 target_mem = 10;
+  // Target per-node number of active connections, 0 means disabled
+  uint64 target_active_connections = 11;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
