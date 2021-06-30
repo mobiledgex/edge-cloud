@@ -167,8 +167,7 @@ func TestNotifyBasic(t *testing.T) {
 	vmpoolCloudlet := testutil.CloudletData[0]
 	vmpoolCloudlet.VmPool = testutil.VMPoolData[0].Key.Name
 	vmpoolCloudlet.GpuConfig = edgeproto.GPUConfig{
-		Driver:  testutil.GPUDriverData[0].Key,
-		GpuType: testutil.GPUDriverData[0].Type,
+		Driver: testutil.GPUDriverData[0].Key,
 	}
 	serverHandler.CloudletCache.Update(ctx, &vmpoolCloudlet, 6)
 	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 7)

@@ -35,7 +35,6 @@ cloudlets:
     driver:
       name: gpudriver1
       organization: TMUS
-    gputype: GpuTypePassthrough
 
 flavors:
 - key:

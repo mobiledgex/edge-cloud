@@ -52,7 +52,7 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 1,
 		Disk:  1,
 		OptResMap: map[string]string{
-			"gpu": "gpu:1",
+			"gpu": "pci:1",
 		},
 	},
 }
@@ -344,8 +344,7 @@ var CloudletData = []edgeproto.Cloudlet{
 			"gpu": &Restblkeys[3],
 		},
 		GpuConfig: edgeproto.GPUConfig{
-			Driver:  GPUDriverData[0].Key,
-			GpuType: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
+			Driver: GPUDriverData[0].Key,
 		},
 	},
 	edgeproto.Cloudlet{
@@ -886,7 +885,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Vcpus:   uint64(10),
 				Ram:     uint64(8192),
 				Disk:    uint64(40),
-				PropMap: map[string]string{"pci_passthrough": "alias=t4:1", "nas": "ceph:1"},
+				PropMap: map[string]string{"pci_passthrough": "alias=t4:1", "nas": "ceph-20:1"},
 			},
 			&edgeproto.FlavorInfo{
 				Name:    "flavor.large-pci",
@@ -1339,7 +1338,7 @@ var ResTagTableData = []edgeproto.ResTagTable{
 
 	edgeproto.ResTagTable{
 		Key:  Restblkeys[0],
-		Tags: map[string]string{"vgpu": "tesla-p4"},
+		Tags: map[string]string{"vmware": "vgpu=1"},
 	},
 
 	edgeproto.ResTagTable{
@@ -1879,27 +1878,23 @@ var GPUDriverData = []edgeproto.GPUDriver{
 			Organization: OperatorData[0],
 			Name:         "nvidia-450",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 	},
 	edgeproto.GPUDriver{
 		Key: edgeproto.GPUDriverKey{
 			Name: "nvidia-490",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 	},
 	edgeproto.GPUDriver{
 		Key: edgeproto.GPUDriverKey{
 			Organization: OperatorData[1],
 			Name:         "nvidia-999",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_PASSTHROUGH,
 	},
 	edgeproto.GPUDriver{
 		Key: edgeproto.GPUDriverKey{
 			Organization: OperatorData[0],
 			Name:         "nvidia-vgpu",
 		},
-		Type: edgeproto.GPUType_GPU_TYPE_VGPU,
 	},
 }
 

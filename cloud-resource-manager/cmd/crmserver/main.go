@@ -362,7 +362,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		TrustPolicy:         cloudlet.TrustPolicy,
 		CacheDir:            *cacheDir,
 	}
-	if cloudlet.GpuConfig.GpuType != edgeproto.GPUType_GPU_TYPE_NONE {
+	if cloudlet.GpuConfig.Driver.Name != "" {
 		pc.GPUConfig = &cloudlet.GpuConfig
 	}
 	pfType := pf.GetType(cloudlet.PlatformType.String())
