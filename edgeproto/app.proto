@@ -315,7 +315,7 @@ rpc ShowCloudletsForAppDeployment(DeploymentCloudletRequest) returns (stream Clo
      body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
-//    option (protogen.mc2_custom_authz) = true;
+    option (protogen.mc2_custom_authz) = true;
     option (protogen.stream_out_incremental) = true;
   }
 }
