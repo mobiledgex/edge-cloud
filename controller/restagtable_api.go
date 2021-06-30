@@ -278,8 +278,8 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 	// 1) optresmap=gpu=gpu:N
 	// 2) optresmap=gpu=vgpu:N or
 	// 3) optresmap=gpu=pci:N
-	// 4) optresmap=vgpu:nvidia-63:N
-	// 5) optresmap=pci:T4:N
+	// 4) optresmap=gpu=vgpu:nvidia-63:N
+	// 5) optresmap=gpu=pci:T4:2
 	//
 	// Where:
 	// 1) indicates we don't care how the resourse is provided, and the first matching os flavor will be used.
@@ -296,7 +296,7 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 	var err error
 	var count string
 	for k, v := range resmap {
-		if k == "gpu" || k == "vgpu" {
+		if k == "gpu" {
 			values := strings.Split(v, ":")
 			if len(values) == 1 {
 				return false, fmt.Errorf("Missing manditory resource count, ex: optresmap=gpu=gpu:1")

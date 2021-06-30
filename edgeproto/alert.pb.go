@@ -1140,10 +1140,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(GPUType(0)):
-		if en, ok := GPUType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
 	case reflect.TypeOf(OSType(0)):
 		if en, ok := OSType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil

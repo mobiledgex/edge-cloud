@@ -644,7 +644,7 @@ func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppIn
 	nonNomApp.Flavor = testflavor.Key
 	err = appInstApi.CreateAppInst(&nonNomApp, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "non-nom-app-create")
-	require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet New York Site supports none", err.Error())
+	require.Equal(t, "Cloudlet New York Site doesn't support GPU", err.Error())
 }
 
 // Test that Crm Override for Delete App overrides any failures
