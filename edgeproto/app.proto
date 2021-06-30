@@ -249,7 +249,7 @@ message AppUserDefinedAlert {
   AppKey app_key = 1 [(gogoproto.nullable) = false];
   // Alert name 
   string user_defined_alert = 2;
-  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization";
+  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization,alert-name=UserDefinedAlert";
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,UserDefinedAlert";
 }
 

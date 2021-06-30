@@ -243,10 +243,78 @@ func appInstCb(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppIn
 	}
 }
 
+func updateAllPromInstsForApp(ctx context.Context, app *edgeproto.App) {
+	// walk appInst cache and update those cluster insts
+	insts := []edgeproto.ClusterInst{}
+	AppInstCache.Mux.Lock()
+	for k, v := range AppInstCache.Objs {
+		if k.AppKey == app.Key {
+			cluster := edgeproto.ClusterInst{}
+			found := ClusterInstCache.Get(v.Obj.ClusterInstKey(), &cluster)
+			if !found {
+				log.SpanLog(ctx, log.DebugLevelNotify, "Unable to find cluster", "app", v.Obj,
+					"cluster", v.Obj.ClusterInstKey())
+				continue
+			}
+			insts = append(insts, cluster)
+		}
+	}
+	AppInstCache.Mux.Unlock()
+
+	// Now walk all the clusterInstances and update Prometheus instance
+	for ii, _ := range insts {
+		err := createMEXPromInst(ctx, dialOpts, &insts[ii], app)
+		log.SpanLog(ctx, log.DebugLevelApi, "Updated user alerts for Prometheus", "ClusterInst", insts[ii].Key,
+			"app", app.Key, "err", err)
+	}
+
+}
+
+func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
+	if new == nil || old == nil {
+		return
+	}
+	fields := make(map[string]struct{})
+	new.DiffFields(old, fields)
+	// We only care about user alerts field
+	if _, found := fields[edgeproto.AppFieldUserDefinedAlerts]; !found {
+		return
+	}
+	updateAllPromInstsForApp(ctx, new)
+}
+
+// Walk all the app Instances and update the clusters that have the instances that use this alert
 func userAlertCb(ctx context.Context, old *edgeproto.UserAlert, new *edgeproto.UserAlert) {
-	// TODO
-	// go through apps an update the appInstances that contain this alert
-	// update prometheus for the ones that have cpu/mem/disk on them
+	log.SpanLog(ctx, log.DebugLevelNotify, "User Alert update", "new", new, "old", old)
+	if new == nil || old == nil {
+		// deleted, so all the appInsts should've been cleaned up already
+		return
+	}
+	fields := make(map[string]struct{})
+	new.DiffFields(old, fields)
+	if len(fields) == 0 {
+		// nothing to update
+		return
+	}
+	// update all prometheus AppInsts on ClusterInsts using the policy
+	apps := []edgeproto.App{}
+	AppCache.Mux.Lock()
+	for k, v := range AppCache.Objs {
+		if new.Key.Organization != k.Organization {
+			continue
+		}
+		for _, alertName := range v.Obj.UserDefinedAlerts {
+			if alertName == new.Key.Name {
+				apps = append(apps, *v.Obj)
+			}
+		}
+	}
+	AppCache.Mux.Unlock()
+
+	// walk the apps and update all prometheus instances for it
+	for ii := range apps {
+		updateAllPromInstsForApp(ctx, &apps[ii])
+	}
 }
 
 func init() {
@@ -264,6 +332,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
 	AutoScalePolicyCache.SetUpdatedCb(autoScalePolicyCb)
 	AppInstCache.SetUpdatedCb(appInstCb)
+	AppCache.SetUpdatedCb(appCb)
 	UserAlertCache.SetUpdatedCb(userAlertCb)
 	notifyClient.RegisterRecvAppCache(&AppCache)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)

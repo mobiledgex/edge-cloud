@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -33,14 +34,11 @@ func (a *UserAlertApi) CreateUserAlert(ctx context.Context, in *edgeproto.UserAl
 	if err = in.Validate(edgeproto.UserAlertAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
-	// Since active connections and other metrics are part
-	// of different instances of Prometheus, disallow mixing them
-	if in.ActiveConnLimit != 0 {
-		if in.CpuLimit != 0 || in.MemLimit != 0 || in.DiskLimit != 0 {
-			return &edgeproto.Result{},
-				fmt.Errorf("Active Connection Alerts should not include any other triggers.")
-		}
+	if !cloudcommon.IsAlertSeverityValid(in.Severity) {
+		return &edgeproto.Result{},
+			fmt.Errorf("Invalid severity. Valid severities: %s", cloudcommon.GetValidAlertSeverityString())
 	}
+
 	err = a.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		log.SpanLog(ctx, log.DebugLevelApi, "CreateUserAlert begin ApplySTMWait", "alert", in.Key.String())
 		if a.store.STMGet(stm, &in.Key, nil) {
@@ -69,6 +67,24 @@ func (a *UserAlertApi) ShowUserAlert(in *edgeproto.UserAlert, cb edgeproto.UserA
 }
 
 func (a *UserAlertApi) UpdateUserAlert(ctx context.Context, in *edgeproto.UserAlert) (*edgeproto.Result, error) {
-	// TODO - fix unit tests
-	return &edgeproto.Result{}, nil
+	cur := edgeproto.UserAlert{}
+	changed := 0
+	err := a.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !a.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		changed = cur.CopyInFields(in)
+		if changed == 0 {
+			return nil
+		}
+		if err := cur.Validate(edgeproto.UserAlertAllFieldsMap); err != nil {
+			return err
+		}
+		if !cloudcommon.IsAlertSeverityValid(cur.Severity) {
+			return fmt.Errorf("Invalid severity. Valid severities: %s", cloudcommon.GetValidAlertSeverityString())
+		}
+		a.store.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }

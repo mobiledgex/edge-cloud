@@ -12,28 +12,11 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
-// Alert Severity
-//
-// 0: `ALERT_SEVERITY_UNKNOWN`
-// 1: `ALERT_SEVERITY_INFO`
-// 2: `ALERT_SEVERITY_WARNING`
-// 3: `ALERT_SEVERITY_ERROR`
-enum AlertSeverity {
-  // Unknown
-  ALERT_SEVERITY_UNKNOWN = 0;
-  // Info
-  ALERT_SEVERITY_INFO = 1;
-  // Warning
-  ALERT_SEVERITY_WARNING = 2;
-  // Error
-  ALERT_SEVERITY_ERROR = 3;
-}
-
 // Does this really need to be different from PolicyKey
 message UserAlertKey {
   // Name of the organization for the app that this alert can be applied to
   string organization = 1 [(protogen.keytag) = "alertorg"];
-  // Policy name
+  // Alert name
   string name = 2 [(protogen.keytag) = "alert"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
@@ -53,7 +36,7 @@ message UserAlert {
   // Active Connections
   uint32 active_conn_limit = 6;
   // Alert Severity
-  AlertSeverity severity = 7;
+  string severity = 7;
   // Trigger threshold interval
   int64 trigger_time = 8 [(gogoproto.casttype) = "Duration"];
   // Additional Labels
@@ -66,7 +49,7 @@ message UserAlert {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,alert-org=Key.Organization";
+  option (protogen.alias) = "name=Key.Name,alert-org=Key.Organization,cpu-utilization=CpuLimit,mem-usage=MemLimit,disk-usage=DiskLimit,active-connections=ActiveConnLimit,trigger-time=TriggerTime";
   option (protogen.uses_org) = "key=Organization";
 }
 

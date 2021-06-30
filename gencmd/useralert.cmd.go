@@ -290,7 +290,7 @@ var UserAlertKeyOptionalArgs = []string{
 var UserAlertKeyAliasArgs = []string{}
 var UserAlertKeyComments = map[string]string{
 	"organization": "Name of the organization for the app that this alert can be applied to",
-	"name":         "Policy name",
+	"name":         "Alert name",
 }
 var UserAlertKeySpecialArgs = map[string]string{}
 var UserAlertRequiredArgs = []string{
@@ -298,30 +298,35 @@ var UserAlertRequiredArgs = []string{
 	"name",
 }
 var UserAlertOptionalArgs = []string{
-	"cpulimit",
-	"memlimit",
-	"disklimit",
-	"activeconnlimit",
+	"cpu-utilization",
+	"mem-usage",
+	"disk-usage",
+	"active-connections",
 	"severity",
-	"triggertime",
+	"trigger-time",
 	"labels",
 	"annotations",
 }
 var UserAlertAliasArgs = []string{
 	"alert-org=key.organization",
 	"name=key.name",
+	"cpu-utilization=cpulimit",
+	"mem-usage=memlimit",
+	"disk-usage=disklimit",
+	"active-connections=activeconnlimit",
+	"trigger-time=triggertime",
 }
 var UserAlertComments = map[string]string{
-	"alert-org":       "Name of the organization for the app that this alert can be applied to",
-	"name":            "Policy name",
-	"cpulimit":        "CPU",
-	"memlimit":        "Mem",
-	"disklimit":       "Disk",
-	"activeconnlimit": "Active Connections",
-	"severity":        "Alert Severity, one of AlertSeverityUnknown, AlertSeverityInfo, AlertSeverityWarning, AlertSeverityError",
-	"triggertime":     "Trigger threshold interval",
-	"labels":          "Additional Labels",
-	"annotations":     "Additional Annotations for extra information about the alert",
+	"alert-org":          "Name of the organization for the app that this alert can be applied to",
+	"name":               "Alert name",
+	"cpu-utilization":    "CPU",
+	"mem-usage":          "Mem",
+	"disk-usage":         "Disk",
+	"active-connections": "Active Connections",
+	"severity":           "Alert Severity",
+	"trigger-time":       "Trigger threshold interval",
+	"labels":             "Additional Labels",
+	"annotations":        "Additional Annotations for extra information about the alert",
 }
 var UserAlertSpecialArgs = map[string]string{
 	"annotations": "StringToString",
@@ -334,11 +339,11 @@ var CreateUserAlertRequiredArgs = []string{
 	"severity",
 }
 var CreateUserAlertOptionalArgs = []string{
-	"cpulimit",
-	"memlimit",
-	"disklimit",
-	"activeconnlimit",
-	"triggertime",
+	"cpu-utilization",
+	"mem-usage",
+	"disk-usage",
+	"active-connections",
+	"trigger-time",
 	"labels",
 	"annotations",
 }

@@ -429,6 +429,7 @@ func startServices() error {
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
+	edgeproto.RegisterUserAlertApiServer(server, &userAlertApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -465,6 +466,7 @@ func startServices() error {
 			edgeproto.RegisterDebugApiHandler,
 			edgeproto.RegisterDeviceApiHandler,
 			edgeproto.RegisterOrganizationApiHandler,
+			edgeproto.RegisterUserAlertApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)

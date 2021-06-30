@@ -716,18 +716,19 @@ var AppUserDefinedAlertRequiredArgs = []string{
 	"app-org",
 	"appname",
 	"appvers",
-	"userdefinedalert",
+	"alert-name",
 }
 var AppUserDefinedAlertOptionalArgs = []string{}
 var AppUserDefinedAlertAliasArgs = []string{
 	"app-org=appkey.organization",
 	"appname=appkey.name",
 	"appvers=appkey.version",
+	"alert-name=userdefinedalert",
 }
 var AppUserDefinedAlertComments = map[string]string{
-	"app-org":          "App developer organization",
-	"appname":          "App name",
-	"appvers":          "App version",
-	"userdefinedalert": "Alert name",
+	"app-org":    "App developer organization",
+	"appname":    "App name",
+	"appvers":    "App version",
+	"alert-name": "Alert name",
 }
 var AppUserDefinedAlertSpecialArgs = map[string]string{}

@@ -870,7 +870,6 @@ func manifestContainsDaemonSet(manifest string) bool {
 	return false
 }
 
-
 func (s *AppApi) AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
 	cur := edgeproto.App{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -920,7 +919,7 @@ func (s *AppApi) validateUserDefinedAlerts(stm concurrency.STM, app *edgeproto.A
 	// make sure alerts exist
 	for ii, _ := range app.UserDefinedAlerts {
 		alertKey := edgeproto.UserAlertKey{
-			Name: app.UserDefinedAlerts[ii],
+			Name:         app.UserDefinedAlerts[ii],
 			Organization: app.Key.Organization,
 		}
 		alert := edgeproto.UserAlert{}

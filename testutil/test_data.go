@@ -1905,7 +1905,7 @@ var UserAlertData = []edgeproto.UserAlert{
 		CpuLimit:    80,
 		MemLimit:    123456,
 		DiskLimit:   123456,
-		Severity:    edgeproto.AlertSeverity_ALERT_SEVERITY_WARNING,
+		Severity:    "warning",
 		TriggerTime: edgeproto.Duration(30 * time.Second),
 	},
 	edgeproto.UserAlert{ // Warning alert with Active Connections
@@ -1914,7 +1914,7 @@ var UserAlertData = []edgeproto.UserAlert{
 			Organization: DevData[0],
 		},
 		ActiveConnLimit: 10,
-		Severity:        edgeproto.AlertSeverity_ALERT_SEVERITY_WARNING,
+		Severity:        "info",
 		TriggerTime:     edgeproto.Duration(5 * time.Minute),
 	},
 	edgeproto.UserAlert{ // Error alert with extra labels
@@ -1923,7 +1923,7 @@ var UserAlertData = []edgeproto.UserAlert{
 			Organization: DevData[1],
 		},
 		CpuLimit:    100,
-		Severity:    edgeproto.AlertSeverity_ALERT_SEVERITY_ERROR,
+		Severity:    "error",
 		TriggerTime: edgeproto.Duration(30 * time.Second),
 		Labels: map[string]string{
 			"testLabel1": "testValue1",

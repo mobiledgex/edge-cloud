@@ -289,6 +289,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
 		}
 	}
+	for i0 := 0; i0 < len(in.UserDefinedAlerts); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -731,6 +733,17 @@ var AllDataOptionalArgs = []string{
 	"gpudrivers:#.properties",
 	"gpudrivers:#.state",
 	"gpudrivers:#.ignorestate",
+	"userdefinedalerts:#.fields",
+	"userdefinedalerts:#.key.organization",
+	"userdefinedalerts:#.key.name",
+	"userdefinedalerts:#.cpulimit",
+	"userdefinedalerts:#.memlimit",
+	"userdefinedalerts:#.disklimit",
+	"userdefinedalerts:#.activeconnlimit",
+	"userdefinedalerts:#.severity",
+	"userdefinedalerts:#.triggertime",
+	"userdefinedalerts:#.labels",
+	"userdefinedalerts:#.annotations",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -1104,6 +1117,16 @@ var AllDataComments = map[string]string{
 	"gpudrivers:#.properties":                                                       "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
 	"gpudrivers:#.state":                                                            "State to figure out if any action on the GPU driver is in-progress",
 	"gpudrivers:#.ignorestate":                                                      "Ignore state will ignore any action in-progress on the GPU driver",
+	"userdefinedalerts:#.key.organization":                                          "Name of the organization for the app that this alert can be applied to",
+	"userdefinedalerts:#.key.name":                                                  "Alert name",
+	"userdefinedalerts:#.cpulimit":                                                  "CPU",
+	"userdefinedalerts:#.memlimit":                                                  "Mem",
+	"userdefinedalerts:#.disklimit":                                                 "Disk",
+	"userdefinedalerts:#.activeconnlimit":                                           "Active Connections",
+	"userdefinedalerts:#.severity":                                                  "Alert Severity",
+	"userdefinedalerts:#.triggertime":                                               "Trigger threshold interval",
+	"userdefinedalerts:#.labels":                                                    "Additional Labels",
+	"userdefinedalerts:#.annotations":                                               "Additional Annotations for extra information about the alert",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -1141,6 +1164,9 @@ var AllDataSpecialArgs = map[string]string{
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
 	"trustpolicies:#.fields":                  "StringArray",
+	"userdefinedalerts:#.annotations":         "StringToString",
+	"userdefinedalerts:#.fields":              "StringArray",
+	"userdefinedalerts:#.labels":              "StringToString",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
 	"vmpools:#.status.msgs":                   "StringArray",

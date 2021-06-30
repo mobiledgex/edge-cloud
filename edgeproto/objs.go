@@ -1177,5 +1177,19 @@ func (key *UserAlertKey) ValidateKey() error {
 }
 
 func (a *UserAlert) Validate(fields map[string]struct{}) error {
-	return a.GetKey().ValidateKey()
+	if err := a.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	// Since active connections and other metrics are part
+	// of different instances of Prometheus, disallow mixing them
+	if a.ActiveConnLimit != 0 {
+		if a.CpuLimit != 0 || a.MemLimit != 0 || a.DiskLimit != 0 {
+			return errors.New("Active Connection Alerts should not include any other triggers")
+		}
+	}
+	// Protect against user defined alerts that can oscillate too quickly
+	if a.TriggerTime < Duration(30*time.Second) {
+		return errors.New("Trigger time cannot be less than 30 seconds")
+	}
+	return nil
 }
