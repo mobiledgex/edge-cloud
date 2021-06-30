@@ -2122,10 +2122,6 @@ func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgep
 	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
 		allMetaFlavors[*k] = ""
 	})
-	fmt.Printf("\n\nall flavors:\n")
-	for _, flavor := range flavors {
-		fmt.Printf("\t%+v\n", flavor)
-	}
 	for flavor, _ := range allMetaFlavors {
 		fm := edgeproto.FlavorMatch{
 			Key:        *in,

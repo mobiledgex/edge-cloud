@@ -793,6 +793,7 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"app.vmappostype":                            "OS Type for VM Apps, one of VmAppOsUnknown, VmAppOsLinux, VmAppOsWindows10, VmAppOsWindows2012, VmAppOsWindows2016, VmAppOsWindows2019",
 	"dryrundeploy":                               "Attempt to qualify cloudlet resources for deployment",
+	"vmapptest":                                  "True if requesting vmAppInset deployment check",
 }
 var DeploymentCloudletRequestSpecialArgs = map[string]string{
 	"app.autoprovpolicies": "StringArray",

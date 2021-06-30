@@ -245,8 +245,9 @@ message AppAutoProvPolicy {
 message DeploymentCloudletRequest {
    // Discover potential App Cloudlets
    App app = 1;
-   //Attempt to qualify cloudlet resources for deployment
+   // Attempt to qualify cloudlet resources for deployment
    bool dry_run_deploy = 2;
+   // True if requesting vmAppInset deployment check
    bool vm_app_test  = 3;
    option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,App.app-org=Key.Organization,App.defaultflavor=DefaultFlavor.Name";
    option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
@@ -310,7 +311,7 @@ service AppApi {
   // Discover cloudlets supporting depoloyments of App.DefaultFlavor
 rpc ShowCloudletsForAppDeployment(DeploymentCloudletRequest) returns (stream CloudletKey) {
    option (google.api.http) =  {
-     post: "/findmapping/deploymentcloudlets"
+     post: "/showmapping/deploymentcloudlets"
      body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
