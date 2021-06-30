@@ -608,7 +608,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Key: edgeproto.ResTagTableKey{
 			Name: "nasmap",
 		},
-		Tags: map[string]string{"nas": "ceph:1"},
+		Tags: map[string]string{"nas": "ceph-20:1"},
 	}
 	_, err := resTagTableApi.CreateResTagTable(ctx, &gputab)
 	require.Nil(t, nil, err, "CreateResTagTable")
@@ -644,7 +644,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Ram:   8192,
 		Vcpus: 10,
 		Disk:  40,
-		// This requests 2 vgpu instances, (not supported by nvidia yet)
+		// This requests 1 vgpu instances, (not supported by nvidia yet)
 		OptResMap: map[string]string{"gpu": "vgpu:1"},
 	}
 	// don't care what kind of gpu resource
@@ -669,18 +669,17 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Vcpus: 8,
 		Disk:  40,
 		// This says I want one gpu, don't care if it's vgpu or passthrough
-		OptResMap: map[string]string{"gpu": "gpu:1", "nas": "ceph-20:1"},
+		OptResMap: map[string]string{"gpu": "gpu:1", "nas": "nas:ceph-20:1"},
 	}
 	// request nas optional resource only
 	var testflavorNas = edgeproto.Flavor{
 		Key: edgeproto.FlavorKey{
 			Name: "x1.large-2-Resources",
 		},
-		Ram:   8192,
-		Vcpus: 8,
-		Disk:  40,
-		// This says I want one gpu, don't care if it's vgpu or passthrough
-		OptResMap: map[string]string{"nas": "ceph-20:1"},
+		Ram:       8192,
+		Vcpus:     8,
+		Disk:      40,
+		OptResMap: map[string]string{"nas": "nas:ceph-20:1"},
 	}
 
 	// test request for a specific type of pci  ( one T4 )
@@ -692,7 +691,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Ram:   8192,
 		Vcpus: 8,
 		Disk:  40,
-		// This says I want one gpu, don't care if it's vgpu or passthrough
+		// This says I want one gpu of kind pci:t4
 		OptResMap: map[string]string{"gpu": "pci:t4:1"},
 	}
 
@@ -703,7 +702,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Ram:   8192,
 		Vcpus: 10,
 		Disk:  40,
-		// This requests 2 vgpu instances, (not supported by nvidia yet)
+		// This requests 1 vgpu instance of spec nvidia-63
 		OptResMap: map[string]string{"gpu": "vgpu:nvidia-63:1"},
 	}
 
@@ -715,8 +714,8 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		Ram:   8192,
 		Vcpus: 10,
 		Disk:  80,
-		// This requests a passthru
-		OptResMap: map[string]string{"gpu": "vgpu:1"},
+		// This requests a 1 vgpu instance of any kind
+		OptResMap: map[string]string{"gpu": "vmware=vgpu=1"},
 	}
 
 	// Two mex flavors differing only in GPU vs VGPU
@@ -761,8 +760,8 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		require.Equal(t, "gpu_image", spec.ImageName)
 
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorVgpuMatch, *cl, cli)
-		require.Nil(t, vmerr, "GetVmSpec wildcard request")
-		require.Equal(t, "flavor.large", spec.FlavorName)
+		require.Nil(t, vmerr, "GetVmSpec vgpu request")
+		require.Equal(t, "flavor.large-nvidia", spec.FlavorName)
 
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorPciMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVMSpec")
@@ -804,15 +803,15 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		require.Nil(t, err)
 
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
-		require.Nil(t, err, "GetVMSpec")
+		require.Nil(t, vmerr, "GetVMSpec")
 		require.Equal(t, "flavor.large2", spec.FlavorName)
 
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorT4VGPUMatch, *cl, cli)
-		require.Nil(t, err, "GetVMSpec")
+		require.Nil(t, vmerr, "GetVMSpec")
 		require.Equal(t, "flavor.m4.large-vgpu", spec.FlavorName)
 
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorT4GPUMatch, *cl, cli)
-		require.Nil(t, err, "GetVMSpec")
+		require.Nil(t, vmerr, "GetVMSpec")
 		require.Equal(t, "flavor.m4.large-gpu", spec.FlavorName)
 
 		// Non-nominal: ask for nas only, should reject testflavor2 as there are no
@@ -822,12 +821,12 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		// Non-nominal: flavor requests optional resource, while cloudlet's OptResMap is nil (cloudlet supports none)
 		cl.ResTagMap = nil
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
-		require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet San Jose Site supports none", vmerr.Error())
+		require.Equal(t, "Cloudlet San Jose Site doesn't support GPU", vmerr.Error())
 
 		nulCL := edgeproto.Cloudlet{}
 		// and finally, Non-nominal, request a resource, and cloudlet has none to give (nil cloudlet/cloudlet.ResTagMap)
 		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, nulCL, cli)
-		require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet San Jose Site supports none", vmerr.Error(), "nil table")
+		require.Equal(t, "Cloudlet San Jose Site doesn't support GPU", vmerr.Error(), "nil table")
 		return nil
 	})
 }

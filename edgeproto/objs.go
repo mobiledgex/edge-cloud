@@ -328,11 +328,6 @@ func (g *GPUDriver) Validate(fields map[string]struct{}) error {
 	if err := g.ValidateEnums(); err != nil {
 		return err
 	}
-	if _, found := fields[GPUDriverFieldType]; found {
-		if g.Type == GPUType_GPU_TYPE_NONE {
-			return fmt.Errorf("GPU type cannot be none")
-		}
-	}
 	buildNames := make(map[string]struct{})
 	for _, build := range g.Builds {
 		if err := build.Validate(); err != nil {
