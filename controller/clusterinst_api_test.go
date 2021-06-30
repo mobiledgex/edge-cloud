@@ -947,6 +947,7 @@ func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
 	vgpuCloudlet := testutil.CloudletData[0]
 	vgpuCloudlet.Key.Name = "VGPUCloudlet"
 	vgpuCloudlet.GpuConfig.Driver = testutil.GPUDriverData[3].Key
+	vgpuCloudlet.ResTagMap["gpu"] = &testutil.Restblkeys[0]
 	err := cloudletApi.CreateCloudlet(&vgpuCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 	cloudletInfo := testutil.CloudletInfoData[0]
@@ -956,19 +957,28 @@ func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
 
 	obj := testutil.ClusterInstData[0]
 	obj.Key.ClusterKey.Name = "GPUTestClusterFlavor"
-	obj.Key.CloudletKey = vgpuCloudlet.Key
 	obj.Flavor = testutil.FlavorData[4].Key // GPU Passthrough flavor
+
+	// Deploy GPU cluster on non-GPU cloudlet, should fail
+	obj.Key.CloudletKey = testutil.CloudletData[1].Key
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
-	require.Contains(t, err.Error(), "must have 'vgpu' as resmap tag to use vGPU")
+	require.Contains(t, err.Error(), "doesn't support GPU")
+
+	// Deploy GPU passthrough cluster on vGPU cloudlet, should fail
+	obj.Key.CloudletKey = vgpuCloudlet.Key
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
+	require.Contains(t, err.Error(), "doesn't support GPU resource \"pci\"")
 
 	vgpuFlavor := testutil.FlavorData[4]
 	vgpuFlavor.Key.Name = "mex-vgpu-flavor"
-	vgpuFlavor.OptResMap["vgpu"] = "resources:VGPU:1"
+	vgpuFlavor.OptResMap["gpu"] = "vmware:vgpu:1"
 	_, err = flavorApi.CreateFlavor(ctx, &vgpuFlavor)
 	require.Nil(t, err, "create flavor as vgpu flavor")
 
 	obj.Flavor = vgpuFlavor.Key
+	verbose = true
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "create cluster inst with vgpu flavor on vgpu cloudlet")
 }

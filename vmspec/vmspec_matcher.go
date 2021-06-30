@@ -116,11 +116,20 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 		// XXX in all cases?
 		return false, fmt.Errorf("invalid optresmap request %s", request)
 	}
+
+	reqResType := ""
+	reqResSpec := ""
 	if len(request) == 2 {
-		// generic request for res type, no res specifier present
-		wildcard = true
+		// format "resType:resCnt"
+		reqResType = request[0]
+		if reqResType == "gpu" {
+			wildcard = true
+		}
 		count = request[1]
 	} else if len(request) == 3 {
+		// format "resType:resSpec:resCnt"
+		reqResType = request[0]
+		reqResSpec = request[1]
 		count = request[2]
 	}
 	if reqcnt, err = strconv.Atoi(count); err != nil {
@@ -189,9 +198,9 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 				}
 			} else {
 				if verbose {
-					log.SpanLog(ctx, log.DebugLevelApi, "Match qualified ", "flavor", flavor.Name, "request[0]", request[0], "tag_key", tag_key)
+					log.SpanLog(ctx, log.DebugLevelApi, "Match qualified ", "flavor", flavor.Name, "resType", reqResType, "resSpec", reqResSpec, "tag_key", tag_key)
 				}
-				if request[0] == tag_key {
+				if reqResType == tag_key {
 					if verbose {
 						log.SpanLog(ctx, log.DebugLevelApi, "Match qualified", "flavor", flavor.Name, "tag_key", tag_key, "in flav_key?", flav_key, "flavcnt >=", flavcnt, "reqcnt", reqcnt)
 					}
@@ -200,6 +209,12 @@ func match(ctx context.Context, resname string, req string, flavor edgeproto.Fla
 							log.SpanLog(ctx, log.DebugLevelApi, "Match qualified", "flavor", flavor.Name, "tag_val", tag_val, "in flav_val?", flav_val, "flavcnt >=", flavcnt, "reqcnt", reqcnt)
 						}
 						if strings.Contains(flav_val, tag_val) && flavcnt >= reqcnt {
+							if reqResSpec != "" && !strings.Contains(flav_val, reqResSpec) {
+								if verbose {
+									log.SpanLog(ctx, log.DebugLevelApi, "Match skipping due to spec mismatch", "flavor", flavor.Name, "fkey", flav_key, "fval", flav_val, "tval", tag_val, "spec", reqResSpec)
+								}
+								continue
+							}
 							if verbose {
 								log.SpanLog(ctx, log.DebugLevelApi, "Match qualified!", "flavor", flavor.Name, "fkey", flav_key, "fval", flav_val, "tval", tag_val)
 							}
@@ -256,11 +271,49 @@ func resLookup(ctx context.Context, nodeflavor edgeproto.Flavor, flavor edgeprot
 	return az, img, true, nil
 }
 
+func ValidateGPUResource(ctx context.Context, nodeflavor edgeproto.Flavor, cli edgeproto.CloudletInfo, tbls map[string]*edgeproto.ResTagTable) error {
+	flavorRes, ok := nodeflavor.OptResMap["gpu"]
+	if !ok {
+		// GPU is not requested, hence no need to perform any GPU based validation
+		return nil
+	}
+	if _, ok := tbls["gpu"]; !ok {
+		return fmt.Errorf("Cloudlet %s doesn't support GPU", cli.Key.Name)
+	}
+	// break flavor request into spec and count
+	var request []string
+	if strings.Contains(flavorRes, ":") {
+		request = strings.Split(flavorRes, ":")
+	} else if strings.Contains(flavorRes, "=") {
+		// VIO syntax uses =
+		request = strings.Split(flavorRes, "=")
+	}
+	if len(request) < 2 {
+		return fmt.Errorf("Invalid optresmap %q found in flavor %s", request, nodeflavor.Key.Name)
+	}
+	resType := request[0]
+	tblTagKeys := make(map[string]struct{})
+	for _, resTagTable := range tbls {
+		for tagKey, _ := range resTagTable.Tags {
+			tblTagKeys[tagKey] = struct{}{}
+		}
+	}
+	if _, ok := tblTagKeys[resType]; !ok {
+		return fmt.Errorf("Invalid node flavor %s, cloudlet %q doesn't support GPU resource %q", nodeflavor.Key.Name, cli.Key.Name, resType)
+	}
+	return nil
+}
+
 // GetVMSpec returns the VMCreationAttributes including flavor name and the size of the external volume which is required, if any
 func GetVMSpec(ctx context.Context, nodeflavor edgeproto.Flavor, cli edgeproto.CloudletInfo, tbls map[string]*edgeproto.ResTagTable) (*VMCreationSpec, error) {
 	var flavorList []*edgeproto.FlavorInfo
 	var vmspec VMCreationSpec
 	var az, img string
+
+	err := ValidateGPUResource(ctx, nodeflavor, cli, tbls)
+	if err != nil {
+		return nil, err
+	}
 
 	// If nodeflavor requests an optional resource, and there is no OptResMap in cl (tbls = nil) to support it, don't bother looking.
 	if nodeflavor.OptResMap != nil && tbls == nil {
