@@ -297,10 +297,6 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
 
-	// do not store license config in etcd, as we upload it to GCS
-	licenseConfig := in.LicenseConfig
-	in.LicenseConfig = ""
-
 	// To ensure updates to etcd and GCS happens atomically:
 	// Step-1: First commit to etcd
 	// Step-2: Validate and upload the license-config to GCS
@@ -329,6 +325,7 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		// we'll only commit state change now,
 		// obj update will happen as part of Step-3
 		old.State = ChangeInProgress
+		// do not store license config in etcd, as we upload it to GCS
 		s.store.STMPut(stm, &old)
 		return nil
 	})
@@ -352,7 +349,7 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			return err
 		}
 		defer storageClient.Close()
-		if licenseConfig == "" {
+		if in.LicenseConfig == "" {
 			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
 			// Delete license config from GCS
 			err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.Key)
@@ -361,12 +358,11 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			}
 			in.LicenseConfigMd5Sum = ""
 		} else {
-			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &licenseConfig, cb)
+			// store the GCS path to license config
+			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &in.LicenseConfig, cb)
 			if err != nil {
 				return err
 			}
-			// store the GCS path to license config
-			in.LicenseConfig = licenseConfig
 			in.LicenseConfigMd5Sum = md5sum
 		}
 		in.Fields = append(in.Fields, edgeproto.GPUDriverFieldLicenseConfigMd5Sum)
