@@ -29,7 +29,10 @@ func (r *RateLimitSettingsApi) initDefaultRateLimitSettings(ctx context.Context)
 	err := r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		defaultsettings := edgeproto.GetDefaultRateLimitSettings()
 		for _, settings := range defaultsettings {
-			r.store.STMPut(stm, settings)
+			buf := edgeproto.RateLimitSettings{}
+			if !r.store.STMGet(stm, &settings.Key, &buf) {
+				r.store.STMPut(stm, settings)
+			}
 		}
 		return nil
 	})
