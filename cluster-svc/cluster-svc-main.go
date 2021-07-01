@@ -262,7 +262,7 @@ func updateAllPromInstsForApp(ctx context.Context, app *edgeproto.App) {
 	AppInstCache.Mux.Unlock()
 
 	// Now walk all the clusterInstances and update Prometheus instance
-	for ii, _ := range insts {
+	for ii := range insts {
 		err := createMEXPromInst(ctx, dialOpts, &insts[ii], app)
 		log.SpanLog(ctx, log.DebugLevelApi, "Updated user alerts for Prometheus", "ClusterInst", insts[ii].Key,
 			"app", app.Key, "err", err)
@@ -280,6 +280,7 @@ func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
 	if _, found := fields[edgeproto.AppFieldUserDefinedAlerts]; !found {
 		return
 	}
+	log.SpanLog(ctx, log.DebugLevelNotify, "app update", "new", new, "old", old)
 	updateAllPromInstsForApp(ctx, new)
 }
 
@@ -334,7 +335,6 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	AppInstCache.SetUpdatedCb(appInstCb)
 	AppCache.SetUpdatedCb(appCb)
 	UserAlertCache.SetUpdatedCb(userAlertCb)
-	notifyClient.RegisterRecvAppCache(&AppCache)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
@@ -803,6 +803,9 @@ func main() {
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
 	notifyClient.RegisterRecvAutoScalePolicyCache(&AutoScalePolicyCache)
 	notifyClient.RegisterRecvCloudletCache(nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion))
+	notifyClient.RegisterRecvAppCache(&AppCache)
+	notifyClient.RegisterRecvAppInstCache(&AppInstCache)
+	notifyClient.RegisterRecvUserAlertCache(&UserAlertCache)
 	nodeMgr.RegisterClient(notifyClient)
 	notifyClient.Start()
 	defer notifyClient.Stop()
