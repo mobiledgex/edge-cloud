@@ -549,7 +549,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if gpuDriver.State == ChangeInProgress {
 				return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
 			}
-			in.GpuConfig.GpuType = gpuDriver.Type
 		}
 		if in.TrustPolicy != "" {
 			policy := edgeproto.TrustPolicy{}
@@ -964,7 +963,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverName)
 				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverOrganization)
 				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigProperties)
-				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigGpuType)
 			} else {
 				if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.Organization {
 					return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.Organization)
@@ -976,8 +974,6 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				if gpuDriver.State == ChangeInProgress {
 					return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
 				}
-				in.GpuConfig.GpuType = gpuDriver.Type
-				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigGpuType)
 			}
 			crmUpdateReqd = true
 		}
@@ -1232,14 +1228,19 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_PlatformDeleteCloudletServer) error {
 	ctx := cb.Context()
 	updatecb := updateCloudletCallback{in, cb}
-	if in.DeploymentLocal {
-		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-		return cloudcommon.StopCRMService(ctx, in)
+	var cloudletPlatform pf.Platform
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return err
 	}
+
 	var pfConfig *edgeproto.PlatformConfig
 	vmPool := edgeproto.VMPool{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		var err error
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return in.Key.NotFoundError()
+		}
 		pfConfig, err = getPlatformConfig(cb.Context(), in)
 		if err != nil {
 			return err
@@ -1253,16 +1254,18 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 				return fmt.Errorf("VM Pool %s not found", in.VmPool)
 			}
 		}
+		in.State = edgeproto.TrackedState_DELETE_REQUESTED
+		s.store.STMPut(stm, in)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
-	var cloudletPlatform pf.Platform
-	cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
-	if err != nil {
-		return err
+	if in.DeploymentLocal {
+		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
+		return cloudcommon.StopCRMService(ctx, in)
 	}
+
 	// Some platform types require caches
 	caches := getCaches(ctx, &vmPool)
 	accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
@@ -1295,6 +1298,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
+	var prevState edgeproto.TrackedState
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
 		clDynInsts = make(map[edgeproto.ClusterInstKey]struct{})
@@ -1316,6 +1320,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err := validateDeleteState(cctx, "Cloudlet", in.State, in.Errors, cb.Send); err != nil {
 			return err
 		}
+		prevState = in.State
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
 		return nil
@@ -1323,6 +1328,22 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		if reterr != nil {
+			s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+				if !s.store.STMGet(stm, &in.Key, in) {
+					return in.Key.NotFoundError()
+				}
+				if in.State == edgeproto.TrackedState_DELETE_PREPARE {
+					// restore previous state since we failed pre-delete actions
+					in.State = prevState
+					s.store.STMPut(stm, in)
+				}
+				return nil
+			})
+		}
+	}()
 
 	// Delete dynamic instances while Cloudlet is still in database
 	// and CRM is still up.
@@ -1710,16 +1731,19 @@ func (s *CloudletApi) UsesVMPool(vmPoolKey *edgeproto.VMPoolKey) bool {
 	return false
 }
 
-func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) bool {
+func (s *CloudletApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) (bool, []string) {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
+	cloudlets := []string{}
+	inUse := false
 	for _, data := range s.cache.Objs {
 		val := data.Obj
 		if driverKey.Matches(&val.GpuConfig.Driver) {
-			return true
+			cloudlets = append(cloudlets, val.Key.Name)
+			inUse = true
 		}
 	}
-	return false
+	return inUse, cloudlets
 }
 
 func (s *CloudletApi) GetCloudletProps(ctx context.Context, in *edgeproto.CloudletProps) (*edgeproto.CloudletProps, error) {
@@ -1914,9 +1938,10 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 	}
 	cloudletRes := map[string]string{
 		// Common Cloudlet Resources
-		cloudcommon.ResourceRamMb: cloudcommon.ResourceRamUnits,
-		cloudcommon.ResourceVcpus: "",
-		cloudcommon.ResourceGpus:  "",
+		cloudcommon.ResourceRamMb:       cloudcommon.ResourceRamUnits,
+		cloudcommon.ResourceVcpus:       "",
+		cloudcommon.ResourceGpus:        "",
+		cloudcommon.ResourceExternalIPs: "",
 	}
 	resInfo := make(map[string]edgeproto.InfraResource)
 	for resName, resUnits := range cloudletRes {
@@ -1962,6 +1987,13 @@ func GetCloudletResourceInfo(ctx context.Context, stm concurrency.STM, cloudlet 
 				if ok {
 					gpusInfo.Value += 1
 					resInfo[cloudcommon.ResourceGpus] = gpusInfo
+				}
+			}
+			if vmRes.Type == cloudcommon.VMTypeRootLB || vmRes.Type == cloudcommon.VMTypePlatform {
+				externalIPInfo, ok := resInfo[cloudcommon.ResourceExternalIPs]
+				if ok {
+					externalIPInfo.Value += 1
+					resInfo[cloudcommon.ResourceExternalIPs] = externalIPInfo
 				}
 			}
 		}

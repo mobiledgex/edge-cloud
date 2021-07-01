@@ -176,8 +176,8 @@ func (c *dmeRestClient) StreamEdgeEvent(ctx context.Context, opts ...grpc.CallOp
 	return nil, fmt.Errorf("StreamEdgeEvent not supported yet in E2E via REST")
 }
 
-func readDMEApiFile(apifile string) {
-	err := util.ReadYamlFile(apifile, &apiRequests, util.ValidateReplacedVars())
+func readDMEApiFile(apifile string, apiFileVars map[string]string) {
+	err := util.ReadYamlFile(apifile, &apiRequests, util.WithVars(apiFileVars), util.ValidateReplacedVars())
 	if err != nil && !util.IsYamlOk(err, "dmeapi") {
 		// old yaml files are not arrayed dmeApiRequests
 		apiRequest := dmeApiRequest{}
@@ -197,7 +197,7 @@ func readMatchEngineStatus(filename string, mes *registration) {
 	util.ReadYamlFile(filename, &mes)
 }
 
-func RunDmeAPI(api string, procname string, apiFile string, apiType string, outputDir string) bool {
+func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[string]string, apiType string, outputDir string) bool {
 	if apiFile == "" {
 		log.Println("Error: Cannot run DME APIs without API file")
 		return false
@@ -205,7 +205,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	log.Printf("RunDmeAPI for api %s, %s, %s\n", api, apiFile, apiType)
 	apiConnectTimeout := 5 * time.Second
 
-	readDMEApiFile(apiFile)
+	readDMEApiFile(apiFile, apiFileVars)
 
 	dme := util.GetDme(procname)
 	var client dmeproto.MatchEngineApiClient

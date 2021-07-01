@@ -363,6 +363,63 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 	return warnings, err
 }
 
+// getClusterFlavorInfo returns nodeFlavorInfo, masterNodeFlavorInfo.  It first looks at platform flavors and if not found there gets it from
+// the cache
+func getClusterFlavorInfo(ctx context.Context, stm concurrency.STM, pfFlavorList []*edgeproto.FlavorInfo, clusterInst *edgeproto.ClusterInst) (*edgeproto.FlavorInfo, *edgeproto.FlavorInfo, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "getClusterFlavorInfo", "clusterinst", clusterInst)
+
+	var nodeFlavorInfo *edgeproto.FlavorInfo
+	var masterFlavorInfo *edgeproto.FlavorInfo
+
+	for _, flavor := range pfFlavorList {
+		if flavor.Name == clusterInst.NodeFlavor {
+			nodeFlavorInfo = flavor
+			log.SpanLog(ctx, log.DebugLevelApi, "found node flavor from platform list", "nodeFlavor", nodeFlavorInfo.Name)
+		}
+		if flavor.Name == clusterInst.MasterNodeFlavor {
+			masterFlavorInfo = flavor
+			log.SpanLog(ctx, log.DebugLevelApi, "found master flavor from platform list", "masterFlavorInfo", masterFlavorInfo.Name)
+
+		}
+	}
+	if nodeFlavorInfo == nil {
+		// get from stm
+		nodeFlavor := edgeproto.Flavor{}
+		nodeFlavorKey := edgeproto.FlavorKey{}
+		nodeFlavorKey.Name = clusterInst.NodeFlavor
+		if !flavorApi.store.STMGet(stm, &nodeFlavorKey, &nodeFlavor) {
+			return nil, nil, fmt.Errorf("node flavor %s not found", clusterInst.MasterNodeFlavor)
+		}
+		nodeFlavorInfo = &edgeproto.FlavorInfo{
+			Name:  nodeFlavor.Key.Name,
+			Vcpus: nodeFlavor.Vcpus,
+			Ram:   nodeFlavor.Ram,
+			Disk:  nodeFlavor.Disk,
+		}
+	}
+	if masterFlavorInfo == nil {
+		if clusterInst.MasterNodeFlavor == "" {
+			// use node flavor
+			masterFlavorInfo = nodeFlavorInfo
+		} else {
+			// get from stm
+			masterNodeFlavor := edgeproto.Flavor{}
+			masterNodeFlavorKey := edgeproto.FlavorKey{}
+			masterNodeFlavorKey.Name = clusterInst.MasterNodeFlavor
+			if !flavorApi.store.STMGet(stm, &masterNodeFlavorKey, &masterNodeFlavor) {
+				return nil, nil, fmt.Errorf("master node flavor %s not found", clusterInst.MasterNodeFlavor)
+			}
+			masterFlavorInfo = &edgeproto.FlavorInfo{
+				Name:  masterNodeFlavor.Key.Name,
+				Vcpus: masterNodeFlavor.Vcpus,
+				Ram:   masterNodeFlavor.Ram,
+				Disk:  masterNodeFlavor.Disk,
+			}
+		}
+	}
+	return nodeFlavorInfo, masterFlavorInfo, nil
+}
+
 func GetRootLBFlavorInfo(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo) (*edgeproto.FlavorInfo, error) {
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
@@ -422,7 +479,11 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if edgeproto.IsDeleteState(ci.State) {
 			continue
 		}
-		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, cloudletInfo.Flavors, lbFlavor)
+		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &ci)
+		if err != nil {
+			return nil, nil, err
+		}
+		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -508,7 +569,11 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 	}
 	reqdVmResources := []edgeproto.VMResource{}
 	if clusterInst != nil {
-		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, clusterInst, cloudletInfo.Flavors, lbFlavor)
+		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, clusterInst)
+		if err != nil {
+			return err
+		}
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		if err != nil {
 			return err
 		}
@@ -570,10 +635,24 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 
 	ramUsed := uint64(0)
 	vcpusUsed := uint64(0)
+	gpusUsed := uint64(0)
+	externalIPsUsed := uint64(0)
+	flavorCount := make(map[string]uint64)
 	for _, vmRes := range allResources {
 		if vmRes.VmFlavor != nil {
 			ramUsed += vmRes.VmFlavor.Ram
 			vcpusUsed += vmRes.VmFlavor.Vcpus
+			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, cloudlet) {
+				gpusUsed += 1
+			}
+			if _, ok := flavorCount[vmRes.VmFlavor.Name]; ok {
+				flavorCount[vmRes.VmFlavor.Name] += 1
+			} else {
+				flavorCount[vmRes.VmFlavor.Name] = 1
+			}
+		}
+		if vmRes.Type == cloudcommon.VMTypeRootLB || vmRes.Type == cloudcommon.VMTypePlatform {
+			externalIPsUsed += 1
 		}
 	}
 
@@ -585,6 +664,8 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	resMetric.AddTag("cloudlet", key.Name)
 	resMetric.AddIntVal(cloudcommon.ResourceMetricRamMB, ramUsed)
 	resMetric.AddIntVal(cloudcommon.ResourceMetricVcpus, vcpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricsGpus, gpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricExternalIPs, externalIPsUsed)
 
 	// get additional infra specific metric
 	err = cloudletPlatform.GetClusterAdditionalResourceMetric(ctx, &cloudlet, &resMetric, allResources)
@@ -592,22 +673,6 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 		return nil, err
 	}
 
-	// get cloudlet metric
-	gpusUsed := uint64(0)
-	flavorCount := make(map[string]uint64)
-	for _, vmRes := range allResources {
-		if vmRes.VmFlavor != nil {
-			if resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, cloudlet) {
-				gpusUsed += 1
-			}
-			if _, ok := flavorCount[vmRes.VmFlavor.Name]; ok {
-				flavorCount[vmRes.VmFlavor.Name] += 1
-			} else {
-				flavorCount[vmRes.VmFlavor.Name] = 1
-			}
-		}
-	}
-	resMetric.AddIntVal(cloudcommon.ResourceMetricsGpus, gpusUsed)
 	metrics := []*edgeproto.Metric{}
 	metrics = append(metrics, &resMetric)
 
@@ -794,8 +859,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		in.OptRes = resTagTableApi.AddGpuResourceHintIfNeeded(ctx, stm, vmspec, cloudlet)
 		if in.OptRes == "gpu" {
-			if cloudlet.GpuConfig.GpuType == edgeproto.GPUType_GPU_TYPE_NONE {
-				return fmt.Errorf("Cloudlet %v doesn't support GPU", cloudlet.Key)
+			if cloudlet.GpuConfig.Driver.Name == "" {
+				return fmt.Errorf("No GPU driver associated with cloudlet %s", cloudlet.Key)
 			}
 		}
 		in.NodeFlavor = vmspec.FlavorName
@@ -938,6 +1003,19 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if inbuf.NumMasters == 0 {
 			return fmt.Errorf("cannot modify single node clusters")
 		}
+		if inbuf.AutoScalePolicy == "" && in.AutoScalePolicy != "" {
+			if inbuf.Deployment != cloudcommon.DeploymentTypeKubernetes {
+				return fmt.Errorf("Cannot add auto scale policy to non-kubernetes ClusterInst")
+			}
+			if inbuf.NumNodes == 0 {
+				// this restriction is because we do not adjust
+				// the taints when switching from 1master/0nodes
+				// to 1master/Xnodes. This check can be removed
+				// if we fix the tainting.
+				return fmt.Errorf("Cannot add auto scale policy to master-only ClusterInst")
+			}
+		}
+
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Update); err != nil {
 			return err
 		}
@@ -1567,6 +1645,22 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	}
 	flavorApi.cache.Mux.Unlock()
 
+	// default autoscale policy
+	// TODO: make these settings configurable
+	policy := edgeproto.AutoScalePolicy{}
+	policy.Key.Organization = cloudcommon.OrganizationMobiledgeX
+	policy.Key.Name = cloudcommon.DefaultMultiTenantCluster
+	policy.TargetCpu = 70
+	policy.TargetMem = 80
+	policy.StabilizationWindowSec = 300
+	policy.MinNodes = 1
+	policy.MaxNodes = 4
+	_, err := autoScalePolicyApi.CreateAutoScalePolicy(ctx, &policy)
+	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst autoscale policy", "policy", policy, "err", err)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		return
+	}
+
 	clusterInst := edgeproto.ClusterInst{}
 	clusterInst.Key = *getDefaultMTClustKey(cloudletKey)
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
@@ -1575,12 +1669,13 @@ func createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.
 	// TODO: custom settings or per-cloudlet config for the below fields?
 	clusterInst.NumMasters = 1
 	clusterInst.NumNodes = 3
+	clusterInst.AutoScalePolicy = policy.Key.Name
 	cb := StreamoutCb{
 		ctx: ctx,
 	}
 	start := time.Now()
 
-	err := clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
+	err = clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst", "cluster", clusterInst, "err", err)
 
 	if err != nil && err.Error() == clusterInst.Key.ExistsError().Error() {

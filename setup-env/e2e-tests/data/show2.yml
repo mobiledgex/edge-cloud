@@ -33,6 +33,8 @@ settings:
   - interval: 24h0m0s
   - interval: 168h0m0s
   - interval: 672h0m0s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
 operatorcodes:
 - code: wifi
   organization: tmus
@@ -166,6 +168,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 4
     clusterinsts:
     - clusterkey:
         name: someapplication1
@@ -218,6 +222,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 4
     clusterinsts:
     - clusterkey:
         name: someapplication1
@@ -323,15 +329,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp.
+    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp.
+    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp.
+    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -357,15 +363,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp.
+    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp.
+    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp.
+    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:

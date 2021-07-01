@@ -544,7 +544,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if autoClusterType == ChooseAutoCluster && in.RealClusterName != "" {
 			// Caller specified target ClusterInst
 			if !sidecarApp {
-				return fmt.Errorf("Cannot specify real cluster name without %s cluster name prefix", cloudcommon.AutoClusterPrefix)
+				return fmt.Errorf("Cannot specify real cluster name with %s cluster name prefix", cloudcommon.AutoClusterPrefix)
 			}
 			key := in.ClusterInstKey()
 			clusterInst := edgeproto.ClusterInst{}

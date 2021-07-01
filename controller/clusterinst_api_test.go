@@ -204,6 +204,7 @@ func TestClusterInstApi(t *testing.T) {
 	testClusterInstOverrideTransientDelete(t, ctx, commonApi, responder)
 
 	testClusterInstResourceUsage(t, ctx)
+	testClusterInstGPUFlavor(t, ctx)
 
 	dummy.Stop()
 }
@@ -745,7 +746,9 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		clusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
 		clusterInst.Flavor = testutil.FlavorData[4].Key
 		clusterInst.NodeFlavor = "flavor.large"
-		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, cloudletInfo.Flavors, lbFlavor)
+		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &clusterInst)
+		require.Nil(t, err, "get cluster flavor info")
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		require.Nil(t, err, "get cluster inst vm requirements")
 		// number of vm resources = num_nodes + num_masters + num_of_rootLBs
 		require.Equal(t, 5, len(ciResources), "matches number of vm resources")
@@ -938,4 +941,44 @@ func waitDefaultMTClust(t *testing.T, cloudletKey edgeproto.CloudletKey, present
 		time.Sleep(100 * time.Millisecond)
 	}
 	require.Equal(t, present, found, "DefaultMTCluster presence incorrect")
+}
+
+func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
+	vgpuCloudlet := testutil.CloudletData[0]
+	vgpuCloudlet.Key.Name = "VGPUCloudlet"
+	vgpuCloudlet.GpuConfig.Driver = testutil.GPUDriverData[3].Key
+	vgpuCloudlet.ResTagMap["gpu"] = &testutil.Restblkeys[0]
+	err := cloudletApi.CreateCloudlet(&vgpuCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	cloudletInfo := testutil.CloudletInfoData[0]
+	cloudletInfo.Key = vgpuCloudlet.Key
+	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
+
+	obj := testutil.ClusterInstData[0]
+	obj.Key.ClusterKey.Name = "GPUTestClusterFlavor"
+	obj.Flavor = testutil.FlavorData[4].Key // GPU Passthrough flavor
+
+	// Deploy GPU cluster on non-GPU cloudlet, should fail
+	obj.Key.CloudletKey = testutil.CloudletData[1].Key
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
+	require.Contains(t, err.Error(), "doesn't support GPU")
+
+	// Deploy GPU passthrough cluster on vGPU cloudlet, should fail
+	obj.Key.CloudletKey = vgpuCloudlet.Key
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
+	require.Contains(t, err.Error(), "doesn't support GPU resource \"pci\"")
+
+	vgpuFlavor := testutil.FlavorData[4]
+	vgpuFlavor.Key.Name = "mex-vgpu-flavor"
+	vgpuFlavor.OptResMap["gpu"] = "vmware:vgpu:1"
+	_, err = flavorApi.CreateFlavor(ctx, &vgpuFlavor)
+	require.Nil(t, err, "create flavor as vgpu flavor")
+
+	obj.Flavor = vgpuFlavor.Key
+	verbose = true
+	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "create cluster inst with vgpu flavor on vgpu cloudlet")
 }

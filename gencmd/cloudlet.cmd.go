@@ -2113,7 +2113,6 @@ var GPUDriverRequiredArgs = []string{
 }
 var GPUDriverOptionalArgs = []string{
 	"gpudriver-org",
-	"type",
 	"builds:#.name",
 	"builds:#.driverpath",
 	"builds:#.driverpathcreds",
@@ -2122,7 +2121,6 @@ var GPUDriverOptionalArgs = []string{
 	"builds:#.hypervisorinfo",
 	"builds:#.md5sum",
 	"licenseconfig",
-	"licenseconfigmd5sum",
 	"properties",
 	"ignorestate",
 }
@@ -2134,7 +2132,6 @@ var GPUDriverComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
 	"gpudrivername":            "Name of the driver",
 	"gpudriver-org":            "Organization to which the driver belongs to",
-	"type":                     "Type of GPU hardware, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
 	"builds:#.name":            "Unique identifier key",
 	"builds:#.driverpath":      "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
 	"builds:#.driverpathcreds": "Optional credentials (username:password) to access driver path",
@@ -2156,14 +2153,12 @@ var GPUConfigRequiredArgs = []string{}
 var GPUConfigOptionalArgs = []string{
 	"driver.name",
 	"driver.organization",
-	"gputype",
 	"properties",
 }
 var GPUConfigAliasArgs = []string{}
 var GPUConfigComments = map[string]string{
 	"driver.name":         "Name of the driver",
 	"driver.organization": "Organization to which the driver belongs to",
-	"gputype":             "Type of GPU hardware supported by the Cloudlet, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
 	"properties":          "Properties to identify specifics of GPU",
 }
 var GPUConfigSpecialArgs = map[string]string{
@@ -2299,7 +2294,6 @@ var CloudletComments = map[string]string{
 	"kafkapassword":                       "password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
 	"gpuconfig.driver.name":               "Name of the driver",
 	"gpuconfig.driver.organization":       "Organization to which the driver belongs to",
-	"gpuconfig.gputype":                   "Type of GPU hardware supported by the Cloudlet, one of GpuTypeNone, GpuTypePassthrough, GpuTypeVgpu",
 	"gpuconfig.properties":                "Properties to identify specifics of GPU",
 	"enabledefaultserverlesscluster":      "Enable experimental default multitenant (serverless) cluster",
 }
@@ -2617,11 +2611,8 @@ var UpdateGPUDriverRequiredArgs = []string{
 }
 var UpdateGPUDriverOptionalArgs = []string{
 	"gpudriver-org",
-	"type",
 	"licenseconfig",
-	"licenseconfigmd5sum",
 	"properties",
-	"ignorestate",
 }
 var AddGPUDriverBuildRequiredArgs = []string{
 	"gpudrivername",
@@ -2653,8 +2644,6 @@ var GetGPUDriverBuildURLRequiredArgs = []string{
 	"build.name",
 }
 var GetGPUDriverBuildURLOptionalArgs = []string{
-	"build.driverpathcreds",
-	"build.md5sum",
 	"ignorestate",
 }
 var CreateCloudletRequiredArgs = []string{

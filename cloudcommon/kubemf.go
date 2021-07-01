@@ -11,8 +11,10 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
+const yamlSeparator = "\n---"
+
 func DecodeK8SYaml(manifest string) ([]runtime.Object, []*schema.GroupVersionKind, error) {
-	files := strings.Split(manifest, "---")
+	files := strings.Split(manifest, yamlSeparator)
 	decode := scheme.Codecs.UniversalDeserializer().Decode
 	objs := []runtime.Object{}
 	kinds := []*schema.GroupVersionKind{}

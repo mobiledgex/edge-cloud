@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
@@ -97,15 +98,30 @@ func (gc *GCSClient) ListObjects(ctx context.Context) ([]string, error) {
 }
 
 // Overwrites object if already exists
-func (gc *GCSClient) UploadObject(ctx context.Context, objectName string, buf *bytes.Buffer) error {
+func (gc *GCSClient) UploadObject(ctx context.Context, objectName, uploadFilePath string, buf *bytes.Buffer) error {
 	ctx, cancel := context.WithTimeout(ctx, gc.Timeout)
 	defer cancel()
 
 	// Upload an object with storage.Writer.
 	wc := gc.Client.Bucket(gc.BucketName).Object(objectName).NewWriter(ctx)
-	reader := bytes.NewReader(buf.Bytes())
-	if _, err := io.Copy(wc, reader); err != nil {
-		return fmt.Errorf("Failed to read object to upload to %s: %v", objectName, err)
+	if buf != nil {
+		reader := bytes.NewReader(buf.Bytes())
+		if _, err := io.Copy(wc, reader); err != nil {
+			return fmt.Errorf("Failed to read object to upload to %s: %v", objectName, err)
+		}
+	} else if uploadFilePath != "" {
+		// Open local file
+		f, err := os.Open(uploadFilePath)
+		if err != nil {
+			return fmt.Errorf("Failed to open file %s: %v", uploadFilePath, err)
+		}
+		defer f.Close()
+
+		if _, err := io.Copy(wc, f); err != nil {
+			return fmt.Errorf("Failed to read object from %s to upload to %s: %v", uploadFilePath, objectName, err)
+		}
+	} else {
+		return fmt.Errorf("No object to upload to %s", objectName)
 	}
 	if err := wc.Close(); err != nil {
 		return fmt.Errorf("Failed to write object(%q) to GCS: %v", objectName, err)
@@ -113,21 +129,32 @@ func (gc *GCSClient) UploadObject(ctx context.Context, objectName string, buf *b
 	return nil
 }
 
-func (gc *GCSClient) DownloadObject(ctx context.Context, objectName string) ([]byte, error) {
+func (gc *GCSClient) DownloadObject(ctx context.Context, objectName, downloadPath string) (reterr error) {
 	ctx, cancel := context.WithTimeout(ctx, gc.Timeout)
 	defer cancel()
 
 	rc, err := gc.Client.Bucket(gc.BucketName).Object(objectName).NewReader(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to download GCS object(%q): %v", objectName, err)
+		return fmt.Errorf("Failed to download GCS object(%q): %v", objectName, err)
 	}
 	defer rc.Close()
 
-	data, err := ioutil.ReadAll(rc)
+	// Open local file
+	outFile, err := os.OpenFile(downloadPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read download object(%q): %v", objectName, err)
+		return fmt.Errorf("Failed to open file %s: %v", downloadPath, err)
 	}
-	return data, nil
+	defer func() {
+		outFile.Close()
+		if reterr != nil {
+			cloudcommon.DeleteFile(downloadPath)
+		}
+	}()
+
+	if _, err := io.Copy(outFile, rc); err != nil {
+		return fmt.Errorf("Failed to read download object(%q): %v", objectName, err)
+	}
+	return nil
 }
 
 func (gc *GCSClient) DeleteObject(ctx context.Context, objectName string) error {

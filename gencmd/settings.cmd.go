@@ -227,6 +227,8 @@ var SettingsOptionalArgs = []string{
 	"influxdbdownsampledmetricsretention",
 	"influxdbedgeeventsmetricsretention",
 	"appinstclientcleanupinterval",
+	"clusterautoscaleaveragingdurationsec",
+	"clusterautoscaleretrydelay",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -258,10 +260,12 @@ var SettingsComments = map[string]string{
 	"createcloudlettimeout":                 "Create Cloudlet timeout (duration)",
 	"updatecloudlettimeout":                 "Update Cloudlet timeout (duration)",
 	"locationtilesidelengthkm":              "Length of location tiles side for latency metrics (km)",
-	"edgeeventsmetricscontinuousqueriescollectionintervals:#.interval": "Collection interval for Influxdb (Specifically used for continuous query intervals)",
+	"edgeeventsmetricscontinuousqueriescollectionintervals:#.interval": "Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)",
 	"influxdbdownsampledmetricsretention":                              "Default retention policy for downsampled influx db (duration)",
 	"influxdbedgeeventsmetricsretention":                               "Default retention policy for edgeevents metrics influx db (duration)",
 	"appinstclientcleanupinterval":                                     "AppInstClient cleanup thread run interval",
+	"clusterautoscaleaveragingdurationsec":                             "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
+	"clusterautoscaleretrydelay":                                       "Cluster auto scale retry delay if scaling failed",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -272,6 +276,6 @@ var CollectionIntervalOptionalArgs = []string{
 }
 var CollectionIntervalAliasArgs = []string{}
 var CollectionIntervalComments = map[string]string{
-	"interval": "Collection interval for Influxdb (Specifically used for continuous query intervals)",
+	"interval": "Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)",
 }
 var CollectionIntervalSpecialArgs = map[string]string{}

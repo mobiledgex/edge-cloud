@@ -283,7 +283,7 @@ func TestAppInstApi(t *testing.T) {
 			if lproto == "http" {
 				continue
 			}
-			test_prefix := fmt.Sprintf("%s-%s.", util.DNSSanitize(app_name), lproto)
+			test_prefix := fmt.Sprintf("%s-%s-", util.DNSSanitize(app_name), lproto)
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}
@@ -644,7 +644,7 @@ func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppIn
 	nonNomApp.Flavor = testflavor.Key
 	err = appInstApi.CreateAppInst(&nonNomApp, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "non-nom-app-create")
-	require.Equal(t, "Optional resource requested by x1.large-mex, cloudlet New York Site supports none", err.Error())
+	require.Equal(t, "Cloudlet New York Site doesn't support GPU", err.Error())
 }
 
 // Test that Crm Override for Delete App overrides any failures

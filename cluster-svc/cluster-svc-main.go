@@ -116,6 +116,7 @@ var ClusterInstCache edgeproto.ClusterInstCache
 var AppInstCache edgeproto.AppInstCache
 var AppCache edgeproto.AppCache
 var UserAlertCache edgeproto.UserAlertCache
+var settings *edgeproto.Settings = edgeproto.GetDefaultSettings()
 var nodeMgr node.NodeMgr
 
 type promCustomizations struct {
@@ -466,7 +467,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 				userAlerts = append(userAlerts, userAlert)
 			}
 		}
-		configs, err := clusterSvcPlugin.GetAppInstConfigs(ctx, clusterInst, &appInst, policy, userAlerts)
+		configs, err := clusterSvcPlugin.GetAppInstConfigs(ctx, clusterInst, &appInst, policy, settings, userAlerts)
 		if err != nil {
 			return err
 		}
@@ -806,6 +807,7 @@ func main() {
 	notifyClient.RegisterRecvAppCache(&AppCache)
 	notifyClient.RegisterRecvAppInstCache(&AppInstCache)
 	notifyClient.RegisterRecvUserAlertCache(&UserAlertCache)
+	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(settings, nil))
 	nodeMgr.RegisterClient(notifyClient)
 	notifyClient.Start()
 	defer notifyClient.Stop()

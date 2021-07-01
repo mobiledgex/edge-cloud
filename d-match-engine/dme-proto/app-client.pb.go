@@ -4990,6 +4990,7 @@ func (m *RegisterClientRequest) CopyInFields(src *RegisterClientRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5053,6 +5054,7 @@ func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5156,6 +5158,7 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5216,6 +5219,7 @@ func (m *PlatformFindCloudletRequest) CopyInFields(src *PlatformFindCloudletRequ
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5321,6 +5325,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5451,6 +5456,7 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5512,6 +5518,7 @@ func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5568,6 +5575,7 @@ func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5666,6 +5674,7 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -5781,6 +5790,7 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6009,6 +6019,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6071,6 +6082,7 @@ func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6167,6 +6179,7 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6273,6 +6286,7 @@ func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6338,6 +6352,7 @@ func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6414,6 +6429,7 @@ func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6469,6 +6485,7 @@ func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6712,6 +6729,7 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -6907,6 +6925,7 @@ func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -7060,6 +7079,7 @@ func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil
@@ -7275,6 +7295,7 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 			m.NewCloudlet.Tags = make(map[string]string)
 			for k1, _ := range src.NewCloudlet.Tags {
 				m.NewCloudlet.Tags[k1] = src.NewCloudlet.Tags[k1]
+				changed++
 			}
 		} else if m.NewCloudlet.Tags != nil {
 			m.NewCloudlet.Tags = nil
@@ -7292,6 +7313,7 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
 			m.Tags[k0] = src.Tags[k0]
+			changed++
 		}
 	} else if m.Tags != nil {
 		m.Tags = nil

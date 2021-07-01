@@ -359,13 +359,11 @@ func startServices() error {
 	// VaultPublicCertClient implements GetPublicCertApi
 	// Allows controller to get public certs from vault
 	var getPublicCertApi cloudcommon.GetPublicCertApi
-	if nodeMgr.InternalPki.UseVaultPki {
-		if tls.IsTestTls() || *testMode {
-			getPublicCertApi = &cloudcommon.TestPublicCertApi{}
-		} else {
-			getPublicCertApi = &cloudcommon.VaultPublicCertApi{
-				VaultConfig: vaultConfig,
-			}
+	if tls.IsTestTls() || *testMode {
+		getPublicCertApi = &cloudcommon.TestPublicCertApi{}
+	} else if nodeMgr.InternalPki.UseVaultPki {
+		getPublicCertApi = &cloudcommon.VaultPublicCertApi{
+			VaultConfig: vaultConfig,
 		}
 	}
 	publicCertManager, err := node.NewPublicCertManager(*publicAddr, getPublicCertApi, "", "")

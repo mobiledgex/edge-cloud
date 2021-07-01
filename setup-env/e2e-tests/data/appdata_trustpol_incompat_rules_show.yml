@@ -48,6 +48,8 @@ settings:
   influxdbdownsampledmetricsretention: 8760h0m0s
   influxdbedgeeventsmetricsretention: 672h0m0s
   appinstclientcleanupinterval: 24h0m0s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
 trustpolicies:
 - key:
     organization: tmus
@@ -165,6 +167,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 5
     clusterinsts:
     - clusterkey:
         name: cluster1
@@ -216,6 +220,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 2
   trustpolicystate: NotPresent
   compatibilityversion: 1
 clusterinsts:

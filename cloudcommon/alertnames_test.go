@@ -15,6 +15,7 @@ func TestValidateSeverity(t *testing.T) {
 }
 
 func TestValidateMonitoredAlert(t *testing.T) {
+	require.True(t, IsMonitoredAlert(AlertClusterAutoScale))
 	require.True(t, IsMonitoredAlert(AlertAutoScaleUp))
 	require.True(t, IsMonitoredAlert(AlertAutoScaleDown))
 	require.True(t, IsMonitoredAlert(AlertAppInstDown))

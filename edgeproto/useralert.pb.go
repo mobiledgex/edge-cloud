@@ -985,6 +985,7 @@ func (m *UserAlert) CopyInFields(src *UserAlert) int {
 			m.Labels = make(map[string]string)
 			for k0, _ := range src.Labels {
 				m.Labels[k0] = src.Labels[k0]
+				changed++
 			}
 		} else if m.Labels != nil {
 			m.Labels = nil
@@ -996,6 +997,7 @@ func (m *UserAlert) CopyInFields(src *UserAlert) int {
 			m.Annotations = make(map[string]string)
 			for k0, _ := range src.Annotations {
 				m.Annotations[k0] = src.Annotations[k0]
+				changed++
 			}
 		} else if m.Annotations != nil {
 			m.Annotations = nil

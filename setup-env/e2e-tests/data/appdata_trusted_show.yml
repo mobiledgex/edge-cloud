@@ -48,6 +48,8 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
 trustpolicies:
 - key:
     organization: tmus
@@ -164,6 +166,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 5
     clusterinsts:
     - clusterkey:
         name: cluster1
@@ -214,6 +218,8 @@ cloudletinfos:
     - name: External IPs
       value: 2
       inframaxvalue: 30
+    - name: Instances
+      value: 6
     clusterinsts:
     - clusterkey:
         name: cluster2
@@ -565,7 +571,7 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: trustedapp10-tcp.
+    fqdnprefix: trustedapp10-tcp-
   flavor:
     name: x1.small
   state: Ready
@@ -600,7 +606,7 @@ appinstances:
   - proto: LProtoTcp
     internalport: 90
     publicport: 90
-    fqdnprefix: nontrustedapp10-tcp.
+    fqdnprefix: nontrustedapp10-tcp-
   flavor:
     name: x1.small
   state: Ready

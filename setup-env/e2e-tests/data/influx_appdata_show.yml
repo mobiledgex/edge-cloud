@@ -31,6 +31,8 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
 flavors:
 - key:
     name: x1.tiny
@@ -134,6 +136,8 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 5
     clusterinsts:
     - clusterkey:
         name: SmallCluster
@@ -310,15 +314,15 @@ appinstances:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp.
+    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp.
+    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp.
+    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:

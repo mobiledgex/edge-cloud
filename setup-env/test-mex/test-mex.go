@@ -62,7 +62,7 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
-func validateArgs(config *e2eapi.TestConfig, spec *setupmex.TestSpec) {
+func validateArgs(config *e2eapi.TestConfig, spec *util.TestSpec) {
 	errFound := false
 
 	errs := config.Validate()
@@ -119,7 +119,7 @@ func main() {
 	util.SetLogFormat()
 
 	config := e2eapi.TestConfig{}
-	spec := setupmex.TestSpec{}
+	spec := util.TestSpec{}
 	mods := []string{}
 
 	err := json.Unmarshal([]byte(*configStr), &config)
@@ -176,8 +176,7 @@ func main() {
 			break
 		}
 		if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
-			pass := util.CompareYamlFiles(spec.CompareYaml.Yaml1,
-				spec.CompareYaml.Yaml2, spec.CompareYaml.FileType)
+			pass := util.CompareYamlFiles(&spec.CompareYaml)
 			if !pass {
 				tryErrs = append(tryErrs, "compare yaml failed")
 			}
