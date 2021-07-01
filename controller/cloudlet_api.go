@@ -1228,14 +1228,19 @@ func (s *CloudletApi) setMaintenanceState(ctx context.Context, key *edgeproto.Cl
 func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_PlatformDeleteCloudletServer) error {
 	ctx := cb.Context()
 	updatecb := updateCloudletCallback{in, cb}
-	if in.DeploymentLocal {
-		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-		return cloudcommon.StopCRMService(ctx, in)
+	var cloudletPlatform pf.Platform
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return err
 	}
+
 	var pfConfig *edgeproto.PlatformConfig
 	vmPool := edgeproto.VMPool{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		var err error
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return in.Key.NotFoundError()
+		}
 		pfConfig, err = getPlatformConfig(cb.Context(), in)
 		if err != nil {
 			return err
@@ -1249,16 +1254,18 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 				return fmt.Errorf("VM Pool %s not found", in.VmPool)
 			}
 		}
+		in.State = edgeproto.TrackedState_DELETE_REQUESTED
+		s.store.STMPut(stm, in)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
-	var cloudletPlatform pf.Platform
-	cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
-	if err != nil {
-		return err
+	if in.DeploymentLocal {
+		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
+		return cloudcommon.StopCRMService(ctx, in)
 	}
+
 	// Some platform types require caches
 	caches := getCaches(ctx, &vmPool)
 	accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
@@ -1291,6 +1298,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
+	var prevState edgeproto.TrackedState
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
 		clDynInsts = make(map[edgeproto.ClusterInstKey]struct{})
@@ -1312,6 +1320,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err := validateDeleteState(cctx, "Cloudlet", in.State, in.Errors, cb.Send); err != nil {
 			return err
 		}
+		prevState = in.State
 		in.State = edgeproto.TrackedState_DELETE_PREPARE
 		s.store.STMPut(stm, in)
 		return nil
@@ -1319,6 +1328,22 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		if reterr != nil {
+			s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+				if !s.store.STMGet(stm, &in.Key, in) {
+					return in.Key.NotFoundError()
+				}
+				if in.State == edgeproto.TrackedState_DELETE_PREPARE {
+					// restore previous state since we failed pre-delete actions
+					in.State = prevState
+					s.store.STMPut(stm, in)
+				}
+				return nil
+			})
+		}
+	}()
 
 	// Delete dynamic instances while Cloudlet is still in database
 	// and CRM is still up.
