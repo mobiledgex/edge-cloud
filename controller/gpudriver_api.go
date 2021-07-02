@@ -50,16 +50,16 @@ func getGCSStorageClient(ctx context.Context) (*gcs.GCSClient, error) {
 	return storageClient, nil
 }
 
-func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey, build *edgeproto.GPUDriverBuild, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) error {
+func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey, build *edgeproto.GPUDriverBuild, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) (string, error) {
 	if build.DriverPath == "" {
-		return fmt.Errorf("Missing driverpath: %s", build.Name)
+		return "", fmt.Errorf("Missing driverpath: %s", build.Name)
 	}
 	if build.OperatingSystem == edgeproto.OSType_LINUX && build.KernelVersion == "" {
-		return fmt.Errorf("Kernel version is required for Linux build %s", build.Name)
+		return "", fmt.Errorf("Kernel version is required for Linux build %s", build.Name)
 	}
 	driverFileName, err := cloudcommon.GetFileNameWithExt(build.DriverPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	ext := filepath.Ext(driverFileName)
 	// Download the driver package
@@ -71,16 +71,16 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	localFilePath := "/tmp/" + strings.ReplaceAll(fileName, "/", "_")
 	err = cloudcommon.DownloadFile(ctx, authApi, build.DriverPath, build.DriverPathCreds, localFilePath, nil)
 	if err != nil {
-		return fmt.Errorf("Failed to download GPU driver build %s, %v", build.DriverPath, err)
+		return "", fmt.Errorf("Failed to download GPU driver build %s, %v", build.DriverPath, err)
 	}
 	defer cloudcommon.DeleteFile(localFilePath)
 	cb.Send(&edgeproto.Result{Message: "Validating MD5Sum of the package"})
 	md5sum, err := cloudcommon.Md5SumFile(localFilePath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if build.Md5Sum != md5sum {
-		return fmt.Errorf("Invalid md5sum specified, expected md5sum %s", md5sum)
+		return "", fmt.Errorf("Invalid md5sum specified, expected md5sum %s", md5sum)
 	}
 
 	// If Linux, then validate the pkg
@@ -89,17 +89,17 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	if build.OperatingSystem == edgeproto.OSType_LINUX {
 		cb.Send(&edgeproto.Result{Message: "Verifying if GPU driver package is a debian package"})
 		if ext != ".deb" {
-			return fmt.Errorf("Only supported file extension for Linux GPU driver is '.deb', given %s", ext)
+			return "", fmt.Errorf("Only supported file extension for Linux GPU driver is '.deb', given %s", ext)
 		}
 		cb.Send(&edgeproto.Result{Message: "Verifying if kernel dependency is specified as part of package's control file"})
 		localClient := &pc.LocalClient{}
 		cmd := fmt.Sprintf("dpkg-deb -I %s | grep -i 'Depends: linux-image-%s'", localFilePath, build.KernelVersion)
 		out, err := localClient.Output(cmd)
 		if err != nil && out != "" {
-			return fmt.Errorf("Invalid driver package(%q), should be a valid debian package, %s, %v", fileName, out, err)
+			return "", fmt.Errorf("Invalid driver package(%q), should be a valid debian package, %s, %v", fileName, out, err)
 		}
 		if out == "" {
-			return fmt.Errorf("Driver package(%q) should have Linux Kernel dependency(%q) specified as part of debian control file, %v", fileName, build.KernelVersion, err)
+			return "", fmt.Errorf("Driver package(%q) should have Linux Kernel dependency(%q) specified as part of debian control file, %v", fileName, build.KernelVersion, err)
 		}
 	}
 
@@ -107,22 +107,22 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	cb.Send(&edgeproto.Result{Message: "Uploading the GPU driver to secure storage"})
 	err = storageClient.UploadObject(ctx, fileName, localFilePath, nil)
 	if err != nil {
-		return fmt.Errorf("Failed to upload GPU driver build to %s, %v", fileName, err)
+		return "", fmt.Errorf("Failed to upload GPU driver build to %s, %v", fileName, err)
 	}
-	build.DriverPath = cloudcommon.GetGPUDriverURL(driverKey, nodeMgr.DeploymentTag, build.Name, ext)
-	return nil
+	driverPathUrl := cloudcommon.GetGPUDriverURL(driverKey, nodeMgr.DeploymentTag, build.Name, ext)
+	return driverPathUrl, nil
 }
 
-func setupGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey, licenseConfig *string, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) (string, error) {
+func setupGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey, licenseConfig string, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) (string, string, error) {
 	cb.Send(&edgeproto.Result{Message: "Uploading the GPU driver license config to secure storage"})
 	fileName := cloudcommon.GetGPUDriverLicenseStoragePath(driverKey)
-	err := storageClient.UploadObject(ctx, fileName, "", bytes.NewBufferString(*licenseConfig))
+	err := storageClient.UploadObject(ctx, fileName, "", bytes.NewBufferString(licenseConfig))
 	if err != nil {
-		return "", fmt.Errorf("Failed to upload GPU driver license to %s, %v", fileName, err)
+		return "", "", fmt.Errorf("Failed to upload GPU driver license to %s, %v", fileName, err)
 	}
-	md5sum := cloudcommon.Md5SumStr(*licenseConfig)
-	*licenseConfig = cloudcommon.GetGPUDriverLicenseURL(driverKey, nodeMgr.DeploymentTag)
-	return md5sum, nil
+	md5sum := cloudcommon.Md5SumStr(licenseConfig)
+	licenseCfgUrl := cloudcommon.GetGPUDriverLicenseURL(driverKey, nodeMgr.DeploymentTag)
+	return licenseCfgUrl, md5sum, nil
 }
 
 func deleteGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey) error {
@@ -245,22 +245,22 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			if creds, ok := credsMap[build.Name]; ok {
 				build.DriverPathCreds = creds
 			}
-			err := setupGPUDriver(ctx, storageClient, &in.Key, &build, cb)
+			driverPathUrl, err := setupGPUDriver(ctx, storageClient, &in.Key, &build, cb)
 			if err != nil {
 				return err
 			}
 			// store the GCS path to driver package
-			in.Builds[ii].DriverPath = build.DriverPath
+			in.Builds[ii].DriverPath = driverPathUrl
 		}
 
 		// If license config is present, upload it to GCS
 		if licenseConfig != "" {
-			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &licenseConfig, cb)
+			url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, licenseConfig, cb)
 			if err != nil {
 				return err
 			}
 			// store the GCS path to license config
-			in.LicenseConfig = licenseConfig
+			in.LicenseConfig = url
 			in.LicenseConfigMd5Sum = md5sum
 		}
 	}
@@ -297,10 +297,6 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
 
-	// do not store license config in etcd, as we upload it to GCS
-	licenseConfig := in.LicenseConfig
-	in.LicenseConfig = ""
-
 	// To ensure updates to etcd and GCS happens atomically:
 	// Step-1: First commit to etcd
 	// Step-2: Validate and upload the license-config to GCS
@@ -329,6 +325,7 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		// we'll only commit state change now,
 		// obj update will happen as part of Step-3
 		old.State = ChangeInProgress
+		// do not store license config in etcd, as we upload it to GCS
 		s.store.STMPut(stm, &old)
 		return nil
 	})
@@ -352,7 +349,7 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			return err
 		}
 		defer storageClient.Close()
-		if licenseConfig == "" {
+		if in.LicenseConfig == "" {
 			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
 			// Delete license config from GCS
 			err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.Key)
@@ -361,12 +358,12 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			}
 			in.LicenseConfigMd5Sum = ""
 		} else {
-			md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, &licenseConfig, cb)
+			url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.Key, in.LicenseConfig, cb)
 			if err != nil {
 				return err
 			}
 			// store the GCS path to license config
-			in.LicenseConfig = licenseConfig
+			in.LicenseConfig = url
 			in.LicenseConfigMd5Sum = md5sum
 		}
 		in.Fields = append(in.Fields, edgeproto.GPUDriverFieldLicenseConfigMd5Sum)
@@ -589,12 +586,12 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 	build := edgeproto.GPUDriverBuild{}
 	build.DeepCopyIn(&in.Build)
 	build.DriverPathCreds = driverPathCreds
-	err = setupGPUDriver(ctx, storageClient, &in.Key, &build, cb)
+	driverPathUrl, err := setupGPUDriver(ctx, storageClient, &in.Key, &build, cb)
 	if err != nil {
 		return err
 	}
 	// store the GCS path to driver package
-	in.Build.DriverPath = build.DriverPath
+	in.Build.DriverPath = driverPathUrl
 
 	// Step-3: And then update build details to reflect GCS URL and update it to etcd
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
