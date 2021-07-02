@@ -441,6 +441,40 @@ func (r *Run) AppApi_AppAutoProvPolicy(data *[]edgeproto.AppAutoProvPolicy, data
 	}
 }
 
+func (r *Run) AppApi_DeploymentCloudletRequest(data *[]edgeproto.DeploymentCloudletRequest, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for DeploymentCloudletRequest", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.DeploymentCloudletRequest{}
+		out, err := r.client.ShowCloudletsForAppDeployment(r.ctx, obj)
+		if err != nil {
+			r.logErr("AppApi_DeploymentCloudletRequest", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.CloudletKey)
+			if !ok {
+				panic(fmt.Sprintf("RunAppApi_DeploymentCloudletRequest expected dataOut type *[]edgeproto.CloudletKey, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "showfiltered":
+			out, err := r.client.ShowCloudletsForAppDeployment(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi_DeploymentCloudletRequest[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.CloudletKey)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_DeploymentCloudletRequest expected dataOut type *[]edgeproto.CloudletKey, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
+	}
+}
+
 func (s *DummyServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if s.CudNoop {
 		return &edgeproto.Result{}, nil
@@ -584,6 +618,41 @@ func (s *CliClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.A
 	return &out, err
 }
 
+type CloudletKeyStream interface {
+	Recv() (*edgeproto.CloudletKey, error)
+}
+
+func CloudletKeyReadStream(stream CloudletKeyStream) ([]edgeproto.CloudletKey, error) {
+	output := []edgeproto.CloudletKey{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read CloudletKey stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) ([]edgeproto.CloudletKey, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	stream, err := api.ShowCloudletsForAppDeployment(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return CloudletKeyReadStream(stream)
+}
+
+func (s *CliClient) ShowCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) ([]edgeproto.CloudletKey, error) {
+	output := []edgeproto.CloudletKey{}
+	args := append(s.BaseArgs, "controller", "ShowCloudletsForAppDeployment")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
 type AppApiClient interface {
 	CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
 	DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error)
@@ -591,4 +660,5 @@ type AppApiClient interface {
 	ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error)
 	AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
 	RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
+	ShowCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) ([]edgeproto.CloudletKey, error)
 }

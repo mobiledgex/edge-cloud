@@ -1229,6 +1229,17 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 				}
 				*outp = append(*outp, *out)
 			}
+		case "showflavorsforcloudlet":
+			out, err := r.client.ShowFlavorsForCloudlet(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.FlavorKey)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[][]edgeproto.FlavorKey, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
 		case "revokeaccesskey":
 			out, err := r.client.RevokeAccessKey(r.ctx, obj)
 			if err != nil {
@@ -1926,6 +1937,41 @@ func (s *CliClient) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMat
 	return &out, err
 }
 
+type FlavorKeyStream interface {
+	Recv() (*edgeproto.FlavorKey, error)
+}
+
+func FlavorKeyReadStream(stream FlavorKeyStream) ([]edgeproto.FlavorKey, error) {
+	output := []edgeproto.FlavorKey{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read FlavorKey stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.FlavorKey, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.ShowFlavorsForCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return FlavorKeyReadStream(stream)
+}
+
+func (s *CliClient) ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.FlavorKey, error) {
+	output := []edgeproto.FlavorKey{}
+	args := append(s.BaseArgs, "controller", "ShowFlavorsForCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
 func (s *ApiClient) RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	return api.RevokeAccessKey(ctx, in)
@@ -1978,6 +2024,7 @@ type CloudletApiClient interface {
 	AddCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)
+	ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.FlavorKey, error)
 	RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	GenerateAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
