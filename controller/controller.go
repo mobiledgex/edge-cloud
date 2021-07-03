@@ -246,6 +246,11 @@ func startServices() error {
 		return fmt.Errorf("Failed to init settings, %v", err)
 	}
 
+	err = rateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to init default rate limit settings, %v", err)
+	}
+
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
 	influxAuth, err = cloudcommon.GetInfluxDataAuth(vaultConfig, *region)
