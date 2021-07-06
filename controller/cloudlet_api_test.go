@@ -847,32 +847,13 @@ func TestShowFlavorsForCloudlet(t *testing.T) {
 	defer sync.Done()
 
 	cCldApi := testutil.NewInternalCloudletApi(&cloudletApi)
-
-	// mock http to redirect requests
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	// any requests that don't have a registered URL will be fetched normally
-	httpmock.RegisterNoResponder(httpmock.InitialTransport.RoundTrip)
-
-	esURL := "http://dummy-es"
-	eMock = NewEventMock(esURL)
-	eMock.registerResponders(t)
-
-	// setup nodeMgr for events
-	nodeMgr = node.NodeMgr{}
-	ctx, _, err := nodeMgr.Init(node.NodeTypeController, "", node.WithRegion("unit-test"),
-		node.WithESUrls(esURL))
-	require.Nil(t, err)
-	require.NotNil(t, nodeMgr.ESClient)
-	defer nodeMgr.Finish()
-
 	// create flavors
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	fmt.Printf("\n\nSetup complete start creating test cloudlets from test_data\n\n")
 
 	// Use a  clouldet with no ResourceTagMap
 	cld := testutil.CloudletData[1]
-	err = cloudletApi.CreateCloudlet(&cld, testutil.NewCudStreamoutCloudlet(ctx))
+	err := cloudletApi.CreateCloudlet(&cld, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
 	show := testutil.ShowFlavorsForCloudlet{}
