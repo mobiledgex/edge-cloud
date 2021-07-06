@@ -956,17 +956,5 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	for k, v := range show.Data {
 		fmt.Printf("\t DryRun next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
 	}
-
-	filter.VmAppTest = true
-	err = cAppApi.ShowCloudletsForAppDeployment(ctx, &filter, &show)
-	require.Nil(t, err, "ShowCloudletsForAppDeployment")
-	require.Equal(t, 1, len(show.Data), "ShowCloudletsForAppDeployment DryRun=True")
-
-	found := show.Data["San Jose Site"]
-	fmt.Printf("\nFound: %+x\n", found)
-
-	for k, _ := range show.Data {
-		require.Equal(t, "San Jose Site", k, "ShowCloudletsForAppDeployment")
-	}
 	// TODO: Increase cloudlets refs such that San Jose can no longer support the App deployment
 }

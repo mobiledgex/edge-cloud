@@ -247,8 +247,6 @@ message DeploymentCloudletRequest {
    App app = 1;
    // Attempt to qualify cloudlet resources for deployment
    bool dry_run_deploy = 2;
-   // True if requesting vmAppInset deployment check
-   bool vm_app_test  = 3;
    option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,App.app-org=Key.Organization,App.defaultflavor=DefaultFlavor.Name";
    option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
 }
