@@ -875,9 +875,11 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 
 	deployment := app.Deployment
 	if deployment == cloudcommon.DeploymentTypeHelm {
+		log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy deployment Helm replaced with Kube")
 		deployment = cloudcommon.DeploymentTypeKubernetes
 	}
 	if app.Deployment == cloudcommon.DeploymentTypeKubernetes && app.AllowServerless {
+		log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy check multi-tenant TBI for kube+serverless")
 		// note: helm not allowed
 		// TODO: check if multi-tenant cluster exists on cloudlet, and check if resources are available
 	}
@@ -897,6 +899,7 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 		}
 		clusterInstApi.cache.Mux.Unlock()
 		if canDeploy {
+			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy Ok", "cloudlet", cloudlet.Key.Name)
 			return nil
 		}
 		// see if we can create a new ClusterInst
@@ -908,7 +911,7 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 			targetCluster.NumMasters = 1
 			targetCluster.NumNodes = 2
 		}
-		// maybe need to set some other stuff?
+
 		return validateResources(ctx, stm, &targetCluster, nil, nil, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
 	}
 	if deployment == cloudcommon.DeploymentTypeVM {
