@@ -233,6 +233,7 @@ var podTemplate = `
     metadata:
       labels:
         run: {{.Run}}
+        mexDeployGen: kubernetes-basic
     spec:
       volumes:
       imagePullSecrets:

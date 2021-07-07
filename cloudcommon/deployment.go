@@ -20,6 +20,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -98,8 +99,53 @@ func GetMappedAccessType(accessType edgeproto.AccessType, deployment, deployment
 
 }
 
-func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports []dme.AppPort) error {
-	if DeploymentType == DeploymentTypeVM {
+func IsValidDeploymentManifestForFlavor(deploymentType, manifest string, flavor *edgeproto.Flavor) error {
+	if deploymentType != DeploymentTypeKubernetes {
+		return nil
+	}
+	ok, count := IsGPUFlavor(flavor)
+	if !ok {
+		// currently we are only validating GPU resources
+		return nil
+	}
+	objs, _, err := DecodeK8SYaml(manifest)
+	if err != nil {
+		return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
+	}
+	var template *v1.PodTemplateSpec
+	requestedGPUCount := int64(0)
+	for i, _ := range objs {
+		template = nil
+		switch obj := objs[i].(type) {
+		case *appsv1.Deployment:
+			template = &obj.Spec.Template
+		case *appsv1.DaemonSet:
+			template = &obj.Spec.Template
+		case *appsv1.StatefulSet:
+			template = &obj.Spec.Template
+		}
+		if template == nil {
+			continue
+		}
+		for j, _ := range template.Spec.Containers {
+			resources := &template.Spec.Containers[j].Resources
+			gpuResName := v1.ResourceName(GPUResourceLimitName)
+			if qty, ok := resources.Limits[gpuResName]; ok {
+				if val, valOk := qty.AsInt64(); valOk {
+					requestedGPUCount += val
+				}
+			}
+		}
+	}
+	if requestedGPUCount > int64(count) {
+		return fmt.Errorf("GPU resource limit (value:%v) exceeds flavor specified count %d", requestedGPUCount, count)
+	}
+
+	return nil
+}
+
+func IsValidDeploymentManifest(deploymentType, command, manifest string, ports []dme.AppPort, appFlavor *edgeproto.Flavor) error {
+	if deploymentType == DeploymentTypeVM {
 		if command != "" {
 			return fmt.Errorf("both deploymentmanifest and command cannot be used together for VM based deployment")
 		}
@@ -107,7 +153,7 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 			return nil
 		}
 		return fmt.Errorf("only cloud-init script support, must start with '#cloud-config'")
-	} else if DeploymentType == DeploymentTypeKubernetes {
+	} else if deploymentType == DeploymentTypeKubernetes {
 		objs, _, err := DecodeK8SYaml(manifest)
 		if err != nil {
 			return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
@@ -178,6 +224,10 @@ func IsValidDeploymentManifest(DeploymentType, command, manifest string, ports [
 		}
 		if len(missingPorts) > 0 {
 			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest in a LoadBalancer service", strings.Join(missingPorts, ","))
+		}
+		err = IsValidDeploymentManifestForFlavor(deploymentType, manifest, appFlavor)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
