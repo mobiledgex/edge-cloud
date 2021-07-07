@@ -105,7 +105,7 @@ enum DeleteType {
   AUTO_DELETE = 1;
 }
 
-// AccessType
+// (Deprecated) AccessType
 //
 // AccessType indicates how to access the app
 //
@@ -184,7 +184,7 @@ message App {
   reserved 27;
   // (_deprecated_) Auto provisioning policy name
   string auto_prov_policy = 28;
-  // Access type
+  // (Deprecated) Access type
   AccessType access_type = 29; 
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];

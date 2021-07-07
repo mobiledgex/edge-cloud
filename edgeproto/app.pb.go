@@ -157,7 +157,7 @@ func (DeleteType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_e0f9056a14b86d47, []int{2}
 }
 
-// AccessType
+// (Deprecated) AccessType
 //
 // AccessType indicates how to access the app
 //
@@ -375,7 +375,7 @@ type App struct {
 	Md5Sum string `protobuf:"bytes,26,opt,name=md5sum,proto3" json:"md5sum,omitempty"`
 	// (_deprecated_) Auto provisioning policy name
 	AutoProvPolicy string `protobuf:"bytes,28,opt,name=auto_prov_policy,json=autoProvPolicy,proto3" json:"auto_prov_policy,omitempty"`
-	// Access type
+	// (Deprecated) Access type
 	AccessType AccessType `protobuf:"varint,29,opt,name=access_type,json=accessType,proto3,enum=edgeproto.AccessType" json:"access_type,omitempty"`
 	// Preparing to be deleted
 	DeletePrepare bool `protobuf:"varint,31,opt,name=delete_prepare,json=deletePrepare,proto3" json:"delete_prepare,omitempty"`
