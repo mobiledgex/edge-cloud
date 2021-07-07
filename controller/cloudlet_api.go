@@ -2150,7 +2150,6 @@ func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 
 func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletApi_ShowFlavorsForCloudletServer) error {
 	ctx := cb.Context()
-	flavors := []edgeproto.FlavorKey{}
 	allMetaFlavors := make(map[edgeproto.FlavorKey]string)
 	flavorCache := &flavorApi.cache
 	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
@@ -2166,7 +2165,6 @@ func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgep
 			delete(allMetaFlavors, flavor)
 			continue
 		}
-		flavors = append(flavors, flavor)
 		allMetaFlavors[flavor] = match.FlavorName
 		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", in)
 	}

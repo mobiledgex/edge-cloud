@@ -609,10 +609,11 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 	if err != nil {
 		return err
 	}
-
-	// generate alerts for these warnings
-	// clear off those alerts which are no longer firing
-	handleResourceUsageAlerts(ctx, stm, &cloudlet.Key, warnings)
+	if genAlerts == GenResourceAlerts {
+		// generate alerts for these warnings
+		// clear off those alerts which are no longer firing
+		handleResourceUsageAlerts(ctx, stm, &cloudlet.Key, warnings)
+	}
 	return nil
 }
 
