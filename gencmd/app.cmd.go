@@ -658,7 +658,7 @@ var AppComments = map[string]string{
 	"officialfqdn":                           "Official FQDN is the FQDN that the app uses to connect by default",
 	"md5sum":                                 "MD5Sum of the VM-based app image",
 	"autoprovpolicy":                         "(_deprecated_) Auto provisioning policy name",
-	"accesstype":                             "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"accesstype":                             "(Deprecated) Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"deleteprepare":                          "Preparing to be deleted",
 	"autoprovpolicies":                       "Auto provisioning policy names, may be specified multiple times",
 	"templatedelimiter":                      "Delimiter to be used for template parsing, defaults to [[ ]]",

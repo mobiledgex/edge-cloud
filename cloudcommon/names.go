@@ -254,7 +254,7 @@ func Hostname() string {
 func GetAppClientType(app *edgeproto.App) string {
 	clientType := ClientTypeRootLB
 	if app.Deployment == DeploymentTypeDocker &&
-		app.AccessType == edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER {
+		app.AccessType != edgeproto.AccessType_ACCESS_TYPE_DIRECT {
 		// docker commands can be run on either the rootlb or on the docker
 		// vm. The default is to run on the rootlb client
 		// If using a load balancer access, a separate VM is always used for
