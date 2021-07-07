@@ -125,19 +125,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		run.Mode = "show"
 		run.DeviceApi(nil, nil, &output.Devices)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
-	} else if api == "showappfiltered" {
-		// show app for rate limited api (no retry)
-		data := []edgeproto.App{}
-		err := util.ReadYamlFile(apiFile, &data)
-		if err != nil {
-			log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
-			os.Exit(1)
-		}
-		output := []edgeproto.App{}
-		run.Mode = "showfiltered"
-		run.AppApi(&data, nil, &output)
-		util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
-		*retry = false
 	} else if api == "ratelimitshow" {
 		output := &edgeproto.RateLimitSettingsData{}
 		run.Mode = "show"
@@ -414,8 +401,16 @@ func runRateLimitSettings(run *testutil.Run, api, apiFile, outputDir string) {
 	output := testutil.RateLimitSettingsDataOut{}
 	inMap := make(map[string]interface{})
 	switch api {
-	case "ratelimitreset":
-		run.Mode = "reset"
+	// TODO: Consolidate create and update
+	case "ratelimitcreate":
+		run.Mode = "create"
+		err := util.ReadYamlFile(apiFile, &inMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
+		if err != nil {
+			if !util.IsYamlOk(err, "appdata") {
+				fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apiFile)
+				os.Exit(1)
+			}
+		}
 	case "ratelimitupdate":
 		run.Mode = "update"
 		err := util.ReadYamlFile(apiFile, &inMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())

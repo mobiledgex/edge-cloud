@@ -529,14 +529,6 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 
 		y1 = a1
 		y2 = a2
-	} else if fileType == "appdatafiltered" {
-		var a1 []edgeproto.App
-		var a2 []edgeproto.App
-		err1 = ReadYamlFile(firstYamlFile, &a1)
-		err2 = ReadYamlFile(secondYamlFile, &a2)
-		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
-		y1 = a1
-		y2 = a2
 	} else if fileType == "findcloudlet" {
 		var f1 dmeproto.FindCloudletReply
 		var f2 dmeproto.FindCloudletReply
