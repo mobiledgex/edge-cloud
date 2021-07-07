@@ -9,7 +9,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "app.proto";
 import "flavor.proto";
 import "common.proto";
-import "cloudlet.proto";
+import "cloudletkey.proto";
 import "autoscalepolicy.proto";
 import "cluster.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
