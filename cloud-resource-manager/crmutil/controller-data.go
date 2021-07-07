@@ -95,7 +95,6 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	// set callbacks to trigger changes
 	cd.ClusterInstCache.SetUpdatedCb(cd.clusterInstChanged)
 	cd.ClusterInstCache.SetDeletedCb(cd.clusterInstDeleted)
-	cd.AppCache.SetUpdatedCb(cd.appUpdated)
 	cd.AppInstCache.SetUpdatedCb(cd.appInstChanged)
 	cd.AppInstCache.SetDeletedCb(cd.appInstDeleted)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
