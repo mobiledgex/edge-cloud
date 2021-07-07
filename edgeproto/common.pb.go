@@ -614,6 +614,11 @@ func (e *Liveness) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e Liveness) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(Liveness_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var IpSupportStrings = []string{
 	"IP_SUPPORT_UNKNOWN",
 	"IP_SUPPORT_STATIC",
@@ -695,6 +700,11 @@ func (e *IpSupport) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e IpSupport) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(IpSupport_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var IpAccessStrings = []string{
 	"IP_ACCESS_UNKNOWN",
 	"IP_ACCESS_DEDICATED",
@@ -774,6 +784,11 @@ func (e *IpAccess) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e IpAccess) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(IpAccess_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var TrackedStateStrings = []string{
@@ -922,6 +937,11 @@ func (e *TrackedState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e TrackedState) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(TrackedState_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var CRMOverrideStrings = []string{
 	"NO_OVERRIDE",
 	"IGNORE_CRM_ERRORS",
@@ -1011,6 +1031,11 @@ func (e *CRMOverride) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e CRMOverride) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(CRMOverride_CamelName, int32(e))
+	return json.Marshal(str)
 }
 func (m *StatusInfo) Size() (n int) {
 	if m == nil {

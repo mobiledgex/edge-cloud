@@ -59,6 +59,15 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 		return fmt.Errorf("Unable to find postupgrade testdata file at %s", filename)
 	}
 	defer file.Close()
+
+	fileExpected, err := os.Create(upgradeTestFileLocation + "/" + funcName + "_expected.etcd")
+	if err != nil {
+		return err
+	}
+	defer fileExpected.Close()
+	writtenKeys := make(map[string]struct{})
+
+	var compareErr error
 	scanner := bufio.NewScanner(file)
 	for {
 		if !scanner.Scan() {
@@ -78,26 +87,31 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 		if !compareDone {
 			err = compareString(funcName, key, val, string(dbVal))
 		}
-		if err != nil {
-			return err
+		if err != nil && compareErr == nil {
+			// continue writing to expected file
+			compareErr = err
 		}
+		fileExpected.WriteString(string(key) + "\n")
+		fileExpected.WriteString(string(dbVal) + "\n")
+		writtenKeys[string(key)] = struct{}{}
+		dbObjCount++
 		fileObjCount++
 	}
-	// count objects in etcd
-	fileExpected, err := os.Create(upgradeTestFileLocation + "/" + funcName + "_expected.etcd")
-	if err != nil {
-		return err
-	}
 	err = objStore.List("", func(key, val []byte, rev, modRev int64) error {
+		if _, found := writtenKeys[string(key)]; found {
+			return nil
+		}
 		fileExpected.WriteString(string(key) + "\n")
 		fileExpected.WriteString(string(val) + "\n")
 		dbObjCount++
 		return nil
 	})
+	if compareErr != nil {
+		return compareErr
+	}
 	if err != nil {
 		return err
 	}
-	fileExpected.Close()
 	if fileObjCount != dbObjCount {
 		return fmt.Errorf("Number of objects in the etcd db[%d] doesn't match the number of expected objects[%d]\n",
 			dbObjCount, fileObjCount)

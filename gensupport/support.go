@@ -683,8 +683,7 @@ func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorPr
 }
 
 // group methods by input type
-func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto) []*MethodGroup {
-	groups := make(map[string]*MethodGroup)
+func CollectMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto, groups map[string]*MethodGroup) {
 	for _, method := range service.Method {
 		in, info := GetMethodInfo(g, method)
 		if info == nil {
@@ -717,6 +716,12 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 			group.HasShow = true
 		}
 	}
+}
+
+func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescriptorProto) []*MethodGroup {
+	groups := make(map[string]*MethodGroup)
+	CollectMethodGroups(g, service, groups)
+	// convert map into sorted list
 	groupsSorted := make([]*MethodGroup, 0)
 	for _, group := range groups {
 		groupsSorted = append(groupsSorted, group)
@@ -725,6 +730,22 @@ func GetMethodGroups(g *generator.Generator, service *descriptor.ServiceDescript
 		return groupsSorted[i].InType < groupsSorted[j].InType
 	})
 	return groupsSorted
+}
+
+func GetAllMethodGroups(g *generator.Generator, support *PluginSupport) map[string]*MethodGroup {
+	groups := make(map[string]*MethodGroup)
+	for _, protofile := range support.ProtoFiles {
+		if !support.GenFile(protofile.GetName()) {
+			continue
+		}
+		for _, svc := range protofile.GetService() {
+			if len(svc.Method) == 0 {
+				continue
+			}
+			CollectMethodGroups(g, svc, groups)
+		}
+	}
+	return groups
 }
 
 func GetFirstFile(gen *generator.Generator) string {

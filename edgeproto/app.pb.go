@@ -3487,6 +3487,11 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e ImageType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(ImageType_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var VmAppOsTypeStrings = []string{
 	"VM_APP_OS_UNKNOWN",
 	"VM_APP_OS_LINUX",
@@ -3583,6 +3588,11 @@ func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e VmAppOsType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(VmAppOsType_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var DeleteTypeStrings = []string{
 	"NO_AUTO_DELETE",
 	"AUTO_DELETE",
@@ -3657,6 +3667,11 @@ func (e *DeleteType) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e DeleteType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(DeleteType_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var AccessTypeStrings = []string{
@@ -3738,6 +3753,11 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e AccessType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(AccessType_CamelName, int32(e))
+	return json.Marshal(str)
 }
 func (m *App) IsValidArgsForCreateApp() error {
 	if m.DelOpt != 0 {

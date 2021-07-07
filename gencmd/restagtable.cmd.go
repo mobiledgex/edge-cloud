@@ -162,7 +162,7 @@ func runUpdateResTagTable(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateResTagTable(c, obj)
 }
 
@@ -482,7 +482,7 @@ var ResTagTableAliasArgs = []string{
 var ResTagTableComments = map[string]string{
 	"res":          "Resource Table Name",
 	"organization": "Operator organization of the cloudlet site.",
-	"tags":         "one or more string tags",
+	"tags":         "one or more string tags, specify tags:empty=true to clear",
 	"azone":        "availability zone(s) of resource if required",
 }
 var ResTagTableSpecialArgs = map[string]string{

@@ -180,8 +180,8 @@ func (c *Command) runE(cmd *cobra.Command, args []string) error {
 // for the map keys (field names) due to json or yaml tags being different
 // from the go struct field name and each other. So we settle on the
 // output map using json field names for consistency.
-func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
-	var in map[string]interface{}
+func (c *Command) ParseInput(args []string) (*MapData, error) {
+	var in *MapData
 	if Datafile != "" {
 		byt, err := ioutil.ReadFile(Datafile)
 		if err != nil {
@@ -190,21 +190,30 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 		Data = string(byt)
 	}
 	if Data != "" {
-		in = make(map[string]interface{})
-		err := json.Unmarshal([]byte(Data), &in)
+		indata := make(map[string]interface{})
+		err := json.Unmarshal([]byte(Data), &indata)
 		if err == nil && c.ReqData != nil {
 			err = json.Unmarshal([]byte(Data), c.ReqData)
 			if err != nil {
 				return nil, err
 			}
+			in = &MapData{
+				Namespace: JsonNamespace,
+				Data:      indata,
+			}
 		} else {
 			// try yaml
-			err2 := yaml.Unmarshal([]byte(Data), &in)
+			indata := make(map[string]interface{})
+			err2 := yaml.Unmarshal([]byte(Data), &indata)
 			if err2 != nil {
 				return nil, fmt.Errorf("unable to unmarshal json or yaml data, %v, %v", err, err2)
 			}
+			in = &MapData{
+				Namespace: YamlNamespace,
+				Data:      indata,
+			}
 			// convert yaml map to json map
-			in, err = JsonMap(in, c.ReqData, YamlNamespace)
+			in, err = JsonMap(in, c.ReqData)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert yaml map to json map, %v", err)
 			}
@@ -236,7 +245,7 @@ func (c *Command) ParseInput(args []string) (map[string]interface{}, error) {
 		}
 		if c.ReqData != nil {
 			// convert to json map
-			in, err = JsonMap(argsMap, c.ReqData, StructNamespace)
+			in, err = JsonMap(argsMap, c.ReqData)
 			if err != nil {
 				return nil, err
 			}

@@ -177,7 +177,7 @@ func runUpdateAutoProvPolicy(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateAutoProvPolicy(c, obj)
 }
 
@@ -420,6 +420,7 @@ var AutoProvPolicyRequiredArgs = []string{
 var AutoProvPolicyOptionalArgs = []string{
 	"deployclientcount",
 	"deployintervalcount",
+	"cloudlets:empty",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
 	"minactiveinstances",
@@ -437,6 +438,7 @@ var AutoProvPolicyComments = map[string]string{
 	"name":                               "Policy name",
 	"deployclientcount":                  "Minimum number of clients within the auto deploy interval to trigger deployment",
 	"deployintervalcount":                "Number of intervals to check before triggering deployment",
+	"cloudlets:empty":                    "Allowed deployment locations, specify cloudlets:empty=true to clear",
 	"cloudlets:#.key.organization":       "Organization of the cloudlet site",
 	"cloudlets:#.key.name":               "Name of the cloudlet",
 	"cloudlets:#.loc.latitude":           "latitude in WGS 84 coordinates",

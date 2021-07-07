@@ -286,7 +286,7 @@ func runUpdateClusterInst(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateClusterInst(c, obj)
 }
 
@@ -623,7 +623,7 @@ var ClusterInstComments = map[string]string{
 	"liveness":                               "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
 	"auto":                                   "Auto is set to true when automatically created by back-end (internal use only)",
 	"state":                                  "State of the cluster instance, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
-	"errors":                                 "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.",
+	"errors":                                 "Any errors trying to create, update, or delete the ClusterInst on the Cloudlet., specify errors:empty=true to clear",
 	"crmoverride":                            "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"ipaccess":                               "IP access type (RootLB Type), one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
 	"allocatedip":                            "Allocated IP for dedicated access",
@@ -641,10 +641,13 @@ var ClusterInstComments = map[string]string{
 	"masternodeflavor":                       "Generic flavor for k8s master VM when worker nodes > 0",
 	"skipcrmcleanuponfailure":                "Prevents cleanup of resources on failure within CRM, used for diagnostic purposes",
 	"optres":                                 "Optional Resources required by OS flavor if any",
+	"resources.vms:empty":                    "Virtual machine resources info, specify resources.vms:empty=true to clear",
 	"resources.vms:#.name":                   "Virtual machine name",
 	"resources.vms:#.type":                   "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"resources.vms:#.status":                 "Runtime status of the VM",
 	"resources.vms:#.infraflavor":            "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"resources.vms:#.ipaddresses:empty":      "IP addresses allocated to the VM, specify resources.vms:#.ipaddresses:empty=true to clear",
+	"resources.vms:#.containers:empty":       "Information about containers running in the VM, specify resources.vms:#.containers:empty=true to clear",
 	"resources.vms:#.containers:#.name":      "Name of the container",
 	"resources.vms:#.containers:#.type":      "Type can be docker or kubernetes",
 	"resources.vms:#.containers:#.status":    "Runtime status of the container",
