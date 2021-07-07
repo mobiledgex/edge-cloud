@@ -1016,7 +1016,7 @@ var AllDataComments = map[string]string{
 	"apps:#.officialfqdn":                                                           "Official FQDN is the FQDN that the app uses to connect by default",
 	"apps:#.md5sum":                                                                 "MD5Sum of the VM-based app image",
 	"apps:#.autoprovpolicy":                                                         "(_deprecated_) Auto provisioning policy name",
-	"apps:#.accesstype":                                                             "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"apps:#.accesstype":                                                             "(Deprecated) Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"apps:#.deleteprepare":                                                          "Preparing to be deleted",
 	"apps:#.autoprovpolicies":                                                       "Auto provisioning policy names, may be specified multiple times",
 	"apps:#.templatedelimiter":                                                      "Delimiter to be used for template parsing, defaults to [[ ]]",
