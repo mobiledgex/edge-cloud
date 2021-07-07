@@ -1,6 +1,8 @@
 package ratelimit
 
-import "context"
+import (
+	"context"
+)
 
 /*
  * Composes multiple limiters into one

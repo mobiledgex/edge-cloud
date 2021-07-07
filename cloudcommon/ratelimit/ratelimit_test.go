@@ -112,6 +112,50 @@ func TestIntervalLimiter(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
 }
 
+func TestCompositeLimiter(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelDmereq)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	// Create CompositeLimiter that is composed of two IntervalLimiters
+	intervalLimiter1 := NewIntervalLimiter(1, time.Duration(time.Second))
+	intervalLimiter2 := NewIntervalLimiter(2, time.Duration(time.Minute))
+	compositeLimiter := NewCompositeLimiter(intervalLimiter1, intervalLimiter2)
+
+	// test composite limiter serially
+	err := compositeLimiter.Limit(ctx, nil)
+	assert.Nil(t, err)
+	time.Sleep(time.Second)
+	err = compositeLimiter.Limit(ctx, nil)
+	assert.Nil(t, err)
+	time.Sleep(time.Second)
+	err = compositeLimiter.Limit(ctx, nil)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+
+	// test composite limiter concurrently
+	numRequests := 5
+	intervalLimiter1 = NewIntervalLimiter(numRequests, time.Duration(time.Second))
+	intervalLimiter2 = NewIntervalLimiter(numRequests, time.Duration(time.Minute))
+	compositeLimiter = NewCompositeLimiter(intervalLimiter1, intervalLimiter2)
+	done := make(chan error, numRequests+1)
+	for i := 0; i < numRequests+1; i++ {
+		go func() {
+			time.Sleep(time.Duration(rand.Intn(numRequests-1)) * time.Second)
+			err := compositeLimiter.Limit(ctx, nil)
+			done <- err
+		}()
+	}
+	for i := 0; i < numRequests; i++ {
+		err := <-done
+		assert.Nil(t, err)
+	}
+	err = <-done
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+}
+
 func TestApiRateLimitMgr(t *testing.T) {
 	// init ratelimitmgr
 	mgr := NewRateLimitManager(false, 100, 100)
