@@ -5,6 +5,7 @@ package edgeproto;
 
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
+import "cloudletkey.proto";
 import "cloudlet.proto";
 import "clusterinst.proto";
 import "app.proto";
