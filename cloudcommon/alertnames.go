@@ -60,7 +60,18 @@ func GetSeverityForAlert(alertname string) string {
 	return AlertSeverityInfo
 }
 
-func IsMonitoredAlert(alertName string) bool {
+func IsMonitoredAlert(labels map[string]string) bool {
+	alertName, found := labels["alertname"]
+	// Alertnames with empty alertnames, or no alertnames are not monitored
+	if !found || alertName == "" {
+		return false
+	}
+	alertScope, _ := labels[AlertScopeTypeTag]
+	// All App/Cloudlet alerts are monitored
+	if alertScope == AlertScopeApp ||
+		alertScope == AlertScopeCloudlet {
+		return true
+	}
 	if alertName == AlertClusterAutoScale ||
 		alertName == AlertAutoScaleUp ||
 		alertName == AlertAutoScaleDown ||

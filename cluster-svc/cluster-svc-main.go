@@ -298,7 +298,7 @@ func userAlertCb(ctx context.Context, old *edgeproto.UserAlert, new *edgeproto.U
 		// nothing to update
 		return
 	}
-	// update all prometheus AppInsts on ClusterInsts using the policy
+	// update all prometheus AppInsts on ClusterInsts using the Alert
 	apps := []edgeproto.App{}
 	AppCache.Mux.Lock()
 	for k, v := range AppCache.Objs {
@@ -418,7 +418,15 @@ func appInstGetApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, ap
 	return nil, err
 }
 
-// create an appInst as a clustersvc
+// Only active connections limit is a cloudlet prometheus level alert
+func isClusterPrometheusAlert(alert *edgeproto.UserAlert) bool {
+	if alert.ActiveConnLimit != 0 {
+		return false
+	}
+	return true
+}
+
+// create an appInst as a cluster-svc
 func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, platformApp *edgeproto.App) error {
 	//update flavor
 	platformApp.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
@@ -429,7 +437,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	defer conn.Close()
 	apiClient := edgeproto.NewAppInstApiClient(conn)
 
-	appInst := edgeproto.AppInst{
+	platformAppInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:         platformApp.Key,
 			ClusterInstKey: *clusterInst.Key.Virtual(""),
@@ -439,6 +447,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	if clusterSvcPlugin != nil {
 		var policy *edgeproto.AutoScalePolicy
 		var userAlerts []edgeproto.UserAlert
+		var userAppInst *edgeproto.AppInst
 		if clusterInst.AutoScalePolicy != "" {
 			//&& (clusterInst.AutoScalePolicy != "" || len(app.UserDefinedAlerts) > 0) {
 			policy = &edgeproto.AutoScalePolicy{}
@@ -451,7 +460,13 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 		}
 		// Check if we need to collect alerts
 		if app != nil && len(app.UserDefinedAlerts) > 0 {
-			userAlerts = []edgeproto.UserAlert{{}}
+			userAlerts = []edgeproto.UserAlert{}
+			userAppInst = &edgeproto.AppInst{
+				Key: edgeproto.AppInstKey{
+					AppKey:         app.Key,
+					ClusterInstKey: *clusterInst.Key.Virtual(""),
+				},
+			}
 			for _, alertName := range app.UserDefinedAlerts {
 				userAlert := edgeproto.UserAlert{
 					Key: edgeproto.UserAlertKey{
@@ -464,30 +479,32 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to find alert definition", "alert", userAlert)
 					continue
 				}
-				userAlerts = append(userAlerts, userAlert)
+				if isClusterPrometheusAlert(&userAlert) {
+					userAlerts = append(userAlerts, userAlert)
+				}
 			}
 		}
-		configs, err := clusterSvcPlugin.GetAppInstConfigs(ctx, clusterInst, &appInst, policy, settings, userAlerts)
+		configs, err := clusterSvcPlugin.GetAppInstConfigs(ctx, clusterInst, userAppInst, policy, settings, userAlerts)
 		if err != nil {
 			return err
 		}
-		appInst.Configs = configs
+		platformAppInst.Configs = configs
 	}
 
 	eventStart := time.Now()
-	res, err := appInstCreateApi(ctx, apiClient, appInst)
+	res, err := appInstCreateApi(ctx, apiClient, platformAppInst)
 	if err != nil {
 		// Handle non-fatal errors
-		if strings.Contains(err.Error(), appInst.Key.ExistsError().Error()) {
-			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", platformApp.String(), "cluster", clusterInst.Key.String())
-			updateExistingAppInst(ctx, apiClient, &appInst)
+		if strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) {
+			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
+			updateExistingAppInst(ctx, apiClient, &platformAppInst)
 			err = nil
 		} else if strings.Contains(err.Error(), "not found") {
 			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", platformApp.String())
 			// Create the app
 			if nerr := createAppCommon(ctx, dialOpts, platformApp); nerr == nil {
 				eventStart = time.Now()
-				res, err = appInstCreateApi(ctx, apiClient, appInst)
+				res, err = appInstCreateApi(ctx, apiClient, platformAppInst)
 			}
 		} else {
 			errstr := err.Error()
@@ -498,9 +515,9 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			err = fmt.Errorf("CreateAppInst failed: %s", errstr)
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String(), "err", err)
+	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "err", err)
 	if err == nil {
-		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", platformApp.Key.Organization, node.EventType, appInst.Key.GetTags(), err, eventStart, time.Now())
+		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", platformApp.Key.Organization, node.EventType, platformAppInst.Key.GetTags(), err, eventStart, time.Now())
 	}
 	return err
 
