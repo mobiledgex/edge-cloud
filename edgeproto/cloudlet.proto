@@ -5,6 +5,7 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "cloudletkey.proto";
 import "flavor.proto";
 import "result.proto";
 import "restagtable.proto";
@@ -17,20 +18,6 @@ import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.prot
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
-
-// Cloudlet unique key
-//
-// CloudletKey uniquely identifies a Cloudlet.
-message CloudletKey {
-  // Organization of the cloudlet site
-  string organization = 1 [(protogen.keytag) = "cloudletorg"];
-  // Name of the cloudlet
-  string name = 2 [(protogen.keytag) = "cloudlet"];
-  option (protogen.generate_matches) = true;
-  option (protogen.obj_key) = true;
-  option (gogoproto.gostring) = true;
-  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
-}
 
 // Operation time limits
 //
@@ -658,6 +645,18 @@ service CloudletApi {
     body: "*"
   };
   option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+  }
+
+  // Find all meta flavors viable on cloudlet
+  rpc ShowFlavorsForCloudlet(CloudletKey) returns (stream FlavorKey) {
+    option(google.api.http) = {
+    post: "/showmapping/cloudletflavors"
+    body: "*"
+  };
+  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+  option (protogen.mc2_custom_authz) = true;
+  option (protogen.non_standard_show) = true;
+  option (protogen.stream_out_incremental) = true;
   }
 
   // Revoke crm access key

@@ -737,7 +737,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs) {
 				initCloudletRefs(&refs, &in.Key.ClusterInstKey.CloudletKey)
 			}
-			err = validateResources(ctx, stm, nil, in, &cloudlet, &info, &refs)
+			err = validateResources(ctx, stm, nil, &app, in, &cloudlet, &info, &refs, GenResourceAlerts)
 			if err != nil {
 				return err
 			}

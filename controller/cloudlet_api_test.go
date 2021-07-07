@@ -830,3 +830,131 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		return nil
 	})
 }
+
+func TestShowFlavorsForCloudlet(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelEvents)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+	testinit()
+
+	dummy := dummyEtcd{}
+	dummy.Start()
+
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	cCldApi := testutil.NewInternalCloudletApi(&cloudletApi)
+	// create flavors
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	fmt.Printf("\n\nSetup complete start creating test cloudlets from test_data\n\n")
+
+	// Use a  clouldet with no ResourceTagMap
+	cld := testutil.CloudletData[1]
+	err := cloudletApi.CreateCloudlet(&cld, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+
+	show := testutil.ShowFlavorsForCloudlet{}
+	show.Init()
+	cldInfo := testutil.CloudletInfoData[1]
+	_, err = cloudletInfoApi.InjectCloudletInfo(ctx, &cldInfo)
+	require.Nil(t, err)
+
+	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
+	require.Nil(t, err)
+	require.Equal(t, 2, len(show.Data))
+}
+
+func TestShowCloudletsAppDeploy(t *testing.T) {
+
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	cAppApi := testutil.NewInternalAppApi(&appApi)
+	testinit()
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	dummy := dummyEtcd{}
+	dummy.Start()
+
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	show := testutil.ShowCloudletsForAppDeployment{}
+	show.Init()
+
+	app := testutil.AppData[2]
+	request := edgeproto.DeploymentCloudletRequest{
+		App:          &app,
+		DryRunDeploy: false,
+	}
+	app.DefaultFlavor = testutil.FlavorData[0].Key // x1.tiny
+	app.Deployment = cloudcommon.DeploymentTypeVM
+	filter := request
+
+	// test data
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+
+	// without a responder, clusterInst create waits forever
+	_ = NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
+		&appInstInfoApi, &clusterInstInfoApi)
+
+	reduceInfoTimeouts(t, ctx)
+
+	// either create the policy expected by one of all cloudlets, or remove that bit of config, or
+	// just don't create that specific cloudlet. #1 create the policy.
+	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
+
+	for _, obj := range testutil.ClusterInstData {
+		err := clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.Nil(t, err, "Create ClusterInst")
+	}
+
+	err := cAppApi.ShowCloudletsForAppDeployment(ctx, &filter, &show)
+	require.Nil(t, err, "ShowCloudletsForAppDeployment")
+	require.Equal(t, 4, len(show.Data), "SHowCloudletsForAppDeployment")
+
+	for k, v := range show.Data {
+		fmt.Printf("\t next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
+	}
+	show.Init()
+	// increase the flavor size, and expect fewer cloudlet matches
+	// TODO: create sets of OS flavors to attach to our CloudletInfo objs  as substitues for whats there in test_data.go
+	// for more complex matching.
+	app.DefaultFlavor = testutil.FlavorData[2].Key // 3 = x1.large 4 = x1.tiny.gpu 2 = x1.medium
+	err = cAppApi.ShowCloudletsForAppDeployment(ctx, &filter, &show)
+	require.Nil(t, err, "ShowCloudletsForAppDeployment")
+	require.Equal(t, 3, len(show.Data), "SHowCloudletsForAppDeployment")
+
+	for k, v := range show.Data {
+		fmt.Printf("\t next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
+	}
+	show.Init()
+	app.DefaultFlavor = testutil.FlavorData[3].Key // 3 = x1.large 4 = x1.tiny.gpu 2 = x1.medium
+	err = cAppApi.ShowCloudletsForAppDeployment(ctx, &filter, &show)
+	require.Nil(t, err, "ShowCloudletsForAppDeployment")
+	require.Equal(t, 1, len(show.Data), "SHowCloudletsForAppDeployment")
+
+	for k, v := range show.Data {
+		fmt.Printf("\t next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
+	}
+	show.Init()
+
+	filter.DryRunDeploy = true
+
+	err = cAppApi.ShowCloudletsForAppDeployment(ctx, &filter, &show)
+	require.Nil(t, err, "ShowCloudletsForAppDeployment")
+	require.Equal(t, 1, len(show.Data), "ShowCloudletsForAppDeployment DryRun=True")
+	for k, v := range show.Data {
+		fmt.Printf("\t DryRun next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
+	}
+	// TODO: Increase cloudlets refs such that San Jose can no longer support the App deployment
+}

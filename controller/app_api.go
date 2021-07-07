@@ -869,3 +869,136 @@ func manifestContainsDaemonSet(manifest string) bool {
 	}
 	return false
 }
+
+func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, appInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo,
+	cloudletRefs *edgeproto.CloudletRefs) error {
+
+	deployment := app.Deployment
+	if deployment == cloudcommon.DeploymentTypeHelm {
+		log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy deployment Helm replaced with Kube")
+		deployment = cloudcommon.DeploymentTypeKubernetes
+	}
+	if app.Deployment == cloudcommon.DeploymentTypeKubernetes && app.AllowServerless {
+		log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy check multi-tenant TBI for kube+serverless")
+		// note: helm not allowed
+		// TODO: check if multi-tenant cluster exists on cloudlet, and check if resources are available
+	}
+	if deployment == cloudcommon.DeploymentTypeKubernetes || deployment == cloudcommon.DeploymentTypeDocker {
+		// look for reservable ClusterInst. This emulates behavior in createAppInstInternal().
+		clusterInstApi.cache.Mux.Lock()
+		canDeploy := false
+		for _, data := range clusterInstApi.cache.Objs {
+			if !cloudlet.Key.Matches(&data.Obj.Key.CloudletKey) {
+				continue
+			}
+			if data.Obj.Reservable && data.Obj.ReservedBy == "" && data.Obj.Deployment == deployment && data.Obj.Flavor.Name == app.DefaultFlavor.Name {
+				// can deploy to existing reservable ClusterInst
+				canDeploy = true
+				break
+			}
+		}
+		clusterInstApi.cache.Mux.Unlock()
+		if canDeploy {
+			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy Ok", "cloudlet", cloudlet.Key.Name)
+			return nil
+		}
+		// see if we can create a new ClusterInst
+		targetCluster := edgeproto.ClusterInst{}
+		targetCluster.MasterNodeFlavor = settingsApi.Get().MasterNodeFlavor
+		targetCluster.NodeFlavor = app.DefaultFlavor.Name
+		targetCluster.Deployment = deployment
+		if deployment == cloudcommon.DeploymentTypeKubernetes {
+			targetCluster.NumMasters = 1
+			targetCluster.NumNodes = 2
+		}
+
+		return validateResources(ctx, stm, &targetCluster, nil, nil, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
+	}
+	if deployment == cloudcommon.DeploymentTypeVM {
+		return validateResources(ctx, stm, nil, app, appInst, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
+	}
+	return fmt.Errorf("Unsupported deployment type %s\n", app.Deployment)
+}
+
+func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletRequest, cb edgeproto.AppApi_ShowCloudletsForAppDeploymentServer) error {
+	ctx := cb.Context()
+	var allclds = make(map[edgeproto.CloudletKey]string)
+	app := in.App
+	flavor := in.App.DefaultFlavor
+
+	if flavor.Name == "" {
+		return fmt.Errorf("No flavor specified for App")
+	}
+	cloudletApi.cache.GetAllKeys(ctx, func(k *edgeproto.CloudletKey, modRev int64) {
+		allclds[*k] = ""
+	})
+
+	// Generate a list of all cloudlets that find a match for app.DefaultFlavor
+	for cldkey, _ := range allclds {
+		fm := edgeproto.FlavorMatch{
+			Key:        cldkey,
+			FlavorName: flavor.Name,
+		}
+		// since the validate is going to consider the appInst.VmFlavor, we'll need spec.FlavorName set in the test
+		// AppInst object, not the meta flavor.
+		spec, err := cloudletApi.FindFlavorMatch(ctx, &fm)
+		if err != nil {
+			delete(allclds, cldkey)
+			continue
+		} else {
+			// need the mapped FlavorName for appInst.VmFlavor
+			allclds[cldkey] = spec.FlavorName
+		}
+	}
+	// If an instance of this App were to be deployed now, check if our resource mgr thinks
+	// there are sufficient resources to support the creation. Assumes the appInst.Flavor and appInst.VmFlavor
+	// would use the App templates default flavor.
+	if in.DryRunDeploy {
+		var err error
+		appInst := edgeproto.AppInst{}
+		if app.Deployment == "" {
+			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy manditory app Deployment not found for App")
+			return fmt.Errorf("No deployment found on candidate App")
+		}
+		appInst.Flavor = app.DefaultFlavor
+
+		log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run deployment")
+		// For all remaining cloudlets, check available resources
+		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			for key, _ := range allclds {
+				appInst.VmFlavor = allclds[key]
+				cloudlet := edgeproto.Cloudlet{}
+				if !cloudletApi.store.STMGet(stm, &key, &cloudlet) {
+					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cld not found", "cloudlet", key)
+					continue
+				}
+				cloudletRefs := edgeproto.CloudletRefs{}
+				if !cloudletRefsApi.store.STMGet(stm, &key, &cloudletRefs) {
+					initCloudletRefs(&cloudletRefs, &key)
+				}
+				cloudletInfo := edgeproto.CloudletInfo{}
+				if !cloudletInfoApi.store.STMGet(stm, &key, &cloudletInfo) {
+					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cldinfo not found, skipping", "cloudlet", key)
+					delete(allclds, key)
+					continue
+				}
+				err = tryDeployApp(ctx, stm, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs)
+				if err != nil {
+					delete(allclds, key)
+					log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy failed for", "cloudlet", cloudlet.Key, "error", err)
+					continue
+				}
+				log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run depoloyment succeeded for", "cloudlet", cloudlet.Key.Name)
+			}
+			return nil
+		})
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment failed", "error", err)
+			return err
+		}
+	}
+	for key, _ := range allclds {
+		cb.Send(&key)
+	}
+	return nil
+}
