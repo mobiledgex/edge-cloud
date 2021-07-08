@@ -871,7 +871,7 @@ func manifestContainsDaemonSet(manifest string) bool {
 }
 
 func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, appInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo,
-	cloudletRefs *edgeproto.CloudletRefs, numWorkers uint32) error {
+	cloudletRefs *edgeproto.CloudletRefs, numNodes uint32) error {
 
 	deployment := app.Deployment
 	if deployment == cloudcommon.DeploymentTypeHelm {
@@ -911,7 +911,7 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 		targetCluster.Deployment = deployment
 		if deployment == cloudcommon.DeploymentTypeKubernetes {
 			targetCluster.NumMasters = 1
-			targetCluster.NumNodes = numWorkers
+			targetCluster.NumNodes = numNodes
 		}
 		return validateResources(ctx, stm, &targetCluster, nil, nil, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
 	}
@@ -926,10 +926,10 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 	var allclds = make(map[edgeproto.CloudletKey]string)
 	app := in.App
 	flavor := in.App.DefaultFlavor
-	var numWorkers uint32 = 2
+	var numNodes uint32 = 2
 
-	if in.NumWorkers != 0 {
-		numWorkers = in.NumWorkers
+	if in.NumNodes != 0 {
+		numNodes = in.NumNodes
 	}
 	if flavor.Name == "" {
 		return fmt.Errorf("No flavor specified for App")
@@ -987,12 +987,13 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 					delete(allclds, key)
 					continue
 				}
-				err = tryDeployApp(ctx, stm, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs, numWorkers)
+				err = tryDeployApp(ctx, stm, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs, numNodes)
 				if err != nil {
 					delete(allclds, key)
 					log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy failed for", "cloudlet", cloudlet.Key, "error", err)
 					continue
 				}
+				cb.Send(&key)
 				log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run deployment succeeded for", "cloudlet", cloudlet.Key.Name)
 			}
 			return nil

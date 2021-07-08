@@ -248,7 +248,7 @@ message DeploymentCloudletRequest {
    // Attempt to qualify cloudlet resources for deployment
    bool dry_run_deploy = 2;
    // Optional number of worker VMs in dry run K8s Cluster, default = 2
-   uint32 num_workers = 3;
+   uint32 num_nodes = 3;
    option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
    option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
 }

@@ -865,6 +865,7 @@ func TestShowFlavorsForCloudlet(t *testing.T) {
 	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
 	require.Nil(t, err)
 	require.Equal(t, 2, len(show.Data))
+	dummy.Stop()
 }
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
