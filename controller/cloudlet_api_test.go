@@ -865,6 +865,7 @@ func TestShowFlavorsForCloudlet(t *testing.T) {
 	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
 	require.Nil(t, err)
 	require.Equal(t, 2, len(show.Data))
+	dummy.Stop()
 }
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
@@ -934,18 +935,11 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	require.Nil(t, err, "ShowCloudletsForAppDeployment")
 	require.Equal(t, 3, len(show.Data), "SHowCloudletsForAppDeployment")
 
-	for k, v := range show.Data {
-		fmt.Printf("\t next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
-	}
 	show.Init()
 	app.DefaultFlavor = testutil.FlavorData[3].Key // 3 = x1.large 4 = x1.tiny.gpu 2 = x1.medium
 	err = cAppApi.ShowCloudletsForAppDeployment(ctx, &filter, &show)
 	require.Nil(t, err, "ShowCloudletsForAppDeployment")
 	require.Equal(t, 1, len(show.Data), "SHowCloudletsForAppDeployment")
-
-	for k, v := range show.Data {
-		fmt.Printf("\t next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
-	}
 	show.Init()
 
 	filter.DryRunDeploy = true
@@ -953,8 +947,6 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	err = cAppApi.ShowCloudletsForAppDeployment(ctx, &filter, &show)
 	require.Nil(t, err, "ShowCloudletsForAppDeployment")
 	require.Equal(t, 1, len(show.Data), "ShowCloudletsForAppDeployment DryRun=True")
-	for k, v := range show.Data {
-		fmt.Printf("\t DryRun next k: %s v: %+v flavor %s \n", k, v, filter.App.DefaultFlavor)
-	}
 	// TODO: Increase cloudlets refs such that San Jose can no longer support the App deployment
+	dummy.Stop()
 }
