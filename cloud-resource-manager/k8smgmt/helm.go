@@ -151,14 +151,14 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 		if err != nil {
 			return fmt.Errorf("error adding helm repo, %s, %s, %v", cmd, out, err)
 		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "added helm repository")
+		log.SpanLog(ctx, log.DebugLevelInfra, "added helm repository", "app name", app.Key.Name)
 	}
 	cmd = fmt.Sprintf("%s helm repo update", names.KconfEnv)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("updating helm repos, %s, %s, %v", cmd, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "helm repos updated")
+	log.SpanLog(ctx, log.DebugLevelInfra, "helm repos updated", "app name", app.Key.Name)
 
 	helmArgs, err := getHelmInstallOptsString(app.Annotations)
 	if err != nil {
@@ -176,7 +176,7 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 	if err != nil {
 		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "applied helm chart")
+	log.SpanLog(ctx, log.DebugLevelInfra, "applied helm chart", "app name", app.Key.Name)
 	return nil
 }
 
@@ -213,6 +213,10 @@ func DeleteHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 			"out", out, "err", err)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "removed helm chart")
+	err = CleanupHelmConfigs(ctx, client, names.AppName)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to cleanup helm app configs", "appname", names.AppName, "err", err)
+	}
 	return nil
 }
 
@@ -224,4 +228,20 @@ func getHelmYamlOpt(ymls []string) string {
 		return ""
 	}
 	return "-f " + strings.Join(ymls, ",")
+}
+
+func CleanupHelmConfigs(ctx context.Context, client ssh.Client, appName string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "cleanup kubernetes helm app configs", "appname", appName)
+	// count 10 is just for safeguard
+	for count := 0; count < 10; count++ {
+		fileName := fmt.Sprintf("%s%d", appName, count)
+		out, err := client.Output("rm " + fileName)
+		if err != nil {
+			if strings.Contains(out, "No such file or directory") {
+				return nil
+			}
+			return fmt.Errorf("failed to delete helm config file %s, %s: %v", fileName, out, err)
+		}
+	}
+	return nil
 }
