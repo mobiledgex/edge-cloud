@@ -6,6 +6,7 @@ import (
 )
 
 var KubernetesBasic = "kubernetes-basic"
+var MexDeployGenLabel = "mexDeployGen"
 
 var Generators = map[string]func(app *AppSpec) (string, error){
 	KubernetesBasic: kubeBasic,

@@ -64,15 +64,12 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 	kports := []kubePort{}
 	var kp kubePort
 	for _, port := range ports {
-
 		endPort, _ := strconv.ParseInt(port.EndPort, 10, 32)
 		if endPort != 0 { // PortSpec port-range short hand notation,
 			// exhaustively enumerate each as a kp
 			start, _ := strconv.ParseInt(port.Port, 10, 32) // we sanitized in objs.go
 			end, _ := strconv.ParseInt(port.EndPort, 10, 32)
-
 			for i := start; i <= end; i++ {
-
 				p := strconv.Itoa(int(i))
 				kp = kubePort{
 					Proto: strings.ToLower(port.Proto),
@@ -88,14 +85,12 @@ func setKubePorts(ports []util.PortSpec) []kubePort {
 				kp.Nginx = port.Nginx
 				kports = append(kports, kp)
 			}
-
 		} else {
 			// nominal non-range
 			kp = kubePort{
 				Proto: strings.ToLower(port.Proto),
 				Port:  port.Port,
 			}
-
 			switch port.Proto {
 			case "tcp":
 				kp.KubeProto = "TCP"
@@ -189,6 +184,7 @@ func (g *kubeBasicGen) kubeApp() {
 		ImagePath:      g.app.ImagePath,
 		Command:        cs,
 		RegistrySecret: registrySecret,
+		MexDeployGen:   MexDeployGenLabel,
 	}
 	buf := bytes.Buffer{}
 	if g.app.ScaleWithCluster {
@@ -210,6 +206,7 @@ type appData struct {
 	Ports          []kubePort
 	Command        []string
 	RegistrySecret string
+	MexDeployGen   string
 }
 
 var dpTemplate = `apiVersion: apps/v1
@@ -233,6 +230,7 @@ var podTemplate = `
     metadata:
       labels:
         run: {{.Run}}
+        {{.MexDeployGen}}: kubernetes-basic
     spec:
       volumes:
       imagePullSecrets:
