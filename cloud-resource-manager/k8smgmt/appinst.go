@@ -32,10 +32,10 @@ var applyManifest = "apply"
 var createManifest = "create"
 
 var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
+var podStateReg = regexp.MustCompile(podStateRegString)
 
 func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace, selector, waitFor string, startTimer time.Time) (bool, error) {
 	done := false
-	r := regexp.MustCompile(podStateRegString)
 	log.SpanLog(ctx, log.DebugLevelInfra, "check pods status", "namespace", namespace, "selector", selector)
 	if namespace == "" {
 		namespace = DefaultNamespace
@@ -58,9 +58,9 @@ func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace
 		}
 		// there can be multiple pods, one per line. If all
 		// of them are running we can quit the loop
-		if r.MatchString(line) {
+		if podStateReg.MatchString(line) {
 			podCount++
-			matches := r.FindStringSubmatch(line)
+			matches := podStateReg.FindStringSubmatch(line)
 			podName := matches[1]
 			podState := matches[2]
 			switch podState {

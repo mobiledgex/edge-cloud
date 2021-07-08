@@ -232,8 +232,8 @@ func getHelmYamlOpt(ymls []string) string {
 
 func CleanupHelmConfigs(ctx context.Context, client ssh.Client, appName string) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "cleanup kubernetes helm app configs", "appname", appName)
-	count := 0
-	for {
+	// count 10 is just for safeguard
+	for count := 0; count < 10; count++ {
 		fileName := fmt.Sprintf("%s%d", appName, count)
 		out, err := client.Output("rm " + fileName)
 		if err != nil {
@@ -241,11 +241,6 @@ func CleanupHelmConfigs(ctx context.Context, client ssh.Client, appName string) 
 				return nil
 			}
 			return fmt.Errorf("failed to delete helm config file %s, %s: %v", fileName, out, err)
-		}
-		count++
-		// safeguard (allthough it is not required)
-		if count == 10 {
-			break
 		}
 	}
 	return nil

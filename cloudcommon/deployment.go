@@ -22,6 +22,7 @@ import (
 	yaml "github.com/mobiledgex/yaml/v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var DeploymentTypeKubernetes = "kubernetes"
@@ -103,14 +104,18 @@ func IsValidDeploymentManifestForFlavor(deploymentType, manifest string, flavor 
 	if deploymentType != DeploymentTypeKubernetes {
 		return nil
 	}
+	objs, _, err := DecodeK8SYaml(manifest)
+	if err != nil {
+		return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
+	}
+	return isValidKubernetesManifestForFlavor(objs, flavor)
+}
+
+func isValidKubernetesManifestForFlavor(objs []runtime.Object, flavor *edgeproto.Flavor) error {
 	ok, count := IsGPUFlavor(flavor)
 	if !ok {
 		// currently we are only validating GPU resources
 		return nil
-	}
-	objs, _, err := DecodeK8SYaml(manifest)
-	if err != nil {
-		return fmt.Errorf("parse kubernetes deployment yaml failed, %v", err)
 	}
 	var template *v1.PodTemplateSpec
 	requestedGPUCount := int64(0)
@@ -225,7 +230,7 @@ func IsValidDeploymentManifest(deploymentType, command, manifest string, ports [
 		if len(missingPorts) > 0 {
 			return fmt.Errorf("port %s defined in AccessPorts but missing from kubernetes manifest in a LoadBalancer service", strings.Join(missingPorts, ","))
 		}
-		err = IsValidDeploymentManifestForFlavor(deploymentType, manifest, appFlavor)
+		err = isValidKubernetesManifestForFlavor(objs, appFlavor)
 		if err != nil {
 			return err
 		}
