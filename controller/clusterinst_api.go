@@ -45,6 +45,13 @@ var DeleteClusterInstTransitions = map[edgeproto.TrackedState]struct{}{
 	edgeproto.TrackedState_DELETING: struct{}{},
 }
 
+type GenerateResourceAlerts int
+
+const (
+	NoGenResourceAlerts = 0
+	GenResourceAlerts   = 1
+)
+
 func InitClusterInstApi(sync *Sync) {
 	clusterInstApi.sync = sync
 	clusterInstApi.store = edgeproto.NewClusterInstStore(sync.store)
@@ -561,7 +568,7 @@ func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *ed
 	}
 }
 
-func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, vmAppInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) error {
+func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, vmApp *edgeproto.App, vmAppInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs, genAlerts GenerateResourceAlerts) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "validate resources", "cloudlet", cloudlet.Key, "clusterinst", clusterInst, "vmappinst", vmAppInst)
 	lbFlavor, err := GetRootLBFlavorInfo(ctx, stm, cloudlet, cloudletInfo)
 	if err != nil {
@@ -580,11 +587,12 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 		reqdVmResources = append(reqdVmResources, ciResources...)
 	}
 	if vmAppInst != nil {
-		app := edgeproto.App{}
-		if !appApi.store.STMGet(stm, &vmAppInst.Key.AppKey, &app) {
-			return fmt.Errorf("App not found: %v", vmAppInst.Key.AppKey)
+		if vmApp == nil {
+			return fmt.Errorf("valid vmApp required with vmAppInst")
 		}
-		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, &app, vmAppInst, cloudletInfo.Flavors, lbFlavor)
+		// appinst_api usage has vmApp, use it here
+		app := vmApp
+		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, app, vmAppInst, cloudletInfo.Flavors, lbFlavor)
 		if err != nil {
 			return err
 		}
@@ -904,7 +912,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
-		err = validateResources(ctx, stm, in, nil, &cloudlet, &info, &refs)
+		err = validateResources(ctx, stm, in, nil, nil, &cloudlet, &info, &refs, GenResourceAlerts)
 		if err != nil {
 			return err
 		}
@@ -1060,7 +1068,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs)
 			// set ipaccess to unknown so that rootlb resource is not calculated as part of diff resource calculation
 			resClusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
-			err = validateResources(ctx, stm, resClusterInst, nil, &cloudlet, &info, &cloudletRefs)
+			err = validateResources(ctx, stm, resClusterInst, nil, nil, &cloudlet, &info, &cloudletRefs, GenResourceAlerts)
 			if err != nil {
 				return err
 			}

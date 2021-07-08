@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vmspec"
@@ -294,24 +294,12 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 	// In all cases, a numeric count value is used to map to os flavors that supply > 1 of the given
 	// resource. Only flavors that advertise a count >= to that requested should match.
 	var err error
-	var count string
 	for k, v := range resmap {
 		if k == "gpu" {
-			values := strings.Split(v, ":")
-			if len(values) == 1 {
-				return false, fmt.Errorf("Missing manditory resource count, ex: optresmap=gpu=gpu:1")
+			_, err = cloudcommon.ParseGPUResourceCount(v)
+			if err != nil {
+				return false, err
 			}
-			if len(values) == 2 {
-				count = values[1]
-			} else if len(values) == 3 {
-				count = values[2]
-			} else {
-				return false, fmt.Errorf("Invalid optresmap syntax encountered: ex: optresmap=gpu=gpu:1")
-			}
-			if _, err = strconv.Atoi(count); err != nil {
-				return false, fmt.Errorf("Non-numeric resource count encountered, found %s", values[1])
-			}
-
 		} else {
 			// if k == "nas" etc
 			return false, fmt.Errorf("Only GPU resources currently supported, use optresmap=gpu=$resource:[$specifier:]$count found %s", k)

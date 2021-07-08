@@ -707,6 +707,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return in.Flavor.NotFoundError()
 		}
 
+		if app.DeploymentManifest != "" {
+			err = cloudcommon.IsValidDeploymentManifestForFlavor(app.Deployment, app.DeploymentManifest, &vmFlavor)
+			if err != nil {
+				return fmt.Errorf("Invalid deployment manifest, %v", err)
+			}
+		}
+
 		vmspec, verr := resTagTableApi.GetVMSpec(ctx, stm, vmFlavor, cloudlet, info)
 		if verr != nil {
 			return verr
@@ -737,7 +744,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs) {
 				initCloudletRefs(&refs, &in.Key.ClusterInstKey.CloudletKey)
 			}
-			err = validateResources(ctx, stm, nil, in, &cloudlet, &info, &refs)
+			err = validateResources(ctx, stm, nil, &app, in, &cloudlet, &info, &refs, GenResourceAlerts)
 			if err != nil {
 				return err
 			}
