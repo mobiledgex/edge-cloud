@@ -747,6 +747,7 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.serverlessconfig.minreplicas",
 	"app.vmappostype",
 	"dryrundeploy",
+	"numnodes",
 }
 var DeploymentCloudletRequestAliasArgs = []string{
 	"appname=app.key.name",
@@ -792,6 +793,7 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"app.vmappostype":                            "OS Type for VM Apps, one of VmAppOsUnknown, VmAppOsLinux, VmAppOsWindows10, VmAppOsWindows2012, VmAppOsWindows2016, VmAppOsWindows2019",
 	"dryrundeploy":                               "Attempt to qualify cloudlet resources for deployment",
+	"numnodes":                                   "Optional number of worker VMs in dry run K8s Cluster, default = 2",
 }
 var DeploymentCloudletRequestSpecialArgs = map[string]string{
 	"app.autoprovpolicies": "StringArray",

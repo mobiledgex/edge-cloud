@@ -247,7 +247,9 @@ message DeploymentCloudletRequest {
    App app = 1;
    // Attempt to qualify cloudlet resources for deployment
    bool dry_run_deploy = 2;
-   option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,App.app-org=Key.Organization,App.defaultflavor=DefaultFlavor.Name";
+   // Optional number of worker VMs in dry run K8s Cluster, default = 2
+   uint32 num_nodes = 3;
+   option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
    option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
 }
 
@@ -306,7 +308,7 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
-  // Discover cloudlets supporting depoloyments of App.DefaultFlavor
+  // Discover cloudlets supporting deployments of App.DefaultFlavor
   rpc ShowCloudletsForAppDeployment(DeploymentCloudletRequest) returns (stream CloudletKey) {
    option (google.api.http) =  {
      post: "/showmapping/deploymentcloudlets"
