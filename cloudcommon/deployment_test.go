@@ -125,3 +125,56 @@ func TestTimeout(t *testing.T) {
 	val = GetTimeout(10 * oneG)
 	require.Equal(t, val, 20*time.Minute)
 }
+
+var gpuBaseDeploymentManifest = `apiVersion: v1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pokemongo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pokemongo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: pokemongo
+        mex-app: pokemongo-deployment
+        mexAppName: pokemongo
+        mexAppVersion: "101"
+    spec:
+      containers:`
+
+var gpuSubManifest = `
+      - image: docker.mobiledgex.net/nianticinc/images/pokemongo10:1.0.1
+        imagePullPolicy: Always
+        name: pokemongo
+        ports:
+        - containerPort: 443
+          protocol: TCP
+        resources:
+          limits:
+             nvidia.com/gpu: 1`
+
+func TestDeploymentManifest(t *testing.T) {
+	var err error
+
+	// gpu flavor with rescount as 1
+	flavor := &testutil.FlavorData[4]
+
+	manifestResCnt1 := gpuBaseDeploymentManifest + gpuSubManifest
+	err = IsValidDeploymentManifestForFlavor(DeploymentTypeKubernetes, manifestResCnt1, flavor)
+	require.Nil(t, err, "valid gpu deployment manifest")
+
+	manifestResCnt2 := gpuBaseDeploymentManifest + gpuSubManifest + gpuSubManifest
+	err = IsValidDeploymentManifestForFlavor(DeploymentTypeKubernetes, manifestResCnt2, flavor)
+	require.NotNil(t, err, "invalid gpu deployment manifest")
+	require.Contains(t, err.Error(), "GPU resource limit (value:2) exceeds flavor specified count 1")
+
+	flavor.OptResMap["gpu"] = "pci:4"
+	err = IsValidDeploymentManifestForFlavor(DeploymentTypeKubernetes, manifestResCnt2, flavor)
+	require.Nil(t, err, "valid gpu deployment manifest")
+}

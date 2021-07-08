@@ -20,6 +20,8 @@ import (
 const WaitDeleted string = "WaitDeleted"
 const WaitRunning string = "WaitRunning"
 
+const DefaultNamespace string = "Default"
+
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
 
@@ -30,6 +32,90 @@ var applyManifest = "apply"
 var createManifest = "create"
 
 var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
+var podStateReg = regexp.MustCompile(podStateRegString)
+
+func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace, selector, waitFor string, startTimer time.Time) (bool, error) {
+	done := false
+	log.SpanLog(ctx, log.DebugLevelInfra, "check pods status", "namespace", namespace, "selector", selector)
+	if namespace == "" {
+		namespace = DefaultNamespace
+	}
+	cmd := fmt.Sprintf("%s kubectl get pods --no-headers -n %s --selector=%s", kConfEnv, namespace, selector)
+	out, err := client.Output(cmd)
+	if err != nil {
+		log.InfoLog("error getting pods", "err", err, "out", out)
+		return done, fmt.Errorf("error getting pods: %v", err)
+	}
+	lines := strings.Split(out, "\n")
+	// there are potentially multiple pods in the lines loop, we will quit processing this obj
+	// only when they are all up, i.e. no non-
+	podCount := 0
+	runningCount := 0
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		// there can be multiple pods, one per line. If all
+		// of them are running we can quit the loop
+		if podStateReg.MatchString(line) {
+			podCount++
+			matches := podStateReg.FindStringSubmatch(line)
+			podName := matches[1]
+			podState := matches[2]
+			switch podState {
+			case "Running":
+				log.SpanLog(ctx, log.DebugLevelInfra, "pod is running", "podName", podName)
+				runningCount++
+			case "Pending":
+				fallthrough
+			case "ContainerCreating":
+				log.SpanLog(ctx, log.DebugLevelInfra, "still waiting for pod", "podName", podName, "state", podState)
+			case "Terminating":
+				log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
+			default:
+				if strings.Contains(podState, "Init") {
+					// Init state cannot be matched exactly, e.g. Init:0/2
+					log.SpanLog(ctx, log.DebugLevelInfra, "pod in init state", "podName", podName, "state", podState)
+				} else {
+					// try to find out what error was
+					// TODO: pull events and send
+					// them back as status updates
+					// rather than sending back
+					// full "describe" dump
+					cmd := fmt.Sprintf("%s kubectl describe pod -n %s --selector=%s", kConfEnv, namespace, selector)
+					out, derr := client.Output(cmd)
+					if derr == nil {
+						return done, fmt.Errorf("Run container failed: %s", out)
+					}
+					return done, fmt.Errorf("Pod is unexpected state: %s", podState)
+				}
+			}
+		} else if strings.Contains(line, "No resources found") {
+			// If creating, pods may not have taken
+			// effect yet. If deleting, may already
+			// be removed.
+			if waitFor == WaitRunning && time.Since(startTimer) > createWaitNoResources {
+				return done, fmt.Errorf("no resources found for %s on create: %s", createWaitNoResources, line)
+			}
+			break
+		} else {
+			return done, fmt.Errorf("unable to parse kubectl output: [%s]", line)
+		}
+	}
+	if waitFor == WaitDeleted {
+		if podCount == 0 {
+			log.SpanLog(ctx, log.DebugLevelInfra, "all pods gone", "selector", selector)
+			done = true
+		}
+	} else {
+		if podCount == runningCount {
+			log.SpanLog(ctx, log.DebugLevelInfra, "all pods up", "selector", selector)
+			done = true
+		}
+	}
+	return done, nil
+}
 
 // WaitForAppInst waits for pods to either start or result in an error if WaitRunning specified,
 // or if WaitDeleted is specified then wait for them to all disappear.
@@ -41,7 +127,6 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	// it might be nicer to pull the state directly rather than parsing it, but the states displayed
 	// are a combination of states and reasons, e.g. ErrImagePull is not actually a state, so it's
 	// just easier to parse the summarized output from kubectl which combines states and reasons
-	r := regexp.MustCompile(podStateRegString)
 	objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
 	if err != nil {
 		log.InfoLog("unable to decode k8s yaml", "err", err)
@@ -62,81 +147,13 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 			if name == "" {
 				break
 			}
-			log.SpanLog(ctx, log.DebugLevelInfra, "get pods", "name", name)
-
-			cmd := fmt.Sprintf("%s kubectl get pods --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
-			out, err := client.Output(cmd)
+			selector := fmt.Sprintf("%s=%s", MexAppLabel, name)
+			done, err := CheckPodsStatus(ctx, client, names.KconfEnv, DefaultNamespace, selector, waitFor, start)
 			if err != nil {
-				log.InfoLog("error getting pods", "err", err, "out", out)
-				return fmt.Errorf("error getting pods: %v", err)
+				return err
 			}
-			lines := strings.Split(out, "\n")
-			// there are potentially multiple pods in the lines loop, we will quit processing this obj
-			// only when they are all up, i.e. no non-
-			podCount := 0
-			runningCount := 0
-
-			for _, line := range lines {
-				if line == "" {
-					continue
-				}
-				// there can be multiple pods, one per line. If all
-				// of them are running we can quit the loop
-				if r.MatchString(line) {
-					podCount++
-					matches := r.FindStringSubmatch(line)
-					podName := matches[1]
-					podState := matches[2]
-					switch podState {
-					case "Running":
-						log.SpanLog(ctx, log.DebugLevelInfra, "pod is running", "podName", podName)
-						runningCount++
-					case "Pending":
-						fallthrough
-					case "ContainerCreating":
-						log.SpanLog(ctx, log.DebugLevelInfra, "still waiting for pod", "podName", podName, "state", podState)
-					case "Terminating":
-						log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
-					default:
-						if strings.Contains(podState, "Init") {
-							// Init state cannot be matched exactly, e.g. Init:0/2
-							log.SpanLog(ctx, log.DebugLevelInfra, "pod in init state", "podName", podName, "state", podState)
-						} else {
-							// try to find out what error was
-							// TODO: pull events and send
-							// them back as status updates
-							// rather than sending back
-							// full "describe" dump
-							cmd := fmt.Sprintf("%s kubectl describe pod --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
-							out, derr := client.Output(cmd)
-							if derr == nil {
-								return fmt.Errorf("Run container failed: %s", out)
-							}
-							return fmt.Errorf("Pod is unexpected state: %s", podState)
-						}
-					}
-				} else if strings.Contains(line, "No resources found") {
-					// If creating, pods may not have taken
-					// effect yet. If deleting, may already
-					// be removed.
-					if waitFor == WaitRunning && time.Since(start) > createWaitNoResources {
-						return fmt.Errorf("no resources found for %s on create: %s", createWaitNoResources, line)
-					}
-					break
-				} else {
-					return fmt.Errorf("unable to parse kubectl output: [%s]", line)
-				}
-			}
-			if waitFor == WaitDeleted {
-				if podCount == 0 {
-					log.SpanLog(ctx, log.DebugLevelInfra, "all pods gone", "name", name)
-					break
-				}
-			} else {
-				if podCount == runningCount {
-					log.SpanLog(ctx, log.DebugLevelInfra, "all pods up", "name", name)
-					break
-				}
+			if done {
+				break
 			}
 			elapsed := time.Since(start)
 			if elapsed >= (maxWait) {
@@ -159,7 +176,7 @@ func getConfigDirName(names *KubeNames) (string, string) {
 	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
 
-func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, action string) error {
+func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor, action string) error {
 	if action == createManifest && names.Namespace != "" {
 		err := CreateNamespace(ctx, client, names)
 		if err != nil {
@@ -179,7 +196,7 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 		}
 		mf = AddManifest(mf, np)
 	}
-	mf, err = MergeEnvVars(ctx, authApi, app, mf, names.ImagePullSecrets, names)
+	mf, err = MergeEnvVars(ctx, authApi, app, mf, names.ImagePullSecrets, names, appInstFlavor)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to merge env vars", "error", err)
 		return fmt.Errorf("error merging environment variables config file: %s", err)
@@ -231,11 +248,11 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 }
 
 func CreateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor) error {
-	return createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, createManifest)
+	return createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, appInstFlavor, createManifest)
 }
 
 func UpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor) error {
-	err := createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, applyManifest)
+	err := createOrUpdateAppInst(ctx, authApi, client, names, app, appInst, appInstFlavor, applyManifest)
 	if err != nil {
 		return err
 	}

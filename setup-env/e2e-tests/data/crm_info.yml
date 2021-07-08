@@ -350,6 +350,7 @@ apps:
         metadata:
           labels:
             run: someapplication11.0
+            mexDeployGen: kubernetes-basic
         spec:
           volumes:
           imagePullSecrets:
@@ -422,6 +423,7 @@ apps:
         metadata:
           labels:
             run: someapplication21.0
+            mexDeployGen: kubernetes-basic
         spec:
           volumes:
           imagePullSecrets:

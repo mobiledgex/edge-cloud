@@ -3,6 +3,7 @@ package cloudcommon
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -195,4 +196,42 @@ func ValidateCloudletResourceQuotas(ctx context.Context, curRes map[string]edgep
 		}
 	}
 	return nil
+}
+
+var GPUResourceLimitName = "nvidia.com/gpu"
+
+func IsGPUFlavor(flavor *edgeproto.Flavor) (bool, int) {
+	if flavor == nil {
+		return false, 0
+	}
+	resStr, ok := flavor.OptResMap["gpu"]
+	if !ok {
+		return ok, 0
+	}
+	count, err := ParseGPUResourceCount(resStr)
+	if err != nil {
+		return false, 0
+	}
+	return true, count
+}
+
+func ParseGPUResourceCount(resStr string) (int, error) {
+	count := 0
+	values := strings.Split(resStr, ":")
+	if len(values) == 1 {
+		return count, fmt.Errorf("Missing manditory resource count, ex: optresmap=gpu=gpu:1")
+	}
+	var countStr string
+	var err error
+	if len(values) == 2 {
+		countStr = values[1]
+	} else if len(values) == 3 {
+		countStr = values[2]
+	} else {
+		return count, fmt.Errorf("Invalid optresmap syntax encountered: ex: optresmap=gpu=gpu:1")
+	}
+	if count, err = strconv.Atoi(countStr); err != nil {
+		return count, fmt.Errorf("Non-numeric resource count encountered, found %s", values[1])
+	}
+	return count, nil
 }
