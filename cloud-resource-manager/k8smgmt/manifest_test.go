@@ -47,15 +47,17 @@ func TestEnvVars(t *testing.T) {
 
 	names := &KubeNames{}
 
+	defaultFlavor := testutil.FlavorData[0]
+
 	authApi := &cloudcommon.DummyRegistryAuthApi{}
 	// Test Deploymeent manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
-	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
+	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names, &defaultFlavor)
 	require.Nil(t, err)
 	// make envVars remote
 	app.Configs[0].Config = tsEnvVars.URL
-	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
+	remoteEnvVars, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names, &defaultFlavor)
 	require.Nil(t, err)
 	require.Equal(t, envVarsMf, remoteEnvVars)
 
@@ -67,7 +69,8 @@ func TestEnvVars(t *testing.T) {
 		Ram:         20,
 		MinReplicas: 2,
 	}
-	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names)
+	gpuFlavor := testutil.FlavorData[4]
+	merged, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names, &gpuFlavor)
 	require.Nil(t, err)
 	require.Equal(t, expectedFullManifest, merged)
 }
@@ -136,6 +139,7 @@ spec:
         mex-app: pillimogo100-deployment
         mexAppName: pillimogo
         mexAppVersion: "100"
+        mexDeployGen: kubernetes-basic
         run: pillimogo1.0.0
     spec:
       containers:
@@ -156,6 +160,7 @@ spec:
           limits:
             cpu: 500m
             memory: 20Mi
+            nvidia.com/gpu: "1"
           requests:
             cpu: 500m
             memory: 20Mi
@@ -454,7 +459,8 @@ func TestImagePullSecrets(t *testing.T) {
 		names.ImagePullSecrets = append(names.ImagePullSecrets, secret)
 	}
 
-	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets, &KubeNames{})
+	defaultFlavor := testutil.FlavorData[0]
+	newMf, err := MergeEnvVars(ctx, nil, app, baseMf, names.ImagePullSecrets, &KubeNames{}, &defaultFlavor)
 	require.Nil(t, err)
 	fmt.Println(newMf)
 	require.Equal(t, newMf, expectedDeploymentManifest)
