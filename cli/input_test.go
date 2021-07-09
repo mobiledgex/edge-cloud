@@ -189,7 +189,7 @@ func TestParseArgs(t *testing.T) {
 func testConversionEmptyFields(t *testing.T, input *cli.Input, obj, buf interface{}, args []string, expectedFields []string) {
 	// Note there is a subtle behavior when using JSON/YAML to marshal
 	// an object with empty maps. In go, and even in JSON/YAML files, we
-	// can differentiate between a map this is nil, versus empty.
+	// can differentiate between a map that is nil, versus empty.
 	// But when marshaling an object to JSON/YAML, there is no way.
 	// If using "omitempty", then both a nil and an empty map in the object
 	// will end up omitted from the marshaled output. If not using
