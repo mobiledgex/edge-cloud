@@ -1,12 +1,10 @@
 package cli
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
-
-	yaml "github.com/mobiledgex/yaml/v2"
 )
 
 // Get a list of fields specified as their hierarchical id space.
@@ -14,8 +12,8 @@ import (
 // hierarchy. Data contains the specified data hierarchically
 // arranged. Obj is the protobuf object with protobuf tags on fields
 // that corresponds to the data.
-func GetSpecifiedFields(data map[string]interface{}, obj interface{}, ns FieldNamespace) []string {
-	return getFields(data, reflect.TypeOf(obj), ns, []string{})
+func GetSpecifiedFields(data *MapData, obj interface{}) []string {
+	return getFields(data.Data, reflect.TypeOf(obj), data.Namespace, []string{})
 }
 
 func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, fvals []string) []string {
@@ -33,9 +31,31 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 			continue
 		}
 
-		if subdata, ok := val.(map[string]interface{}); ok {
+		if subdata, ok := val.(map[string]interface{}); ok && len(subdata) > 0 {
 			// sub struct
 			subfields := getFields(subdata, sf.Type, ns, append(fvals, fval))
+			fields = append(fields, subfields...)
+			continue
+		}
+		if subdataArr, ok := arrayOfMaps(val); ok && len(subdataArr) > 0 {
+			// array of sub structs
+			if sf.Type.Kind() != reflect.Slice {
+				continue
+			}
+			fields = append(fields, strings.Join(append(fvals, fval), "."))
+			// use map to eliminate duplicate fields
+			subfieldsMap := make(map[string]struct{})
+			for _, subdata := range subdataArr {
+				subfields := getFields(subdata, sf.Type.Elem(), ns, append(fvals, fval))
+				for _, s := range subfields {
+					subfieldsMap[s] = struct{}{}
+				}
+			}
+			subfields := []string{}
+			for k, _ := range subfieldsMap {
+				subfields = append(subfields, k)
+			}
+			sort.Strings(subfields)
 			fields = append(fields, subfields...)
 			continue
 		}
@@ -45,72 +65,31 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 	return fields
 }
 
-// Get a map of fields specified by the fields array. This is the opposite of
-// GetSpecifiedFields above, converting a proto fields list "[1, 2.2]" to a map
-// of obj fields with their associated data from obj.
-func GetSpecifiedFieldsData(fields []string, obj interface{}, ns FieldNamespace) (map[string]interface{}, error) {
-	data := make(map[string]interface{})
-	// It's easiest to use the yaml marshaller to convert to the map
-	// and then remove the ones that weren't specified, rather than
-	// trying to build the map ourselves from the specified fields.
-	// Make sure marshaling does not omit empty.
-	buf := bytes.Buffer{}
-	enc := yaml.NewEncoder(&buf)
-	enc.SetOmitEmpty(false)
-	err := enc.Encode(obj)
-	if err != nil {
-		return data, err
+// Convert the value to an array of map[string]interface{},
+// which corresponds to an array of structs.
+func arrayOfMaps(val interface{}) ([]map[string]interface{}, bool) {
+	// Val could be a []map[string]interface{} object, or
+	// it could be an []interface{} array, where each interface{}
+	// is a map[string]interface{} object (an extra level of indirection).
+	// The latter case happens when umarshaling yaml into
+	// a generic map[string]interface{} data, when the yaml
+	// has a field which is an array of substructs.
+	if arr, ok := val.([]map[string]interface{}); ok {
+		return arr, ok
 	}
-	err = yaml.Unmarshal(buf.Bytes(), &data)
-	if err != nil {
-		return data, err
-	}
-	// convert fields to map for easy lookup
-	fmap := make(map[string]struct{})
-	for _, f := range fields {
-		// adds all parent fields as well
-		tags := strings.Split(f, ".")
-		for ii := len(tags); ii >= 0; ii-- {
-			tag := strings.Join(tags[:ii], ".")
-			fmap[tag] = struct{}{}
+	if arr, ok := val.([]interface{}); ok {
+		mm := make([]map[string]interface{}, len(arr), len(arr))
+		for ii, obj := range arr {
+			subm, ok := obj.(map[string]interface{})
+			if ok {
+				mm[ii] = subm
+			} else {
+				return nil, false
+			}
 		}
+		return mm, true
 	}
-	pruneFields(data, fmap, reflect.TypeOf(obj), ns, []string{})
-	return data, nil
-}
-
-func pruneFields(data map[string]interface{}, fmap map[string]struct{}, t reflect.Type, ns FieldNamespace, fvals []string) {
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	for key, val := range data {
-		sf, ok := FindField(t, key, ns)
-		if !ok {
-			continue
-		}
-		fval, ok := getProtoTag(sf)
-		if !ok {
-			continue
-		}
-		fstr := strings.Join(append(fvals, fval), ".")
-		if _, found := fmap[fstr]; !found {
-			delete(data, key)
-			continue
-		}
-		if subdata, ok := val.(map[string]interface{}); ok {
-			// sub struct
-			pruneFields(subdata, fmap, sf.Type, ns, append(fvals, fval))
-		}
-	}
-}
-
-func getProtoTag(sf reflect.StructField) (string, bool) {
-	tag := sf.Tag.Get("protobuf")
-	tagvals := strings.Split(tag, ",")
-	if len(tagvals) < 2 {
-		return "", false
-	}
-	return tagvals[1], true
+	return nil, false
 }
 
 func GetGenericObj(dataMap interface{}) (map[string]interface{}, error) {

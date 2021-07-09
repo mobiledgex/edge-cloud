@@ -708,7 +708,11 @@ func (t *TestCud) generateRunGroupApi(file *descriptor.FileDescriptorProto, serv
 			t.P("*r.Rc = false")
 			t.P("return")
 			t.P("}")
-			t.P("obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)")
+			t.P("yamlData := cli.MapData{")
+			t.P("Namespace: cli.YamlNamespace,")
+			t.P("Data: objMap,")
+			t.P("}")
+			t.P("obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)")
 			t.P()
 		}
 		t.runApiOutput(apiName, mInfo, group, looped)

@@ -538,6 +538,11 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+
+func (e DlgMessage_DlgAck) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e))
+	return json.Marshal(str)
+}
 func (m *DlgMessage) IsValidArgsForSendToGroup() error {
 	return nil
 }
