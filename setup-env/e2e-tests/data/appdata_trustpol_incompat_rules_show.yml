@@ -397,7 +397,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: cluster1.cloudlet1.dmuus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp

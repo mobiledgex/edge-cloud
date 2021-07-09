@@ -309,20 +309,18 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
+  uri: shared.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:

@@ -778,7 +778,7 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.officialfqdn":        "Official FQDN is the FQDN that the app uses to connect by default",
 	"app.md5sum":              "MD5Sum of the VM-based app image",
 	"app.autoprovpolicy":      "(_deprecated_) Auto provisioning policy name",
-	"app.accesstype":          "Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"app.accesstype":          "(Deprecated) Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"app.deleteprepare":       "Preparing to be deleted",
 	"app.autoprovpolicies":    "Auto provisioning policy names, may be specified multiple times",
 	"app.templatedelimiter":   "Delimiter to be used for template parsing, defaults to [[ ]]",

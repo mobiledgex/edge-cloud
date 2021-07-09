@@ -233,7 +233,7 @@ cloudletinfos:
     - clusterkey:
         name: reservable0
       organization: MobiledgeX
-  compatibilityversion: 1
+  compatibilityversion: 2
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -288,7 +288,7 @@ cloudletinfos:
     - clusterkey:
         name: reservable1
       organization: MobiledgeX
-  compatibilityversion: 1
+  compatibilityversion: 2
 apps:
 - key:
     organization: AcmeAppCo
@@ -514,21 +514,18 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: dmuus-cloud-2.dmuus.localtest.net
+  uri: shared.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   state: Ready
@@ -554,7 +551,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: reservable0.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -581,7 +577,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: reservable1.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -608,17 +603,15 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: dmuus-cloud-2.dmuus.localtest.net
+  uri: shared.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 23
     publicport: 23
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10003
     publicport: 10003
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   state: Ready
@@ -644,21 +637,18 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: dmuus-cloud-1.dmuus.localtest.net
+  uri: shared.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   state: Ready
@@ -684,7 +674,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: reservable0.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
