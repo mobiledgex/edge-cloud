@@ -619,7 +619,11 @@ func (r *Run) ClusterInstApi(data *[]edgeproto.ClusterInst, dataMap interface{},
 				*r.Rc = false
 				return
 			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			yamlData := cli.MapData{
+				Namespace: cli.YamlNamespace,
+				Data:      objMap,
+			}
+			obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)
 
 			out, err := r.client.UpdateClusterInst(r.ctx, obj)
 			if err != nil {

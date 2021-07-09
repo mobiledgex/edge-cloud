@@ -1609,6 +1609,11 @@ func (e *OptResNames) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+
+func (e OptResNames) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(OptResNames_CamelName, int32(e))
+	return json.Marshal(str)
+}
 func (m *ResTagTable) IsValidArgsForCreateResTagTable() error {
 	return nil
 }

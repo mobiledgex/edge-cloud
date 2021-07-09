@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/mobiledgex/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -45,8 +47,8 @@ type Input struct {
 // based on lower case field names, ignoring any json/yaml tags.
 // It also fills in obj if specified.
 // NOTE: arrays and maps not supported yet.
-func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{}, error) {
-	dat := make(map[string]interface{})
+func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
+	dat := map[string]interface{}{}
 
 	// resolve aliases first
 	aliases := make(map[string]string)
@@ -77,27 +79,21 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 		arg = strings.TrimSpace(arg)
 		kv := strings.SplitN(arg, "=", 2)
 		if len(kv) != 2 {
-			return dat, fmt.Errorf("arg \"%s\" not name=val format", arg)
+			return nil, fmt.Errorf("arg \"%s\" not name=val format", arg)
 		}
-		var argVal interface{}
 		argKey, argVal := kv[0], kv[1]
 		argKey = resolveAlias(argKey, aliases)
 		specialArgType := ""
 		if s.SpecialArgs != nil {
 			if argType, found := (*s.SpecialArgs)[argKey]; found {
 				specialArgType = argType
-				if argType == "StringToString" {
-					pair := argVal.(string)
-					kv := strings.SplitN(pair, "=", 2)
-					if len(kv) != 2 {
-						return dat, fmt.Errorf("value \"%s\" of arg \"%s\" must be formatted as key=value", pair, arg)
-					}
-					argVal = kv
-				}
 			}
 		}
 		delete(required, argKey)
-		setKeyVal(dat, argKey, argVal, specialArgType)
+		err := setKeyVal(dat, obj, argKey, argVal, specialArgType)
+		if err != nil {
+			return nil, fmt.Errorf("parsing arg \"%s\" failed: %v", arg, err)
+		}
 		if argKey == s.PasswordArg {
 			passwordFound = true
 		} else if argKey == s.ApiKeyArg {
@@ -112,12 +108,12 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 			k = resolveAlias(k, reals)
 			missing = append(missing, k)
 		}
-		return dat, fmt.Errorf("missing required args: %s", strings.Join(missing, " "))
+		return nil, fmt.Errorf("missing required args: %s", strings.Join(missing, " "))
 	}
 
 	if s.PasswordArg != "" && s.ApiKeyArg != "" {
 		if apiKeyFound && passwordFound {
-			return dat, fmt.Errorf("either password or apikey should passed and not both")
+			return nil, fmt.Errorf("either password or apikey should passed and not both")
 		}
 	}
 
@@ -127,9 +123,9 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 		if s.PasswordArg != "" && !passwordFound {
 			pw, err := getPassword(s.VerifyPassword)
 			if err != nil {
-				return dat, err
+				return nil, err
 			}
-			setKeyVal(dat, resolveAlias(s.PasswordArg, aliases), pw, "")
+			setKeyVal(dat, obj, resolveAlias(s.PasswordArg, aliases), pw, "")
 		}
 	}
 
@@ -138,14 +134,18 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (map[string]interface{
 	if obj != nil {
 		unused, err := WeakDecode(dat, obj, s.DecodeHook)
 		if err != nil {
-			return dat, ConvertDecodeErr(err, reals)
+			return nil, ConvertDecodeErr(err, reals)
 		}
 		if !s.AllowUnused && len(unused) > 0 {
-			return dat, fmt.Errorf("invalid args: %s",
+			return nil, fmt.Errorf("invalid args: %s",
 				strings.Join(unused, " "))
 		}
 	}
-	return dat, nil
+	data := MapData{
+		Namespace: ArgsNamespace,
+		Data:      dat,
+	}
+	return &data, nil
 }
 
 // Use mapstructure to convert an args map (map[string]interface{})
@@ -210,16 +210,29 @@ func getDecodeArg(name string, reals map[string]string) string {
 	return arg
 }
 
-// FieldNamespace describes the format of field names used in generic
+// FieldNamespace describes the format of field names in generic
 // map[string]interface{} data, whether they correspond to the go struct's
-// field names, yaml tag names, or json tag names.
+// field names, yaml tag names, json tag names, or arg names.
+// Note that arg names are just lower-cased field names.
+// It does not specify what format the values are in. Values may be
+// type-specific (if extracted from an object with type info), or may
+// be generic values (if unmarshaling yaml/json into map[string]interface{}
+// where type info is not present).
 type FieldNamespace int
 
 const (
 	StructNamespace FieldNamespace = iota
 	YamlNamespace
 	JsonNamespace
+	ArgsNamespace
 )
+
+// MapData associates generic imported mapped data with the
+// namespace that the keys are in.
+type MapData struct {
+	Namespace FieldNamespace
+	Data      map[string]interface{}
+}
 
 func (s FieldNamespace) String() string {
 	switch s {
@@ -229,31 +242,38 @@ func (s FieldNamespace) String() string {
 		return "YamlNamespace"
 	case JsonNamespace:
 		return "JsonNamespace"
+	case ArgsNamespace:
+		return "ArgsNamespace"
 	}
 	return fmt.Sprintf("UnknownNamespace(%d)", s)
 }
 
-// JsonMap takes as input the generic args map from ParseArgs
-// corresponding to obj, and uses the json tags in obj to generate
-// a map with field names in the JSON namespace.
-func JsonMap(args map[string]interface{}, obj interface{}, inputNS FieldNamespace) (map[string]interface{}, error) {
-	if inputNS == JsonNamespace {
+// This converts the key namespace from whatever is specified into JSON
+// key names, based on json tags on the object. The values are not changed.
+// It will squash hierarchy if the "inline" tag is found.
+func JsonMap(mdat *MapData, obj interface{}) (*MapData, error) {
+	if mdat.Namespace == JsonNamespace {
 		// already json
-		return args, nil
+		return mdat, nil
 	}
-	js := make(map[string]interface{})
-	err := MapJsonNamesT(args, js, reflect.TypeOf(obj), inputNS)
+
+	js := map[string]interface{}{}
+	err := MapJsonNamesT(mdat.Data, js, reflect.TypeOf(obj), mdat.Namespace)
 	if err != nil {
 		return nil, err
 	}
-	return js, nil
+	jsDat := MapData{
+		Namespace: JsonNamespace,
+		Data:      js,
+	}
+	return &jsDat, nil
 }
 
-func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS FieldNamespace) error {
+func MapJsonNamesT(dat, js map[string]interface{}, t reflect.Type, inputNS FieldNamespace) error {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	for key, val := range args {
+	for key, val := range dat {
 		// get the StructField to get the json tag
 		sf, ok := FindField(t, key, inputNS)
 		if !ok {
@@ -270,6 +290,11 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 			jsonName = sf.Name
 		}
 		if subargs, ok := val.(map[string]interface{}); ok {
+			if len(subargs) == 0 {
+				// empty map/array for update
+				js[jsonName] = reflect.New(sf.Type)
+				continue
+			}
 			// sub struct
 			kind := sf.Type.Kind()
 			if kind == reflect.Ptr {
@@ -288,7 +313,7 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 			if err != nil {
 				return err
 			}
-		} else if list, ok := val.([]map[string]interface{}); ok {
+		} else if list, ok := arrayOfMaps(val); ok {
 			// arrayed struct
 			if sf.Type.Kind() != reflect.Slice {
 				return fmt.Errorf("key %s (%s) value %v is an array but expected %v", key, inputNS.String(), val, sf.Type)
@@ -304,68 +329,67 @@ func MapJsonNamesT(args, js map[string]interface{}, t reflect.Type, inputNS Fiel
 				jslist = append(jslist, out)
 			}
 			js[jsonName] = jslist
-		} else if reflect.TypeOf(val).Kind() == reflect.Slice {
-			// array of built-in types
-			if sf.Type.Kind() != reflect.Slice {
-				return fmt.Errorf("key %s (%s) value %v is an array but expected type %v", key, inputNS.String(), val, sf.Type)
-			}
-			js[jsonName] = val
 		} else {
-			if sf.Type.Kind() == reflect.Map {
-				// must be map of basic built-in types
-				js[jsonName] = val
-			} else {
-				// allocate an object of type (gives us a pointer to it)
-				v := reflect.New(sf.Type)
-				// let yaml deal with converting the string to the
-				// field's type. The only special case is string types
-				// may need quotes around string values in case there
-				// are special characters in the string.
-				strval := fmt.Sprintf("%v", val)
-				if v.Elem().Kind() == reflect.String {
-					strval = strconv.Quote(strval)
-				}
-				err := yaml.Unmarshal([]byte(strval), v.Interface())
-				if err != nil {
-					return fmt.Errorf("unmarshal err on %s (%s), %s, %v, %v", key, inputNS.String(), strval, v.Elem().Kind(), err)
-				}
-				// elem to dereference it
-				js[jsonName] = v.Elem().Interface()
-			}
+			// no sub-structure, so just assign value.
+			js[jsonName] = val
 		}
 	}
 	return nil
 }
 
 func FindField(t reflect.Type, name string, ns FieldNamespace) (reflect.StructField, bool) {
-	if ns == StructNamespace {
+	if ns == ArgsNamespace {
+		// Same as StructNamespace, but lower cased
 		return t.FieldByNameFunc(func(n string) bool {
 			return strings.ToLower(n) == strings.ToLower(name)
 		})
+	} else if ns == StructNamespace {
+		return t.FieldByName(name)
 	} else {
+		// Both JSON and YAML are case-sensitive to field names,
+		// but marshaled yaml is always lower-cased, and JSON
+		// unmarshal prefers case-sensitive but also matches case
+		// insensitive. So here we prefer case-sensitive matching
+		// but we also allow case-insensitive matching.
+		var sfCaseIns reflect.StructField
 		for ii := 0; ii < t.NumField(); ii++ {
 			sf := t.Field(ii)
 
-			var tag string
-			if ns == JsonNamespace {
-				tag = sf.Tag.Get("json")
-			} else if ns == YamlNamespace {
-				tag = sf.Tag.Get("yaml")
-			}
-			tagvals := strings.Split(tag, ",")
-			tagName := ""
-			if len(tagvals) > 0 {
-				tagName = tagvals[0]
-			}
-			if tagName == "" {
-				tagName = strings.ToLower(sf.Name)
-			}
+			tagName := GetFieldTaggedName(sf, ns)
 			if tagName == name {
 				return sf, true
+			} else if strings.ToLower(tagName) == strings.ToLower(name) {
+				sfCaseIns = sf
 			}
+		}
+		if sfCaseIns.Name != "" {
+			// return case insensitive match
+			return sfCaseIns, true
 		}
 		return reflect.StructField{}, false
 	}
+}
+
+// Get the field name based on the namespace
+func GetFieldTaggedName(sf reflect.StructField, ns FieldNamespace) string {
+	tagType := ""
+	switch ns {
+	case JsonNamespace:
+		tagType = "json"
+	case YamlNamespace:
+		tagType = "yaml"
+	case ArgsNamespace:
+		return strings.ToLower(sf.Name)
+	default:
+		// default struct namespace
+		return sf.Name
+	}
+	tag := sf.Tag.Get(tagType)
+	tagvals := strings.Split(tag, ",")
+	if len(tagvals) > 0 && tagvals[0] != "" {
+		return tagvals[0]
+	}
+	return sf.Name
 }
 
 func FindHierField(t reflect.Type, hierName string, ns FieldNamespace) (reflect.StructField, bool) {
@@ -374,6 +398,12 @@ func FindHierField(t reflect.Type, hierName string, ns FieldNamespace) (reflect.
 	for _, name := range strings.Split(hierName, ".") {
 		if t.Kind() == reflect.Ptr {
 			t = t.Elem()
+		}
+		if t.Kind() == reflect.Map || t.Kind() == reflect.Slice {
+			t = t.Elem()
+			if t.Kind() == reflect.Ptr {
+				t = t.Elem()
+			}
 		}
 		if t.Kind() != reflect.Struct {
 			return sf, false
@@ -449,6 +479,20 @@ var (
 )
 
 func resolveAlias(name string, lookup map[string]string) string {
+	// for sublists/maps, we may need to remove any :empty directive
+	emptySuffix := ":" + util.EmptySet
+	if strings.HasSuffix(name, emptySuffix) {
+		// for lists of objects, the alias will include :empty
+		if mapped, ok := lookup[name]; ok {
+			return mapped
+		}
+		// for lists of strings, the alias will not include :empty
+		trimmed := strings.TrimSuffix(name, emptySuffix)
+		if mapped, ok := lookup[trimmed]; ok {
+			return mapped + emptySuffix
+		}
+		return name
+	}
 	// for sublist arrays, we need to convert a :1 index
 	// into the generic :# used by the alias in the mapping.
 	// Ex: array:1.name -> array:#.name
@@ -477,39 +521,82 @@ func resolveAlias(name string, lookup map[string]string) string {
 	return string(nameReplaced)
 }
 
-func setKeyVal(dat map[string]interface{}, key string, val interface{}, argType string) {
+// setKeyVal is used to build a generic map[string]interface{} set of data
+// from command line arguments. The key namespace is ArgsNamespace,
+// and the values are type-specific based on the object's field types.
+func setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType string) error {
+	// Lookup object field corresponding to hierarchical key name.
+	// key may include an array index suffix, ignore that for field lookup.
+	// key may also end in :empty.
+	lookupKey := strings.TrimSuffix(key, ":"+util.EmptySet)
+	lookupKey = string(reArrayNums.ReplaceAll([]byte(lookupKey), []byte(".")))
+	sf, sfok := FindHierField(reflect.TypeOf(obj), lookupKey, ArgsNamespace)
+	if !sfok {
+		return fmt.Errorf("invalid argument: key \"%s\" not found in %v", lookupKey, reflect.TypeOf(obj))
+	}
+
+	// values passed in on the command line that
+	// have spaces will be quoted, remove those now.
+	valnew, err := strconv.Unquote(val)
+	if err == nil {
+		val = valnew
+	}
+
 	parts := strings.Split(key, ".")
 	for ii, part := range parts {
 		if ii == len(parts)-1 {
-			// values passed in on the command line that
-			// have spaces will be quoted.
-			if readVal, ok := val.(string); ok {
-				valnew, err := strconv.Unquote(readVal)
-				if err != nil {
-					valnew = readVal
+			// special case to specify empty list/map for update
+			colonParts := strings.Split(part, ":")
+			if len(colonParts) == 2 && colonParts[1] == util.EmptySet {
+				if !valIsTrue(val) {
+					continue
 				}
-				if argType == "StringArray" {
-					if _, ok := dat[part]; !ok {
-						dat[part] = make([]string, 0)
-					}
-					strarr := dat[part].([]string)
-					dat[part] = append(strarr, valnew)
+				// get the hier name without the :empty
+				strs := strings.Split(key, ":")
+				emptyVal, ok := getFieldEmptyListMap(strs[0], sf.Type, ArgsNamespace)
+				if ok {
+					dat[colonParts[0]] = emptyVal
 				} else {
-					dat[part] = valnew
+					dat[colonParts[0]] = nil
 				}
-			} else {
-				if argType == "StringToString" {
-					if _, ok := dat[part]; !ok {
-						dat[part] = make(map[string]string)
-					}
-					valSlice := val.([]string)
-					mapVal := dat[part].(map[string]string)
-					mapVal[valSlice[0]] = valSlice[1]
-					dat[part] = mapVal
-				} else {
-					dat[part] = val
-				}
+				continue
 			}
+			if argType == "StringArray" {
+				if _, ok := dat[part]; !ok {
+					dat[part] = make([]string, 0)
+				}
+				strarr := dat[part].([]string)
+				dat[part] = append(strarr, val)
+				continue
+			}
+			if argType == "StringToString" {
+				valSlice := strings.SplitN(val, "=", 2)
+				if len(valSlice) != 2 {
+					return fmt.Errorf("value \"%s\" must be formatted as key=value", val)
+				}
+				if _, ok := dat[part]; !ok {
+					dat[part] = make(map[string]string)
+				}
+				mapVal := dat[part].(map[string]string)
+				mapVal[valSlice[0]] = valSlice[1]
+				dat[part] = mapVal
+				continue
+			}
+			// convert command line string val to type-specific value
+			v := reflect.New(sf.Type)
+			// let yaml deal with converting the string to the
+			// field's type. The only special case is string types
+			// may need quotes around string values in case there
+			// are special characters in the string.
+			if v.Elem().Kind() == reflect.String {
+				val = strconv.Quote(val)
+			}
+			err := yaml.Unmarshal([]byte(val), v.Interface())
+			if err != nil {
+				return fmt.Errorf("unmarshal value %s into type %s failed: %v", val, sf.Type, err)
+			}
+			// elem to dereference it
+			dat[part] = v.Elem().Interface()
 		} else {
 			arrIdx := -1
 			// if field is repeated (arrayed) struct, it will have a :# suffix.
@@ -523,6 +610,42 @@ func setKeyVal(dat map[string]interface{}, key string, val interface{}, argType 
 			dat = getSubMap(dat, part, arrIdx)
 		}
 	}
+	return nil
+}
+
+func valIsTrue(val interface{}) bool {
+	b := false
+	switch v := val.(type) {
+	case string:
+		e, err := strconv.ParseBool(v)
+		if err == nil {
+			b = e
+		}
+	case bool:
+		b = v
+	case int:
+		if v == 1 {
+			b = true
+		}
+	}
+	return b
+}
+
+// Get empty list or map value based on field type.
+func getFieldEmptyListMap(hierName string, fieldType reflect.Type, ns FieldNamespace) (interface{}, bool) {
+	// Note: we return generic slices and maps rather than Type
+	// specific interfaces, in order to match YAML/JSON behavior,
+	// which do not have type info (so in yaml, an empty map is {}
+	// and an empty slice is []), so if you unmarshal those into
+	// a generic map[string]interface, those become
+	// map[string]interface{} and []interface{}, respectively.
+	switch fieldType.Kind() {
+	case reflect.Slice:
+		return []interface{}{}, true
+	case reflect.Map:
+		return map[string]interface{}{}, true
+	}
+	return nil, false
 }
 
 func getPassword(verify bool) (string, error) {
@@ -574,23 +697,20 @@ func MarshalArgs(obj interface{}, ignore []string, aliases []string) ([]string, 
 	}
 
 	// for updates, passed in data may already by mapped
-	dat, ok := obj.(map[string]interface{})
+	dat, ok := obj.(*MapData)
 	if !ok {
-		// use mobiledgex yaml here since it always omits empty
-		byt, err := yaml.Marshal(obj)
-		if err != nil {
-			return args, err
-		}
-		dat = make(map[string]interface{})
-		err = yaml.Unmarshal(byt, &dat)
+		var err error
+		dat, err = GetStructMap(obj, WithStructMapOmitEmpty())
 		if err != nil {
 			return args, err
 		}
 	}
-	// Note if generic map is passed in, it must be the StructNamespace.
-	// This is because args are also nominally in the struct namespace.
-	// It is difficult to accept JsonNamespace, because JSON collapses
-	// embedded structs, while args/yaml/mapstructure do not.
+	// If MapData passed in, it must be in either the StructNamespace
+	// or ArgsNamespace, because MapToArgs does not do any key name
+	// translation besides lower-casing it.
+	if dat.Namespace != StructNamespace && dat.Namespace != ArgsNamespace {
+		return nil, fmt.Errorf("Passed in MapData must be in the struct or args namespace, but is %s", dat.Namespace.String())
+	}
 
 	ignoremap := make(map[string]struct{})
 	if ignore != nil {
@@ -609,7 +729,7 @@ func MarshalArgs(obj interface{}, ignore []string, aliases []string) ([]string, 
 		aliasm[ar[1]] = ar[0]
 	}
 
-	return MapToArgs([]string{}, dat, ignoremap, spargs, aliasm), nil
+	return MapToArgs([]string{}, dat.Data, ignoremap, spargs, aliasm), nil
 }
 
 func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]struct{}, specialArgs map[string]string, aliases map[string]string) []string {
@@ -619,13 +739,28 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 			continue
 		}
 		k := strings.ToLower(kK)
-		if sub, ok := v.(map[string]interface{}); ok {
+		emptySet := false
+
+		value := reflect.ValueOf(v)
+		if value.Kind() == reflect.Ptr {
+			value = value.Elem()
+		}
+		// special case: check if the value is an empty list/map
+		if value.Kind() == reflect.Slice || value.Kind() == reflect.Map {
+			if value.Len() == 0 {
+				emptySet = true
+			}
+		}
+
+		if sub, ok := v.(map[string]interface{}); ok && len(sub) > 0 {
 			subargs := MapToArgs(append(prefix, k), sub, ignore, specialArgs, aliases)
 			args = append(args, subargs...)
 			continue
 		}
-		if sub, ok := v.([]interface{}); ok {
-			for ii, subv := range sub {
+		// may be []interface{} or []map[string]interface{}
+		if value.Kind() == reflect.Slice && value.Len() > 0 {
+			for ii := 0; ii < value.Len(); ii++ {
+				subv := value.Index(ii).Interface()
 				key := k
 				if reflect.ValueOf(subv).Kind() == reflect.Map {
 					// repeated struct
@@ -651,12 +786,25 @@ func MapToArgs(prefix []string, dat map[string]interface{}, ignore map[string]st
 		}
 		name = resolveAlias(name, aliases)
 
-		val := fmt.Sprintf("%v", v)
+		// use json.Marshal in case any custom marshalers have been defined
+		val := ""
+		valbytes, err := json.Marshal(v)
+		if err == nil {
+			val = string(valbytes)
+			// yaml adds quotes for strings that we want to avoid
+			if str, err := strconv.Unquote(val); err == nil {
+				val = str
+			}
+		} else {
+			val = fmt.Sprintf("%v", v)
+		}
 		if strings.ContainsAny(val, " \t\r\n") || len(val) == 0 {
 			val = strconv.Quote(val)
 		}
 		var arg string
-		if sparg == "StringToString" {
+		if emptySet {
+			arg = fmt.Sprintf("%s:%s=true", name, util.EmptySet)
+		} else if sparg == "StringToString" {
 			arg = fmt.Sprintf("%s=%s=%s", name, kK, val)
 		} else {
 			arg = fmt.Sprintf("%s=%s", name, val)
