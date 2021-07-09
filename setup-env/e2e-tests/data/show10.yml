@@ -1193,20 +1193,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
+  uri: shared.dmuus-cloud-4.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1228,20 +1226,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
+  uri: shared.dmuus-cloud-4.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1263,20 +1259,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
+  uri: shared.dmuus-cloud-7.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1298,20 +1292,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
+  uri: shared.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1333,20 +1325,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
+  uri: shared.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1368,20 +1358,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
+  uri: shared.dmuus-cloud-3.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1403,20 +1391,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
+  uri: shared.dmuus-cloud-6.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1438,20 +1424,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
+  uri: shared.dmuus-cloud-8.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1473,20 +1457,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
+  uri: shared.dmuus-cloud-3.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1508,20 +1490,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
+  uri: shared.dmuus-cloud-5.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1543,20 +1523,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
+  uri: shared.dmuus-cloud-6.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1578,20 +1556,21 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
+  uri: acmeappcosomeapplication210.reservable1.azure-cloud-9.azure.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication210-tcp-
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication210-tcp-
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication210-udp-
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1613,20 +1592,21 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
+  uri: acmeappcosomeapplication110.reservable0.gcp-cloud-10.gcp.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1648,20 +1628,21 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
+  uri: acmeappcosomeapplication210.reservable1.gcp-cloud-10.gcp.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication210-tcp-
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication210-tcp-
+    fqdnprefix: someapplication210-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication210-udp-
+    fqdnprefix: someapplication210-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1683,20 +1664,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
+  uri: shared.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1718,20 +1697,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
+  uri: shared.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1753,20 +1730,21 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
+  uri: acmeappcosomeapplication110.reservable0.azure-cloud-9.azure.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
+    fqdnprefix: someapplication110-tcp.
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
+    fqdnprefix: someapplication110-udp.
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1788,20 +1766,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
+  uri: shared.dmuus-cloud-5.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1823,20 +1799,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
+  uri: shared.dmuus-cloud-7.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:
@@ -1858,20 +1832,18 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
+  uri: shared.dmuus-cloud-8.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 10000
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 10001
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10000
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   runtimeinfo:

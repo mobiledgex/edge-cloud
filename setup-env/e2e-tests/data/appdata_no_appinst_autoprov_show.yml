@@ -677,13 +677,13 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
+  uri: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessAutoprov
   realclustername: ReservableCluster2
   mappedports:
   - proto: LProtoTcp
     internalport: 81
     publicport: 81
-    fqdnprefix: autoprovapp10-tcp-
   flavor:
     name: x1.small
   runtimeinfo:

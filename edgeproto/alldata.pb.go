@@ -808,9 +808,6 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Apps.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.Uri")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.State")
 	}
 	if _, found := tags["nocmp"]; found {

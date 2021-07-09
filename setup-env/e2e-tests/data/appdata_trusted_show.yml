@@ -505,7 +505,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: cluster1.cloudlet1.dmuus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -535,7 +534,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: cluster2.cloudlet2.dmuus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -565,13 +563,12 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: cloudlet1.dmuus.localtest.net
+  uri: shared.cloudlet1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: trustedapp10-tcp-
   flavor:
     name: x1.small
   state: Ready
@@ -606,7 +603,6 @@ appinstances:
   - proto: LProtoTcp
     internalport: 90
     publicport: 90
-    fqdnprefix: nontrustedapp10-tcp-
   flavor:
     name: x1.small
   state: Ready

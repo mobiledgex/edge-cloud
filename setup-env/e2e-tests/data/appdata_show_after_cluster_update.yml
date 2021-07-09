@@ -663,29 +663,25 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
+  uri: shared.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   - proto: LProtoTcp
     internalport: 81
     publicport: 81
-    fqdnprefix: someapplication110-tcp-
     tls: true
   - proto: LProtoTcp
     internalport: 444
     publicport: 444
-    fqdnprefix: someapplication110-tcp-
     tls: true
   flavor:
     name: x1.small
@@ -750,29 +746,25 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
+  uri: smallcluster.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   - proto: LProtoTcp
     internalport: 81
     publicport: 81
-    fqdnprefix: someapplication110-tcp-
     tls: true
   - proto: LProtoTcp
     internalport: 444
     publicport: 444
-    fqdnprefix: someapplication110-tcp-
     tls: true
   flavor:
     name: x1.small
@@ -795,6 +787,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
+  uri: shared.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoUdp
@@ -817,6 +810,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
+  uri: acmeappco1vmapp110.dmuus-cloud-1.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
@@ -845,6 +839,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
+  uri: acmeappco1vmapp210.dmuus-cloud-2.dmuus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
