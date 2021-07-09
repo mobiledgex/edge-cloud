@@ -234,7 +234,7 @@ func runUpdateApp(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateApp(c, obj)
 }
 
@@ -606,6 +606,7 @@ var AppOptionalArgs = []string{
 	"deploymentmanifest",
 	"deploymentgenerator",
 	"androidpackagename",
+	"configs:empty",
 	"configs:#.kind",
 	"configs:#.config",
 	"scalewithcluster",
@@ -618,6 +619,7 @@ var AppOptionalArgs = []string{
 	"templatedelimiter",
 	"skiphcports",
 	"trusted",
+	"requiredoutboundconnections:empty",
 	"requiredoutboundconnections:#.protocol",
 	"requiredoutboundconnections:#.port",
 	"requiredoutboundconnections:#.remoteip",
@@ -650,6 +652,7 @@ var AppComments = map[string]string{
 	"deploymentgenerator":                    "Deployment generator target to generate a basic deployment manifest",
 	"androidpackagename":                     "Android package name used to match the App name from the Android package",
 	"delopt":                                 "Override actions to Controller, one of NoAutoDelete, AutoDelete",
+	"configs:empty":                          "Customization files passed through to implementing services, specify configs:empty=true to clear",
 	"configs:#.kind":                         "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"configs:#.config":                       "Config file contents or URI reference",
 	"scalewithcluster":                       "Option to run App on all nodes of the cluster",
@@ -660,10 +663,11 @@ var AppComments = map[string]string{
 	"autoprovpolicy":                         "(_deprecated_) Auto provisioning policy name",
 	"accesstype":                             "(Deprecated) Access type, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
 	"deleteprepare":                          "Preparing to be deleted",
-	"autoprovpolicies":                       "Auto provisioning policy names, may be specified multiple times",
+	"autoprovpolicies":                       "Auto provisioning policy names, may be specified multiple times, specify autoprovpolicies:empty=true to clear",
 	"templatedelimiter":                      "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"skiphcports":                            "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002,http:443.",
 	"trusted":                                "Indicates that an instance of this app can be started on a trusted cloudlet",
+	"requiredoutboundconnections:empty":      "Connections this app require to determine if the app is compatible with a trust policy, specify requiredoutboundconnections:empty=true to clear",
 	"requiredoutboundconnections:#.protocol": "tcp, udp or icmp",
 	"requiredoutboundconnections:#.port":     "TCP or UDP port",
 	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",

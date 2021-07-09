@@ -180,7 +180,7 @@ func runUpdateCloudletPool(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateCloudletPool(c, obj)
 }
 
@@ -443,7 +443,7 @@ var CloudletPoolComments = map[string]string{
 	"fields":    "Fields are used for the Update API to specify which fields to apply",
 	"org":       "Name of the organization this pool belongs to",
 	"name":      "CloudletPool Name",
-	"cloudlets": "Cloudlets part of the pool",
+	"cloudlets": "Cloudlets part of the pool, specify cloudlets:empty=true to clear",
 }
 var CloudletPoolSpecialArgs = map[string]string{
 	"cloudlets": "StringArray",

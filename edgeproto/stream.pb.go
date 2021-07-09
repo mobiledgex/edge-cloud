@@ -1288,6 +1288,11 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+
+func (e StreamState) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(StreamState_CamelName, int32(e))
+	return json.Marshal(str)
+}
 func (m *AppInstKey) IsValidArgsForStreamAppInst() error {
 	return nil
 }

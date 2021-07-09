@@ -47,12 +47,12 @@ func testGetFieldsArgs(t *testing.T, obj interface{}, args []string, expected []
 	require.Nil(t, err, "parse args %v", args)
 	fmt.Printf("argsmap: %v\n", dat)
 
-	fields := GetSpecifiedFields(dat, obj, StructNamespace)
+	fields := GetSpecifiedFields(dat, obj)
 	require.ElementsMatch(t, expected, fields, "fields list should match")
 
 	// test GetSpecifiedFieldsData (kind of the opposite of above)
-	dmap, err := GetSpecifiedFieldsData(expected, obj, StructNamespace)
-	require.Nil(t, err, "GetSpecifiedFieldsData %v", expected)
+	dmap, err := GetStructMap(obj, WithStructMapFieldFlags(expected))
+	require.Nil(t, err, "GetStructMap fields %v", expected)
 	genArgs, err := MarshalArgs(dmap, nil, nil)
 	require.Nil(t, err, "MarshalArgs for %v", dmap)
 	require.ElementsMatch(t, args, genArgs, "args should match")
@@ -64,6 +64,10 @@ func testGetFieldsYaml(t *testing.T, obj interface{}, data string, expected []st
 	require.Nil(t, err, "unmarshal yaml data %s", data)
 	fmt.Printf("yamlmap: %v\n", in)
 
-	fields := GetSpecifiedFields(in, obj, YamlNamespace)
+	inMap := &MapData{
+		Namespace: YamlNamespace,
+		Data:      in,
+	}
+	fields := GetSpecifiedFields(inMap, obj)
 	require.ElementsMatch(t, expected, fields, "fields list should match")
 }

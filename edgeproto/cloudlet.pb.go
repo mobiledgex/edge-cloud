@@ -12434,6 +12434,11 @@ func (e *PlatformType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e PlatformType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(PlatformType_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var InfraApiAccessStrings = []string{
 	"DIRECT_ACCESS",
 	"RESTRICTED_ACCESS",
@@ -12508,6 +12513,11 @@ func (e *InfraApiAccess) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e InfraApiAccess) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(InfraApiAccess_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var OSTypeStrings = []string{
@@ -12589,6 +12599,11 @@ func (e *OSType) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e OSType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(OSType_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var ReportScheduleStrings = []string{
@@ -12675,6 +12690,11 @@ func (e *ReportSchedule) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e ReportSchedule) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(ReportSchedule_CamelName, int32(e))
+	return json.Marshal(str)
 }
 func (m *GPUDriver) IsValidArgsForCreateGPUDriver() error {
 	if m.LicenseConfigMd5Sum != "" {

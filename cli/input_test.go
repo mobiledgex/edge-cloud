@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/cli"
@@ -14,24 +15,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// protobuf tags are for testing GetSpecifiedFieldsData()
 type TestObj struct {
-	Inner1     InnerObj
-	Inner2     *InnerObj
-	unexported string
-	Arr        []string
-	Mmm        map[string]string
-	ObjArr     []InnerObj
+	Inner1     InnerObj          `protobuf:"bytes,1"`
+	Inner2     *InnerObj         `protobuf:"bytes,2"`
+	unexported string            `protobuf:"bytes,3"`
+	Arr        []string          `protobuf:"bytes,4"`
+	Mmm        map[string]string `protobuf:"bytes,5"`
+	ObjArr     []InnerObj        `protobuf:"bytes,6"`
+	ObjArr2    []InnerObj        `protobuf:"bytes,7"`
 }
 
 type InnerObj struct {
-	Name    string
-	Val     int
-	Mmm     map[string]string
-	Sublist []SublistObj
+	Name    string            `protobuf:"bytes,1"`
+	Val     int               `protobuf:"varint,2"`
+	Mmm     map[string]string `protobuf:"bytes,3"`
+	Sublist []SublistObj      `protobuf:"bytes,4"`
 }
 
 type SublistObj struct {
-	Name string
+	Name string `protobuf:"bytes,1"`
 }
 
 func TestParseArgs(t *testing.T) {
@@ -118,7 +121,7 @@ func TestParseArgs(t *testing.T) {
 		Disk:  2,
 		Ram:   3,
 	}
-	args = []string{"vcpus=1", "disk=2", "key.name=\"x1.tiny\"", "ram=3"}
+	args = []string{"vcpus=1", "disk=2", "key.name=x1.tiny", "ram=3"}
 	// basic parsing
 	testParseArgs(t, input, args, &rf, &edgeproto.Flavor{}, &edgeproto.Flavor{})
 
@@ -140,7 +143,7 @@ func TestParseArgs(t *testing.T) {
 	args = []string{"vcpus=1", "disk=2", "name=x1.tiny", "ram=3", "extra.arg=foo"}
 	_, err = input.ParseArgs(args, &edgeproto.Flavor{})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "invalid args")
+	assert.Contains(t, err.Error(), "invalid argument")
 
 	// test enum
 	input = &cli.Input{
@@ -152,6 +155,73 @@ func TestParseArgs(t *testing.T) {
 	}
 	args = []string{"ipsupport=IpSupportDynamic"}
 	testParseArgs(t, input, args, &rc, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
+
+	// For updates, we need to distinguish between empty fields to be updated,
+	// versus empty fields to be ignored. In JSON/YAML, this is accomplished
+	// by having the empty value in the file (as 0 or [] or {}), or not.
+	// For protobuf structs, this is accomplished using the Fields []string to
+	// denote the fields to update. For cli args, it's based on whether the
+	// arg is present or not. Additionally, for lists/maps on the command line,
+	// we need to distinguish between setting the whole array empty, vs setting
+	// some value in the array/map to an empty value. This is done by specifying
+	// name:empty=true to set the whole array/map to an empty value.
+	input = &cli.Input{
+		SpecialArgs: &spargs,
+		DecodeHook:  edgeproto.EnumDecodeHook,
+	}
+	args = []string{"inner1.name=name1", "arr:empty=true", "inner1.mmm:empty=true", "inner1.sublist:empty=true", "objarr:empty=true", "objarr2:0.name=nothing", "objarr2:0.sublist:empty=true"}
+	emptySets := TestObj{}
+	emptySets.Inner1.Name = "name1"
+	emptySets.Inner1.Mmm = make(map[string]string)
+	emptySets.Inner1.Sublist = make([]SublistObj, 0)
+	emptySets.Arr = []string{}
+	emptySets.ObjArr = make([]InnerObj, 0)
+	emptySets.ObjArr2 = []InnerObj{
+		{
+			Name:    "nothing",
+			Sublist: make([]SublistObj, 0),
+		},
+	}
+	fields := []string{"1.1", "1.3", "1.4", "4", "6", "7", "7.1", "7.4"}
+	testConversionEmptyFields(t, input, &emptySets, &TestObj{}, args, fields)
+}
+
+func testConversionEmptyFields(t *testing.T, input *cli.Input, obj, buf interface{}, args []string, expectedFields []string) {
+	// Note there is a subtle behavior when using JSON/YAML to marshal
+	// an object with empty maps. In go, and even in JSON/YAML files, we
+	// can differentiate between a map that is nil, versus empty.
+	// But when marshaling an object to JSON/YAML, there is no way.
+	// If using "omitempty", then both a nil and an empty map in the object
+	// will end up omitted from the marshaled output. If not using
+	// "omitempty", then both a nil and an empty map will end up as an
+	// empty value, i.e. [] or {} in the marshaled output.
+
+	// In addition, because the code that marshals an object to args
+	// uses yaml.Marshal with omitempty to avoid generating args for
+	// nil fields, we skip that test here.
+
+	// parse args into buf
+	dat, err := input.ParseArgs(args, buf)
+	require.Nil(t, err)
+	require.Equal(t, obj, buf)
+	fmt.Printf("argsmap: %+v\n", dat)
+
+	// check fields setting for update - this code mirrors the auto-generated
+	// setUpdateXXXFields functions.
+	fields := cli.GetSpecifiedFields(dat, buf)
+	sort.Strings(fields)
+	require.Equal(t, expectedFields, fields)
+
+	// convert object and fields to struct map
+	extractedDat, err := cli.GetStructMap(obj, cli.WithStructMapFieldFlags(fields))
+	require.Nil(t, err)
+	fmt.Printf("extractedDat: %#v\n", extractedDat)
+	// convert extractedDat to extractedArgs, should be the same as args
+	extractedArgs, err := cli.MarshalArgs(extractedDat, []string{}, input.AliasArgs)
+	require.Nil(t, err)
+	fmt.Printf("args: %v\n", args)
+	fmt.Printf("extractedArgs: %v\n", extractedArgs)
+	require.ElementsMatch(t, args, extractedArgs)
 }
 
 func testParseArgs(t *testing.T, input *cli.Input, args []string, expected, buf1, buf2 interface{}) {
@@ -163,11 +233,11 @@ func testParseArgs(t *testing.T, input *cli.Input, args []string, expected, buf1
 	fmt.Printf("argsmap: %v\n", dat)
 
 	// convert args to json
-	jsmap, err := cli.JsonMap(dat, buf1, cli.StructNamespace)
+	jsmap, err := cli.JsonMap(dat, buf1)
 	require.Nil(t, err)
-	fmt.Printf("jsonamp: %v\n", jsmap)
+	fmt.Printf("jsonmap: %v\n", jsmap)
 
-	byt, err := json.Marshal(jsmap)
+	byt, err := json.Marshal(jsmap.Data)
 	require.Nil(t, err)
 	fmt.Printf("json: %s\n", string(byt))
 
@@ -175,6 +245,20 @@ func testParseArgs(t *testing.T, input *cli.Input, args []string, expected, buf1
 	err = json.Unmarshal([]byte(byt), buf2)
 	require.Nil(t, err)
 	require.Equal(t, expected, buf2, "buf2 %v\n", buf2)
+
+	// get specified fields
+	fields := cli.GetSpecifiedFields(jsmap, buf1)
+	fmt.Printf("fields: %s\n", strings.Join(fields, ", "))
+	// extract args based on fields
+	extractedMap, err := cli.GetStructMap(expected, cli.WithStructMapFieldFlags(fields))
+	require.Nil(t, err)
+	fmt.Printf("extractedMap: %v\n", extractedMap)
+	// marshal into args, should match original set of args
+	extractedArgs, err := cli.MarshalArgs(extractedMap, []string{}, input.AliasArgs)
+	require.Nil(t, err)
+	fmt.Printf("args: %v\n", args)
+	fmt.Printf("extractedArgs: %v\n", extractedArgs)
+	require.ElementsMatch(t, args, extractedArgs)
 }
 
 func TestConversion(t *testing.T) {
@@ -234,12 +318,12 @@ func testConversion(t *testing.T, input *cli.Input, obj interface{}, buf, buf2 i
 	fmt.Printf("argsmap: %v\n", dat)
 
 	// convert args map to json map
-	jsmap, err := cli.JsonMap(dat, obj, cli.StructNamespace)
+	jsmap, err := cli.JsonMap(dat, obj)
 	require.Nil(t, err, "json map")
 	fmt.Printf("jsonmap: %s\n", jsmap)
 
 	// simulate client to server, check that matches original
-	byt, err := json.Marshal(jsmap)
+	byt, err := json.Marshal(jsmap.Data)
 	require.Nil(t, err, "marshal")
 	fmt.Printf("json string: %s\n", string(byt))
 	err = json.Unmarshal(byt, buf2)
@@ -399,7 +483,11 @@ func TestJsonMapFromYaml(t *testing.T) {
 		require.Nil(t, err, "%d: unmarshal json to map", ii)
 
 		// convert yaml map to json map (this is the focus of the test)
-		jsonMapFromYaml, err := cli.JsonMap(yamlMap, d.obj3, cli.YamlNamespace)
+		yamlData := &cli.MapData{
+			Namespace: cli.YamlNamespace,
+			Data:      yamlMap,
+		}
+		jsonMapFromYaml, err := cli.JsonMap(yamlData, d.obj3)
 		require.Nil(t, err, "%d: jsonMap conversion")
 
 		// Due to difference with enums and numeric types
@@ -408,7 +496,7 @@ func TestJsonMapFromYaml(t *testing.T) {
 		// objects and compare the objects to verify.
 		_, err = cli.WeakDecode(jsonMap, d.obj3, edgeproto.EnumDecodeHook)
 		require.Nil(t, err, "%d: decode jsonMap")
-		_, err = cli.WeakDecode(jsonMapFromYaml, d.obj4, edgeproto.EnumDecodeHook)
+		_, err = cli.WeakDecode(jsonMapFromYaml.Data, d.obj4, edgeproto.EnumDecodeHook)
 		require.Nil(t, err, "%d: decode jsonMapFromYaml")
 		require.Equal(t, d.obj3, d.obj4, "%d: objects equal after mapping")
 	}

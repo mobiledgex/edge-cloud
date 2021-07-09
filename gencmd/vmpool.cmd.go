@@ -242,7 +242,7 @@ func runUpdateVMPool(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateVMPool(c, obj)
 }
 
@@ -541,6 +541,7 @@ var VMPoolRequiredArgs = []string{
 	"vmpool",
 }
 var VMPoolOptionalArgs = []string{
+	"vms:empty",
 	"vms:#.name",
 	"vms:#.netinfo.externalip",
 	"vms:#.netinfo.internalip",
@@ -555,6 +556,7 @@ var VMPoolComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
 	"vmpool-org":               "Organization of the vmpool",
 	"vmpool":                   "Name of the vmpool",
+	"vms:empty":                "list of VMs to be part of VM pool, specify vms:empty=true to clear",
 	"vms:#.name":               "VM Name",
 	"vms:#.netinfo.externalip": "External IP",
 	"vms:#.netinfo.internalip": "Internal IP",
@@ -567,9 +569,9 @@ var VMPoolComments = map[string]string{
 	"vms:#.flavor.vcpus":       "Number of VCPU cores on the Cloudlet",
 	"vms:#.flavor.ram":         "Ram in MB on the Cloudlet",
 	"vms:#.flavor.disk":        "Amount of disk in GB on the Cloudlet",
-	"vms:#.flavor.propmap":     "OS Flavor Properties, if any",
+	"vms:#.flavor.propmap":     "OS Flavor Properties, if any, specify vms:#.flavor.propmap:empty=true to clear",
 	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
-	"errors":                   "Any errors trying to add/remove VM to/from VM Pool",
+	"errors":                   "Any errors trying to add/remove VM to/from VM Pool, specify errors:empty=true to clear",
 	"crmoverride":              "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 }
 var VMPoolSpecialArgs = map[string]string{

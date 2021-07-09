@@ -806,6 +806,11 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e LProto) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(LProto_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var HealthCheckStrings = []string{
 	"HEALTH_CHECK_UNKNOWN",
 	"HEALTH_CHECK_FAIL_ROOTLB_OFFLINE",
@@ -890,6 +895,11 @@ func (e *HealthCheck) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e HealthCheck) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(HealthCheck_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var CloudletStateStrings = []string{
@@ -996,6 +1006,11 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e CloudletState) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(CloudletState_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var MaintenanceStateStrings = []string{
@@ -1117,6 +1132,11 @@ func (e *MaintenanceState) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e MaintenanceState) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(MaintenanceState_CamelName, int32(e))
+	return json.Marshal(str)
 }
 func (m *AppPort) Size() (n int) {
 	if m == nil {

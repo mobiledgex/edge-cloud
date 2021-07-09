@@ -368,7 +368,7 @@ func runUpdateAppInst(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateAppInst(c, obj)
 }
 
@@ -792,6 +792,7 @@ var AppInstOptionalArgs = []string{
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
+	"configs:empty",
 	"configs:#.kind",
 	"configs:#.config",
 	"healthcheck",
@@ -827,6 +828,7 @@ var AppInstComments = map[string]string{
 	"cloudletloc.speed":              "speed (IOS) / velocity (Android) (meters/sec)",
 	"uri":                            "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.",
 	"liveness":                       "Liveness of instance (see Liveness), one of LivenessUnknown, LivenessStatic, LivenessDynamic, LivenessAutoprov",
+	"mappedports:empty":              "For instances accessible via a shared load balancer, defines the external ports on the shared load balancer that map to the internal ports External ports should be appended to the Uri for L4 access., specify mappedports:empty=true to clear",
 	"mappedports:#.proto":            "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
 	"mappedports:#.internalport":     "Container port",
 	"mappedports:#.publicport":       "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
@@ -836,13 +838,14 @@ var AppInstComments = map[string]string{
 	"mappedports:#.nginx":            "use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"flavor":                         "Flavor name",
 	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
-	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet",
+	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet, specify errors:empty=true to clear",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
-	"runtimeinfo.containerids":       "List of container names",
+	"runtimeinfo.containerids":       "List of container names, specify runtimeinfo.containerids:empty=true to clear",
 	"autoclusteripaccess":            "(Deprecated) IpAccess for auto-clusters. Ignored otherwise., one of IpAccessUnknown, IpAccessDedicated, IpAccessShared",
 	"revision":                       "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
 	"updatemultiple":                 "Allow multiple instances to be updated at once",
+	"configs:empty":                  "Customization files passed through to implementing services, specify configs:empty=true to clear",
 	"configs:#.kind":                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"configs:#.config":               "Config file contents or URI reference",
 	"healthcheck":                    "Health Check status, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
@@ -1074,6 +1077,7 @@ var UpdateAppInstOptionalArgs = []string{
 	"cluster",
 	"cluster-org",
 	"crmoverride",
+	"configs:empty",
 	"configs:#.kind",
 	"configs:#.config",
 	"privacypolicy",

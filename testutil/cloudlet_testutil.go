@@ -965,7 +965,11 @@ func (r *Run) GPUDriverApi(data *[]edgeproto.GPUDriver, dataMap interface{}, dat
 				*r.Rc = false
 				return
 			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			yamlData := cli.MapData{
+				Namespace: cli.YamlNamespace,
+				Data:      objMap,
+			}
+			obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)
 
 			out, err := r.client.UpdateGPUDriver(r.ctx, obj)
 			if err != nil {
@@ -1173,7 +1177,11 @@ func (r *Run) CloudletApi(data *[]edgeproto.Cloudlet, dataMap interface{}, dataO
 				*r.Rc = false
 				return
 			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			yamlData := cli.MapData{
+				Namespace: cli.YamlNamespace,
+				Data:      objMap,
+			}
+			obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)
 
 			out, err := r.client.UpdateCloudlet(r.ctx, obj)
 			if err != nil {
