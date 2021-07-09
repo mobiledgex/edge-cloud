@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -275,6 +276,12 @@ func TestAppInstApi(t *testing.T) {
 		if obj.Key.AppKey.Name == "helmApp" || obj.Key.AppKey.Name == "vm lb" {
 			continue
 		}
+		cloudlet := edgeproto.Cloudlet{}
+		found := cloudletApi.cache.Get(&obj.Key.ClusterInstKey.CloudletKey, &cloudlet)
+		require.True(t, found)
+		features := platform.Features{}
+		operator := obj.Key.ClusterInstKey.CloudletKey.Organization
+
 		for _, port := range obj.MappedPorts {
 			lproto, err := edgeproto.LProtoStr(port.Proto)
 			if err != nil {
@@ -283,7 +290,10 @@ func TestAppInstApi(t *testing.T) {
 			if lproto == "http" {
 				continue
 			}
-			test_prefix := fmt.Sprintf("%s-%s-", util.DNSSanitize(app_name), lproto)
+			test_prefix := ""
+			if isIPAllocatedPerService(ctx, cloudlet.PlatformType, &features, operator) {
+				test_prefix = fmt.Sprintf("%s-%s-", util.DNSSanitize(app_name), lproto)
+			}
 			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}

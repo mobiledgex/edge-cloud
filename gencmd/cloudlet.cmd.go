@@ -1401,6 +1401,87 @@ func FindFlavorMatchs(c *cli.Command, data []edgeproto.FlavorMatch, err *error) 
 	}
 }
 
+var ShowFlavorsForCloudletCmd = &cli.Command{
+	Use:          "ShowFlavorsForCloudlet",
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.FlavorKey{},
+	Run:          runShowFlavorsForCloudlet,
+}
+
+func runShowFlavorsForCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowFlavorsForCloudlet(c, obj)
+}
+
+func ShowFlavorsForCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletApiCmd.ShowFlavorsForCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowFlavorsForCloudlet failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.FlavorKey, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowFlavorsForCloudlet recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowFlavorsForCloudlets(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowFlavorsForCloudlet %v\n", data[ii])
+		myerr := ShowFlavorsForCloudlet(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var RevokeAccessKeyCmd = &cli.Command{
 	Use:          "RevokeAccessKey",
 	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
@@ -1604,6 +1685,7 @@ var CloudletApiCmds = []*cobra.Command{
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
+	ShowFlavorsForCloudletCmd.GenCmd(),
 	RevokeAccessKeyCmd.GenCmd(),
 	GenerateAccessKeyCmd.GenCmd(),
 	PlatformDeleteCloudletCmd.GenCmd(),
@@ -1890,20 +1972,6 @@ var CloudletMetricsApiCmds = []*cobra.Command{
 	ShowCloudletMetricsCmd.GenCmd(),
 }
 
-var CloudletKeyRequiredArgs = []string{}
-var CloudletKeyOptionalArgs = []string{
-	"cloudlet-org",
-	"cloudlet",
-}
-var CloudletKeyAliasArgs = []string{
-	"cloudlet-org=organization",
-	"cloudlet=name",
-}
-var CloudletKeyComments = map[string]string{
-	"cloudlet-org": "Organization of the cloudlet site",
-	"cloudlet":     "Name of the cloudlet",
-}
-var CloudletKeySpecialArgs = map[string]string{}
 var OperationTimeLimitsRequiredArgs = []string{}
 var OperationTimeLimitsOptionalArgs = []string{
 	"createclusterinsttimeout",

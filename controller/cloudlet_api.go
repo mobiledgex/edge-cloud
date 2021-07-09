@@ -2147,3 +2147,25 @@ func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 
 	return &quotaProps, nil
 }
+
+func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletApi_ShowFlavorsForCloudletServer) error {
+	ctx := cb.Context()
+	allMetaFlavors := make(map[edgeproto.FlavorKey]struct{})
+	flavorCache := &flavorApi.cache
+	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
+		allMetaFlavors[*k] = struct{}{}
+	})
+	for flavor, _ := range allMetaFlavors {
+		fm := edgeproto.FlavorMatch{
+			Key:        *in,
+			FlavorName: flavor.Name,
+		}
+		match, err := s.FindFlavorMatch(ctx, &fm)
+		if err != nil {
+			continue
+		}
+		cb.Send(&flavor)
+		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", in)
+	}
+	return nil
+}

@@ -5,6 +5,7 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "result.proto";
+import "cloudletkey.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
 import "gogoproto/gogo.proto";
@@ -104,7 +105,7 @@ enum DeleteType {
   AUTO_DELETE = 1;
 }
 
-// AccessType
+// (Deprecated) AccessType
 //
 // AccessType indicates how to access the app
 //
@@ -183,7 +184,7 @@ message App {
   reserved 27;
   // (_deprecated_) Auto provisioning policy name
   string auto_prov_policy = 28;
-  // Access type
+  // (Deprecated) Access type
   AccessType access_type = 29; 
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
@@ -241,6 +242,17 @@ message AppAutoProvPolicy {
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
 }
 
+message DeploymentCloudletRequest {
+   // Discover potential App Cloudlets
+   App app = 1;
+   // Attempt to qualify cloudlet resources for deployment
+   bool dry_run_deploy = 2;
+   // Optional number of worker VMs in dry run K8s Cluster, default = 2
+   uint32 num_nodes = 3;
+   option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
+   option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
+}
+
 service AppApi {
   // Create Application. Creates a definition for an application instance for Cloudlet deployment.
   rpc CreateApp(App) returns (Result) {
@@ -295,5 +307,15 @@ service AppApi {
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
+  }
+  // Discover cloudlets supporting deployments of App.DefaultFlavor
+  rpc ShowCloudletsForAppDeployment(DeploymentCloudletRequest) returns (stream CloudletKey) {
+   option (google.api.http) =  {
+     post: "/showmapping/deploymentcloudlets"
+     body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.mc2_custom_authz) = true;
+    option (protogen.stream_out_incremental) = true;
   }
 }
