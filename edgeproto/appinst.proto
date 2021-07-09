@@ -99,7 +99,7 @@ message AppInst {
   // Cached location of the cloudlet
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
   // Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.
-  string uri = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string uri = 4 [(protogen.backend) = true];
   // Liveness of instance (see Liveness)
   Liveness liveness = 6 [(protogen.backend) = true];
   // For instances accessible via a shared load balancer, defines the external
