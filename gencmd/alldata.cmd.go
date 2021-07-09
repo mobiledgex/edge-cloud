@@ -214,9 +214,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].Uri = ""
-		}
 		for i1 := 0; i1 < len(in.AppInstances[i0].MappedPorts); i1++ {
 		}
 		if _, found := tags["nocmp"]; found {
