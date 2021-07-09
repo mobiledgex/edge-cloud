@@ -445,6 +445,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	var reservedClusterInstKey *edgeproto.ClusterInstKey
 	realClusterName := in.RealClusterName
 	var cloudletFeatures *platform.Features
+	cloudletCompatibilityVersion := uint32(0)
 
 	defer func() {
 		if reterr != nil {
@@ -464,6 +465,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		reservedAutoClusterId = -1
 		reservedClusterInstKey = nil
 		in.RealClusterName = realClusterName
+		cloudletCompatibilityVersion = 0
 
 		// lookup App so we can get flavor for reservable ClusterInst
 		var app edgeproto.App
@@ -489,6 +491,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
 			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
 		}
+		cloudletCompatibilityVersion = info.CompatibilityVersion
 		cloudletFeatures, err = GetCloudletFeatures(ctx, cloudlet.PlatformType)
 		if err != nil {
 			return fmt.Errorf("Failed to get features for platform: %s", err)
@@ -524,7 +527,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !cloudcommon.IsClusterInstReqd(&app) {
 				return fmt.Errorf("No cluster required for App deployment type %s, cannot use cluster name %s which attempts to use or create a ClusterInst", app.Deployment, cloudcommon.AutoClusterPrefix)
 			}
-			if info.CompatibilityVersion < cloudcommon.CRMCompatibilityAutoReservableCluster {
+			if cloudletCompatibilityVersion < cloudcommon.CRMCompatibilityAutoReservableCluster {
 				autoClusterType = DeprecatedAutoCluster
 			}
 			if autoClusterType != DeprecatedAutoCluster {
@@ -958,7 +961,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
 		} else if ipaccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts {
-			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
+			if cloudletCompatibilityVersion < cloudcommon.CRMCompatibilitySharedRootLBFQDN {
+				// CRM has issued DNS entry only for old style FQDN.
+				// This case can be removed once all CRMs have been
+				// updated to current version.
+				in.Uri = cloudcommon.GetRootLBFQDNOld(&in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
+			} else {
+				// current style FQDN
+				in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
+			}
 			if cloudletRefs.RootLbPorts == nil {
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
 			}
@@ -1006,7 +1017,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		} else {
-			if isIPAllocatedPerService(ctx, cloudlet.PlatformType, cloudletFeatures, clusterInst.Key.CloudletKey.Organization) {
+			if isIPAllocatedPerService(ctx, cloudlet.PlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
 				//dedicated access in which each service gets a different ip
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				for ii, _ := range ports {
@@ -1020,9 +1031,18 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 			}
 		}
+		if app.InternalPorts || len(ports) == 0 {
+			// no external access to AppInst, no need for URI
+			in.Uri = ""
+		}
+		if err := cloudcommon.CheckFQDNLengths("", in.Uri); err != nil {
+			return err
+		}
 		if len(ports) > 0 {
 			in.MappedPorts = ports
-			setPortFQDNPrefixes(in, &app)
+			if isIPAllocatedPerService(ctx, cloudlet.PlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
+				setPortFQDNPrefixes(in, &app)
+			}
 		}
 
 		// TODO: Make sure resources are available
@@ -1866,6 +1886,9 @@ func setPortFQDNPrefixes(in *edgeproto.AppInst, app *edgeproto.App) error {
 		}
 		for ii, _ := range in.MappedPorts {
 			setPortFQDNPrefix(&in.MappedPorts[ii], objs)
+			if err := cloudcommon.CheckFQDNLengths(in.MappedPorts[ii].FqdnPrefix, in.Uri); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
