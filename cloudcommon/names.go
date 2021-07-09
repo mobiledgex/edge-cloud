@@ -222,11 +222,11 @@ func ServiceFQDN(svcName, baseFQDN string) string {
 func CheckFQDNLengths(prefix, uri string) error {
 	fqdn := prefix + uri
 	if len(fqdn) > 253 {
-		return fmt.Errorf(`DNS name "%s" exceeds 253 chars, please shorten some names`, fqdn)
+		return fmt.Errorf("DNS name %q exceeds 253 chars, please shorten some names", fqdn)
 	}
 	for _, label := range strings.Split(fqdn, ".") {
 		if len(label) > 63 {
-			return fmt.Errorf(`Label "%s" of DNS name "%s" exceeds 63 chars, please shorten it`, label, fqdn)
+			return fmt.Errorf("Label %q of DNS name %q exceeds 63 chars, please shorten it", label, fqdn)
 		}
 	}
 	return nil
