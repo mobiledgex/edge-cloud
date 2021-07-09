@@ -210,7 +210,7 @@ func runUpdateTrustPolicy(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateTrustPolicy(c, obj)
 }
 
@@ -374,6 +374,7 @@ var TrustPolicyRequiredArgs = []string{
 	"name",
 }
 var TrustPolicyOptionalArgs = []string{
+	"outboundsecurityrules:empty",
 	"outboundsecurityrules:#.protocol",
 	"outboundsecurityrules:#.portrangemin",
 	"outboundsecurityrules:#.portrangemax",
@@ -387,6 +388,7 @@ var TrustPolicyComments = map[string]string{
 	"fields":                               "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                         "Name of the organization for the cluster that this policy will apply to",
 	"name":                                 "Policy name",
+	"outboundsecurityrules:empty":          "list of outbound security rules for whitelisting traffic, specify outboundsecurityrules:empty=true to clear",
 	"outboundsecurityrules:#.protocol":     "tcp, udp, icmp",
 	"outboundsecurityrules:#.portrangemin": "TCP or UDP port range start",
 	"outboundsecurityrules:#.portrangemax": "TCP or UDP port range end",

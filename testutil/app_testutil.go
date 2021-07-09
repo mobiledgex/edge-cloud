@@ -382,7 +382,11 @@ func (r *Run) AppApi(data *[]edgeproto.App, dataMap interface{}, dataOut interfa
 				*r.Rc = false
 				return
 			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			yamlData := cli.MapData{
+				Namespace: cli.YamlNamespace,
+				Data:      objMap,
+			}
+			obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)
 
 			out, err := r.client.UpdateApp(r.ctx, obj)
 			if err != nil {

@@ -5627,6 +5627,11 @@ func (e *PowerState) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+
+func (e PowerState) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(PowerState_CamelName, int32(e))
+	return json.Marshal(str)
+}
 func (m *AppInst) IsValidArgsForCreateAppInst() error {
 	if m.CloudletLoc.Latitude != 0 {
 		return fmt.Errorf("Invalid field specified: CloudletLoc.Latitude, this field is only for internal use")

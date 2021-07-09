@@ -7461,6 +7461,11 @@ func (e *IDTypes) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e IDTypes) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(IDTypes_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var ReplyStatusStrings = []string{
 	"RS_UNDEFINED",
 	"RS_SUCCESS",
@@ -7540,6 +7545,11 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e ReplyStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(ReplyStatus_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var FindStatusStrings = []string{
@@ -7623,6 +7633,11 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e FindCloudletReply_FindStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var TowerStatusStrings = []string{
 	"TOWER_UNKNOWN",
 	"CONNECTED_TO_SPECIFIED_TOWER",
@@ -7702,6 +7717,11 @@ func (e *VerifyLocationReply_TowerStatus) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e VerifyLocationReply_TowerStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(VerifyLocationReply_TowerStatus_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var GPSLocationStatusStrings = []string{
@@ -7810,6 +7830,11 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e VerifyLocationReply_GPSLocationStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var LocStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_FOUND",
@@ -7889,6 +7914,11 @@ func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e GetLocationReply_LocStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var AIStatusStrings = []string{
@@ -7972,6 +8002,11 @@ func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e AppInstListReply_AIStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var FLStatusStrings = []string{
 	"FL_UNDEFINED",
 	"FL_SUCCESS",
@@ -8051,6 +8086,11 @@ func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e FqdnListReply_FLStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var AOFStatusStrings = []string{
@@ -8134,6 +8174,11 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e AppOfficialFqdnReply_AOFStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(AppOfficialFqdnReply_AOFStatus_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var DlgCommTypeStrings = []string{
 	"DLG_UNDEFINED",
 	"DLG_SECURE",
@@ -8213,6 +8258,11 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e DynamicLocGroupRequest_DlgCommType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var ClientEventTypeStrings = []string{
@@ -8309,6 +8359,11 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e ClientEdgeEvent_ClientEventType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(ClientEdgeEvent_ClientEventType_CamelName, int32(e))
+	return json.Marshal(str)
 }
 
 var ServerEventTypeStrings = []string{
@@ -8420,6 +8475,11 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e ServerEdgeEvent_ServerEventType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(ServerEdgeEvent_ServerEventType_CamelName, int32(e))
+	return json.Marshal(str)
 }
 func (m *RegisterClientRequest) IsValidArgsForRegisterClient() error {
 	return nil

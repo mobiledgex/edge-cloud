@@ -162,7 +162,7 @@ func runUpdateAutoScalePolicy(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateAutoScalePolicy(c, obj)
 }
 

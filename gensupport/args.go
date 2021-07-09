@@ -41,19 +41,20 @@ func GetInputMessages(g *generator.Generator, support *PluginSupport) map[string
 	return allInputDescs
 }
 
-func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, prefixMessageToAlias bool, count int) {
-	generateArgs(g, support, desc, nil, prefixMessageToAlias, count)
+func GenerateMessageArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, methodGroup *MethodGroup, prefixMessageToAlias bool, count int) {
+	generateArgs(g, support, desc, nil, methodGroup, prefixMessageToAlias, count)
 }
 
-func GenerateMethodArgs(g *generator.Generator, support *PluginSupport, method *descriptor.MethodDescriptorProto, prefixMessageToAlias bool, count int) {
+func GenerateMethodArgs(g *generator.Generator, support *PluginSupport, method *descriptor.MethodDescriptorProto, methodGroups map[string]*MethodGroup, prefixMessageToAlias bool, count int) {
 	if !HasMethodArgs(method) {
 		return
 	}
 	desc := GetDesc(g, method.GetInputType())
-	generateArgs(g, support, desc, method, prefixMessageToAlias, count)
+	methodGroup := methodGroups[*desc.DescriptorProto.Name]
+	generateArgs(g, support, desc, method, methodGroup, prefixMessageToAlias, count)
 }
 
-func generateArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto, prefixMessageToAlias bool, count int) {
+func generateArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto, methodGroup *MethodGroup, prefixMessageToAlias bool, count int) {
 	if desc.Options != nil && desc.Options.MapEntry != nil && *desc.Options.MapEntry == true {
 		// descriptor for map entry, skip
 		return
@@ -61,8 +62,14 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 
 	message := desc.DescriptorProto
 	msgname := *message.Name
+	isUpdate := false
 	if method != nil {
 		msgname = *method.Name
+		if strings.HasPrefix(msgname, "Update") {
+			isUpdate = true
+		}
+	} else if methodGroup != nil {
+		isUpdate = methodGroup.HasUpdate
 	}
 
 	aliasSpec := GetAlias(message)
@@ -93,7 +100,7 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	}
 
 	// find all possible args
-	allargs, specialArgs := GetArgs(g, support, []string{}, desc)
+	allargs, specialArgs := GetArgs(g, support, []string{}, desc, isUpdate)
 
 	// generate required args (set by Key)
 	requiredMap := make(map[string]struct{})
@@ -225,7 +232,7 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 	g.P("}")
 }
 
-func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, desc *generator.Descriptor) ([]Arg, map[string]string) {
+func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, desc *generator.Descriptor, isUpdate bool) ([]Arg, map[string]string) {
 	allargs := []Arg{}
 	specialArgs := make(map[string]string)
 	msg := desc.DescriptorProto
@@ -241,16 +248,30 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			Name:    hierName,
 			Comment: comment,
 		}
+		clearComment := ""
+		if isUpdate {
+			clearComment = fmt.Sprintf(", specify %s:%s=true to clear", strings.ToLower(arg.Name), util.EmptySet)
+		}
 		mapType := support.GetMapType(g, field, WithNoImport())
 		if mapType != nil && mapType.FlagType != "" {
 			specialArgs[hierName] = mapType.FlagType
+			if arg.Comment != "" && clearComment != "" {
+				arg.Comment += clearComment
+			}
 			allargs = append(allargs, arg)
 		} else if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 			subDesc := GetDesc(g, field.GetTypeName())
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				if arg.Comment != "" && clearComment != "" {
+					// this adds an extra arg that is only
+					// used for clearing the list/map
+					arg.Comment += clearComment
+					arg.Name += ":" + util.EmptySet
+					allargs = append(allargs, arg)
+				}
 				name = name + ":#"
 			}
-			subArgs, subSpecialArgs := GetArgs(g, support, append(parents, name), subDesc)
+			subArgs, subSpecialArgs := GetArgs(g, support, append(parents, name), subDesc, isUpdate)
 			allargs = append(allargs, subArgs...)
 			for k, v := range subSpecialArgs {
 				specialArgs[k] = v
@@ -274,6 +295,9 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 		} else {
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED && *field.Type == descriptor.FieldDescriptorProto_TYPE_STRING {
 				specialArgs[hierName] = "StringArray"
+				if name != "Fields" && arg.Comment != "" && clearComment != "" {
+					arg.Comment += clearComment
+				}
 			}
 			allargs = append(allargs, arg)
 		}
