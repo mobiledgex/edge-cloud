@@ -39,6 +39,49 @@ func (r *RateLimitSettings) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+// TODO: Consolidate with other validate function
+func (f *FlowRateLimitSettings) Validate(fields map[string]struct{}) error {
+	for field, _ := range fields {
+		switch field {
+		case FlowRateLimitSettingsFieldSettingsFlowAlgorithm:
+			if f.Settings.FlowAlgorithm == FlowRateLimitAlgorithm_UNKNOWN_FLOW_ALGORITHM {
+				return fmt.Errorf("Invalid FlowAlgorithm %v", f.Settings.FlowAlgorithm)
+			}
+		case FlowRateLimitSettingsFieldSettingsReqsPerSecond:
+			if f.Settings.ReqsPerSecond <= 0 {
+				return fmt.Errorf("Invalid ReqsPerSecond %f, must be greater than 0", f.Settings.ReqsPerSecond)
+			}
+		case FlowRateLimitSettingsFieldSettingsBurstSize:
+			if f.Settings.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM {
+				if f.Settings.BurstSize <= 0 {
+					return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", f.Settings.BurstSize)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (m *MaxReqsRateLimitSettings) Validate(fields map[string]struct{}) error {
+	for field, _ := range fields {
+		switch field {
+		case MaxReqsRateLimitSettingsFieldSettingsMaxReqsAlgorithm:
+			if m.Settings.MaxReqsAlgorithm == MaxReqsRateLimitAlgorithm_UNKNOWN_MAX_REQS_ALGORITHM {
+				return fmt.Errorf("Invalid MaxReqsAlgorithm %v", m.Settings.MaxReqsAlgorithm)
+			}
+		case MaxReqsRateLimitSettingsFieldSettingsMaxRequests:
+			if m.Settings.MaxRequests <= 0 {
+				return fmt.Errorf("Invalid MaxRequests %d, must be greater than 0", m.Settings.MaxRequests)
+			}
+		case MaxReqsRateLimitSettingsFieldSettingsInterval:
+			if m.Settings.Interval <= 0 {
+				return fmt.Errorf("Invalid Interval %d, must be greater than 0", m.Settings.Interval)
+			}
+		}
+	}
+	return nil
+}
+
 func (key *RateLimitSettingsKey) ValidateKey() error {
 	if key == nil {
 		return fmt.Errorf("Nil key")
@@ -53,6 +96,26 @@ func (key *RateLimitSettingsKey) ValidateKey() error {
 		return fmt.Errorf("Invalid ApiEndpointType")
 	}
 	return nil
+}
+
+func (key *FlowRateLimitSettingsKey) ValidateKey() error {
+	if key == nil {
+		return fmt.Errorf("Nil key")
+	}
+	if key.FlowSettingsName == "" {
+		return fmt.Errorf("Invalid FlowSettingsName")
+	}
+	return key.RateLimitKey.ValidateKey()
+}
+
+func (key *MaxReqsRateLimitSettingsKey) ValidateKey() error {
+	if key == nil {
+		return fmt.Errorf("Nil key")
+	}
+	if key.MaxReqsSettingsName == "" {
+		return fmt.Errorf("Invalid MaxReqsSettingsName")
+	}
+	return key.RateLimitKey.ValidateKey()
 }
 
 func GetRateLimitSettingsKey(apiName string, apiEndpointType ApiEndpointType, rateLimitTarget RateLimitTarget) RateLimitSettingsKey {
@@ -72,8 +135,8 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
 			ApiName:         GlobalApiName,
 		},
-		FlowSettings: []*FlowSettings{
-			&FlowSettings{
+		FlowSettings: map[string]*FlowSettings{
+			"dmeglobalallreqs1": &FlowSettings{
 				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 25000,
 				BurstSize:     250,
@@ -86,8 +149,8 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
 			ApiName:         "VerifyLocation",
 		},
-		FlowSettings: []*FlowSettings{
-			&FlowSettings{
+		FlowSettings: map[string]*FlowSettings{
+			"verifylocallreqs1": &FlowSettings{
 				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 5000,
 				BurstSize:     50,
@@ -101,8 +164,8 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 			RateLimitTarget: RateLimitTarget_PER_IP,
 			ApiName:         GlobalApiName,
 		},
-		FlowSettings: []*FlowSettings{
-			&FlowSettings{
+		FlowSettings: map[string]*FlowSettings{
+			"dmeglobalperip1": &FlowSettings{
 				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 10000,
 				BurstSize:     100,
@@ -115,8 +178,8 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 			RateLimitTarget: RateLimitTarget_PER_IP,
 			ApiName:         "VerifyLocation",
 		},
-		FlowSettings: []*FlowSettings{
-			&FlowSettings{
+		FlowSettings: map[string]*FlowSettings{
+			"verifylocperip1": &FlowSettings{
 				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 1000,
 				BurstSize:     25,

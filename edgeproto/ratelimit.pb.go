@@ -232,6 +232,89 @@ func (m *FlowSettings) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_FlowSettings proto.InternalMessageInfo
 
+type FlowRateLimitSettingsKey struct {
+	// Unique name for FlowRateLimitSettings (there can be multiple FlowSettings per RateLimitSettingsKey)
+	FlowSettingsName string `protobuf:"bytes,1,opt,name=flow_settings_name,json=flowSettingsName,proto3" json:"flow_settings_name,omitempty"`
+	// Key that identifies api and rate limit target for settings
+	RateLimitKey RateLimitSettingsKey `protobuf:"bytes,2,opt,name=rate_limit_key,json=rateLimitKey,proto3" json:"rate_limit_key"`
+}
+
+func (m *FlowRateLimitSettingsKey) Reset()         { *m = FlowRateLimitSettingsKey{} }
+func (m *FlowRateLimitSettingsKey) String() string { return proto.CompactTextString(m) }
+func (*FlowRateLimitSettingsKey) ProtoMessage()    {}
+func (*FlowRateLimitSettingsKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{2}
+}
+func (m *FlowRateLimitSettingsKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FlowRateLimitSettingsKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FlowRateLimitSettingsKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FlowRateLimitSettingsKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowRateLimitSettingsKey.Merge(m, src)
+}
+func (m *FlowRateLimitSettingsKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *FlowRateLimitSettingsKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlowRateLimitSettingsKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FlowRateLimitSettingsKey proto.InternalMessageInfo
+
+type FlowRateLimitSettings struct {
+	// Fields are used for the Update API to specify which fields to apply
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
+	// required: true
+	// Unique identifier key
+	Key FlowRateLimitSettingsKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
+	// FlowSettings
+	Settings *FlowSettings `protobuf:"bytes,3,opt,name=settings,proto3" json:"settings,omitempty"`
+}
+
+func (m *FlowRateLimitSettings) Reset()         { *m = FlowRateLimitSettings{} }
+func (m *FlowRateLimitSettings) String() string { return proto.CompactTextString(m) }
+func (*FlowRateLimitSettings) ProtoMessage()    {}
+func (*FlowRateLimitSettings) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{3}
+}
+func (m *FlowRateLimitSettings) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FlowRateLimitSettings) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FlowRateLimitSettings.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FlowRateLimitSettings) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowRateLimitSettings.Merge(m, src)
+}
+func (m *FlowRateLimitSettings) XXX_Size() int {
+	return m.Size()
+}
+func (m *FlowRateLimitSettings) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlowRateLimitSettings.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FlowRateLimitSettings proto.InternalMessageInfo
+
 type MaxReqsSettings struct {
 	// MaxReqs Rate Limit Algorithm
 	MaxReqsAlgorithm MaxReqsRateLimitAlgorithm `protobuf:"varint,1,opt,name=max_reqs_algorithm,json=maxReqsAlgorithm,proto3,enum=edgeproto.MaxReqsRateLimitAlgorithm" json:"max_reqs_algorithm,omitempty"`
@@ -245,7 +328,7 @@ func (m *MaxReqsSettings) Reset()         { *m = MaxReqsSettings{} }
 func (m *MaxReqsSettings) String() string { return proto.CompactTextString(m) }
 func (*MaxReqsSettings) ProtoMessage()    {}
 func (*MaxReqsSettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{2}
+	return fileDescriptor_9c81fd649b00920f, []int{4}
 }
 func (m *MaxReqsSettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -274,23 +357,104 @@ func (m *MaxReqsSettings) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MaxReqsSettings proto.InternalMessageInfo
 
-type RateLimitSettings struct {
+type MaxReqsRateLimitSettingsKey struct {
+	// Unique name for MaxReqsRateLimitSettings (there can be multiple MaxReqsSettings per RateLimitSettingsKey)
+	MaxReqsSettingsName string `protobuf:"bytes,1,opt,name=max_reqs_settings_name,json=maxReqsSettingsName,proto3" json:"max_reqs_settings_name,omitempty"`
+	// Key that identifies api and rate limit target for settings
+	RateLimitKey RateLimitSettingsKey `protobuf:"bytes,2,opt,name=rate_limit_key,json=rateLimitKey,proto3" json:"rate_limit_key"`
+}
+
+func (m *MaxReqsRateLimitSettingsKey) Reset()         { *m = MaxReqsRateLimitSettingsKey{} }
+func (m *MaxReqsRateLimitSettingsKey) String() string { return proto.CompactTextString(m) }
+func (*MaxReqsRateLimitSettingsKey) ProtoMessage()    {}
+func (*MaxReqsRateLimitSettingsKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{5}
+}
+func (m *MaxReqsRateLimitSettingsKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MaxReqsRateLimitSettingsKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MaxReqsRateLimitSettingsKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MaxReqsRateLimitSettingsKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaxReqsRateLimitSettingsKey.Merge(m, src)
+}
+func (m *MaxReqsRateLimitSettingsKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *MaxReqsRateLimitSettingsKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaxReqsRateLimitSettingsKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaxReqsRateLimitSettingsKey proto.InternalMessageInfo
+
+type MaxReqsRateLimitSettings struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// required: true
 	// Unique identifier key
-	Key RateLimitSettingsKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
-	// List of FlowSettings
-	FlowSettings []*FlowSettings `protobuf:"bytes,7,rep,name=flow_settings,json=flowSettings,proto3" json:"flow_settings,omitempty"`
-	// List of MaxReqsSettings
-	MaxReqsSettings []*MaxReqsSettings `protobuf:"bytes,8,rep,name=max_reqs_settings,json=maxReqsSettings,proto3" json:"max_reqs_settings,omitempty"`
+	Key MaxReqsRateLimitSettingsKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
+	// MaxReqsSettings
+	Settings *MaxReqsSettings `protobuf:"bytes,3,opt,name=settings,proto3" json:"settings,omitempty"`
+}
+
+func (m *MaxReqsRateLimitSettings) Reset()         { *m = MaxReqsRateLimitSettings{} }
+func (m *MaxReqsRateLimitSettings) String() string { return proto.CompactTextString(m) }
+func (*MaxReqsRateLimitSettings) ProtoMessage()    {}
+func (*MaxReqsRateLimitSettings) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{6}
+}
+func (m *MaxReqsRateLimitSettings) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MaxReqsRateLimitSettings) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MaxReqsRateLimitSettings.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MaxReqsRateLimitSettings) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaxReqsRateLimitSettings.Merge(m, src)
+}
+func (m *MaxReqsRateLimitSettings) XXX_Size() int {
+	return m.Size()
+}
+func (m *MaxReqsRateLimitSettings) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaxReqsRateLimitSettings.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaxReqsRateLimitSettings proto.InternalMessageInfo
+
+type RateLimitSettings struct {
+	// required: true
+	// Unique identifier key
+	Key RateLimitSettingsKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
+	// Map of FlowSettings (key: FlowSettingsName, value: FlowSettings)
+	FlowSettings map[string]*FlowSettings `protobuf:"bytes,2,rep,name=flow_settings,json=flowSettings,proto3" json:"flow_settings,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// Map of MaxReqsSettings (key: MaxReqsSettingsName, value: MaxReqsSettings)
+	MaxReqsSettings map[string]*MaxReqsSettings `protobuf:"bytes,3,rep,name=max_reqs_settings,json=maxReqsSettings,proto3" json:"max_reqs_settings,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *RateLimitSettings) Reset()         { *m = RateLimitSettings{} }
 func (m *RateLimitSettings) String() string { return proto.CompactTextString(m) }
 func (*RateLimitSettings) ProtoMessage()    {}
 func (*RateLimitSettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{3}
+	return fileDescriptor_9c81fd649b00920f, []int{7}
 }
 func (m *RateLimitSettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -327,7 +491,7 @@ func (m *RateLimitSettingsData) Reset()         { *m = RateLimitSettingsData{} }
 func (m *RateLimitSettingsData) String() string { return proto.CompactTextString(m) }
 func (*RateLimitSettingsData) ProtoMessage()    {}
 func (*RateLimitSettingsData) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{4}
+	return fileDescriptor_9c81fd649b00920f, []int{8}
 }
 func (m *RateLimitSettingsData) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -356,6 +520,80 @@ func (m *RateLimitSettingsData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RateLimitSettingsData proto.InternalMessageInfo
 
+type FlowRateLimitSettingsData struct {
+	Settings []FlowRateLimitSettings `protobuf:"bytes,1,rep,name=settings,proto3" json:"settings"`
+}
+
+func (m *FlowRateLimitSettingsData) Reset()         { *m = FlowRateLimitSettingsData{} }
+func (m *FlowRateLimitSettingsData) String() string { return proto.CompactTextString(m) }
+func (*FlowRateLimitSettingsData) ProtoMessage()    {}
+func (*FlowRateLimitSettingsData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{9}
+}
+func (m *FlowRateLimitSettingsData) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FlowRateLimitSettingsData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FlowRateLimitSettingsData.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FlowRateLimitSettingsData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowRateLimitSettingsData.Merge(m, src)
+}
+func (m *FlowRateLimitSettingsData) XXX_Size() int {
+	return m.Size()
+}
+func (m *FlowRateLimitSettingsData) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlowRateLimitSettingsData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FlowRateLimitSettingsData proto.InternalMessageInfo
+
+type MaxReqsRateLimitSettingsData struct {
+	Settings []MaxReqsRateLimitSettings `protobuf:"bytes,1,rep,name=settings,proto3" json:"settings"`
+}
+
+func (m *MaxReqsRateLimitSettingsData) Reset()         { *m = MaxReqsRateLimitSettingsData{} }
+func (m *MaxReqsRateLimitSettingsData) String() string { return proto.CompactTextString(m) }
+func (*MaxReqsRateLimitSettingsData) ProtoMessage()    {}
+func (*MaxReqsRateLimitSettingsData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{10}
+}
+func (m *MaxReqsRateLimitSettingsData) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MaxReqsRateLimitSettingsData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MaxReqsRateLimitSettingsData.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MaxReqsRateLimitSettingsData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaxReqsRateLimitSettingsData.Merge(m, src)
+}
+func (m *MaxReqsRateLimitSettingsData) XXX_Size() int {
+	return m.Size()
+}
+func (m *MaxReqsRateLimitSettingsData) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaxReqsRateLimitSettingsData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaxReqsRateLimitSettingsData proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterEnum("edgeproto.ApiEndpointType", ApiEndpointType_name, ApiEndpointType_value)
 	proto.RegisterEnum("edgeproto.RateLimitTarget", RateLimitTarget_name, RateLimitTarget_value)
@@ -363,79 +601,112 @@ func init() {
 	proto.RegisterEnum("edgeproto.MaxReqsRateLimitAlgorithm", MaxReqsRateLimitAlgorithm_name, MaxReqsRateLimitAlgorithm_value)
 	proto.RegisterType((*RateLimitSettingsKey)(nil), "edgeproto.RateLimitSettingsKey")
 	proto.RegisterType((*FlowSettings)(nil), "edgeproto.FlowSettings")
+	proto.RegisterType((*FlowRateLimitSettingsKey)(nil), "edgeproto.FlowRateLimitSettingsKey")
+	proto.RegisterType((*FlowRateLimitSettings)(nil), "edgeproto.FlowRateLimitSettings")
 	proto.RegisterType((*MaxReqsSettings)(nil), "edgeproto.MaxReqsSettings")
+	proto.RegisterType((*MaxReqsRateLimitSettingsKey)(nil), "edgeproto.MaxReqsRateLimitSettingsKey")
+	proto.RegisterType((*MaxReqsRateLimitSettings)(nil), "edgeproto.MaxReqsRateLimitSettings")
 	proto.RegisterType((*RateLimitSettings)(nil), "edgeproto.RateLimitSettings")
+	proto.RegisterMapType((map[string]*FlowSettings)(nil), "edgeproto.RateLimitSettings.FlowSettingsEntry")
+	proto.RegisterMapType((map[string]*MaxReqsSettings)(nil), "edgeproto.RateLimitSettings.MaxReqsSettingsEntry")
 	proto.RegisterType((*RateLimitSettingsData)(nil), "edgeproto.RateLimitSettingsData")
+	proto.RegisterType((*FlowRateLimitSettingsData)(nil), "edgeproto.FlowRateLimitSettingsData")
+	proto.RegisterType((*MaxReqsRateLimitSettingsData)(nil), "edgeproto.MaxReqsRateLimitSettingsData")
 }
 
 func init() { proto.RegisterFile("ratelimit.proto", fileDescriptor_9c81fd649b00920f) }
 
 var fileDescriptor_9c81fd649b00920f = []byte{
-	// 1012 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x55, 0x41, 0x6f, 0x1b, 0x45,
-	0x14, 0xf6, 0xd8, 0x51, 0xe2, 0x4c, 0xdc, 0xd8, 0x19, 0xda, 0x64, 0x63, 0x19, 0x27, 0xb5, 0x2a,
-	0x14, 0x45, 0x21, 0x46, 0xe1, 0x00, 0x44, 0x80, 0x58, 0xc7, 0x9b, 0xd6, 0xb2, 0xe3, 0xb8, 0xe3,
-	0x35, 0x69, 0xd5, 0xc3, 0x6a, 0x62, 0x4f, 0x36, 0x2b, 0xd6, 0x3b, 0xdb, 0xdd, 0x35, 0x89, 0xe1,
-	0x82, 0x38, 0x70, 0x8e, 0xc4, 0x01, 0x84, 0x38, 0xf4, 0x27, 0x54, 0x3d, 0xf6, 0x17, 0xe4, 0x58,
-	0x89, 0x0b, 0xa7, 0x0a, 0x12, 0x24, 0xa0, 0x27, 0xa4, 0x18, 0x0b, 0x71, 0x42, 0x33, 0x5e, 0x6f,
-	0x1d, 0xdb, 0x8d, 0x38, 0xf5, 0x12, 0xbd, 0x7d, 0xef, 0x7d, 0xef, 0x7d, 0xef, 0x9b, 0xf7, 0x62,
-	0x18, 0x77, 0x88, 0x47, 0x4d, 0xa3, 0x69, 0x78, 0xeb, 0xb6, 0xc3, 0x3c, 0x86, 0xa6, 0x69, 0x43,
-	0xa7, 0xc2, 0x4c, 0xc6, 0x1c, 0xea, 0xb6, 0x4c, 0x3f, 0x90, 0x4c, 0xe9, 0x8c, 0xe9, 0x26, 0xcd,
-	0x12, 0xdb, 0xc8, 0x12, 0xcb, 0x62, 0x1e, 0xf1, 0x0c, 0x66, 0xb9, 0x7e, 0xf4, 0x7d, 0xdd, 0xf0,
-	0x0e, 0x5b, 0xfb, 0xeb, 0x75, 0xd6, 0xcc, 0x36, 0xd9, 0xbe, 0x61, 0xf2, 0x32, 0xc7, 0x59, 0xfe,
-	0xf7, 0xed, 0xba, 0xc9, 0x5a, 0x8d, 0xac, 0xc8, 0xd3, 0xa9, 0x15, 0x18, 0x3e, 0xf2, 0xba, 0xce,
-	0x74, 0x26, 0xcc, 0x2c, 0xb7, 0x7a, 0xde, 0xcc, 0x37, 0x61, 0x78, 0x1d, 0x13, 0x8f, 0x96, 0x38,
-	0xb5, 0x2a, 0xf5, 0x3c, 0xc3, 0xd2, 0xdd, 0x22, 0x6d, 0xa3, 0xb7, 0x60, 0x94, 0xd8, 0x86, 0x66,
-	0x91, 0x26, 0x95, 0xc0, 0x32, 0x58, 0x99, 0xce, 0xcd, 0x3c, 0xed, 0x4a, 0x53, 0xc4, 0x36, 0xb8,
-	0x0b, 0x73, 0xa3, 0x4c, 0x9a, 0x14, 0x3d, 0x80, 0x73, 0x3c, 0x8f, 0x5a, 0x0d, 0x9b, 0x19, 0x96,
-	0xa7, 0x79, 0x6d, 0x9b, 0x4a, 0xe1, 0x65, 0xb0, 0x32, 0xbb, 0x91, 0x5c, 0x0f, 0x66, 0x5c, 0x97,
-	0x6d, 0x43, 0xf1, 0x53, 0xd4, 0xb6, 0x4d, 0x73, 0x6f, 0x3c, 0xed, 0x4a, 0x71, 0x62, 0x1b, 0x7d,
-	0x1c, 0x87, 0x61, 0xee, 0x18, 0xcc, 0xe2, 0xc5, 0xb9, 0x6e, 0x9a, 0x10, 0x4e, 0xf3, 0x88, 0xa3,
-	0x53, 0x4f, 0x8a, 0x8c, 0x14, 0x0f, 0x06, 0x50, 0x45, 0x46, 0xaf, 0x78, 0x20, 0x78, 0x0f, 0x86,
-	0x85, 0x63, 0x20, 0x6b, 0x33, 0xf6, 0xc7, 0x85, 0x04, 0xfe, 0xb9, 0x90, 0xc0, 0xe3, 0x47, 0x4b,
-	0x20, 0xf3, 0x23, 0x80, 0xb1, 0x6d, 0x93, 0x1d, 0xf5, 0x35, 0x40, 0x77, 0xe0, 0xec, 0x81, 0xc9,
-	0x8e, 0x34, 0x62, 0xea, 0xcc, 0x31, 0xbc, 0xc3, 0xa6, 0x90, 0x61, 0x76, 0xe3, 0xe6, 0x40, 0x63,
-	0x0e, 0x08, 0x9a, 0xcb, 0xfd, 0x44, 0x7c, 0x8d, 0x03, 0x83, 0x4f, 0x74, 0x0b, 0x5e, 0x73, 0xe8,
-	0x43, 0xb7, 0x42, 0x9d, 0x2a, 0xad, 0x33, 0xab, 0x21, 0xe4, 0x01, 0xf8, 0xb2, 0x13, 0xa5, 0xe0,
-	0xf4, 0x7e, 0xcb, 0x71, 0xbd, 0xaa, 0xf1, 0x05, 0x15, 0x33, 0x46, 0xf0, 0x4b, 0x47, 0xe6, 0x09,
-	0x80, 0xf1, 0x1d, 0x72, 0x8c, 0xe9, 0x43, 0x37, 0x60, 0x88, 0x21, 0x6a, 0x92, 0x63, 0x8d, 0x97,
-	0x19, 0x61, 0x79, 0x6b, 0x80, 0xa5, 0x8f, 0x1b, 0x43, 0x34, 0xd1, 0xec, 0x85, 0x5e, 0x72, 0xbd,
-	0x09, 0x63, 0x7e, 0xcd, 0x16, 0x75, 0x3d, 0x57, 0x50, 0x8d, 0xe0, 0x99, 0x5e, 0x9e, 0x70, 0xa1,
-	0x15, 0x18, 0x35, 0x2c, 0x8f, 0x3a, 0x9f, 0x13, 0xb3, 0xc7, 0x33, 0x17, 0xfb, 0xf7, 0xf9, 0x52,
-	0x34, 0xdf, 0x72, 0xc4, 0xa6, 0xe2, 0x20, 0x9a, 0xf9, 0x3d, 0x0c, 0xe7, 0x46, 0x96, 0x0b, 0xcd,
-	0xc3, 0xc9, 0x03, 0x83, 0x9a, 0x0d, 0x57, 0x02, 0xcb, 0x91, 0x95, 0x69, 0xec, 0x7f, 0xa1, 0xf7,
-	0x60, 0xe4, 0x33, 0xda, 0x16, 0x1d, 0x67, 0x36, 0x96, 0xc6, 0x3d, 0xef, 0xc0, 0x7e, 0xe6, 0x26,
-	0x4e, 0x9f, 0x2f, 0x85, 0x30, 0x47, 0xa0, 0x0f, 0xa1, 0x10, 0x5c, 0x73, 0xfd, 0xb0, 0x34, 0xb5,
-	0x1c, 0x59, 0x99, 0xd9, 0x58, 0x18, 0x7a, 0xa8, 0x3e, 0x1a, 0xc7, 0x0e, 0x06, 0xdf, 0x79, 0x1b,
-	0xce, 0x05, 0x2a, 0x06, 0x15, 0xa2, 0xa2, 0x42, 0x72, 0x54, 0xc4, 0xa0, 0x48, 0xbc, 0x79, 0xd9,
-	0xb1, 0xf9, 0x25, 0x5f, 0xa7, 0xbf, 0x2e, 0x24, 0xf0, 0x55, 0x47, 0x02, 0x27, 0x1d, 0x09, 0x3c,
-	0xee, 0x48, 0xe0, 0x87, 0xbf, 0xa5, 0x07, 0x43, 0x5b, 0xfe, 0x51, 0x91, 0xb6, 0x87, 0xcf, 0x61,
-	0x6d, 0x68, 0x59, 0x45, 0xce, 0xd0, 0x56, 0xaf, 0xf9, 0xa7, 0xd7, 0xc7, 0xf3, 0xeb, 0x7b, 0xd2,
-	0x95, 0x26, 0x2c, 0x66, 0xd1, 0x0c, 0x81, 0x37, 0x46, 0x54, 0xca, 0x13, 0x8f, 0xa0, 0x8f, 0x61,
-	0x34, 0x18, 0x0a, 0x88, 0xa1, 0x52, 0x57, 0x29, 0xeb, 0xcb, 0x1a, 0x60, 0x36, 0xa3, 0xdf, 0x77,
-	0x25, 0xf0, 0xa8, 0x2b, 0x85, 0x56, 0x3f, 0x80, 0xf1, 0x21, 0xd6, 0xe8, 0x4d, 0xb8, 0x58, 0x2b,
-	0x17, 0xcb, 0xbb, 0x7b, 0x65, 0x4d, 0xae, 0x14, 0x34, 0xa5, 0x9c, 0xaf, 0xec, 0x16, 0xca, 0xaa,
-	0xa6, 0xde, 0xaf, 0x28, 0x89, 0x10, 0x9a, 0x82, 0x91, 0xfc, 0x8e, 0x92, 0x00, 0xab, 0x77, 0x61,
-	0x7c, 0x68, 0x18, 0x84, 0xe0, 0x6c, 0x1f, 0xaa, 0xca, 0xf8, 0xb6, 0xa2, 0x26, 0x42, 0x28, 0x01,
-	0x63, 0x72, 0xa9, 0xa4, 0x61, 0xe5, 0x6e, 0x4d, 0xa9, 0xaa, 0xd5, 0x04, 0x40, 0x10, 0x4e, 0x56,
-	0x14, 0xac, 0x15, 0x2a, 0x89, 0x30, 0x8a, 0xc1, 0x28, 0xb7, 0x6b, 0x55, 0x05, 0x27, 0x22, 0xab,
-	0x26, 0x9c, 0x1f, 0x7f, 0x7c, 0x28, 0x09, 0xe7, 0xfb, 0x95, 0xb7, 0x4b, 0xbb, 0x7b, 0x9a, 0x5c,
-	0xba, 0xbd, 0x8b, 0x0b, 0xea, 0x9d, 0x9d, 0x44, 0x88, 0xc7, 0xd4, 0xdd, 0xa2, 0x52, 0xd6, 0x72,
-	0xb5, 0xad, 0xa2, 0xa2, 0x0e, 0xc4, 0x00, 0x8f, 0x95, 0x14, 0xb9, 0x78, 0x7f, 0x34, 0x16, 0x5e,
-	0xdd, 0x83, 0x8b, 0xaf, 0x3c, 0x22, 0x94, 0x86, 0xc9, 0x7e, 0xc3, 0x1d, 0xf9, 0x1e, 0xa7, 0x5f,
-	0x1d, 0x6e, 0xba, 0x5d, 0xb8, 0xa7, 0xe4, 0xb5, 0xbd, 0x42, 0x39, 0x7f, 0x89, 0x10, 0xd8, 0xf8,
-	0x73, 0x62, 0xcc, 0xbf, 0x5f, 0xd9, 0x36, 0xd0, 0x09, 0x80, 0x0b, 0x5b, 0x0e, 0x25, 0x1e, 0x1d,
-	0x3d, 0xa0, 0x2b, 0x5f, 0x30, 0x39, 0x37, 0x18, 0x15, 0x3f, 0x2c, 0x99, 0xfc, 0x8b, 0x8e, 0x94,
-	0xc2, 0xd4, 0x65, 0x2d, 0xa7, 0x4e, 0xb7, 0x98, 0x75, 0x60, 0xe8, 0x6b, 0x72, 0x9d, 0x1f, 0xeb,
-	0x0e, 0xb1, 0x88, 0x4e, 0xd7, 0xbe, 0xfe, 0xe9, 0xb7, 0x6f, 0xc3, 0xe9, 0xcc, 0x62, 0xb6, 0x2e,
-	0x5a, 0x66, 0x83, 0x75, 0x0c, 0xf6, 0x00, 0xac, 0x0a, 0x4a, 0x35, 0xbb, 0xf1, 0xba, 0x29, 0xb5,
-	0x44, 0xcb, 0x57, 0x53, 0xca, 0x53, 0x93, 0xbe, 0x66, 0x4a, 0x0d, 0xd1, 0x72, 0x3c, 0xa5, 0xef,
-	0x00, 0xbc, 0x51, 0x3d, 0x1c, 0xd8, 0xcc, 0xff, 0x49, 0xe8, 0xca, 0x68, 0xe6, 0x93, 0x17, 0x1d,
-	0x29, 0x39, 0x96, 0xdb, 0xa7, 0x06, 0x3d, 0xea, 0x31, 0x4b, 0x65, 0x16, 0xb2, 0xee, 0x21, 0x3b,
-	0x1a, 0xcb, 0xeb, 0x1d, 0x90, 0x4b, 0x9d, 0xfe, 0x9a, 0x0e, 0x9d, 0x9e, 0xa5, 0xc1, 0xb3, 0xb3,
-	0x34, 0xf8, 0xe5, 0x2c, 0x0d, 0x4e, 0xce, 0xd3, 0xa1, 0x67, 0xe7, 0xe9, 0xd0, 0xcf, 0xe7, 0xe9,
-	0xd0, 0xfe, 0xa4, 0x68, 0xfd, 0xee, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x19, 0x00, 0x91, 0xee,
-	0xa9, 0x08, 0x00, 0x00,
+	// 1422 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0x3f, 0x6c, 0x13, 0x57,
+	0x18, 0xf7, 0xb3, 0x29, 0x38, 0x2f, 0x26, 0x71, 0x1e, 0x21, 0xb9, 0x18, 0xe3, 0x84, 0x83, 0xa2,
+	0x28, 0x32, 0x31, 0x0d, 0x52, 0x4b, 0x53, 0x81, 0x6a, 0xe3, 0x03, 0x22, 0x3b, 0x4e, 0x38, 0x3b,
+	0x0d, 0x08, 0xb5, 0xa7, 0x4b, 0xfc, 0x70, 0x4e, 0x3d, 0xdf, 0xb9, 0x77, 0x67, 0x12, 0x33, 0x55,
+	0x1d, 0xba, 0x74, 0xa1, 0xea, 0x50, 0x84, 0x18, 0x58, 0x3a, 0x75, 0xa9, 0xe8, 0xd4, 0xa8, 0x53,
+	0x97, 0x32, 0x22, 0x75, 0xe9, 0x84, 0x5a, 0xe8, 0x50, 0x31, 0x55, 0x22, 0xb5, 0xaa, 0x4e, 0xd5,
+	0x7b, 0xf7, 0xc7, 0xe7, 0xbb, 0xb3, 0x13, 0xa4, 0xaa, 0x19, 0xba, 0x44, 0x2f, 0xef, 0xfb, 0xf7,
+	0x7b, 0xbf, 0xef, 0xf7, 0xbd, 0x77, 0x86, 0xc3, 0x9a, 0x68, 0x60, 0x59, 0xaa, 0x4b, 0xc6, 0x6c,
+	0x43, 0x53, 0x0d, 0x15, 0x0d, 0xe0, 0x6a, 0x0d, 0xd3, 0x65, 0x22, 0xa6, 0x61, 0xbd, 0x29, 0x5b,
+	0x86, 0x44, 0xb2, 0xa6, 0xaa, 0x35, 0x19, 0x67, 0xc4, 0x86, 0x94, 0x11, 0x15, 0x45, 0x35, 0x44,
+	0x43, 0x52, 0x15, 0xdd, 0xb2, 0x9e, 0xaf, 0x49, 0xc6, 0x46, 0x73, 0x6d, 0x76, 0x5d, 0xad, 0x67,
+	0xea, 0xea, 0x9a, 0x24, 0x93, 0x34, 0x5b, 0x19, 0xf2, 0xf7, 0xcc, 0xba, 0xac, 0x36, 0xab, 0x19,
+	0xea, 0x57, 0xc3, 0x8a, 0xb3, 0xb0, 0x22, 0x47, 0x6b, 0x6a, 0x4d, 0xa5, 0xcb, 0x0c, 0x59, 0x99,
+	0xbb, 0xec, 0xa7, 0x61, 0x38, 0xca, 0x8b, 0x06, 0x2e, 0x12, 0x68, 0x65, 0x6c, 0x18, 0x92, 0x52,
+	0xd3, 0x0b, 0xb8, 0x85, 0x4e, 0xc3, 0xa8, 0xd8, 0x90, 0x04, 0x45, 0xac, 0x63, 0x06, 0x4c, 0x81,
+	0xe9, 0x81, 0xdc, 0xe0, 0x76, 0x9b, 0x39, 0x24, 0x36, 0x24, 0xb2, 0xc5, 0x93, 0x45, 0x49, 0xac,
+	0x63, 0x74, 0x13, 0x8e, 0x10, 0x3f, 0xac, 0x54, 0x1b, 0xaa, 0xa4, 0x18, 0x82, 0xd1, 0x6a, 0x60,
+	0x26, 0x3c, 0x05, 0xa6, 0x87, 0xe6, 0x12, 0xb3, 0xce, 0x19, 0x67, 0xb3, 0x0d, 0x89, 0xb3, 0x5c,
+	0x2a, 0xad, 0x06, 0xce, 0x1d, 0xd9, 0x6e, 0x33, 0xc3, 0x62, 0x43, 0xb2, 0xe3, 0x48, 0x18, 0x4f,
+	0x36, 0xdc, 0x5e, 0x24, 0x39, 0xe1, 0x4d, 0xa0, 0xc4, 0x09, 0x86, 0xa8, 0xd5, 0xb0, 0xc1, 0x44,
+	0x7c, 0xc9, 0x9d, 0x03, 0x54, 0xa8, 0x87, 0x99, 0xdc, 0x21, 0xdc, 0x0c, 0xe3, 0xe9, 0x86, 0xcb,
+	0x6b, 0x3e, 0xf6, 0xfb, 0x4b, 0x06, 0xfc, 0xf5, 0x92, 0x01, 0xdf, 0x3c, 0x9c, 0x04, 0xec, 0x03,
+	0x00, 0x63, 0x97, 0x65, 0x75, 0xd3, 0xe6, 0x00, 0x5d, 0x85, 0x43, 0xb7, 0x64, 0x75, 0x53, 0x10,
+	0xe5, 0x9a, 0xaa, 0x49, 0xc6, 0x46, 0x9d, 0xd2, 0x30, 0x34, 0x77, 0xc2, 0x55, 0x98, 0x04, 0x38,
+	0xc5, 0xb3, 0xb6, 0x23, 0x7f, 0x98, 0x04, 0x3a, 0xff, 0xa2, 0x53, 0xf0, 0xb0, 0x86, 0x3f, 0xd2,
+	0x97, 0xb1, 0x56, 0xc6, 0xeb, 0xaa, 0x52, 0xa5, 0xf4, 0x00, 0xbe, 0x7b, 0x13, 0x25, 0xe1, 0xc0,
+	0x5a, 0x53, 0xd3, 0x8d, 0xb2, 0x74, 0x07, 0xd3, 0x33, 0x46, 0xf8, 0xce, 0x06, 0xfb, 0x1d, 0x80,
+	0x4c, 0x57, 0x35, 0x77, 0xaf, 0x72, 0x10, 0x51, 0xa8, 0xba, 0xb5, 0xe7, 0xee, 0xda, 0xe8, 0x76,
+	0x9b, 0x89, 0x13, 0xab, 0x6d, 0xa4, 0xed, 0xa3, 0x3b, 0x76, 0x0a, 0xda, 0xc7, 0x02, 0x1c, 0x72,
+	0x51, 0xfd, 0x21, 0x6e, 0x51, 0x94, 0x83, 0x73, 0x93, 0x41, 0x3c, 0xbb, 0x8a, 0xe7, 0x0e, 0x3c,
+	0x7e, 0x3a, 0x19, 0xe2, 0x63, 0x0e, 0xbb, 0x05, 0xdc, 0xf2, 0x50, 0xfb, 0x7d, 0x04, 0x1e, 0x0d,
+	0xc4, 0x8e, 0xc6, 0xe0, 0xc1, 0x5b, 0x12, 0x96, 0xab, 0x3a, 0x03, 0xa6, 0x22, 0xd3, 0x03, 0xbc,
+	0xf5, 0x1f, 0x7a, 0x07, 0x46, 0x3a, 0x08, 0x4e, 0xf6, 0x22, 0xdc, 0x8f, 0x82, 0x44, 0xa1, 0x73,
+	0x30, 0x6a, 0x9f, 0x95, 0xf2, 0x38, 0x38, 0x37, 0xee, 0xc9, 0x60, 0x07, 0xf2, 0x8e, 0xe3, 0xfc,
+	0xbd, 0x30, 0x81, 0xfc, 0xc7, 0x4b, 0x06, 0xdc, 0xff, 0x93, 0xf9, 0x2c, 0xec, 0x25, 0xec, 0x42,
+	0x01, 0xb7, 0xba, 0x42, 0x09, 0x67, 0x69, 0x8f, 0x7e, 0xa9, 0x13, 0xef, 0xe2, 0xc1, 0xab, 0xfa,
+	0xb4, 0x47, 0x93, 0xfe, 0x00, 0x8f, 0x92, 0xd3, 0xd6, 0xb8, 0x05, 0x66, 0x36, 0x21, 0xd8, 0x2a,
+	0xbb, 0x60, 0x23, 0xa3, 0x30, 0x1d, 0xf1, 0xa5, 0x89, 0xc8, 0x1a, 0x58, 0xd3, 0xa9, 0xc8, 0x3a,
+	0x4e, 0xbc, 0x5b, 0x7b, 0x69, 0xaa, 0x33, 0x5d, 0xba, 0x83, 0x3b, 0x0e, 0x39, 0x47, 0x7a, 0x8f,
+	0x00, 0x1c, 0x5e, 0x14, 0xb7, 0x48, 0x84, 0xd3, 0x38, 0x1e, 0xa2, 0xba, 0xb8, 0x25, 0x90, 0xe4,
+	0xbe, 0x01, 0x39, 0xe5, 0x62, 0xdb, 0x8a, 0x0b, 0x98, 0x91, 0x78, 0xdd, 0x34, 0x75, 0xc6, 0xe4,
+	0x04, 0x8c, 0x59, 0x39, 0x9b, 0x58, 0x37, 0x74, 0xda, 0xfd, 0x08, 0x3f, 0x68, 0xfa, 0xd1, 0x2d,
+	0x34, 0x0d, 0xa3, 0x92, 0x62, 0x60, 0xed, 0xb6, 0x28, 0x9b, 0x23, 0x92, 0x8b, 0xfd, 0xfd, 0x74,
+	0x32, 0x9a, 0x6f, 0x6a, 0xf4, 0x92, 0xe4, 0x1d, 0x2b, 0xfb, 0x03, 0x80, 0xc7, 0xbc, 0xc5, 0xdd,
+	0x23, 0x53, 0x84, 0x63, 0xce, 0x01, 0x82, 0xc6, 0x66, 0x7c, 0xbb, 0xcd, 0x1c, 0xa9, 0x8b, 0x5b,
+	0xc4, 0xa1, 0x6b, 0x72, 0x8e, 0xd4, 0xbb, 0xa9, 0xf8, 0xf7, 0x87, 0x27, 0xea, 0x0c, 0xce, 0x8f,
+	0x11, 0xc8, 0xf4, 0x3a, 0x44, 0xcf, 0xd9, 0xb9, 0xe8, 0x9e, 0x9d, 0xd3, 0x7d, 0x7a, 0xd1, 0x63,
+	0x7c, 0xde, 0xf4, 0x8d, 0x4f, 0xc2, 0x9f, 0x24, 0x60, 0x82, 0xee, 0x87, 0xad, 0xe9, 0xf9, 0x3c,
+	0x1c, 0xc0, 0x1b, 0x55, 0xf0, 0xa2, 0x9f, 0xba, 0xff, 0xc9, 0x0c, 0x7d, 0x7b, 0x00, 0x8e, 0xf8,
+	0x5b, 0xf8, 0x96, 0xd9, 0x2a, 0xf0, 0x2a, 0x5a, 0xa1, 0x3d, 0x2a, 0xc3, 0xc3, 0x5d, 0x17, 0x3e,
+	0x13, 0x9e, 0x8a, 0x4c, 0x0f, 0xce, 0xcd, 0xf6, 0x4b, 0xd1, 0x75, 0x7d, 0x71, 0x8a, 0xa1, 0xb5,
+	0xf8, 0x98, 0xfb, 0x15, 0x40, 0xef, 0xc3, 0x11, 0xdf, 0x48, 0x30, 0x11, 0x9a, 0xf8, 0x8d, 0xbe,
+	0x89, 0x3d, 0x6d, 0x35, 0x73, 0x0f, 0x7b, 0xe6, 0x24, 0x71, 0x1d, 0x8e, 0xf8, 0x10, 0xa0, 0x78,
+	0x87, 0x81, 0x01, 0xf3, 0x68, 0x67, 0xe0, 0x6b, 0xb7, 0x45, 0xb9, 0x89, 0x2d, 0x01, 0xf7, 0xbc,
+	0xba, 0x4d, 0xaf, 0xf9, 0xf0, 0x79, 0x90, 0xf8, 0x00, 0x8e, 0x06, 0x41, 0x08, 0x48, 0x7e, 0xb6,
+	0x3b, 0x79, 0x3f, 0x61, 0x77, 0xf2, 0xcf, 0x6f, 0xda, 0x4f, 0xc3, 0xc7, 0x3b, 0x0c, 0xb8, 0xbb,
+	0x43, 0x45, 0x7e, 0x33, 0x48, 0xb7, 0xaf, 0x24, 0xd5, 0x00, 0x75, 0x5a, 0x82, 0x7c, 0xd4, 0x66,
+	0x0e, 0x28, 0xaa, 0x82, 0x59, 0x11, 0x1e, 0xf5, 0xb1, 0x9d, 0x17, 0x0d, 0x11, 0x5d, 0x74, 0xcd,
+	0x28, 0xa0, 0x1d, 0x4a, 0xf6, 0xeb, 0x90, 0x25, 0x9d, 0xce, 0xac, 0x46, 0xef, 0xb5, 0x19, 0xf0,
+	0xb0, 0xcd, 0x84, 0x58, 0x09, 0x4e, 0x04, 0xbe, 0xa9, 0xb4, 0x4c, 0xce, 0x57, 0x66, 0x6a, 0xb7,
+	0xb7, 0xb8, 0x4f, 0x29, 0x15, 0x26, 0x7b, 0x5d, 0x41, 0xb4, 0x1a, 0xe7, 0xab, 0x76, 0x72, 0x0f,
+	0xb7, 0x57, 0xef, 0x82, 0x33, 0x6f, 0xc3, 0x61, 0x4f, 0x47, 0xd0, 0x71, 0x38, 0xb1, 0x52, 0x2a,
+	0x94, 0x96, 0x56, 0x4b, 0x42, 0x76, 0x79, 0x41, 0xe0, 0x4a, 0xf9, 0xe5, 0xa5, 0x85, 0x52, 0x45,
+	0xa8, 0xdc, 0x58, 0xe6, 0xe2, 0x21, 0x74, 0x08, 0x46, 0xf2, 0x8b, 0x5c, 0x1c, 0xcc, 0x5c, 0x83,
+	0xc3, 0x9e, 0x46, 0x21, 0x04, 0x87, 0xec, 0xd0, 0x4a, 0x96, 0xbf, 0xc2, 0x55, 0xe2, 0x21, 0x14,
+	0x87, 0xb1, 0x6c, 0xb1, 0x28, 0xf0, 0xdc, 0xb5, 0x15, 0xae, 0x5c, 0x29, 0xc7, 0x01, 0x82, 0xf0,
+	0xe0, 0x32, 0xc7, 0x0b, 0x0b, 0xcb, 0xf1, 0x30, 0x8a, 0xc1, 0x28, 0x59, 0xaf, 0x94, 0x39, 0x3e,
+	0x1e, 0x99, 0x91, 0xe1, 0x58, 0xf0, 0xe7, 0x22, 0x4a, 0xc0, 0x31, 0x3b, 0xf3, 0xe5, 0xe2, 0xd2,
+	0xaa, 0x90, 0x2d, 0x5e, 0x59, 0xe2, 0x17, 0x2a, 0x57, 0x17, 0xe3, 0x21, 0x62, 0xab, 0x2c, 0x15,
+	0xb8, 0x92, 0x90, 0x5b, 0xb9, 0x54, 0xe0, 0x2a, 0x2e, 0x1b, 0x20, 0xb6, 0x22, 0x97, 0x2d, 0xdc,
+	0xf0, 0xdb, 0xc2, 0x33, 0xab, 0x70, 0xa2, 0xe7, 0xdb, 0x8b, 0x52, 0x30, 0x61, 0x17, 0x5c, 0xcc,
+	0x5e, 0x27, 0xf0, 0xcb, 0xde, 0xa2, 0x97, 0x17, 0xae, 0x73, 0x79, 0x61, 0x75, 0xa1, 0x94, 0xef,
+	0x02, 0x04, 0xe6, 0xbe, 0x1e, 0x0c, 0xf8, 0xc1, 0x90, 0x6d, 0x48, 0xe8, 0x2e, 0x80, 0xe3, 0x97,
+	0x34, 0x2c, 0x1a, 0xd8, 0x7f, 0xd1, 0xf5, 0x55, 0x67, 0x62, 0xc4, 0x6d, 0xa5, 0x3f, 0x85, 0xd8,
+	0xfc, 0x8b, 0x1d, 0x26, 0xc9, 0x63, 0x5d, 0x6d, 0x6a, 0xeb, 0xf8, 0x92, 0xaa, 0xdc, 0x92, 0x6a,
+	0xe9, 0xec, 0x3a, 0x79, 0xe3, 0x17, 0x45, 0x45, 0xac, 0xe1, 0xf4, 0x27, 0x3f, 0xfd, 0xf6, 0x45,
+	0x38, 0xc5, 0x4e, 0x64, 0xd6, 0x69, 0xc9, 0x8c, 0x33, 0x6a, 0x8e, 0x0e, 0xc0, 0x0c, 0x85, 0x94,
+	0xc7, 0x32, 0xfe, 0x8f, 0x21, 0x55, 0x69, 0xc9, 0x60, 0x48, 0x5f, 0x02, 0x78, 0xb4, 0xbc, 0x11,
+	0xf4, 0x2d, 0xdc, 0x1f, 0x50, 0x5f, 0x2b, 0xfb, 0xee, 0x8b, 0x1d, 0x26, 0x11, 0x88, 0xed, 0x3d,
+	0x09, 0x6f, 0x9a, 0xc8, 0x92, 0xec, 0x78, 0x46, 0xdf, 0x50, 0x37, 0x03, 0x71, 0x9d, 0x05, 0xe8,
+	0x01, 0x80, 0xc7, 0xcc, 0xfe, 0x05, 0x7f, 0xab, 0xef, 0x3a, 0xfa, 0x41, 0xa4, 0x5d, 0xdd, 0x13,
+	0x69, 0x2c, 0x7b, 0xdc, 0xee, 0x23, 0x79, 0x91, 0x02, 0x89, 0x23, 0xf0, 0x56, 0x1a, 0xd5, 0xfd,
+	0x82, 0xd7, 0xa4, 0xa5, 0xfb, 0xc3, 0x33, 0xa5, 0xb6, 0x2f, 0xf0, 0x2c, 0xc9, 0xf5, 0x84, 0xf7,
+	0x15, 0x80, 0x29, 0xb3, 0xb9, 0x3d, 0xbf, 0x27, 0xf7, 0x72, 0xd9, 0x06, 0x81, 0x2c, 0xec, 0x09,
+	0xe4, 0xeb, 0xec, 0x94, 0xdd, 0x62, 0xeb, 0xeb, 0xb0, 0x27, 0x4e, 0xb3, 0xcb, 0xfb, 0x88, 0xd3,
+	0xea, 0xf5, 0x6e, 0x38, 0xcd, 0x76, 0xef, 0x23, 0x4e, 0xab, 0xe9, 0x7d, 0x70, 0xe6, 0x92, 0x8f,
+	0x7f, 0x4d, 0x85, 0x1e, 0x3f, 0x4b, 0x81, 0x27, 0xcf, 0x52, 0xe0, 0x97, 0x67, 0x29, 0x70, 0xf7,
+	0x79, 0x2a, 0xf4, 0xe4, 0x79, 0x2a, 0xf4, 0xf3, 0xf3, 0x54, 0x68, 0xed, 0x20, 0x2d, 0x7c, 0xee,
+	0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x8b, 0x69, 0xa2, 0xaa, 0x9d, 0x12, 0x00, 0x00,
 }
 
 func (this *RateLimitSettingsKey) GoString() string {
@@ -447,6 +718,28 @@ func (this *RateLimitSettingsKey) GoString() string {
 	s = append(s, "ApiName: "+fmt.Sprintf("%#v", this.ApiName)+",\n")
 	s = append(s, "ApiEndpointType: "+fmt.Sprintf("%#v", this.ApiEndpointType)+",\n")
 	s = append(s, "RateLimitTarget: "+fmt.Sprintf("%#v", this.RateLimitTarget)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *FlowRateLimitSettingsKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&edgeproto.FlowRateLimitSettingsKey{")
+	s = append(s, "FlowSettingsName: "+fmt.Sprintf("%#v", this.FlowSettingsName)+",\n")
+	s = append(s, "RateLimitKey: "+strings.Replace(this.RateLimitKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *MaxReqsRateLimitSettingsKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&edgeproto.MaxReqsRateLimitSettingsKey{")
+	s = append(s, "MaxReqsSettingsName: "+fmt.Sprintf("%#v", this.MaxReqsSettingsName)+",\n")
+	s = append(s, "RateLimitKey: "+strings.Replace(this.RateLimitKey.GoString(), `&`, ``, 1)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -473,12 +766,22 @@ const _ = grpc.SupportPackageIsVersion4
 type RateLimitSettingsApiClient interface {
 	// Create RateLimitSettings for an API endpoint and target
 	CreateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
-	// Update RateLimit settings for an API endpoint and target
-	UpdateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
 	// Delete RateLimit settings for an API endpoint and target (ie. no rate limiting)
 	DeleteRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
 	// Show RateLimit settings for an API endpoint and target
 	ShowRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowRateLimitSettingsClient, error)
+	// Create Flow RateLimit settings for an API endpoint and target
+	CreateFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Update Flow RateLimit settings for an API endpoint and target
+	UpdateFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Delete Flow RateLimit settings for an API endpoint and target
+	DeleteFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Create MaxReqs RateLimit settings for an API endpoint and target
+	CreateMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Update MaxReqs RateLimit settings for an API endpoint and target
+	UpdateMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Delete MaxReqs RateLimit settings for an API endpoint and target
+	DeleteMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
 }
 
 type rateLimitSettingsApiClient struct {
@@ -492,15 +795,6 @@ func NewRateLimitSettingsApiClient(cc *grpc.ClientConn) RateLimitSettingsApiClie
 func (c *rateLimitSettingsApiClient) CreateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
 	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/CreateRateLimitSettings", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *rateLimitSettingsApiClient) UpdateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/UpdateRateLimitSettings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -548,16 +842,80 @@ func (x *rateLimitSettingsApiShowRateLimitSettingsClient) Recv() (*RateLimitSett
 	return m, nil
 }
 
+func (c *rateLimitSettingsApiClient) CreateFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/CreateFlowRateLimitSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rateLimitSettingsApiClient) UpdateFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/UpdateFlowRateLimitSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rateLimitSettingsApiClient) DeleteFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/DeleteFlowRateLimitSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rateLimitSettingsApiClient) CreateMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/CreateMaxReqsRateLimitSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rateLimitSettingsApiClient) UpdateMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/UpdateMaxReqsRateLimitSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rateLimitSettingsApiClient) DeleteMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
+	out := new(Result)
+	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/DeleteMaxReqsRateLimitSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RateLimitSettingsApiServer is the server API for RateLimitSettingsApi service.
 type RateLimitSettingsApiServer interface {
 	// Create RateLimitSettings for an API endpoint and target
 	CreateRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
-	// Update RateLimit settings for an API endpoint and target
-	UpdateRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
 	// Delete RateLimit settings for an API endpoint and target (ie. no rate limiting)
 	DeleteRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
 	// Show RateLimit settings for an API endpoint and target
 	ShowRateLimitSettings(*RateLimitSettings, RateLimitSettingsApi_ShowRateLimitSettingsServer) error
+	// Create Flow RateLimit settings for an API endpoint and target
+	CreateFlowRateLimitSettings(context.Context, *FlowRateLimitSettings) (*Result, error)
+	// Update Flow RateLimit settings for an API endpoint and target
+	UpdateFlowRateLimitSettings(context.Context, *FlowRateLimitSettings) (*Result, error)
+	// Delete Flow RateLimit settings for an API endpoint and target
+	DeleteFlowRateLimitSettings(context.Context, *FlowRateLimitSettings) (*Result, error)
+	// Create MaxReqs RateLimit settings for an API endpoint and target
+	CreateMaxReqsRateLimitSettings(context.Context, *MaxReqsRateLimitSettings) (*Result, error)
+	// Update MaxReqs RateLimit settings for an API endpoint and target
+	UpdateMaxReqsRateLimitSettings(context.Context, *MaxReqsRateLimitSettings) (*Result, error)
+	// Delete MaxReqs RateLimit settings for an API endpoint and target
+	DeleteMaxReqsRateLimitSettings(context.Context, *MaxReqsRateLimitSettings) (*Result, error)
 }
 
 // UnimplementedRateLimitSettingsApiServer can be embedded to have forward compatible implementations.
@@ -567,14 +925,29 @@ type UnimplementedRateLimitSettingsApiServer struct {
 func (*UnimplementedRateLimitSettingsApiServer) CreateRateLimitSettings(ctx context.Context, req *RateLimitSettings) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRateLimitSettings not implemented")
 }
-func (*UnimplementedRateLimitSettingsApiServer) UpdateRateLimitSettings(ctx context.Context, req *RateLimitSettings) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateRateLimitSettings not implemented")
-}
 func (*UnimplementedRateLimitSettingsApiServer) DeleteRateLimitSettings(ctx context.Context, req *RateLimitSettings) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRateLimitSettings not implemented")
 }
 func (*UnimplementedRateLimitSettingsApiServer) ShowRateLimitSettings(req *RateLimitSettings, srv RateLimitSettingsApi_ShowRateLimitSettingsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ShowRateLimitSettings not implemented")
+}
+func (*UnimplementedRateLimitSettingsApiServer) CreateFlowRateLimitSettings(ctx context.Context, req *FlowRateLimitSettings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateFlowRateLimitSettings not implemented")
+}
+func (*UnimplementedRateLimitSettingsApiServer) UpdateFlowRateLimitSettings(ctx context.Context, req *FlowRateLimitSettings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateFlowRateLimitSettings not implemented")
+}
+func (*UnimplementedRateLimitSettingsApiServer) DeleteFlowRateLimitSettings(ctx context.Context, req *FlowRateLimitSettings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFlowRateLimitSettings not implemented")
+}
+func (*UnimplementedRateLimitSettingsApiServer) CreateMaxReqsRateLimitSettings(ctx context.Context, req *MaxReqsRateLimitSettings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMaxReqsRateLimitSettings not implemented")
+}
+func (*UnimplementedRateLimitSettingsApiServer) UpdateMaxReqsRateLimitSettings(ctx context.Context, req *MaxReqsRateLimitSettings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaxReqsRateLimitSettings not implemented")
+}
+func (*UnimplementedRateLimitSettingsApiServer) DeleteMaxReqsRateLimitSettings(ctx context.Context, req *MaxReqsRateLimitSettings) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteMaxReqsRateLimitSettings not implemented")
 }
 
 func RegisterRateLimitSettingsApiServer(s *grpc.Server, srv RateLimitSettingsApiServer) {
@@ -595,24 +968,6 @@ func _RateLimitSettingsApi_CreateRateLimitSettings_Handler(srv interface{}, ctx 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RateLimitSettingsApiServer).CreateRateLimitSettings(ctx, req.(*RateLimitSettings))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RateLimitSettingsApi_UpdateRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RateLimitSettings)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RateLimitSettingsApiServer).UpdateRateLimitSettings(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.RateLimitSettingsApi/UpdateRateLimitSettings",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RateLimitSettingsApiServer).UpdateRateLimitSettings(ctx, req.(*RateLimitSettings))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -656,6 +1011,114 @@ func (x *rateLimitSettingsApiShowRateLimitSettingsServer) Send(m *RateLimitSetti
 	return x.ServerStream.SendMsg(m)
 }
 
+func _RateLimitSettingsApi_CreateFlowRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FlowRateLimitSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RateLimitSettingsApiServer).CreateFlowRateLimitSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.RateLimitSettingsApi/CreateFlowRateLimitSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RateLimitSettingsApiServer).CreateFlowRateLimitSettings(ctx, req.(*FlowRateLimitSettings))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RateLimitSettingsApi_UpdateFlowRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FlowRateLimitSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RateLimitSettingsApiServer).UpdateFlowRateLimitSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.RateLimitSettingsApi/UpdateFlowRateLimitSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RateLimitSettingsApiServer).UpdateFlowRateLimitSettings(ctx, req.(*FlowRateLimitSettings))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RateLimitSettingsApi_DeleteFlowRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FlowRateLimitSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RateLimitSettingsApiServer).DeleteFlowRateLimitSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.RateLimitSettingsApi/DeleteFlowRateLimitSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RateLimitSettingsApiServer).DeleteFlowRateLimitSettings(ctx, req.(*FlowRateLimitSettings))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MaxReqsRateLimitSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RateLimitSettingsApiServer).CreateMaxReqsRateLimitSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.RateLimitSettingsApi/CreateMaxReqsRateLimitSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RateLimitSettingsApiServer).CreateMaxReqsRateLimitSettings(ctx, req.(*MaxReqsRateLimitSettings))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RateLimitSettingsApi_UpdateMaxReqsRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MaxReqsRateLimitSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RateLimitSettingsApiServer).UpdateMaxReqsRateLimitSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.RateLimitSettingsApi/UpdateMaxReqsRateLimitSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RateLimitSettingsApiServer).UpdateMaxReqsRateLimitSettings(ctx, req.(*MaxReqsRateLimitSettings))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RateLimitSettingsApi_DeleteMaxReqsRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MaxReqsRateLimitSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RateLimitSettingsApiServer).DeleteMaxReqsRateLimitSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/edgeproto.RateLimitSettingsApi/DeleteMaxReqsRateLimitSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RateLimitSettingsApiServer).DeleteMaxReqsRateLimitSettings(ctx, req.(*MaxReqsRateLimitSettings))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RateLimitSettingsApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.RateLimitSettingsApi",
 	HandlerType: (*RateLimitSettingsApiServer)(nil),
@@ -665,12 +1128,32 @@ var _RateLimitSettingsApi_serviceDesc = grpc.ServiceDesc{
 			Handler:    _RateLimitSettingsApi_CreateRateLimitSettings_Handler,
 		},
 		{
-			MethodName: "UpdateRateLimitSettings",
-			Handler:    _RateLimitSettingsApi_UpdateRateLimitSettings_Handler,
-		},
-		{
 			MethodName: "DeleteRateLimitSettings",
 			Handler:    _RateLimitSettingsApi_DeleteRateLimitSettings_Handler,
+		},
+		{
+			MethodName: "CreateFlowRateLimitSettings",
+			Handler:    _RateLimitSettingsApi_CreateFlowRateLimitSettings_Handler,
+		},
+		{
+			MethodName: "UpdateFlowRateLimitSettings",
+			Handler:    _RateLimitSettingsApi_UpdateFlowRateLimitSettings_Handler,
+		},
+		{
+			MethodName: "DeleteFlowRateLimitSettings",
+			Handler:    _RateLimitSettingsApi_DeleteFlowRateLimitSettings_Handler,
+		},
+		{
+			MethodName: "CreateMaxReqsRateLimitSettings",
+			Handler:    _RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_Handler,
+		},
+		{
+			MethodName: "UpdateMaxReqsRateLimitSettings",
+			Handler:    _RateLimitSettingsApi_UpdateMaxReqsRateLimitSettings_Handler,
+		},
+		{
+			MethodName: "DeleteMaxReqsRateLimitSettings",
+			Handler:    _RateLimitSettingsApi_DeleteMaxReqsRateLimitSettings_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -762,6 +1245,100 @@ func (m *FlowSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *FlowRateLimitSettingsKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowRateLimitSettingsKey) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FlowRateLimitSettingsKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.RateLimitKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRatelimit(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.FlowSettingsName) > 0 {
+		i -= len(m.FlowSettingsName)
+		copy(dAtA[i:], m.FlowSettingsName)
+		i = encodeVarintRatelimit(dAtA, i, uint64(len(m.FlowSettingsName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *FlowRateLimitSettings) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowRateLimitSettings) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FlowRateLimitSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Settings != nil {
+		{
+			size, err := m.Settings.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintRatelimit(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRatelimit(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Fields) > 0 {
+		for iNdEx := len(m.Fields) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Fields[iNdEx])
+			copy(dAtA[i:], m.Fields[iNdEx])
+			i = encodeVarintRatelimit(dAtA, i, uint64(len(m.Fields[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *MaxReqsSettings) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -800,7 +1377,7 @@ func (m *MaxReqsSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *RateLimitSettings) Marshal() (dAtA []byte, err error) {
+func (m *MaxReqsRateLimitSettingsKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -810,43 +1387,67 @@ func (m *RateLimitSettings) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *RateLimitSettings) MarshalTo(dAtA []byte) (int, error) {
+func (m *MaxReqsRateLimitSettingsKey) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *RateLimitSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MaxReqsRateLimitSettingsKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.MaxReqsSettings) > 0 {
-		for iNdEx := len(m.MaxReqsSettings) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.MaxReqsSettings[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintRatelimit(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x42
+	{
+		size, err := m.RateLimitKey.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintRatelimit(dAtA, i, uint64(size))
 	}
-	if len(m.FlowSettings) > 0 {
-		for iNdEx := len(m.FlowSettings) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.FlowSettings[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintRatelimit(dAtA, i, uint64(size))
+	i--
+	dAtA[i] = 0x12
+	if len(m.MaxReqsSettingsName) > 0 {
+		i -= len(m.MaxReqsSettingsName)
+		copy(dAtA[i:], m.MaxReqsSettingsName)
+		i = encodeVarintRatelimit(dAtA, i, uint64(len(m.MaxReqsSettingsName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MaxReqsRateLimitSettings) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MaxReqsRateLimitSettings) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MaxReqsRateLimitSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Settings != nil {
+		{
+			size, err := m.Settings.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
 			}
-			i--
-			dAtA[i] = 0x3a
+			i -= size
+			i = encodeVarintRatelimit(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x1a
 	}
 	{
 		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
@@ -870,6 +1471,91 @@ func (m *RateLimitSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *RateLimitSettings) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RateLimitSettings) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RateLimitSettings) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MaxReqsSettings) > 0 {
+		for k := range m.MaxReqsSettings {
+			v := m.MaxReqsSettings[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintRatelimit(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintRatelimit(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintRatelimit(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.FlowSettings) > 0 {
+		for k := range m.FlowSettings {
+			v := m.FlowSettings[k]
+			baseI := i
+			if v != nil {
+				{
+					size, err := v.MarshalToSizedBuffer(dAtA[:i])
+					if err != nil {
+						return 0, err
+					}
+					i -= size
+					i = encodeVarintRatelimit(dAtA, i, uint64(size))
+				}
+				i--
+				dAtA[i] = 0x12
+			}
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintRatelimit(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintRatelimit(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	{
+		size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintRatelimit(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func (m *RateLimitSettingsData) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -886,6 +1572,80 @@ func (m *RateLimitSettingsData) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *RateLimitSettingsData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Settings) > 0 {
+		for iNdEx := len(m.Settings) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Settings[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRatelimit(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *FlowRateLimitSettingsData) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowRateLimitSettingsData) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FlowRateLimitSettingsData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Settings) > 0 {
+		for iNdEx := len(m.Settings) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Settings[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintRatelimit(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MaxReqsRateLimitSettingsData) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MaxReqsRateLimitSettingsData) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MaxReqsRateLimitSettingsData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1045,6 +1805,449 @@ func (m *FlowSettings) ValidateEnums() error {
 	return nil
 }
 
+func (m *FlowRateLimitSettingsKey) Matches(o *FlowRateLimitSettingsKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !opts.Filter || o.FlowSettingsName != "" {
+		if o.FlowSettingsName != m.FlowSettingsName {
+			return false
+		}
+	}
+	if !m.RateLimitKey.Matches(&o.RateLimitKey, fopts...) {
+		return false
+	}
+	return true
+}
+
+func (m *FlowRateLimitSettingsKey) CopyInFields(src *FlowRateLimitSettingsKey) int {
+	changed := 0
+	if m.FlowSettingsName != src.FlowSettingsName {
+		m.FlowSettingsName = src.FlowSettingsName
+		changed++
+	}
+	if m.RateLimitKey.ApiName != src.RateLimitKey.ApiName {
+		m.RateLimitKey.ApiName = src.RateLimitKey.ApiName
+		changed++
+	}
+	if m.RateLimitKey.ApiEndpointType != src.RateLimitKey.ApiEndpointType {
+		m.RateLimitKey.ApiEndpointType = src.RateLimitKey.ApiEndpointType
+		changed++
+	}
+	if m.RateLimitKey.RateLimitTarget != src.RateLimitKey.RateLimitTarget {
+		m.RateLimitKey.RateLimitTarget = src.RateLimitKey.RateLimitTarget
+		changed++
+	}
+	return changed
+}
+
+func (m *FlowRateLimitSettingsKey) DeepCopyIn(src *FlowRateLimitSettingsKey) {
+	m.FlowSettingsName = src.FlowSettingsName
+	m.RateLimitKey.DeepCopyIn(&src.RateLimitKey)
+}
+
+func (m *FlowRateLimitSettingsKey) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal FlowRateLimitSettingsKey key string", "obj", m)
+	}
+	return string(key)
+}
+
+func FlowRateLimitSettingsKeyStringParse(str string, key *FlowRateLimitSettingsKey) {
+	err := json.Unmarshal([]byte(str), key)
+	if err != nil {
+		log.FatalLog("Failed to unmarshal FlowRateLimitSettingsKey key string", "str", str)
+	}
+}
+
+func (m *FlowRateLimitSettingsKey) NotFoundError() error {
+	return fmt.Errorf("FlowRateLimitSettings key %s not found", m.GetKeyString())
+}
+
+func (m *FlowRateLimitSettingsKey) ExistsError() error {
+	return fmt.Errorf("FlowRateLimitSettings key %s already exists", m.GetKeyString())
+}
+
+var FlowRateLimitSettingsKeyTagFlowSettingsName = "flowsettingsname"
+
+func (m *FlowRateLimitSettingsKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["flowsettingsname"] = m.FlowSettingsName
+	tags["apiname"] = m.RateLimitKey.ApiName
+	tags["apiendpointtype"] = ApiEndpointType_name[int32(m.RateLimitKey.ApiEndpointType)]
+	tags["ratelimittarget"] = RateLimitTarget_name[int32(m.RateLimitKey.RateLimitTarget)]
+	return tags
+}
+
+// Helper method to check that enums have valid values
+func (m *FlowRateLimitSettingsKey) ValidateEnums() error {
+	if err := m.RateLimitKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *FlowRateLimitSettings) Matches(o *FlowRateLimitSettings, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.Settings != nil {
+		if m.Settings == nil && o.Settings != nil || m.Settings != nil && o.Settings == nil {
+			return false
+		} else if m.Settings != nil && o.Settings != nil {
+		}
+	}
+	return true
+}
+
+const FlowRateLimitSettingsFieldKey = "2"
+const FlowRateLimitSettingsFieldKeyFlowSettingsName = "2.1"
+const FlowRateLimitSettingsFieldKeyRateLimitKey = "2.2"
+const FlowRateLimitSettingsFieldKeyRateLimitKeyApiName = "2.2.1"
+const FlowRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType = "2.2.2"
+const FlowRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget = "2.2.3"
+const FlowRateLimitSettingsFieldSettings = "3"
+const FlowRateLimitSettingsFieldSettingsFlowAlgorithm = "3.1"
+const FlowRateLimitSettingsFieldSettingsReqsPerSecond = "3.2"
+const FlowRateLimitSettingsFieldSettingsBurstSize = "3.3"
+
+var FlowRateLimitSettingsAllFields = []string{
+	FlowRateLimitSettingsFieldKeyFlowSettingsName,
+	FlowRateLimitSettingsFieldKeyRateLimitKeyApiName,
+	FlowRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType,
+	FlowRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget,
+	FlowRateLimitSettingsFieldSettingsFlowAlgorithm,
+	FlowRateLimitSettingsFieldSettingsReqsPerSecond,
+	FlowRateLimitSettingsFieldSettingsBurstSize,
+}
+
+var FlowRateLimitSettingsAllFieldsMap = map[string]struct{}{
+	FlowRateLimitSettingsFieldKeyFlowSettingsName:            struct{}{},
+	FlowRateLimitSettingsFieldKeyRateLimitKeyApiName:         struct{}{},
+	FlowRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType: struct{}{},
+	FlowRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget: struct{}{},
+	FlowRateLimitSettingsFieldSettingsFlowAlgorithm:          struct{}{},
+	FlowRateLimitSettingsFieldSettingsReqsPerSecond:          struct{}{},
+	FlowRateLimitSettingsFieldSettingsBurstSize:              struct{}{},
+}
+
+var FlowRateLimitSettingsAllFieldsStringMap = map[string]string{
+	FlowRateLimitSettingsFieldKeyFlowSettingsName:            "Key Flow Settings Name",
+	FlowRateLimitSettingsFieldKeyRateLimitKeyApiName:         "Key Rate Limit Key Api Name",
+	FlowRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType: "Key Rate Limit Key Api Endpoint Type",
+	FlowRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget: "Key Rate Limit Key Rate Limit Target",
+	FlowRateLimitSettingsFieldSettingsFlowAlgorithm:          "Settings Flow Algorithm",
+	FlowRateLimitSettingsFieldSettingsReqsPerSecond:          "Settings Reqs Per Second",
+	FlowRateLimitSettingsFieldSettingsBurstSize:              "Settings Burst Size",
+}
+
+func (m *FlowRateLimitSettings) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, FlowRateLimitSettingsFieldKey+".") || s == FlowRateLimitSettingsFieldKey
+}
+
+func (m *FlowRateLimitSettings) DiffFields(o *FlowRateLimitSettings, fields map[string]struct{}) {
+	if m.Key.FlowSettingsName != o.Key.FlowSettingsName {
+		fields[FlowRateLimitSettingsFieldKeyFlowSettingsName] = struct{}{}
+		fields[FlowRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Key.RateLimitKey.ApiName != o.Key.RateLimitKey.ApiName {
+		fields[FlowRateLimitSettingsFieldKeyRateLimitKeyApiName] = struct{}{}
+		fields[FlowRateLimitSettingsFieldKeyRateLimitKey] = struct{}{}
+		fields[FlowRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Key.RateLimitKey.ApiEndpointType != o.Key.RateLimitKey.ApiEndpointType {
+		fields[FlowRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType] = struct{}{}
+		fields[FlowRateLimitSettingsFieldKeyRateLimitKey] = struct{}{}
+		fields[FlowRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Key.RateLimitKey.RateLimitTarget != o.Key.RateLimitKey.RateLimitTarget {
+		fields[FlowRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget] = struct{}{}
+		fields[FlowRateLimitSettingsFieldKeyRateLimitKey] = struct{}{}
+		fields[FlowRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Settings != nil && o.Settings != nil {
+		if m.Settings.FlowAlgorithm != o.Settings.FlowAlgorithm {
+			fields[FlowRateLimitSettingsFieldSettingsFlowAlgorithm] = struct{}{}
+			fields[FlowRateLimitSettingsFieldSettings] = struct{}{}
+		}
+		if m.Settings.ReqsPerSecond != o.Settings.ReqsPerSecond {
+			fields[FlowRateLimitSettingsFieldSettingsReqsPerSecond] = struct{}{}
+			fields[FlowRateLimitSettingsFieldSettings] = struct{}{}
+		}
+		if m.Settings.BurstSize != o.Settings.BurstSize {
+			fields[FlowRateLimitSettingsFieldSettingsBurstSize] = struct{}{}
+			fields[FlowRateLimitSettingsFieldSettings] = struct{}{}
+		}
+	} else if (m.Settings != nil && o.Settings == nil) || (m.Settings == nil && o.Settings != nil) {
+		fields[FlowRateLimitSettingsFieldSettings] = struct{}{}
+	}
+}
+
+func (m *FlowRateLimitSettings) CopyInFields(src *FlowRateLimitSettings) int {
+	changed := 0
+	fmap := MakeFieldMap(src.Fields)
+	if _, set := fmap["2"]; set {
+		if _, set := fmap["2.1"]; set {
+			if m.Key.FlowSettingsName != src.Key.FlowSettingsName {
+				m.Key.FlowSettingsName = src.Key.FlowSettingsName
+				changed++
+			}
+		}
+		if _, set := fmap["2.2"]; set {
+			if _, set := fmap["2.2.1"]; set {
+				if m.Key.RateLimitKey.ApiName != src.Key.RateLimitKey.ApiName {
+					m.Key.RateLimitKey.ApiName = src.Key.RateLimitKey.ApiName
+					changed++
+				}
+			}
+			if _, set := fmap["2.2.2"]; set {
+				if m.Key.RateLimitKey.ApiEndpointType != src.Key.RateLimitKey.ApiEndpointType {
+					m.Key.RateLimitKey.ApiEndpointType = src.Key.RateLimitKey.ApiEndpointType
+					changed++
+				}
+			}
+			if _, set := fmap["2.2.3"]; set {
+				if m.Key.RateLimitKey.RateLimitTarget != src.Key.RateLimitKey.RateLimitTarget {
+					m.Key.RateLimitKey.RateLimitTarget = src.Key.RateLimitKey.RateLimitTarget
+					changed++
+				}
+			}
+		}
+	}
+	if _, set := fmap["3"]; set {
+		if src.Settings != nil {
+			m.Settings = &FlowSettings{}
+			if _, set := fmap["3.1"]; set {
+				if m.Settings.FlowAlgorithm != src.Settings.FlowAlgorithm {
+					m.Settings.FlowAlgorithm = src.Settings.FlowAlgorithm
+					changed++
+				}
+			}
+			if _, set := fmap["3.2"]; set {
+				if m.Settings.ReqsPerSecond != src.Settings.ReqsPerSecond {
+					m.Settings.ReqsPerSecond = src.Settings.ReqsPerSecond
+					changed++
+				}
+			}
+			if _, set := fmap["3.3"]; set {
+				if m.Settings.BurstSize != src.Settings.BurstSize {
+					m.Settings.BurstSize = src.Settings.BurstSize
+					changed++
+				}
+			}
+		} else if m.Settings != nil {
+			m.Settings = nil
+			changed++
+		}
+	}
+	return changed
+}
+
+func (m *FlowRateLimitSettings) DeepCopyIn(src *FlowRateLimitSettings) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.Settings != nil {
+		var tmp_Settings FlowSettings
+		tmp_Settings.DeepCopyIn(src.Settings)
+		m.Settings = &tmp_Settings
+	} else {
+		m.Settings = nil
+	}
+}
+
+func (s *FlowRateLimitSettings) HasFields() bool {
+	return true
+}
+
+type FlowRateLimitSettingsStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewFlowRateLimitSettingsStore(kvstore objstore.KVStore) FlowRateLimitSettingsStore {
+	return FlowRateLimitSettingsStore{kvstore: kvstore}
+}
+
+func (s *FlowRateLimitSettingsStore) Create(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
+	err := m.Validate(FlowRateLimitSettingsAllFieldsMap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("FlowRateLimitSettings", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *FlowRateLimitSettingsStore) Update(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("FlowRateLimitSettings", m.GetKey())
+	var vers int64 = 0
+	curBytes, vers, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	var cur FlowRateLimitSettings
+	err = json.Unmarshal(curBytes, &cur)
+	if err != nil {
+		return nil, err
+	}
+	cur.CopyInFields(m)
+	// never save fields
+	cur.Fields = nil
+	val, err := json.Marshal(cur)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *FlowRateLimitSettingsStore) Put(ctx context.Context, m *FlowRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(FlowRateLimitSettingsAllFieldsMap)
+	m.Fields = nil
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("FlowRateLimitSettings", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *FlowRateLimitSettingsStore) Delete(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("FlowRateLimitSettings", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *FlowRateLimitSettingsStore) LoadOne(key string) (*FlowRateLimitSettings, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj FlowRateLimitSettings
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse FlowRateLimitSettings data", "val", string(val), "err", err)
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *FlowRateLimitSettingsStore) STMGet(stm concurrency.STM, key *FlowRateLimitSettingsKey, buf *FlowRateLimitSettings) bool {
+	keystr := objstore.DbKeyString("FlowRateLimitSettings", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *FlowRateLimitSettingsStore) STMPut(stm concurrency.STM, obj *FlowRateLimitSettings, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("FlowRateLimitSettings", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("FlowRateLimitSettings json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *FlowRateLimitSettingsStore) STMDel(stm concurrency.STM, key *FlowRateLimitSettingsKey) {
+	keystr := objstore.DbKeyString("FlowRateLimitSettings", key)
+	stm.Del(keystr)
+}
+
+func (m *FlowRateLimitSettings) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *FlowRateLimitSettings) GetKey() *FlowRateLimitSettingsKey {
+	return &m.Key
+}
+
+func (m *FlowRateLimitSettings) GetKeyVal() FlowRateLimitSettingsKey {
+	return m.Key
+}
+
+func (m *FlowRateLimitSettings) SetKey(key *FlowRateLimitSettingsKey) {
+	m.Key = *key
+}
+
+func CmpSortFlowRateLimitSettings(a FlowRateLimitSettings, b FlowRateLimitSettings) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *FlowRateLimitSettings) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Settings.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *MaxReqsSettings) CopyInFields(src *MaxReqsSettings) int {
 	changed := 0
 	if m.MaxReqsAlgorithm != src.MaxReqsAlgorithm {
@@ -1076,271 +2279,246 @@ func (m *MaxReqsSettings) ValidateEnums() error {
 	return nil
 }
 
-func (m *RateLimitSettings) Matches(o *RateLimitSettings, fopts ...MatchOpt) bool {
-	opts := MatchOptions{}
-	applyMatchOptions(&opts, fopts...)
-	if o == nil {
-		if opts.Filter {
-			return true
-		}
-		return false
+func (m *MaxReqsRateLimitSettingsKey) CopyInFields(src *MaxReqsRateLimitSettingsKey) int {
+	changed := 0
+	if m.MaxReqsSettingsName != src.MaxReqsSettingsName {
+		m.MaxReqsSettingsName = src.MaxReqsSettingsName
+		changed++
 	}
-	if !m.Key.Matches(&o.Key, fopts...) {
-		return false
+	if m.RateLimitKey.ApiName != src.RateLimitKey.ApiName {
+		m.RateLimitKey.ApiName = src.RateLimitKey.ApiName
+		changed++
 	}
-	if !opts.Filter || o.FlowSettings != nil {
-		if len(m.FlowSettings) == 0 && len(o.FlowSettings) > 0 || len(m.FlowSettings) > 0 && len(o.FlowSettings) == 0 {
-			return false
-		} else if m.FlowSettings != nil && o.FlowSettings != nil {
-			if !opts.Filter && len(m.FlowSettings) != len(o.FlowSettings) {
-				return false
-			}
-		}
+	if m.RateLimitKey.ApiEndpointType != src.RateLimitKey.ApiEndpointType {
+		m.RateLimitKey.ApiEndpointType = src.RateLimitKey.ApiEndpointType
+		changed++
 	}
-	if !opts.Filter || o.MaxReqsSettings != nil {
-		if len(m.MaxReqsSettings) == 0 && len(o.MaxReqsSettings) > 0 || len(m.MaxReqsSettings) > 0 && len(o.MaxReqsSettings) == 0 {
-			return false
-		} else if m.MaxReqsSettings != nil && o.MaxReqsSettings != nil {
-			if !opts.Filter && len(m.MaxReqsSettings) != len(o.MaxReqsSettings) {
-				return false
-			}
-		}
+	if m.RateLimitKey.RateLimitTarget != src.RateLimitKey.RateLimitTarget {
+		m.RateLimitKey.RateLimitTarget = src.RateLimitKey.RateLimitTarget
+		changed++
 	}
-	return true
+	return changed
 }
 
-const RateLimitSettingsFieldKey = "2"
-const RateLimitSettingsFieldKeyApiName = "2.1"
-const RateLimitSettingsFieldKeyApiEndpointType = "2.2"
-const RateLimitSettingsFieldKeyRateLimitTarget = "2.3"
-const RateLimitSettingsFieldFlowSettings = "7"
-const RateLimitSettingsFieldFlowSettingsFlowAlgorithm = "7.1"
-const RateLimitSettingsFieldFlowSettingsReqsPerSecond = "7.2"
-const RateLimitSettingsFieldFlowSettingsBurstSize = "7.3"
-const RateLimitSettingsFieldMaxReqsSettings = "8"
-const RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm = "8.1"
-const RateLimitSettingsFieldMaxReqsSettingsMaxRequests = "8.2"
-const RateLimitSettingsFieldMaxReqsSettingsInterval = "8.3"
-
-var RateLimitSettingsAllFields = []string{
-	RateLimitSettingsFieldKeyApiName,
-	RateLimitSettingsFieldKeyApiEndpointType,
-	RateLimitSettingsFieldKeyRateLimitTarget,
-	RateLimitSettingsFieldFlowSettingsFlowAlgorithm,
-	RateLimitSettingsFieldFlowSettingsReqsPerSecond,
-	RateLimitSettingsFieldFlowSettingsBurstSize,
-	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm,
-	RateLimitSettingsFieldMaxReqsSettingsMaxRequests,
-	RateLimitSettingsFieldMaxReqsSettingsInterval,
+func (m *MaxReqsRateLimitSettingsKey) DeepCopyIn(src *MaxReqsRateLimitSettingsKey) {
+	m.MaxReqsSettingsName = src.MaxReqsSettingsName
+	m.RateLimitKey.DeepCopyIn(&src.RateLimitKey)
 }
 
-var RateLimitSettingsAllFieldsMap = map[string]struct{}{
-	RateLimitSettingsFieldKeyApiName:                      struct{}{},
-	RateLimitSettingsFieldKeyApiEndpointType:              struct{}{},
-	RateLimitSettingsFieldKeyRateLimitTarget:              struct{}{},
-	RateLimitSettingsFieldFlowSettingsFlowAlgorithm:       struct{}{},
-	RateLimitSettingsFieldFlowSettingsReqsPerSecond:       struct{}{},
-	RateLimitSettingsFieldFlowSettingsBurstSize:           struct{}{},
-	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm: struct{}{},
-	RateLimitSettingsFieldMaxReqsSettingsMaxRequests:      struct{}{},
-	RateLimitSettingsFieldMaxReqsSettingsInterval:         struct{}{},
+func (m *MaxReqsRateLimitSettingsKey) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal MaxReqsRateLimitSettingsKey key string", "obj", m)
+	}
+	return string(key)
 }
 
-var RateLimitSettingsAllFieldsStringMap = map[string]string{
-	RateLimitSettingsFieldKeyApiName:                      "Key Api Name",
-	RateLimitSettingsFieldKeyApiEndpointType:              "Key Api Endpoint Type",
-	RateLimitSettingsFieldKeyRateLimitTarget:              "Key Rate Limit Target",
-	RateLimitSettingsFieldFlowSettingsFlowAlgorithm:       "Flow Settings Flow Algorithm",
-	RateLimitSettingsFieldFlowSettingsReqsPerSecond:       "Flow Settings Reqs Per Second",
-	RateLimitSettingsFieldFlowSettingsBurstSize:           "Flow Settings Burst Size",
-	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm: "Max Reqs Settings Max Reqs Algorithm",
-	RateLimitSettingsFieldMaxReqsSettingsMaxRequests:      "Max Reqs Settings Max Requests",
-	RateLimitSettingsFieldMaxReqsSettingsInterval:         "Max Reqs Settings Interval",
-}
-
-func (m *RateLimitSettings) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, RateLimitSettingsFieldKey+".") || s == RateLimitSettingsFieldKey
-}
-
-func (m *RateLimitSettings) DiffFields(o *RateLimitSettings, fields map[string]struct{}) {
-	if m.Key.ApiName != o.Key.ApiName {
-		fields[RateLimitSettingsFieldKeyApiName] = struct{}{}
-		fields[RateLimitSettingsFieldKey] = struct{}{}
-	}
-	if m.Key.ApiEndpointType != o.Key.ApiEndpointType {
-		fields[RateLimitSettingsFieldKeyApiEndpointType] = struct{}{}
-		fields[RateLimitSettingsFieldKey] = struct{}{}
-	}
-	if m.Key.RateLimitTarget != o.Key.RateLimitTarget {
-		fields[RateLimitSettingsFieldKeyRateLimitTarget] = struct{}{}
-		fields[RateLimitSettingsFieldKey] = struct{}{}
-	}
-	if m.FlowSettings != nil && o.FlowSettings != nil {
-		if len(m.FlowSettings) != len(o.FlowSettings) {
-			fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
-		} else {
-			for i0 := 0; i0 < len(m.FlowSettings); i0++ {
-				if m.FlowSettings[i0].FlowAlgorithm != o.FlowSettings[i0].FlowAlgorithm {
-					fields[RateLimitSettingsFieldFlowSettingsFlowAlgorithm] = struct{}{}
-					fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
-				}
-				if m.FlowSettings[i0].ReqsPerSecond != o.FlowSettings[i0].ReqsPerSecond {
-					fields[RateLimitSettingsFieldFlowSettingsReqsPerSecond] = struct{}{}
-					fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
-				}
-				if m.FlowSettings[i0].BurstSize != o.FlowSettings[i0].BurstSize {
-					fields[RateLimitSettingsFieldFlowSettingsBurstSize] = struct{}{}
-					fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
-				}
-			}
-		}
-	} else if (m.FlowSettings != nil && o.FlowSettings == nil) || (m.FlowSettings == nil && o.FlowSettings != nil) {
-		fields[RateLimitSettingsFieldFlowSettings] = struct{}{}
-	}
-	if m.MaxReqsSettings != nil && o.MaxReqsSettings != nil {
-		if len(m.MaxReqsSettings) != len(o.MaxReqsSettings) {
-			fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
-		} else {
-			for i0 := 0; i0 < len(m.MaxReqsSettings); i0++ {
-				if m.MaxReqsSettings[i0].MaxReqsAlgorithm != o.MaxReqsSettings[i0].MaxReqsAlgorithm {
-					fields[RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm] = struct{}{}
-					fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
-				}
-				if m.MaxReqsSettings[i0].MaxRequests != o.MaxReqsSettings[i0].MaxRequests {
-					fields[RateLimitSettingsFieldMaxReqsSettingsMaxRequests] = struct{}{}
-					fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
-				}
-				if m.MaxReqsSettings[i0].Interval != o.MaxReqsSettings[i0].Interval {
-					fields[RateLimitSettingsFieldMaxReqsSettingsInterval] = struct{}{}
-					fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
-				}
-			}
-		}
-	} else if (m.MaxReqsSettings != nil && o.MaxReqsSettings == nil) || (m.MaxReqsSettings == nil && o.MaxReqsSettings != nil) {
-		fields[RateLimitSettingsFieldMaxReqsSettings] = struct{}{}
+func MaxReqsRateLimitSettingsKeyStringParse(str string, key *MaxReqsRateLimitSettingsKey) {
+	err := json.Unmarshal([]byte(str), key)
+	if err != nil {
+		log.FatalLog("Failed to unmarshal MaxReqsRateLimitSettingsKey key string", "str", str)
 	}
 }
 
-var UpdateRateLimitSettingsFieldsMap = map[string]struct{}{
-	RateLimitSettingsFieldFlowSettings:                    struct{}{},
-	RateLimitSettingsFieldFlowSettingsFlowAlgorithm:       struct{}{},
-	RateLimitSettingsFieldFlowSettingsReqsPerSecond:       struct{}{},
-	RateLimitSettingsFieldFlowSettingsBurstSize:           struct{}{},
-	RateLimitSettingsFieldMaxReqsSettings:                 struct{}{},
-	RateLimitSettingsFieldMaxReqsSettingsMaxReqsAlgorithm: struct{}{},
-	RateLimitSettingsFieldMaxReqsSettingsMaxRequests:      struct{}{},
-	RateLimitSettingsFieldMaxReqsSettingsInterval:         struct{}{},
+func (m *MaxReqsRateLimitSettingsKey) NotFoundError() error {
+	return fmt.Errorf("MaxReqsRateLimitSettings key %s not found", m.GetKeyString())
 }
 
-func (m *RateLimitSettings) ValidateUpdateFields() error {
-	if m.Fields == nil {
-		return fmt.Errorf("nothing specified to update")
-	}
-	fmap := MakeFieldMap(m.Fields)
-	badFieldStrs := []string{}
-	for field, _ := range fmap {
-		if m.IsKeyField(field) {
-			continue
-		}
-		if _, ok := UpdateRateLimitSettingsFieldsMap[field]; !ok {
-			if _, ok := RateLimitSettingsAllFieldsStringMap[field]; !ok {
-				continue
-			}
-			badFieldStrs = append(badFieldStrs, RateLimitSettingsAllFieldsStringMap[field])
-		}
-	}
-	if len(badFieldStrs) > 0 {
-		return fmt.Errorf("specified field(s) %s cannot be modified", strings.Join(badFieldStrs, ","))
+func (m *MaxReqsRateLimitSettingsKey) ExistsError() error {
+	return fmt.Errorf("MaxReqsRateLimitSettings key %s already exists", m.GetKeyString())
+}
+
+var MaxReqsRateLimitSettingsKeyTagMaxReqsSettingsName = "maxreqssettingsname"
+
+func (m *MaxReqsRateLimitSettingsKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["maxreqssettingsname"] = m.MaxReqsSettingsName
+	tags["apiname"] = m.RateLimitKey.ApiName
+	tags["apiendpointtype"] = ApiEndpointType_name[int32(m.RateLimitKey.ApiEndpointType)]
+	tags["ratelimittarget"] = RateLimitTarget_name[int32(m.RateLimitKey.RateLimitTarget)]
+	return tags
+}
+
+// Helper method to check that enums have valid values
+func (m *MaxReqsRateLimitSettingsKey) ValidateEnums() error {
+	if err := m.RateLimitKey.ValidateEnums(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (m *RateLimitSettings) CopyInFields(src *RateLimitSettings) int {
+const MaxReqsRateLimitSettingsFieldKey = "2"
+const MaxReqsRateLimitSettingsFieldKeyMaxReqsSettingsName = "2.1"
+const MaxReqsRateLimitSettingsFieldKeyRateLimitKey = "2.2"
+const MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiName = "2.2.1"
+const MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType = "2.2.2"
+const MaxReqsRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget = "2.2.3"
+const MaxReqsRateLimitSettingsFieldSettings = "3"
+const MaxReqsRateLimitSettingsFieldSettingsMaxReqsAlgorithm = "3.1"
+const MaxReqsRateLimitSettingsFieldSettingsMaxRequests = "3.2"
+const MaxReqsRateLimitSettingsFieldSettingsInterval = "3.3"
+
+var MaxReqsRateLimitSettingsAllFields = []string{
+	MaxReqsRateLimitSettingsFieldKeyMaxReqsSettingsName,
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiName,
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType,
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget,
+	MaxReqsRateLimitSettingsFieldSettingsMaxReqsAlgorithm,
+	MaxReqsRateLimitSettingsFieldSettingsMaxRequests,
+	MaxReqsRateLimitSettingsFieldSettingsInterval,
+}
+
+var MaxReqsRateLimitSettingsAllFieldsMap = map[string]struct{}{
+	MaxReqsRateLimitSettingsFieldKeyMaxReqsSettingsName:         struct{}{},
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiName:         struct{}{},
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType: struct{}{},
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget: struct{}{},
+	MaxReqsRateLimitSettingsFieldSettingsMaxReqsAlgorithm:       struct{}{},
+	MaxReqsRateLimitSettingsFieldSettingsMaxRequests:            struct{}{},
+	MaxReqsRateLimitSettingsFieldSettingsInterval:               struct{}{},
+}
+
+var MaxReqsRateLimitSettingsAllFieldsStringMap = map[string]string{
+	MaxReqsRateLimitSettingsFieldKeyMaxReqsSettingsName:         "Key Max Reqs Settings Name",
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiName:         "Key Rate Limit Key Api Name",
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType: "Key Rate Limit Key Api Endpoint Type",
+	MaxReqsRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget: "Key Rate Limit Key Rate Limit Target",
+	MaxReqsRateLimitSettingsFieldSettingsMaxReqsAlgorithm:       "Settings Max Reqs Algorithm",
+	MaxReqsRateLimitSettingsFieldSettingsMaxRequests:            "Settings Max Requests",
+	MaxReqsRateLimitSettingsFieldSettingsInterval:               "Settings Interval",
+}
+
+func (m *MaxReqsRateLimitSettings) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, MaxReqsRateLimitSettingsFieldKey+".") || s == MaxReqsRateLimitSettingsFieldKey
+}
+
+func (m *MaxReqsRateLimitSettings) DiffFields(o *MaxReqsRateLimitSettings, fields map[string]struct{}) {
+	if m.Key.MaxReqsSettingsName != o.Key.MaxReqsSettingsName {
+		fields[MaxReqsRateLimitSettingsFieldKeyMaxReqsSettingsName] = struct{}{}
+		fields[MaxReqsRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Key.RateLimitKey.ApiName != o.Key.RateLimitKey.ApiName {
+		fields[MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiName] = struct{}{}
+		fields[MaxReqsRateLimitSettingsFieldKeyRateLimitKey] = struct{}{}
+		fields[MaxReqsRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Key.RateLimitKey.ApiEndpointType != o.Key.RateLimitKey.ApiEndpointType {
+		fields[MaxReqsRateLimitSettingsFieldKeyRateLimitKeyApiEndpointType] = struct{}{}
+		fields[MaxReqsRateLimitSettingsFieldKeyRateLimitKey] = struct{}{}
+		fields[MaxReqsRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Key.RateLimitKey.RateLimitTarget != o.Key.RateLimitKey.RateLimitTarget {
+		fields[MaxReqsRateLimitSettingsFieldKeyRateLimitKeyRateLimitTarget] = struct{}{}
+		fields[MaxReqsRateLimitSettingsFieldKeyRateLimitKey] = struct{}{}
+		fields[MaxReqsRateLimitSettingsFieldKey] = struct{}{}
+	}
+	if m.Settings != nil && o.Settings != nil {
+		if m.Settings.MaxReqsAlgorithm != o.Settings.MaxReqsAlgorithm {
+			fields[MaxReqsRateLimitSettingsFieldSettingsMaxReqsAlgorithm] = struct{}{}
+			fields[MaxReqsRateLimitSettingsFieldSettings] = struct{}{}
+		}
+		if m.Settings.MaxRequests != o.Settings.MaxRequests {
+			fields[MaxReqsRateLimitSettingsFieldSettingsMaxRequests] = struct{}{}
+			fields[MaxReqsRateLimitSettingsFieldSettings] = struct{}{}
+		}
+		if m.Settings.Interval != o.Settings.Interval {
+			fields[MaxReqsRateLimitSettingsFieldSettingsInterval] = struct{}{}
+			fields[MaxReqsRateLimitSettingsFieldSettings] = struct{}{}
+		}
+	} else if (m.Settings != nil && o.Settings == nil) || (m.Settings == nil && o.Settings != nil) {
+		fields[MaxReqsRateLimitSettingsFieldSettings] = struct{}{}
+	}
+}
+
+func (m *MaxReqsRateLimitSettings) CopyInFields(src *MaxReqsRateLimitSettings) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
-			if m.Key.ApiName != src.Key.ApiName {
-				m.Key.ApiName = src.Key.ApiName
+			if m.Key.MaxReqsSettingsName != src.Key.MaxReqsSettingsName {
+				m.Key.MaxReqsSettingsName = src.Key.MaxReqsSettingsName
 				changed++
 			}
 		}
 		if _, set := fmap["2.2"]; set {
-			if m.Key.ApiEndpointType != src.Key.ApiEndpointType {
-				m.Key.ApiEndpointType = src.Key.ApiEndpointType
-				changed++
+			if _, set := fmap["2.2.1"]; set {
+				if m.Key.RateLimitKey.ApiName != src.Key.RateLimitKey.ApiName {
+					m.Key.RateLimitKey.ApiName = src.Key.RateLimitKey.ApiName
+					changed++
+				}
 			}
-		}
-		if _, set := fmap["2.3"]; set {
-			if m.Key.RateLimitTarget != src.Key.RateLimitTarget {
-				m.Key.RateLimitTarget = src.Key.RateLimitTarget
-				changed++
+			if _, set := fmap["2.2.2"]; set {
+				if m.Key.RateLimitKey.ApiEndpointType != src.Key.RateLimitKey.ApiEndpointType {
+					m.Key.RateLimitKey.ApiEndpointType = src.Key.RateLimitKey.ApiEndpointType
+					changed++
+				}
+			}
+			if _, set := fmap["2.2.3"]; set {
+				if m.Key.RateLimitKey.RateLimitTarget != src.Key.RateLimitKey.RateLimitTarget {
+					m.Key.RateLimitKey.RateLimitTarget = src.Key.RateLimitKey.RateLimitTarget
+					changed++
+				}
 			}
 		}
 	}
-	if _, set := fmap["7"]; set {
-		if src.FlowSettings != nil {
-			m.FlowSettings = src.FlowSettings
-			changed++
-		} else if m.FlowSettings != nil {
-			m.FlowSettings = nil
-			changed++
-		}
-	}
-	if _, set := fmap["8"]; set {
-		if src.MaxReqsSettings != nil {
-			m.MaxReqsSettings = src.MaxReqsSettings
-			changed++
-		} else if m.MaxReqsSettings != nil {
-			m.MaxReqsSettings = nil
+	if _, set := fmap["3"]; set {
+		if src.Settings != nil {
+			m.Settings = &MaxReqsSettings{}
+			if _, set := fmap["3.1"]; set {
+				if m.Settings.MaxReqsAlgorithm != src.Settings.MaxReqsAlgorithm {
+					m.Settings.MaxReqsAlgorithm = src.Settings.MaxReqsAlgorithm
+					changed++
+				}
+			}
+			if _, set := fmap["3.2"]; set {
+				if m.Settings.MaxRequests != src.Settings.MaxRequests {
+					m.Settings.MaxRequests = src.Settings.MaxRequests
+					changed++
+				}
+			}
+			if _, set := fmap["3.3"]; set {
+				if m.Settings.Interval != src.Settings.Interval {
+					m.Settings.Interval = src.Settings.Interval
+					changed++
+				}
+			}
+		} else if m.Settings != nil {
+			m.Settings = nil
 			changed++
 		}
 	}
 	return changed
 }
 
-func (m *RateLimitSettings) DeepCopyIn(src *RateLimitSettings) {
+func (m *MaxReqsRateLimitSettings) DeepCopyIn(src *MaxReqsRateLimitSettings) {
 	m.Key.DeepCopyIn(&src.Key)
-	if src.FlowSettings != nil {
-		m.FlowSettings = make([]*FlowSettings, len(src.FlowSettings), len(src.FlowSettings))
-		for ii, s := range src.FlowSettings {
-			var tmp_s FlowSettings
-			tmp_s.DeepCopyIn(s)
-			m.FlowSettings[ii] = &tmp_s
-		}
+	if src.Settings != nil {
+		var tmp_Settings MaxReqsSettings
+		tmp_Settings.DeepCopyIn(src.Settings)
+		m.Settings = &tmp_Settings
 	} else {
-		m.FlowSettings = nil
-	}
-	if src.MaxReqsSettings != nil {
-		m.MaxReqsSettings = make([]*MaxReqsSettings, len(src.MaxReqsSettings), len(src.MaxReqsSettings))
-		for ii, s := range src.MaxReqsSettings {
-			var tmp_s MaxReqsSettings
-			tmp_s.DeepCopyIn(s)
-			m.MaxReqsSettings[ii] = &tmp_s
-		}
-	} else {
-		m.MaxReqsSettings = nil
+		m.Settings = nil
 	}
 }
 
-func (s *RateLimitSettings) HasFields() bool {
+func (s *MaxReqsRateLimitSettings) HasFields() bool {
 	return true
 }
 
-type RateLimitSettingsStore struct {
+type MaxReqsRateLimitSettingsStore struct {
 	kvstore objstore.KVStore
 }
 
-func NewRateLimitSettingsStore(kvstore objstore.KVStore) RateLimitSettingsStore {
-	return RateLimitSettingsStore{kvstore: kvstore}
+func NewMaxReqsRateLimitSettingsStore(kvstore objstore.KVStore) MaxReqsRateLimitSettingsStore {
+	return MaxReqsRateLimitSettingsStore{kvstore: kvstore}
 }
 
-func (s *RateLimitSettingsStore) Create(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
-	err := m.Validate(RateLimitSettingsAllFieldsMap)
+func (s *MaxReqsRateLimitSettingsStore) Create(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
+	err := m.Validate(MaxReqsRateLimitSettingsAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("RateLimitSettings", m.GetKey())
+	key := objstore.DbKeyString("MaxReqsRateLimitSettings", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
@@ -1355,19 +2533,19 @@ func (s *RateLimitSettingsStore) Create(ctx context.Context, m *RateLimitSetting
 	return &Result{}, err
 }
 
-func (s *RateLimitSettingsStore) Update(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *MaxReqsRateLimitSettingsStore) Update(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("RateLimitSettings", m.GetKey())
+	key := objstore.DbKeyString("MaxReqsRateLimitSettings", m.GetKey())
 	var vers int64 = 0
 	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
-	var cur RateLimitSettings
+	var cur MaxReqsRateLimitSettings
 	err = json.Unmarshal(curBytes, &cur)
 	if err != nil {
 		return nil, err
@@ -1389,9 +2567,303 @@ func (s *RateLimitSettingsStore) Update(ctx context.Context, m *RateLimitSetting
 	return &Result{}, err
 }
 
-func (s *RateLimitSettingsStore) Put(ctx context.Context, m *RateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	err := m.Validate(RateLimitSettingsAllFieldsMap)
+func (s *MaxReqsRateLimitSettingsStore) Put(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(MaxReqsRateLimitSettingsAllFieldsMap)
 	m.Fields = nil
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("MaxReqsRateLimitSettings", m.GetKey())
+	var val []byte
+	val, err = json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(ctx, key, string(val), ops...)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *MaxReqsRateLimitSettingsStore) Delete(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
+	err := m.GetKey().ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("MaxReqsRateLimitSettings", m.GetKey())
+	rev, err := s.kvstore.Delete(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *MaxReqsRateLimitSettingsStore) LoadOne(key string) (*MaxReqsRateLimitSettings, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj MaxReqsRateLimitSettings
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse MaxReqsRateLimitSettings data", "val", string(val), "err", err)
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *MaxReqsRateLimitSettingsStore) STMGet(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey, buf *MaxReqsRateLimitSettings) bool {
+	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *MaxReqsRateLimitSettingsStore) STMPut(stm concurrency.STM, obj *MaxReqsRateLimitSettings, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", obj.GetKey())
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("MaxReqsRateLimitSettings json marsahal failed", "obj", obj, "err", err)
+	}
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
+}
+
+func (s *MaxReqsRateLimitSettingsStore) STMDel(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey) {
+	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", key)
+	stm.Del(keystr)
+}
+
+func (m *MaxReqsRateLimitSettings) GetObjKey() objstore.ObjKey {
+	return m.GetKey()
+}
+
+func (m *MaxReqsRateLimitSettings) GetKey() *MaxReqsRateLimitSettingsKey {
+	return &m.Key
+}
+
+func (m *MaxReqsRateLimitSettings) GetKeyVal() MaxReqsRateLimitSettingsKey {
+	return m.Key
+}
+
+func (m *MaxReqsRateLimitSettings) SetKey(key *MaxReqsRateLimitSettingsKey) {
+	m.Key = *key
+}
+
+func CmpSortMaxReqsRateLimitSettings(a MaxReqsRateLimitSettings, b MaxReqsRateLimitSettings) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *MaxReqsRateLimitSettings) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Settings.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *RateLimitSettings) Matches(o *RateLimitSettings, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.FlowSettings != nil {
+		if len(m.FlowSettings) == 0 && len(o.FlowSettings) > 0 || len(m.FlowSettings) > 0 && len(o.FlowSettings) == 0 {
+			return false
+		} else if m.FlowSettings != nil && o.FlowSettings != nil {
+			if !opts.Filter && len(m.FlowSettings) != len(o.FlowSettings) {
+				return false
+			}
+			for k, _ := range o.FlowSettings {
+				_, ok := m.FlowSettings[k]
+				if !ok {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.MaxReqsSettings != nil {
+		if len(m.MaxReqsSettings) == 0 && len(o.MaxReqsSettings) > 0 || len(m.MaxReqsSettings) > 0 && len(o.MaxReqsSettings) == 0 {
+			return false
+		} else if m.MaxReqsSettings != nil && o.MaxReqsSettings != nil {
+			if !opts.Filter && len(m.MaxReqsSettings) != len(o.MaxReqsSettings) {
+				return false
+			}
+			for k, _ := range o.MaxReqsSettings {
+				_, ok := m.MaxReqsSettings[k]
+				if !ok {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+func (m *RateLimitSettings) CopyInFields(src *RateLimitSettings) int {
+	changed := 0
+	if m.Key.ApiName != src.Key.ApiName {
+		m.Key.ApiName = src.Key.ApiName
+		changed++
+	}
+	if m.Key.ApiEndpointType != src.Key.ApiEndpointType {
+		m.Key.ApiEndpointType = src.Key.ApiEndpointType
+		changed++
+	}
+	if m.Key.RateLimitTarget != src.Key.RateLimitTarget {
+		m.Key.RateLimitTarget = src.Key.RateLimitTarget
+		changed++
+	}
+	if src.FlowSettings != nil {
+		m.FlowSettings = make(map[string]*FlowSettings)
+		for k0, _ := range src.FlowSettings {
+			m.FlowSettings[k0] = &FlowSettings{}
+			if m.FlowSettings[k0].FlowAlgorithm != src.FlowSettings[k0].FlowAlgorithm {
+				m.FlowSettings[k0].FlowAlgorithm = src.FlowSettings[k0].FlowAlgorithm
+				changed++
+			}
+			if m.FlowSettings[k0].ReqsPerSecond != src.FlowSettings[k0].ReqsPerSecond {
+				m.FlowSettings[k0].ReqsPerSecond = src.FlowSettings[k0].ReqsPerSecond
+				changed++
+			}
+			if m.FlowSettings[k0].BurstSize != src.FlowSettings[k0].BurstSize {
+				m.FlowSettings[k0].BurstSize = src.FlowSettings[k0].BurstSize
+				changed++
+			}
+		}
+	} else if m.FlowSettings != nil {
+		m.FlowSettings = nil
+		changed++
+	}
+	if src.MaxReqsSettings != nil {
+		m.MaxReqsSettings = make(map[string]*MaxReqsSettings)
+		for k0, _ := range src.MaxReqsSettings {
+			m.MaxReqsSettings[k0] = &MaxReqsSettings{}
+			if m.MaxReqsSettings[k0].MaxReqsAlgorithm != src.MaxReqsSettings[k0].MaxReqsAlgorithm {
+				m.MaxReqsSettings[k0].MaxReqsAlgorithm = src.MaxReqsSettings[k0].MaxReqsAlgorithm
+				changed++
+			}
+			if m.MaxReqsSettings[k0].MaxRequests != src.MaxReqsSettings[k0].MaxRequests {
+				m.MaxReqsSettings[k0].MaxRequests = src.MaxReqsSettings[k0].MaxRequests
+				changed++
+			}
+			if m.MaxReqsSettings[k0].Interval != src.MaxReqsSettings[k0].Interval {
+				m.MaxReqsSettings[k0].Interval = src.MaxReqsSettings[k0].Interval
+				changed++
+			}
+		}
+	} else if m.MaxReqsSettings != nil {
+		m.MaxReqsSettings = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *RateLimitSettings) DeepCopyIn(src *RateLimitSettings) {
+	m.Key.DeepCopyIn(&src.Key)
+	if src.FlowSettings != nil {
+		m.FlowSettings = make(map[string]*FlowSettings)
+		for k, v := range src.FlowSettings {
+			var tmp_v FlowSettings
+			tmp_v.DeepCopyIn(v)
+			m.FlowSettings[k] = &tmp_v
+		}
+	} else {
+		m.FlowSettings = nil
+	}
+	if src.MaxReqsSettings != nil {
+		m.MaxReqsSettings = make(map[string]*MaxReqsSettings)
+		for k, v := range src.MaxReqsSettings {
+			var tmp_v MaxReqsSettings
+			tmp_v.DeepCopyIn(v)
+			m.MaxReqsSettings[k] = &tmp_v
+		}
+	} else {
+		m.MaxReqsSettings = nil
+	}
+}
+
+func (s *RateLimitSettings) HasFields() bool {
+	return false
+}
+
+type RateLimitSettingsStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewRateLimitSettingsStore(kvstore objstore.KVStore) RateLimitSettingsStore {
+	return RateLimitSettingsStore{kvstore: kvstore}
+}
+
+func (s *RateLimitSettingsStore) Create(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("RateLimitSettings", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(ctx, key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *RateLimitSettingsStore) Update(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
+	err := m.Validate(nil)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("RateLimitSettings", m.GetKey())
+	var vers int64 = 0
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(ctx, key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *RateLimitSettingsStore) Put(ctx context.Context, m *RateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1858,20 +3330,9 @@ func CmpSortRateLimitSettings(a RateLimitSettings, b RateLimitSettings) bool {
 }
 
 // Helper method to check that enums have valid values
-// NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *RateLimitSettings) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
-	}
-	for _, e := range m.FlowSettings {
-		if err := e.ValidateEnums(); err != nil {
-			return err
-		}
-	}
-	for _, e := range m.MaxReqsSettings {
-		if err := e.ValidateEnums(); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -1889,6 +3350,48 @@ func (m *RateLimitSettingsData) DeepCopyIn(src *RateLimitSettingsData) {
 
 // Helper method to check that enums have valid values
 func (m *RateLimitSettingsData) ValidateEnums() error {
+	for _, e := range m.Settings {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *FlowRateLimitSettingsData) DeepCopyIn(src *FlowRateLimitSettingsData) {
+	if src.Settings != nil {
+		m.Settings = make([]FlowRateLimitSettings, len(src.Settings), len(src.Settings))
+		for ii, s := range src.Settings {
+			m.Settings[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Settings = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *FlowRateLimitSettingsData) ValidateEnums() error {
+	for _, e := range m.Settings {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *MaxReqsRateLimitSettingsData) DeepCopyIn(src *MaxReqsRateLimitSettingsData) {
+	if src.Settings != nil {
+		m.Settings = make([]MaxReqsRateLimitSettings, len(src.Settings), len(src.Settings))
+		for ii, s := range src.Settings {
+			m.Settings[ii].DeepCopyIn(&s)
+		}
+	} else {
+		m.Settings = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *MaxReqsRateLimitSettingsData) ValidateEnums() error {
 	for _, e := range m.Settings {
 		if err := e.ValidateEnums(); err != nil {
 			return err
@@ -2219,11 +3722,31 @@ func (m *RateLimitSettings) IsValidArgsForCreateRateLimitSettings() error {
 	return nil
 }
 
-func (m *RateLimitSettings) IsValidArgsForUpdateRateLimitSettings() error {
+func (m *RateLimitSettings) IsValidArgsForDeleteRateLimitSettings() error {
 	return nil
 }
 
-func (m *RateLimitSettings) IsValidArgsForDeleteRateLimitSettings() error {
+func (m *FlowRateLimitSettings) IsValidArgsForCreateFlowRateLimitSettings() error {
+	return nil
+}
+
+func (m *FlowRateLimitSettings) IsValidArgsForUpdateFlowRateLimitSettings() error {
+	return nil
+}
+
+func (m *FlowRateLimitSettings) IsValidArgsForDeleteFlowRateLimitSettings() error {
+	return nil
+}
+
+func (m *MaxReqsRateLimitSettings) IsValidArgsForCreateMaxReqsRateLimitSettings() error {
+	return nil
+}
+
+func (m *MaxReqsRateLimitSettings) IsValidArgsForUpdateMaxReqsRateLimitSettings() error {
+	return nil
+}
+
+func (m *MaxReqsRateLimitSettings) IsValidArgsForDeleteMaxReqsRateLimitSettings() error {
 	return nil
 }
 
@@ -2264,6 +3787,42 @@ func (m *FlowSettings) Size() (n int) {
 	return n
 }
 
+func (m *FlowRateLimitSettingsKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.FlowSettingsName)
+	if l > 0 {
+		n += 1 + l + sovRatelimit(uint64(l))
+	}
+	l = m.RateLimitKey.Size()
+	n += 1 + l + sovRatelimit(uint64(l))
+	return n
+}
+
+func (m *FlowRateLimitSettings) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			l = len(s)
+			n += 1 + l + sovRatelimit(uint64(l))
+		}
+	}
+	l = m.Key.Size()
+	n += 1 + l + sovRatelimit(uint64(l))
+	if m.Settings != nil {
+		l = m.Settings.Size()
+		n += 1 + l + sovRatelimit(uint64(l))
+	}
+	return n
+}
+
 func (m *MaxReqsSettings) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2282,7 +3841,22 @@ func (m *MaxReqsSettings) Size() (n int) {
 	return n
 }
 
-func (m *RateLimitSettings) Size() (n int) {
+func (m *MaxReqsRateLimitSettingsKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MaxReqsSettingsName)
+	if l > 0 {
+		n += 1 + l + sovRatelimit(uint64(l))
+	}
+	l = m.RateLimitKey.Size()
+	n += 1 + l + sovRatelimit(uint64(l))
+	return n
+}
+
+func (m *MaxReqsRateLimitSettings) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2296,14 +3870,58 @@ func (m *RateLimitSettings) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovRatelimit(uint64(l))
+	if m.Settings != nil {
+		l = m.Settings.Size()
+		n += 1 + l + sovRatelimit(uint64(l))
+	}
+	return n
+}
+
+func (m *RateLimitSettings) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Key.Size()
+	n += 1 + l + sovRatelimit(uint64(l))
 	if len(m.FlowSettings) > 0 {
-		for _, e := range m.FlowSettings {
-			l = e.Size()
-			n += 1 + l + sovRatelimit(uint64(l))
+		for k, v := range m.FlowSettings {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovRatelimit(uint64(l))
+			}
+			mapEntrySize := 1 + len(k) + sovRatelimit(uint64(len(k))) + l
+			n += mapEntrySize + 1 + sovRatelimit(uint64(mapEntrySize))
 		}
 	}
 	if len(m.MaxReqsSettings) > 0 {
-		for _, e := range m.MaxReqsSettings {
+		for k, v := range m.MaxReqsSettings {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovRatelimit(uint64(l))
+			}
+			mapEntrySize := 1 + len(k) + sovRatelimit(uint64(len(k))) + l
+			n += mapEntrySize + 1 + sovRatelimit(uint64(mapEntrySize))
+		}
+	}
+	return n
+}
+
+func (m *RateLimitSettingsData) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Settings) > 0 {
+		for _, e := range m.Settings {
 			l = e.Size()
 			n += 1 + l + sovRatelimit(uint64(l))
 		}
@@ -2311,7 +3929,22 @@ func (m *RateLimitSettings) Size() (n int) {
 	return n
 }
 
-func (m *RateLimitSettingsData) Size() (n int) {
+func (m *FlowRateLimitSettingsData) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Settings) > 0 {
+		for _, e := range m.Settings {
+			l = e.Size()
+			n += 1 + l + sovRatelimit(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MaxReqsRateLimitSettingsData) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2557,6 +4190,278 @@ func (m *FlowSettings) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *FlowRateLimitSettingsKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowRateLimitSettingsKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowRateLimitSettingsKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FlowSettingsName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FlowSettingsName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RateLimitKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RateLimitKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowRateLimitSettings) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowRateLimitSettings: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowRateLimitSettings: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Settings == nil {
+				m.Settings = &FlowSettings{}
+			}
+			if err := m.Settings.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MaxReqsSettings) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2667,7 +4572,7 @@ func (m *MaxReqsSettings) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
+func (m *MaxReqsRateLimitSettingsKey) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2690,10 +4595,128 @@ func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: RateLimitSettings: wiretype end group for non-group")
+			return fmt.Errorf("proto: MaxReqsRateLimitSettingsKey: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RateLimitSettings: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MaxReqsRateLimitSettingsKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxReqsSettingsName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MaxReqsSettingsName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RateLimitKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RateLimitKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MaxReqsRateLimitSettings) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MaxReqsRateLimitSettings: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MaxReqsRateLimitSettings: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2761,7 +4784,129 @@ func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Settings == nil {
+				m.Settings = &MaxReqsSettings{}
+			}
+			if err := m.Settings.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RateLimitSettings: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RateLimitSettings: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FlowSettings", wireType)
 			}
@@ -2790,12 +4935,107 @@ func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FlowSettings = append(m.FlowSettings, &FlowSettings{})
-			if err := m.FlowSettings[len(m.FlowSettings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			if m.FlowSettings == nil {
+				m.FlowSettings = make(map[string]*FlowSettings)
 			}
+			var mapkey string
+			var mapvalue *FlowSettings
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRatelimit
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRatelimit
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRatelimit
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &FlowSettings{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipRatelimit(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.FlowSettings[mapkey] = mapvalue
 			iNdEx = postIndex
-		case 8:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxReqsSettings", wireType)
 			}
@@ -2824,10 +5064,105 @@ func (m *RateLimitSettings) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MaxReqsSettings = append(m.MaxReqsSettings, &MaxReqsSettings{})
-			if err := m.MaxReqsSettings[len(m.MaxReqsSettings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			if m.MaxReqsSettings == nil {
+				m.MaxReqsSettings = make(map[string]*MaxReqsSettings)
 			}
+			var mapkey string
+			var mapvalue *MaxReqsSettings
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRatelimit
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRatelimit
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRatelimit
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &MaxReqsSettings{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipRatelimit(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthRatelimit
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.MaxReqsSettings[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2912,6 +5247,180 @@ func (m *RateLimitSettingsData) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Settings = append(m.Settings, RateLimitSettings{})
+			if err := m.Settings[len(m.Settings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowRateLimitSettingsData) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowRateLimitSettingsData: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowRateLimitSettingsData: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Settings = append(m.Settings, FlowRateLimitSettings{})
+			if err := m.Settings[len(m.Settings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MaxReqsRateLimitSettingsData) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MaxReqsRateLimitSettingsData: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MaxReqsRateLimitSettingsData: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Settings = append(m.Settings, MaxReqsRateLimitSettings{})
 			if err := m.Settings[len(m.Settings)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

@@ -172,8 +172,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"api1allreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 100,
 				BurstSize:     100,
@@ -186,8 +186,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"api2allreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 200,
 				BurstSize:     100,
@@ -200,8 +200,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"api3allreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 300,
 				BurstSize:     100,
@@ -214,8 +214,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"globalallreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 1000,
 				BurstSize:     100,
@@ -273,8 +273,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 					ApiEndpointType: edgeproto.ApiEndpointType_DME,
 					RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 				},
-				MaxReqsSettings: []*edgeproto.MaxReqsSettings{
-					&edgeproto.MaxReqsSettings{
+				MaxReqsSettings: map[string]*edgeproto.MaxReqsSettings{
+					"api1allreqs1": &edgeproto.MaxReqsSettings{
 						MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
 						MaxRequests:      1,
 						Interval:         edgeproto.Duration(time.Second),

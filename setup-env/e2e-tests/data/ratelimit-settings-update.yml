@@ -1,9 +1,0 @@
-settings:
-- key:
-    apiname: FindCloudlet
-    apiendpointtype: Dme
-    ratelimittarget: AllRequests
-  flowsettings:
-  - flowalgorithm: TokenBucketAlgorithm
-    reqspersecond: 1
-    burstsize: 1

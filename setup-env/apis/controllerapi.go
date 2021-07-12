@@ -131,7 +131,13 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		run.RateLimitSettingsApi(nil, nil, &output.Settings)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.Contains(api, "ratelimit") {
-		runRateLimitSettings(run, api, apiFile, outputDir)
+		if strings.Contains(api, "flow") {
+			runRateLimitFlowSettings(run, api, apiFile, outputDir)
+		} else if strings.Contains(api, "maxreqs") {
+			runRateLimitMaxReqsSettings(run, api, apiFile, outputDir)
+		} else {
+			runRateLimitSettings(run, api, apiFile, outputDir)
+		}
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, outputDir)
 	} else {
@@ -384,6 +390,76 @@ func runOrg(run *testutil.Run, api, apiFile, outputDir string) {
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }
 
+func runRateLimitFlowSettings(run *testutil.Run, api, apiFile, outputDir string) {
+	data := edgeproto.FlowRateLimitSettingsData{}
+
+	if apiFile == "" {
+		log.Println("Error: Cannot run Org API without API file")
+		*run.Rc = false
+		return
+	}
+	err := util.ReadYamlFile(apiFile, &data)
+	if err != nil {
+		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
+		os.Exit(1)
+	}
+
+	output := testutil.FlowRateLimitSettingsDataOut{}
+	inMap := make(map[string]interface{})
+	switch api {
+	case "ratelimitflowcreate":
+		run.Mode = "create"
+	case "ratelimitflowdelete":
+		run.Mode = "delete"
+	case "ratelimitflowupdate":
+		run.Mode = "update"
+		err := util.ReadYamlFile(apiFile, &inMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
+		if err != nil {
+			if !util.IsYamlOk(err, "ratelimitsettings") {
+				fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apiFile)
+				os.Exit(1)
+			}
+		}
+	}
+	testutil.RunFlowRateLimitSettingsDataApis(run, &data, inMap, &output, testutil.NoApiCallback)
+	util.PrintToYamlFile("api-output.yml", outputDir, output, true)
+}
+
+func runRateLimitMaxReqsSettings(run *testutil.Run, api, apiFile, outputDir string) {
+	data := edgeproto.MaxReqsRateLimitSettingsData{}
+
+	if apiFile == "" {
+		log.Println("Error: Cannot run Org API without API file")
+		*run.Rc = false
+		return
+	}
+	err := util.ReadYamlFile(apiFile, &data)
+	if err != nil {
+		log.Printf("Error in unmarshal for file %s, %v\n", apiFile, err)
+		os.Exit(1)
+	}
+
+	output := testutil.MaxReqsRateLimitSettingsDataOut{}
+	inMap := make(map[string]interface{})
+	switch api {
+	case "ratelimitmaxreqscreate":
+		run.Mode = "create"
+	case "ratelimitmaxreqsdelete":
+		run.Mode = "delete"
+	case "ratelimitmaxreqsupdate":
+		run.Mode = "update"
+		err := util.ReadYamlFile(apiFile, &inMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
+		if err != nil {
+			if !util.IsYamlOk(err, "ratelimitsettings") {
+				fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apiFile)
+				os.Exit(1)
+			}
+		}
+	}
+	testutil.RunMaxReqsRateLimitSettingsDataApis(run, &data, inMap, &output, testutil.NoApiCallback)
+	util.PrintToYamlFile("api-output.yml", outputDir, output, true)
+}
+
 func runRateLimitSettings(run *testutil.Run, api, apiFile, outputDir string) {
 	data := edgeproto.RateLimitSettingsData{}
 
@@ -401,25 +477,8 @@ func runRateLimitSettings(run *testutil.Run, api, apiFile, outputDir string) {
 	output := testutil.RateLimitSettingsDataOut{}
 	inMap := make(map[string]interface{})
 	switch api {
-	// TODO: Consolidate create and update
 	case "ratelimitcreate":
 		run.Mode = "create"
-		err := util.ReadYamlFile(apiFile, &inMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
-		if err != nil {
-			if !util.IsYamlOk(err, "appdata") {
-				fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apiFile)
-				os.Exit(1)
-			}
-		}
-	case "ratelimitupdate":
-		run.Mode = "update"
-		err := util.ReadYamlFile(apiFile, &inMap, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
-		if err != nil {
-			if !util.IsYamlOk(err, "appdata") {
-				fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apiFile)
-				os.Exit(1)
-			}
-		}
 	case "ratelimitdelete":
 		run.Mode = "delete"
 	default:

@@ -34,24 +34,6 @@ message RateLimitSettingsKey {
   option (gogoproto.gostring) = true;
 }
 
-message FlowSettings {
-  // Flow Rate Limit algorithm
-  FlowRateLimitAlgorithm flow_algorithm = 1;
-  // requests per second for flow rate limiting
-  double reqsPerSecond = 2;
-  // burst size for flow rate limiting
-  int64 burstSize = 3;
-}
-
-message MaxReqsSettings {
-  // MaxReqs Rate Limit Algorithm
-  MaxReqsRateLimitAlgorithm max_reqs_algorithm = 1;
-  // Maximum number of requests for the given Interval
-  int64 max_requests = 2;
-  // Time interval
-  int64 interval = 3 [(gogoproto.casttype) = "Duration"];
-}
-
 enum FlowRateLimitAlgorithm {
   UNKNOWN_FLOW_ALGORITHM = 0;
   TOKEN_BUCKET_ALGORITHM = 1;
@@ -63,20 +45,78 @@ enum MaxReqsRateLimitAlgorithm {
   FIXED_WINDOW_ALGORITHM = 1;
 }
 
-message RateLimitSettings {
+message FlowSettings {
+  // Flow Rate Limit algorithm
+  FlowRateLimitAlgorithm flow_algorithm = 1;
+  // requests per second for flow rate limiting
+  double reqsPerSecond = 2;
+  // burst size for flow rate limiting
+  int64 burstSize = 3;
+}
+
+message FlowRateLimitSettingsKey {
+  // Unique name for FlowRateLimitSettings (there can be multiple FlowSettings per RateLimitSettingsKey)
+  string flow_settings_name = 1 [(protogen.keytag) = "flowsettingsname"];
+  // Key that identifies api and rate limit target for settings
+  RateLimitSettingsKey rate_limit_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message FlowRateLimitSettings {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // required: true
   // Unique identifier key
-  RateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
-  // List of FlowSettings
-  repeated FlowSettings flow_settings = 7;
-  // List of MaxReqsSettings
-  repeated MaxReqsSettings max_reqs_settings = 8;
-
+  FlowRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
+  // FlowSettings
+  FlowSettings settings = 3;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
-  option (protogen.generate_cud_streamout) = true;
+  option (protogen.alias) = "flowsettingsname=Key.FlowSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,algorithm=Settings.FlowAlgorithm,reqspersecond=Settings.ReqsPerSecond,burstsize=Settings.BurstSize";
+}
+
+message MaxReqsSettings {
+  // MaxReqs Rate Limit Algorithm
+  MaxReqsRateLimitAlgorithm max_reqs_algorithm = 1;
+  // Maximum number of requests for the given Interval
+  int64 max_requests = 2;
+  // Time interval
+  int64 interval = 3 [(gogoproto.casttype) = "Duration"];
+}
+
+message MaxReqsRateLimitSettingsKey {
+  // Unique name for MaxReqsRateLimitSettings (there can be multiple MaxReqsSettings per RateLimitSettingsKey)
+  string max_reqs_settings_name = 1 [(protogen.keytag) = "maxreqssettingsname"];
+  // Key that identifies api and rate limit target for settings
+  RateLimitSettingsKey rate_limit_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message MaxReqsRateLimitSettings {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // required: true
+  // Unique identifier key
+  MaxReqsRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
+  // MaxReqsSettings
+  MaxReqsSettings settings = 3;
+  option (protogen.generate_cud) = true;
+  option (protogen.alias) = "maxreqssettingsname=Key.MaxReqsSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,algorithm=Settings.FlowAlgorithm,reqspersecond=Settings.ReqsPerSecond,burstsize=Settings.BurstSize";
+}
+
+message RateLimitSettings {
+  // required: true
+  // Unique identifier key
+  RateLimitSettingsKey key = 1 [(gogoproto.nullable) = false];
+  // Map of FlowSettings (key: FlowSettingsName, value: FlowSettings)
+  map<string, FlowSettings> flow_settings = 2;
+  // Map of MaxReqsSettings (key: MaxReqsSettingsName, value: MaxReqsSettings)
+  map<string, MaxReqsSettings> max_reqs_settings = 3;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.uses_org) = "none";
@@ -88,14 +128,6 @@ service RateLimitSettingsApi {
   rpc CreateRateLimitSettings(RateLimitSettings) returns (Result) {
     option (google.api.http) = {
       post: "/create/ratelimitsettings"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
-  }
-  // Update RateLimit settings for an API endpoint and target
-  rpc UpdateRateLimitSettings(RateLimitSettings) returns (Result) {
-    option (google.api.http) = {
-      post: "/update/ratelimitsettings"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
@@ -116,10 +148,70 @@ service RateLimitSettingsApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
+  // Create Flow RateLimit settings for an API endpoint and target
+  rpc CreateFlowRateLimitSettings(FlowRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Update Flow RateLimit settings for an API endpoint and target
+  rpc UpdateFlowRateLimitSettings(FlowRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Delete Flow RateLimit settings for an API endpoint and target
+  rpc DeleteFlowRateLimitSettings(FlowRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Create MaxReqs RateLimit settings for an API endpoint and target
+  rpc CreateMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Update MaxReqs RateLimit settings for an API endpoint and target
+  rpc UpdateMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Delete MaxReqs RateLimit settings for an API endpoint and target
+  rpc DeleteMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
 }
 
 message RateLimitSettingsData {
   repeated RateLimitSettings settings = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
+}
+
+message FlowRateLimitSettingsData {
+  repeated FlowRateLimitSettings settings = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
+}
+
+message MaxReqsRateLimitSettingsData {
+  repeated MaxReqsRateLimitSettings settings = 1 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }

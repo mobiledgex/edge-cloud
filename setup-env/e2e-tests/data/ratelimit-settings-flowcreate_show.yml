@@ -35,3 +35,12 @@ settings:
       flowalgorithm: TokenBucketAlgorithm
       reqspersecond: 1000
       burstsize: 25
+- key:
+    apiname: FindCloudlet
+    apiendpointtype: Dme
+    ratelimittarget: AllRequests
+  flowsettings:
+    fcallreqs1:
+      flowalgorithm: TokenBucketAlgorithm
+      reqspersecond: 100
+      burstsize: 5
