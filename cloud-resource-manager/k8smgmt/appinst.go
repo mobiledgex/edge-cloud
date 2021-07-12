@@ -20,7 +20,7 @@ import (
 const WaitDeleted string = "WaitDeleted"
 const WaitRunning string = "WaitRunning"
 
-const DefaultNamespace string = "Default"
+const DefaultNamespace string = "default"
 
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
