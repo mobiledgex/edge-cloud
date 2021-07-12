@@ -483,9 +483,12 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if !clusterInstApi.store.STMGet(stm, &clusterInstKey, &ci) {
 			continue
 		}
-		if edgeproto.IsDeleteState(ci.State) {
-			continue
-		}
+		// Ignore state and consider all clusterInsts present in DB
+		// We are being conservative here. If clusterInst exists in DB, then we should
+		// assume it's taking up resources, or going to take up resources (CreateRequested),
+		// or may not actually be able to free up resources yet (DeleteRequested, etc)
+		// Note: This could result in having usedResources > maxResources as we are not sure
+		//       if resources in transient state are already using infra resources or not
 		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &ci)
 		if err != nil {
 			return nil, nil, err
@@ -511,9 +514,6 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		appInstKey := edgeproto.AppInstKey{}
 		appInstKey.FromAppInstRefKey(&appInstRefKey, &cloudlet.Key)
 		if !appInstApi.store.STMGet(stm, &appInstKey, &appInst) {
-			continue
-		}
-		if edgeproto.IsDeleteState(appInst.State) {
 			continue
 		}
 		app := edgeproto.App{}
