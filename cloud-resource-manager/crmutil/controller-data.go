@@ -188,6 +188,8 @@ func GetCloudletTrustPolicy(ctx context.Context, name string, cloudletOrg string
 	}
 }
 
+var UpdateResourceInfo = true
+
 func (cd *ControllerData) vmResourceActionBegin() {
 	cd.vmActionRefMux.Lock()
 	defer cd.vmActionRefMux.Unlock()
@@ -316,7 +318,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		// create or update k8s cluster on this cloudlet
-		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateClusterCacheCallback)
+		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateClusterCacheCallback, !UpdateResourceInfo)
 		if err != nil {
 			// Marks end of clusterinst change and hence reduces ref count
 			cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
@@ -328,12 +330,11 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
-			// Marks end of clusterinst change and hence reduces ref count
-			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
-
 			if !cd.CloudletCache.Get(&new.Key.CloudletKey, &cloudlet) {
 				log.WarnLog("Could not find cloudlet in cache", "key", new.Key.CloudletKey)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey), updateClusterCacheCallback)
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR,
+					fmt.Sprintf("Create Failed, Could not find cloudlet in cache %s", new.Key.CloudletKey),
+					updateClusterCacheCallback, UpdateResourceInfo)
 				return
 			}
 			timeout := cd.settings.CreateClusterInstTimeout.TimeDuration()
@@ -345,13 +346,15 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			err = cd.platform.CreateClusterInst(ctx, new, updateClusterCacheCallback, timeout)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error cluster create fail", "error", err)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err), updateClusterCacheCallback)
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR,
+					fmt.Sprintf("Create failed: %s", err), updateClusterCacheCallback,
+					UpdateResourceInfo)
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
 
 			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
+			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback, UpdateResourceInfo)
 			// Get cluster resources and report to controller.
 			resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 			if err != nil {
@@ -367,13 +370,13 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
 		cd.vmResourceActionBegin()
-		// Marks end of clusterinst change and hence reduces ref count
-		defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster inst update", "ClusterInst", *new)
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
-		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateClusterCacheCallback)
+		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateClusterCacheCallback, !UpdateResourceInfo)
 		if err != nil {
+			// Marks end of clusterinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
 			return
 		}
 
@@ -381,7 +384,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		err = cd.platform.UpdateClusterInst(ctx, new, updateClusterCacheCallback)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
-			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateClusterCacheCallback)
+			cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateClusterCacheCallback, UpdateResourceInfo)
 			return
 		}
 		// Update Runtime info of apps deployed on this Cluster
@@ -399,14 +402,14 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", obj.Key, "err", err)
 				} else {
-					cd.appInstInfoRuntime(ctx, &obj.Key, edgeproto.TrackedState_READY, rt, updateClusterCacheCallback)
+					cd.appInstInfoRuntime(ctx, &obj.Key, &app, edgeproto.TrackedState_READY, rt, updateClusterCacheCallback, !UpdateResourceInfo)
 				}
 			}
 			return nil
 		})
 
 		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
+		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback, UpdateResourceInfo)
 		// Get cluster resources and report to controller.
 		resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 		if err != nil {
@@ -425,7 +428,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
 		// clusterInst was deleted
-		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback)
+		err = cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateClusterCacheCallback, !UpdateResourceInfo)
 		if err != nil {
 			// Marks end of clusterinst change and hence reduces ref count
 			cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
@@ -436,19 +439,16 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
-			// Marks end of clusterinst change and hence reduces ref count
-			defer cd.vmResourceActionEnd(ctx, &new.Key.CloudletKey)
-
 			log.SpanLog(ctx, log.DebugLevelInfra, "delete cluster inst", "ClusterInst", *new)
 			err = cd.platform.DeleteClusterInst(ctx, new, updateClusterCacheCallback)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
-				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateClusterCacheCallback)
+				cd.clusterInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateClusterCacheCallback, UpdateResourceInfo)
 				return
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "set cluster inst deleted", "ClusterInst", *new)
 
-			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateClusterCacheCallback)
+			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateClusterCacheCallback, UpdateResourceInfo)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		transStates := map[edgeproto.TrackedState]struct{}{
@@ -528,9 +528,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		if !flavorFound {
 			str := fmt.Sprintf("Flavor %s not found",
 				new.Flavor.Name)
-			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
-			// Marks end of appinst change and hence reduces ref count
-			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+			cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback, UpdateResourceInfo)
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
@@ -539,14 +537,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.ClusterInstKey().ClusterKey.Name)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
-				// Marks end of appinst change and hence reduces ref count
-				cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+				cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback, UpdateResourceInfo)
 				return
 			}
 		}
 
-		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_CREATING, updateAppCacheCallback)
+		err = cd.appInstInfoState(ctx, &new.Key, &app, edgeproto.TrackedState_CREATING, updateAppCacheCallback, !UpdateResourceInfo)
 		if err != nil {
 			// Marks end of appinst change and hence reduces ref count
 			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
@@ -558,21 +554,16 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
-			if app.Deployment == cloudcommon.DeploymentTypeVM {
-				// Marks end of appinst change and hence reduces ref count
-				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
-			}
-
 			oldUri := new.Uri
 			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr, updateAppCacheCallback)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't create app inst", "error", errstr, "key", new.Key)
 				derr := cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
 				if derr != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "can't cleanup app inst", "error", errstr, "key", new.Key)
 				}
+				cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_CREATE_ERROR, errstr, updateAppCacheCallback, UpdateResourceInfo)
 				return
 			}
 			if new.Uri != "" && oldUri != new.Uri {
@@ -584,17 +575,15 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, new)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", new.Key, "err", err)
-				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateAppCacheCallback)
+				cd.appInstInfoState(ctx, &new.Key, &app, edgeproto.TrackedState_READY, updateAppCacheCallback, UpdateResourceInfo)
 			} else {
-				cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
+				cd.appInstInfoRuntime(ctx, &new.Key, &app, edgeproto.TrackedState_READY, rt, updateAppCacheCallback, UpdateResourceInfo)
 			}
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		if app.Deployment == cloudcommon.DeploymentTypeVM {
 			// Marks start of appinst change and hence increases ref count
 			cd.vmResourceActionBegin()
-			// Marks end of appinst change and hence reduces ref count
-			defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 		}
 		// reset status messages
 		resetStatus = edgeproto.ResetStatus
@@ -603,11 +592,13 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		if !flavorFound {
 			str := fmt.Sprintf("Flavor %s not found",
 				new.Flavor.Name)
-			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback)
+			cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_CREATE_ERROR, str, updateAppCacheCallback, UpdateResourceInfo)
 			return
 		}
-		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_UPDATING, updateAppCacheCallback)
+		err = cd.appInstInfoState(ctx, &new.Key, &app, edgeproto.TrackedState_UPDATING, updateAppCacheCallback, !UpdateResourceInfo)
 		if err != nil {
+			// Marks end of appinst change and hence reduces ref count
+			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
 			return
 		}
 		// Only proceed with power action if current state and it reflecting state is valid
@@ -619,11 +610,11 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if err != nil {
 				errstr := fmt.Sprintf("Set AppInst PowerState failed: %s", err)
 				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.PowerState_POWER_STATE_ERROR)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback)
+				cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback, UpdateResourceInfo)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't set power state on AppInst", "error", err, "key", new.Key)
 			} else {
 				cd.appInstInfoPowerState(ctx, &new.Key, edgeproto.GetNextPowerState(nextPowerState, edgeproto.FinalState))
-				cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateAppCacheCallback)
+				cd.appInstInfoState(ctx, &new.Key, &app, edgeproto.TrackedState_READY, updateAppCacheCallback, UpdateResourceInfo)
 			}
 			return
 		}
@@ -633,14 +624,14 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.ClusterInstKey().ClusterKey.Name)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, str, updateAppCacheCallback)
+				cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_UPDATE_ERROR, str, updateAppCacheCallback, UpdateResourceInfo)
 				return
 			}
 		}
 		err = cd.platform.UpdateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
 		if err != nil {
 			errstr := fmt.Sprintf("Update App Inst failed: %s", err)
-			cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback)
+			cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_UPDATE_ERROR, errstr, updateAppCacheCallback, UpdateResourceInfo)
 			log.SpanLog(ctx, log.DebugLevelInfra, "can't update app inst", "error", errstr, "key", new.Key)
 			return
 		}
@@ -648,9 +639,9 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		rt, err := cd.platform.GetAppInstRuntime(ctx, &clusterInst, &app, new)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "unable to get AppInstRuntime", "key", new.Key, "err", err)
-			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateAppCacheCallback)
+			cd.appInstInfoState(ctx, &new.Key, &app, edgeproto.TrackedState_READY, updateAppCacheCallback, UpdateResourceInfo)
 		} else {
-			cd.appInstInfoRuntime(ctx, &new.Key, edgeproto.TrackedState_READY, rt, updateAppCacheCallback)
+			cd.appInstInfoRuntime(ctx, &new.Key, &app, edgeproto.TrackedState_READY, rt, updateAppCacheCallback, UpdateResourceInfo)
 		}
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		if app.Deployment == cloudcommon.DeploymentTypeVM {
@@ -665,14 +656,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					new.ClusterInstKey().ClusterKey.Name)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, str, updateAppCacheCallback)
-				// Marks end of appinst change and hence reduces ref count
-				cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
+				cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_DELETE_ERROR, str, updateAppCacheCallback, UpdateResourceInfo)
 				return
 			}
 		}
 		// appInst was deleted
-		err = cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETING, updateAppCacheCallback)
+		err = cd.appInstInfoState(ctx, &new.Key, &app, edgeproto.TrackedState_DELETING, updateAppCacheCallback, !UpdateResourceInfo)
 		if err != nil {
 			// Marks end of appinst change and hence reduces ref count
 			cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
@@ -684,20 +673,15 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			log.SetTags(cspan, new.Key.GetTags())
 			defer cspan.Finish()
 
-			if app.Deployment == cloudcommon.DeploymentTypeVM {
-				// Marks end of appinst change and hence reduces ref count
-				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
-			}
-
 			err = cd.platform.DeleteAppInst(ctx, &clusterInst, &app, new, updateAppCacheCallback)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, errstr, updateAppCacheCallback)
+				cd.appInstInfoError(ctx, &new.Key, &app, edgeproto.TrackedState_DELETE_ERROR, errstr, updateAppCacheCallback, UpdateResourceInfo)
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't delete app inst", "error", errstr, "key", new.Key)
 				return
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "deleted app inst", "AppInst", new, "ClusterInst", clusterInst)
-			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateAppCacheCallback)
+			cd.appInstInfoState(ctx, &new.Key, &app, edgeproto.TrackedState_DELETE_DONE, updateAppCacheCallback, UpdateResourceInfo)
 		}()
 	} else if new.State == edgeproto.TrackedState_CREATING {
 		// Controller may send a CRM transitional state after a
@@ -735,22 +719,40 @@ func (cd *ControllerData) appInstDeleted(ctx context.Context, old *edgeproto.App
 	cd.AppInstInfoCache.Delete(ctx, &info, 0)
 }
 
-func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {
+func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback, updateResource bool) {
 	if cd.ClusterInstInfoCache.Get(key, &edgeproto.ClusterInstInfo{}) {
 		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
 	} else {
 		// If info obj is not yet created, send status msg after it is created
 		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
 	}
+	if updateResource {
+		// Marks end of clusterinst change and hence reduces ref count
+		// When ref count == 0, then it captures resources & updates it as part of CloudletInfo
+		//
+		// NOTE: This should be done before setting state on the object, so that
+		//       correct resource usage is calculated before controller marks action
+		//       on this object as done
+		cd.vmResourceActionEnd(ctx, &key.CloudletKey)
+	}
 	cd.ClusterInstInfoCache.SetError(ctx, key, errState, err)
 }
 
-func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgeproto.ClusterInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
+func (cd *ControllerData) clusterInstInfoState(ctx context.Context, key *edgeproto.ClusterInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback, updateResource bool) error {
 	if cd.ClusterInstInfoCache.Get(key, &edgeproto.ClusterInstInfo{}) {
 		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	} else {
 		// If info obj is not yet created, send status msg after it is created
 		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	}
+	if updateResource {
+		// Marks end of clusterinst change and hence reduces ref count
+		// When ref count == 0, then it captures resources & updates it as part of CloudletInfo
+		//
+		// NOTE: This should be done before setting state on the object, so that
+		//       correct resource usage is calculated before controller marks action
+		//       on this object as done
+		cd.vmResourceActionEnd(ctx, &key.CloudletKey)
 	}
 	if err := cd.ClusterInstInfoCache.SetState(ctx, key, state); err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst set state failed", "err", err)
@@ -763,24 +765,41 @@ func (cd *ControllerData) clusterInstInfoResources(ctx context.Context, key *edg
 	return cd.ClusterInstInfoCache.SetResources(ctx, key, resources)
 }
 
-func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.AppInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {
+func (cd *ControllerData) appInstInfoError(ctx context.Context, key *edgeproto.AppInstKey, app *edgeproto.App, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback, updateResource bool) {
 	if cd.AppInstInfoCache.Get(key, &edgeproto.AppInstInfo{}) {
 		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
 	} else {
 		// If info obj is not yet created, send status msg after it is created
 		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(errState)])
 	}
+	if updateResource && app.Deployment == cloudcommon.DeploymentTypeVM {
+		// Marks end of VM appInst change and hence reduces ref count
+		// When ref count == 0, then it captures resources & updates it as part of CloudletInfo
+		//
+		// NOTE: This should be done before setting state on the object, so that
+		//       correct resource usage is calculated before controller marks action
+		//       on this object as done
+		cd.vmResourceActionEnd(ctx, &key.ClusterInstKey.CloudletKey)
+	}
 	cd.AppInstInfoCache.SetError(ctx, key, errState, err)
 }
 
-func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback) error {
+func (cd *ControllerData) appInstInfoState(ctx context.Context, key *edgeproto.AppInstKey, app *edgeproto.App, state edgeproto.TrackedState, updateCallback edgeproto.CacheUpdateCallback, updateResource bool) error {
 	if cd.AppInstInfoCache.Get(key, &edgeproto.AppInstInfo{}) {
 		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	} else {
 		// If info obj is not yet created, send status msg after it is created
 		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	}
-
+	if updateResource && app.Deployment == cloudcommon.DeploymentTypeVM {
+		// Marks end of VM appInst change and hence reduces ref count
+		// When ref count == 0, then it captures resources & updates it as part of CloudletInfo
+		//
+		// NOTE: This should be done before setting state on the object, so that
+		//       correct resource usage is calculated before controller marks action
+		//       on this object as done
+		cd.vmResourceActionEnd(ctx, &key.ClusterInstKey.CloudletKey)
+	}
 	if err := cd.AppInstInfoCache.SetState(ctx, key, state); err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "AppInst set state failed", "err", err)
 		return err
@@ -796,12 +815,21 @@ func (cd *ControllerData) appInstInfoPowerState(ctx context.Context, key *edgepr
 	return nil
 }
 
-func (cd *ControllerData) appInstInfoRuntime(ctx context.Context, key *edgeproto.AppInstKey, state edgeproto.TrackedState, rt *edgeproto.AppInstRuntime, updateCallback edgeproto.CacheUpdateCallback) {
+func (cd *ControllerData) appInstInfoRuntime(ctx context.Context, key *edgeproto.AppInstKey, app *edgeproto.App, state edgeproto.TrackedState, rt *edgeproto.AppInstRuntime, updateCallback edgeproto.CacheUpdateCallback, updateResource bool) {
 	if cd.AppInstInfoCache.Get(key, &edgeproto.AppInstInfo{}) {
 		updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
 	} else {
 		// If info obj is not yet created, send status msg after it is created
 		defer updateCallback(edgeproto.UpdateTask, edgeproto.TrackedState_CamelName[int32(state)])
+	}
+	if updateResource && app.Deployment == cloudcommon.DeploymentTypeVM {
+		// Marks end of VM appInst change and hence reduces ref count
+		// When ref count == 0, then it captures resources & updates it as part of CloudletInfo
+		//
+		// NOTE: This should be done before setting state on the object, so that
+		//       correct resource usage is calculated before controller marks action
+		//       on this object as done
+		cd.vmResourceActionEnd(ctx, &key.ClusterInstKey.CloudletKey)
 	}
 	cd.AppInstInfoCache.SetStateRuntime(ctx, key, state, rt)
 }
