@@ -250,7 +250,7 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 }
 
 // Validate resource requirements for the VMs on the cloudlet
-func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource) ([]string, error) {
+func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource, outOfSync bool) ([]string, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
 
 	infraResInfo := make(map[string]edgeproto.InfraResource)
@@ -313,7 +313,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		errsOut := strings.Join(errsStr, ", ")
 		err = fmt.Errorf("Not enough resources available: %s", errsOut)
 	}
-	if err != nil {
+	if err != nil || outOfSync {
 		return warnings, err
 	}
 
@@ -449,13 +449,19 @@ func GetRootLBFlavorInfo(ctx context.Context, stm concurrency.STM, cloudlet *edg
 
 // getAllCloudletResources
 // Returns (1) All the VM resources on the cloudlet (2) Diff of VM resources reported by CRM and seen by controller
-func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, []edgeproto.VMResource, error) {
+func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs) ([]edgeproto.VMResource, []edgeproto.VMResource, bool, error) {
 	allVmResources := []edgeproto.VMResource{}
 	diffVmResources := []edgeproto.VMResource{}
+
+	// Perform Infra based resource validations only if they are in sync
+	// with controller i.e. there are no objects on Infra captured by
+	// ResourceSnapshot that are not present on controller (etcd)
+	outOfSync := false
+
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
 	cloudletRes, err := GetPlatformVMsResources(ctx, cloudletInfo)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, outOfSync, err
 	}
 	allVmResources = append(allVmResources, cloudletRes...)
 
@@ -471,11 +477,12 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 
 	lbFlavor, err := GetRootLBFlavorInfo(ctx, stm, cloudlet, cloudletInfo)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, outOfSync, err
 	}
 
 	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
 	clusterInstKeys := cloudletRefs.ClusterInsts
+	ctrlClusters := make(map[edgeproto.ClusterInstRefKey]struct{})
 	for _, clusterInstRefKey := range clusterInstKeys {
 		ci := edgeproto.ClusterInst{}
 		clusterInstKey := edgeproto.ClusterInstKey{}
@@ -483,17 +490,18 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if !clusterInstApi.store.STMGet(stm, &clusterInstKey, &ci) {
 			continue
 		}
+		ctrlClusters[clusterInstRefKey] = struct{}{}
 		// Ignore state and consider all clusterInsts present in DB
 		// We are being conservative here. If clusterInst exists in DB, then we should
 		// assume it's taking up resources, or going to take up resources (CreateRequested),
 		// or may not actually be able to free up resources yet (DeleteRequested, etc)
 		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &ci)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, outOfSync, err
 		}
 		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, outOfSync, err
 		}
 		allVmResources = append(allVmResources, ciRes...)
 
@@ -506,7 +514,19 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		}
 		diffVmResources = append(diffVmResources, ciRes...)
 	}
+	if len(snapshotClusters) > len(ctrlClusters) {
+		outOfSync = true
+	} else {
+		for clusterInstRefKey, _ := range snapshotClusters {
+			if _, ok := ctrlClusters[clusterInstRefKey]; ok {
+				continue
+			}
+			outOfSync = true
+			break
+		}
+	}
 	// get all VM app inst resources
+	ctrlVmAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
 	for _, appInstRefKey := range cloudletRefs.VmAppInsts {
 		appInst := edgeproto.AppInst{}
 		appInstKey := edgeproto.AppInstKey{}
@@ -514,17 +534,18 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if !appInstApi.store.STMGet(stm, &appInstKey, &appInst) {
 			continue
 		}
+		ctrlVmAppInsts[appInstRefKey] = struct{}{}
 		// Ignore state and consider all VMAppInsts present in DB
 		// We are being conservative here. If VMAppInst exists in DB, then we should
 		// assume it's taking up resources, or going to take up resources (CreateRequested),
 		// or may not actually be able to free up resources yet (DeleteRequested, etc)
 		app := edgeproto.App{}
 		if !appApi.store.STMGet(stm, &appInstKey.AppKey, &app) {
-			return nil, nil, fmt.Errorf("App not found: %v", appInstKey.AppKey)
+			return nil, nil, outOfSync, fmt.Errorf("App not found: %v", appInstKey.AppKey)
 		}
 		vmRes, err := cloudcommon.GetVMAppRequirements(ctx, &app, &appInst, cloudletInfo.Flavors, lbFlavor)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, outOfSync, err
 		}
 		allVmResources = append(allVmResources, vmRes...)
 
@@ -537,7 +558,20 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		}
 		diffVmResources = append(diffVmResources, vmRes...)
 	}
-	return allVmResources, diffVmResources, nil
+	if !outOfSync {
+		if len(snapshotVmAppInsts) > len(ctrlVmAppInsts) {
+			outOfSync = true
+		} else {
+			for appInstRefKey, _ := range snapshotVmAppInsts {
+				if _, ok := ctrlVmAppInsts[appInstRefKey]; ok {
+					continue
+				}
+				outOfSync = true
+				break
+			}
+		}
+	}
+	return allVmResources, diffVmResources, outOfSync, nil
 }
 
 func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey, warnings []string) {
@@ -602,12 +636,12 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 	}
 
 	// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
-	allVmResources, diffVmResources, err := getAllCloudletResources(ctx, stm, cloudlet, cloudletInfo, cloudletRefs)
+	allVmResources, diffVmResources, outOfSync, err := getAllCloudletResources(ctx, stm, cloudlet, cloudletInfo, cloudletRefs)
 	if err != nil {
 		return err
 	}
 
-	warnings, err := validateCloudletInfraResources(ctx, stm, cloudlet, &cloudletInfo.ResourcesSnapshot, allVmResources, reqdVmResources, diffVmResources)
+	warnings, err := validateCloudletInfraResources(ctx, stm, cloudlet, &cloudletInfo.ResourcesSnapshot, allVmResources, reqdVmResources, diffVmResources, outOfSync)
 	if err != nil {
 		return err
 	}
@@ -639,7 +673,7 @@ func getCloudletResourceMetric(ctx context.Context, stm concurrency.STM, key *ed
 	pfType := pf.GetType(cloudlet.PlatformType.String())
 
 	// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
-	allResources, _, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
+	allResources, _, _, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
 	if err != nil {
 		return nil, err
 	}
