@@ -487,8 +487,6 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		// We are being conservative here. If clusterInst exists in DB, then we should
 		// assume it's taking up resources, or going to take up resources (CreateRequested),
 		// or may not actually be able to free up resources yet (DeleteRequested, etc)
-		// Note: This could result in having usedResources > maxResources as we are not sure
-		//       if resources in transient state are already using infra resources or not
 		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &ci)
 		if err != nil {
 			return nil, nil, err
@@ -516,6 +514,10 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		if !appInstApi.store.STMGet(stm, &appInstKey, &appInst) {
 			continue
 		}
+		// Ignore state and consider all VMAppInsts present in DB
+		// We are being conservative here. If VMAppInst exists in DB, then we should
+		// assume it's taking up resources, or going to take up resources (CreateRequested),
+		// or may not actually be able to free up resources yet (DeleteRequested, etc)
 		app := edgeproto.App{}
 		if !appApi.store.STMGet(stm, &appInstKey.AppKey, &app) {
 			return nil, nil, fmt.Errorf("App not found: %v", appInstKey.AppKey)
