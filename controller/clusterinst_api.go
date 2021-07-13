@@ -514,12 +514,16 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		}
 		diffVmResources = append(diffVmResources, ciRes...)
 	}
-	for clusterInstRefKey, _ := range snapshotClusters {
-		if _, ok := ctrlClusters[clusterInstRefKey]; ok {
-			continue
-		}
+	if len(snapshotClusters) > len(ctrlClusters) {
 		outOfSync = true
-		break
+	} else {
+		for clusterInstRefKey, _ := range snapshotClusters {
+			if _, ok := ctrlClusters[clusterInstRefKey]; ok {
+				continue
+			}
+			outOfSync = true
+			break
+		}
 	}
 	// get all VM app inst resources
 	ctrlVmAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
@@ -555,12 +559,16 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		diffVmResources = append(diffVmResources, vmRes...)
 	}
 	if !outOfSync {
-		for appInstRefKey, _ := range snapshotVmAppInsts {
-			if _, ok := ctrlVmAppInsts[appInstRefKey]; ok {
-				continue
-			}
+		if len(snapshotVmAppInsts) > len(ctrlVmAppInsts) {
 			outOfSync = true
-			break
+		} else {
+			for appInstRefKey, _ := range snapshotVmAppInsts {
+				if _, ok := ctrlVmAppInsts[appInstRefKey]; ok {
+					continue
+				}
+				outOfSync = true
+				break
+			}
 		}
 	}
 	return allVmResources, diffVmResources, outOfSync, nil
