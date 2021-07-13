@@ -6,80 +6,59 @@ import (
 
 var GlobalApiName = "Global"
 
+func (f *FlowSettings) Validate() error {
+	// Validate fields that must be set if FlowAlgorithm is set
+	if f.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM || f.FlowAlgorithm == FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
+		if f.ReqsPerSecond <= 0 {
+			return fmt.Errorf("Invalid ReqsPerSecond %f, must be greater than 0", f.ReqsPerSecond)
+		}
+		if f.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM {
+			if f.BurstSize <= 0 {
+				return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", f.BurstSize)
+			}
+		}
+	} else {
+		return fmt.Errorf("Invalid FlowAlgorithm %v", f.FlowAlgorithm)
+	}
+	return nil
+}
+
+func (m *MaxReqsSettings) Validate() error {
+	// Validate fields that must be set if MaxReqsAlgorithm is set
+	if m.MaxReqsAlgorithm == MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM {
+		if m.MaxRequests <= 0 {
+			return fmt.Errorf("Invalid MaxRequests %d, must be greater than 0", m.MaxRequests)
+		}
+		if m.Interval <= 0 {
+			return fmt.Errorf("Invalid Interval %d, must be greater than 0", m.Interval)
+		}
+	} else {
+		return fmt.Errorf("Invalid MaxReqsAlgorithm %v", m.MaxReqsAlgorithm)
+	}
+	return nil
+}
+
 func (r *RateLimitSettings) Validate(fields map[string]struct{}) error {
 	for _, fsettings := range r.FlowSettings {
-		// Validate fields that must be set if FlowAlgorithm is set
-		if fsettings.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM || fsettings.FlowAlgorithm == FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
-			if fsettings.ReqsPerSecond <= 0 {
-				return fmt.Errorf("Invalid ReqsPerSecond %f, must be greater than 0", fsettings.ReqsPerSecond)
-			}
-			if fsettings.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM {
-				if fsettings.BurstSize <= 0 {
-					return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", fsettings.BurstSize)
-				}
-			}
-		} else {
-			return fmt.Errorf("Invalid FlowAlgorithm %v", fsettings.FlowAlgorithm)
+		if err := fsettings.Validate(); err != nil {
+			return err
 		}
 	}
 
 	for _, msettings := range r.MaxReqsSettings {
-		// Validate fields that must be set if MaxReqsAlgorithm is set
-		if msettings.MaxReqsAlgorithm == MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM {
-			if msettings.MaxRequests <= 0 {
-				return fmt.Errorf("Invalid MaxRequests %d, must be greater than 0", msettings.MaxRequests)
-			}
-			if msettings.Interval <= 0 {
-				return fmt.Errorf("Invalid Interval %d, must be greater than 0", msettings.Interval)
-			}
-		} else {
-			return fmt.Errorf("Invalid MaxReqsAlgorithm %v", msettings.MaxReqsAlgorithm)
+		if err := msettings.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-// TODO: Consolidate with other validate function
 func (f *FlowRateLimitSettings) Validate(fields map[string]struct{}) error {
-	for field, _ := range fields {
-		switch field {
-		case FlowRateLimitSettingsFieldSettingsFlowAlgorithm:
-			if f.Settings.FlowAlgorithm == FlowRateLimitAlgorithm_UNKNOWN_FLOW_ALGORITHM {
-				return fmt.Errorf("Invalid FlowAlgorithm %v", f.Settings.FlowAlgorithm)
-			}
-		case FlowRateLimitSettingsFieldSettingsReqsPerSecond:
-			if f.Settings.ReqsPerSecond <= 0 {
-				return fmt.Errorf("Invalid ReqsPerSecond %f, must be greater than 0", f.Settings.ReqsPerSecond)
-			}
-		case FlowRateLimitSettingsFieldSettingsBurstSize:
-			if f.Settings.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM {
-				if f.Settings.BurstSize <= 0 {
-					return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", f.Settings.BurstSize)
-				}
-			}
-		}
-	}
-	return nil
+	return f.Settings.Validate()
 }
 
 func (m *MaxReqsRateLimitSettings) Validate(fields map[string]struct{}) error {
-	for field, _ := range fields {
-		switch field {
-		case MaxReqsRateLimitSettingsFieldSettingsMaxReqsAlgorithm:
-			if m.Settings.MaxReqsAlgorithm == MaxReqsRateLimitAlgorithm_UNKNOWN_MAX_REQS_ALGORITHM {
-				return fmt.Errorf("Invalid MaxReqsAlgorithm %v", m.Settings.MaxReqsAlgorithm)
-			}
-		case MaxReqsRateLimitSettingsFieldSettingsMaxRequests:
-			if m.Settings.MaxRequests <= 0 {
-				return fmt.Errorf("Invalid MaxRequests %d, must be greater than 0", m.Settings.MaxRequests)
-			}
-		case MaxReqsRateLimitSettingsFieldSettingsInterval:
-			if m.Settings.Interval <= 0 {
-				return fmt.Errorf("Invalid Interval %d, must be greater than 0", m.Settings.Interval)
-			}
-		}
-	}
-	return nil
+	return m.Settings.Validate()
 }
 
 func (key *RateLimitSettingsKey) ValidateKey() error {

@@ -74,7 +74,7 @@ message FlowRateLimitSettings {
   FlowSettings settings = 3;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
-  option (protogen.alias) = "flowsettingsname=Key.FlowSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,algorithm=Settings.FlowAlgorithm,reqspersecond=Settings.ReqsPerSecond,burstsize=Settings.BurstSize";
+  option (protogen.alias) = "flowsettingsname=Key.FlowSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,flowalgorithm=Settings.FlowAlgorithm,reqspersecond=Settings.ReqsPerSecond,burstsize=Settings.BurstSize";
 }
 
 message MaxReqsSettings {
@@ -104,7 +104,7 @@ message MaxReqsRateLimitSettings {
   // MaxReqsSettings
   MaxReqsSettings settings = 3;
   option (protogen.generate_cud) = true;
-  option (protogen.alias) = "maxreqssettingsname=Key.MaxReqsSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,algorithm=Settings.FlowAlgorithm,reqspersecond=Settings.ReqsPerSecond,burstsize=Settings.BurstSize";
+  option (protogen.alias) = "maxreqssettingsname=Key.MaxReqsSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,maxreqsalgorithm=Settings.MaxReqsAlgorithm,maxrequests=Settings.MaxRequests,interval=Settings.Interval";
 }
 
 message RateLimitSettings {

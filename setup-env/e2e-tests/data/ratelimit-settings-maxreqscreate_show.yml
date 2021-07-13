@@ -39,8 +39,8 @@ settings:
     apiname: FindCloudlet
     apiendpointtype: Dme
     ratelimittarget: AllRequests
-  flowsettings:
+  maxreqssettings:
     fcallreqs1:
-      flowalgorithm: TokenBucketAlgorithm
-      reqspersecond: 100
-      burstsize: 5
+      maxreqsalgorithm: FixedWindowAlgorithm
+      maxrequests: 1
+      interval: 3s
