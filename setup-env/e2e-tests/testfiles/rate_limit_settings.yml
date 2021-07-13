@@ -100,7 +100,7 @@ tests:
   apifile: "{{datadir}}/find_cloudlet_app1_maxreqsratelimit.yml"
   actions: [dmeapi-findcloudlet]
 
-- name: sleep, allow time token bucket to refill
+- name: sleep, allow time for fixed window to reset
   actions: [sleep=3]
 
 - name: FindCloudlet3 MaxReqsRateLimit (will be successful)
