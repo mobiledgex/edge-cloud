@@ -938,7 +938,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		cloudletRefsApi.store.STMGet(stm, &in.Key, &cloudletRefs)
 		if _, found := fmap[edgeproto.CloudletFieldResourceQuotas]; found {
 			// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
-			allVmResources, _, err := getAllCloudletResources(ctx, stm, cur, &cloudletInfo, &cloudletRefs)
+			allVmResources, _, _, err := getAllCloudletResources(ctx, stm, cur, &cloudletInfo, &cloudletRefs)
 			if err != nil {
 				return err
 			}
@@ -2088,7 +2088,7 @@ func (s *CloudletApi) GetCloudletResourceUsage(ctx context.Context, usage *edgep
 		}
 		cloudletRefs := edgeproto.CloudletRefs{}
 		cloudletRefsApi.store.STMGet(stm, &usage.Key, &cloudletRefs)
-		allVmResources, diffVmResources, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
+		allVmResources, diffVmResources, _, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
 		if err != nil {
 			return err
 		}
