@@ -179,13 +179,10 @@ func ConvertDecodeErr(err error, reals map[string]string) error {
 		case *mapstructure.ParseError:
 			name := getDecodeArg(e.Name, reals)
 			suberr := e.Err
-			help := ""
 			if ne, ok := suberr.(*strconv.NumError); ok {
 				suberr = ne.Err
 			}
-			if e.To == reflect.Bool {
-				help = ", valid values are true, false"
-			}
+			help := getParseErrorHelp(e.To)
 			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: %v%s`, name, e.Val, e.To, suberr, help)
 		case *mapstructure.OverflowError:
 			name := getDecodeArg(e.Name, reals)
@@ -593,7 +590,9 @@ func setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType st
 			}
 			err := yaml.Unmarshal([]byte(val), v.Interface())
 			if err != nil {
-				return fmt.Errorf("unmarshal value %s into type %s failed: %v", val, sf.Type, err)
+				help := getParseErrorHelp(sf.Type.Kind())
+				// omit yaml error as it is not user-friendly
+				return fmt.Errorf("unable to parse value %q as %v%s", val, sf.Type.Kind(), help)
 			}
 			// elem to dereference it
 			dat[part] = v.Elem().Interface()
@@ -611,6 +610,13 @@ func setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType st
 		}
 	}
 	return nil
+}
+
+func getParseErrorHelp(k reflect.Kind) string {
+	if k == reflect.Bool {
+		return ", valid values are true, false"
+	}
+	return ""
 }
 
 func valIsTrue(val interface{}) bool {
