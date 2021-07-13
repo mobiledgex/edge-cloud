@@ -706,7 +706,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		found = cloudletRefsApi.store.STMGet(stm, &cloudletKey, &cloudletRefs)
 		require.True(t, found, "cloudlet refs exists")
 
-		allRes, diffRes, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
+		allRes, diffRes, _, err := getAllCloudletResources(ctx, stm, &cloudlet, &cloudletInfo, &cloudletRefs)
 		require.Nil(t, err, "get all cloudlet resources")
 		require.Equal(t, len(allRes), len(diffRes), "should match as crm resource snapshot doesn't have any tracked resources")
 		clusters := make(map[edgeproto.ClusterInstKey]struct{})
@@ -771,7 +771,8 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		require.Equal(t, numNodes, int(clusterInst.NumNodes), "resource type count matches")
 		require.Equal(t, numRootLB, 1, "resource type count matches")
 
-		warnings, err := validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, ciResources, diffRes)
+		outOfSync := false
+		warnings, err := validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, ciResources, diffRes, outOfSync)
 		require.NotNil(t, err, "not enough resource available error")
 		require.Greater(t, len(warnings), 0, "warnings for resources", "warnings", warnings)
 		for _, warning := range warnings {
@@ -812,7 +813,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		require.True(t, foundVMRes, "resource type app vm found")
 		require.True(t, foundVMRootLBRes, "resource type vm rootlb found")
 
-		warnings, err = validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, vmAppResources, diffRes)
+		warnings, err = validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, vmAppResources, diffRes, outOfSync)
 		require.Nil(t, err, "enough resource available")
 		require.Greater(t, len(warnings), 0, "warnings for resources", "warnings", warnings)
 
