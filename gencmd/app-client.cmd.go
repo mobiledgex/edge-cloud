@@ -670,7 +670,7 @@ var RegisterClientReplyOptionalArgs = []string{
 var RegisterClientReplyAliasArgs = []string{}
 var RegisterClientReplyComments = map[string]string{
 	"ver":            "API version _(hidden)_ Reserved for future use",
-	"status":         "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
+	"status":         "Status of the reply, one of Undefined, Success, Fail",
 	"sessioncookie":  "Session Cookie to be used in later API calls",
 	"tokenserveruri": "URI for the Token Server",
 	"uniqueidtype":   "Unique ID Type _(optional)_ Type of unique ID provided by the server A unique_id_type and unique_id may be provided by the client to be registered. During registering, if a unique_id_type and unique_id are provided by the client in their request, the unique_id_type and unique_id will be left blank in the response. But, if the client does not provide a unique_id_type and unique_id, then the server generates one and provides the unique_id in the response. If possible, the unique_id should be saved by the client locally and used for subsequent RegisterClient API calls. Otherwise, a new unique_id will be generated for further API calls.",
@@ -761,9 +761,9 @@ var FindCloudletReplyOptionalArgs = []string{
 var FindCloudletReplyAliasArgs = []string{}
 var FindCloudletReplyComments = map[string]string{
 	"ver":                                 "API version _(hidden)_ Reserved for future use",
-	"status":                              "Status return, one of FindUnknown, FindFound, FindNotfound",
+	"status":                              "Status return, one of Unknown, Found, Notfound",
 	"fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
-	"ports:#.proto":                       "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
+	"ports:#.proto":                       "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"ports:#.internalport":                "Container port",
 	"ports:#.publicport":                  "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"ports:#.fqdnprefix":                  "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
@@ -832,7 +832,7 @@ var VerifyLocationReplyAliasArgs = []string{}
 var VerifyLocationReplyComments = map[string]string{
 	"ver":                   "API version _(hidden)_ Reserved for future use",
 	"towerstatus":           ", one of TowerUnknown, ConnectedToSpecifiedTower, NotConnectedToSpecifiedTower",
-	"gpslocationstatus":     ", one of LocUnknown, LocVerified, LocMismatchSameCountry, LocMismatchOtherCountry, LocRoamingCountryMatch, LocRoamingCountryMismatch, LocErrorUnauthorized, LocErrorOther",
+	"gpslocationstatus":     ", one of Unknown, Verified, MismatchSameCountry, MismatchOtherCountry, RoamingCountryMatch, RoamingCountryMismatch, ErrorUnauthorized, ErrorOther",
 	"gpslocationaccuracykm": "location accuracy, the location is verified to be within this number of kilometers.  Negative value means no verification was performed",
 	"tags":                  "_(optional)_ Vendor specific data",
 }
@@ -878,7 +878,7 @@ var GetLocationReplyOptionalArgs = []string{
 var GetLocationReplyAliasArgs = []string{}
 var GetLocationReplyComments = map[string]string{
 	"ver":                                "API version _(hidden)_ Reserved for future use",
-	"status":                             ", one of LocUnknown, LocFound, LocDenied",
+	"status":                             ", one of Unknown, Found, Denied",
 	"carriername":                        "Unique carrier identification (typically MCC + MNC)",
 	"tower":                              "The tower that the user is currently connected to",
 	"networklocation.latitude":           "latitude in WGS 84 coordinates",
@@ -950,7 +950,7 @@ var AppinstanceComments = map[string]string{
 	"appname":              "App Instance Name",
 	"appvers":              "App Instance Version",
 	"fqdn":                 "App Instance FQDN",
-	"ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
+	"ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"ports:#.internalport": "Container port",
 	"ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"ports:#.fqdnprefix":   "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
@@ -1003,7 +1003,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances:#.appname":              "App Instance Name",
 	"appinstances:#.appvers":              "App Instance Version",
 	"appinstances:#.fqdn":                 "App Instance FQDN",
-	"appinstances:#.ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
+	"appinstances:#.ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"appinstances:#.ports:#.internalport": "Container port",
 	"appinstances:#.ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"appinstances:#.ports:#.fqdnprefix":   "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
@@ -1047,7 +1047,7 @@ var AppInstListReplyOptionalArgs = []string{
 var AppInstListReplyAliasArgs = []string{}
 var AppInstListReplyComments = map[string]string{
 	"ver":                                             "API version _(hidden)_ Reserved for future use",
-	"status":                                          ", one of AiUndefined, AiSuccess, AiFail",
+	"status":                                          ", one of Undefined, Success, Fail",
 	"cloudlets:#.carriername":                         "Cloudlet Organization Name",
 	"cloudlets:#.cloudletname":                        "Cloudlet Name",
 	"cloudlets:#.gpslocation.latitude":                "latitude in WGS 84 coordinates",
@@ -1061,7 +1061,7 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets:#.appinstances:#.appname":              "App Instance Name",
 	"cloudlets:#.appinstances:#.appvers":              "App Instance Version",
 	"cloudlets:#.appinstances:#.fqdn":                 "App Instance FQDN",
-	"cloudlets:#.appinstances:#.ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
+	"cloudlets:#.appinstances:#.ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"cloudlets:#.appinstances:#.ports:#.internalport": "Container port",
 	"cloudlets:#.appinstances:#.ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"cloudlets:#.appinstances:#.ports:#.fqdnprefix":   "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
@@ -1130,7 +1130,7 @@ var FqdnListReplyComments = map[string]string{
 	"appfqdns:#.orgname":            "App organization name",
 	"appfqdns:#.fqdns":              "App FQDN",
 	"appfqdns:#.androidpackagename": "_(optional)_ Android package name",
-	"status":                        ", one of FlUndefined, FlSuccess, FlFail",
+	"status":                        ", one of Undefined, Success, Fail",
 	"tags":                          "_(optional)_ Vendor specific data",
 }
 var FqdnListReplySpecialArgs = map[string]string{
@@ -1188,8 +1188,8 @@ var AppOfficialFqdnReplyComments = map[string]string{
 	"ver":                  "API version _(hidden)_ Reserved for future use",
 	"appofficialfqdn":      "The FQDN to which the app is reached independent of the edge",
 	"clienttoken":          "Tokenized client data",
-	"status":               "Status of the reply, one of AofUndefined, AofSuccess, AofFail",
-	"ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
+	"status":               "Status of the reply, one of Undefined, Success, Fail",
+	"ports:#.proto":        "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"ports:#.internalport": "Container port",
 	"ports:#.publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"ports:#.fqdnprefix":   "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
@@ -1216,7 +1216,7 @@ var DynamicLocGroupRequestComments = map[string]string{
 	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"lgid":          "Dynamic Location Group Id",
-	"commtype":      ", one of DlgUndefined, DlgSecure, DlgOpen",
+	"commtype":      ", one of Undefined, Secure, Open",
 	"userdata":      "Unused",
 	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags":          "_(optional)_ Vendor specific data",
@@ -1235,7 +1235,7 @@ var DynamicLocGroupReplyOptionalArgs = []string{
 var DynamicLocGroupReplyAliasArgs = []string{}
 var DynamicLocGroupReplyComments = map[string]string{
 	"ver":         "API version _(hidden)_ Reserved for future use",
-	"status":      "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
+	"status":      "Status of the reply, one of Undefined, Success, Fail",
 	"errorcode":   "Error Code based on Failure",
 	"groupcookie": "Group Cookie for Secure Group Communication",
 	"tags":        "_(optional)_ Vendor specific data",
@@ -1394,7 +1394,7 @@ var QosPositionKpiReplyOptionalArgs = []string{
 var QosPositionKpiReplyAliasArgs = []string{}
 var QosPositionKpiReplyComments = map[string]string{
 	"ver":                                    "API version _(hidden)_ Reserved for future use",
-	"status":                                 "Status of the reply, one of RsUndefined, RsSuccess, RsFail",
+	"status":                                 "Status of the reply, one of Undefined, Success, Fail",
 	"positionresults:#.positionid":           "as set by the client, must be unique within one QosPositionRequest",
 	"positionresults:#.gpslocation.latitude": "latitude in WGS 84 coordinates",
 	"positionresults:#.gpslocation.longitude":          "longitude in WGS 84 coordinates",
@@ -1439,7 +1439,7 @@ var ClientEdgeEventAliasArgs = []string{}
 var ClientEdgeEventComments = map[string]string{
 	"sessioncookie":                     "Session Cookie from RegisterClientReply",
 	"edgeeventscookie":                  "Session Cookie from FindCloudletReply",
-	"eventtype":                         ", one of EventUnknown, EventInitConnection, EventTerminateConnection, EventLatencySamples, EventLocationUpdate, EventCustomEvent",
+	"eventtype":                         ", one of Unknown, InitConnection, TerminateConnection, LatencySamples, LocationUpdate, CustomEvent",
 	"gpslocation.latitude":              "latitude in WGS 84 coordinates",
 	"gpslocation.longitude":             "longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy":    "horizontal accuracy (radius in meters)",
@@ -1501,10 +1501,10 @@ var ServerEdgeEventOptionalArgs = []string{
 }
 var ServerEdgeEventAliasArgs = []string{}
 var ServerEdgeEventComments = map[string]string{
-	"eventtype":                                       ", one of EventUnknown, EventInitConnection, EventLatencyRequest, EventLatencyProcessed, EventCloudletState, EventCloudletMaintenance, EventAppinstHealth, EventCloudletUpdate, EventError",
-	"cloudletstate":                                   "Cloudlet state information, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
+	"eventtype":                                       ", one of Unknown, InitConnection, LatencyRequest, LatencyProcessed, CloudletState, CloudletMaintenance, AppinstHealth, CloudletUpdate, Error",
+	"cloudletstate":                                   "Cloudlet state information, one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync",
 	"maintenancestate":                                "Cloudlet maintenance state information, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
-	"healthcheck":                                     "AppInst health state information, one of HealthCheckUnknown, HealthCheckFailRootlbOffline, HealthCheckFailServerFail, HealthCheckOk",
+	"healthcheck":                                     "AppInst health state information, one of Unknown, FailRootlbOffline, FailServerFail, Ok",
 	"statistics.avg":                                  "average",
 	"statistics.min":                                  "minimum",
 	"statistics.max":                                  "maximum",
@@ -1512,9 +1512,9 @@ var ServerEdgeEventComments = map[string]string{
 	"statistics.variance":                             "unbiased variance",
 	"statistics.numsamples":                           "number of samples to create stats",
 	"newcloudlet.ver":                                 "API version _(hidden)_ Reserved for future use",
-	"newcloudlet.status":                              "Status return, one of FindUnknown, FindFound, FindNotfound",
+	"newcloudlet.status":                              "Status return, one of Unknown, Found, Notfound",
 	"newcloudlet.fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
-	"newcloudlet.ports:#.proto":                       "TCP (L4) or UDP (L4) protocol, one of LProtoUnknown, LProtoTcp, LProtoUdp",
+	"newcloudlet.ports:#.proto":                       "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"newcloudlet.ports:#.internalport":                "Container port",
 	"newcloudlet.ports:#.publicport":                  "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
 	"newcloudlet.ports:#.fqdnprefix":                  "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",

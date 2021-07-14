@@ -233,8 +233,8 @@ var TestGenOptionalArgs = []string{
 }
 var TestGenAliasArgs = []string{}
 var TestGenComments = map[string]string{
-	"outeren":                                 ", one of Outer0, Outer1, Outer2, Outer3",
-	"inneren":                                 ", one of Inner0, Inner1, Inner2, Inner3",
+	"outeren":                                 ", one of 0, 1, 2, 3",
+	"inneren":                                 ", one of 0, 1, 2, 3",
 	"loc.latitude":                            "latitude in WGS 84 coordinates",
 	"loc.longitude":                           "longitude in WGS 84 coordinates",
 	"loc.horizontalaccuracy":                  "horizontal accuracy (radius in meters)",

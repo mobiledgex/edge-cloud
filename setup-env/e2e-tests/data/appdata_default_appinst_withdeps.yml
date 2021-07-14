@@ -27,7 +27,7 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   defaultflavor:
     name: x1.small
   cluster:
@@ -48,7 +48,7 @@ appinstances:
       cloudletkey:
         organization: developer
         name: default
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
   uri: default.someapplication.acme.com

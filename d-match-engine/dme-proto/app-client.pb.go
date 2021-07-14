@@ -20,6 +20,7 @@ import (
 	math_bits "math/bits"
 	reflect "reflect"
 	"strconv"
+	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -7429,7 +7430,8 @@ func (e *IDTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e IDTypes) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(IDTypes_CamelName, int32(e)), nil
+	str := proto.EnumName(IDTypes_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -7500,6 +7502,10 @@ func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := ReplyStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = ReplyStatus_CamelValue["Rs"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -7515,7 +7521,9 @@ func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e ReplyStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(ReplyStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(ReplyStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Rs")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -7524,6 +7532,10 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := ReplyStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = ReplyStatus_CamelValue["Rs"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -7549,8 +7561,11 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 
 func (e ReplyStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ReplyStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Rs")
 	return json.Marshal(str)
 }
+
+var ReplyStatusCommonPrefix = "Rs"
 
 var FindStatusStrings = []string{
 	"FIND_UNKNOWN",
@@ -7586,6 +7601,10 @@ func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{})
 	}
 	val, ok := FindCloudletReply_FindStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = FindCloudletReply_FindStatus_CamelValue["Find"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -7601,7 +7620,9 @@ func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{})
 }
 
 func (e FindCloudletReply_FindStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Find")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -7610,6 +7631,10 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := FindCloudletReply_FindStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = FindCloudletReply_FindStatus_CamelValue["Find"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -7635,8 +7660,11 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 
 func (e FindCloudletReply_FindStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Find")
 	return json.Marshal(str)
 }
+
+var FindStatusCommonPrefix = "Find"
 
 var TowerStatusStrings = []string{
 	"TOWER_UNKNOWN",
@@ -7687,7 +7715,8 @@ func (e *VerifyLocationReply_TowerStatus) UnmarshalYAML(unmarshal func(interface
 }
 
 func (e VerifyLocationReply_TowerStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(VerifyLocationReply_TowerStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(VerifyLocationReply_TowerStatus_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -7783,6 +7812,10 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalYAML(unmarshal func(int
 	}
 	val, ok := VerifyLocationReply_GPSLocationStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = VerifyLocationReply_GPSLocationStatus_CamelValue["Loc"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -7798,7 +7831,9 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalYAML(unmarshal func(int
 }
 
 func (e VerifyLocationReply_GPSLocationStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Loc")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -7807,6 +7842,10 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := VerifyLocationReply_GPSLocationStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = VerifyLocationReply_GPSLocationStatus_CamelValue["Loc"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -7832,8 +7871,11 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 
 func (e VerifyLocationReply_GPSLocationStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Loc")
 	return json.Marshal(str)
 }
+
+var GPSLocationStatusCommonPrefix = "Loc"
 
 var LocStatusStrings = []string{
 	"LOC_UNKNOWN",
@@ -7869,6 +7911,10 @@ func (e *GetLocationReply_LocStatus) UnmarshalYAML(unmarshal func(interface{}) e
 	}
 	val, ok := GetLocationReply_LocStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = GetLocationReply_LocStatus_CamelValue["Loc"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -7884,7 +7930,9 @@ func (e *GetLocationReply_LocStatus) UnmarshalYAML(unmarshal func(interface{}) e
 }
 
 func (e GetLocationReply_LocStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Loc")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -7893,6 +7941,10 @@ func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := GetLocationReply_LocStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = GetLocationReply_LocStatus_CamelValue["Loc"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -7918,8 +7970,11 @@ func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 
 func (e GetLocationReply_LocStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Loc")
 	return json.Marshal(str)
 }
+
+var LocStatusCommonPrefix = "Loc"
 
 var AIStatusStrings = []string{
 	"AI_UNDEFINED",
@@ -7955,6 +8010,10 @@ func (e *AppInstListReply_AIStatus) UnmarshalYAML(unmarshal func(interface{}) er
 	}
 	val, ok := AppInstListReply_AIStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = AppInstListReply_AIStatus_CamelValue["Ai"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -7970,7 +8029,9 @@ func (e *AppInstListReply_AIStatus) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 func (e AppInstListReply_AIStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Ai")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -7979,6 +8040,10 @@ func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := AppInstListReply_AIStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = AppInstListReply_AIStatus_CamelValue["Ai"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -8004,8 +8069,11 @@ func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 
 func (e AppInstListReply_AIStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Ai")
 	return json.Marshal(str)
 }
+
+var AIStatusCommonPrefix = "Ai"
 
 var FLStatusStrings = []string{
 	"FL_UNDEFINED",
@@ -8041,6 +8109,10 @@ func (e *FqdnListReply_FLStatus) UnmarshalYAML(unmarshal func(interface{}) error
 	}
 	val, ok := FqdnListReply_FLStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = FqdnListReply_FLStatus_CamelValue["Fl"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -8056,7 +8128,9 @@ func (e *FqdnListReply_FLStatus) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 func (e FqdnListReply_FLStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Fl")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -8065,6 +8139,10 @@ func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := FqdnListReply_FLStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = FqdnListReply_FLStatus_CamelValue["Fl"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -8090,8 +8168,11 @@ func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 
 func (e FqdnListReply_FLStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Fl")
 	return json.Marshal(str)
 }
+
+var FLStatusCommonPrefix = "Fl"
 
 var AOFStatusStrings = []string{
 	"AOF_UNDEFINED",
@@ -8127,6 +8208,10 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalYAML(unmarshal func(interface{
 	}
 	val, ok := AppOfficialFqdnReply_AOFStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = AppOfficialFqdnReply_AOFStatus_CamelValue["Aof"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -8142,7 +8227,9 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalYAML(unmarshal func(interface{
 }
 
 func (e AppOfficialFqdnReply_AOFStatus) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(AppOfficialFqdnReply_AOFStatus_CamelName, int32(e)), nil
+	str := proto.EnumName(AppOfficialFqdnReply_AOFStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Aof")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -8151,6 +8238,10 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := AppOfficialFqdnReply_AOFStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = AppOfficialFqdnReply_AOFStatus_CamelValue["Aof"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -8176,8 +8267,11 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
 
 func (e AppOfficialFqdnReply_AOFStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(AppOfficialFqdnReply_AOFStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Aof")
 	return json.Marshal(str)
 }
+
+var AOFStatusCommonPrefix = "Aof"
 
 var DlgCommTypeStrings = []string{
 	"DLG_UNDEFINED",
@@ -8213,6 +8307,10 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interf
 	}
 	val, ok := DynamicLocGroupRequest_DlgCommType_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = DynamicLocGroupRequest_DlgCommType_CamelValue["Dlg"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -8228,7 +8326,9 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interf
 }
 
 func (e DynamicLocGroupRequest_DlgCommType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e)), nil
+	str := proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Dlg")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -8237,6 +8337,10 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := DynamicLocGroupRequest_DlgCommType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = DynamicLocGroupRequest_DlgCommType_CamelValue["Dlg"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -8262,8 +8366,11 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 
 func (e DynamicLocGroupRequest_DlgCommType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Dlg")
 	return json.Marshal(str)
 }
+
+var DlgCommTypeCommonPrefix = "Dlg"
 
 var ClientEventTypeStrings = []string{
 	"EVENT_UNKNOWN",
@@ -8314,6 +8421,10 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalYAML(unmarshal func(interface
 	}
 	val, ok := ClientEdgeEvent_ClientEventType_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = ClientEdgeEvent_ClientEventType_CamelValue["Event"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -8329,7 +8440,9 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalYAML(unmarshal func(interface
 }
 
 func (e ClientEdgeEvent_ClientEventType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(ClientEdgeEvent_ClientEventType_CamelName, int32(e)), nil
+	str := proto.EnumName(ClientEdgeEvent_ClientEventType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Event")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -8338,6 +8451,10 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := ClientEdgeEvent_ClientEventType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = ClientEdgeEvent_ClientEventType_CamelValue["Event"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -8363,8 +8480,11 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
 
 func (e ClientEdgeEvent_ClientEventType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ClientEdgeEvent_ClientEventType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Event")
 	return json.Marshal(str)
 }
+
+var ClientEventTypeCommonPrefix = "Event"
 
 var ServerEventTypeStrings = []string{
 	"EVENT_UNKNOWN",
@@ -8430,6 +8550,10 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalYAML(unmarshal func(interface
 	}
 	val, ok := ServerEdgeEvent_ServerEventType_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = ServerEdgeEvent_ServerEventType_CamelValue["Event"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -8445,7 +8569,9 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalYAML(unmarshal func(interface
 }
 
 func (e ServerEdgeEvent_ServerEventType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(ServerEdgeEvent_ServerEventType_CamelName, int32(e)), nil
+	str := proto.EnumName(ServerEdgeEvent_ServerEventType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Event")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -8454,6 +8580,10 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := ServerEdgeEvent_ServerEventType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = ServerEdgeEvent_ServerEventType_CamelValue["Event"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -8479,8 +8609,12 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
 
 func (e ServerEdgeEvent_ServerEventType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ServerEdgeEvent_ServerEventType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Event")
 	return json.Marshal(str)
 }
+
+var ServerEventTypeCommonPrefix = "Event"
+
 func (m *RegisterClientRequest) IsValidArgsForRegisterClient() error {
 	return nil
 }

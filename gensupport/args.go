@@ -280,11 +280,14 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			enumDesc := GetEnumDesc(g, field.GetTypeName())
 			en := enumDesc.EnumDescriptorProto
 			strs := make([]string, 0, len(en.Value))
+			prefix := GetEnumCommonPrefix(en)
 			for _, val := range en.Value {
 				if GetEnumBackend(val) {
 					continue
 				}
-				strs = append(strs, util.CamelCase(*val.Name))
+				valName := util.CamelCase(*val.Name)
+				valName = strings.TrimPrefix(valName, prefix)
+				strs = append(strs, valName)
 			}
 			text := "one of"
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
@@ -324,6 +327,32 @@ func argSpecified(arg string, entries map[string]struct{}) bool {
 		}
 	}
 	return false
+}
+
+func GetEnumCommonPrefix(en *descriptor.EnumDescriptorProto) string {
+	if prefix, found := FindStringExtension(en.Options, protogen.E_CommonPrefix); found {
+		return util.CamelCase(prefix)
+	}
+	if len(en.Value) <= 1 {
+		return ""
+	}
+	prefix := *en.Value[0].Name
+	for ii := 1; ii < len(en.Value); ii++ {
+		name := *en.Value[ii].Name
+		// search for common prefix
+		var kk int
+		for kk = 0; kk < len(prefix) && kk < len(name); kk++ {
+			if prefix[kk] != name[kk] {
+				break
+			}
+		}
+		prefix = prefix[:kk]
+		if kk == 0 {
+			// no common prefix
+			break
+		}
+	}
+	return util.CamelCase(prefix)
 }
 
 func HasMethodArgs(method *descriptor.MethodDescriptorProto) bool {

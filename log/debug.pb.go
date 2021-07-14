@@ -195,7 +195,8 @@ func (e *DebugLevel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e DebugLevel) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(DebugLevel_CamelName, int32(e)), nil
+	str := proto.EnumName(DebugLevel_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding

@@ -219,12 +219,20 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	m.P("}")
 	m.P()
 
-	args := enumTempl{Name: m.support.FQTypeName(m.gen, desc)}
+	args := enumTempl{
+		Name:         m.support.FQTypeName(m.gen, desc),
+		CommonPrefix: gensupport.GetEnumCommonPrefix(en),
+	}
 	m.enumTemplate.Execute(m.gen.Buffer, args)
 	m.importErrors = true
 	m.importStrconv = true
 	m.importJson = true
 	m.importUtil = true
+	if len(args.CommonPrefix) > 0 {
+		m.importStrings = true
+		m.P("var ", en.Name, "CommonPrefix = \"", args.CommonPrefix, "\"")
+		m.P()
+	}
 
 	if GetVersionHashOpt(en) {
 		// Collect all key objects
@@ -242,7 +250,8 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 }
 
 type enumTempl struct {
-	Name string
+	Name         string
+	CommonPrefix string
 }
 
 var enumTemplateIn = `
@@ -251,6 +260,12 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	err := unmarshal(&str)
 	if err != nil { return err }
 	val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
+{{- if .CommonPrefix}}
+	if !ok {
+		// may have omitted common prefix
+		val, ok = {{.Name}}_CamelValue["{{.CommonPrefix}}"+util.CamelCase(str)]
+	}
+{{- end}}
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
@@ -267,7 +282,11 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e {{.Name}}) MarshalYAML() (interface{}, error) {
-	return proto.EnumName({{.Name}}_CamelName, int32(e)), nil
+	str := proto.EnumName({{.Name}}_CamelName, int32(e))
+{{- if .CommonPrefix}}
+	str = strings.TrimPrefix(str, "{{.CommonPrefix}}")
+{{- end}}
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -276,6 +295,12 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
+{{- if .CommonPrefix}}
+		if !ok {
+			// may have omitted common prefix
+			val, ok = {{.Name}}_CamelValue["{{.CommonPrefix}}"+util.CamelCase(str)]
+		}
+{{- end}}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -301,6 +326,9 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 
 func (e {{.Name}}) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName({{.Name}}_CamelName, int32(e))
+{{- if .CommonPrefix}}
+	str = strings.TrimPrefix(str, "{{.CommonPrefix}}")
+{{- end}}
 	return json.Marshal(str)
 }
 `
