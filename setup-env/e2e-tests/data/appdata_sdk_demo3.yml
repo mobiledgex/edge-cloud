@@ -41,7 +41,7 @@ clusterinsts:
       name: centraluscloudlet
   flavor:
     name: x1.medium
-  liveness: LivenessStatic
+  liveness: Static
 
 - key:
     clusterkey:
@@ -51,7 +51,7 @@ clusterinsts:
       name: westuscloudlet
   flavor:
     name: x1.medium
-  liveness: LivenessStatic
+  liveness: Static
 
 - key:
     clusterkey:
@@ -61,7 +61,7 @@ clusterinsts:
       name: bonncloudlet
   flavor:
     name: x1.medium
-  liveness: LivenessStatic
+  liveness: Static
 
 - key:
     clusterkey:
@@ -71,7 +71,7 @@ clusterinsts:
       name: azcentraluscloudlet
   flavor:
     name: x1.medium
-  liveness: LivenessStatic
+  liveness: Static
 
 
 cloudlets:
@@ -82,7 +82,7 @@ cloudlets:
   location:
     latitude: 44.977300
     longitude: -93.265469
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: TDG
@@ -91,7 +91,7 @@ cloudlets:
   location:
     latitude: 37.338
     longitude: -121.886
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: TDG
@@ -100,7 +100,7 @@ cloudlets:
   location:
     latitude: 50.737
     longitude: 7.098
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: azure
@@ -109,7 +109,7 @@ cloudlets:
   location:
     latitude: 42.379
     longitude: -87.858
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 5
 
 apps:
@@ -118,7 +118,7 @@ apps:
     name: MobiledgeX SDK Demo
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
@@ -138,9 +138,9 @@ appinstances:
       cloudletkey:
         organization: TDG
         name: centraluscloudlet
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: MobiledgeXSDKDemo
   flavor:
     name: x1.small
@@ -157,9 +157,9 @@ appinstances:
       cloudletkey:
         organization: TDG
         name: westuscloudlet
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: MobiledgeXSDKDemo
   flavor:
     name: x1.small
@@ -180,9 +180,9 @@ appinstances:
     cloudletkey:
       organization: TDG
       name: bonncloudlet
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: MobiledgeXSDKDemo
   flavor:
     name: x1.small
@@ -203,7 +203,7 @@ appinstances:
     cloudletkey:
       organization: azure
       name: azcentraluscloudlet
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7

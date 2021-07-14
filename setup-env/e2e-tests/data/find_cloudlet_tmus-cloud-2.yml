@@ -6,9 +6,9 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51102
   flavor:
     name: x1.small

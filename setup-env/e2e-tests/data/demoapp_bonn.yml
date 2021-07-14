@@ -6,7 +6,7 @@ cloudlets:
   location:
     latitude: 50.737
     longitude: 7.0982
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 
 apps:
@@ -15,7 +15,7 @@ apps:
     name: MobiledgeX SDK Demo
     version: "1.0"
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   defaultflavor:
     name: x1.small
   cluster:
@@ -35,8 +35,8 @@ appinstances:
       cloudletkey:
         organization: TDG
         name: bonn3cloudlet
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   flavor:
     name: x1.small
