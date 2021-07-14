@@ -250,7 +250,7 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 }
 
 // Validate resource requirements for the VMs on the cloudlet
-func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource, outOfSync bool) ([]string, error) {
+func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cloudlet *edgeproto.Cloudlet, infraResources *edgeproto.InfraResourcesSnapshot, allClusterResources, reqdVmResources, diffVmResources []edgeproto.VMResource, skipInfraCheck bool) ([]string, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Validate cloudlet resources", "vm resources", reqdVmResources, "cloudlet resources", infraResources)
 
 	infraResInfo := make(map[string]edgeproto.InfraResource)
@@ -313,7 +313,7 @@ func validateCloudletInfraResources(ctx context.Context, stm concurrency.STM, cl
 		errsOut := strings.Join(errsStr, ", ")
 		err = fmt.Errorf("Not enough resources available: %s", errsOut)
 	}
-	if err != nil || outOfSync {
+	if err != nil || skipInfraCheck {
 		return warnings, err
 	}
 
@@ -456,12 +456,12 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 	// Perform Infra based resource validations only if they are in sync
 	// with controller i.e. there are no objects on Infra captured by
 	// ResourceSnapshot that are not present on controller (etcd)
-	outOfSync := false
+	skipInfraCheck := false
 
 	// get all cloudlet resources (platformVM, sharedRootLB, etc)
 	cloudletRes, err := GetPlatformVMsResources(ctx, cloudletInfo)
 	if err != nil {
-		return nil, nil, outOfSync, err
+		return nil, nil, skipInfraCheck, err
 	}
 	allVmResources = append(allVmResources, cloudletRes...)
 
@@ -477,7 +477,7 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 
 	lbFlavor, err := GetRootLBFlavorInfo(ctx, stm, cloudlet, cloudletInfo)
 	if err != nil {
-		return nil, nil, outOfSync, err
+		return nil, nil, skipInfraCheck, err
 	}
 
 	// get all cluster resources (clusterVM, dedicatedRootLB, etc)
@@ -497,11 +497,11 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		// or may not actually be able to free up resources yet (DeleteRequested, etc)
 		nodeFlavorInfo, masterFlavorInfo, err := getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &ci)
 		if err != nil {
-			return nil, nil, outOfSync, err
+			return nil, nil, skipInfraCheck, err
 		}
 		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
 		if err != nil {
-			return nil, nil, outOfSync, err
+			return nil, nil, skipInfraCheck, err
 		}
 		allVmResources = append(allVmResources, ciRes...)
 
@@ -514,16 +514,15 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		}
 		diffVmResources = append(diffVmResources, ciRes...)
 	}
-	if len(snapshotClusters) > len(ctrlClusters) {
-		outOfSync = true
-	} else {
-		for clusterInstRefKey, _ := range snapshotClusters {
-			if _, ok := ctrlClusters[clusterInstRefKey]; ok {
-				continue
-			}
-			outOfSync = true
-			break
+	// check infra resource usage as long as the infra instances set is
+	// equal to or a subset of the controller instances set
+	// use `skipInfraCheck` flag to skip infra resource usage
+	for clusterInstRefKey, _ := range snapshotClusters {
+		if _, ok := ctrlClusters[clusterInstRefKey]; ok {
+			continue
 		}
+		skipInfraCheck = true
+		break
 	}
 	// get all VM app inst resources
 	ctrlVmAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
@@ -541,11 +540,11 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		// or may not actually be able to free up resources yet (DeleteRequested, etc)
 		app := edgeproto.App{}
 		if !appApi.store.STMGet(stm, &appInstKey.AppKey, &app) {
-			return nil, nil, outOfSync, fmt.Errorf("App not found: %v", appInstKey.AppKey)
+			return nil, nil, skipInfraCheck, fmt.Errorf("App not found: %v", appInstKey.AppKey)
 		}
 		vmRes, err := cloudcommon.GetVMAppRequirements(ctx, &app, &appInst, cloudletInfo.Flavors, lbFlavor)
 		if err != nil {
-			return nil, nil, outOfSync, err
+			return nil, nil, skipInfraCheck, err
 		}
 		allVmResources = append(allVmResources, vmRes...)
 
@@ -558,20 +557,19 @@ func getAllCloudletResources(ctx context.Context, stm concurrency.STM, cloudlet 
 		}
 		diffVmResources = append(diffVmResources, vmRes...)
 	}
-	if !outOfSync {
-		if len(snapshotVmAppInsts) > len(ctrlVmAppInsts) {
-			outOfSync = true
-		} else {
-			for appInstRefKey, _ := range snapshotVmAppInsts {
-				if _, ok := ctrlVmAppInsts[appInstRefKey]; ok {
-					continue
-				}
-				outOfSync = true
-				break
+	if !skipInfraCheck {
+		// check infra resource usage as long as the infra instances set is
+		// equal to or a subset of the controller instances set
+		// use `skipInfraCheck` flag to skip infra resource usage
+		for appInstRefKey, _ := range snapshotVmAppInsts {
+			if _, ok := ctrlVmAppInsts[appInstRefKey]; ok {
+				continue
 			}
+			skipInfraCheck = true
+			break
 		}
 	}
-	return allVmResources, diffVmResources, outOfSync, nil
+	return allVmResources, diffVmResources, skipInfraCheck, nil
 }
 
 func handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey, warnings []string) {
@@ -636,12 +634,12 @@ func validateResources(ctx context.Context, stm concurrency.STM, clusterInst *ed
 	}
 
 	// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
-	allVmResources, diffVmResources, outOfSync, err := getAllCloudletResources(ctx, stm, cloudlet, cloudletInfo, cloudletRefs)
+	allVmResources, diffVmResources, skipInfraCheck, err := getAllCloudletResources(ctx, stm, cloudlet, cloudletInfo, cloudletRefs)
 	if err != nil {
 		return err
 	}
 
-	warnings, err := validateCloudletInfraResources(ctx, stm, cloudlet, &cloudletInfo.ResourcesSnapshot, allVmResources, reqdVmResources, diffVmResources, outOfSync)
+	warnings, err := validateCloudletInfraResources(ctx, stm, cloudlet, &cloudletInfo.ResourcesSnapshot, allVmResources, reqdVmResources, diffVmResources, skipInfraCheck)
 	if err != nil {
 		return err
 	}
