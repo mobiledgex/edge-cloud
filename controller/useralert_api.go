@@ -34,6 +34,14 @@ func (a *UserAlertApi) CreateUserAlert(ctx context.Context, in *edgeproto.UserAl
 	if err = in.Validate(edgeproto.UserAlertAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
+
+	// Protect against user defined alerts that can oscillate too quickly
+	if in.TriggerTime < settingsApi.Get().UserDefinedAlertMinTriggerTime {
+		return &edgeproto.Result{},
+			fmt.Errorf("Trigger time cannot be less than %s",
+				settingsApi.Get().UserDefinedAlertMinTriggerTime.TimeDuration().String())
+	}
+
 	if !cloudcommon.IsAlertSeverityValid(in.Severity) {
 		return &edgeproto.Result{},
 			fmt.Errorf("Invalid severity. Valid severities: %s", cloudcommon.GetValidAlertSeverityString())
@@ -47,11 +55,15 @@ func (a *UserAlertApi) CreateUserAlert(ctx context.Context, in *edgeproto.UserAl
 		a.store.STMPut(stm, in)
 		return nil
 	})
-	log.SpanLog(ctx, log.DebugLevelApi, "CreateAppCreateUserAlert done", "alert", in.Key.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateUserAlert done", "alert", in.Key.String())
 	return &edgeproto.Result{}, err
 }
 
 func (a *UserAlertApi) DeleteUserAlert(ctx context.Context, in *edgeproto.UserAlert) (*edgeproto.Result, error) {
+	if !a.cache.HasKey(&in.Key) {
+		return &edgeproto.Result{}, in.Key.NotFoundError()
+	}
+
 	if appApi.UsesUserDefinedAlert(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("Alert is in use by App")
 	}
@@ -80,6 +92,12 @@ func (a *UserAlertApi) UpdateUserAlert(ctx context.Context, in *edgeproto.UserAl
 		if err := cur.Validate(edgeproto.UserAlertAllFieldsMap); err != nil {
 			return err
 		}
+		// Protect against user defined alerts that can oscillate too quickly
+		if in.TriggerTime < settingsApi.Get().UserDefinedAlertMinTriggerTime {
+			return fmt.Errorf("Trigger time cannot be less than %s",
+				settingsApi.Get().UserDefinedAlertMinTriggerTime.TimeDuration().String())
+		}
+
 		if !cloudcommon.IsAlertSeverityValid(cur.Severity) {
 			return fmt.Errorf("Invalid severity. Valid severities: %s", cloudcommon.GetValidAlertSeverityString())
 		}

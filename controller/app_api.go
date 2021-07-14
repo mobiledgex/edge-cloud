@@ -906,10 +906,9 @@ func (s *AppApi) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.Ap
 			changed = true
 			break
 		}
-		if !changed {
-			return nil
+		if changed {
+			s.store.STMPut(stm, &cur)
 		}
-		s.store.STMPut(stm, &cur)
 		return nil
 	})
 	return &edgeproto.Result{}, err

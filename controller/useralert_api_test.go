@@ -55,11 +55,32 @@ func TestUserAlertApi(t *testing.T) {
 	_, err = userAlertApi.CreateUserAlert(ctx, &userAlert)
 	require.NotNil(t, err, "Both active connections and cpu cannot be set for a user alert")
 
+	// Invalid set of conditions for an alert
+	userAlert = testutil.UserAlertData[0]
+	userAlert.ActiveConnLimit = 0
+	userAlert.CpuLimit = 0
+	userAlert.MemLimit = 0
+	userAlert.DiskLimit = 0
+	_, err = userAlertApi.CreateUserAlert(ctx, &userAlert)
+	require.NotNil(t, err, "User Alert should have at least one set value")
+
+	// Invalid set of conditions for an alert
+	userAlert = testutil.UserAlertData[0]
+	userAlert.CpuLimit = 200
+	_, err = userAlertApi.CreateUserAlert(ctx, &userAlert)
+	require.NotNil(t, err, "Cpu cannot be >100%")
+
 	// Create user alert with trigger time, that's invalid
 	userAlert = testutil.UserAlertData[0]
 	userAlert.TriggerTime = 0
 	_, err = userAlertApi.CreateUserAlert(ctx, &userAlert)
 	require.NotNil(t, err, "Trigger Time should be at least 30s")
+
+	// Delete non-existent user alert
+	userAlert = testutil.UserAlertData[0]
+	_, err = userAlertApi.DeleteUserAlert(ctx, &userAlert)
+	require.NotNil(t, err)
+	require.Equal(t, err, userAlert.Key.NotFoundError())
 
 	// Create a user alerts
 	testutil.InternalUserAlertTest(t, "cud", &userAlertApi, testutil.UserAlertData)

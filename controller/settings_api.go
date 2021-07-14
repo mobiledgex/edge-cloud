@@ -117,6 +117,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ClusterAutoScaleRetryDelay = def.ClusterAutoScaleRetryDelay
 			modified = true
 		}
+		if cur.UserDefinedAlertMinTriggerTime == 0 {
+			cur.UserDefinedAlertMinTriggerTime = def.UserDefinedAlertMinTriggerTime
+			modified = true
+		}
 
 		if modified {
 			s.store.STMPut(stm, cur)

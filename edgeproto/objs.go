@@ -1220,9 +1220,35 @@ func (a *UserAlert) Validate(fields map[string]struct{}) error {
 			return errors.New("Active Connection Alerts should not include any other triggers")
 		}
 	}
-	// Protect against user defined alerts that can oscillate too quickly
-	if a.TriggerTime < Duration(30*time.Second) {
-		return errors.New("Trigger time cannot be less than 30 seconds")
+	// at least one of the values for alert should be set
+	if a.ActiveConnLimit == 0 && a.CpuLimit == 0 && a.MemLimit == 0 && a.DiskLimit == 0 {
+		return errors.New("At least one of the measurements for alert should be set")
 	}
+
+	// check CPU to be within 0-100 percent
+	if a.CpuLimit > 0 && a.CpuLimit > 100 {
+		return errors.New("Cpu limit is percent. Valid values 1-100%")
+	}
+
 	return nil
+}
+
+// Check if UserDefinedAlerts are different between two apps
+func (app *App) AppUserAlertsDifferent(other *App) bool {
+	alertsChanged := false
+	if len(app.UserDefinedAlerts) != len(other.UserDefinedAlerts) {
+		alertsChanged = true
+	} else {
+		oldAlerts := make(map[string]struct{})
+		for _, alert := range app.UserDefinedAlerts {
+			oldAlerts[alert] = struct{}{}
+		}
+		for _, alert := range other.UserDefinedAlerts {
+			if _, found := oldAlerts[alert]; !found {
+				alertsChanged = true
+				break
+			}
+		}
+	}
+	return alertsChanged
 }

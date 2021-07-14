@@ -130,6 +130,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.ClusterAutoScaleAveragingDurationSec, int64(0))
 		case SettingsFieldClusterAutoScaleRetryDelay:
 			v.CheckGT(f, s.ClusterAutoScaleRetryDelay, dur0)
+		case SettingsFieldUserDefinedAlertMinTriggerTime:
+			v.CheckGT(f, s.UserDefinedAlertMinTriggerTime, dur0)
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -188,6 +190,7 @@ func GetDefaultSettings() *Settings {
 	s.InfluxDbDownsampledMetricsRetention = Duration(8760 * time.Hour) // 1 year
 	s.ClusterAutoScaleAveragingDurationSec = 60
 	s.ClusterAutoScaleRetryDelay = Duration(time.Minute)
+	s.UserDefinedAlertMinTriggerTime = Duration(30 * time.Second)
 	return &s
 }
 

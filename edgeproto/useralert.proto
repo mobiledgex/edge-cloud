@@ -12,7 +12,6 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
-// Does this really need to be different from PolicyKey
 message UserAlertKey {
   // Name of the organization for the app that this alert can be applied to
   string organization = 1 [(protogen.keytag) = "alertorg"];
@@ -25,19 +24,19 @@ message UserAlertKey {
 
 message UserAlert {
   repeated string fields = 1;
-  // Unique identifier key(same as policy)
+  // Unique identifier key
   UserAlertKey key = 2 [(gogoproto.nullable) = false];
-  // CPU
+  // CPU percent alert threshold
   uint32 cpu_limit = 3;
-  // Mem
+  // Memory usage alert threshold
   uint32 mem_limit = 4;
-  // Disk
+  // Disk usage alert threshold
   uint32 disk_limit = 5;
-  // Active Connections
+  // Active Connections alert threshold
   uint32 active_conn_limit = 6;
   // Alert Severity
   string severity = 7;
-  // Trigger threshold interval
+  // Duration for which alert interval is active
   int64 trigger_time = 8 [(gogoproto.casttype) = "Duration"];
   // Additional Labels
   map <string, string> labels = 9;

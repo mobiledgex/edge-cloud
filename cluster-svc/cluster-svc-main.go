@@ -275,10 +275,8 @@ func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
 	if new == nil || old == nil {
 		return
 	}
-	fields := make(map[string]struct{})
-	new.DiffFields(old, fields)
-	// We only care about user alerts field
-	if _, found := fields[edgeproto.AppFieldUserDefinedAlerts]; !found {
+	if new.Matches(old) || !old.AppUserAlertsDifferent(new) {
+		// nothing to update
 		return
 	}
 	log.SpanLog(ctx, log.DebugLevelNotify, "app update", "new", new, "old", old)
@@ -292,12 +290,11 @@ func userAlertCb(ctx context.Context, old *edgeproto.UserAlert, new *edgeproto.U
 		// deleted, so all the appInsts should've been cleaned up already
 		return
 	}
-	fields := make(map[string]struct{})
-	new.DiffFields(old, fields)
-	if len(fields) == 0 {
+	if new.Matches(old) {
 		// nothing to update
 		return
 	}
+
 	// update all prometheus AppInsts on ClusterInsts using the Alert
 	apps := []edgeproto.App{}
 	AppCache.Mux.Lock()
@@ -449,7 +446,6 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 		var userAlerts []edgeproto.UserAlert
 		var userAppInst *edgeproto.AppInst
 		if clusterInst.AutoScalePolicy != "" {
-			//&& (clusterInst.AutoScalePolicy != "" || len(app.UserDefinedAlerts) > 0) {
 			policy = &edgeproto.AutoScalePolicy{}
 			policyKey := edgeproto.PolicyKey{}
 			policyKey.Organization = clusterInst.Key.Organization

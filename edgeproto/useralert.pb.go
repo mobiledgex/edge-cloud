@@ -36,7 +36,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Does this really need to be different from PolicyKey
 type UserAlertKey struct {
 	// Name of the organization for the app that this alert can be applied to
 	Organization string `protobuf:"bytes,1,opt,name=organization,proto3" json:"organization,omitempty"`

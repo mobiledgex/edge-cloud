@@ -10,6 +10,7 @@ const (
 	AlertCloudletDown            = "CloudletDown"
 	AlertCloudletDownDescription = "Cloudlet resource manager is offline"
 	AlertCloudletResourceUsage   = "CloudletResourceUsage"
+	AlertTypeUserDefined         = "UserDefined"
 )
 
 // Alert types
@@ -20,6 +21,7 @@ const (
 	AlertSeverityLabel         = "severity"
 	AlertScopeApp              = "Application"
 	AlertScopeCloudlet         = "Cloudlet"
+	AlertTypeLabel             = "type"
 )
 
 // Alert annotation keys
@@ -72,6 +74,11 @@ func IsMonitoredAlert(labels map[string]string) bool {
 		alertScope == AlertScopeCloudlet {
 		return true
 	}
+	alertType, _ := labels[AlertTypeLabel]
+	// user defined alerts are always monitored
+	if alertType == AlertTypeUserDefined {
+		return true
+	}
 	if alertName == AlertClusterAutoScale ||
 		alertName == AlertAutoScaleUp ||
 		alertName == AlertAutoScaleDown ||
@@ -84,10 +91,16 @@ func IsMonitoredAlert(labels map[string]string) bool {
 	return false
 }
 
-func IsInternalAlert(alertName string) bool {
+func IsInternalAlert(labels map[string]string) bool {
+	alertName, _ := labels["alertname"]
 	if alertName == AlertAppInstDown ||
 		alertName == AlertCloudletDown ||
 		alertName == AlertCloudletResourceUsage {
+		return false
+	}
+	alertType, _ := labels[AlertTypeLabel]
+	// user defined alerts are external
+	if alertType == AlertTypeUserDefined {
 		return false
 	}
 	return true

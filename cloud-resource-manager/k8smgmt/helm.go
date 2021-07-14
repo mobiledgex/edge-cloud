@@ -206,7 +206,6 @@ func UpdateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 	if err != nil {
 		return fmt.Errorf("updating helm repos, %s, %s, %v", cmd, out, err)
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "helm repos updated")
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts, "helmArgs", helmArgs)
 	cmd = fmt.Sprintf("%s helm upgrade %s %s %s %s", names.KconfEnv, helmArgs, helmOpts, names.HelmAppName, chart)
