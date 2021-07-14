@@ -107,7 +107,7 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes";
+  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes,ReservationEndedAt";
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,cluster-org=Key.Organization,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
