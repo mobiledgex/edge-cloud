@@ -297,7 +297,7 @@ var VMResourceComments = map[string]string{
 	"vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
 	"vmflavor.propmap":             "OS Flavor Properties, if any",
 	"type":                         "Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
-	"appaccesstype":                "Access type for resource of type App VM, one of AccessTypeDefaultForDeployment, AccessTypeDirect, AccessTypeLoadBalancer",
+	"appaccesstype":                "Access type for resource of type App VM, one of DefaultForDeployment, Direct, LoadBalancer",
 }
 var VMResourceSpecialArgs = map[string]string{
 	"vmflavor.propmap": "StringToString",

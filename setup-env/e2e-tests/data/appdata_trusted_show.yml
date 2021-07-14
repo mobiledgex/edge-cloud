@@ -76,7 +76,7 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
   state: Ready
   notifysrvaddr: 127.0.0.1:0
@@ -101,7 +101,7 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
   state: Ready
   notifysrvaddr: 127.0.0.1:0
@@ -123,7 +123,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: cloudlet1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 1
   controller: JMORRIS-MAC.local@127.0.0.1:55001
   osmaxram: 40960
@@ -175,7 +175,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: cloudlet2
-  state: CloudletStateReady
+  state: Ready
   notifyid: 2
   controller: JMORRIS-MAC.local@127.0.0.1:55001
   osmaxram: 40960
@@ -234,9 +234,9 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
+  liveness: Static
   state: Ready
-  ipaccess: IpAccessDedicated
+  ipaccess: Dedicated
   allocatedip: dynamic
   nodeflavor: x1.small
   deployment: kubernetes
@@ -275,9 +275,9 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
+  liveness: Static
   state: Ready
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
@@ -312,7 +312,7 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   accessports: tcp:9090
   defaultflavor:
     name: x1.medium
@@ -363,7 +363,7 @@ apps:
         mexAppVersion: "10"
   internalports: true
   trusted: true
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   createdat:
     seconds: 1607989352
     nanos: 739348000
@@ -372,7 +372,7 @@ apps:
     name: trustedapp
     version: "1.0"
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/trustedapp:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:80
   defaultflavor:
     name: x1.small
@@ -419,7 +419,7 @@ apps:
             - containerPort: 80
               protocol: TCP
   deploymentgenerator: kubernetes-basic
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   createdat:
     seconds: 1607989353
     nanos: 898975000
@@ -438,7 +438,7 @@ apps:
     name: nontrustedapp
     version: "1.0"
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/nontrustedapp:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:90
   defaultflavor:
     name: x1.small
@@ -485,7 +485,7 @@ apps:
             - containerPort: 90
               protocol: TCP
   deploymentgenerator: kubernetes-basic
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   createdat:
     seconds: 1607989354
     nanos: 221124000
@@ -505,9 +505,9 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -516,7 +516,7 @@ appinstances:
   createdat:
     seconds: 1607989352
     nanos: 987882000
-  healthcheck: HealthCheckOk
+  healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
 - key:
@@ -534,9 +534,9 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -545,7 +545,7 @@ appinstances:
   createdat:
     seconds: 1607989353
     nanos: 273316000
-  healthcheck: HealthCheckOk
+  healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
 - key:
@@ -564,9 +564,9 @@ appinstances:
     latitude: 31
     longitude: -91
   uri: shared.cloudlet1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
   flavor:
@@ -579,7 +579,7 @@ appinstances:
   createdat:
     seconds: 1607989354
     nanos: 253915000
-  healthcheck: HealthCheckOk
+  healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
 - key:
@@ -598,9 +598,9 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: cluster2.cloudlet2.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 90
     publicport: 90
   flavor:
@@ -613,7 +613,7 @@ appinstances:
   createdat:
     seconds: 1607989354
     nanos: 373759000
-  healthcheck: HealthCheckOk
+  healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
 appinstrefs:

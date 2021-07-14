@@ -11,4 +11,4 @@ appfqdns:
   fqdns:
   - someapplication2.acmeappco.com
   androidpackagename: com.acmeappco.someapplication2
-status: FlSuccess
+status: Success

@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 	math "math"
 	"strconv"
+	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -273,6 +274,10 @@ func (e *VersionHash) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := VersionHash_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = VersionHash_CamelValue["Hash"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -288,7 +293,9 @@ func (e *VersionHash) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e VersionHash) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(VersionHash_CamelName, int32(e)), nil
+	str := proto.EnumName(VersionHash_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Hash")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -297,6 +304,10 @@ func (e *VersionHash) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := VersionHash_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = VersionHash_CamelValue["Hash"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -322,8 +333,11 @@ func (e *VersionHash) UnmarshalJSON(b []byte) error {
 
 func (e VersionHash) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VersionHash_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Hash")
 	return json.Marshal(str)
 }
+
+var VersionHashCommonPrefix = "Hash"
 
 // Keys being hashed:
 // AppInstKey

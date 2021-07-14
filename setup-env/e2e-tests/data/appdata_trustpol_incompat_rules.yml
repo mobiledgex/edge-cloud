@@ -63,9 +63,9 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   trustpolicy: TrustPolicy1
 - key:
     organization: dmuus
@@ -73,9 +73,9 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
 
 clusterinsts:
 - key:
@@ -87,8 +87,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   nummasters: 1
   numnodes: 2
 
@@ -97,7 +97,7 @@ apps:
     organization: AcmeAppCo
     name: trustedapp
     version: "1.0"
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small

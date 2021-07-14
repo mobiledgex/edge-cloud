@@ -58,11 +58,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -75,11 +75,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessDedicated
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -92,11 +92,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -109,11 +109,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -126,11 +126,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -143,11 +143,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -160,11 +160,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -177,11 +177,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -194,11 +194,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessDedicated
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -211,11 +211,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -228,11 +228,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -245,11 +245,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -262,11 +262,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -279,11 +279,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -296,11 +296,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -313,11 +313,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -330,11 +330,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -347,11 +347,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessShared
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -364,11 +364,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessDedicated
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -381,11 +381,11 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
   reservable: true
   reservedby: AcmeAppCo
-  ipaccess: IpAccessDedicated
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -402,9 +402,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 2
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-2
@@ -417,9 +417,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 5
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-5
@@ -432,9 +432,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 6
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-6
@@ -447,9 +447,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 9
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: azure-cloud-9
@@ -462,9 +462,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 10
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: gcp-cloud-10
@@ -477,9 +477,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 1
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-1
@@ -492,9 +492,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 3
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-3
@@ -507,9 +507,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 4
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-4
@@ -522,9 +522,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 7
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-7
@@ -537,9 +537,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 8
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-8
@@ -550,7 +550,7 @@ cloudletinfos:
 - key:
     organization: gcp
     name: gcp-cloud-10
-  state: CloudletStateReady
+  state: Ready
   notifyid: 49
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -607,7 +607,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-2
-  state: CloudletStateReady
+  state: Ready
   notifyid: 41
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -664,7 +664,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-3
-  state: CloudletStateReady
+  state: Ready
   notifyid: 42
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -722,7 +722,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-4
-  state: CloudletStateReady
+  state: Ready
   notifyid: 43
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -779,7 +779,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-5
-  state: CloudletStateReady
+  state: Ready
   notifyid: 44
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -836,7 +836,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-6
-  state: CloudletStateReady
+  state: Ready
   notifyid: 45
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -893,7 +893,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-7
-  state: CloudletStateReady
+  state: Ready
   notifyid: 46
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -950,7 +950,7 @@ cloudletinfos:
 - key:
     organization: azure
     name: azure-cloud-9
-  state: CloudletStateReady
+  state: Ready
   notifyid: 48
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -1007,7 +1007,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 40
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -1064,7 +1064,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-8
-  state: CloudletStateReady
+  state: Ready
   notifyid: 47
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -1124,18 +1124,18 @@ apps:
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:64000
   defaultflavor:
     name: x1.small
   deployment: kubernetes
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
@@ -1152,13 +1152,13 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication1
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo
     name: someapplication2
     version: "1.0"
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002
   officialfqdn: someapplication2.acmeappco.com
   defaultflavor:
@@ -1175,7 +1175,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication2
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 
 appinstances:
 - key:
@@ -1194,15 +1194,15 @@ appinstances:
     latitude: 1
     longitude: 4
   uri: shared.dmuus-cloud-4.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1227,15 +1227,15 @@ appinstances:
     latitude: 1
     longitude: 4
   uri: shared.dmuus-cloud-4.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:
@@ -1260,15 +1260,15 @@ appinstances:
     latitude: 1
     longitude: 7
   uri: shared.dmuus-cloud-7.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1293,15 +1293,15 @@ appinstances:
     latitude: 1
     longitude: 1
   uri: shared.dmuus-cloud-1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:
@@ -1326,15 +1326,15 @@ appinstances:
     latitude: 1
     longitude: 2
   uri: shared.dmuus-cloud-2.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:
@@ -1359,15 +1359,15 @@ appinstances:
     latitude: 1
     longitude: 3
   uri: shared.dmuus-cloud-3.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:
@@ -1392,15 +1392,15 @@ appinstances:
     latitude: 1
     longitude: 6
   uri: shared.dmuus-cloud-6.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:
@@ -1425,15 +1425,15 @@ appinstances:
     latitude: 1
     longitude: 8
   uri: shared.dmuus-cloud-8.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1458,15 +1458,15 @@ appinstances:
     latitude: 1
     longitude: 3
   uri: shared.dmuus-cloud-3.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1491,15 +1491,15 @@ appinstances:
     latitude: 1
     longitude: 5
   uri: shared.dmuus-cloud-5.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:
@@ -1524,15 +1524,15 @@ appinstances:
     latitude: 1
     longitude: 6
   uri: shared.dmuus-cloud-6.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1557,17 +1557,17 @@ appinstances:
     latitude: 1
     longitude: 9
   uri: acmeappcosomeapplication210.reservable1.azure-cloud-9.azure.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication210-tcp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
     fqdnprefix: someapplication210-tcp.
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication210-udp.
@@ -1593,17 +1593,17 @@ appinstances:
     latitude: 1
     longitude: 10
   uri: acmeappcosomeapplication110.reservable0.gcp-cloud-10.gcp.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication110-tcp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
     fqdnprefix: someapplication110-tcp.
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication110-udp.
@@ -1629,17 +1629,17 @@ appinstances:
     latitude: 1
     longitude: 10
   uri: acmeappcosomeapplication210.reservable1.gcp-cloud-10.gcp.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication210-tcp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
     fqdnprefix: someapplication210-tcp.
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication210-udp.
@@ -1665,15 +1665,15 @@ appinstances:
     latitude: 1
     longitude: 1
   uri: shared.dmuus-cloud-1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1698,15 +1698,15 @@ appinstances:
     latitude: 1
     longitude: 2
   uri: shared.dmuus-cloud-2.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1731,17 +1731,17 @@ appinstances:
     latitude: 1
     longitude: 9
   uri: acmeappcosomeapplication110.reservable0.azure-cloud-9.azure.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication110-tcp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
     fqdnprefix: someapplication110-tcp.
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication110-udp.
@@ -1767,15 +1767,15 @@ appinstances:
     latitude: 1
     longitude: 5
   uri: shared.dmuus-cloud-5.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -1800,15 +1800,15 @@ appinstances:
     latitude: 1
     longitude: 7
   uri: shared.dmuus-cloud-7.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:
@@ -1833,15 +1833,15 @@ appinstances:
     latitude: 1
     longitude: 8
   uri: shared.dmuus-cloud-8.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 10000
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 10001
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10000
   flavor:

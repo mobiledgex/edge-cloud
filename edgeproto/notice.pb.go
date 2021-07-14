@@ -525,7 +525,8 @@ func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e NoticeAction) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(NoticeAction_CamelName, int32(e)), nil
+	str := proto.EnumName(NoticeAction_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding

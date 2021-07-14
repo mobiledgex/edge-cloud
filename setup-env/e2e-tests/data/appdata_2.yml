@@ -30,9 +30,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 1
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: x1.medium
@@ -45,9 +45,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 2
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51002
   flavor:
     name: x1.medium
@@ -84,7 +84,7 @@ apps:
     organization: AcmeAppCo
     name: someapplication1
     version : "1.0"
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   defaultflavor:
     name: x1.small
   accessports: tcp:80,tcp:443,udp:10002

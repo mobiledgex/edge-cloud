@@ -153,7 +153,7 @@ func TestParseArgs(t *testing.T) {
 	rc := edgeproto.Cloudlet{
 		IpSupport: edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
 	}
-	args = []string{"ipsupport=IpSupportDynamic"}
+	args = []string{"ipsupport=Dynamic"}
 	testParseArgs(t, input, args, &rc, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
 
 	// For updates, we need to distinguish between empty fields to be updated,
@@ -370,8 +370,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   nummasters: 1
   numnodes: 2
 
@@ -384,8 +384,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   nummasters: 1
   numnodes: 2
 `,
@@ -432,8 +432,8 @@ clusterinsts:
          "flavor": {
             "name": "x1.small"
          },
-         "liveness": "LivenessStatic",
-         "ip_access": "IpAccessShared",
+         "liveness": "Static",
+         "ip_access": "Shared",
          "num_masters": 1,
          "num_nodes": 2
       },
@@ -451,8 +451,8 @@ clusterinsts:
          "flavor": {
             "name": "x1.small"
          },
-         "liveness": "LivenessStatic",
-         "ip_access": "IpAccessDedicated",
+         "liveness": "Static",
+         "ip_access": "Dedicated",
          "num_masters": 1,
          "num_nodes": 2
       }

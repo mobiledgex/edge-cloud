@@ -17,6 +17,7 @@ import (
 	math "math"
 	math_bits "math/bits"
 	"strconv"
+	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -492,6 +493,10 @@ func (e *DlgMessage_DlgAck) UnmarshalYAML(unmarshal func(interface{}) error) err
 	}
 	val, ok := DlgMessage_DlgAck_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = DlgMessage_DlgAck_CamelValue["Dlg"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -507,7 +512,9 @@ func (e *DlgMessage_DlgAck) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 func (e DlgMessage_DlgAck) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e)), nil
+	str := proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Dlg")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -516,6 +523,10 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := DlgMessage_DlgAck_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = DlgMessage_DlgAck_CamelValue["Dlg"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -541,8 +552,12 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 
 func (e DlgMessage_DlgAck) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Dlg")
 	return json.Marshal(str)
 }
+
+var DlgAckCommonPrefix = "Dlg"
+
 func (m *DlgMessage) IsValidArgsForSendToGroup() error {
 	return nil
 }
