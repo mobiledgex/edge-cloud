@@ -5596,7 +5596,8 @@ func (e *PowerState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e PowerState) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(PowerState_CamelName, int32(e)), nil
+	str := proto.EnumName(PowerState_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding

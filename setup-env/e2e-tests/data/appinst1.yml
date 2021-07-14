@@ -14,6 +14,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small

@@ -23,6 +23,7 @@ import (
 	math "math"
 	math_bits "math/bits"
 	"strconv"
+	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1242,6 +1243,10 @@ func (e *StreamState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := StreamState_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = StreamState_CamelValue["Stream"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -1257,7 +1262,9 @@ func (e *StreamState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e StreamState) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(StreamState_CamelName, int32(e)), nil
+	str := proto.EnumName(StreamState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Stream")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -1266,6 +1273,10 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := StreamState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = StreamState_CamelValue["Stream"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -1291,8 +1302,12 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 
 func (e StreamState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(StreamState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Stream")
 	return json.Marshal(str)
 }
+
+var StreamStateCommonPrefix = "Stream"
+
 func (m *AppInstKey) IsValidArgsForStreamAppInst() error {
 	return nil
 }
