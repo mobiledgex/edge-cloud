@@ -602,8 +602,6 @@ var ClusterInstOptionalArgs = []string{
 	"reservable",
 	"sharedvolumesize",
 	"skipcrmcleanuponfailure",
-	"reservationendedat.seconds",
-	"reservationendedat.nanos",
 	"multitenant",
 }
 var ClusterInstAliasArgs = []string{
@@ -733,7 +731,5 @@ var UpdateClusterInstOptionalArgs = []string{
 	"numnodes",
 	"autoscalepolicy",
 	"skipcrmcleanuponfailure",
-	"reservationendedat.seconds",
-	"reservationendedat.nanos",
 	"multitenant",
 }
