@@ -267,21 +267,22 @@ func TestApiRateLimitMgr(t *testing.T) {
 		}(i)
 		// Update settings midway through
 		if i == numClients/2 {
-			newCreateLimitSettings := &edgeproto.RateLimitSettings{
-				Key: edgeproto.RateLimitSettingsKey{
-					ApiName:         apis[0],
-					ApiEndpointType: edgeproto.ApiEndpointType_DME,
-					RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
-				},
-				MaxReqsSettings: map[string]*edgeproto.MaxReqsSettings{
-					"api1allreqs1": &edgeproto.MaxReqsSettings{
-						MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
-						MaxRequests:      1,
-						Interval:         edgeproto.Duration(time.Second),
+			newCreateLimitSettings := &edgeproto.MaxReqsRateLimitSettings{
+				Key: edgeproto.MaxReqsRateLimitSettingsKey{
+					MaxReqsSettingsName: "api1allreqs1",
+					RateLimitKey: edgeproto.RateLimitSettingsKey{
+						ApiName:         apis[0],
+						ApiEndpointType: edgeproto.ApiEndpointType_DME,
+						RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 					},
 				},
+				Settings: &edgeproto.MaxReqsSettings{
+					MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+					MaxRequests:      1,
+					Interval:         edgeproto.Duration(time.Second),
+				},
 			}
-			mgr.UpdateRateLimitSettings(newCreateLimitSettings)
+			mgr.UpdateMaxReqsRateLimitSettings(newCreateLimitSettings)
 		}
 	}
 	wg.Wait()

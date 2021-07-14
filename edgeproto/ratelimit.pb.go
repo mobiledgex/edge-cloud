@@ -148,48 +148,6 @@ func (MaxReqsRateLimitAlgorithm) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_9c81fd649b00920f, []int{3}
 }
 
-type RateLimitSettingsKey struct {
-	// Name of API (eg. CreateApp or RegisterClient) (Use "Global" if not a specific API)
-	ApiName string `protobuf:"bytes,1,opt,name=api_name,json=apiName,proto3" json:"api_name,omitempty"`
-	// API Endpoint type
-	ApiEndpointType ApiEndpointType `protobuf:"varint,2,opt,name=api_endpoint_type,json=apiEndpointType,proto3,enum=edgeproto.ApiEndpointType" json:"api_endpoint_type,omitempty"`
-	// Target to rate limit
-	RateLimitTarget RateLimitTarget `protobuf:"varint,3,opt,name=rate_limit_target,json=rateLimitTarget,proto3,enum=edgeproto.RateLimitTarget" json:"rate_limit_target,omitempty"`
-}
-
-func (m *RateLimitSettingsKey) Reset()         { *m = RateLimitSettingsKey{} }
-func (m *RateLimitSettingsKey) String() string { return proto.CompactTextString(m) }
-func (*RateLimitSettingsKey) ProtoMessage()    {}
-func (*RateLimitSettingsKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{0}
-}
-func (m *RateLimitSettingsKey) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *RateLimitSettingsKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_RateLimitSettingsKey.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *RateLimitSettingsKey) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RateLimitSettingsKey.Merge(m, src)
-}
-func (m *RateLimitSettingsKey) XXX_Size() int {
-	return m.Size()
-}
-func (m *RateLimitSettingsKey) XXX_DiscardUnknown() {
-	xxx_messageInfo_RateLimitSettingsKey.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_RateLimitSettingsKey proto.InternalMessageInfo
-
 type FlowSettings struct {
 	// Flow Rate Limit algorithm
 	FlowAlgorithm FlowRateLimitAlgorithm `protobuf:"varint,1,opt,name=flow_algorithm,json=flowAlgorithm,proto3,enum=edgeproto.FlowRateLimitAlgorithm" json:"flow_algorithm,omitempty"`
@@ -203,7 +161,7 @@ func (m *FlowSettings) Reset()         { *m = FlowSettings{} }
 func (m *FlowSettings) String() string { return proto.CompactTextString(m) }
 func (*FlowSettings) ProtoMessage()    {}
 func (*FlowSettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{1}
+	return fileDescriptor_9c81fd649b00920f, []int{0}
 }
 func (m *FlowSettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -243,7 +201,7 @@ func (m *FlowRateLimitSettingsKey) Reset()         { *m = FlowRateLimitSettingsK
 func (m *FlowRateLimitSettingsKey) String() string { return proto.CompactTextString(m) }
 func (*FlowRateLimitSettingsKey) ProtoMessage()    {}
 func (*FlowRateLimitSettingsKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{2}
+	return fileDescriptor_9c81fd649b00920f, []int{1}
 }
 func (m *FlowRateLimitSettingsKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -286,7 +244,7 @@ func (m *FlowRateLimitSettings) Reset()         { *m = FlowRateLimitSettings{} }
 func (m *FlowRateLimitSettings) String() string { return proto.CompactTextString(m) }
 func (*FlowRateLimitSettings) ProtoMessage()    {}
 func (*FlowRateLimitSettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{3}
+	return fileDescriptor_9c81fd649b00920f, []int{2}
 }
 func (m *FlowRateLimitSettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -328,7 +286,7 @@ func (m *MaxReqsSettings) Reset()         { *m = MaxReqsSettings{} }
 func (m *MaxReqsSettings) String() string { return proto.CompactTextString(m) }
 func (*MaxReqsSettings) ProtoMessage()    {}
 func (*MaxReqsSettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{4}
+	return fileDescriptor_9c81fd649b00920f, []int{3}
 }
 func (m *MaxReqsSettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -368,7 +326,7 @@ func (m *MaxReqsRateLimitSettingsKey) Reset()         { *m = MaxReqsRateLimitSet
 func (m *MaxReqsRateLimitSettingsKey) String() string { return proto.CompactTextString(m) }
 func (*MaxReqsRateLimitSettingsKey) ProtoMessage()    {}
 func (*MaxReqsRateLimitSettingsKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{5}
+	return fileDescriptor_9c81fd649b00920f, []int{4}
 }
 func (m *MaxReqsRateLimitSettingsKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -411,7 +369,7 @@ func (m *MaxReqsRateLimitSettings) Reset()         { *m = MaxReqsRateLimitSettin
 func (m *MaxReqsRateLimitSettings) String() string { return proto.CompactTextString(m) }
 func (*MaxReqsRateLimitSettings) ProtoMessage()    {}
 func (*MaxReqsRateLimitSettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9c81fd649b00920f, []int{6}
+	return fileDescriptor_9c81fd649b00920f, []int{5}
 }
 func (m *MaxReqsRateLimitSettings) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -440,9 +398,50 @@ func (m *MaxReqsRateLimitSettings) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MaxReqsRateLimitSettings proto.InternalMessageInfo
 
+type RateLimitSettingsKey struct {
+	// Name of API (eg. CreateApp or RegisterClient) (Use "Global" if not a specific API)
+	ApiName string `protobuf:"bytes,1,opt,name=api_name,json=apiName,proto3" json:"api_name,omitempty"`
+	// API Endpoint type
+	ApiEndpointType ApiEndpointType `protobuf:"varint,2,opt,name=api_endpoint_type,json=apiEndpointType,proto3,enum=edgeproto.ApiEndpointType" json:"api_endpoint_type,omitempty"`
+	// Target to rate limit
+	RateLimitTarget RateLimitTarget `protobuf:"varint,3,opt,name=rate_limit_target,json=rateLimitTarget,proto3,enum=edgeproto.RateLimitTarget" json:"rate_limit_target,omitempty"`
+}
+
+func (m *RateLimitSettingsKey) Reset()         { *m = RateLimitSettingsKey{} }
+func (m *RateLimitSettingsKey) String() string { return proto.CompactTextString(m) }
+func (*RateLimitSettingsKey) ProtoMessage()    {}
+func (*RateLimitSettingsKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c81fd649b00920f, []int{6}
+}
+func (m *RateLimitSettingsKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RateLimitSettingsKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RateLimitSettingsKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RateLimitSettingsKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RateLimitSettingsKey.Merge(m, src)
+}
+func (m *RateLimitSettingsKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *RateLimitSettingsKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_RateLimitSettingsKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RateLimitSettingsKey proto.InternalMessageInfo
+
 type RateLimitSettings struct {
-	// required: true
-	// Unique identifier key
+	// Key that identifies api and rate limit target for settings
 	Key RateLimitSettingsKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Map of FlowSettings (key: FlowSettingsName, value: FlowSettings)
 	FlowSettings map[string]*FlowSettings `protobuf:"bytes,2,rep,name=flow_settings,json=flowSettings,proto3" json:"flow_settings,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
@@ -599,13 +598,13 @@ func init() {
 	proto.RegisterEnum("edgeproto.RateLimitTarget", RateLimitTarget_name, RateLimitTarget_value)
 	proto.RegisterEnum("edgeproto.FlowRateLimitAlgorithm", FlowRateLimitAlgorithm_name, FlowRateLimitAlgorithm_value)
 	proto.RegisterEnum("edgeproto.MaxReqsRateLimitAlgorithm", MaxReqsRateLimitAlgorithm_name, MaxReqsRateLimitAlgorithm_value)
-	proto.RegisterType((*RateLimitSettingsKey)(nil), "edgeproto.RateLimitSettingsKey")
 	proto.RegisterType((*FlowSettings)(nil), "edgeproto.FlowSettings")
 	proto.RegisterType((*FlowRateLimitSettingsKey)(nil), "edgeproto.FlowRateLimitSettingsKey")
 	proto.RegisterType((*FlowRateLimitSettings)(nil), "edgeproto.FlowRateLimitSettings")
 	proto.RegisterType((*MaxReqsSettings)(nil), "edgeproto.MaxReqsSettings")
 	proto.RegisterType((*MaxReqsRateLimitSettingsKey)(nil), "edgeproto.MaxReqsRateLimitSettingsKey")
 	proto.RegisterType((*MaxReqsRateLimitSettings)(nil), "edgeproto.MaxReqsRateLimitSettings")
+	proto.RegisterType((*RateLimitSettingsKey)(nil), "edgeproto.RateLimitSettingsKey")
 	proto.RegisterType((*RateLimitSettings)(nil), "edgeproto.RateLimitSettings")
 	proto.RegisterMapType((map[string]*FlowSettings)(nil), "edgeproto.RateLimitSettings.FlowSettingsEntry")
 	proto.RegisterMapType((map[string]*MaxReqsSettings)(nil), "edgeproto.RateLimitSettings.MaxReqsSettingsEntry")
@@ -617,112 +616,101 @@ func init() {
 func init() { proto.RegisterFile("ratelimit.proto", fileDescriptor_9c81fd649b00920f) }
 
 var fileDescriptor_9c81fd649b00920f = []byte{
-	// 1447 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0x4d, 0x6c, 0x1b, 0x45,
-	0x1b, 0xf6, 0xd8, 0xfd, 0xda, 0x64, 0xe2, 0x26, 0xce, 0x34, 0x4d, 0x36, 0xae, 0xeb, 0xa4, 0xdb,
-	0x7e, 0x55, 0x14, 0xb9, 0x71, 0x49, 0x25, 0x28, 0x41, 0xad, 0xb0, 0xeb, 0x6d, 0x6b, 0xf9, 0x27,
-	0xe9, 0xda, 0x21, 0xad, 0x2a, 0x58, 0x6d, 0xe2, 0xa9, 0xb3, 0x62, 0xbd, 0x6b, 0x76, 0xd7, 0x4d,
-	0xdc, 0x13, 0xe2, 0xc0, 0x95, 0x4a, 0x08, 0x81, 0x50, 0x85, 0x7a, 0xe1, 0xc4, 0x05, 0x95, 0x13,
-	0x39, 0x21, 0x4e, 0x95, 0xb8, 0x54, 0xe2, 0xc2, 0xa9, 0x82, 0x96, 0x03, 0xea, 0x09, 0xa9, 0xc1,
-	0x42, 0x9c, 0xd0, 0xcc, 0xfe, 0x78, 0xbd, 0xbb, 0x76, 0x53, 0x09, 0x11, 0x2e, 0xd1, 0x64, 0xde,
-	0xbf, 0x67, 0xde, 0xf7, 0x79, 0x66, 0xd6, 0x70, 0x4c, 0x13, 0x0d, 0x2c, 0x4b, 0x0d, 0xc9, 0x58,
-	0x68, 0x6a, 0xaa, 0xa1, 0xa2, 0x61, 0x5c, 0xab, 0x63, 0xba, 0x8c, 0x47, 0x35, 0xac, 0xb7, 0x64,
-	0xcb, 0x10, 0x4f, 0xd4, 0x55, 0xb5, 0x2e, 0xe3, 0xb4, 0xd8, 0x94, 0xd2, 0xa2, 0xa2, 0xa8, 0x86,
-	0x68, 0x48, 0xaa, 0xa2, 0x5b, 0xd6, 0xf3, 0x75, 0xc9, 0xd8, 0x6c, 0xad, 0x2f, 0x6c, 0xa8, 0x8d,
-	0x74, 0x43, 0x5d, 0x97, 0x64, 0x92, 0x66, 0x3b, 0x4d, 0xfe, 0x9e, 0xd9, 0x90, 0xd5, 0x56, 0x2d,
-	0x4d, 0xfd, 0xea, 0x58, 0x71, 0x16, 0x56, 0xe4, 0x44, 0x5d, 0xad, 0xab, 0x74, 0x99, 0x26, 0x2b,
-	0x73, 0x97, 0xfd, 0x30, 0x0c, 0x27, 0x78, 0xd1, 0xc0, 0x45, 0x02, 0xad, 0x82, 0x0d, 0x43, 0x52,
-	0xea, 0x7a, 0x01, 0xb7, 0xd1, 0x69, 0x38, 0x24, 0x36, 0x25, 0x41, 0x11, 0x1b, 0x98, 0x01, 0xb3,
-	0x60, 0x6e, 0x38, 0x3b, 0xb2, 0xd3, 0x61, 0x0e, 0x89, 0x4d, 0x89, 0x6c, 0xf1, 0x64, 0x51, 0x16,
-	0x1b, 0x18, 0xdd, 0x84, 0xe3, 0xc4, 0x0f, 0x2b, 0xb5, 0xa6, 0x2a, 0x29, 0x86, 0x60, 0xb4, 0x9b,
-	0x98, 0x09, 0xcf, 0x82, 0xb9, 0xd1, 0xc5, 0xf8, 0x82, 0x73, 0xc6, 0x85, 0x4c, 0x53, 0xe2, 0x2c,
-	0x97, 0x6a, 0xbb, 0x89, 0xb3, 0x47, 0x76, 0x3a, 0xcc, 0x98, 0xd8, 0x94, 0xec, 0x38, 0x12, 0xc6,
-	0x93, 0x0d, 0xb7, 0x17, 0x49, 0x4e, 0xfa, 0x26, 0xd0, 0xc6, 0x09, 0x86, 0xa8, 0xd5, 0xb1, 0xc1,
-	0x44, 0x7c, 0xc9, 0x9d, 0x03, 0x54, 0xa9, 0x87, 0x99, 0xdc, 0x69, 0xb8, 0x19, 0xc6, 0xd3, 0x0d,
-	0x97, 0xd7, 0x52, 0xf4, 0xb7, 0xe7, 0x0c, 0xf8, 0xf3, 0x39, 0x03, 0xbe, 0xbe, 0x3f, 0x03, 0xd8,
-	0x7b, 0x00, 0x46, 0x2f, 0xcb, 0xea, 0x96, 0xdd, 0x03, 0x74, 0x15, 0x8e, 0xde, 0x92, 0xd5, 0x2d,
-	0x41, 0x94, 0xeb, 0xaa, 0x26, 0x19, 0x9b, 0x0d, 0xda, 0x86, 0xd1, 0xc5, 0x13, 0xae, 0xc2, 0x24,
-	0xc0, 0x29, 0x9e, 0xb1, 0x1d, 0xf9, 0xc3, 0x24, 0xd0, 0xf9, 0x17, 0x9d, 0x82, 0x87, 0x35, 0xfc,
-	0x9e, 0xbe, 0x82, 0xb5, 0x0a, 0xde, 0x50, 0x95, 0x1a, 0x6d, 0x0f, 0xe0, 0x7b, 0x37, 0x51, 0x02,
-	0x0e, 0xaf, 0xb7, 0x34, 0xdd, 0xa8, 0x48, 0x77, 0x30, 0x3d, 0x63, 0x84, 0xef, 0x6e, 0xb0, 0xdf,
-	0x02, 0xc8, 0xf4, 0x54, 0x73, 0xcf, 0x2a, 0x0b, 0x11, 0x85, 0xaa, 0x5b, 0x7b, 0xee, 0xa9, 0x4d,
-	0xec, 0x74, 0x98, 0x18, 0xb1, 0xda, 0x46, 0x3a, 0x3e, 0xba, 0x63, 0xa7, 0xa0, 0x73, 0x2c, 0xc0,
-	0x51, 0x57, 0xab, 0xdf, 0xc5, 0x6d, 0x8a, 0x72, 0x64, 0x71, 0x26, 0xa8, 0xcf, 0xae, 0xe2, 0xd9,
-	0x03, 0x0f, 0x1f, 0xcf, 0x84, 0xf8, 0xa8, 0xd3, 0xdd, 0x02, 0x6e, 0x7b, 0x5a, 0xfb, 0x5d, 0x04,
-	0x1e, 0x0d, 0xc4, 0x8e, 0x26, 0xe1, 0xc1, 0x5b, 0x12, 0x96, 0x6b, 0x3a, 0x03, 0x66, 0x23, 0x73,
-	0xc3, 0xbc, 0xf5, 0x1f, 0x7a, 0x03, 0x46, 0xba, 0x08, 0x4e, 0xf6, 0x6b, 0xb8, 0x1f, 0x05, 0x89,
-	0x42, 0xe7, 0xe0, 0x90, 0x7d, 0x56, 0xda, 0xc7, 0x91, 0xc5, 0x29, 0x4f, 0x06, 0x3b, 0x90, 0x77,
-	0x1c, 0x97, 0xee, 0x85, 0x09, 0xe4, 0xdf, 0x9f, 0x33, 0xe0, 0xf3, 0x3f, 0x98, 0x8f, 0xc2, 0xde,
-	0x86, 0x5d, 0x28, 0xe0, 0x76, 0x4f, 0x28, 0xe9, 0x59, 0xca, 0xc3, 0x5f, 0xea, 0xc4, 0xbb, 0xfa,
-	0xe0, 0x65, 0x7d, 0xca, 0xc3, 0x49, 0x7f, 0x80, 0x87, 0xc9, 0x29, 0x4b, 0x6e, 0x81, 0x99, 0x29,
-	0x04, 0x02, 0xd4, 0x61, 0xe8, 0x05, 0x1b, 0x1d, 0x85, 0xea, 0x10, 0x30, 0x45, 0x88, 0xd6, 0xc4,
-	0x9a, 0x4e, 0x89, 0xd6, 0x75, 0xe2, 0xdd, 0xfc, 0x4b, 0x51, 0xae, 0xe9, 0xd2, 0x1d, 0xdc, 0x75,
-	0xc8, 0x3a, 0xf4, 0x7b, 0x00, 0xe0, 0x58, 0x49, 0xdc, 0x26, 0x11, 0xce, 0xf0, 0x78, 0x88, 0x1a,
-	0xe2, 0xb6, 0x40, 0x92, 0xfb, 0x44, 0x72, 0xca, 0xd5, 0x71, 0x2b, 0x2e, 0x40, 0x27, 0xb1, 0x86,
-	0x69, 0xea, 0x4a, 0xe5, 0x04, 0x8c, 0x5a, 0x39, 0x5b, 0x58, 0x37, 0x74, 0xca, 0x80, 0x08, 0x3f,
-	0x62, 0xfa, 0xd1, 0x2d, 0x34, 0x07, 0x87, 0x24, 0xc5, 0xc0, 0xda, 0x6d, 0x51, 0x36, 0x65, 0x92,
-	0x8d, 0xfe, 0xf5, 0x78, 0x66, 0x28, 0xd7, 0xd2, 0xe8, 0x45, 0xc9, 0x3b, 0x56, 0xf6, 0x7b, 0x00,
-	0x8f, 0x79, 0x8b, 0xbb, 0x65, 0x53, 0x84, 0x93, 0xce, 0x01, 0x82, 0xa4, 0x33, 0xb5, 0xd3, 0x61,
-	0x8e, 0x34, 0xc4, 0x6d, 0xe2, 0xd0, 0xa3, 0x9e, 0x23, 0x8d, 0xde, 0x56, 0xfc, 0xf3, 0x02, 0x1a,
-	0x72, 0xc4, 0xf3, 0x43, 0x04, 0x32, 0xfd, 0x0e, 0xd1, 0x57, 0x3f, 0x17, 0xdd, 0xfa, 0x39, 0x3d,
-	0x60, 0x16, 0x7d, 0x24, 0xf4, 0xaa, 0x4f, 0x42, 0x71, 0x7f, 0x92, 0x00, 0x15, 0x7d, 0x11, 0xb6,
-	0x14, 0xf4, 0x49, 0x38, 0xa0, 0x6f, 0x94, 0xc5, 0x25, 0x7f, 0xeb, 0xfe, 0x0b, 0x3a, 0xb2, 0xe0,
-	0x06, 0x48, 0xa9, 0xe4, 0xe1, 0xa8, 0xe5, 0x4a, 0xc9, 0xe8, 0xf5, 0xa2, 0x9b, 0x29, 0x9b, 0x80,
-	0x5d, 0x6b, 0xde, 0xa6, 0xe4, 0x37, 0x07, 0xe0, 0xb8, 0x7f, 0x8c, 0xaf, 0x99, 0xe3, 0x02, 0x2f,
-	0xc3, 0x17, 0x3a, 0xa7, 0x0a, 0x3c, 0xdc, 0x73, 0xf1, 0x33, 0xe1, 0xd9, 0xc8, 0xdc, 0xc8, 0xe2,
-	0xc2, 0xa0, 0x14, 0x3d, 0xd7, 0x18, 0xa7, 0x18, 0x5a, 0x9b, 0x8f, 0xba, 0x5f, 0x03, 0xf4, 0x36,
-	0x1c, 0xf7, 0xc9, 0x82, 0x89, 0xd0, 0xc4, 0xaf, 0x0c, 0x4c, 0xec, 0x19, 0xad, 0x99, 0x7b, 0xcc,
-	0xa3, 0x95, 0xf8, 0x75, 0x38, 0xee, 0x43, 0x80, 0x62, 0xdd, 0x0e, 0x0c, 0x9b, 0x47, 0x3b, 0x03,
-	0xff, 0x77, 0x5b, 0x94, 0x5b, 0xd8, 0x22, 0x71, 0xdf, 0x2b, 0xdc, 0xf4, 0x5a, 0x0a, 0x9f, 0x07,
-	0xf1, 0x77, 0xe0, 0x44, 0x10, 0x84, 0x80, 0xe4, 0x67, 0x7b, 0x93, 0x0f, 0x22, 0x77, 0x37, 0xff,
-	0xd2, 0x96, 0xfd, 0x44, 0xbc, 0xbf, 0xcb, 0x80, 0xbb, 0xbb, 0x94, 0xe8, 0x37, 0x83, 0xb8, 0xfb,
-	0x52, 0x74, 0x0d, 0x60, 0xa8, 0x45, 0xca, 0x07, 0x1d, 0xe6, 0x80, 0xa2, 0x2a, 0x98, 0x15, 0xe1,
-	0x51, 0x5f, 0xb7, 0x73, 0xa2, 0x21, 0xa2, 0x8b, 0x2e, 0x9d, 0x02, 0x3a, 0xa1, 0xc4, 0xa0, 0x09,
-	0x59, 0xd4, 0xe9, 0xea, 0x75, 0xe8, 0xb3, 0x0e, 0x03, 0xee, 0x77, 0x98, 0x10, 0x2b, 0xc1, 0xe9,
-	0xc0, 0xb7, 0x95, 0x96, 0xc9, 0xfa, 0xca, 0xcc, 0xbe, 0xe8, 0x4d, 0x1e, 0x50, 0x4a, 0x85, 0x89,
-	0x7e, 0xd7, 0x10, 0xad, 0xc6, 0xf9, 0xaa, 0x9d, 0xdc, 0xc3, 0x0d, 0xd6, 0xbf, 0xe0, 0xfc, 0xeb,
-	0x70, 0xcc, 0x33, 0x11, 0x74, 0x1c, 0x4e, 0xaf, 0x96, 0x0b, 0xe5, 0xe5, 0xb5, 0xb2, 0x90, 0x59,
-	0xc9, 0x0b, 0x5c, 0x39, 0xb7, 0xb2, 0x9c, 0x2f, 0x57, 0x85, 0xea, 0x8d, 0x15, 0x2e, 0x16, 0x42,
-	0x87, 0x60, 0x24, 0x57, 0xe2, 0x62, 0x60, 0xfe, 0x1a, 0x1c, 0xf3, 0x0c, 0x0a, 0x21, 0x38, 0x6a,
-	0x87, 0x56, 0x33, 0xfc, 0x15, 0xae, 0x1a, 0x0b, 0xa1, 0x18, 0x8c, 0x66, 0x8a, 0x45, 0x81, 0xe7,
-	0xae, 0xad, 0x72, 0x95, 0x6a, 0x25, 0x06, 0x10, 0x84, 0x07, 0x57, 0x38, 0x5e, 0xc8, 0xaf, 0xc4,
-	0xc2, 0x28, 0x0a, 0x87, 0xc8, 0x7a, 0xb5, 0xc2, 0xf1, 0xb1, 0xc8, 0xbc, 0x0c, 0x27, 0x83, 0x3f,
-	0x1b, 0x51, 0x1c, 0x4e, 0xda, 0x99, 0x2f, 0x17, 0x97, 0xd7, 0x84, 0x4c, 0xf1, 0xca, 0x32, 0x9f,
-	0xaf, 0x5e, 0x2d, 0xc5, 0x42, 0xc4, 0x56, 0x5d, 0x2e, 0x70, 0x65, 0x21, 0xbb, 0x7a, 0xa9, 0xc0,
-	0x55, 0x5d, 0x36, 0x40, 0x6c, 0x45, 0x2e, 0x53, 0xb8, 0xe1, 0xb7, 0x85, 0xe7, 0xd7, 0xe0, 0x74,
-	0xdf, 0xf7, 0x17, 0x25, 0x61, 0xdc, 0x2e, 0x58, 0xca, 0x5c, 0x27, 0xf0, 0x2b, 0xde, 0xa2, 0x97,
-	0xf3, 0xd7, 0xb9, 0x9c, 0xb0, 0x96, 0x2f, 0xe7, 0x7a, 0x00, 0x81, 0xc5, 0xaf, 0x46, 0x02, 0x7e,
-	0x38, 0x64, 0x9a, 0x12, 0xba, 0x0b, 0xe0, 0xd4, 0x25, 0x0d, 0x8b, 0x06, 0xf6, 0x5f, 0x74, 0x03,
-	0xd9, 0x19, 0x1f, 0x77, 0x5b, 0xe9, 0x4f, 0x22, 0x36, 0xf7, 0x6c, 0x97, 0x49, 0xf0, 0x58, 0x57,
-	0x5b, 0xda, 0x06, 0xbe, 0xa4, 0x2a, 0xb7, 0xa4, 0x7a, 0x2a, 0xb3, 0x41, 0xde, 0xf9, 0x92, 0xa8,
-	0x88, 0x75, 0x9c, 0xfa, 0xe0, 0xc7, 0x5f, 0x3f, 0x0e, 0x27, 0xd9, 0xe9, 0xf4, 0x06, 0x2d, 0x99,
-	0x76, 0xa4, 0xe6, 0xf0, 0x00, 0xcc, 0x53, 0x48, 0x39, 0x2c, 0xe3, 0x7f, 0x19, 0x52, 0x8d, 0x96,
-	0x0c, 0x86, 0xf4, 0x29, 0x80, 0x47, 0x2b, 0x9b, 0x41, 0xdf, 0xc4, 0x83, 0x01, 0x0d, 0xb4, 0xb2,
-	0x6f, 0x3e, 0xdb, 0x65, 0xe2, 0x81, 0xd8, 0xde, 0x92, 0xf0, 0x96, 0x89, 0x2c, 0xc1, 0x4e, 0xa5,
-	0xf5, 0x4d, 0x75, 0x2b, 0x10, 0xd7, 0x59, 0x80, 0xee, 0x01, 0x78, 0xcc, 0x9c, 0x5f, 0xf0, 0x37,
-	0xfb, 0x0b, 0xa5, 0x1f, 0xd4, 0xb4, 0xab, 0x7b, 0x6a, 0x1a, 0xcb, 0x1e, 0xb7, 0xe7, 0x48, 0x5e,
-	0xa4, 0xc0, 0xc6, 0x11, 0x78, 0xab, 0xcd, 0xda, 0x7e, 0xc1, 0x6b, 0xd1, 0xd2, 0x83, 0xe1, 0x99,
-	0x54, 0xdb, 0x17, 0x78, 0x16, 0xe5, 0xfa, 0xc2, 0xfb, 0x12, 0xc0, 0xa4, 0x39, 0xdc, 0xbe, 0xdf,
-	0x94, 0x7b, 0xb9, 0x6c, 0x83, 0x40, 0x16, 0xf6, 0x04, 0xf2, 0xff, 0xec, 0xac, 0x3d, 0x62, 0xeb,
-	0x93, 0xab, 0x2f, 0x4e, 0x73, 0xca, 0xfb, 0x88, 0xd3, 0x9a, 0xf5, 0x8b, 0x70, 0x9a, 0xe3, 0xde,
-	0x47, 0x9c, 0xd6, 0xd0, 0x07, 0xe0, 0xcc, 0x26, 0x1e, 0xfe, 0x92, 0x0c, 0x3d, 0x7c, 0x92, 0x04,
-	0x8f, 0x9e, 0x24, 0xc1, 0xcf, 0x4f, 0x92, 0xe0, 0xee, 0xd3, 0x64, 0xe8, 0xd1, 0xd3, 0x64, 0xe8,
-	0xa7, 0xa7, 0xc9, 0xd0, 0xfa, 0x41, 0x5a, 0xf8, 0xdc, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xe1,
-	0x7b, 0x07, 0xd8, 0xa5, 0x12, 0x00, 0x00,
+	// 1462 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0x4d, 0x6c, 0x1b, 0xc5,
+	0x17, 0xf7, 0xd8, 0xfd, 0xb7, 0xce, 0xc4, 0x8d, 0x9d, 0x69, 0x9a, 0x6e, 0x5c, 0xd7, 0x71, 0xb7,
+	0xfd, 0x57, 0x51, 0xe4, 0xc6, 0x21, 0x95, 0xa0, 0x14, 0xb5, 0xc2, 0xae, 0xb7, 0xad, 0xe5, 0x8f,
+	0xa4, 0x6b, 0x87, 0xb4, 0x42, 0xb0, 0xda, 0xc4, 0x53, 0x67, 0x85, 0xbd, 0x6b, 0xd6, 0xeb, 0x26,
+	0xee, 0x09, 0x71, 0xe0, 0x4a, 0x25, 0x84, 0x40, 0xa8, 0x87, 0x5e, 0x10, 0xd7, 0xaa, 0x48, 0x48,
+	0xe4, 0xc8, 0x29, 0xc7, 0x4a, 0x70, 0xe0, 0x54, 0x41, 0x03, 0x12, 0xea, 0x09, 0xa9, 0xc1, 0x42,
+	0x9c, 0xd0, 0xcc, 0x7e, 0x78, 0xbd, 0xbb, 0x76, 0xc2, 0x87, 0x14, 0x2e, 0xd1, 0x78, 0xde, 0x9b,
+	0xf7, 0x7e, 0xf3, 0xde, 0xef, 0xf7, 0x76, 0x02, 0xc3, 0xaa, 0xa8, 0xe1, 0xba, 0xd4, 0x90, 0xb4,
+	0xb9, 0xa6, 0xaa, 0x68, 0x0a, 0x1a, 0xc1, 0xd5, 0x1a, 0xa6, 0xcb, 0x68, 0x48, 0xc5, 0xad, 0x76,
+	0xdd, 0x30, 0x44, 0x63, 0x35, 0x45, 0xa9, 0xd5, 0x71, 0x4a, 0x6c, 0x4a, 0x29, 0x51, 0x96, 0x15,
+	0x4d, 0xd4, 0x24, 0x45, 0x6e, 0x19, 0xd6, 0x8b, 0x35, 0x49, 0x5b, 0x6f, 0xaf, 0xce, 0xad, 0x29,
+	0x8d, 0x54, 0x43, 0x59, 0x95, 0xea, 0x24, 0xcc, 0x66, 0x8a, 0xfc, 0x3d, 0xbf, 0x56, 0x57, 0xda,
+	0xd5, 0x14, 0xf5, 0xab, 0x61, 0xd9, 0x5a, 0x18, 0x27, 0x27, 0x6a, 0x4a, 0x4d, 0xa1, 0xcb, 0x14,
+	0x59, 0xe9, 0xbb, 0xec, 0x03, 0x00, 0x43, 0xd7, 0xea, 0xca, 0x46, 0x19, 0x6b, 0x9a, 0x24, 0xd7,
+	0x5a, 0xe8, 0x06, 0x1c, 0xbb, 0x53, 0x57, 0x36, 0x04, 0xb1, 0x5e, 0x53, 0x54, 0x49, 0x5b, 0x6f,
+	0x30, 0x20, 0x01, 0x66, 0xc6, 0x16, 0x4e, 0xcf, 0x59, 0x80, 0xe7, 0xc8, 0x01, 0x5e, 0xd4, 0x70,
+	0x81, 0xdc, 0x27, 0x6d, 0x3a, 0xf2, 0x47, 0xc9, 0x41, 0xeb, 0x27, 0x3a, 0x0b, 0x8f, 0xaa, 0xf8,
+	0xdd, 0xd6, 0x12, 0x56, 0xcb, 0x78, 0x4d, 0x91, 0xab, 0x8c, 0x3f, 0x01, 0x66, 0x00, 0xdf, 0xbf,
+	0x89, 0x62, 0x70, 0x64, 0xb5, 0xad, 0xb6, 0xb4, 0xb2, 0x74, 0x0f, 0x33, 0x81, 0x04, 0x98, 0x09,
+	0xf0, 0xbd, 0x0d, 0xf6, 0x6b, 0x00, 0x99, 0xbe, 0x6c, 0x26, 0xce, 0x3c, 0xee, 0xa0, 0x0c, 0x44,
+	0x14, 0x6a, 0xcb, 0xd8, 0x13, 0x64, 0xb1, 0x81, 0x29, 0xdc, 0x91, 0xcc, 0xc4, 0x56, 0x97, 0x89,
+	0x10, 0xab, 0x69, 0x24, 0x36, 0x9e, 0xee, 0x98, 0x21, 0x4a, 0x62, 0x03, 0xa3, 0x3c, 0x1c, 0x23,
+	0x9d, 0x11, 0x68, 0x6b, 0x84, 0x77, 0x70, 0x87, 0xa2, 0x1c, 0x5d, 0x98, 0xb6, 0x5d, 0xd7, 0x2b,
+	0x79, 0xe6, 0xd0, 0xf6, 0xd3, 0x69, 0x1f, 0x1f, 0x52, 0x4d, 0x5b, 0x1e, 0x77, 0x2e, 0x85, 0x7e,
+	0x79, 0xc1, 0x80, 0xdf, 0x5f, 0x30, 0xe0, 0xd1, 0xc3, 0x69, 0xc0, 0x7e, 0x17, 0x80, 0xc7, 0x3d,
+	0xb1, 0xa3, 0x49, 0x78, 0xf8, 0x8e, 0x84, 0xeb, 0xd5, 0x16, 0x03, 0x12, 0x81, 0x99, 0x11, 0xde,
+	0xf8, 0x85, 0x5e, 0x83, 0x81, 0x1e, 0x82, 0x33, 0x83, 0x0a, 0xee, 0x46, 0x41, 0x4e, 0xa1, 0x0b,
+	0x30, 0x68, 0xde, 0x95, 0xd6, 0x71, 0x74, 0xe1, 0x84, 0x23, 0x82, 0x79, 0x90, 0xb7, 0x1c, 0x2f,
+	0x3d, 0xf2, 0x13, 0xc8, 0xbf, 0xbe, 0x60, 0xc0, 0x7b, 0xbb, 0x0c, 0xb8, 0xbf, 0xcb, 0x80, 0x47,
+	0xbb, 0x0c, 0xf8, 0xec, 0x37, 0xe6, 0x43, 0xbf, 0xb3, 0x78, 0x97, 0xf3, 0xb8, 0xd3, 0x17, 0x86,
+	0xd4, 0x2f, 0x29, 0x36, 0x25, 0x2c, 0x57, 0x9b, 0x8a, 0x24, 0x6b, 0x5a, 0xa7, 0xa9, 0x3b, 0xf1,
+	0xb6, 0x9a, 0xcc, 0xa5, 0x9b, 0x12, 0x67, 0x38, 0x54, 0x3a, 0x4d, 0x9c, 0xb4, 0x74, 0xa0, 0x89,
+	0x6a, 0x0d, 0x6b, 0xee, 0x03, 0xd6, 0x8f, 0x0a, 0x75, 0x20, 0x19, 0xac, 0xf4, 0xce, 0xc8, 0x14,
+	0x02, 0x01, 0x6a, 0xb1, 0xf5, 0xb2, 0x89, 0x8e, 0x42, 0xb5, 0xc8, 0x98, 0x24, 0xa4, 0x6b, 0x62,
+	0xb5, 0x45, 0x49, 0xd7, 0x73, 0xe2, 0xed, 0x5c, 0x4c, 0x52, 0xde, 0xb5, 0xa4, 0x7b, 0xb8, 0xe7,
+	0x90, 0x31, 0xa9, 0xf8, 0xb8, 0xcb, 0x1c, 0x92, 0x15, 0x19, 0xb3, 0x8f, 0x01, 0x0c, 0x17, 0xc5,
+	0x4d, 0x72, 0xd2, 0x6a, 0x28, 0x0f, 0x51, 0x43, 0xdc, 0x14, 0x48, 0x12, 0x97, 0x70, 0xce, 0xda,
+	0xba, 0x60, 0x9c, 0xf3, 0xd0, 0x4e, 0xa4, 0xa1, 0x9b, 0x7a, 0xf2, 0x39, 0x0d, 0x43, 0x46, 0xcc,
+	0x36, 0x6e, 0x69, 0x2d, 0xca, 0x8a, 0x00, 0x3f, 0xaa, 0xfb, 0xd1, 0x2d, 0x34, 0x03, 0x83, 0x92,
+	0xac, 0x61, 0xf5, 0xae, 0x58, 0xd7, 0xa5, 0x93, 0x09, 0xfd, 0xf1, 0x74, 0x3a, 0x98, 0x6d, 0xab,
+	0x74, 0x66, 0xf0, 0x96, 0x95, 0xfd, 0x06, 0xc0, 0x93, 0xce, 0xe4, 0x76, 0x29, 0x15, 0xe0, 0xa4,
+	0x75, 0x01, 0x2f, 0x39, 0x9d, 0xd8, 0xea, 0x32, 0xc7, 0x1a, 0xe2, 0x26, 0x71, 0xe8, 0x53, 0xd4,
+	0xb1, 0x46, 0x7f, 0x29, 0xfe, 0x7d, 0x51, 0x05, 0x2d, 0x41, 0xed, 0x04, 0x20, 0x33, 0xe8, 0x12,
+	0x03, 0x35, 0x75, 0xc5, 0xae, 0xa9, 0x73, 0x43, 0x7a, 0x31, 0x40, 0x56, 0x2f, 0xbb, 0x64, 0x15,
+	0x75, 0x07, 0xf1, 0x50, 0xd6, 0x57, 0x83, 0x94, 0xf5, 0xb1, 0xdf, 0xa3, 0x8e, 0x94, 0xdd, 0x45,
+	0x77, 0x29, 0xff, 0x0b, 0xfa, 0x32, 0xe0, 0x7a, 0x48, 0xac, 0xe8, 0xe0, 0xac, 0xe1, 0x4a, 0xc9,
+	0xe9, 0xf4, 0xa2, 0x9b, 0x49, 0x93, 0x90, 0x3d, 0x6b, 0xce, 0xd8, 0xb1, 0xf4, 0xf5, 0x81, 0x1f,
+	0x4e, 0x78, 0x72, 0xf4, 0x1c, 0x0c, 0x8a, 0x4d, 0xc9, 0xce, 0xca, 0xd1, 0xad, 0x2e, 0x73, 0xc4,
+	0xc0, 0xcf, 0x93, 0x05, 0x65, 0xdf, 0x9b, 0x70, 0x9c, 0xf8, 0x99, 0x65, 0x13, 0x48, 0xdd, 0x68,
+	0xff, 0xc7, 0xfa, 0x5a, 0xe7, 0x28, 0x5c, 0xe6, 0xd8, 0x56, 0x97, 0x09, 0x3b, 0xca, 0xcd, 0x93,
+	0x0d, 0xbb, 0x17, 0x09, 0x6e, 0xa3, 0xb6, 0x5e, 0x63, 0xca, 0x8b, 0xfe, 0xe0, 0x8e, 0x22, 0xeb,
+	0xc1, 0x1d, 0xad, 0xe1, 0xc3, 0x6a, 0xbf, 0x97, 0xe3, 0xfb, 0xb1, 0x1d, 0x80, 0xe3, 0x6e, 0x9e,
+	0xbf, 0xa2, 0xf3, 0x19, 0xfc, 0x15, 0x41, 0x51, 0x22, 0x97, 0xe1, 0xd1, 0xbe, 0xaf, 0x25, 0xe3,
+	0x4f, 0x04, 0x66, 0x46, 0x17, 0xe6, 0x86, 0x85, 0xe8, 0x9b, 0xf7, 0x9c, 0xac, 0xa9, 0x1d, 0x3e,
+	0x64, 0xff, 0x84, 0xa2, 0xb7, 0xe0, 0xb8, 0x6b, 0x6e, 0x30, 0x01, 0x1a, 0xf8, 0xa5, 0xa1, 0x81,
+	0x1d, 0x5c, 0xd7, 0x63, 0x87, 0x1d, 0xc3, 0x24, 0x7a, 0x0b, 0x8e, 0xbb, 0x10, 0xa0, 0x48, 0xaf,
+	0x02, 0x23, 0xfa, 0xd5, 0xce, 0xc3, 0xff, 0xdd, 0x15, 0xeb, 0x6d, 0x6c, 0xa8, 0x7c, 0xe0, 0x77,
+	0x4f, 0xf7, 0xba, 0xe4, 0xbf, 0x08, 0xa2, 0x6f, 0xc3, 0x09, 0x2f, 0x08, 0x1e, 0xc1, 0xe7, 0xfb,
+	0x83, 0x0f, 0x53, 0x7f, 0x2f, 0xbe, 0xde, 0x4a, 0xa2, 0x7e, 0xa2, 0x7a, 0x56, 0x84, 0xc7, 0x5d,
+	0x25, 0xc8, 0x8a, 0x9a, 0x88, 0xae, 0xd8, 0xa6, 0x0b, 0xa0, 0x65, 0x8b, 0x0d, 0x2b, 0x9b, 0xd1,
+	0xcf, 0xde, 0x94, 0x09, 0x7e, 0xda, 0x65, 0xc0, 0xc3, 0x2e, 0xe3, 0x63, 0x25, 0x38, 0xe5, 0xf9,
+	0x4a, 0xa0, 0x69, 0x32, 0xae, 0x34, 0x89, 0xbd, 0x5e, 0x17, 0x43, 0x52, 0x29, 0x30, 0x36, 0x68,
+	0x78, 0xd2, 0x6c, 0x9c, 0x2b, 0xdb, 0x99, 0x7d, 0xcc, 0xdd, 0xc1, 0x09, 0x67, 0x5f, 0x85, 0x61,
+	0x87, 0x5a, 0xd1, 0x29, 0x38, 0xb5, 0x5c, 0xca, 0x97, 0x16, 0x57, 0x4a, 0x42, 0x7a, 0x29, 0x27,
+	0x70, 0xa5, 0xec, 0xd2, 0x62, 0xae, 0x54, 0x11, 0x2a, 0xb7, 0x97, 0xb8, 0x88, 0x0f, 0x1d, 0x81,
+	0x81, 0x6c, 0x91, 0x8b, 0x80, 0xd9, 0x9b, 0x30, 0xec, 0xd0, 0x22, 0x42, 0x70, 0xcc, 0x3c, 0x5a,
+	0x49, 0xf3, 0xd7, 0xb9, 0x4a, 0xc4, 0x87, 0x22, 0x30, 0x94, 0x2e, 0x14, 0x04, 0x9e, 0xbb, 0xb9,
+	0xcc, 0x95, 0x2b, 0xe5, 0x08, 0x40, 0x10, 0x1e, 0x5e, 0xe2, 0x78, 0x21, 0xb7, 0x14, 0xf1, 0xa3,
+	0x10, 0x0c, 0x92, 0xf5, 0x72, 0x99, 0xe3, 0x23, 0x81, 0xd9, 0x3a, 0x9c, 0xf4, 0x7e, 0x00, 0xa3,
+	0x28, 0x9c, 0x34, 0x23, 0x5f, 0x2b, 0x2c, 0xae, 0x08, 0xe9, 0xc2, 0xf5, 0x45, 0x3e, 0x57, 0xb9,
+	0x51, 0x8c, 0xf8, 0x88, 0xad, 0xb2, 0x98, 0xe7, 0x4a, 0x42, 0x66, 0xf9, 0x6a, 0x9e, 0xab, 0xd8,
+	0x6c, 0x80, 0xd8, 0x0a, 0x5c, 0x3a, 0x7f, 0xdb, 0x6d, 0xf3, 0xcf, 0xae, 0xc0, 0xa9, 0x81, 0xaf,
+	0x06, 0x14, 0x87, 0x51, 0x33, 0x61, 0x31, 0x7d, 0x8b, 0xc0, 0x2f, 0x3b, 0x93, 0x5e, 0xcb, 0xdd,
+	0xe2, 0xb2, 0xc2, 0x4a, 0xae, 0x94, 0xed, 0x03, 0x04, 0x16, 0x7e, 0x1e, 0xf5, 0x98, 0xb3, 0xe9,
+	0xa6, 0x84, 0x3e, 0x01, 0xf0, 0x78, 0x79, 0xdd, 0xeb, 0xdd, 0x3a, 0x94, 0x9b, 0xd1, 0xa1, 0x56,
+	0xf6, 0xf5, 0xe7, 0xbb, 0x4c, 0x94, 0xc7, 0x2d, 0xa5, 0xad, 0xae, 0xe1, 0xab, 0x8a, 0x7c, 0x47,
+	0xaa, 0x25, 0xd3, 0x6b, 0xe4, 0x99, 0xf2, 0x86, 0x84, 0x37, 0x92, 0xef, 0x7f, 0xfb, 0xd3, 0x47,
+	0xfe, 0x18, 0x7b, 0x22, 0xd5, 0x5a, 0x57, 0x36, 0x52, 0xd6, 0xa4, 0xb4, 0xc8, 0x00, 0x66, 0xe7,
+	0x01, 0x7a, 0x00, 0xe0, 0xc9, 0xab, 0x2a, 0x16, 0x35, 0xec, 0xfd, 0xae, 0xde, 0x93, 0xd4, 0xd1,
+	0x71, 0x3b, 0x46, 0xfa, 0x5f, 0x17, 0x7b, 0xe3, 0xf9, 0x2e, 0x13, 0xf3, 0x04, 0x56, 0x14, 0x65,
+	0xb1, 0x86, 0x75, 0x68, 0x2c, 0x7b, 0x2a, 0xb5, 0x46, 0x53, 0xa7, 0xc8, 0x00, 0xf4, 0x02, 0x48,
+	0xe1, 0x2d, 0x37, 0xab, 0x07, 0x05, 0xaf, 0x4d, 0x53, 0x0f, 0x87, 0x97, 0xc5, 0x75, 0x7c, 0x40,
+	0xf0, 0xaa, 0x34, 0xf5, 0x60, 0x78, 0x5f, 0x00, 0x38, 0x45, 0x68, 0xf7, 0x77, 0xc1, 0xed, 0xe9,
+	0xc1, 0x66, 0xf7, 0x41, 0xc1, 0x04, 0x7b, 0x52, 0xa7, 0xe0, 0x20, 0x9c, 0xf3, 0x00, 0x7d, 0x0e,
+	0x60, 0x5c, 0xa7, 0xe1, 0xc0, 0xd7, 0xe8, 0x7e, 0x06, 0x9e, 0x57, 0x39, 0xf3, 0xfb, 0x2a, 0xe7,
+	0xff, 0xd9, 0x84, 0x49, 0x46, 0xe3, 0x71, 0xe6, 0x59, 0x51, 0x82, 0x53, 0xe7, 0xe3, 0x01, 0xe2,
+	0x34, 0x58, 0xb9, 0x17, 0x4e, 0x9d, 0x98, 0x07, 0x88, 0xd3, 0xa0, 0xe7, 0x30, 0x9c, 0x5f, 0x02,
+	0x18, 0x23, 0x0c, 0xfd, 0x67, 0x28, 0xf7, 0xe3, 0xc4, 0x5e, 0xdf, 0x07, 0x55, 0xcf, 0xb0, 0x71,
+	0x9d, 0xaa, 0x43, 0x30, 0xcf, 0x83, 0x4c, 0x6c, 0xfb, 0xc7, 0xb8, 0x6f, 0xfb, 0x59, 0x1c, 0x3c,
+	0x79, 0x16, 0x07, 0x3f, 0x3c, 0x8b, 0x83, 0xfb, 0x3b, 0x71, 0xdf, 0x93, 0x9d, 0xb8, 0xef, 0xfb,
+	0x9d, 0xb8, 0x6f, 0xf5, 0x30, 0x05, 0x72, 0xe1, 0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x57, 0xc4,
+	0x04, 0x5f, 0xa0, 0x12, 0x00, 0x00,
 }
 
-func (this *RateLimitSettingsKey) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 7)
-	s = append(s, "&edgeproto.RateLimitSettingsKey{")
-	s = append(s, "ApiName: "+fmt.Sprintf("%#v", this.ApiName)+",\n")
-	s = append(s, "ApiEndpointType: "+fmt.Sprintf("%#v", this.ApiEndpointType)+",\n")
-	s = append(s, "RateLimitTarget: "+fmt.Sprintf("%#v", this.RateLimitTarget)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
 func (this *FlowRateLimitSettingsKey) GoString() string {
 	if this == nil {
 		return "nil"
@@ -742,6 +730,18 @@ func (this *MaxReqsRateLimitSettingsKey) GoString() string {
 	s = append(s, "&edgeproto.MaxReqsRateLimitSettingsKey{")
 	s = append(s, "MaxReqsSettingsName: "+fmt.Sprintf("%#v", this.MaxReqsSettingsName)+",\n")
 	s = append(s, "RateLimitKey: "+strings.Replace(this.RateLimitKey.GoString(), `&`, ``, 1)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *RateLimitSettingsKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&edgeproto.RateLimitSettingsKey{")
+	s = append(s, "ApiName: "+fmt.Sprintf("%#v", this.ApiName)+",\n")
+	s = append(s, "ApiEndpointType: "+fmt.Sprintf("%#v", this.ApiEndpointType)+",\n")
+	s = append(s, "RateLimitTarget: "+fmt.Sprintf("%#v", this.RateLimitTarget)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -766,10 +766,6 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type RateLimitSettingsApiClient interface {
-	// Create RateLimitSettings for an API endpoint and target
-	CreateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
-	// Delete RateLimit settings for an API endpoint and target (ie. no rate limiting)
-	DeleteRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error)
 	// Show RateLimit settings for an API endpoint and target
 	ShowRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowRateLimitSettingsClient, error)
 	// Create Flow RateLimit settings for an API endpoint and target
@@ -778,12 +774,16 @@ type RateLimitSettingsApiClient interface {
 	UpdateFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
 	// Delete Flow RateLimit settings for an API endpoint and target
 	DeleteFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Show Flow RateLimit settings for an API endpoint and target
+	ShowFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowFlowRateLimitSettingsClient, error)
 	// Create MaxReqs RateLimit settings for an API endpoint and target
 	CreateMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
 	// Update MaxReqs RateLimit settings for an API endpoint and target
 	UpdateMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
 	// Delete MaxReqs RateLimit settings for an API endpoint and target
 	DeleteMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error)
+	// Show MaxReqs RateLimit settings for an API endpoint and target
+	ShowMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsClient, error)
 }
 
 type rateLimitSettingsApiClient struct {
@@ -792,24 +792,6 @@ type rateLimitSettingsApiClient struct {
 
 func NewRateLimitSettingsApiClient(cc *grpc.ClientConn) RateLimitSettingsApiClient {
 	return &rateLimitSettingsApiClient{cc}
-}
-
-func (c *rateLimitSettingsApiClient) CreateRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/CreateRateLimitSettings", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *rateLimitSettingsApiClient) DeleteRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/DeleteRateLimitSettings", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *rateLimitSettingsApiClient) ShowRateLimitSettings(ctx context.Context, in *RateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowRateLimitSettingsClient, error) {
@@ -871,6 +853,38 @@ func (c *rateLimitSettingsApiClient) DeleteFlowRateLimitSettings(ctx context.Con
 	return out, nil
 }
 
+func (c *rateLimitSettingsApiClient) ShowFlowRateLimitSettings(ctx context.Context, in *FlowRateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowFlowRateLimitSettingsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_RateLimitSettingsApi_serviceDesc.Streams[1], "/edgeproto.RateLimitSettingsApi/ShowFlowRateLimitSettings", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &rateLimitSettingsApiShowFlowRateLimitSettingsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RateLimitSettingsApi_ShowFlowRateLimitSettingsClient interface {
+	Recv() (*FlowRateLimitSettings, error)
+	grpc.ClientStream
+}
+
+type rateLimitSettingsApiShowFlowRateLimitSettingsClient struct {
+	grpc.ClientStream
+}
+
+func (x *rateLimitSettingsApiShowFlowRateLimitSettingsClient) Recv() (*FlowRateLimitSettings, error) {
+	m := new(FlowRateLimitSettings)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *rateLimitSettingsApiClient) CreateMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
 	err := c.cc.Invoke(ctx, "/edgeproto.RateLimitSettingsApi/CreateMaxReqsRateLimitSettings", in, out, opts...)
@@ -898,12 +912,40 @@ func (c *rateLimitSettingsApiClient) DeleteMaxReqsRateLimitSettings(ctx context.
 	return out, nil
 }
 
+func (c *rateLimitSettingsApiClient) ShowMaxReqsRateLimitSettings(ctx context.Context, in *MaxReqsRateLimitSettings, opts ...grpc.CallOption) (RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_RateLimitSettingsApi_serviceDesc.Streams[2], "/edgeproto.RateLimitSettingsApi/ShowMaxReqsRateLimitSettings", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &rateLimitSettingsApiShowMaxReqsRateLimitSettingsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsClient interface {
+	Recv() (*MaxReqsRateLimitSettings, error)
+	grpc.ClientStream
+}
+
+type rateLimitSettingsApiShowMaxReqsRateLimitSettingsClient struct {
+	grpc.ClientStream
+}
+
+func (x *rateLimitSettingsApiShowMaxReqsRateLimitSettingsClient) Recv() (*MaxReqsRateLimitSettings, error) {
+	m := new(MaxReqsRateLimitSettings)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // RateLimitSettingsApiServer is the server API for RateLimitSettingsApi service.
 type RateLimitSettingsApiServer interface {
-	// Create RateLimitSettings for an API endpoint and target
-	CreateRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
-	// Delete RateLimit settings for an API endpoint and target (ie. no rate limiting)
-	DeleteRateLimitSettings(context.Context, *RateLimitSettings) (*Result, error)
 	// Show RateLimit settings for an API endpoint and target
 	ShowRateLimitSettings(*RateLimitSettings, RateLimitSettingsApi_ShowRateLimitSettingsServer) error
 	// Create Flow RateLimit settings for an API endpoint and target
@@ -912,24 +954,22 @@ type RateLimitSettingsApiServer interface {
 	UpdateFlowRateLimitSettings(context.Context, *FlowRateLimitSettings) (*Result, error)
 	// Delete Flow RateLimit settings for an API endpoint and target
 	DeleteFlowRateLimitSettings(context.Context, *FlowRateLimitSettings) (*Result, error)
+	// Show Flow RateLimit settings for an API endpoint and target
+	ShowFlowRateLimitSettings(*FlowRateLimitSettings, RateLimitSettingsApi_ShowFlowRateLimitSettingsServer) error
 	// Create MaxReqs RateLimit settings for an API endpoint and target
 	CreateMaxReqsRateLimitSettings(context.Context, *MaxReqsRateLimitSettings) (*Result, error)
 	// Update MaxReqs RateLimit settings for an API endpoint and target
 	UpdateMaxReqsRateLimitSettings(context.Context, *MaxReqsRateLimitSettings) (*Result, error)
 	// Delete MaxReqs RateLimit settings for an API endpoint and target
 	DeleteMaxReqsRateLimitSettings(context.Context, *MaxReqsRateLimitSettings) (*Result, error)
+	// Show MaxReqs RateLimit settings for an API endpoint and target
+	ShowMaxReqsRateLimitSettings(*MaxReqsRateLimitSettings, RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsServer) error
 }
 
 // UnimplementedRateLimitSettingsApiServer can be embedded to have forward compatible implementations.
 type UnimplementedRateLimitSettingsApiServer struct {
 }
 
-func (*UnimplementedRateLimitSettingsApiServer) CreateRateLimitSettings(ctx context.Context, req *RateLimitSettings) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateRateLimitSettings not implemented")
-}
-func (*UnimplementedRateLimitSettingsApiServer) DeleteRateLimitSettings(ctx context.Context, req *RateLimitSettings) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteRateLimitSettings not implemented")
-}
 func (*UnimplementedRateLimitSettingsApiServer) ShowRateLimitSettings(req *RateLimitSettings, srv RateLimitSettingsApi_ShowRateLimitSettingsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ShowRateLimitSettings not implemented")
 }
@@ -942,6 +982,9 @@ func (*UnimplementedRateLimitSettingsApiServer) UpdateFlowRateLimitSettings(ctx 
 func (*UnimplementedRateLimitSettingsApiServer) DeleteFlowRateLimitSettings(ctx context.Context, req *FlowRateLimitSettings) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFlowRateLimitSettings not implemented")
 }
+func (*UnimplementedRateLimitSettingsApiServer) ShowFlowRateLimitSettings(req *FlowRateLimitSettings, srv RateLimitSettingsApi_ShowFlowRateLimitSettingsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowFlowRateLimitSettings not implemented")
+}
 func (*UnimplementedRateLimitSettingsApiServer) CreateMaxReqsRateLimitSettings(ctx context.Context, req *MaxReqsRateLimitSettings) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMaxReqsRateLimitSettings not implemented")
 }
@@ -951,45 +994,12 @@ func (*UnimplementedRateLimitSettingsApiServer) UpdateMaxReqsRateLimitSettings(c
 func (*UnimplementedRateLimitSettingsApiServer) DeleteMaxReqsRateLimitSettings(ctx context.Context, req *MaxReqsRateLimitSettings) (*Result, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteMaxReqsRateLimitSettings not implemented")
 }
+func (*UnimplementedRateLimitSettingsApiServer) ShowMaxReqsRateLimitSettings(req *MaxReqsRateLimitSettings, srv RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowMaxReqsRateLimitSettings not implemented")
+}
 
 func RegisterRateLimitSettingsApiServer(s *grpc.Server, srv RateLimitSettingsApiServer) {
 	s.RegisterService(&_RateLimitSettingsApi_serviceDesc, srv)
-}
-
-func _RateLimitSettingsApi_CreateRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RateLimitSettings)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RateLimitSettingsApiServer).CreateRateLimitSettings(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.RateLimitSettingsApi/CreateRateLimitSettings",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RateLimitSettingsApiServer).CreateRateLimitSettings(ctx, req.(*RateLimitSettings))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RateLimitSettingsApi_DeleteRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RateLimitSettings)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RateLimitSettingsApiServer).DeleteRateLimitSettings(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.RateLimitSettingsApi/DeleteRateLimitSettings",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RateLimitSettingsApiServer).DeleteRateLimitSettings(ctx, req.(*RateLimitSettings))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _RateLimitSettingsApi_ShowRateLimitSettings_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -1067,6 +1077,27 @@ func _RateLimitSettingsApi_DeleteFlowRateLimitSettings_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RateLimitSettingsApi_ShowFlowRateLimitSettings_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(FlowRateLimitSettings)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RateLimitSettingsApiServer).ShowFlowRateLimitSettings(m, &rateLimitSettingsApiShowFlowRateLimitSettingsServer{stream})
+}
+
+type RateLimitSettingsApi_ShowFlowRateLimitSettingsServer interface {
+	Send(*FlowRateLimitSettings) error
+	grpc.ServerStream
+}
+
+type rateLimitSettingsApiShowFlowRateLimitSettingsServer struct {
+	grpc.ServerStream
+}
+
+func (x *rateLimitSettingsApiShowFlowRateLimitSettingsServer) Send(m *FlowRateLimitSettings) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 func _RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MaxReqsRateLimitSettings)
 	if err := dec(in); err != nil {
@@ -1121,18 +1152,31 @@ func _RateLimitSettingsApi_DeleteMaxReqsRateLimitSettings_Handler(srv interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(MaxReqsRateLimitSettings)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RateLimitSettingsApiServer).ShowMaxReqsRateLimitSettings(m, &rateLimitSettingsApiShowMaxReqsRateLimitSettingsServer{stream})
+}
+
+type RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsServer interface {
+	Send(*MaxReqsRateLimitSettings) error
+	grpc.ServerStream
+}
+
+type rateLimitSettingsApiShowMaxReqsRateLimitSettingsServer struct {
+	grpc.ServerStream
+}
+
+func (x *rateLimitSettingsApiShowMaxReqsRateLimitSettingsServer) Send(m *MaxReqsRateLimitSettings) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _RateLimitSettingsApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.RateLimitSettingsApi",
 	HandlerType: (*RateLimitSettingsApiServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateRateLimitSettings",
-			Handler:    _RateLimitSettingsApi_CreateRateLimitSettings_Handler,
-		},
-		{
-			MethodName: "DeleteRateLimitSettings",
-			Handler:    _RateLimitSettingsApi_DeleteRateLimitSettings_Handler,
-		},
 		{
 			MethodName: "CreateFlowRateLimitSettings",
 			Handler:    _RateLimitSettingsApi_CreateFlowRateLimitSettings_Handler,
@@ -1164,48 +1208,18 @@ var _RateLimitSettingsApi_serviceDesc = grpc.ServiceDesc{
 			Handler:       _RateLimitSettingsApi_ShowRateLimitSettings_Handler,
 			ServerStreams: true,
 		},
+		{
+			StreamName:    "ShowFlowRateLimitSettings",
+			Handler:       _RateLimitSettingsApi_ShowFlowRateLimitSettings_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ShowMaxReqsRateLimitSettings",
+			Handler:       _RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_Handler,
+			ServerStreams: true,
+		},
 	},
 	Metadata: "ratelimit.proto",
-}
-
-func (m *RateLimitSettingsKey) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *RateLimitSettingsKey) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *RateLimitSettingsKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.RateLimitTarget != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.RateLimitTarget))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.ApiEndpointType != 0 {
-		i = encodeVarintRatelimit(dAtA, i, uint64(m.ApiEndpointType))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.ApiName) > 0 {
-		i -= len(m.ApiName)
-		copy(dAtA[i:], m.ApiName)
-		i = encodeVarintRatelimit(dAtA, i, uint64(len(m.ApiName)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *FlowSettings) Marshal() (dAtA []byte, err error) {
@@ -1473,6 +1487,46 @@ func (m *MaxReqsRateLimitSettings) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *RateLimitSettingsKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RateLimitSettingsKey) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RateLimitSettingsKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.RateLimitTarget != 0 {
+		i = encodeVarintRatelimit(dAtA, i, uint64(m.RateLimitTarget))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.ApiEndpointType != 0 {
+		i = encodeVarintRatelimit(dAtA, i, uint64(m.ApiEndpointType))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ApiName) > 0 {
+		i -= len(m.ApiName)
+		copy(dAtA[i:], m.ApiName)
+		i = encodeVarintRatelimit(dAtA, i, uint64(len(m.ApiName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *RateLimitSettings) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1680,102 +1734,6 @@ func encodeVarintRatelimit(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *RateLimitSettingsKey) Matches(o *RateLimitSettingsKey, fopts ...MatchOpt) bool {
-	opts := MatchOptions{}
-	applyMatchOptions(&opts, fopts...)
-	if o == nil {
-		if opts.Filter {
-			return true
-		}
-		return false
-	}
-	if !opts.Filter || o.ApiName != "" {
-		if o.ApiName != m.ApiName {
-			return false
-		}
-	}
-	if !opts.Filter || o.ApiEndpointType != 0 {
-		if o.ApiEndpointType != m.ApiEndpointType {
-			return false
-		}
-	}
-	if !opts.Filter || o.RateLimitTarget != 0 {
-		if o.RateLimitTarget != m.RateLimitTarget {
-			return false
-		}
-	}
-	return true
-}
-
-func (m *RateLimitSettingsKey) CopyInFields(src *RateLimitSettingsKey) int {
-	changed := 0
-	if m.ApiName != src.ApiName {
-		m.ApiName = src.ApiName
-		changed++
-	}
-	if m.ApiEndpointType != src.ApiEndpointType {
-		m.ApiEndpointType = src.ApiEndpointType
-		changed++
-	}
-	if m.RateLimitTarget != src.RateLimitTarget {
-		m.RateLimitTarget = src.RateLimitTarget
-		changed++
-	}
-	return changed
-}
-
-func (m *RateLimitSettingsKey) DeepCopyIn(src *RateLimitSettingsKey) {
-	m.ApiName = src.ApiName
-	m.ApiEndpointType = src.ApiEndpointType
-	m.RateLimitTarget = src.RateLimitTarget
-}
-
-func (m *RateLimitSettingsKey) GetKeyString() string {
-	key, err := json.Marshal(m)
-	if err != nil {
-		log.FatalLog("Failed to marshal RateLimitSettingsKey key string", "obj", m)
-	}
-	return string(key)
-}
-
-func RateLimitSettingsKeyStringParse(str string, key *RateLimitSettingsKey) {
-	err := json.Unmarshal([]byte(str), key)
-	if err != nil {
-		log.FatalLog("Failed to unmarshal RateLimitSettingsKey key string", "str", str)
-	}
-}
-
-func (m *RateLimitSettingsKey) NotFoundError() error {
-	return fmt.Errorf("RateLimitSettings key %s not found", m.GetKeyString())
-}
-
-func (m *RateLimitSettingsKey) ExistsError() error {
-	return fmt.Errorf("RateLimitSettings key %s already exists", m.GetKeyString())
-}
-
-var RateLimitSettingsKeyTagApiName = "apiname"
-var RateLimitSettingsKeyTagApiEndpointType = "apiendpointtype"
-var RateLimitSettingsKeyTagRateLimitTarget = "ratelimittarget"
-
-func (m *RateLimitSettingsKey) GetTags() map[string]string {
-	tags := make(map[string]string)
-	tags["apiname"] = m.ApiName
-	tags["apiendpointtype"] = ApiEndpointType_name[int32(m.ApiEndpointType)]
-	tags["ratelimittarget"] = RateLimitTarget_name[int32(m.RateLimitTarget)]
-	return tags
-}
-
-// Helper method to check that enums have valid values
-func (m *RateLimitSettingsKey) ValidateEnums() error {
-	if _, ok := ApiEndpointType_name[int32(m.ApiEndpointType)]; !ok {
-		return errors.New("invalid ApiEndpointType")
-	}
-	if _, ok := RateLimitTarget_name[int32(m.RateLimitTarget)]; !ok {
-		return errors.New("invalid RateLimitTarget")
-	}
-	return nil
-}
-
 func (m *FlowSettings) CopyInFields(src *FlowSettings) int {
 	changed := 0
 	if m.FlowAlgorithm != src.FlowAlgorithm {
@@ -2218,6 +2176,372 @@ func (s *FlowRateLimitSettingsStore) STMDel(stm concurrency.STM, key *FlowRateLi
 	stm.Del(keystr)
 }
 
+type FlowRateLimitSettingsKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+type FlowRateLimitSettingsCacheData struct {
+	Obj    *FlowRateLimitSettings
+	ModRev int64
+}
+
+// FlowRateLimitSettingsCache caches FlowRateLimitSettings objects in memory in a hash table
+// and keeps them in sync with the database.
+type FlowRateLimitSettingsCache struct {
+	Objs          map[FlowRateLimitSettingsKey]*FlowRateLimitSettingsCacheData
+	Mux           util.Mutex
+	List          map[FlowRateLimitSettingsKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *FlowRateLimitSettingsKey, old *FlowRateLimitSettings, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *FlowRateLimitSettings, new *FlowRateLimitSettings)
+	DeletedCbs    []func(ctx context.Context, old *FlowRateLimitSettings)
+	KeyWatchers   map[FlowRateLimitSettingsKey][]*FlowRateLimitSettingsKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *FlowRateLimitSettingsKey)
+	DeletedKeyCbs []func(ctx context.Context, key *FlowRateLimitSettingsKey)
+}
+
+func NewFlowRateLimitSettingsCache() *FlowRateLimitSettingsCache {
+	cache := FlowRateLimitSettingsCache{}
+	InitFlowRateLimitSettingsCache(&cache)
+	return &cache
+}
+
+func InitFlowRateLimitSettingsCache(cache *FlowRateLimitSettingsCache) {
+	cache.Objs = make(map[FlowRateLimitSettingsKey]*FlowRateLimitSettingsCacheData)
+	cache.KeyWatchers = make(map[FlowRateLimitSettingsKey][]*FlowRateLimitSettingsKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
+}
+
+func (c *FlowRateLimitSettingsCache) GetTypeString() string {
+	return "FlowRateLimitSettings"
+}
+
+func (c *FlowRateLimitSettingsCache) Get(key *FlowRateLimitSettingsKey, valbuf *FlowRateLimitSettings) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *FlowRateLimitSettingsCache) GetWithRev(key *FlowRateLimitSettingsKey, valbuf *FlowRateLimitSettings, modRev *int64) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
+	}
+	return found
+}
+
+func (c *FlowRateLimitSettingsCache) HasKey(key *FlowRateLimitSettingsKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *FlowRateLimitSettingsCache) GetAllKeys(ctx context.Context, cb func(key *FlowRateLimitSettingsKey, modRev int64)) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
+	}
+}
+
+func (c *FlowRateLimitSettingsCache) Update(ctx context.Context, in *FlowRateLimitSettings, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *FlowRateLimitSettings) (*FlowRateLimitSettings, bool) {
+		return in, true
+	})
+}
+
+func (c *FlowRateLimitSettingsCache) UpdateModFunc(ctx context.Context, key *FlowRateLimitSettingsKey, modRev int64, modFunc func(old *FlowRateLimitSettings) (new *FlowRateLimitSettings, changed bool)) {
+	c.Mux.Lock()
+	var old *FlowRateLimitSettings
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &FlowRateLimitSettings{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
+	}
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &FlowRateLimitSettings{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &FlowRateLimitSettingsCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *FlowRateLimitSettingsCache) Delete(ctx context.Context, in *FlowRateLimitSettings, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *FlowRateLimitSettings) bool {
+		return true
+	})
+}
+
+func (c *FlowRateLimitSettingsCache) DeleteCondFunc(ctx context.Context, in *FlowRateLimitSettings, modRev int64, condFunc func(old *FlowRateLimitSettings) bool) {
+	c.Mux.Lock()
+	var old *FlowRateLimitSettings
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
+	}
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	c.Mux.Unlock()
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *FlowRateLimitSettingsCache) Prune(ctx context.Context, validKeys map[FlowRateLimitSettingsKey]struct{}) {
+	notify := make(map[FlowRateLimitSettingsKey]*FlowRateLimitSettingsCacheData)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *FlowRateLimitSettingsCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *FlowRateLimitSettingsCache) Flush(ctx context.Context, notifyId int64) {
+}
+
+func (c *FlowRateLimitSettingsCache) Show(filter *FlowRateLimitSettings, cb func(ret *FlowRateLimitSettings) error) error {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, data := range c.Objs {
+		if !data.Obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		err := cb(data.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func FlowRateLimitSettingsGenericNotifyCb(fn func(key *FlowRateLimitSettingsKey, old *FlowRateLimitSettings)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*FlowRateLimitSettingsKey), obj.(*FlowRateLimitSettings))
+	}
+}
+
+func (c *FlowRateLimitSettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *FlowRateLimitSettingsKey, old *FlowRateLimitSettings, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *FlowRateLimitSettingsKey, old *FlowRateLimitSettings, modRev int64){fn}
+}
+
+func (c *FlowRateLimitSettingsCache) SetUpdatedCb(fn func(ctx context.Context, old *FlowRateLimitSettings, new *FlowRateLimitSettings)) {
+	c.UpdatedCbs = []func(ctx context.Context, old *FlowRateLimitSettings, new *FlowRateLimitSettings){fn}
+}
+
+func (c *FlowRateLimitSettingsCache) SetDeletedCb(fn func(ctx context.Context, old *FlowRateLimitSettings)) {
+	c.DeletedCbs = []func(ctx context.Context, old *FlowRateLimitSettings){fn}
+}
+
+func (c *FlowRateLimitSettingsCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *FlowRateLimitSettingsKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *FlowRateLimitSettingsKey){fn}
+}
+
+func (c *FlowRateLimitSettingsCache) SetDeletedKeyCb(fn func(ctx context.Context, key *FlowRateLimitSettingsKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *FlowRateLimitSettingsKey){fn}
+}
+
+func (c *FlowRateLimitSettingsCache) AddUpdatedCb(fn func(ctx context.Context, old *FlowRateLimitSettings, new *FlowRateLimitSettings)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *FlowRateLimitSettingsCache) AddDeletedCb(fn func(ctx context.Context, old *FlowRateLimitSettings)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *FlowRateLimitSettingsCache) AddNotifyCb(fn func(ctx context.Context, obj *FlowRateLimitSettingsKey, old *FlowRateLimitSettings, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *FlowRateLimitSettingsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *FlowRateLimitSettingsKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *FlowRateLimitSettingsCache) AddDeletedKeyCb(fn func(ctx context.Context, key *FlowRateLimitSettingsKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *FlowRateLimitSettingsCache) SetFlushAll() {
+	c.FlushAll = true
+}
+
+func (c *FlowRateLimitSettingsCache) WatchKey(key *FlowRateLimitSettingsKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*FlowRateLimitSettingsKeyWatcher, 0)
+	}
+	watcher := FlowRateLimitSettingsKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching FlowRateLimitSettings", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *FlowRateLimitSettingsCache) TriggerKeyWatchers(ctx context.Context, key *FlowRateLimitSettingsKey) {
+	watchers := make([]*FlowRateLimitSettingsKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *FlowRateLimitSettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := FlowRateLimitSettings{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse FlowRateLimitSettings data", "val", string(val), "err", err)
+		return
+	}
+	c.Update(ctx, &obj, modRev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *FlowRateLimitSettingsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := FlowRateLimitSettings{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	FlowRateLimitSettingsKeyStringParse(keystr, obj.GetKey())
+	c.Delete(ctx, &obj, modRev)
+}
+
+func (c *FlowRateLimitSettingsCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[FlowRateLimitSettingsKey]struct{})
+}
+
+func (c *FlowRateLimitSettingsCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[FlowRateLimitSettingsKey]*FlowRateLimitSettingsCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *FlowRateLimitSettingsCache) UsesOrg(org string) bool {
+	return false
+}
+
 func (m *FlowRateLimitSettings) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
@@ -2347,6 +2671,24 @@ func (m *MaxReqsRateLimitSettingsKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (m *MaxReqsRateLimitSettings) Matches(o *MaxReqsRateLimitSettings, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !opts.Filter || o.Settings != nil {
+		if m.Settings == nil && o.Settings != nil || m.Settings != nil && o.Settings == nil {
+			return false
+		} else if m.Settings != nil && o.Settings != nil {
+		}
+	}
+	return true
 }
 
 const MaxReqsRateLimitSettingsFieldKey = "2"
@@ -2651,6 +2993,372 @@ func (s *MaxReqsRateLimitSettingsStore) STMDel(stm concurrency.STM, key *MaxReqs
 	stm.Del(keystr)
 }
 
+type MaxReqsRateLimitSettingsKeyWatcher struct {
+	cb func(ctx context.Context)
+}
+
+type MaxReqsRateLimitSettingsCacheData struct {
+	Obj    *MaxReqsRateLimitSettings
+	ModRev int64
+}
+
+// MaxReqsRateLimitSettingsCache caches MaxReqsRateLimitSettings objects in memory in a hash table
+// and keeps them in sync with the database.
+type MaxReqsRateLimitSettingsCache struct {
+	Objs          map[MaxReqsRateLimitSettingsKey]*MaxReqsRateLimitSettingsCacheData
+	Mux           util.Mutex
+	List          map[MaxReqsRateLimitSettingsKey]struct{}
+	FlushAll      bool
+	NotifyCbs     []func(ctx context.Context, obj *MaxReqsRateLimitSettingsKey, old *MaxReqsRateLimitSettings, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *MaxReqsRateLimitSettings, new *MaxReqsRateLimitSettings)
+	DeletedCbs    []func(ctx context.Context, old *MaxReqsRateLimitSettings)
+	KeyWatchers   map[MaxReqsRateLimitSettingsKey][]*MaxReqsRateLimitSettingsKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *MaxReqsRateLimitSettingsKey)
+	DeletedKeyCbs []func(ctx context.Context, key *MaxReqsRateLimitSettingsKey)
+}
+
+func NewMaxReqsRateLimitSettingsCache() *MaxReqsRateLimitSettingsCache {
+	cache := MaxReqsRateLimitSettingsCache{}
+	InitMaxReqsRateLimitSettingsCache(&cache)
+	return &cache
+}
+
+func InitMaxReqsRateLimitSettingsCache(cache *MaxReqsRateLimitSettingsCache) {
+	cache.Objs = make(map[MaxReqsRateLimitSettingsKey]*MaxReqsRateLimitSettingsCacheData)
+	cache.KeyWatchers = make(map[MaxReqsRateLimitSettingsKey][]*MaxReqsRateLimitSettingsKeyWatcher)
+	cache.NotifyCbs = nil
+	cache.UpdatedCbs = nil
+	cache.DeletedCbs = nil
+	cache.UpdatedKeyCbs = nil
+	cache.DeletedKeyCbs = nil
+}
+
+func (c *MaxReqsRateLimitSettingsCache) GetTypeString() string {
+	return "MaxReqsRateLimitSettings"
+}
+
+func (c *MaxReqsRateLimitSettingsCache) Get(key *MaxReqsRateLimitSettingsKey, valbuf *MaxReqsRateLimitSettings) bool {
+	var modRev int64
+	return c.GetWithRev(key, valbuf, &modRev)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) GetWithRev(key *MaxReqsRateLimitSettingsKey, valbuf *MaxReqsRateLimitSettings, modRev *int64) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		valbuf.DeepCopyIn(inst.Obj)
+		*modRev = inst.ModRev
+	}
+	return found
+}
+
+func (c *MaxReqsRateLimitSettingsCache) HasKey(key *MaxReqsRateLimitSettingsKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *MaxReqsRateLimitSettingsCache) GetAllKeys(ctx context.Context, cb func(key *MaxReqsRateLimitSettingsKey, modRev int64)) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, data := range c.Objs {
+		cb(&key, data.ModRev)
+	}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) Update(ctx context.Context, in *MaxReqsRateLimitSettings, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *MaxReqsRateLimitSettings) (*MaxReqsRateLimitSettings, bool) {
+		return in, true
+	})
+}
+
+func (c *MaxReqsRateLimitSettingsCache) UpdateModFunc(ctx context.Context, key *MaxReqsRateLimitSettingsKey, modRev int64, modFunc func(old *MaxReqsRateLimitSettings) (new *MaxReqsRateLimitSettings, changed bool)) {
+	c.Mux.Lock()
+	var old *MaxReqsRateLimitSettings
+	if oldData, found := c.Objs[*key]; found {
+		old = oldData.Obj
+	}
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
+	for _, cb := range c.UpdatedCbs {
+		newCopy := &MaxReqsRateLimitSettings{}
+		newCopy.DeepCopyIn(new)
+		defer cb(ctx, old, newCopy)
+	}
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			defer cb(ctx, new.GetKey(), old, modRev)
+		}
+	}
+	for _, cb := range c.UpdatedKeyCbs {
+		defer cb(ctx, key)
+	}
+	store := &MaxReqsRateLimitSettings{}
+	store.DeepCopyIn(new)
+	c.Objs[new.GetKeyVal()] = &MaxReqsRateLimitSettingsCacheData{
+		Obj:    store,
+		ModRev: modRev,
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(ctx, new.GetKey())
+}
+
+func (c *MaxReqsRateLimitSettingsCache) Delete(ctx context.Context, in *MaxReqsRateLimitSettings, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *MaxReqsRateLimitSettings) bool {
+		return true
+	})
+}
+
+func (c *MaxReqsRateLimitSettingsCache) DeleteCondFunc(ctx context.Context, in *MaxReqsRateLimitSettings, modRev int64, condFunc func(old *MaxReqsRateLimitSettings) bool) {
+	c.Mux.Lock()
+	var old *MaxReqsRateLimitSettings
+	oldData, found := c.Objs[in.GetKeyVal()]
+	if found {
+		old = oldData.Obj
+		if !condFunc(old) {
+			c.Mux.Unlock()
+			return
+		}
+	}
+	delete(c.Objs, in.GetKeyVal())
+	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
+	c.Mux.Unlock()
+	for _, cb := range c.NotifyCbs {
+		if cb != nil {
+			cb(ctx, in.GetKey(), old, modRev)
+		}
+	}
+	if old != nil {
+		for _, cb := range c.DeletedCbs {
+			cb(ctx, old)
+		}
+	}
+	for _, cb := range c.DeletedKeyCbs {
+		cb(ctx, in.GetKey())
+	}
+	c.TriggerKeyWatchers(ctx, in.GetKey())
+}
+
+func (c *MaxReqsRateLimitSettingsCache) Prune(ctx context.Context, validKeys map[MaxReqsRateLimitSettingsKey]struct{}) {
+	notify := make(map[MaxReqsRateLimitSettingsKey]*MaxReqsRateLimitSettingsCacheData)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, old.Obj, old.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if old.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, old.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) Flush(ctx context.Context, notifyId int64) {
+}
+
+func (c *MaxReqsRateLimitSettingsCache) Show(filter *MaxReqsRateLimitSettings, cb func(ret *MaxReqsRateLimitSettings) error) error {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, data := range c.Objs {
+		if !data.Obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		err := cb(data.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func MaxReqsRateLimitSettingsGenericNotifyCb(fn func(key *MaxReqsRateLimitSettingsKey, old *MaxReqsRateLimitSettings)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*MaxReqsRateLimitSettingsKey), obj.(*MaxReqsRateLimitSettings))
+	}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *MaxReqsRateLimitSettingsKey, old *MaxReqsRateLimitSettings, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *MaxReqsRateLimitSettingsKey, old *MaxReqsRateLimitSettings, modRev int64){fn}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SetUpdatedCb(fn func(ctx context.Context, old *MaxReqsRateLimitSettings, new *MaxReqsRateLimitSettings)) {
+	c.UpdatedCbs = []func(ctx context.Context, old *MaxReqsRateLimitSettings, new *MaxReqsRateLimitSettings){fn}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SetDeletedCb(fn func(ctx context.Context, old *MaxReqsRateLimitSettings)) {
+	c.DeletedCbs = []func(ctx context.Context, old *MaxReqsRateLimitSettings){fn}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *MaxReqsRateLimitSettingsKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *MaxReqsRateLimitSettingsKey){fn}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SetDeletedKeyCb(fn func(ctx context.Context, key *MaxReqsRateLimitSettingsKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *MaxReqsRateLimitSettingsKey){fn}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) AddUpdatedCb(fn func(ctx context.Context, old *MaxReqsRateLimitSettings, new *MaxReqsRateLimitSettings)) {
+	c.UpdatedCbs = append(c.UpdatedCbs, fn)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) AddDeletedCb(fn func(ctx context.Context, old *MaxReqsRateLimitSettings)) {
+	c.DeletedCbs = append(c.DeletedCbs, fn)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) AddNotifyCb(fn func(ctx context.Context, obj *MaxReqsRateLimitSettingsKey, old *MaxReqsRateLimitSettings, modRev int64)) {
+	c.NotifyCbs = append(c.NotifyCbs, fn)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *MaxReqsRateLimitSettingsKey)) {
+	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) AddDeletedKeyCb(fn func(ctx context.Context, key *MaxReqsRateLimitSettingsKey)) {
+	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SetFlushAll() {
+	c.FlushAll = true
+}
+
+func (c *MaxReqsRateLimitSettingsCache) WatchKey(key *MaxReqsRateLimitSettingsKey, cb func(ctx context.Context)) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*MaxReqsRateLimitSettingsKeyWatcher, 0)
+	}
+	watcher := MaxReqsRateLimitSettingsKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching MaxReqsRateLimitSettings", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) TriggerKeyWatchers(ctx context.Context, key *MaxReqsRateLimitSettingsKey) {
+	watchers := make([]*MaxReqsRateLimitSettingsKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb(ctx)
+	}
+}
+
+// Note that we explicitly ignore the global revision number, because of the way
+// the notify framework sends updates (by hashing keys and doing lookups, instead
+// of sequentially through a history buffer), updates may be done out-of-order
+// or multiple updates compressed into one update, so the state of the cache at
+// any point in time may not by in sync with a particular database revision number.
+
+func (c *MaxReqsRateLimitSettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := MaxReqsRateLimitSettings{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse MaxReqsRateLimitSettings data", "val", string(val), "err", err)
+		return
+	}
+	c.Update(ctx, &obj, modRev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.GetKeyVal()] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := MaxReqsRateLimitSettings{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	MaxReqsRateLimitSettingsKeyStringParse(keystr, obj.GetKey())
+	c.Delete(ctx, &obj, modRev)
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[MaxReqsRateLimitSettingsKey]struct{})
+}
+
+func (c *MaxReqsRateLimitSettingsCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[MaxReqsRateLimitSettingsKey]*MaxReqsRateLimitSettingsCacheData)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	for key, val := range deleted {
+		for _, cb := range c.NotifyCbs {
+			if cb != nil {
+				cb(ctx, &key, val.Obj, val.ModRev)
+			}
+		}
+		for _, cb := range c.DeletedKeyCbs {
+			cb(ctx, &key)
+		}
+		if val.Obj != nil {
+			for _, cb := range c.DeletedCbs {
+				cb(ctx, val.Obj)
+			}
+		}
+		c.TriggerKeyWatchers(ctx, &key)
+	}
+}
+
+func (c *MaxReqsRateLimitSettingsCache) UsesOrg(org string) bool {
+	return false
+}
+
 func (m *MaxReqsRateLimitSettings) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
@@ -2679,6 +3387,102 @@ func (m *MaxReqsRateLimitSettings) ValidateEnums() error {
 	}
 	if err := m.Settings.ValidateEnums(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (m *RateLimitSettingsKey) Matches(o *RateLimitSettingsKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !opts.Filter || o.ApiName != "" {
+		if o.ApiName != m.ApiName {
+			return false
+		}
+	}
+	if !opts.Filter || o.ApiEndpointType != 0 {
+		if o.ApiEndpointType != m.ApiEndpointType {
+			return false
+		}
+	}
+	if !opts.Filter || o.RateLimitTarget != 0 {
+		if o.RateLimitTarget != m.RateLimitTarget {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *RateLimitSettingsKey) CopyInFields(src *RateLimitSettingsKey) int {
+	changed := 0
+	if m.ApiName != src.ApiName {
+		m.ApiName = src.ApiName
+		changed++
+	}
+	if m.ApiEndpointType != src.ApiEndpointType {
+		m.ApiEndpointType = src.ApiEndpointType
+		changed++
+	}
+	if m.RateLimitTarget != src.RateLimitTarget {
+		m.RateLimitTarget = src.RateLimitTarget
+		changed++
+	}
+	return changed
+}
+
+func (m *RateLimitSettingsKey) DeepCopyIn(src *RateLimitSettingsKey) {
+	m.ApiName = src.ApiName
+	m.ApiEndpointType = src.ApiEndpointType
+	m.RateLimitTarget = src.RateLimitTarget
+}
+
+func (m *RateLimitSettingsKey) GetKeyString() string {
+	key, err := json.Marshal(m)
+	if err != nil {
+		log.FatalLog("Failed to marshal RateLimitSettingsKey key string", "obj", m)
+	}
+	return string(key)
+}
+
+func RateLimitSettingsKeyStringParse(str string, key *RateLimitSettingsKey) {
+	err := json.Unmarshal([]byte(str), key)
+	if err != nil {
+		log.FatalLog("Failed to unmarshal RateLimitSettingsKey key string", "str", str)
+	}
+}
+
+func (m *RateLimitSettingsKey) NotFoundError() error {
+	return fmt.Errorf("RateLimitSettings key %s not found", m.GetKeyString())
+}
+
+func (m *RateLimitSettingsKey) ExistsError() error {
+	return fmt.Errorf("RateLimitSettings key %s already exists", m.GetKeyString())
+}
+
+var RateLimitSettingsKeyTagApiName = "apiname"
+var RateLimitSettingsKeyTagApiEndpointType = "apiendpointtype"
+var RateLimitSettingsKeyTagRateLimitTarget = "ratelimittarget"
+
+func (m *RateLimitSettingsKey) GetTags() map[string]string {
+	tags := make(map[string]string)
+	tags["apiname"] = m.ApiName
+	tags["apiendpointtype"] = ApiEndpointType_name[int32(m.ApiEndpointType)]
+	tags["ratelimittarget"] = RateLimitTarget_name[int32(m.RateLimitTarget)]
+	return tags
+}
+
+// Helper method to check that enums have valid values
+func (m *RateLimitSettingsKey) ValidateEnums() error {
+	if _, ok := ApiEndpointType_name[int32(m.ApiEndpointType)]; !ok {
+		return errors.New("invalid ApiEndpointType")
+	}
+	if _, ok := RateLimitTarget_name[int32(m.RateLimitTarget)]; !ok {
+		return errors.New("invalid RateLimitTarget")
 	}
 	return nil
 }
@@ -2943,372 +3747,6 @@ func (s *RateLimitSettingsStore) STMPut(stm concurrency.STM, obj *RateLimitSetti
 func (s *RateLimitSettingsStore) STMDel(stm concurrency.STM, key *RateLimitSettingsKey) {
 	keystr := objstore.DbKeyString("RateLimitSettings", key)
 	stm.Del(keystr)
-}
-
-type RateLimitSettingsKeyWatcher struct {
-	cb func(ctx context.Context)
-}
-
-type RateLimitSettingsCacheData struct {
-	Obj    *RateLimitSettings
-	ModRev int64
-}
-
-// RateLimitSettingsCache caches RateLimitSettings objects in memory in a hash table
-// and keeps them in sync with the database.
-type RateLimitSettingsCache struct {
-	Objs          map[RateLimitSettingsKey]*RateLimitSettingsCacheData
-	Mux           util.Mutex
-	List          map[RateLimitSettingsKey]struct{}
-	FlushAll      bool
-	NotifyCbs     []func(ctx context.Context, obj *RateLimitSettingsKey, old *RateLimitSettings, modRev int64)
-	UpdatedCbs    []func(ctx context.Context, old *RateLimitSettings, new *RateLimitSettings)
-	DeletedCbs    []func(ctx context.Context, old *RateLimitSettings)
-	KeyWatchers   map[RateLimitSettingsKey][]*RateLimitSettingsKeyWatcher
-	UpdatedKeyCbs []func(ctx context.Context, key *RateLimitSettingsKey)
-	DeletedKeyCbs []func(ctx context.Context, key *RateLimitSettingsKey)
-}
-
-func NewRateLimitSettingsCache() *RateLimitSettingsCache {
-	cache := RateLimitSettingsCache{}
-	InitRateLimitSettingsCache(&cache)
-	return &cache
-}
-
-func InitRateLimitSettingsCache(cache *RateLimitSettingsCache) {
-	cache.Objs = make(map[RateLimitSettingsKey]*RateLimitSettingsCacheData)
-	cache.KeyWatchers = make(map[RateLimitSettingsKey][]*RateLimitSettingsKeyWatcher)
-	cache.NotifyCbs = nil
-	cache.UpdatedCbs = nil
-	cache.DeletedCbs = nil
-	cache.UpdatedKeyCbs = nil
-	cache.DeletedKeyCbs = nil
-}
-
-func (c *RateLimitSettingsCache) GetTypeString() string {
-	return "RateLimitSettings"
-}
-
-func (c *RateLimitSettingsCache) Get(key *RateLimitSettingsKey, valbuf *RateLimitSettings) bool {
-	var modRev int64
-	return c.GetWithRev(key, valbuf, &modRev)
-}
-
-func (c *RateLimitSettingsCache) GetWithRev(key *RateLimitSettingsKey, valbuf *RateLimitSettings, modRev *int64) bool {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	inst, found := c.Objs[*key]
-	if found {
-		valbuf.DeepCopyIn(inst.Obj)
-		*modRev = inst.ModRev
-	}
-	return found
-}
-
-func (c *RateLimitSettingsCache) HasKey(key *RateLimitSettingsKey) bool {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	_, found := c.Objs[*key]
-	return found
-}
-
-func (c *RateLimitSettingsCache) GetAllKeys(ctx context.Context, cb func(key *RateLimitSettingsKey, modRev int64)) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for key, data := range c.Objs {
-		cb(&key, data.ModRev)
-	}
-}
-
-func (c *RateLimitSettingsCache) Update(ctx context.Context, in *RateLimitSettings, modRev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *RateLimitSettings) (*RateLimitSettings, bool) {
-		return in, true
-	})
-}
-
-func (c *RateLimitSettingsCache) UpdateModFunc(ctx context.Context, key *RateLimitSettingsKey, modRev int64, modFunc func(old *RateLimitSettings) (new *RateLimitSettings, changed bool)) {
-	c.Mux.Lock()
-	var old *RateLimitSettings
-	if oldData, found := c.Objs[*key]; found {
-		old = oldData.Obj
-	}
-	new, changed := modFunc(old)
-	if !changed {
-		c.Mux.Unlock()
-		return
-	}
-	for _, cb := range c.UpdatedCbs {
-		newCopy := &RateLimitSettings{}
-		newCopy.DeepCopyIn(new)
-		defer cb(ctx, old, newCopy)
-	}
-	for _, cb := range c.NotifyCbs {
-		if cb != nil {
-			defer cb(ctx, new.GetKey(), old, modRev)
-		}
-	}
-	for _, cb := range c.UpdatedKeyCbs {
-		defer cb(ctx, key)
-	}
-	store := &RateLimitSettings{}
-	store.DeepCopyIn(new)
-	c.Objs[new.GetKeyVal()] = &RateLimitSettingsCacheData{
-		Obj:    store,
-		ModRev: modRev,
-	}
-	log.SpanLog(ctx, log.DebugLevelApi, "cache update", "new", store)
-	c.Mux.Unlock()
-	c.TriggerKeyWatchers(ctx, new.GetKey())
-}
-
-func (c *RateLimitSettingsCache) Delete(ctx context.Context, in *RateLimitSettings, modRev int64) {
-	c.DeleteCondFunc(ctx, in, modRev, func(old *RateLimitSettings) bool {
-		return true
-	})
-}
-
-func (c *RateLimitSettingsCache) DeleteCondFunc(ctx context.Context, in *RateLimitSettings, modRev int64, condFunc func(old *RateLimitSettings) bool) {
-	c.Mux.Lock()
-	var old *RateLimitSettings
-	oldData, found := c.Objs[in.GetKeyVal()]
-	if found {
-		old = oldData.Obj
-		if !condFunc(old) {
-			c.Mux.Unlock()
-			return
-		}
-	}
-	delete(c.Objs, in.GetKeyVal())
-	log.SpanLog(ctx, log.DebugLevelApi, "cache delete")
-	c.Mux.Unlock()
-	for _, cb := range c.NotifyCbs {
-		if cb != nil {
-			cb(ctx, in.GetKey(), old, modRev)
-		}
-	}
-	if old != nil {
-		for _, cb := range c.DeletedCbs {
-			cb(ctx, old)
-		}
-	}
-	for _, cb := range c.DeletedKeyCbs {
-		cb(ctx, in.GetKey())
-	}
-	c.TriggerKeyWatchers(ctx, in.GetKey())
-}
-
-func (c *RateLimitSettingsCache) Prune(ctx context.Context, validKeys map[RateLimitSettingsKey]struct{}) {
-	notify := make(map[RateLimitSettingsKey]*RateLimitSettingsCacheData)
-	c.Mux.Lock()
-	for key, _ := range c.Objs {
-		if _, ok := validKeys[key]; !ok {
-			if len(c.NotifyCbs) > 0 || len(c.DeletedKeyCbs) > 0 || len(c.DeletedCbs) > 0 {
-				notify[key] = c.Objs[key]
-			}
-			delete(c.Objs, key)
-		}
-	}
-	c.Mux.Unlock()
-	for key, old := range notify {
-		for _, cb := range c.NotifyCbs {
-			if cb != nil {
-				cb(ctx, &key, old.Obj, old.ModRev)
-			}
-		}
-		for _, cb := range c.DeletedKeyCbs {
-			cb(ctx, &key)
-		}
-		if old.Obj != nil {
-			for _, cb := range c.DeletedCbs {
-				cb(ctx, old.Obj)
-			}
-		}
-		c.TriggerKeyWatchers(ctx, &key)
-	}
-}
-
-func (c *RateLimitSettingsCache) GetCount() int {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	return len(c.Objs)
-}
-
-func (c *RateLimitSettingsCache) Flush(ctx context.Context, notifyId int64) {
-}
-
-func (c *RateLimitSettingsCache) Show(filter *RateLimitSettings, cb func(ret *RateLimitSettings) error) error {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for _, data := range c.Objs {
-		if !data.Obj.Matches(filter, MatchFilter()) {
-			continue
-		}
-		err := cb(data.Obj)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func RateLimitSettingsGenericNotifyCb(fn func(key *RateLimitSettingsKey, old *RateLimitSettings)) func(objstore.ObjKey, objstore.Obj) {
-	return func(objkey objstore.ObjKey, obj objstore.Obj) {
-		fn(objkey.(*RateLimitSettingsKey), obj.(*RateLimitSettings))
-	}
-}
-
-func (c *RateLimitSettingsCache) SetNotifyCb(fn func(ctx context.Context, obj *RateLimitSettingsKey, old *RateLimitSettings, modRev int64)) {
-	c.NotifyCbs = []func(ctx context.Context, obj *RateLimitSettingsKey, old *RateLimitSettings, modRev int64){fn}
-}
-
-func (c *RateLimitSettingsCache) SetUpdatedCb(fn func(ctx context.Context, old *RateLimitSettings, new *RateLimitSettings)) {
-	c.UpdatedCbs = []func(ctx context.Context, old *RateLimitSettings, new *RateLimitSettings){fn}
-}
-
-func (c *RateLimitSettingsCache) SetDeletedCb(fn func(ctx context.Context, old *RateLimitSettings)) {
-	c.DeletedCbs = []func(ctx context.Context, old *RateLimitSettings){fn}
-}
-
-func (c *RateLimitSettingsCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *RateLimitSettingsKey)) {
-	c.UpdatedKeyCbs = []func(ctx context.Context, key *RateLimitSettingsKey){fn}
-}
-
-func (c *RateLimitSettingsCache) SetDeletedKeyCb(fn func(ctx context.Context, key *RateLimitSettingsKey)) {
-	c.DeletedKeyCbs = []func(ctx context.Context, key *RateLimitSettingsKey){fn}
-}
-
-func (c *RateLimitSettingsCache) AddUpdatedCb(fn func(ctx context.Context, old *RateLimitSettings, new *RateLimitSettings)) {
-	c.UpdatedCbs = append(c.UpdatedCbs, fn)
-}
-
-func (c *RateLimitSettingsCache) AddDeletedCb(fn func(ctx context.Context, old *RateLimitSettings)) {
-	c.DeletedCbs = append(c.DeletedCbs, fn)
-}
-
-func (c *RateLimitSettingsCache) AddNotifyCb(fn func(ctx context.Context, obj *RateLimitSettingsKey, old *RateLimitSettings, modRev int64)) {
-	c.NotifyCbs = append(c.NotifyCbs, fn)
-}
-
-func (c *RateLimitSettingsCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *RateLimitSettingsKey)) {
-	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
-}
-
-func (c *RateLimitSettingsCache) AddDeletedKeyCb(fn func(ctx context.Context, key *RateLimitSettingsKey)) {
-	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
-}
-
-func (c *RateLimitSettingsCache) SetFlushAll() {
-	c.FlushAll = true
-}
-
-func (c *RateLimitSettingsCache) WatchKey(key *RateLimitSettingsKey, cb func(ctx context.Context)) context.CancelFunc {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	list, ok := c.KeyWatchers[*key]
-	if !ok {
-		list = make([]*RateLimitSettingsKeyWatcher, 0)
-	}
-	watcher := RateLimitSettingsKeyWatcher{cb: cb}
-	c.KeyWatchers[*key] = append(list, &watcher)
-	log.DebugLog(log.DebugLevelApi, "Watching RateLimitSettings", "key", key)
-	return func() {
-		c.Mux.Lock()
-		defer c.Mux.Unlock()
-		list, ok := c.KeyWatchers[*key]
-		if !ok {
-			return
-		}
-		for ii, _ := range list {
-			if list[ii] != &watcher {
-				continue
-			}
-			if len(list) == 1 {
-				delete(c.KeyWatchers, *key)
-				return
-			}
-			list[ii] = list[len(list)-1]
-			list[len(list)-1] = nil
-			c.KeyWatchers[*key] = list[:len(list)-1]
-			return
-		}
-	}
-}
-
-func (c *RateLimitSettingsCache) TriggerKeyWatchers(ctx context.Context, key *RateLimitSettingsKey) {
-	watchers := make([]*RateLimitSettingsKeyWatcher, 0)
-	c.Mux.Lock()
-	if list, ok := c.KeyWatchers[*key]; ok {
-		watchers = append(watchers, list...)
-	}
-	c.Mux.Unlock()
-	for ii, _ := range watchers {
-		watchers[ii].cb(ctx)
-	}
-}
-
-// Note that we explicitly ignore the global revision number, because of the way
-// the notify framework sends updates (by hashing keys and doing lookups, instead
-// of sequentially through a history buffer), updates may be done out-of-order
-// or multiple updates compressed into one update, so the state of the cache at
-// any point in time may not by in sync with a particular database revision number.
-
-func (c *RateLimitSettingsCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
-	obj := RateLimitSettings{}
-	err := json.Unmarshal(val, &obj)
-	if err != nil {
-		log.WarnLog("Failed to parse RateLimitSettings data", "val", string(val), "err", err)
-		return
-	}
-	c.Update(ctx, &obj, modRev)
-	c.Mux.Lock()
-	if c.List != nil {
-		c.List[obj.GetKeyVal()] = struct{}{}
-	}
-	c.Mux.Unlock()
-}
-
-func (c *RateLimitSettingsCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
-	obj := RateLimitSettings{}
-	keystr := objstore.DbKeyPrefixRemove(string(key))
-	RateLimitSettingsKeyStringParse(keystr, obj.GetKey())
-	c.Delete(ctx, &obj, modRev)
-}
-
-func (c *RateLimitSettingsCache) SyncListStart(ctx context.Context) {
-	c.List = make(map[RateLimitSettingsKey]struct{})
-}
-
-func (c *RateLimitSettingsCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[RateLimitSettingsKey]*RateLimitSettingsCacheData)
-	c.Mux.Lock()
-	for key, val := range c.Objs {
-		if _, found := c.List[key]; !found {
-			deleted[key] = val
-			delete(c.Objs, key)
-		}
-	}
-	c.List = nil
-	c.Mux.Unlock()
-	for key, val := range deleted {
-		for _, cb := range c.NotifyCbs {
-			if cb != nil {
-				cb(ctx, &key, val.Obj, val.ModRev)
-			}
-		}
-		for _, cb := range c.DeletedKeyCbs {
-			cb(ctx, &key)
-		}
-		if val.Obj != nil {
-			for _, cb := range c.DeletedCbs {
-				cb(ctx, val.Obj)
-			}
-		}
-		c.TriggerKeyWatchers(ctx, &key)
-	}
-}
-
-func (c *RateLimitSettingsCache) UsesOrg(org string) bool {
-	return false
 }
 
 func (m *RateLimitSettings) GetObjKey() objstore.ObjKey {
@@ -3720,14 +4158,6 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
-func (m *RateLimitSettings) IsValidArgsForCreateRateLimitSettings() error {
-	return nil
-}
-
-func (m *RateLimitSettings) IsValidArgsForDeleteRateLimitSettings() error {
-	return nil
-}
-
 func (m *FlowRateLimitSettings) IsValidArgsForCreateFlowRateLimitSettings() error {
 	return nil
 }
@@ -3750,25 +4180,6 @@ func (m *MaxReqsRateLimitSettings) IsValidArgsForUpdateMaxReqsRateLimitSettings(
 
 func (m *MaxReqsRateLimitSettings) IsValidArgsForDeleteMaxReqsRateLimitSettings() error {
 	return nil
-}
-
-func (m *RateLimitSettingsKey) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ApiName)
-	if l > 0 {
-		n += 1 + l + sovRatelimit(uint64(l))
-	}
-	if m.ApiEndpointType != 0 {
-		n += 1 + sovRatelimit(uint64(m.ApiEndpointType))
-	}
-	if m.RateLimitTarget != 0 {
-		n += 1 + sovRatelimit(uint64(m.RateLimitTarget))
-	}
-	return n
 }
 
 func (m *FlowSettings) Size() (n int) {
@@ -3879,6 +4290,25 @@ func (m *MaxReqsRateLimitSettings) Size() (n int) {
 	return n
 }
 
+func (m *RateLimitSettingsKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ApiName)
+	if l > 0 {
+		n += 1 + l + sovRatelimit(uint64(l))
+	}
+	if m.ApiEndpointType != 0 {
+		n += 1 + sovRatelimit(uint64(m.ApiEndpointType))
+	}
+	if m.RateLimitTarget != 0 {
+		n += 1 + sovRatelimit(uint64(m.RateLimitTarget))
+	}
+	return n
+}
+
 func (m *RateLimitSettings) Size() (n int) {
 	if m == nil {
 		return 0
@@ -3966,129 +4396,6 @@ func sovRatelimit(x uint64) (n int) {
 }
 func sozRatelimit(x uint64) (n int) {
 	return sovRatelimit(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *RateLimitSettingsKey) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRatelimit
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: RateLimitSettingsKey: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RateLimitSettingsKey: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthRatelimit
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthRatelimit
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ApiName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiEndpointType", wireType)
-			}
-			m.ApiEndpointType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiEndpointType |= ApiEndpointType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RateLimitTarget", wireType)
-			}
-			m.RateLimitTarget = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRatelimit
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RateLimitTarget |= RateLimitTarget(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRatelimit(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthRatelimit
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthRatelimit
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *FlowSettings) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -4822,6 +5129,129 @@ func (m *MaxReqsRateLimitSettings) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRatelimit(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RateLimitSettingsKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRatelimit
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RateLimitSettingsKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RateLimitSettingsKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthRatelimit
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ApiName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiEndpointType", wireType)
+			}
+			m.ApiEndpointType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiEndpointType |= ApiEndpointType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RateLimitTarget", wireType)
+			}
+			m.RateLimitTarget = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRatelimit
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RateLimitTarget |= RateLimitTarget(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRatelimit(dAtA[iNdEx:])

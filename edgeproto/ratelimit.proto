@@ -22,18 +22,6 @@ enum RateLimitTarget {
   PER_USER = 3;
 }
 
-message RateLimitSettingsKey {
-  // Name of API (eg. CreateApp or RegisterClient) (Use "Global" if not a specific API)
-  string api_name = 1 [(protogen.keytag) = "apiname"];
-  // API Endpoint type
-  ApiEndpointType api_endpoint_type = 2 [(protogen.keytag) = "apiendpointtype"];
-  // Target to rate limit
-  RateLimitTarget rate_limit_target = 3 [(protogen.keytag) = "ratelimittarget"];
-  option (protogen.generate_matches) = true;
-  option (protogen.obj_key) = true;
-  option (gogoproto.gostring) = true;
-}
-
 enum FlowRateLimitAlgorithm {
   UNKNOWN_FLOW_ALGORITHM = 0;
   TOKEN_BUCKET_ALGORITHM = 1;
@@ -74,6 +62,10 @@ message FlowRateLimitSettings {
   FlowSettings settings = 3;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.uses_org) = "none";
   option (protogen.alias) = "flowsettingsname=Key.FlowSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,flowalgorithm=Settings.FlowAlgorithm,reqspersecond=Settings.ReqsPerSecond,burstsize=Settings.BurstSize";
 }
 
@@ -103,43 +95,40 @@ message MaxReqsRateLimitSettings {
   MaxReqsRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
   // MaxReqsSettings
   MaxReqsSettings settings = 3;
+  option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.uses_org) = "none";
   option (protogen.alias) = "maxreqssettingsname=Key.MaxReqsSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,maxreqsalgorithm=Settings.MaxReqsAlgorithm,maxrequests=Settings.MaxRequests,interval=Settings.Interval";
 }
 
+message RateLimitSettingsKey {
+  // Name of API (eg. CreateApp or RegisterClient) (Use "Global" if not a specific API)
+  string api_name = 1 [(protogen.keytag) = "apiname"];
+  // API Endpoint type
+  ApiEndpointType api_endpoint_type = 2 [(protogen.keytag) = "apiendpointtype"];
+  // Target to rate limit
+  RateLimitTarget rate_limit_target = 3 [(protogen.keytag) = "ratelimittarget"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
 message RateLimitSettings {
-  // required: true
-  // Unique identifier key
+  // Key that identifies api and rate limit target for settings
   RateLimitSettingsKey key = 1 [(gogoproto.nullable) = false];
   // Map of FlowSettings (key: FlowSettingsName, value: FlowSettings)
   map<string, FlowSettings> flow_settings = 2;
   // Map of MaxReqsSettings (key: MaxReqsSettingsName, value: MaxReqsSettings)
   map<string, MaxReqsSettings> max_reqs_settings = 3;
-  option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
-  option (protogen.generate_cache) = true;
-  option (protogen.notify_cache) = true;
-  option (protogen.uses_org) = "none";
-  option (protogen.alias) = "apiendpointtype=Key.ApiEndpointType,ratelimittarget=Key.RateLimitTarget,apiname=Key.ApiName";
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_matches) = true;
 }
 
 service RateLimitSettingsApi {
-  // Create RateLimitSettings for an API endpoint and target
-  rpc CreateRateLimitSettings(RateLimitSettings) returns (Result) {
-    option (google.api.http) = {
-      post: "/create/ratelimitsettings"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
-  }
-  // Delete RateLimit settings for an API endpoint and target (ie. no rate limiting)
-  rpc DeleteRateLimitSettings(RateLimitSettings) returns (Result) {
-    option (google.api.http) = {
-      post: "/delete/ratelimitsettings"
-      body: "*"
-    };
-    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
-  }
   // Show RateLimit settings for an API endpoint and target
   rpc ShowRateLimitSettings(RateLimitSettings) returns (stream RateLimitSettings) {
     option (google.api.http) = {
@@ -172,6 +161,14 @@ service RateLimitSettingsApi {
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
+  // Show Flow RateLimit settings for an API endpoint and target
+  rpc ShowFlowRateLimitSettings(FlowRateLimitSettings) returns (stream FlowRateLimitSettings) {
+    option (google.api.http) = {
+      post: "/show/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+  }
   // Create MaxReqs RateLimit settings for an API endpoint and target
   rpc CreateMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (Result) {
     option (google.api.http) = {
@@ -195,6 +192,14 @@ service RateLimitSettingsApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Show MaxReqs RateLimit settings for an API endpoint and target
+  rpc ShowMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (stream MaxReqsRateLimitSettings) {
+    option (google.api.http) = {
+      post: "/show/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
   }
 }
 

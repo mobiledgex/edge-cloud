@@ -27,120 +27,6 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 var RateLimitSettingsApiCmd edgeproto.RateLimitSettingsApiClient
 
-var CreateRateLimitSettingsCmd = &cli.Command{
-	Use:          "CreateRateLimitSettings",
-	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
-	OptionalArgs: strings.Join(RateLimitSettingsOptionalArgs, " "),
-	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
-	SpecialArgs:  &RateLimitSettingsSpecialArgs,
-	Comments:     RateLimitSettingsComments,
-	ReqData:      &edgeproto.RateLimitSettings{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runCreateRateLimitSettings,
-}
-
-func runCreateRateLimitSettings(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.RateLimitSettings)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return CreateRateLimitSettings(c, obj)
-}
-
-func CreateRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
-	if RateLimitSettingsApiCmd == nil {
-		return fmt.Errorf("RateLimitSettingsApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := RateLimitSettingsApiCmd.CreateRateLimitSettings(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("CreateRateLimitSettings failed: %s", errstr)
-	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func CreateRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("CreateRateLimitSettings %v\n", data[ii])
-		myerr := CreateRateLimitSettings(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
-var DeleteRateLimitSettingsCmd = &cli.Command{
-	Use:          "DeleteRateLimitSettings",
-	RequiredArgs: strings.Join(RateLimitSettingsRequiredArgs, " "),
-	OptionalArgs: strings.Join(RateLimitSettingsOptionalArgs, " "),
-	AliasArgs:    strings.Join(RateLimitSettingsAliasArgs, " "),
-	SpecialArgs:  &RateLimitSettingsSpecialArgs,
-	Comments:     RateLimitSettingsComments,
-	ReqData:      &edgeproto.RateLimitSettings{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runDeleteRateLimitSettings,
-}
-
-func runDeleteRateLimitSettings(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.RateLimitSettings)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return DeleteRateLimitSettings(c, obj)
-}
-
-func DeleteRateLimitSettings(c *cli.Command, in *edgeproto.RateLimitSettings) error {
-	if RateLimitSettingsApiCmd == nil {
-		return fmt.Errorf("RateLimitSettingsApi client not initialized")
-	}
-	ctx := context.Background()
-	obj, err := RateLimitSettingsApiCmd.DeleteRateLimitSettings(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("DeleteRateLimitSettings failed: %s", errstr)
-	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func DeleteRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("DeleteRateLimitSettings %v\n", data[ii])
-		myerr := DeleteRateLimitSettings(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var ShowRateLimitSettingsCmd = &cli.Command{
 	Use:          "ShowRateLimitSettings",
 	OptionalArgs: strings.Join(append(RateLimitSettingsRequiredArgs, RateLimitSettingsOptionalArgs...), " "),
@@ -389,6 +275,82 @@ func DeleteFlowRateLimitSettingss(c *cli.Command, data []edgeproto.FlowRateLimit
 	}
 }
 
+var ShowFlowRateLimitSettingsCmd = &cli.Command{
+	Use:          "ShowFlowRateLimitSettings",
+	OptionalArgs: strings.Join(append(FlowRateLimitSettingsRequiredArgs, FlowRateLimitSettingsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(FlowRateLimitSettingsAliasArgs, " "),
+	SpecialArgs:  &FlowRateLimitSettingsSpecialArgs,
+	Comments:     FlowRateLimitSettingsComments,
+	ReqData:      &edgeproto.FlowRateLimitSettings{},
+	ReplyData:    &edgeproto.FlowRateLimitSettings{},
+	Run:          runShowFlowRateLimitSettings,
+}
+
+func runShowFlowRateLimitSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.FlowRateLimitSettings)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowFlowRateLimitSettings(c, obj)
+}
+
+func ShowFlowRateLimitSettings(c *cli.Command, in *edgeproto.FlowRateLimitSettings) error {
+	if RateLimitSettingsApiCmd == nil {
+		return fmt.Errorf("RateLimitSettingsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := RateLimitSettingsApiCmd.ShowFlowRateLimitSettings(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowFlowRateLimitSettings failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.FlowRateLimitSettings, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowFlowRateLimitSettings recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowFlowRateLimitSettingss(c *cli.Command, data []edgeproto.FlowRateLimitSettings, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowFlowRateLimitSettings %v\n", data[ii])
+		myerr := ShowFlowRateLimitSettings(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var CreateMaxReqsRateLimitSettingsCmd = &cli.Command{
 	Use:          "CreateMaxReqsRateLimitSettings",
 	RequiredArgs: strings.Join(MaxReqsRateLimitSettingsRequiredArgs, " "),
@@ -561,31 +523,94 @@ func DeleteMaxReqsRateLimitSettingss(c *cli.Command, data []edgeproto.MaxReqsRat
 	}
 }
 
+var ShowMaxReqsRateLimitSettingsCmd = &cli.Command{
+	Use:          "ShowMaxReqsRateLimitSettings",
+	OptionalArgs: strings.Join(append(MaxReqsRateLimitSettingsRequiredArgs, MaxReqsRateLimitSettingsOptionalArgs...), " "),
+	AliasArgs:    strings.Join(MaxReqsRateLimitSettingsAliasArgs, " "),
+	SpecialArgs:  &MaxReqsRateLimitSettingsSpecialArgs,
+	Comments:     MaxReqsRateLimitSettingsComments,
+	ReqData:      &edgeproto.MaxReqsRateLimitSettings{},
+	ReplyData:    &edgeproto.MaxReqsRateLimitSettings{},
+	Run:          runShowMaxReqsRateLimitSettings,
+}
+
+func runShowMaxReqsRateLimitSettings(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.MaxReqsRateLimitSettings)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return ShowMaxReqsRateLimitSettings(c, obj)
+}
+
+func ShowMaxReqsRateLimitSettings(c *cli.Command, in *edgeproto.MaxReqsRateLimitSettings) error {
+	if RateLimitSettingsApiCmd == nil {
+		return fmt.Errorf("RateLimitSettingsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := RateLimitSettingsApiCmd.ShowMaxReqsRateLimitSettings(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowMaxReqsRateLimitSettings failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.MaxReqsRateLimitSettings, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowMaxReqsRateLimitSettings recv failed: %s", errstr)
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func ShowMaxReqsRateLimitSettingss(c *cli.Command, data []edgeproto.MaxReqsRateLimitSettings, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowMaxReqsRateLimitSettings %v\n", data[ii])
+		myerr := ShowMaxReqsRateLimitSettings(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var RateLimitSettingsApiCmds = []*cobra.Command{
-	CreateRateLimitSettingsCmd.GenCmd(),
-	DeleteRateLimitSettingsCmd.GenCmd(),
 	ShowRateLimitSettingsCmd.GenCmd(),
 	CreateFlowRateLimitSettingsCmd.GenCmd(),
 	UpdateFlowRateLimitSettingsCmd.GenCmd(),
 	DeleteFlowRateLimitSettingsCmd.GenCmd(),
+	ShowFlowRateLimitSettingsCmd.GenCmd(),
 	CreateMaxReqsRateLimitSettingsCmd.GenCmd(),
 	UpdateMaxReqsRateLimitSettingsCmd.GenCmd(),
 	DeleteMaxReqsRateLimitSettingsCmd.GenCmd(),
+	ShowMaxReqsRateLimitSettingsCmd.GenCmd(),
 }
 
-var RateLimitSettingsKeyRequiredArgs = []string{}
-var RateLimitSettingsKeyOptionalArgs = []string{
-	"apiname",
-	"apiendpointtype",
-	"ratelimittarget",
-}
-var RateLimitSettingsKeyAliasArgs = []string{}
-var RateLimitSettingsKeyComments = map[string]string{
-	"apiname":         "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
-	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Dme",
-	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
-}
-var RateLimitSettingsKeySpecialArgs = map[string]string{}
 var FlowSettingsRequiredArgs = []string{}
 var FlowSettingsOptionalArgs = []string{
 	"flowalgorithm",
@@ -708,10 +733,23 @@ var MaxReqsRateLimitSettingsComments = map[string]string{
 var MaxReqsRateLimitSettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
 }
-var RateLimitSettingsRequiredArgs = []string{
+var RateLimitSettingsKeyRequiredArgs = []string{}
+var RateLimitSettingsKeyOptionalArgs = []string{
 	"apiname",
 	"apiendpointtype",
 	"ratelimittarget",
+}
+var RateLimitSettingsKeyAliasArgs = []string{}
+var RateLimitSettingsKeyComments = map[string]string{
+	"apiname":         "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
+	"apiendpointtype": "API Endpoint type, one of UnknownApiEndpointType, Dme",
+	"ratelimittarget": "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+}
+var RateLimitSettingsKeySpecialArgs = map[string]string{}
+var RateLimitSettingsRequiredArgs = []string{
+	"key.apiname",
+	"key.apiendpointtype",
+	"key.ratelimittarget",
 }
 var RateLimitSettingsOptionalArgs = []string{
 	"flowsettings:#.key",
@@ -723,15 +761,11 @@ var RateLimitSettingsOptionalArgs = []string{
 	"maxreqssettings:#.value.maxrequests",
 	"maxreqssettings:#.value.interval",
 }
-var RateLimitSettingsAliasArgs = []string{
-	"apiname=key.apiname",
-	"apiendpointtype=key.apiendpointtype",
-	"ratelimittarget=key.ratelimittarget",
-}
+var RateLimitSettingsAliasArgs = []string{}
 var RateLimitSettingsComments = map[string]string{
-	"apiname":                                  "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
-	"apiendpointtype":                          "API Endpoint type, one of UnknownApiEndpointType, Dme",
-	"ratelimittarget":                          "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"key.apiname":                              "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
+	"key.apiendpointtype":                      "API Endpoint type, one of UnknownApiEndpointType, Dme",
+	"key.ratelimittarget":                      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"flowsettings:#.value.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"flowsettings:#.value.reqspersecond":       "requests per second for flow rate limiting",
 	"flowsettings:#.value.burstsize":           "burst size for flow rate limiting",

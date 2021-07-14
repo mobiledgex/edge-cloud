@@ -6,6 +6,7 @@ import (
 
 var GlobalApiName = "Global"
 
+// TODO: VALIDATE ALL BASED ON FIELDS
 func (f *FlowSettings) Validate() error {
 	// Validate fields that must be set if FlowAlgorithm is set
 	if f.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM || f.FlowAlgorithm == FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
@@ -173,4 +174,26 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 	rlMap[verifyLocPerIp.Key] = verifyLocPerIp
 
 	return rlMap
+}
+
+func (r *RateLimitSettings) UpdateFlowSettings(f *FlowRateLimitSettings) {
+	if r.FlowSettings == nil {
+		r.FlowSettings = make(map[string]*FlowSettings)
+	}
+	r.FlowSettings[f.Key.FlowSettingsName] = f.Settings
+}
+
+func (r *RateLimitSettings) RemoveFlowSettings(name string) {
+	delete(r.FlowSettings, name)
+}
+
+func (r *RateLimitSettings) UpdateMaxReqsSettings(m *MaxReqsRateLimitSettings) {
+	if r.MaxReqsSettings == nil {
+		r.MaxReqsSettings = make(map[string]*MaxReqsSettings)
+	}
+	r.MaxReqsSettings[m.Key.MaxReqsSettingsName] = m.Settings
+}
+
+func (r *RateLimitSettings) RemoveMaxReqsSettings(name string) {
+	delete(r.MaxReqsSettings, name)
 }

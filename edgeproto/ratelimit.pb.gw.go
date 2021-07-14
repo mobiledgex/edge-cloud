@@ -31,74 +31,6 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
-func request_RateLimitSettingsApi_CreateRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, client RateLimitSettingsApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RateLimitSettings
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.CreateRateLimitSettings(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_RateLimitSettingsApi_CreateRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, server RateLimitSettingsApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RateLimitSettings
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.CreateRateLimitSettings(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-func request_RateLimitSettingsApi_DeleteRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, client RateLimitSettingsApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RateLimitSettings
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.DeleteRateLimitSettings(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_RateLimitSettingsApi_DeleteRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, server RateLimitSettingsApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RateLimitSettings
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.DeleteRateLimitSettings(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
 func request_RateLimitSettingsApi_ShowRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, client RateLimitSettingsApiClient, req *http.Request, pathParams map[string]string) (RateLimitSettingsApi_ShowRateLimitSettingsClient, runtime.ServerMetadata, error) {
 	var protoReq RateLimitSettings
 	var metadata runtime.ServerMetadata
@@ -226,6 +158,31 @@ func local_request_RateLimitSettingsApi_DeleteFlowRateLimitSettings_0(ctx contex
 
 }
 
+func request_RateLimitSettingsApi_ShowFlowRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, client RateLimitSettingsApiClient, req *http.Request, pathParams map[string]string) (RateLimitSettingsApi_ShowFlowRateLimitSettingsClient, runtime.ServerMetadata, error) {
+	var protoReq FlowRateLimitSettings
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.ShowFlowRateLimitSettings(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
 func request_RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, client RateLimitSettingsApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq MaxReqsRateLimitSettings
 	var metadata runtime.ServerMetadata
@@ -328,50 +285,35 @@ func local_request_RateLimitSettingsApi_DeleteMaxReqsRateLimitSettings_0(ctx con
 
 }
 
+func request_RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_0(ctx context.Context, marshaler runtime.Marshaler, client RateLimitSettingsApiClient, req *http.Request, pathParams map[string]string) (RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsClient, runtime.ServerMetadata, error) {
+	var protoReq MaxReqsRateLimitSettings
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.ShowMaxReqsRateLimitSettings(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
 // RegisterRateLimitSettingsApiHandlerServer registers the http handlers for service RateLimitSettingsApi to "mux".
 // UnaryRPC     :call RateLimitSettingsApiServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 func RegisterRateLimitSettingsApiHandlerServer(ctx context.Context, mux *runtime.ServeMux, server RateLimitSettingsApiServer) error {
-
-	mux.Handle("POST", pattern_RateLimitSettingsApi_CreateRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_RateLimitSettingsApi_CreateRateLimitSettings_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_RateLimitSettingsApi_CreateRateLimitSettings_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_RateLimitSettingsApi_DeleteRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_RateLimitSettingsApi_DeleteRateLimitSettings_0(rctx, inboundMarshaler, server, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_RateLimitSettingsApi_DeleteRateLimitSettings_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
 
 	mux.Handle("POST", pattern_RateLimitSettingsApi_ShowRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
@@ -440,6 +382,13 @@ func RegisterRateLimitSettingsApiHandlerServer(ctx context.Context, mux *runtime
 
 	})
 
+	mux.Handle("POST", pattern_RateLimitSettingsApi_ShowFlowRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
 	mux.Handle("POST", pattern_RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -500,6 +449,13 @@ func RegisterRateLimitSettingsApiHandlerServer(ctx context.Context, mux *runtime
 
 	})
 
+	mux.Handle("POST", pattern_RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
+	})
+
 	return nil
 }
 
@@ -540,46 +496,6 @@ func RegisterRateLimitSettingsApiHandler(ctx context.Context, mux *runtime.Serve
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "RateLimitSettingsApiClient" to call the correct interceptors.
 func RegisterRateLimitSettingsApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client RateLimitSettingsApiClient) error {
-
-	mux.Handle("POST", pattern_RateLimitSettingsApi_CreateRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_RateLimitSettingsApi_CreateRateLimitSettings_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_RateLimitSettingsApi_CreateRateLimitSettings_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("POST", pattern_RateLimitSettingsApi_DeleteRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_RateLimitSettingsApi_DeleteRateLimitSettings_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_RateLimitSettingsApi_DeleteRateLimitSettings_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
 
 	mux.Handle("POST", pattern_RateLimitSettingsApi_ShowRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -661,6 +577,26 @@ func RegisterRateLimitSettingsApiHandlerClient(ctx context.Context, mux *runtime
 
 	})
 
+	mux.Handle("POST", pattern_RateLimitSettingsApi_ShowFlowRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_RateLimitSettingsApi_ShowFlowRateLimitSettings_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_RateLimitSettingsApi_ShowFlowRateLimitSettings_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -721,14 +657,30 @@ func RegisterRateLimitSettingsApiHandlerClient(ctx context.Context, mux *runtime
 
 	})
 
+	mux.Handle("POST", pattern_RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
 var (
-	pattern_RateLimitSettingsApi_CreateRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "ratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
-
-	pattern_RateLimitSettingsApi_DeleteRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "ratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
-
 	pattern_RateLimitSettingsApi_ShowRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "ratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_RateLimitSettingsApi_CreateFlowRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "flowratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -737,18 +689,18 @@ var (
 
 	pattern_RateLimitSettingsApi_DeleteFlowRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "flowratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_RateLimitSettingsApi_ShowFlowRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "flowratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "maxreqsratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_RateLimitSettingsApi_UpdateMaxReqsRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "maxreqsratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_RateLimitSettingsApi_DeleteMaxReqsRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "maxreqsratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "maxreqsratelimitsettings"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
-	forward_RateLimitSettingsApi_CreateRateLimitSettings_0 = runtime.ForwardResponseMessage
-
-	forward_RateLimitSettingsApi_DeleteRateLimitSettings_0 = runtime.ForwardResponseMessage
-
 	forward_RateLimitSettingsApi_ShowRateLimitSettings_0 = runtime.ForwardResponseStream
 
 	forward_RateLimitSettingsApi_CreateFlowRateLimitSettings_0 = runtime.ForwardResponseMessage
@@ -757,9 +709,13 @@ var (
 
 	forward_RateLimitSettingsApi_DeleteFlowRateLimitSettings_0 = runtime.ForwardResponseMessage
 
+	forward_RateLimitSettingsApi_ShowFlowRateLimitSettings_0 = runtime.ForwardResponseStream
+
 	forward_RateLimitSettingsApi_CreateMaxReqsRateLimitSettings_0 = runtime.ForwardResponseMessage
 
 	forward_RateLimitSettingsApi_UpdateMaxReqsRateLimitSettings_0 = runtime.ForwardResponseMessage
 
 	forward_RateLimitSettingsApi_DeleteMaxReqsRateLimitSettings_0 = runtime.ForwardResponseMessage
+
+	forward_RateLimitSettingsApi_ShowMaxReqsRateLimitSettings_0 = runtime.ForwardResponseStream
 )

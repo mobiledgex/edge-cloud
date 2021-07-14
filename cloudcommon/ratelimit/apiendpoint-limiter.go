@@ -98,60 +98,192 @@ func (a *apiEndpointLimiter) Type() string {
 	return "apiEndpointLimiter"
 }
 
-// Update the RateLimitSettings for the corresponding RateLimitTarget (eg. update PerIp RateLimitSettings)
-func (a *apiEndpointLimiter) updateApiEndpointLimiterSettings(rateLimitSettings *edgeproto.RateLimitSettings) {
-	if rateLimitSettings == nil {
+// Update the FlowRateLimitSettings for the corresponding RateLimitTarget (eg. update PerIp FlowRateLimitSettings)
+func (a *apiEndpointLimiter) updateFlowRateLimitSettings(flowRateLimitSettings *edgeproto.FlowRateLimitSettings) {
+	if flowRateLimitSettings == nil {
 		return
 	}
-	// Update correct RateLimitSettings and initialize new limiters for specified RateLimitTarget
-	key := rateLimitSettings.Key
-	switch key.RateLimitTarget {
+	// Update correct flow settings RateLimitSettings and initialize new limiters for specified RateLimitTarget
+	switch flowRateLimitSettings.Key.RateLimitKey.RateLimitTarget {
 	case edgeproto.RateLimitTarget_ALL_REQUESTS:
-		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = rateLimitSettings
+		if a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings == nil {
+			a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = &edgeproto.RateLimitSettings{
+				Key: flowRateLimitSettings.Key.RateLimitKey,
+			}
+		}
+		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.UpdateFlowSettings(flowRateLimitSettings)
 		limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
 		a.limitAllRequests = NewCompositeLimiter(limiters...)
 	case edgeproto.RateLimitTarget_PER_IP:
-		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = rateLimitSettings
+		if a.apiEndpointRateLimitSettings.PerIpRateLimitSettings == nil {
+			a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = &edgeproto.RateLimitSettings{
+				Key: flowRateLimitSettings.Key.RateLimitKey,
+			}
+		}
+		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.UpdateFlowSettings(flowRateLimitSettings)
 		a.limitsPerIp = make(map[string]*CompositeLimiter)
 	case edgeproto.RateLimitTarget_PER_USER:
-		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = rateLimitSettings
+		if a.apiEndpointRateLimitSettings.PerUserRateLimitSettings == nil {
+			a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = &edgeproto.RateLimitSettings{
+				Key: flowRateLimitSettings.Key.RateLimitKey,
+			}
+		}
+		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.UpdateFlowSettings(flowRateLimitSettings)
 		a.limitsPerUser = make(map[string]*CompositeLimiter)
 	}
 }
 
-// Remove the RateLimitSettings for the corresponding RateLimitTarget (eg. remove PerIp RateLimitSettings)
-func (a *apiEndpointLimiter) removeApiEndpointLimiterSettings(target edgeproto.RateLimitTarget) {
-	// Remove RateLimitSettings and limiters for specified RateLimitTarget
+// Remove the FlowRateLimitSettings for the corresponding RateLimitTarget (eg. remove PerIp RateLimitSettings)
+func (a *apiEndpointLimiter) removeFlowRateLimitSettings(target edgeproto.RateLimitTarget, name string) {
+	// Remove MaxReqsRateLimitSettings and limiters for specified RateLimitTarget
 	switch target {
 	case edgeproto.RateLimitTarget_ALL_REQUESTS:
-		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = nil
-		a.limitAllRequests = nil
+		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.RemoveFlowSettings(name)
+		limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
+		a.limitAllRequests = NewCompositeLimiter(limiters...)
 	case edgeproto.RateLimitTarget_PER_IP:
-		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = nil
+		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.RemoveFlowSettings(name)
 		a.limitsPerIp = make(map[string]*CompositeLimiter)
 	case edgeproto.RateLimitTarget_PER_USER:
-		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = nil
+		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.RemoveFlowSettings(name)
 		a.limitsPerUser = make(map[string]*CompositeLimiter)
 	}
 }
 
-// Prune the RateLimitSettings that are not in the keys map
-func (a *apiEndpointLimiter) pruneApiEndpointLimiterSettings(keys map[edgeproto.RateLimitSettingsKey]struct{}) {
+// Update the MaxReqsRateLimitSettings for the corresponding RateLimitTarget (eg. update PerIp MaxReqsRateLimitSettings)
+func (a *apiEndpointLimiter) updateMaxReqsRateLimitSettings(maxReqsRateLimitSettings *edgeproto.MaxReqsRateLimitSettings) {
+	if maxReqsRateLimitSettings == nil {
+		return
+	}
+	// Update max reqs settings of correct RateLimitSettings and initialize new limiters for specified RateLimitTarget
+	switch maxReqsRateLimitSettings.Key.RateLimitKey.RateLimitTarget {
+	case edgeproto.RateLimitTarget_ALL_REQUESTS:
+		if a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings == nil {
+			a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = &edgeproto.RateLimitSettings{
+				Key: maxReqsRateLimitSettings.Key.RateLimitKey,
+			}
+		}
+		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.UpdateMaxReqsSettings(maxReqsRateLimitSettings)
+		limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
+		a.limitAllRequests = NewCompositeLimiter(limiters...)
+	case edgeproto.RateLimitTarget_PER_IP:
+		if a.apiEndpointRateLimitSettings.PerIpRateLimitSettings == nil {
+			a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = &edgeproto.RateLimitSettings{
+				Key: maxReqsRateLimitSettings.Key.RateLimitKey,
+			}
+		}
+		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.UpdateMaxReqsSettings(maxReqsRateLimitSettings)
+		a.limitsPerIp = make(map[string]*CompositeLimiter)
+	case edgeproto.RateLimitTarget_PER_USER:
+		if a.apiEndpointRateLimitSettings.PerUserRateLimitSettings == nil {
+			a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = &edgeproto.RateLimitSettings{
+				Key: maxReqsRateLimitSettings.Key.RateLimitKey,
+			}
+		}
+		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.UpdateMaxReqsSettings(maxReqsRateLimitSettings)
+		a.limitsPerUser = make(map[string]*CompositeLimiter)
+	}
+}
+
+// Remove the MaxReqsRateLimitSettings for the corresponding RateLimitTarget (eg. remove PerIp RateLimitSettings)
+func (a *apiEndpointLimiter) removeMaxReqsRateLimitSettings(target edgeproto.RateLimitTarget, name string) {
+	// Remove MaxReqsRateLimitSettings and limiters for specified RateLimitTarget
+	switch target {
+	case edgeproto.RateLimitTarget_ALL_REQUESTS:
+		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.RemoveMaxReqsSettings(name)
+		limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
+		a.limitAllRequests = NewCompositeLimiter(limiters...)
+	case edgeproto.RateLimitTarget_PER_IP:
+		a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.RemoveMaxReqsSettings(name)
+		a.limitsPerIp = make(map[string]*CompositeLimiter)
+	case edgeproto.RateLimitTarget_PER_USER:
+		a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.RemoveMaxReqsSettings(name)
+		a.limitsPerUser = make(map[string]*CompositeLimiter)
+	}
+}
+
+// Prune the FlowRateLimitSettings that are not in the keys map
+func (a *apiEndpointLimiter) pruneFlowRateLimitSettings(keys map[edgeproto.FlowRateLimitSettingsKey]struct{}) {
 	if a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings != nil {
-		if _, ok := keys[a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.Key]; !ok {
-			a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings = nil
+		for name, _ := range a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.FlowSettings {
+			key := edgeproto.FlowRateLimitSettingsKey{
+				FlowSettingsName: name,
+				RateLimitKey:     a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.Key,
+			}
+			if _, ok := keys[key]; !ok {
+				a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.RemoveFlowSettings(name)
+				limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
+				a.limitAllRequests = NewCompositeLimiter(limiters...)
+			}
 		}
 	}
 
 	if a.apiEndpointRateLimitSettings.PerIpRateLimitSettings != nil {
-		if _, ok := keys[a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.Key]; !ok {
-			a.apiEndpointRateLimitSettings.PerIpRateLimitSettings = nil
+		for name, _ := range a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.FlowSettings {
+			key := edgeproto.FlowRateLimitSettingsKey{
+				FlowSettingsName: name,
+				RateLimitKey:     a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.Key,
+			}
+			if _, ok := keys[key]; !ok {
+				a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.RemoveFlowSettings(name)
+				a.limitsPerIp = make(map[string]*CompositeLimiter)
+			}
 		}
 	}
 
 	if a.apiEndpointRateLimitSettings.PerUserRateLimitSettings != nil {
-		if _, ok := keys[a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.Key]; !ok {
-			a.apiEndpointRateLimitSettings.PerUserRateLimitSettings = nil
+		for name, _ := range a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.FlowSettings {
+			key := edgeproto.FlowRateLimitSettingsKey{
+				FlowSettingsName: name,
+				RateLimitKey:     a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.Key,
+			}
+			if _, ok := keys[key]; !ok {
+				a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.RemoveFlowSettings(name)
+				a.limitsPerIp = make(map[string]*CompositeLimiter)
+			}
+		}
+	}
+}
+
+// Prune the MaxReqsRateLimitSettings that are not in the keys map
+func (a *apiEndpointLimiter) pruneMaxReqsRateLimitSettings(keys map[edgeproto.MaxReqsRateLimitSettingsKey]struct{}) {
+	if a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings != nil {
+		for name, _ := range a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.MaxReqsSettings {
+			key := edgeproto.MaxReqsRateLimitSettingsKey{
+				MaxReqsSettingsName: name,
+				RateLimitKey:        a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.Key,
+			}
+			if _, ok := keys[key]; !ok {
+				a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.RemoveMaxReqsSettings(name)
+				limiters := getLimitersFromRateLimitSettings(a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings)
+				a.limitAllRequests = NewCompositeLimiter(limiters...)
+			}
+		}
+	}
+
+	if a.apiEndpointRateLimitSettings.PerIpRateLimitSettings != nil {
+		for name, _ := range a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.MaxReqsSettings {
+			key := edgeproto.MaxReqsRateLimitSettingsKey{
+				MaxReqsSettingsName: name,
+				RateLimitKey:        a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.Key,
+			}
+			if _, ok := keys[key]; !ok {
+				a.apiEndpointRateLimitSettings.PerIpRateLimitSettings.RemoveMaxReqsSettings(name)
+				a.limitsPerIp = make(map[string]*CompositeLimiter)
+			}
+		}
+	}
+
+	if a.apiEndpointRateLimitSettings.PerUserRateLimitSettings != nil {
+		for name, _ := range a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.MaxReqsSettings {
+			key := edgeproto.MaxReqsRateLimitSettingsKey{
+				MaxReqsSettingsName: name,
+				RateLimitKey:        a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.Key,
+			}
+			if _, ok := keys[key]; !ok {
+				a.apiEndpointRateLimitSettings.PerUserRateLimitSettings.RemoveMaxReqsSettings(name)
+				a.limitsPerIp = make(map[string]*CompositeLimiter)
+			}
 		}
 	}
 }

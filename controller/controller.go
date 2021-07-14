@@ -627,7 +627,8 @@ func InitApis(sync *Sync) {
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
-	notify.ServerMgrOne.RegisterSendRateLimitSettingsCache(&rateLimitSettingsApi.cache)
+	notify.ServerMgrOne.RegisterSendFlowRateLimitSettingsCache(&rateLimitSettingsApi.flowcache)
+	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&rateLimitSettingsApi.maxreqscache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendGPUDriverCache(&gpuDriverApi.cache)
