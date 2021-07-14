@@ -59,8 +59,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   nummasters: 1
   numnodes: 1
 - key:
@@ -72,8 +72,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   nummasters: 1
   numnodes: 1
 - key:
@@ -85,8 +85,8 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   nummasters: 1
   numnodes: 1
   reservable: true
@@ -99,8 +99,8 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   nummasters: 1
   numnodes: 1
   reservable: true
@@ -117,9 +117,9 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51101
   flavor:
     name: x1.small
@@ -130,9 +130,9 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51102
   flavor:
     name: x1.small
@@ -143,9 +143,9 @@ cloudlets:
   location:
     latitude: 37
     longitude: -99
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51103
   flavor:
     name: x1.small
@@ -156,9 +156,9 @@ cloudlets:
   location:
     latitude: 32
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51104
   flavor:
     name: x1.small
@@ -169,9 +169,9 @@ cloudlets:
   location:
     latitude: 36
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51105
   flavor:
     name: x1.small
@@ -213,7 +213,7 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   defaultflavor:
     name: x1.small
@@ -228,7 +228,7 @@ apps:
     name: autoprovapp
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   defaultflavor:
     name: x1.small
@@ -242,7 +242,7 @@ apps:
     name: autoprovapp2
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   defaultflavor:
     name: x1.small
@@ -256,7 +256,7 @@ apps:
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   defaultflavor:
     name: x1.small

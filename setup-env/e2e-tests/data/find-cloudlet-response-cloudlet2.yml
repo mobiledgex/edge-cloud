@@ -1,13 +1,13 @@
 status: FindFound
 fqdn: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
 ports:
-- proto: LProtoTcp
+- proto: Tcp
   internalport: 80
   publicport: 80
-- proto: LProtoTcp
+- proto: Tcp
   internalport: 443
   publicport: 443
-- proto: LProtoUdp
+- proto: Udp
   internalport: 10002
   publicport: 10002
 cloudletlocation:

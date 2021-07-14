@@ -43,9 +43,9 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
@@ -55,7 +55,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 6
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -137,8 +137,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -148,20 +148,20 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
   deployment: kubernetes
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   accessports: tcp:9090
   internalports: true
   trusted: true
@@ -169,7 +169,7 @@ apps:
     name: x1.medium
   annotations: version=9.4.10
   deployment: helm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -229,15 +229,15 @@ appinstances:
     latitude: 31
     longitude: -91
   uri: shared.dmuus-cloud-1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -260,9 +260,9 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:

@@ -61,8 +61,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -75,8 +75,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -89,8 +89,8 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -104,8 +104,8 @@ clusterinsts:
     organization: MobiledgeX
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -124,9 +124,9 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.small
   physicalname: dmuus-cloud-1
@@ -139,9 +139,9 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.small
   physicalname: dmuus-cloud-2
@@ -154,9 +154,9 @@ cloudlets:
   location:
     latitude: 37
     longitude: -99
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.small
   physicalname: att-cloud-1
@@ -169,9 +169,9 @@ cloudlets:
   location:
     latitude: 32
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.small
   physicalname: azure-cloud-4
@@ -184,9 +184,9 @@ cloudlets:
   location:
     latitude: 36
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.small
   physicalname: gcp-cloud-5
@@ -197,7 +197,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 1
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -254,7 +254,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-2
-  state: CloudletStateReady
+  state: Ready
   notifyid: 2
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -311,7 +311,7 @@ cloudletinfos:
 - key:
     organization: att
     name: att-cloud-1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 5
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -361,7 +361,7 @@ cloudletinfos:
 - key:
     organization: azure
     name: azure-cloud-4
-  state: CloudletStateReady
+  state: Ready
   notifyid: 3
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -411,7 +411,7 @@ cloudletinfos:
 - key:
     organization: gcp
     name: gcp-cloud-5
-  state: CloudletStateReady
+  state: Ready
   notifyid: 4
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -464,7 +464,7 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   defaultflavor:
     name: x1.small
@@ -474,26 +474,26 @@ apps:
   androidpackagename: com.acme.someapplication1
   officialfqdn: someapplication1.acmeappco.com
   authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo
     name: autoprovapp
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:81
   defaultflavor:
     name: x1.small
   deployment: kubernetes
   autoprovpolicy: autoprov1
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   officialfqdn: autoprovapp.acmeappco.com 
 - key:
     organization: AcmeAppCo
     name: autoprovapp2
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   defaultflavor:
     name: x1.small
@@ -501,27 +501,27 @@ apps:
     name: SmallCluster
   accessports: "tcp:82"
   autoprovpolicy: autoprov2
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   officialfqdn: autoprovapp2.acmeappco.com
 - key:
     organization: platos
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
   accessports: "tcp:64000"
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   accessports: tcp:9090
   internalports: true
   trusted: true
@@ -529,7 +529,7 @@ apps:
     name: x1.medium
   annotations: version=9.4.10
   deployment: helm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -589,9 +589,9 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -611,9 +611,9 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -633,9 +633,9 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -655,9 +655,9 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -678,10 +678,10 @@ appinstances:
     latitude: 35
     longitude: -95
   uri: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
-  liveness: LivenessAutoprov
+  liveness: Autoprov
   realclustername: ReservableCluster2
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 81
     publicport: 81
   flavor:

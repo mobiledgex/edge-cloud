@@ -14,6 +14,7 @@ import (
 	math "math"
 	math_bits "math/bits"
 	"strconv"
+	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -567,6 +568,10 @@ func (e *Liveness) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := Liveness_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = Liveness_CamelValue["Liveness"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -582,7 +587,9 @@ func (e *Liveness) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e Liveness) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(Liveness_CamelName, int32(e)), nil
+	str := proto.EnumName(Liveness_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Liveness")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -591,6 +598,10 @@ func (e *Liveness) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := Liveness_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = Liveness_CamelValue["Liveness"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -616,8 +627,11 @@ func (e *Liveness) UnmarshalJSON(b []byte) error {
 
 func (e Liveness) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(Liveness_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Liveness")
 	return json.Marshal(str)
 }
+
+var LivenessCommonPrefix = "Liveness"
 
 var IpSupportStrings = []string{
 	"IP_SUPPORT_UNKNOWN",
@@ -653,6 +667,10 @@ func (e *IpSupport) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := IpSupport_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = IpSupport_CamelValue["IpSupport"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -668,7 +686,9 @@ func (e *IpSupport) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e IpSupport) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(IpSupport_CamelName, int32(e)), nil
+	str := proto.EnumName(IpSupport_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "IpSupport")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -677,6 +697,10 @@ func (e *IpSupport) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := IpSupport_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = IpSupport_CamelValue["IpSupport"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -702,8 +726,11 @@ func (e *IpSupport) UnmarshalJSON(b []byte) error {
 
 func (e IpSupport) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(IpSupport_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "IpSupport")
 	return json.Marshal(str)
 }
+
+var IpSupportCommonPrefix = "IpSupport"
 
 var IpAccessStrings = []string{
 	"IP_ACCESS_UNKNOWN",
@@ -739,6 +766,10 @@ func (e *IpAccess) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := IpAccess_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = IpAccess_CamelValue["IpAccess"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -754,7 +785,9 @@ func (e *IpAccess) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e IpAccess) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(IpAccess_CamelName, int32(e)), nil
+	str := proto.EnumName(IpAccess_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "IpAccess")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -763,6 +796,10 @@ func (e *IpAccess) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := IpAccess_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = IpAccess_CamelValue["IpAccess"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -788,8 +825,11 @@ func (e *IpAccess) UnmarshalJSON(b []byte) error {
 
 func (e IpAccess) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(IpAccess_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "IpAccess")
 	return json.Marshal(str)
 }
+
+var IpAccessCommonPrefix = "IpAccess"
 
 var TrackedStateStrings = []string{
 	"TRACKED_STATE_UNKNOWN",
@@ -905,7 +945,8 @@ func (e *TrackedState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e TrackedState) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(TrackedState_CamelName, int32(e)), nil
+	str := proto.EnumName(TrackedState_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -1001,7 +1042,8 @@ func (e *CRMOverride) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e CRMOverride) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(CRMOverride_CamelName, int32(e)), nil
+	str := proto.EnumName(CRMOverride_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding

@@ -25,9 +25,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 1
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51001
   flavor:
     name: x1.tiny
@@ -40,9 +40,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 2
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51002
   flavor:
     name: x1.tiny
@@ -55,9 +55,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 3
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51003
   flavor:
     name: x1.tiny
@@ -70,9 +70,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 4
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51004
   flavor:
     name: x1.tiny
@@ -85,9 +85,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 5
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51005
   flavor:
     name: x1.tiny
@@ -100,9 +100,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 6
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51006
   flavor:
     name: x1.tiny
@@ -115,9 +115,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 7
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51007
   flavor:
     name: x1.tiny
@@ -130,9 +130,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 8
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51008
   flavor:
     name: x1.tiny
@@ -145,9 +145,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 9
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51009
   flavor:
     name: x1.tiny
@@ -160,9 +160,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 10
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   notifysrvaddr: 127.0.0.1:51010
   flavor:
     name: x1.tiny
@@ -176,7 +176,7 @@ apps:
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   defaultflavor:
     name: x1.small
   accessports: "tcp:64000"
@@ -185,7 +185,7 @@ apps:
     organization: AcmeAppCo
     name: someapplication1
     version : "1.0"
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   defaultflavor:
     name: x1.small
   accessports: tcp:80,tcp:443,udp:10002
@@ -196,7 +196,7 @@ apps:
     organization: AcmeAppCo
     name: someapplication2
     version : "1.0"
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   defaultflavor:
     name: x1.small
   accessports: tcp:80,tcp:443,udp:10002

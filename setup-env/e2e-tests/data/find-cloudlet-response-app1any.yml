@@ -1,15 +1,15 @@
 - status: FindFound
   fqdn: acmeappcosomeapplication110.reservable0.azure-cloud-4.azure.localtest.net
   ports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication110-tcp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
     fqdnprefix: someapplication110-tcp.
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication110-udp.
@@ -19,13 +19,13 @@
 - status: FindFound
   fqdn: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
   ports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   cloudletlocation:
@@ -34,13 +34,13 @@
 - status: FindFound
   fqdn: shared.att-cloud-1.att.localtest.net
   ports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   cloudletlocation:

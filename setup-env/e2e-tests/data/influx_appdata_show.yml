@@ -61,8 +61,8 @@ clusterinsts:
   flavor:
     name: x1.small
   sharedvolumesize: 100
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 2
@@ -78,9 +78,9 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
@@ -91,7 +91,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 16
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -149,10 +149,10 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002
   officialfqdn: someapplication1.acmeappco.com
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   defaultflavor:
     name: x1.small
   cluster:
@@ -169,13 +169,13 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
     name: NFSAutoProvision
     version: "1.0"
   imagepath: https://charts.helm.sh/stable:stable/nfs-client-provisioner
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   defaultflavor:
     name: x1.medium
   annotations: version=1.2.8
@@ -191,22 +191,22 @@ apps:
         defaultClass: true
   internalports: true
   trusted: true
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   accessports: tcp:9090
   internalports: true
   trusted: true
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   defaultflavor:
     name: x1.medium
   annotations: version=9.4.10
   deployment: helm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -249,7 +249,7 @@ apps:
       commonLabels:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
-accesstype: AccessTypeLoadBalancer
+accesstype: LoadBalancer
 
 appinstances:
 - key:
@@ -267,9 +267,9 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -290,7 +290,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessDynamic
+  liveness: Dynamic
   flavor:
     name: x1.small
 
@@ -310,15 +310,15 @@ appinstances:
     latitude: 31
     longitude: -91
   uri: shared.dmuus-cloud-1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:

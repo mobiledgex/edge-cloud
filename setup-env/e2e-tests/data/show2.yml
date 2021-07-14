@@ -67,8 +67,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -81,8 +81,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
@@ -95,9 +95,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 2
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.medium
   physicalname: dmuus-cloud-2
@@ -110,9 +110,9 @@ cloudlets:
   location:
     latitude: 1
     longitude: 1
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: x1.medium
   physicalname: dmuus-cloud-1
@@ -123,7 +123,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 37
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -177,7 +177,7 @@ cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-2
-  state: CloudletStateReady
+  state: Ready
   notifyid: 38
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -234,7 +234,7 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   accessports: tcp:9090
   internalports: true
   trusted: true
@@ -242,7 +242,7 @@ apps:
     name: x1.medium
   annotations: version=9.4.10
   deployment: helm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -290,7 +290,7 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
@@ -306,7 +306,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: kubernetes
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 
 appinstances:
 - key:
@@ -325,15 +325,15 @@ appinstances:
     latitude: 1
     longitude: 1
   uri: shared.dmuus-cloud-1.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -357,15 +357,15 @@ appinstances:
     latitude: 1
     longitude: 2
   uri: shared.dmuus-cloud-2.dmuus.localtest.net
-  liveness: LivenessStatic
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -388,9 +388,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -410,9 +410,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:

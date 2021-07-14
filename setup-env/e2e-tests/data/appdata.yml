@@ -52,8 +52,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   sharedvolumesize: 100
   nummasters: 1
   numnodes: 2
@@ -67,8 +67,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   nummasters: 1
   numnodes: 2
 
@@ -83,45 +83,45 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
 - key:
     organization: dmuus
     name: dmuus-cloud-2
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
 - key:
     organization: dmuus
     name: dmuus-cloud-3
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
 - key:
     organization: azure
     name: azure-cloud-4
   location:
     latitude: 32
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
 - key:
     organization: gcp
     name: gcp-cloud-5
   location:
     latitude: 36
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
 
 apps:
 - key:
@@ -129,7 +129,7 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
@@ -154,7 +154,7 @@ apps:
     name: PlatosEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
@@ -165,7 +165,7 @@ apps:
     name: vmapp1
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
-  imagetype: ImageTypeQcow
+  imagetype: Qcow
   deployment: "vm"
   defaultflavor:
     name: x1.small
@@ -176,7 +176,7 @@ apps:
     name: vmapp2
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
-  imagetype: ImageTypeQcow
+  imagetype: Qcow
   deployment: "vm"
   defaultflavor:
     name: x1.small
@@ -186,7 +186,7 @@ apps:
     name: NoPortsApp
     version: "1.0"
   imagepath: http://registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
@@ -208,7 +208,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
 - key:
@@ -226,7 +226,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
 - key:
@@ -244,7 +244,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
 - key:
@@ -260,7 +260,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
 - key:
@@ -276,7 +276,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
 - key:
@@ -294,6 +294,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small

@@ -16,7 +16,7 @@ func TestGetSpecifiedFields(t *testing.T) {
 		[]string{"2.2", "2.3", "13", "23", "25"})
 	// test App args, make sure empty string value still sets field
 	testGetFieldsArgs(t, &edgeproto.App{},
-		[]string{"key.organization=atlantic", `key.name="Pillimo Go!"`, "imagetype=ImageTypeDocker", `accessports=""`, "defaultflavor.name=x1.small"},
+		[]string{"key.organization=atlantic", `key.name="Pillimo Go!"`, "imagetype=Docker", `accessports=""`, "defaultflavor.name=x1.small"},
 		[]string{"2.1", "2.2", "5", "7", "9.1"})
 
 	dat := `
@@ -25,7 +25,7 @@ key:
   name: someapplication1
   version: "1.0"
 imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-imagetype: ImageTypeDocker
+imagetype: Docker
 deployment: ""
 defaultflavor:
   name: x1.small
