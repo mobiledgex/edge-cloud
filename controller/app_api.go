@@ -946,7 +946,7 @@ func (s *AppApi) UsesUserDefinedAlert(key *edgeproto.UserAlertKey) bool {
 }
 
 func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, appInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo,
-	cloudletRefs *edgeproto.CloudletRefs) error {
+	cloudletRefs *edgeproto.CloudletRefs, numNodes uint32) error {
 
 	deployment := app.Deployment
 	if deployment == cloudcommon.DeploymentTypeHelm {
@@ -974,19 +974,20 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 		}
 		clusterInstApi.cache.Mux.Unlock()
 		if canDeploy {
-			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy Ok", "cloudlet", cloudlet.Key.Name)
+			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy Ok for reservable cluster", "cloudlet", cloudlet.Key.Name)
 			return nil
 		}
 		// see if we can create a new ClusterInst
 		targetCluster := edgeproto.ClusterInst{}
-		targetCluster.MasterNodeFlavor = settingsApi.Get().MasterNodeFlavor
+		if deployment == cloudcommon.DeploymentTypeKubernetes {
+			targetCluster.MasterNodeFlavor = settingsApi.Get().MasterNodeFlavor
+		}
 		targetCluster.NodeFlavor = app.DefaultFlavor.Name
 		targetCluster.Deployment = deployment
 		if deployment == cloudcommon.DeploymentTypeKubernetes {
 			targetCluster.NumMasters = 1
-			targetCluster.NumNodes = 2
+			targetCluster.NumNodes = numNodes
 		}
-
 		return validateResources(ctx, stm, &targetCluster, nil, nil, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
 	}
 	if deployment == cloudcommon.DeploymentTypeVM {
@@ -1000,7 +1001,11 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 	var allclds = make(map[edgeproto.CloudletKey]string)
 	app := in.App
 	flavor := in.App.DefaultFlavor
+	var numNodes uint32 = 2
 
+	if in.NumNodes != 0 {
+		numNodes = in.NumNodes
+	}
 	if flavor.Name == "" {
 		return fmt.Errorf("No flavor specified for App")
 	}
@@ -1032,7 +1037,7 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 		var err error
 		appInst := edgeproto.AppInst{}
 		if app.Deployment == "" {
-			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy manditory app Deployment not found for App")
+			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy mandatory app Deployment not found for App")
 			return fmt.Errorf("No deployment found on candidate App")
 		}
 		appInst.Flavor = app.DefaultFlavor
@@ -1044,7 +1049,7 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 				appInst.VmFlavor = allclds[key]
 				cloudlet := edgeproto.Cloudlet{}
 				if !cloudletApi.store.STMGet(stm, &key, &cloudlet) {
-					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cld not found", "cloudlet", key)
+					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cloudlet not found", "cloudlet", key)
 					continue
 				}
 				cloudletRefs := edgeproto.CloudletRefs{}
@@ -1053,24 +1058,21 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 				}
 				cloudletInfo := edgeproto.CloudletInfo{}
 				if !cloudletInfoApi.store.STMGet(stm, &key, &cloudletInfo) {
-					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cldinfo not found, skipping", "cloudlet", key)
+					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cloudletinfo not found, skipping", "cloudlet", key)
 					delete(allclds, key)
 					continue
 				}
-				err = tryDeployApp(ctx, stm, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs)
+				err = tryDeployApp(ctx, stm, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs, numNodes)
 				if err != nil {
 					delete(allclds, key)
 					log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy failed for", "cloudlet", cloudlet.Key, "error", err)
 					continue
 				}
-				log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run depoloyment succeeded for", "cloudlet", cloudlet.Key.Name)
+				cb.Send(&key)
+				log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment dry run deployment succeeded for", "cloudlet", cloudlet.Key.Name)
 			}
 			return nil
 		})
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment failed", "error", err)
-			return err
-		}
 	}
 	for key, _ := range allclds {
 		cb.Send(&key)

@@ -162,7 +162,7 @@ func runUpdateUserAlert(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateUserAlert(c, obj)
 }
 
@@ -319,14 +319,14 @@ var UserAlertAliasArgs = []string{
 var UserAlertComments = map[string]string{
 	"alert-org":          "Name of the organization for the app that this alert can be applied to",
 	"name":               "Alert name",
-	"cpu-utilization":    "CPU",
-	"mem-usage":          "Mem",
-	"disk-usage":         "Disk",
-	"active-connections": "Active Connections",
+	"cpu-utilization":    "CPU percent alert threshold",
+	"mem-usage":          "Memory usage alert threshold",
+	"disk-usage":         "Disk usage alert threshold",
+	"active-connections": "Active Connections alert threshold",
 	"severity":           "Alert Severity",
-	"trigger-time":       "Trigger threshold interval",
-	"labels":             "Additional Labels",
-	"annotations":        "Additional Annotations for extra information about the alert",
+	"trigger-time":       "Duration for which alert interval is active",
+	"labels":             "Additional Labels, specify labels:empty=true to clear",
+	"annotations":        "Additional Annotations for extra information about the alert, specify annotations:empty=true to clear",
 }
 var UserAlertSpecialArgs = map[string]string{
 	"annotations": "StringToString",

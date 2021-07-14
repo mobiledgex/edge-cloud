@@ -139,6 +139,8 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		}
 	}
 
+	methodGroups := gensupport.GetAllMethodGroups(g.Generator, &g.support)
+
 	// Generate service vars which must assigned by the main function.
 	// Also generate input vars which will be used to capture input args.
 	if len(file.FileDescriptorProto.Service) > 0 {
@@ -151,7 +153,8 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		if desc.File() != file {
 			continue
 		}
-		gensupport.GenerateMessageArgs(g.Generator, &g.support, desc, false, ii)
+		methodGroup := methodGroups[*desc.DescriptorProto.Name]
+		gensupport.GenerateMessageArgs(g.Generator, &g.support, desc, methodGroup, false, ii)
 	}
 	if len(file.FileDescriptorProto.Service) > 0 {
 		for _, service := range file.FileDescriptorProto.Service {
@@ -159,7 +162,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 				continue
 			}
 			for ii, method := range service.Method {
-				gensupport.GenerateMethodArgs(g.Generator, &g.support, method, false, ii)
+				gensupport.GenerateMethodArgs(g.Generator, &g.support, method, methodGroups, false, ii)
 			}
 		}
 	}
@@ -256,7 +259,7 @@ func run{{.Method}}(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 {{- else}}
 	_, err := c.ParseInput(args)
 	if err != nil {

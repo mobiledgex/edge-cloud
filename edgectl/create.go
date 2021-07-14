@@ -25,11 +25,15 @@ func runCreate(c *cli.Command, args []string) error {
 
 	gencmd.CreateFlavors(c, data.Flavors, &err)
 	if data.Settings != nil {
-		objMap, err := cli.GetGenericObj(mapped["settings"])
+		objMap, err := cli.GetGenericObj(mapped.Data["settings"])
 		if err != nil {
 			return fmt.Errorf("invalid data map for settings: %v", err)
 		}
-		data.Settings.Fields = cli.GetSpecifiedFields(objMap, data.Settings, cli.JsonNamespace)
+		settingsMap := &cli.MapData{
+			Namespace: mapped.Namespace,
+			Data:      objMap,
+		}
+		data.Settings.Fields = cli.GetSpecifiedFields(settingsMap, data.Settings)
 		gencmd.UpdateSettingsBatch(c, data.Settings, &err)
 	}
 

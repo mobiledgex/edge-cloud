@@ -227,6 +227,11 @@ func (e *DebugLevel) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+func (e DebugLevel) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(DebugLevel_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 type MatchOptions struct {
 	// Filter will ignore 0 or nil fields on the passed in object
 	Filter bool

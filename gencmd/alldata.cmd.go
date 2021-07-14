@@ -214,9 +214,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].Uri = ""
-		}
 		for i1 := 0; i1 < len(in.AppInstances[i0].MappedPorts); i1++ {
 		}
 		if _, found := tags["nocmp"]; found {
@@ -1129,12 +1126,12 @@ var AllDataComments = map[string]string{
 	"gpudrivers:#.ignorestate":                                                      "Ignore state will ignore any action in-progress on the GPU driver",
 	"userdefinedalerts:#.key.organization":                                          "Name of the organization for the app that this alert can be applied to",
 	"userdefinedalerts:#.key.name":                                                  "Alert name",
-	"userdefinedalerts:#.cpulimit":                                                  "CPU",
-	"userdefinedalerts:#.memlimit":                                                  "Mem",
-	"userdefinedalerts:#.disklimit":                                                 "Disk",
-	"userdefinedalerts:#.activeconnlimit":                                           "Active Connections",
+	"userdefinedalerts:#.cpulimit":                                                  "CPU percent alert threshold",
+	"userdefinedalerts:#.memlimit":                                                  "Memory usage alert threshold",
+	"userdefinedalerts:#.disklimit":                                                 "Disk usage alert threshold",
+	"userdefinedalerts:#.activeconnlimit":                                           "Active Connections alert threshold",
 	"userdefinedalerts:#.severity":                                                  "Alert Severity",
-	"userdefinedalerts:#.triggertime":                                               "Trigger threshold interval",
+	"userdefinedalerts:#.triggertime":                                               "Duration for which alert interval is active",
 	"userdefinedalerts:#.labels":                                                    "Additional Labels",
 	"userdefinedalerts:#.annotations":                                               "Additional Annotations for extra information about the alert",
 }

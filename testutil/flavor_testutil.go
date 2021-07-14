@@ -381,7 +381,11 @@ func (r *Run) FlavorApi(data *[]edgeproto.Flavor, dataMap interface{}, dataOut i
 				*r.Rc = false
 				return
 			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			yamlData := cli.MapData{
+				Namespace: cli.YamlNamespace,
+				Data:      objMap,
+			}
+			obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)
 
 			out, err := r.client.UpdateFlavor(r.ctx, obj)
 			if err != nil {

@@ -234,7 +234,7 @@ cloudletinfos:
     - clusterkey:
         name: reservable0
       organization: MobiledgeX
-  compatibilityversion: 1
+  compatibilityversion: 2
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -289,7 +289,7 @@ cloudletinfos:
     - clusterkey:
         name: reservable1
       organization: MobiledgeX
-  compatibilityversion: 1
+  compatibilityversion: 2
 apps:
 - key:
     organization: AcmeAppCo
@@ -515,21 +515,18 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.localtest.net
+  uri: shared.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   state: Ready
@@ -555,7 +552,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: reservable0.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -582,7 +578,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: reservable1.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
@@ -609,17 +604,15 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.localtest.net
+  uri: shared.tmus-cloud-2.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 23
     publicport: 23
-    fqdnprefix: someapplication210-tcp-
   - proto: LProtoUdp
     internalport: 10003
     publicport: 10003
-    fqdnprefix: someapplication210-udp-
   flavor:
     name: x1.small
   state: Ready
@@ -645,21 +638,18 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: tmus-cloud-1.tmus.localtest.net
+  uri: shared.tmus-cloud-1.tmus.localtest.net
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoTcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp-
   - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp-
   flavor:
     name: x1.small
   state: Ready
@@ -685,7 +675,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: reservable0.tmus-cloud-1.tmus.localtest.net
   liveness: LivenessDynamic
   mappedports:
   - proto: LProtoTcp
