@@ -771,8 +771,8 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		require.Equal(t, numNodes, int(clusterInst.NumNodes), "resource type count matches")
 		require.Equal(t, numRootLB, 1, "resource type count matches")
 
-		outOfSync := false
-		warnings, err := validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, ciResources, diffRes, outOfSync)
+		skipInfraCheck := false
+		warnings, err := validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, ciResources, diffRes, skipInfraCheck)
 		require.NotNil(t, err, "not enough resource available error")
 		require.Greater(t, len(warnings), 0, "warnings for resources", "warnings", warnings)
 		for _, warning := range warnings {
@@ -813,7 +813,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		require.True(t, foundVMRes, "resource type app vm found")
 		require.True(t, foundVMRootLBRes, "resource type vm rootlb found")
 
-		warnings, err = validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, vmAppResources, diffRes, outOfSync)
+		warnings, err = validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, vmAppResources, diffRes, skipInfraCheck)
 		require.Nil(t, err, "enough resource available")
 		require.Greater(t, len(warnings), 0, "warnings for resources", "warnings", warnings)
 
