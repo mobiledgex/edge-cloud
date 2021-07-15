@@ -1100,12 +1100,21 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := Liveness_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := Liveness_CamelValue["Liveness"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(IpSupport(0)):
 		if en, ok := IpSupport_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := IpSupport_CamelValue["IpSupport"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(IpAccess(0)):
 		if en, ok := IpAccess_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := IpAccess_CamelValue["IpAccess"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(TrackedState(0)):
@@ -1120,8 +1129,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := ImageType_CamelValue["ImageType"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VmAppOsType(0)):
 		if en, ok := VmAppOsType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := VmAppOsType_CamelValue["VmAppOs"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(DeleteType(0)):
@@ -1132,8 +1147,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := AccessType_CamelValue["AccessType"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PlatformType(0)):
 		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := PlatformType_CamelValue["PlatformType"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(InfraApiAccess(0)):
@@ -1152,8 +1173,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := VMState_CamelValue["Vm"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VMAction(0)):
 		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := VMAction_CamelValue["VmAction"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(PowerState(0)):
@@ -1168,8 +1195,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := StreamState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := StreamState_CamelValue["Stream"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VersionHash(0)):
 		if en, ok := VersionHash_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := VersionHash_CamelValue["Hash"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	}
