@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/mobiledgex/edge-cloud/util"
-	yaml "github.com/mobiledgex/yaml/v2"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -90,7 +90,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 			}
 		}
 		delete(required, argKey)
-		err := setKeyVal(dat, obj, argKey, argVal, specialArgType)
+		err := s.setKeyVal(dat, obj, argKey, argVal, specialArgType)
 		if err != nil {
 			return nil, fmt.Errorf("parsing arg \"%s\" failed: %v", arg, err)
 		}
@@ -125,7 +125,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 			if err != nil {
 				return nil, err
 			}
-			setKeyVal(dat, obj, resolveAlias(s.PasswordArg, aliases), pw, "")
+			s.setKeyVal(dat, obj, resolveAlias(s.PasswordArg, aliases), pw, "")
 		}
 	}
 
@@ -179,13 +179,10 @@ func ConvertDecodeErr(err error, reals map[string]string) error {
 		case *mapstructure.ParseError:
 			name := getDecodeArg(e.Name, reals)
 			suberr := e.Err
-			help := ""
 			if ne, ok := suberr.(*strconv.NumError); ok {
 				suberr = ne.Err
 			}
-			if e.To == reflect.Bool {
-				help = ", valid values are true, false"
-			}
+			help := getParseErrorHelp(e.To)
 			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: %v%s`, name, e.Val, e.To, suberr, help)
 		case *mapstructure.OverflowError:
 			name := getDecodeArg(e.Name, reals)
@@ -524,7 +521,7 @@ func resolveAlias(name string, lookup map[string]string) string {
 // setKeyVal is used to build a generic map[string]interface{} set of data
 // from command line arguments. The key namespace is ArgsNamespace,
 // and the values are type-specific based on the object's field types.
-func setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType string) error {
+func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType string) error {
 	// Lookup object field corresponding to hierarchical key name.
 	// key may include an array index suffix, ignore that for field lookup.
 	// key may also end in :empty.
@@ -532,7 +529,7 @@ func setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType st
 	lookupKey = string(reArrayNums.ReplaceAll([]byte(lookupKey), []byte(".")))
 	sf, sfok := FindHierField(reflect.TypeOf(obj), lookupKey, ArgsNamespace)
 	if !sfok {
-		return fmt.Errorf("invalid argument: key \"%s\" not found in %v", lookupKey, reflect.TypeOf(obj))
+		return fmt.Errorf("invalid argument: key \"%s\" not found", lookupKey)
 	}
 
 	// values passed in on the command line that
@@ -584,16 +581,29 @@ func setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType st
 			}
 			// convert command line string val to type-specific value
 			v := reflect.New(sf.Type)
-			// let yaml deal with converting the string to the
-			// field's type. The only special case is string types
-			// may need quotes around string values in case there
-			// are special characters in the string.
-			if v.Elem().Kind() == reflect.String {
-				val = strconv.Quote(val)
-			}
-			err := yaml.Unmarshal([]byte(val), v.Interface())
+			_, err := WeakDecode(val, v.Interface(), s.DecodeHook)
 			if err != nil {
-				return fmt.Errorf("unmarshal value %s into type %s failed: %v", val, sf.Type, err)
+				asType := sf.Type.String()
+				switch e := err.(type) {
+				case *mapstructure.ParseError:
+					err = e.Err
+					if ne, ok := err.(*strconv.NumError); ok {
+						err = ne.Err
+					}
+					asType = e.To.String()
+				case *mapstructure.OverflowError:
+					err = fmt.Errorf("overflow error")
+					asType = e.To.String()
+				default:
+					// possible decode hook error with
+					// extra junk we should remove.
+					replace := "error decoding '': "
+					if strings.Contains(err.Error(), replace) {
+						err = errors.New(strings.Replace(err.Error(), replace, "", -1))
+					}
+				}
+				help := getParseErrorHelp(sf.Type.Kind())
+				return fmt.Errorf("unable to parse %q as %s: %v%s", val, asType, err, help)
 			}
 			// elem to dereference it
 			dat[part] = v.Elem().Interface()
@@ -611,6 +621,13 @@ func setKeyVal(dat map[string]interface{}, obj interface{}, key, val, argType st
 		}
 	}
 	return nil
+}
+
+func getParseErrorHelp(k reflect.Kind) string {
+	if k == reflect.Bool {
+		return ", valid values are true, false"
+	}
+	return ""
 }
 
 func valIsTrue(val interface{}) bool {
