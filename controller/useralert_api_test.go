@@ -58,15 +58,15 @@ func TestUserAlertApi(t *testing.T) {
 	// Invalid set of conditions for an alert
 	userAlert = testutil.UserAlertData[0]
 	userAlert.ActiveConnLimit = 0
-	userAlert.CpuLimit = 0
-	userAlert.MemLimit = 0
-	userAlert.DiskLimit = 0
+	userAlert.CpuUtilizationLimit = 0
+	userAlert.MemUtilizationLimit = 0
+	userAlert.DiskUtilizationLimit = 0
 	_, err = userAlertApi.CreateUserAlert(ctx, &userAlert)
 	require.NotNil(t, err, "User Alert should have at least one set value")
 
 	// Invalid set of conditions for an alert
 	userAlert = testutil.UserAlertData[0]
-	userAlert.CpuLimit = 200
+	userAlert.CpuUtilizationLimit = 200
 	_, err = userAlertApi.CreateUserAlert(ctx, &userAlert)
 	require.NotNil(t, err, "Cpu cannot be >100%")
 
@@ -105,8 +105,8 @@ func TestUserAlertApi(t *testing.T) {
 
 	// Update user alert - add invalid selection
 	userAlert = testutil.UserAlertData[1]
-	userAlert.CpuLimit = 30
-	userAlert.Fields = []string{edgeproto.UserAlertFieldCpuLimit}
+	userAlert.CpuUtilizationLimit = 30
+	userAlert.Fields = []string{edgeproto.UserAlertFieldCpuUtilizationLimit}
 	_, err = userAlertApi.UpdateUserAlert(ctx, &userAlert)
 	require.NotNil(t, err, "Should not be allowed to update alert with invalid set of arguments")
 	userAlert = testutil.UserAlertData[1]
@@ -117,7 +117,7 @@ func TestUserAlertApi(t *testing.T) {
 
 	// Update user alert
 	userAlert = testutil.UserAlertData[0]
-	userAlert.CpuLimit = 90
+	userAlert.CpuUtilizationLimit = 90
 	_, err = userAlertApi.UpdateUserAlert(ctx, &userAlert)
 	require.Nil(t, err)
 

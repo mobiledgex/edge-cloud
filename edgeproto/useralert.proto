@@ -26,12 +26,12 @@ message UserAlert {
   repeated string fields = 1;
   // Unique identifier key
   UserAlertKey key = 2 [(gogoproto.nullable) = false];
-  // CPU percent alert threshold
-  uint32 cpu_limit = 3;
-  // Memory usage alert threshold
-  uint32 mem_limit = 4;
-  // Disk usage alert threshold
-  uint32 disk_limit = 5;
+  // CPU utiliztion rate(percentage) across all nodes
+  uint32 cpu_utilization_limit = 3;
+  // Memory utilization rate(percentage) across all nodes 
+  uint32 mem_utilization_limit = 4;
+  // Disk utilization rate(percentage) across all nodes
+  uint32 disk_utilization_limit = 5;
   // Active Connections alert threshold
   uint32 active_conn_limit = 6;
   // Alert Severity

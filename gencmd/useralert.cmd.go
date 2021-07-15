@@ -298,9 +298,9 @@ var UserAlertRequiredArgs = []string{
 	"name",
 }
 var UserAlertOptionalArgs = []string{
-	"cpu-utilization",
-	"mem-usage",
-	"disk-usage",
+	"cpuutilizationlimit",
+	"memutilizationlimit",
+	"diskutilizationlimit",
 	"active-connections",
 	"severity",
 	"trigger-time",
@@ -310,23 +310,20 @@ var UserAlertOptionalArgs = []string{
 var UserAlertAliasArgs = []string{
 	"alert-org=key.organization",
 	"name=key.name",
-	"cpu-utilization=cpulimit",
-	"mem-usage=memlimit",
-	"disk-usage=disklimit",
 	"active-connections=activeconnlimit",
 	"trigger-time=triggertime",
 }
 var UserAlertComments = map[string]string{
-	"alert-org":          "Name of the organization for the app that this alert can be applied to",
-	"name":               "Alert name",
-	"cpu-utilization":    "CPU percent alert threshold",
-	"mem-usage":          "Memory usage alert threshold",
-	"disk-usage":         "Disk usage alert threshold",
-	"active-connections": "Active Connections alert threshold",
-	"severity":           "Alert Severity",
-	"trigger-time":       "Duration for which alert interval is active",
-	"labels":             "Additional Labels, specify labels:empty=true to clear",
-	"annotations":        "Additional Annotations for extra information about the alert, specify annotations:empty=true to clear",
+	"alert-org":            "Name of the organization for the app that this alert can be applied to",
+	"name":                 "Alert name",
+	"cpuutilizationlimit":  "CPU utiliztion rate(percentage) across all nodes",
+	"memutilizationlimit":  "Memory utilization rate(percentage) across all nodes",
+	"diskutilizationlimit": "Disk utilization rate(percentage) across all nodes",
+	"active-connections":   "Active Connections alert threshold",
+	"severity":             "Alert Severity",
+	"trigger-time":         "Duration for which alert interval is active",
+	"labels":               "Additional Labels, specify labels:empty=true to clear",
+	"annotations":          "Additional Annotations for extra information about the alert, specify annotations:empty=true to clear",
 }
 var UserAlertSpecialArgs = map[string]string{
 	"annotations": "StringToString",
@@ -339,9 +336,9 @@ var CreateUserAlertRequiredArgs = []string{
 	"severity",
 }
 var CreateUserAlertOptionalArgs = []string{
-	"cpu-utilization",
-	"mem-usage",
-	"disk-usage",
+	"cpuutilizationlimit",
+	"memutilizationlimit",
+	"diskutilizationlimit",
 	"active-connections",
 	"trigger-time",
 	"labels",
