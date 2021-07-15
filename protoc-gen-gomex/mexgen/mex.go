@@ -2546,6 +2546,12 @@ func (m *mex) generateEnumDecodeHook() {
 			m.P("if en, ok := ", en.Name, "_CamelValue[util.CamelCase(data.(string))]; ok {")
 			m.P("return en, nil")
 			m.P("}")
+			commonPrefix := gensupport.GetEnumCommonPrefix(en)
+			if commonPrefix != "" {
+				m.P("if en, ok := ", en.Name, "_CamelValue[\"", commonPrefix, "\"+util.CamelCase(data.(string))]; ok {")
+				m.P("return en, nil")
+				m.P("}")
+			}
 		}
 	}
 	m.P("}")

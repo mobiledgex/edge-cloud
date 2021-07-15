@@ -3367,6 +3367,9 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := OuterEnum_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := OuterEnum_CamelValue["Outer"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	}
 	return data, nil
 }
