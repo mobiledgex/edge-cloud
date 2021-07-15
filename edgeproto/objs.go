@@ -1229,11 +1229,11 @@ func (a *UserAlert) Validate(fields map[string]struct{}) error {
 	if a.CpuUtilizationLimit > 0 && a.CpuUtilizationLimit > 100 {
 		return errors.New("Cpu utilization limit is percent. Valid values 1-100%")
 	}
-	// check CPU to be within 0-100 percent
+	// check Memory to be within 0-100 percent
 	if a.MemUtilizationLimit > 0 && a.MemUtilizationLimit > 100 {
 		return errors.New("Memory utilization limit is percent. Valid values 1-100%")
 	}
-	// check CPU to be within 0-100 percent
+	// check Disk to be within 0-100 percent
 	if a.DiskUtilizationLimit > 0 && a.DiskUtilizationLimit > 100 {
 		return errors.New("Disk utilization limit is percent. Valid values 1-100%")
 	}

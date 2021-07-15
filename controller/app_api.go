@@ -465,6 +465,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if err := s.validatePolicies(stm, in); err != nil {
 		return err
 	}
+	if err := s.validateUserDefinedAlerts(stm, in); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -908,15 +911,17 @@ func (s *AppApi) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.Ap
 		}
 		if changed {
 			s.store.STMPut(stm, &cur)
+			return nil
+		} else {
+			return (&edgeproto.UserAlertKey{}).NotFoundError()
 		}
-		return nil
 	})
 	return &edgeproto.Result{}, err
 }
 
 func (s *AppApi) validateUserDefinedAlerts(stm concurrency.STM, app *edgeproto.App) error {
 	// make sure alerts exist
-	for ii, _ := range app.UserDefinedAlerts {
+	for ii := range app.UserDefinedAlerts {
 		alertKey := edgeproto.UserAlertKey{
 			Name:         app.UserDefinedAlerts[ii],
 			Organization: app.Key.Organization,

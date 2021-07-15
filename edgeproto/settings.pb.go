@@ -106,7 +106,7 @@ type Settings struct {
 	ClusterAutoScaleAveragingDurationSec int64 `protobuf:"varint,34,opt,name=cluster_auto_scale_averaging_duration_sec,json=clusterAutoScaleAveragingDurationSec,proto3" json:"cluster_auto_scale_averaging_duration_sec,omitempty"`
 	// Cluster auto scale retry delay if scaling failed
 	ClusterAutoScaleRetryDelay Duration `protobuf:"varint,35,opt,name=cluster_auto_scale_retry_delay,json=clusterAutoScaleRetryDelay,proto3,casttype=Duration" json:"cluster_auto_scale_retry_delay,omitempty"`
-	// Minimmum UserAlert trigger time
+	// Minimmum user alert trigger time
 	UserDefinedAlertMinTriggerTime Duration `protobuf:"varint,36,opt,name=user_defined_alert_min_trigger_time,json=userDefinedAlertMinTriggerTime,proto3,casttype=Duration" json:"user_defined_alert_min_trigger_time,omitempty"`
 }
 

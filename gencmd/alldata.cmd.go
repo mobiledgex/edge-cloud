@@ -789,7 +789,7 @@ var AllDataComments = map[string]string{
 	"settings.appinstclientcleanupinterval":                                         "AppInstClient cleanup thread run interval",
 	"settings.clusterautoscaleaveragingdurationsec":                                 "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
 	"settings.clusterautoscaleretrydelay":                                           "Cluster auto scale retry delay if scaling failed",
-	"settings.userdefinedalertmintriggertime":                                       "Minimmum UserAlert trigger time",
+	"settings.userdefinedalertmintriggertime":                                       "Minimmum user alert trigger time",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",

@@ -19,6 +19,7 @@ func TestUserAlertApi(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
 	InitApis(sync)
@@ -97,6 +98,11 @@ func TestUserAlertApi(t *testing.T) {
 	appAlert.UserDefinedAlert = "nonexistent"
 	_, err = appApi.AddAppUserDefinedAlert(ctx, &appAlert)
 	require.NotNil(t, err, "User Alert Should exist before being added to an app")
+
+	// remove non-existent alert from app
+	appAlert.UserDefinedAlert = "nonexistent"
+	_, err = appApi.RemoveAppUserDefinedAlert(ctx, &appAlert)
+	require.NotNil(t, err, "User Alert Should exist on the app to be removed")
 
 	// Remove user alert, that is configured on the app - should fail
 	userAlert = testutil.UserAlertData[0]

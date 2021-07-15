@@ -48,7 +48,6 @@ func (a *UserAlertApi) CreateUserAlert(ctx context.Context, in *edgeproto.UserAl
 	}
 
 	err = a.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		log.SpanLog(ctx, log.DebugLevelApi, "CreateUserAlert begin ApplySTMWait", "alert", in.Key.String())
 		if a.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
