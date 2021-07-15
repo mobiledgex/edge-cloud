@@ -26,7 +26,7 @@ message UserAlert {
   repeated string fields = 1;
   // Unique identifier key
   UserAlertKey key = 2 [(gogoproto.nullable) = false];
-  // CPU utiliztion rate(percentage) across all nodes
+  // CPU utilization rate(percentage) across all nodes
   uint32 cpu_utilization_limit = 3;
   // Memory utilization rate(percentage) across all nodes 
   uint32 mem_utilization_limit = 4;
