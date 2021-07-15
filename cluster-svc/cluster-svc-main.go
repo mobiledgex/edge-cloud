@@ -17,6 +17,7 @@ import (
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -115,6 +116,7 @@ var AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 var ClusterInstCache edgeproto.ClusterInstCache
 var settings *edgeproto.Settings = edgeproto.GetDefaultSettings()
 var nodeMgr node.NodeMgr
+var alertCache edgeproto.AlertCache
 
 type promCustomizations struct {
 	Interval           string
@@ -360,9 +362,54 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String(), "err", err)
 	if err == nil {
 		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", app.Key.Organization, node.EventType, appInst.Key.GetTags(), err, eventStart, time.Now())
+		clearAlertAppInst(ctx, &appInst)
+	} else {
+		// Generate an alert
+		createAlertAppInst(ctx, &appInst)
 	}
 	return err
 
+}
+
+func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
+	alert := edgeproto.Alert{}
+	alert.State = "firing"
+	alert.ActiveAt = dme.Timestamp{}
+	ts := time.Now()
+	alert.ActiveAt.Seconds = ts.Unix()
+	alert.ActiveAt.Nanos = int32(ts.Nanosecond())
+
+	alert.Labels = appInstToAlertLabels(in)
+
+	alert.Annotations = make(map[string]string)
+	alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertClusterSvcAppInstDown
+	alert.Annotations[cloudcommon.AlertAnnotationDescription] = cloudcommon.AlertClusterSvcAppInstDownDescription
+
+	alertCache.Update(ctx, &alert, 0)
+}
+
+func clearAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
+	alert := edgeproto.Alert{}
+	alert.Labels = appInstToAlertLabels(in)
+	alertCache.Delete(ctx, &alert, 0)
+}
+
+func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
+	labels := make(map[string]string)
+
+	labels["alertname"] = cloudcommon.AlertClusterSvcAppInstDown
+	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopePlatform
+
+	labels[edgeproto.AppKeyTagName] = appInst.Key.AppKey.Name
+	labels[edgeproto.AppKeyTagVersion] = appInst.Key.AppKey.Version
+	labels[edgeproto.AppKeyTagOrganization] = appInst.Key.AppKey.Organization
+
+	labels[edgeproto.CloudletKeyTagOrganization] = appInst.Key.ClusterInstKey.CloudletKey.Organization
+	labels[edgeproto.CloudletKeyTagName] = appInst.Key.ClusterInstKey.CloudletKey.Name
+
+	labels["cluster"] = appInst.Key.ClusterInstKey.ClusterKey.Name
+
+	return labels
 }
 
 func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
@@ -664,6 +711,9 @@ func main() {
 	notifyClient.RegisterRecvAutoScalePolicyCache(&AutoScalePolicyCache)
 	notifyClient.RegisterRecvCloudletCache(nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion))
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(settings, nil))
+	edgeproto.InitAlertCache(&alertCache)
+	notifyClient.RegisterSendAlertCache(&alertCache)
+
 	nodeMgr.RegisterClient(notifyClient)
 	notifyClient.Start()
 	defer notifyClient.Stop()
