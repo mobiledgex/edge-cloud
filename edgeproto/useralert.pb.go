@@ -80,7 +80,7 @@ type UserAlert struct {
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
 	Key UserAlertKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
-	// CPU utiliztion rate(percentage) across all nodes
+	// CPU utilization rate(percentage) across all nodes
 	CpuUtilizationLimit uint32 `protobuf:"varint,3,opt,name=cpu_utilization_limit,json=cpuUtilizationLimit,proto3" json:"cpu_utilization_limit,omitempty"`
 	// Memory utilization rate(percentage) across all nodes
 	MemUtilizationLimit uint32 `protobuf:"varint,4,opt,name=mem_utilization_limit,json=memUtilizationLimit,proto3" json:"mem_utilization_limit,omitempty"`

@@ -1126,7 +1126,7 @@ var AllDataComments = map[string]string{
 	"gpudrivers:#.ignorestate":                                                      "Ignore state will ignore any action in-progress on the GPU driver",
 	"userdefinedalerts:#.key.organization":                                          "Name of the organization for the app that this alert can be applied to",
 	"userdefinedalerts:#.key.name":                                                  "Alert name",
-	"userdefinedalerts:#.cpuutilizationlimit":                                       "CPU utiliztion rate(percentage) across all nodes",
+	"userdefinedalerts:#.cpuutilizationlimit":                                       "CPU utilization rate(percentage) across all nodes",
 	"userdefinedalerts:#.memutilizationlimit":                                       "Memory utilization rate(percentage) across all nodes",
 	"userdefinedalerts:#.diskutilizationlimit":                                      "Disk utilization rate(percentage) across all nodes",
 	"userdefinedalerts:#.activeconnlimit":                                           "Active Connections alert threshold",

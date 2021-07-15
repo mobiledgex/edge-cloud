@@ -912,9 +912,8 @@ func (s *AppApi) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.Ap
 		if changed {
 			s.store.STMPut(stm, &cur)
 			return nil
-		} else {
-			return (&edgeproto.UserAlertKey{}).NotFoundError()
 		}
+		return (&edgeproto.UserAlertKey{}).NotFoundError()
 	})
 	return &edgeproto.Result{}, err
 }
