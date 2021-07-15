@@ -98,7 +98,7 @@ var DlgMessageComments = map[string]string{
 	"lgid":        "Dynamic Location Group Id",
 	"groupcookie": "Group Cookie if secure",
 	"messageid":   "Message ID",
-	"acktype":     ", one of DlgAckEachMessage, DlgAsyEveryNMessage, DlgNoAck",
+	"acktype":     ", one of AckEachMessage, AsyEveryNMessage, NoAck",
 	"message":     "Message",
 }
 var DlgMessageSpecialArgs = map[string]string{}

@@ -4118,6 +4118,10 @@ func (e *ImageType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := ImageType_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = ImageType_CamelValue["ImageType"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -4133,7 +4137,9 @@ func (e *ImageType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e ImageType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(ImageType_CamelName, int32(e)), nil
+	str := proto.EnumName(ImageType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "ImageType")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -4142,6 +4148,10 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := ImageType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = ImageType_CamelValue["ImageType"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -4167,8 +4177,11 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 
 func (e ImageType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ImageType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "ImageType")
 	return json.Marshal(str)
 }
+
+var ImageTypeCommonPrefix = "ImageType"
 
 var VmAppOsTypeStrings = []string{
 	"VM_APP_OS_UNKNOWN",
@@ -4219,6 +4232,10 @@ func (e *VmAppOsType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := VmAppOsType_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = VmAppOsType_CamelValue["VmAppOs"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -4234,7 +4251,9 @@ func (e *VmAppOsType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e VmAppOsType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(VmAppOsType_CamelName, int32(e)), nil
+	str := proto.EnumName(VmAppOsType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "VmAppOs")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -4243,6 +4262,10 @@ func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := VmAppOsType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = VmAppOsType_CamelValue["VmAppOs"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -4268,8 +4291,11 @@ func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
 
 func (e VmAppOsType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VmAppOsType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "VmAppOs")
 	return json.Marshal(str)
 }
+
+var VmAppOsTypeCommonPrefix = "VmAppOs"
 
 var DeleteTypeStrings = []string{
 	"NO_AUTO_DELETE",
@@ -4315,7 +4341,8 @@ func (e *DeleteType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e DeleteType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(DeleteType_CamelName, int32(e)), nil
+	str := proto.EnumName(DeleteType_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -4386,6 +4413,10 @@ func (e *AccessType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := AccessType_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = AccessType_CamelValue["AccessType"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -4401,7 +4432,9 @@ func (e *AccessType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e AccessType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(AccessType_CamelName, int32(e)), nil
+	str := proto.EnumName(AccessType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "AccessType")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -4410,6 +4443,10 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := AccessType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = AccessType_CamelValue["AccessType"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -4435,8 +4472,12 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 
 func (e AccessType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(AccessType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "AccessType")
 	return json.Marshal(str)
 }
+
+var AccessTypeCommonPrefix = "AccessType"
+
 func (m *App) IsValidArgsForCreateApp() error {
 	if m.DelOpt != 0 {
 		return fmt.Errorf("Invalid field specified: DelOpt, this field is only for internal use")

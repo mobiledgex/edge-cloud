@@ -2300,7 +2300,7 @@ var CloudletComments = map[string]string{
 	"location.altitude":                   "On android only lat and long are guaranteed to be supplied altitude in meters",
 	"location.course":                     "course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"location.speed":                      "speed (IOS) / velocity (Android) (meters/sec)",
-	"ipsupport":                           "Type of IP support provided by Cloudlet (see IpSupport), one of IpSupportUnknown, IpSupportStatic, IpSupportDynamic",
+	"ipsupport":                           "Type of IP support provided by Cloudlet (see IpSupport), one of Unknown, Static, Dynamic",
 	"staticips":                           "List of static IPs for static IP support",
 	"numdynamicips":                       "Number of dynamic IPs available for dynamic IP support",
 	"timelimits.createclusterinsttimeout": "override default max time to create a cluster instance (duration)",
@@ -2313,7 +2313,7 @@ var CloudletComments = map[string]string{
 	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
+	"platformtype":                        "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra",
 	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
@@ -2441,7 +2441,7 @@ var CloudletPropsOptionalArgs = []string{
 }
 var CloudletPropsAliasArgs = []string{}
 var CloudletPropsComments = map[string]string{
-	"platformtype":                   "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
+	"platformtype":                   "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra",
 	"properties:#.value.name":        "Name of the property",
 	"properties:#.value.description": "Description of the property",
 	"properties:#.value.value":       "Default value of the property",
@@ -2465,7 +2465,7 @@ var CloudletResourceQuotaPropsOptionalArgs = []string{
 }
 var CloudletResourceQuotaPropsAliasArgs = []string{}
 var CloudletResourceQuotaPropsComments = map[string]string{
-	"platformtype":                "Platform type, one of PlatformTypeFake, PlatformTypeDind, PlatformTypeOpenstack, PlatformTypeAzure, PlatformTypeGcp, PlatformTypeEdgebox, PlatformTypeFakeinfra, PlatformTypeVsphere, PlatformTypeAwsEks, PlatformTypeVmPool, PlatformTypeAwsEc2, PlatformTypeVcd, PlatformTypeK8SBareMetal, PlatformTypeKind, PlatformTypeKindinfra",
+	"platformtype":                "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra",
 	"properties:#.name":           "Resource name",
 	"properties:#.value":          "Resource value",
 	"properties:#.inframaxvalue":  "Resource infra max value",
@@ -2618,7 +2618,7 @@ var CloudletInfoComments = map[string]string{
 	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                           "Organization of the cloudlet site",
 	"cloudlet":                               "Name of the cloudlet",
-	"state":                                  "State of cloudlet, one of CloudletStateUnknown, CloudletStateErrors, CloudletStateReady, CloudletStateOffline, CloudletStateNotPresent, CloudletStateInit, CloudletStateUpgrade, CloudletStateNeedSync",
+	"state":                                  "State of cloudlet, one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync",
 	"notifyid":                               "Id of client assigned by server (internal use only)",
 	"controller":                             "Connected controller unique id",
 	"osmaxram":                               "Maximum Ram in MB on the Cloudlet",

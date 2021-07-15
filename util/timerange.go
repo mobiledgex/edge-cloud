@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -57,4 +58,15 @@ func TimeFromEpochMicros(us int64) time.Time {
 	sec := us / 1e6
 	ns := (us % 1e6) * 1e3
 	return time.Unix(sec, ns)
+}
+
+// Change the time.ParseError into something more user-friendly to read.
+func NiceTimeParseError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(err.Error(), time.RFC3339) {
+		err = fmt.Errorf("%s into RFC3339 format failed. Example: \"%s\"", strings.Split(err.Error(), " as")[0], time.RFC3339)
+	}
+	return err
 }

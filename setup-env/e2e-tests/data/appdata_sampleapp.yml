@@ -32,7 +32,7 @@ clusterinsts:
   flavor:
     name: x1.small
   nodes: 3
-  liveness: LivenessStatic
+  liveness: Static
 - key:
     clusterkey:
       name: SmallCluster
@@ -42,7 +42,7 @@ clusterinsts:
   flavor:
     name: x1.small
   nodes: 3
-  liveness: LivenessStatic
+  liveness: Static
 
 cloudlets:
 - key:
@@ -66,7 +66,7 @@ apps:
     name: sampleApplication
     version: "1.0"
   imagepath: docker.mobiledgex.net/mobiledgex/images/mobiledgex/mexexample
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accesslayer: AccessLayerL7
   flavor:
     name: x1.small
@@ -88,9 +88,9 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_MEX/sampleApplication:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: sampleApplication
   flavor:
     name: x1.small
@@ -110,9 +110,9 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_MEX/sampleApplication:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: sampleApplication
   flavor:
     name: x1.small

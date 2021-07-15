@@ -1,13 +1,13 @@
 status: FindFound
 fqdn: default.someapplication.acme.com
 ports:
-- proto: LProtoTcp
+- proto: Tcp
   internalport: 80
   publicport: 80
-- proto: LProtoTcp
+- proto: Tcp
   internalport: 443
   publicport: 443
-- proto: LProtoUdp
+- proto: Udp
   internalport: 10002
   publicport: 10002
 cloudletlocation: {}

@@ -816,4 +816,5 @@ enum ReportSchedule {
   Every30Days = 2;
   // Every Month
   EveryMonth = 3;
+  option (protogen.common_prefix) = ""; // avoid dropping "Every"
 }

@@ -1578,7 +1578,8 @@ func (e *OptResNames) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e OptResNames) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(OptResNames_CamelName, int32(e)), nil
+	str := proto.EnumName(OptResNames_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding

@@ -69,7 +69,7 @@ clusterinsts:
       name: cloudlet-35
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -79,7 +79,7 @@ clusterinsts:
       name: cloudlet-39
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -89,7 +89,7 @@ clusterinsts:
       name: cloudlet-7
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -99,7 +99,7 @@ clusterinsts:
       name: cloudlet-13
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -109,7 +109,7 @@ clusterinsts:
       name: cloudlet-19
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -119,7 +119,7 @@ clusterinsts:
       name: cloudlet-21
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -129,7 +129,7 @@ clusterinsts:
       name: cloudlet-28
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -139,7 +139,7 @@ clusterinsts:
       name: cloudlet-33
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -149,7 +149,7 @@ clusterinsts:
       name: cloudlet-52
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -159,7 +159,7 @@ clusterinsts:
       name: cloudlet-65
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -169,7 +169,7 @@ clusterinsts:
       name: cloudlet-10
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -179,7 +179,7 @@ clusterinsts:
       name: cloudlet-21
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -189,7 +189,7 @@ clusterinsts:
       name: cloudlet-64
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -199,7 +199,7 @@ clusterinsts:
       name: cloudlet-64
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -209,7 +209,7 @@ clusterinsts:
       name: cloudlet-85
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -219,7 +219,7 @@ clusterinsts:
       name: cloudlet-30
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -229,7 +229,7 @@ clusterinsts:
       name: cloudlet-46
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -239,7 +239,7 @@ clusterinsts:
       name: cloudlet-49
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -249,7 +249,7 @@ clusterinsts:
       name: cloudlet-76
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -259,7 +259,7 @@ clusterinsts:
       name: cloudlet-72
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -269,7 +269,7 @@ clusterinsts:
       name: cloudlet-94
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -279,7 +279,7 @@ clusterinsts:
       name: cloudlet-1
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -289,7 +289,7 @@ clusterinsts:
       name: cloudlet-15
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -299,7 +299,7 @@ clusterinsts:
       name: cloudlet-33
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -309,7 +309,7 @@ clusterinsts:
       name: cloudlet-52
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -319,7 +319,7 @@ clusterinsts:
       name: cloudlet-57
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -329,7 +329,7 @@ clusterinsts:
       name: cloudlet-58
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -339,7 +339,7 @@ clusterinsts:
       name: cloudlet-75
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -349,7 +349,7 @@ clusterinsts:
       name: cloudlet-77
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -359,7 +359,7 @@ clusterinsts:
       name: cloudlet-79
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -369,7 +369,7 @@ clusterinsts:
       name: cloudlet-23
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -379,7 +379,7 @@ clusterinsts:
       name: cloudlet-36
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -389,7 +389,7 @@ clusterinsts:
       name: cloudlet-43
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -399,7 +399,7 @@ clusterinsts:
       name: cloudlet-86
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -409,7 +409,7 @@ clusterinsts:
       name: cloudlet-66
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -419,7 +419,7 @@ clusterinsts:
       name: cloudlet-69
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -429,7 +429,7 @@ clusterinsts:
       name: cloudlet-2
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -439,7 +439,7 @@ clusterinsts:
       name: cloudlet-18
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -449,7 +449,7 @@ clusterinsts:
       name: cloudlet-32
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -459,7 +459,7 @@ clusterinsts:
       name: cloudlet-48
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -469,7 +469,7 @@ clusterinsts:
       name: cloudlet-51
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -479,7 +479,7 @@ clusterinsts:
       name: cloudlet-62
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -489,7 +489,7 @@ clusterinsts:
       name: cloudlet-69
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -499,7 +499,7 @@ clusterinsts:
       name: cloudlet-80
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -509,7 +509,7 @@ clusterinsts:
       name: cloudlet-80
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -519,7 +519,7 @@ clusterinsts:
       name: cloudlet-6
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -529,7 +529,7 @@ clusterinsts:
       name: cloudlet-18
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -539,7 +539,7 @@ clusterinsts:
       name: cloudlet-49
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -549,7 +549,7 @@ clusterinsts:
       name: cloudlet-67
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -559,7 +559,7 @@ clusterinsts:
       name: cloudlet-100
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -569,7 +569,7 @@ clusterinsts:
       name: cloudlet-13
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -579,7 +579,7 @@ clusterinsts:
       name: cloudlet-20
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -589,7 +589,7 @@ clusterinsts:
       name: cloudlet-83
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -599,7 +599,7 @@ clusterinsts:
       name: cloudlet-98
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -609,7 +609,7 @@ clusterinsts:
       name: cloudlet-4
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -619,7 +619,7 @@ clusterinsts:
       name: cloudlet-19
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -629,7 +629,7 @@ clusterinsts:
       name: cloudlet-38
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -639,7 +639,7 @@ clusterinsts:
       name: cloudlet-42
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -649,7 +649,7 @@ clusterinsts:
       name: cloudlet-53
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -659,7 +659,7 @@ clusterinsts:
       name: cloudlet-90
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -669,7 +669,7 @@ clusterinsts:
       name: cloudlet-95
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -679,7 +679,7 @@ clusterinsts:
       name: cloudlet-4
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -689,7 +689,7 @@ clusterinsts:
       name: cloudlet-25
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -699,7 +699,7 @@ clusterinsts:
       name: cloudlet-44
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -709,7 +709,7 @@ clusterinsts:
       name: cloudlet-54
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -719,7 +719,7 @@ clusterinsts:
       name: cloudlet-59
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -729,7 +729,7 @@ clusterinsts:
       name: cloudlet-78
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -739,7 +739,7 @@ clusterinsts:
       name: cloudlet-30
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -749,7 +749,7 @@ clusterinsts:
       name: cloudlet-31
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -759,7 +759,7 @@ clusterinsts:
       name: cloudlet-7
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -769,7 +769,7 @@ clusterinsts:
       name: cloudlet-9
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -779,7 +779,7 @@ clusterinsts:
       name: cloudlet-9
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -789,7 +789,7 @@ clusterinsts:
       name: cloudlet-20
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -799,7 +799,7 @@ clusterinsts:
       name: cloudlet-23
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -809,7 +809,7 @@ clusterinsts:
       name: cloudlet-29
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -819,7 +819,7 @@ clusterinsts:
       name: cloudlet-82
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -829,7 +829,7 @@ clusterinsts:
       name: cloudlet-41
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -839,7 +839,7 @@ clusterinsts:
       name: cloudlet-42
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -849,7 +849,7 @@ clusterinsts:
       name: cloudlet-57
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -859,7 +859,7 @@ clusterinsts:
       name: cloudlet-68
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -869,7 +869,7 @@ clusterinsts:
       name: cloudlet-71
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -879,7 +879,7 @@ clusterinsts:
       name: cloudlet-79
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -889,7 +889,7 @@ clusterinsts:
       name: cloudlet-45
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -899,7 +899,7 @@ clusterinsts:
       name: cloudlet-55
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -909,7 +909,7 @@ clusterinsts:
       name: cloudlet-55
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -919,7 +919,7 @@ clusterinsts:
       name: cloudlet-65
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -929,7 +929,7 @@ clusterinsts:
       name: cloudlet-77
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -939,7 +939,7 @@ clusterinsts:
       name: cloudlet-6
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -949,7 +949,7 @@ clusterinsts:
       name: cloudlet-22
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -959,7 +959,7 @@ clusterinsts:
       name: cloudlet-67
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -969,7 +969,7 @@ clusterinsts:
       name: cloudlet-84
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -979,7 +979,7 @@ clusterinsts:
       name: cloudlet-93
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -989,7 +989,7 @@ clusterinsts:
       name: cloudlet-56
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -999,7 +999,7 @@ clusterinsts:
       name: cloudlet-56
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1009,7 +1009,7 @@ clusterinsts:
       name: cloudlet-5
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1019,7 +1019,7 @@ clusterinsts:
       name: cloudlet-12
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1029,7 +1029,7 @@ clusterinsts:
       name: cloudlet-14
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1039,7 +1039,7 @@ clusterinsts:
       name: cloudlet-14
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1049,7 +1049,7 @@ clusterinsts:
       name: cloudlet-22
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1059,7 +1059,7 @@ clusterinsts:
       name: cloudlet-25
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1069,7 +1069,7 @@ clusterinsts:
       name: cloudlet-61
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1079,7 +1079,7 @@ clusterinsts:
       name: cloudlet-74
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1089,7 +1089,7 @@ clusterinsts:
       name: cloudlet-88
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1099,7 +1099,7 @@ clusterinsts:
       name: cloudlet-97
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1109,7 +1109,7 @@ clusterinsts:
       name: cloudlet-2
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1119,7 +1119,7 @@ clusterinsts:
       name: cloudlet-26
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1129,7 +1129,7 @@ clusterinsts:
       name: cloudlet-29
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1139,7 +1139,7 @@ clusterinsts:
       name: cloudlet-63
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1149,7 +1149,7 @@ clusterinsts:
       name: cloudlet-60
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1159,7 +1159,7 @@ clusterinsts:
       name: cloudlet-68
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1169,7 +1169,7 @@ clusterinsts:
       name: cloudlet-3
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1179,7 +1179,7 @@ clusterinsts:
       name: cloudlet-34
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1189,7 +1189,7 @@ clusterinsts:
       name: cloudlet-35
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1199,7 +1199,7 @@ clusterinsts:
       name: cloudlet-38
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1209,7 +1209,7 @@ clusterinsts:
       name: cloudlet-45
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1219,7 +1219,7 @@ clusterinsts:
       name: cloudlet-51
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1229,7 +1229,7 @@ clusterinsts:
       name: cloudlet-34
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1239,7 +1239,7 @@ clusterinsts:
       name: cloudlet-40
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1249,7 +1249,7 @@ clusterinsts:
       name: cloudlet-63
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1259,7 +1259,7 @@ clusterinsts:
       name: cloudlet-5
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1269,7 +1269,7 @@ clusterinsts:
       name: cloudlet-54
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1279,7 +1279,7 @@ clusterinsts:
       name: cloudlet-75
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1289,7 +1289,7 @@ clusterinsts:
       name: cloudlet-83
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1299,7 +1299,7 @@ clusterinsts:
       name: cloudlet-86
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1309,7 +1309,7 @@ clusterinsts:
       name: cloudlet-90
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1319,7 +1319,7 @@ clusterinsts:
       name: cloudlet-81
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1329,7 +1329,7 @@ clusterinsts:
       name: cloudlet-89
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1339,7 +1339,7 @@ clusterinsts:
       name: cloudlet-39
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1349,7 +1349,7 @@ clusterinsts:
       name: cloudlet-46
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1359,7 +1359,7 @@ clusterinsts:
       name: cloudlet-58
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1369,7 +1369,7 @@ clusterinsts:
       name: cloudlet-70
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1379,7 +1379,7 @@ clusterinsts:
       name: cloudlet-71
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1389,7 +1389,7 @@ clusterinsts:
       name: cloudlet-78
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1399,7 +1399,7 @@ clusterinsts:
       name: cloudlet-96
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1409,7 +1409,7 @@ clusterinsts:
       name: cloudlet-16
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1419,7 +1419,7 @@ clusterinsts:
       name: cloudlet-82
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1429,7 +1429,7 @@ clusterinsts:
       name: cloudlet-10
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1439,7 +1439,7 @@ clusterinsts:
       name: cloudlet-11
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1449,7 +1449,7 @@ clusterinsts:
       name: cloudlet-48
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1459,7 +1459,7 @@ clusterinsts:
       name: cloudlet-81
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1469,7 +1469,7 @@ clusterinsts:
       name: cloudlet-84
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1479,7 +1479,7 @@ clusterinsts:
       name: cloudlet-93
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1489,7 +1489,7 @@ clusterinsts:
       name: cloudlet-24
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1499,7 +1499,7 @@ clusterinsts:
       name: cloudlet-98
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1509,7 +1509,7 @@ clusterinsts:
       name: cloudlet-15
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1519,7 +1519,7 @@ clusterinsts:
       name: cloudlet-31
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1529,7 +1529,7 @@ clusterinsts:
       name: cloudlet-50
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1539,7 +1539,7 @@ clusterinsts:
       name: cloudlet-59
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1549,7 +1549,7 @@ clusterinsts:
       name: cloudlet-66
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1559,7 +1559,7 @@ clusterinsts:
       name: cloudlet-87
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1569,7 +1569,7 @@ clusterinsts:
       name: cloudlet-17
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1579,7 +1579,7 @@ clusterinsts:
       name: cloudlet-26
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1589,7 +1589,7 @@ clusterinsts:
       name: cloudlet-28
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1599,7 +1599,7 @@ clusterinsts:
       name: cloudlet-44
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1609,7 +1609,7 @@ clusterinsts:
       name: cloudlet-99
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1619,7 +1619,7 @@ clusterinsts:
       name: cloudlet-27
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1629,7 +1629,7 @@ clusterinsts:
       name: cloudlet-37
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1639,7 +1639,7 @@ clusterinsts:
       name: cloudlet-50
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1649,7 +1649,7 @@ clusterinsts:
       name: cloudlet-76
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1659,7 +1659,7 @@ clusterinsts:
       name: cloudlet-92
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1669,7 +1669,7 @@ clusterinsts:
       name: cloudlet-96
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1679,7 +1679,7 @@ clusterinsts:
       name: cloudlet-72
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1689,7 +1689,7 @@ clusterinsts:
       name: cloudlet-89
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1699,7 +1699,7 @@ clusterinsts:
       name: cloudlet-1
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1709,7 +1709,7 @@ clusterinsts:
       name: cloudlet-3
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1719,7 +1719,7 @@ clusterinsts:
       name: cloudlet-16
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1729,7 +1729,7 @@ clusterinsts:
       name: cloudlet-24
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1739,7 +1739,7 @@ clusterinsts:
       name: cloudlet-40
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1749,7 +1749,7 @@ clusterinsts:
       name: cloudlet-53
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1759,7 +1759,7 @@ clusterinsts:
       name: cloudlet-92
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1769,7 +1769,7 @@ clusterinsts:
       name: cloudlet-100
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1779,7 +1779,7 @@ clusterinsts:
       name: cloudlet-99
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1789,7 +1789,7 @@ clusterinsts:
       name: cloudlet-8
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1799,7 +1799,7 @@ clusterinsts:
       name: cloudlet-41
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1809,7 +1809,7 @@ clusterinsts:
       name: cloudlet-47
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1819,7 +1819,7 @@ clusterinsts:
       name: cloudlet-62
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1829,7 +1829,7 @@ clusterinsts:
       name: cloudlet-70
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1839,7 +1839,7 @@ clusterinsts:
       name: cloudlet-97
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1849,7 +1849,7 @@ clusterinsts:
       name: cloudlet-27
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1859,7 +1859,7 @@ clusterinsts:
       name: cloudlet-43
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1869,7 +1869,7 @@ clusterinsts:
       name: cloudlet-88
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1879,7 +1879,7 @@ clusterinsts:
       name: cloudlet-11
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1889,7 +1889,7 @@ clusterinsts:
       name: cloudlet-60
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1899,7 +1899,7 @@ clusterinsts:
       name: cloudlet-61
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1909,7 +1909,7 @@ clusterinsts:
       name: cloudlet-73
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1919,7 +1919,7 @@ clusterinsts:
       name: cloudlet-74
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1929,7 +1929,7 @@ clusterinsts:
       name: cloudlet-95
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1939,7 +1939,7 @@ clusterinsts:
       name: cloudlet-12
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1949,7 +1949,7 @@ clusterinsts:
       name: cloudlet-17
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1959,7 +1959,7 @@ clusterinsts:
       name: cloudlet-36
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1969,7 +1969,7 @@ clusterinsts:
       name: cloudlet-37
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1979,7 +1979,7 @@ clusterinsts:
       name: cloudlet-85
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1989,7 +1989,7 @@ clusterinsts:
       name: cloudlet-94
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -1999,7 +1999,7 @@ clusterinsts:
       name: cloudlet-91
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -2009,7 +2009,7 @@ clusterinsts:
       name: cloudlet-8
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -2019,7 +2019,7 @@ clusterinsts:
       name: cloudlet-32
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -2029,7 +2029,7 @@ clusterinsts:
       name: cloudlet-47
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -2039,7 +2039,7 @@ clusterinsts:
       name: cloudlet-73
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -2049,7 +2049,7 @@ clusterinsts:
       name: cloudlet-87
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 - key:
     clusterkey:
@@ -2059,7 +2059,7 @@ clusterinsts:
       name: cloudlet-91
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 
 cloudlets:
@@ -2069,7 +2069,7 @@ cloudlets:
   accessuri: OP1.cloudlet-32
   location:
     longitude: -144
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2077,7 +2077,7 @@ cloudlets:
   accessuri: OP1.cloudlet-60
   location:
     longitude: -116
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2085,7 +2085,7 @@ cloudlets:
   accessuri: OP1.cloudlet-65
   location:
     longitude: -111
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2093,7 +2093,7 @@ cloudlets:
   accessuri: OP1.cloudlet-66
   location:
     longitude: -110
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2101,7 +2101,7 @@ cloudlets:
   accessuri: OP1.cloudlet-73
   location:
     longitude: -103
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2109,7 +2109,7 @@ cloudlets:
   accessuri: OP1.cloudlet-4
   location:
     longitude: -172
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2117,7 +2117,7 @@ cloudlets:
   accessuri: OP1.cloudlet-18
   location:
     longitude: -158
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2125,7 +2125,7 @@ cloudlets:
   accessuri: OP1.cloudlet-29
   location:
     longitude: -147
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2133,7 +2133,7 @@ cloudlets:
   accessuri: OP1.cloudlet-81
   location:
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2141,7 +2141,7 @@ cloudlets:
   accessuri: OP1.cloudlet-55
   location:
     longitude: -121
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2149,7 +2149,7 @@ cloudlets:
   accessuri: OP1.cloudlet-58
   location:
     longitude: -118
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2157,7 +2157,7 @@ cloudlets:
   accessuri: OP1.cloudlet-9
   location:
     longitude: -167
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2165,7 +2165,7 @@ cloudlets:
   accessuri: OP1.cloudlet-13
   location:
     longitude: -163
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2173,7 +2173,7 @@ cloudlets:
   accessuri: OP1.cloudlet-37
   location:
     longitude: -139
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2181,7 +2181,7 @@ cloudlets:
   accessuri: OP1.cloudlet-25
   location:
     longitude: -151
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2189,7 +2189,7 @@ cloudlets:
   accessuri: OP1.cloudlet-28
   location:
     longitude: -148
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2197,7 +2197,7 @@ cloudlets:
   accessuri: OP1.cloudlet-72
   location:
     longitude: -104
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2205,7 +2205,7 @@ cloudlets:
   accessuri: OP1.cloudlet-1
   location:
     longitude: -175
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2213,7 +2213,7 @@ cloudlets:
   accessuri: OP1.cloudlet-11
   location:
     longitude: -165
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2221,7 +2221,7 @@ cloudlets:
   accessuri: OP1.cloudlet-20
   location:
     longitude: -156
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2229,7 +2229,7 @@ cloudlets:
   accessuri: OP1.cloudlet-50
   location:
     longitude: -126
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2237,7 +2237,7 @@ cloudlets:
   accessuri: OP1.cloudlet-52
   location:
     longitude: -124
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2245,7 +2245,7 @@ cloudlets:
   accessuri: OP1.cloudlet-71
   location:
     longitude: -105
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2253,7 +2253,7 @@ cloudlets:
   accessuri: OP1.cloudlet-76
   location:
     longitude: -100
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2261,7 +2261,7 @@ cloudlets:
   accessuri: OP1.cloudlet-83
   location:
     longitude: -93
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2269,7 +2269,7 @@ cloudlets:
   accessuri: OP1.cloudlet-26
   location:
     longitude: -150
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2277,7 +2277,7 @@ cloudlets:
   accessuri: OP1.cloudlet-27
   location:
     longitude: -149
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2285,7 +2285,7 @@ cloudlets:
   accessuri: OP1.cloudlet-36
   location:
     longitude: -140
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2293,7 +2293,7 @@ cloudlets:
   accessuri: OP1.cloudlet-90
   location:
     longitude: -86
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2301,7 +2301,7 @@ cloudlets:
   accessuri: OP1.cloudlet-95
   location:
     longitude: -81
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2309,7 +2309,7 @@ cloudlets:
   accessuri: OP1.cloudlet-84
   location:
     longitude: -92
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2317,7 +2317,7 @@ cloudlets:
   accessuri: OP1.cloudlet-85
   location:
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2325,7 +2325,7 @@ cloudlets:
   accessuri: OP1.cloudlet-100
   location:
     longitude: -76
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2333,7 +2333,7 @@ cloudlets:
   accessuri: OP1.cloudlet-10
   location:
     longitude: -166
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2341,7 +2341,7 @@ cloudlets:
   accessuri: OP1.cloudlet-34
   location:
     longitude: -142
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2349,7 +2349,7 @@ cloudlets:
   accessuri: OP1.cloudlet-44
   location:
     longitude: -132
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2357,7 +2357,7 @@ cloudlets:
   accessuri: OP1.cloudlet-70
   location:
     longitude: -106
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2365,7 +2365,7 @@ cloudlets:
   accessuri: OP1.cloudlet-80
   location:
     longitude: -96
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2373,7 +2373,7 @@ cloudlets:
   accessuri: OP1.cloudlet-82
   location:
     longitude: -94
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2381,7 +2381,7 @@ cloudlets:
   accessuri: OP1.cloudlet-89
   location:
     longitude: -87
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2389,7 +2389,7 @@ cloudlets:
   accessuri: OP1.cloudlet-6
   location:
     longitude: -170
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2397,7 +2397,7 @@ cloudlets:
   accessuri: OP1.cloudlet-24
   location:
     longitude: -152
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2405,7 +2405,7 @@ cloudlets:
   accessuri: OP1.cloudlet-67
   location:
     longitude: -109
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2413,7 +2413,7 @@ cloudlets:
   accessuri: OP1.cloudlet-38
   location:
     longitude: -138
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2421,7 +2421,7 @@ cloudlets:
   accessuri: OP1.cloudlet-98
   location:
     longitude: -78
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2429,7 +2429,7 @@ cloudlets:
   accessuri: OP1.cloudlet-5
   location:
     longitude: -171
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2437,7 +2437,7 @@ cloudlets:
   accessuri: OP1.cloudlet-22
   location:
     longitude: -154
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2445,7 +2445,7 @@ cloudlets:
   accessuri: OP1.cloudlet-33
   location:
     longitude: -143
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2453,7 +2453,7 @@ cloudlets:
   accessuri: OP1.cloudlet-39
   location:
     longitude: -137
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2461,7 +2461,7 @@ cloudlets:
   accessuri: OP1.cloudlet-40
   location:
     longitude: -136
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2469,7 +2469,7 @@ cloudlets:
   accessuri: OP1.cloudlet-42
   location:
     longitude: -134
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2477,7 +2477,7 @@ cloudlets:
   accessuri: OP1.cloudlet-54
   location:
     longitude: -122
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2485,7 +2485,7 @@ cloudlets:
   accessuri: OP1.cloudlet-59
   location:
     longitude: -117
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2493,7 +2493,7 @@ cloudlets:
   accessuri: OP1.cloudlet-3
   location:
     longitude: -173
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2501,7 +2501,7 @@ cloudlets:
   accessuri: OP1.cloudlet-30
   location:
     longitude: -146
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2509,7 +2509,7 @@ cloudlets:
   accessuri: OP1.cloudlet-35
   location:
     longitude: -141
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2517,7 +2517,7 @@ cloudlets:
   accessuri: OP1.cloudlet-51
   location:
     longitude: -125
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2525,7 +2525,7 @@ cloudlets:
   accessuri: OP1.cloudlet-69
   location:
     longitude: -107
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2533,7 +2533,7 @@ cloudlets:
   accessuri: OP1.cloudlet-99
   location:
     longitude: -77
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2541,7 +2541,7 @@ cloudlets:
   accessuri: OP1.cloudlet-8
   location:
     longitude: -168
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2549,7 +2549,7 @@ cloudlets:
   accessuri: OP1.cloudlet-45
   location:
     longitude: -131
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2557,7 +2557,7 @@ cloudlets:
   accessuri: OP1.cloudlet-46
   location:
     longitude: -130
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2565,7 +2565,7 @@ cloudlets:
   accessuri: OP1.cloudlet-2
   location:
     longitude: -174
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2573,7 +2573,7 @@ cloudlets:
   accessuri: OP1.cloudlet-79
   location:
     longitude: -97
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2581,7 +2581,7 @@ cloudlets:
   accessuri: OP1.cloudlet-92
   location:
     longitude: -84
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2589,7 +2589,7 @@ cloudlets:
   accessuri: OP1.cloudlet-68
   location:
     longitude: -108
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2597,7 +2597,7 @@ cloudlets:
   accessuri: OP1.cloudlet-74
   location:
     longitude: -102
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2605,7 +2605,7 @@ cloudlets:
   accessuri: OP1.cloudlet-77
   location:
     longitude: -99
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2613,7 +2613,7 @@ cloudlets:
   accessuri: OP1.cloudlet-14
   location:
     longitude: -162
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2621,7 +2621,7 @@ cloudlets:
   accessuri: OP1.cloudlet-43
   location:
     longitude: -133
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2629,7 +2629,7 @@ cloudlets:
   accessuri: OP1.cloudlet-56
   location:
     longitude: -120
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2637,7 +2637,7 @@ cloudlets:
   accessuri: OP1.cloudlet-31
   location:
     longitude: -145
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2645,7 +2645,7 @@ cloudlets:
   accessuri: OP1.cloudlet-47
   location:
     longitude: -129
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2653,7 +2653,7 @@ cloudlets:
   accessuri: OP1.cloudlet-48
   location:
     longitude: -128
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2661,7 +2661,7 @@ cloudlets:
   accessuri: OP1.cloudlet-63
   location:
     longitude: -113
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2669,7 +2669,7 @@ cloudlets:
   accessuri: OP1.cloudlet-78
   location:
     longitude: -98
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2677,7 +2677,7 @@ cloudlets:
   accessuri: OP1.cloudlet-7
   location:
     longitude: -169
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2685,7 +2685,7 @@ cloudlets:
   accessuri: OP1.cloudlet-15
   location:
     longitude: -161
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2693,7 +2693,7 @@ cloudlets:
   accessuri: OP1.cloudlet-17
   location:
     longitude: -159
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2701,7 +2701,7 @@ cloudlets:
   accessuri: OP1.cloudlet-93
   location:
     longitude: -83
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2709,7 +2709,7 @@ cloudlets:
   accessuri: OP1.cloudlet-97
   location:
     longitude: -79
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2717,7 +2717,7 @@ cloudlets:
   accessuri: OP1.cloudlet-62
   location:
     longitude: -114
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2725,7 +2725,7 @@ cloudlets:
   accessuri: OP1.cloudlet-64
   location:
     longitude: -112
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2733,7 +2733,7 @@ cloudlets:
   accessuri: OP1.cloudlet-16
   location:
     longitude: -160
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2741,7 +2741,7 @@ cloudlets:
   accessuri: OP1.cloudlet-19
   location:
     longitude: -157
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2749,7 +2749,7 @@ cloudlets:
   accessuri: OP1.cloudlet-23
   location:
     longitude: -153
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2757,7 +2757,7 @@ cloudlets:
   accessuri: OP1.cloudlet-87
   location:
     longitude: -89
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2765,7 +2765,7 @@ cloudlets:
   accessuri: OP1.cloudlet-94
   location:
     longitude: -82
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2773,7 +2773,7 @@ cloudlets:
   accessuri: OP1.cloudlet-96
   location:
     longitude: -80
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2781,7 +2781,7 @@ cloudlets:
   accessuri: OP1.cloudlet-12
   location:
     longitude: -164
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2789,7 +2789,7 @@ cloudlets:
   accessuri: OP1.cloudlet-75
   location:
     longitude: -101
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2797,7 +2797,7 @@ cloudlets:
   accessuri: OP1.cloudlet-86
   location:
     longitude: -90
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2805,7 +2805,7 @@ cloudlets:
   accessuri: OP1.cloudlet-88
   location:
     longitude: -88
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2813,7 +2813,7 @@ cloudlets:
   accessuri: OP1.cloudlet-91
   location:
     longitude: -85
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2821,7 +2821,7 @@ cloudlets:
   accessuri: OP1.cloudlet-21
   location:
     longitude: -155
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2829,7 +2829,7 @@ cloudlets:
   accessuri: OP1.cloudlet-41
   location:
     longitude: -135
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2837,7 +2837,7 @@ cloudlets:
   accessuri: OP1.cloudlet-53
   location:
     longitude: -123
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2845,7 +2845,7 @@ cloudlets:
   accessuri: OP1.cloudlet-49
   location:
     longitude: -127
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2853,7 +2853,7 @@ cloudlets:
   accessuri: OP1.cloudlet-57
   location:
     longitude: -119
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 - key:
     organization: OP1
@@ -2861,7 +2861,7 @@ cloudlets:
   accessuri: OP1.cloudlet-61
   location:
     longitude: -115
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
 
 apps:
@@ -2870,7 +2870,7 @@ apps:
     name: app1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   accesslayer: AccessLayerL7
   defaultflavor:
@@ -2882,7 +2882,7 @@ apps:
     name: app2
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: kubernetes
   accesslayer: AccessLayerL7
   defaultflavor:
@@ -2908,9 +2908,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-45
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -2932,9 +2932,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-53
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -2956,9 +2956,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-72
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -2980,9 +2980,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-96
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3004,9 +3004,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-100
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3028,9 +3028,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-14
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3052,9 +3052,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-21
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3076,9 +3076,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-83
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3100,9 +3100,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-90
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3124,9 +3124,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-93
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3148,9 +3148,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-30
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3172,9 +3172,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-32
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3196,9 +3196,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-54
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3220,9 +3220,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-85
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3244,9 +3244,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-2
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3268,9 +3268,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-19
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3292,9 +3292,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-35
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3316,9 +3316,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-56
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3340,9 +3340,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-87
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3364,9 +3364,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-97
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3388,9 +3388,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-97
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3412,9 +3412,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-11
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3436,9 +3436,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-18
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3460,9 +3460,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-25
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3484,9 +3484,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-31
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3508,9 +3508,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-37
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3532,9 +3532,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-41
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3556,9 +3556,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-82
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3580,9 +3580,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-5
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3604,9 +3604,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-33
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3628,9 +3628,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-46
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3652,9 +3652,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-77
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3676,9 +3676,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-78
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3700,9 +3700,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-3
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3724,9 +3724,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-20
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3748,9 +3748,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-36
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -3772,9 +3772,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-36
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3796,9 +3796,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-46
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3820,9 +3820,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-59
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3844,9 +3844,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-61
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3868,9 +3868,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-74
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3892,9 +3892,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-84
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3916,9 +3916,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-7
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3940,9 +3940,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-12
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3964,9 +3964,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-17
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -3988,9 +3988,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-50
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4012,9 +4012,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-76
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4036,9 +4036,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-100
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4060,9 +4060,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-13
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4084,9 +4084,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-65
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4108,9 +4108,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-73
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4132,9 +4132,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-9
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4156,9 +4156,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-10
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4180,9 +4180,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-16
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4204,9 +4204,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-19
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4228,9 +4228,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-23
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4252,9 +4252,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-34
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4276,9 +4276,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-39
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4300,9 +4300,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-48
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4324,9 +4324,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-53
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4348,9 +4348,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-62
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4372,9 +4372,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-17
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4396,9 +4396,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-22
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4420,9 +4420,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-25
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4444,9 +4444,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-35
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4468,9 +4468,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-47
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4492,9 +4492,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-88
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4516,9 +4516,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-3
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4540,9 +4540,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-9
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4564,9 +4564,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-43
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4588,9 +4588,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-71
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4612,9 +4612,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-86
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4636,9 +4636,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-98
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4660,9 +4660,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-13
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4684,9 +4684,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-20
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4708,9 +4708,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-28
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4732,9 +4732,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-30
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4756,9 +4756,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-31
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4780,9 +4780,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-87
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4804,9 +4804,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-37
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4828,9 +4828,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-79
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4852,9 +4852,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-91
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4876,9 +4876,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-99
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4900,9 +4900,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-1
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4924,9 +4924,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-33
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -4948,9 +4948,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-47
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4972,9 +4972,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-51
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -4996,9 +4996,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-61
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5020,9 +5020,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-68
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5044,9 +5044,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-7
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5068,9 +5068,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-8
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5092,9 +5092,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-18
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5116,9 +5116,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-40
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5140,9 +5140,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-55
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5164,9 +5164,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-56
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5188,9 +5188,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-80
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5212,9 +5212,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-98
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5236,9 +5236,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-48
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5260,9 +5260,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-63
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5284,9 +5284,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-85
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5308,9 +5308,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-11
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5332,9 +5332,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-12
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5356,9 +5356,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-26
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5380,9 +5380,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-44
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5404,9 +5404,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-50
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5428,9 +5428,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-82
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5452,9 +5452,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-95
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5476,9 +5476,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-99
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5500,9 +5500,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-1
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5524,9 +5524,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-32
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5548,9 +5548,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-42
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5572,9 +5572,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-44
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5596,9 +5596,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-54
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5620,9 +5620,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-70
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5644,9 +5644,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-91
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5668,9 +5668,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-92
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5692,9 +5692,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-4
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5716,9 +5716,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-52
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5740,9 +5740,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-66
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5764,9 +5764,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-67
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5788,9 +5788,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-69
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5812,9 +5812,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-69
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5836,9 +5836,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-72
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5860,9 +5860,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-75
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5884,9 +5884,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-24
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5908,9 +5908,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-27
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5932,9 +5932,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-29
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -5956,9 +5956,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-60
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -5980,9 +5980,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-94
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6004,9 +6004,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-16
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6028,9 +6028,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-41
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6052,9 +6052,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-43
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6076,9 +6076,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-59
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6100,9 +6100,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-73
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6124,9 +6124,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-75
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6148,9 +6148,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-84
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6172,9 +6172,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-8
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6196,9 +6196,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-29
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6220,9 +6220,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-34
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6244,9 +6244,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-49
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6268,9 +6268,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-65
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6292,9 +6292,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-86
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6316,9 +6316,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-89
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6340,9 +6340,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-93
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6364,9 +6364,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-94
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6388,9 +6388,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-22
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6412,9 +6412,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-45
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6436,9 +6436,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-51
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6460,9 +6460,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-76
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6484,9 +6484,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-5
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6508,9 +6508,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-14
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6532,9 +6532,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-57
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6556,9 +6556,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-78
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6580,9 +6580,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-6
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6604,9 +6604,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-27
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6628,9 +6628,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-49
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6652,9 +6652,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-58
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6676,9 +6676,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-81
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6700,9 +6700,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-92
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6724,9 +6724,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-10
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6748,9 +6748,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-23
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6772,9 +6772,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-26
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6796,9 +6796,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-64
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6820,9 +6820,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-64
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6844,9 +6844,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-68
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6868,9 +6868,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-77
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6892,9 +6892,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-83
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6916,9 +6916,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-88
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6940,9 +6940,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-95
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -6964,9 +6964,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-96
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -6988,9 +6988,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-24
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7012,9 +7012,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-38
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7036,9 +7036,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-63
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7060,9 +7060,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-67
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7084,9 +7084,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-4
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7108,9 +7108,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-6
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7132,9 +7132,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-42
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7156,9 +7156,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-58
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7180,9 +7180,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-74
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7204,9 +7204,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-52
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7228,9 +7228,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-62
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7252,9 +7252,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-80
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7276,9 +7276,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-90
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7300,9 +7300,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-2
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7324,9 +7324,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-15
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7348,9 +7348,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-15
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7372,9 +7372,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-21
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7396,9 +7396,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-28
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7420,9 +7420,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-40
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7444,9 +7444,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-55
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7468,9 +7468,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-57
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7492,9 +7492,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-60
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7516,9 +7516,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-66
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7540,9 +7540,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-70
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7564,9 +7564,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-71
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7588,9 +7588,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-79
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7612,9 +7612,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-81
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7636,9 +7636,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-38
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
@@ -7660,9 +7660,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-39
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app2:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app2
   flavor:
     name: x1.small
@@ -7684,9 +7684,9 @@ appinstances:
     cloudletkey:
       organization: OP1
       name: cloudlet-89
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_Dev1/app1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: app1
   flavor:
     name: x1.small
