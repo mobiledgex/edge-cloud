@@ -23,7 +23,7 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
-  disabledmeratelimit: false
+  disableratelimit: false
   maxnumperipratelimiters: 10000
 flavors:
 - key:

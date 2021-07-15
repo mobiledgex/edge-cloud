@@ -126,7 +126,7 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			// no validation
 		case SettingsFieldLocationTileSideLengthKm:
 			v.CheckGT(f, s.LocationTileSideLengthKm, int64(0))
-		case SettingsFieldDisableDmeRateLimit:
+		case SettingsFieldDisableRateLimit:
 			// no validation
 		case SettingsFieldMaxNumPerIpRateLimiters:
 			v.CheckGT(f, s.MaxNumPerIpRateLimiters, int64(0))
@@ -186,7 +186,7 @@ func GetDefaultSettings() *Settings {
 		},
 	}
 	s.InfluxDbDownsampledMetricsRetention = Duration(8760 * time.Hour) // 1 year
-	s.DisableDmeRateLimit = false
+	s.DisableRateLimit = false
 	s.MaxNumPerIpRateLimiters = 10000
 	return &s
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -80,6 +81,9 @@ func buildMaxReqsRateLimitSettings(key edgeproto.RateLimitSettingsKey, name stri
 
 // Show RateLimit settings for an API endpoint type
 func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowRateLimitSettingsServer) error {
+	if settingsApi.Get().DisableRateLimit {
+		return fmt.Errorf("DisableRateLimit must be false to ShowRateLimitSettings")
+	}
 	// Get all FlowRateLimitSettings with corresponding RateLimitKey
 	flowsettings := make([]*edgeproto.FlowRateLimitSettings, 0)
 	ffilter := &edgeproto.FlowRateLimitSettings{
@@ -132,9 +136,9 @@ func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msetti
 				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
 				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
 			}
+			settingsmap[key] = ratelimitsetting
 		}
 		ratelimitsetting.FlowSettings[fsetting.Key.FlowSettingsName] = fsetting.Settings
-		settingsmap[key] = ratelimitsetting
 	}
 
 	for _, msetting := range msettings {
@@ -146,9 +150,9 @@ func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msetti
 				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
 				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
 			}
+			settingsmap[key] = ratelimitsetting
 		}
 		ratelimitsetting.MaxReqsSettings[msetting.Key.MaxReqsSettingsName] = msetting.Settings
-		settingsmap[key] = ratelimitsetting
 	}
 
 	ratelimitsettings := make([]*edgeproto.RateLimitSettings, 0)
@@ -160,6 +164,10 @@ func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msetti
 
 // Create FlowRateLimitSettings for the specified RateLimitSettings. If no RateLimitSettings exists, create a new one
 func (r *RateLimitSettingsApi) CreateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to CreateFlowRateLimitSettings")
+	}
+
 	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
@@ -188,6 +196,10 @@ func (r *RateLimitSettingsApi) CreateFlowRateLimitSettings(ctx context.Context, 
 
 // Update FlowRateLimitSettings for the specified RateLimitSettings
 func (r *RateLimitSettingsApi) UpdateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to UpdateFlowRateLimitSettings")
+	}
+
 	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
@@ -232,6 +244,10 @@ func (r *RateLimitSettingsApi) UpdateFlowRateLimitSettings(ctx context.Context, 
 
 // Delete FlowRateLimitSettings for the specified RateLimitSettings. If no FlowSettings and MaxReqsSettings left, remove the RateLimitSettings
 func (r *RateLimitSettingsApi) DeleteFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to DeleteFlowRateLimitSettings")
+	}
+
 	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
@@ -248,6 +264,13 @@ func (r *RateLimitSettingsApi) DeleteFlowRateLimitSettings(ctx context.Context, 
 
 // Show FlowRateLimit settings for an API endpoint type
 func (r *RateLimitSettingsApi) ShowFlowRateLimitSettings(in *edgeproto.FlowRateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowFlowRateLimitSettingsServer) error {
+	if settingsApi.Get().DisableRateLimit {
+		if *testMode {
+			return nil
+		}
+		return fmt.Errorf("DisableRateLimit must be false to ShowFlowRateLimitSettings")
+	}
+
 	err := r.flowcache.Show(in, func(obj *edgeproto.FlowRateLimitSettings) error {
 		err := cb.Send(obj)
 		return err
@@ -257,6 +280,10 @@ func (r *RateLimitSettingsApi) ShowFlowRateLimitSettings(in *edgeproto.FlowRateL
 
 // Create MaxReqsRateLimitSettings for the specified RateLimitSettings. If no RateLimitSettings exists, create a new one
 func (r *RateLimitSettingsApi) CreateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to CreateMaxReqsRateLimitSettings")
+	}
+
 	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
@@ -285,6 +312,10 @@ func (r *RateLimitSettingsApi) CreateMaxReqsRateLimitSettings(ctx context.Contex
 
 // Update MaxReqsRateLimitSettings for the specified RateLimitSettings
 func (r *RateLimitSettingsApi) UpdateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to UpdateMaxReqsRateLimitSettings")
+	}
+
 	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
@@ -329,6 +360,10 @@ func (r *RateLimitSettingsApi) UpdateMaxReqsRateLimitSettings(ctx context.Contex
 
 // Delete MaxReqsRateLimitSettings for the specified RateLimitSettings. If no FlowSettings and MaxReqsSettings left, remove the RateLimitSettings
 func (r *RateLimitSettingsApi) DeleteMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to DeleteMaxReqsRateLimitSettings")
+	}
+
 	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
@@ -345,6 +380,13 @@ func (r *RateLimitSettingsApi) DeleteMaxReqsRateLimitSettings(ctx context.Contex
 
 // Show MaxReqsRateLimit settings for an API endpoint type
 func (r *RateLimitSettingsApi) ShowMaxReqsRateLimitSettings(in *edgeproto.MaxReqsRateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsServer) error {
+	if settingsApi.Get().DisableRateLimit {
+		if *testMode {
+			return nil
+		}
+		return fmt.Errorf("DisableRateLimit must be false to ShowMaxReqsRateLimitSettings")
+	}
+
 	err := r.maxreqscache.Show(in, func(obj *edgeproto.MaxReqsRateLimitSettings) error {
 		err := cb.Send(obj)
 		return err

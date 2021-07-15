@@ -208,15 +208,3 @@ message RateLimitSettingsData {
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }
-
-message FlowRateLimitSettingsData {
-  repeated FlowRateLimitSettings settings = 1 [(gogoproto.nullable) = false];
-  option (protogen.e2edata) = true;
-  option (protogen.generate_copy_in_fields) = false;
-}
-
-message MaxReqsRateLimitSettingsData {
-  repeated MaxReqsRateLimitSettings settings = 1 [(gogoproto.nullable) = false];
-  option (protogen.e2edata) = true;
-  option (protogen.generate_copy_in_fields) = false;
-}

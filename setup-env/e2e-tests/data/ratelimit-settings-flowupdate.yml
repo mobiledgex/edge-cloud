@@ -1,4 +1,4 @@
-settings:
+flowratelimitsettings:
 - key:
     flowsettingsname: fcallreqs1
     ratelimitkey:
@@ -6,6 +6,5 @@ settings:
       apiendpointtype: Dme
       ratelimittarget: AllRequests
   settings:
-    flowalgorithm: TokenBucketAlgorithm
     reqspersecond: 1
     burstsize: 1

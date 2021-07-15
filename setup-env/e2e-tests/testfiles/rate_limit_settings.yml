@@ -17,17 +17,17 @@ tests:
     yaml2: "{{datadir}}/ratelimit-settings-default_show.yml"
     filetype: ratelimitsettings
 
-- name: Create RateLimitSettings for FindCloudlet
-  apifile: "{{datadir}}/ratelimit-settings-create.yml"
-  actions: [ctrlapi-ratelimitcreate,ctrlapi-ratelimitshow]
+- name: Create FlowRateLimitSettings for FindCloudlet
+  apifile: "{{datadir}}/ratelimit-settings-flowcreate.yml"
+  actions: [ctrlapi-create,ctrlapi-ratelimitshow]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/ratelimit-settings-create_show.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-flowcreate_show.yml"
     filetype: ratelimitsettings
 
 - name: Update FlowRateLimitSettings, update flow rate limit on FindCloudlet settings (1 req/sec and 1 burstsize)
   apifile: "{{datadir}}/ratelimit-settings-flowupdate.yml"
-  actions: [ctrlapi-ratelimitflowupdate,ctrlapi-ratelimitshow]
+  actions: [ctrlapi-update,ctrlapi-ratelimitshow]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/ratelimit-settings-flowupdate_show.yml"
@@ -58,7 +58,7 @@ tests:
 
 - name: Delete FlowRateLimitSettings for FindCloudlet
   apifile: "{{datadir}}/ratelimit-settings-flowdelete.yml"
-  actions: [ctrlapi-ratelimitflowdelete,ctrlapi-ratelimitshow]
+  actions: [ctrlapi-delete,ctrlapi-ratelimitshow]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/ratelimit-settings-default_show.yml"
@@ -82,7 +82,7 @@ tests:
 
 - name: Create MaxReqsRateLimitSettings for FindCloudlet
   apifile: "{{datadir}}/ratelimit-settings-maxreqscreate.yml"
-  actions: [ctrlapi-ratelimitmaxreqscreate,ctrlapi-ratelimitshow]
+  actions: [ctrlapi-create,ctrlapi-ratelimitshow]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/ratelimit-settings-maxreqscreate_show.yml"
@@ -111,12 +111,12 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response.yml"
     filetype: findcloudlet
 
-- name: Delete all RateLimitSettings
-  apifile: "{{datadir}}/ratelimit-settings-delete.yml"
-  actions: [ctrlapi-ratelimitdelete,ctrlapi-ratelimitshow]
+- name: Delete MaxReqsRateLimitSettings for FindCloudlet
+  apifile: "{{datadir}}/ratelimit-settings-maxreqsdelete.yml"
+  actions: [ctrlapi-delete,ctrlapi-ratelimitshow]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/ratelimit-settings-delete_show.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-default_show.yml"
     filetype: ratelimitsettings
 
 - name: delete provisioning, verify it is empty

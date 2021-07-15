@@ -1162,10 +1162,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
-	case reflect.TypeOf(NoticeAction(0)):
-		if en, ok := NoticeAction_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
 	case reflect.TypeOf(ApiEndpointType(0)):
 		if en, ok := ApiEndpointType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1180,6 +1176,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		}
 	case reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)):
 		if en, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(NoticeAction(0)):
+		if en, ok := NoticeAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(StreamState(0)):
@@ -1218,13 +1218,13 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":             struct{}{},
 	"ShowClusterRefs":              struct{}{},
 	"ShowAppInstRefs":              struct{}{},
+	"ShowRateLimitSettings":        struct{}{},
+	"ShowFlowRateLimitSettings":    struct{}{},
+	"ShowMaxReqsRateLimitSettings": struct{}{},
 	"ShowController":               struct{}{},
 	"ShowNode":                     struct{}{},
 	"ShowDevice":                   struct{}{},
 	"ShowDeviceReport":             struct{}{},
-	"ShowRateLimitSettings":        struct{}{},
-	"ShowFlowRateLimitSettings":    struct{}{},
-	"ShowMaxReqsRateLimitSettings": struct{}{},
 }
 
 func IsShow(cmd string) bool {

@@ -114,6 +114,12 @@ func (a *AllData) Sort() {
 	sort.Slice(a.VmPools[:], func(i, j int) bool {
 		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
 	})
+	sort.Slice(a.FlowRateLimitSettings[:], func(i, j int) bool {
+		return a.FlowRateLimitSettings[i].Key.GetKeyString() < a.FlowRateLimitSettings[j].Key.GetKeyString()
+	})
+	sort.Slice(a.MaxReqsRateLimitSettings[:], func(i, j int) bool {
+		return a.MaxReqsRateLimitSettings[i].Key.GetKeyString() < a.MaxReqsRateLimitSettings[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {

@@ -1,4 +1,4 @@
-settings:
+maxreqsratelimitsettings:
 - key:
     maxreqssettingsname: fcallreqs1
     ratelimitkey:

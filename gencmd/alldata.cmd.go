@@ -289,6 +289,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
 		}
 	}
+	for i0 := 0; i0 < len(in.FlowRateLimitSettings); i0++ {
+	}
+	for i0 := 0; i0 < len(in.MaxReqsRateLimitSettings); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -331,7 +335,7 @@ var AllDataOptionalArgs = []string{
 	"settings.influxdbdownsampledmetricsretention",
 	"settings.influxdbedgeeventsmetricsretention",
 	"settings.appinstclientcleanupinterval",
-	"settings.disabledmeratelimit",
+	"settings.disableratelimit",
 	"settings.maxnumperipratelimiters",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
@@ -731,6 +735,22 @@ var AllDataOptionalArgs = []string{
 	"gpudrivers:#.properties",
 	"gpudrivers:#.state",
 	"gpudrivers:#.ignorestate",
+	"flowratelimitsettings:#.fields",
+	"flowratelimitsettings:#.key.flowsettingsname",
+	"flowratelimitsettings:#.key.ratelimitkey.apiname",
+	"flowratelimitsettings:#.key.ratelimitkey.apiendpointtype",
+	"flowratelimitsettings:#.key.ratelimitkey.ratelimittarget",
+	"flowratelimitsettings:#.settings.flowalgorithm",
+	"flowratelimitsettings:#.settings.reqspersecond",
+	"flowratelimitsettings:#.settings.burstsize",
+	"maxreqsratelimitsettings:#.fields",
+	"maxreqsratelimitsettings:#.key.maxreqssettingsname",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiname",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiendpointtype",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.ratelimittarget",
+	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm",
+	"maxreqsratelimitsettings:#.settings.maxrequests",
+	"maxreqsratelimitsettings:#.settings.interval",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -772,7 +792,7 @@ var AllDataComments = map[string]string{
 	"settings.influxdbdownsampledmetricsretention":                                  "Default retention policy for downsampled influx db (duration)",
 	"settings.influxdbedgeeventsmetricsretention":                                   "Default retention policy for edgeevents metrics influx db (duration)",
 	"settings.appinstclientcleanupinterval":                                         "AppInstClient cleanup thread run interval",
-	"settings.disabledmeratelimit":                                                  "Disable rate limiting for DME APIs (default is false)",
+	"settings.disableratelimit":                                                     "Disable rate limiting for APIs (default is false)",
 	"settings.maxnumperipratelimiters":                                              "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
@@ -1104,6 +1124,22 @@ var AllDataComments = map[string]string{
 	"gpudrivers:#.properties":                                                       "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
 	"gpudrivers:#.state":                                                            "State to figure out if any action on the GPU driver is in-progress",
 	"gpudrivers:#.ignorestate":                                                      "Ignore state will ignore any action in-progress on the GPU driver",
+	"flowratelimitsettings:#.fields":                                                "Fields are used for the Update API to specify which fields to apply",
+	"flowratelimitsettings:#.key.flowsettingsname":                                  "Unique name for FlowRateLimitSettings (there can be multiple FlowSettings per RateLimitSettingsKey)",
+	"flowratelimitsettings:#.key.ratelimitkey.apiname":                              "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
+	"flowratelimitsettings:#.key.ratelimitkey.apiendpointtype":                      "API Endpoint type, one of UnknownApiEndpointType, Dme",
+	"flowratelimitsettings:#.key.ratelimitkey.ratelimittarget":                      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"flowratelimitsettings:#.settings.flowalgorithm":                                "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"flowratelimitsettings:#.settings.reqspersecond":                                "requests per second for flow rate limiting",
+	"flowratelimitsettings:#.settings.burstsize":                                    "burst size for flow rate limiting",
+	"maxreqsratelimitsettings:#.fields":                                             "Fields are used for the Update API to specify which fields to apply",
+	"maxreqsratelimitsettings:#.key.maxreqssettingsname":                            "Unique name for MaxReqsRateLimitSettings (there can be multiple MaxReqsSettings per RateLimitSettingsKey)",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiname":                           "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiendpointtype":                   "API Endpoint type, one of UnknownApiEndpointType, Dme",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.ratelimittarget":                   "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm":                          "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
+	"maxreqsratelimitsettings:#.settings.maxrequests":                               "Maximum number of requests for the given Interval",
+	"maxreqsratelimitsettings:#.settings.interval":                                  "Time interval",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -1134,8 +1170,10 @@ var AllDataSpecialArgs = map[string]string{
 	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
+	"flowratelimitsettings:#.fields":          "StringArray",
 	"gpudrivers:#.fields":                     "StringArray",
 	"gpudrivers:#.properties":                 "StringToString",
+	"maxreqsratelimitsettings:#.fields":       "StringArray",
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",

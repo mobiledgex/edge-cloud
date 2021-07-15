@@ -31,7 +31,7 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
-  disabledmeratelimit: false
+  disableratelimit: false
   maxnumperipratelimiters: 10000
 flavors:
 - key:
@@ -927,3 +927,47 @@ appinstrefs:
   insts:
     ? '{"app_key":{"organization":"MobiledgeX","name":"NFSAutoProvision","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
+
+flowratelimitsettings:
+- key:
+    flowsettingsname: dmeglobalallreqs1
+    ratelimitkey:
+      apiname: Global
+      apiendpointtype: Dme
+      ratelimittarget: AllRequests
+  settings:
+    flowalgorithm: TokenBucketAlgorithm
+    reqspersecond: 25000
+    burstsize: 250
+- key:
+    flowsettingsname: verifylocallreqs1
+    ratelimitkey:
+      apiname: VerifyLocation
+      apiendpointtype: Dme
+      ratelimittarget: AllRequests
+  settings:
+    flowalgorithm: TokenBucketAlgorithm
+    reqspersecond: 5000
+    burstsize: 50
+- key:
+    flowsettingsname: dmeglobalperip1
+    ratelimitkey:
+      apiname: Global
+      apiendpointtype: Dme
+      ratelimittarget: PerIp
+  settings:
+    flowalgorithm: TokenBucketAlgorithm
+    reqspersecond: 10000
+    burstsize: 100
+- key:
+    flowsettingsname: verifylocperip1
+    ratelimitkey:
+      apiname: VerifyLocation
+      apiendpointtype: Dme
+      ratelimittarget: PerIp
+  settings:
+    flowalgorithm: TokenBucketAlgorithm
+    reqspersecond: 1000
+    burstsize: 25
+
+maxreqsratelimitsettings:

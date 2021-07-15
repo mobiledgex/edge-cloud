@@ -63,7 +63,7 @@ func (r *RateLimitManager) UpdateFlowRateLimitSettings(flowRateLimitSettings *ed
 }
 
 /*
- * Remove the rflow ate limit settings for API associated with the specified RateLimitSettingsKey
+ * Remove the flow rate limit settings for API associated with the specified RateLimitSettingsKey
  * For example, this might remove the PerIp rate limiting for VerifyLocation
  */
 func (r *RateLimitManager) RemoveFlowRateLimitSettings(key edgeproto.FlowRateLimitSettingsKey) {

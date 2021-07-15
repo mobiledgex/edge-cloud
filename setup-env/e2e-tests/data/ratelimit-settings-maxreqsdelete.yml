@@ -1,6 +1,6 @@
-flowratelimitsettings:
+maxreqsratelimitsettings:
 - key:
-    flowsettingsname: fcallreqs1
+    maxreqssettingsname: fcallreqs1
     ratelimitkey:
       apiname: FindCloudlet
       apiendpointtype: Dme

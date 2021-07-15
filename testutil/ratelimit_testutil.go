@@ -47,62 +47,6 @@ func RunRateLimitSettingsDataShowApis(run *Run, in *edgeproto.RateLimitSettingsD
 	run.RateLimitSettingsApi(&in.Settings, nil, &out.Settings)
 }
 
-type FlowRateLimitSettingsDataOut struct {
-	Settings []edgeproto.Result
-	Errors   []Err
-}
-
-// used to intersperse other creates/deletes/checks
-// note the objs value is the previous one for create,
-// but the next one for delete
-type RunFlowRateLimitSettingsDataApiCallback func(objs string)
-
-func RunFlowRateLimitSettingsDataApis(run *Run, in *edgeproto.FlowRateLimitSettingsData, inMap map[string]interface{}, out *FlowRateLimitSettingsDataOut, apicb RunFlowRateLimitSettingsDataApiCallback) {
-	apicb("")
-	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.Settings, inMap["settings"], &out.Settings)
-	apicb("settings")
-	out.Errors = run.Errs
-}
-
-func RunFlowRateLimitSettingsDataReverseApis(run *Run, in *edgeproto.FlowRateLimitSettingsData, inMap map[string]interface{}, out *FlowRateLimitSettingsDataOut, apicb RunFlowRateLimitSettingsDataApiCallback) {
-	apicb("settings")
-	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.Settings, inMap["settings"], &out.Settings)
-	apicb("")
-	out.Errors = run.Errs
-}
-
-func RunFlowRateLimitSettingsDataShowApis(run *Run, in *edgeproto.FlowRateLimitSettingsData, out *edgeproto.FlowRateLimitSettingsData) {
-	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.Settings, nil, &out.Settings)
-}
-
-type MaxReqsRateLimitSettingsDataOut struct {
-	Settings []edgeproto.Result
-	Errors   []Err
-}
-
-// used to intersperse other creates/deletes/checks
-// note the objs value is the previous one for create,
-// but the next one for delete
-type RunMaxReqsRateLimitSettingsDataApiCallback func(objs string)
-
-func RunMaxReqsRateLimitSettingsDataApis(run *Run, in *edgeproto.MaxReqsRateLimitSettingsData, inMap map[string]interface{}, out *MaxReqsRateLimitSettingsDataOut, apicb RunMaxReqsRateLimitSettingsDataApiCallback) {
-	apicb("")
-	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.Settings, inMap["settings"], &out.Settings)
-	apicb("settings")
-	out.Errors = run.Errs
-}
-
-func RunMaxReqsRateLimitSettingsDataReverseApis(run *Run, in *edgeproto.MaxReqsRateLimitSettingsData, inMap map[string]interface{}, out *MaxReqsRateLimitSettingsDataOut, apicb RunMaxReqsRateLimitSettingsDataApiCallback) {
-	apicb("settings")
-	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.Settings, inMap["settings"], &out.Settings)
-	apicb("")
-	out.Errors = run.Errs
-}
-
-func RunMaxReqsRateLimitSettingsDataShowApis(run *Run, in *edgeproto.MaxReqsRateLimitSettingsData, out *edgeproto.MaxReqsRateLimitSettingsData) {
-	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.Settings, nil, &out.Settings)
-}
-
 func (r *Run) RateLimitSettingsApi_FlowRateLimitSettings(data *[]edgeproto.FlowRateLimitSettings, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for FlowRateLimitSettings", "mode", r.Mode)
 	if r.Mode == "show" {
