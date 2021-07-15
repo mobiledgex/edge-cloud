@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -601,6 +602,9 @@ func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val,
 					if strings.Contains(err.Error(), replace) {
 						err = errors.New(strings.Replace(err.Error(), replace, "", -1))
 					}
+				}
+				if sf.Type == reflect.TypeOf(time.Time{}) || sf.Type == reflect.TypeOf(&time.Time{}) {
+					err = util.NiceTimeParseError(err)
 				}
 				help := getParseErrorHelp(sf.Type.Kind())
 				return fmt.Errorf("unable to parse %q as %s: %v%s", val, asType, err, help)
