@@ -20,7 +20,6 @@ import (
 
 var tracer opentracing.Tracer
 var tracerCloser io.Closer
-var reporterCloser io.Closer
 
 type contextKey struct{}
 
@@ -64,8 +63,7 @@ func InitTracer(tlsConfig *tls.Config) {
 		QueueSize:         1000,
 	}
 	logger := zap.NewLogger(slogger.Desugar())
-	reporter, rcloser := NewReporter(SpanServiceName, tlsConfig, rc, logger)
-	reporterCloser = rcloser
+	reporter, _ := NewReporter(SpanServiceName, tlsConfig, rc, logger)
 
 	cfg := &config.Configuration{
 		ServiceName: SpanServiceName,
@@ -107,11 +105,6 @@ func FinishTracer() {
 	}
 	tracerCloser.Close()
 	tracerCloser = nil
-	if reporterCloser == nil {
-		return
-	}
-	reporterCloser.Close()
-	reporterCloser = nil
 }
 
 // TraceData is used to transport trace/span across boundaries,
