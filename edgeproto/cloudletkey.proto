@@ -22,6 +22,7 @@ message CloudletKey {
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+  option (protogen.also_required) = "Name,Organization";
   option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
   option (protogen.custom_key_type) = "CloudletKey";
   option (protogen.generate_show_test) = true; 
