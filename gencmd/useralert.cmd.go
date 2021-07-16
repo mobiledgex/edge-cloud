@@ -316,9 +316,9 @@ var UserAlertAliasArgs = []string{
 var UserAlertComments = map[string]string{
 	"alert-org":            "Name of the organization for the app that this alert can be applied to",
 	"name":                 "Alert name",
-	"cpuutilizationlimit":  "CPU utilization rate(percentage) across all nodes",
-	"memutilizationlimit":  "Memory utilization rate(percentage) across all nodes",
-	"diskutilizationlimit": "Disk utilization rate(percentage) across all nodes",
+	"cpuutilizationlimit":  "container or pod CPU utilization rate(percentage) across all nodes",
+	"memutilizationlimit":  "container or pod memory utilization rate(percentage) across all nodes",
+	"diskutilizationlimit": "container or pod disk utilization rate(percentage) across all nodes",
 	"active-connections":   "Active Connections alert threshold",
 	"severity":             "Alert Severity",
 	"trigger-time":         "Duration for which alert interval is active",

@@ -80,11 +80,11 @@ type UserAlert struct {
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
 	Key UserAlertKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
-	// CPU utilization rate(percentage) across all nodes
+	// container or pod CPU utilization rate(percentage) across all nodes
 	CpuUtilizationLimit uint32 `protobuf:"varint,3,opt,name=cpu_utilization_limit,json=cpuUtilizationLimit,proto3" json:"cpu_utilization_limit,omitempty"`
-	// Memory utilization rate(percentage) across all nodes
+	// container or pod memory utilization rate(percentage) across all nodes
 	MemUtilizationLimit uint32 `protobuf:"varint,4,opt,name=mem_utilization_limit,json=memUtilizationLimit,proto3" json:"mem_utilization_limit,omitempty"`
-	// Disk utilization rate(percentage) across all nodes
+	// container or pod disk utilization rate(percentage) across all nodes
 	DiskUtilizationLimit uint32 `protobuf:"varint,5,opt,name=disk_utilization_limit,json=diskUtilizationLimit,proto3" json:"disk_utilization_limit,omitempty"`
 	// Active Connections alert threshold
 	ActiveConnLimit uint32 `protobuf:"varint,6,opt,name=active_conn_limit,json=activeConnLimit,proto3" json:"active_conn_limit,omitempty"`
