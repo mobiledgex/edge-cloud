@@ -445,6 +445,37 @@ func (r *Run) AppApi_AppAutoProvPolicy(data *[]edgeproto.AppAutoProvPolicy, data
 	}
 }
 
+func (r *Run) AppApi_AppUserDefinedAlert(data *[]edgeproto.AppUserDefinedAlert, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for AppUserDefinedAlert", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "add":
+			out, err := r.client.AddAppUserDefinedAlert(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi_AppUserDefinedAlert[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_AppUserDefinedAlert expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "remove":
+			out, err := r.client.RemoveAppUserDefinedAlert(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("AppApi_AppUserDefinedAlert[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunAppApi_AppUserDefinedAlert expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
 func (r *Run) AppApi_DeploymentCloudletRequest(data *[]edgeproto.DeploymentCloudletRequest, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for DeploymentCloudletRequest", "mode", r.Mode)
 	if r.Mode == "show" {
@@ -622,6 +653,30 @@ func (s *CliClient) RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.A
 	return &out, err
 }
 
+func (s *ApiClient) AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.AddAppUserDefinedAlert(ctx, in)
+}
+
+func (s *CliClient) AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "AddAppUserDefinedAlert")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+	api := edgeproto.NewAppApiClient(s.Conn)
+	return api.RemoveAppUserDefinedAlert(ctx, in)
+}
+
+func (s *CliClient) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "RemoveAppUserDefinedAlert")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 type CloudletKeyStream interface {
 	Recv() (*edgeproto.CloudletKey, error)
 }
@@ -664,5 +719,7 @@ type AppApiClient interface {
 	ShowApp(ctx context.Context, in *edgeproto.App) ([]edgeproto.App, error)
 	AddAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
 	RemoveAppAutoProvPolicy(ctx context.Context, in *edgeproto.AppAutoProvPolicy) (*edgeproto.Result, error)
+	AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error)
+	RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error)
 	ShowCloudletsForAppDeployment(ctx context.Context, in *edgeproto.DeploymentCloudletRequest) ([]edgeproto.CloudletKey, error)
 }

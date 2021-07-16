@@ -104,7 +104,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "alertname not found", "labels", in.Labels)
 		return
 	}
-	if !cloudcommon.IsMonitoredAlert(name) {
+	if !cloudcommon.IsMonitoredAlert(in.Labels) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "ignoring alert", "name", name)
 		return
 	}

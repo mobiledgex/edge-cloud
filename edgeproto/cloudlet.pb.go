@@ -953,7 +953,8 @@ type FlavorMatch struct {
 	// Cloudlet ctx
 	Key CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
 	// Flavor name to lookup
-	FlavorName       string `protobuf:"bytes,3,opt,name=flavor_name,json=flavorName,proto3" json:"flavor_name,omitempty"`
+	FlavorName string `protobuf:"bytes,3,opt,name=flavor_name,json=flavorName,proto3" json:"flavor_name,omitempty"`
+	// availability zone for optional resources if any
 	AvailabilityZone string `protobuf:"bytes,4,opt,name=availability_zone,json=availabilityZone,proto3" json:"availability_zone,omitempty"`
 }
 

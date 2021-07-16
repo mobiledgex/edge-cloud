@@ -50,6 +50,7 @@ settings:
   - interval: 2s
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
+  userdefinedalertmintriggertime: 30s
 trustpolicies:
 - key:
     organization: dmuus

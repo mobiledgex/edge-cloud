@@ -155,7 +155,8 @@ func TestNotifyBasic(t *testing.T) {
 	require.Equal(t, 0, len(crmHandler.CloudletCache.Objs), "num cloudlets")
 	require.Equal(t, 0, len(crmHandler.FlavorCache.Objs), "num flavors")
 	require.Equal(t, 0, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
-	require.Equal(t, 0, len(crmHandler.AppCache.Objs), "num apps")
+	// We should be getting all the App updates
+	require.Equal(t, 5, len(crmHandler.AppCache.Objs), "num apps")
 	require.Equal(t, 0, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	// crm must send cloudletinfo to receive clusterInsts and appInsts
 	serverHandler.VMPoolCache.Update(ctx, &testutil.VMPoolData[0], 0)

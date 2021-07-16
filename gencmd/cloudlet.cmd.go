@@ -2395,9 +2395,10 @@ var FlavorMatchAliasArgs = []string{
 	"flavor=flavorname",
 }
 var FlavorMatchComments = map[string]string{
-	"cloudlet-org": "Organization of the cloudlet site",
-	"cloudlet":     "Name of the cloudlet",
-	"flavor":       "Flavor name to lookup",
+	"cloudlet-org":     "Organization of the cloudlet site",
+	"cloudlet":         "Name of the cloudlet",
+	"flavor":           "Flavor name to lookup",
+	"availabilityzone": "availability zone for optional resources if any",
 }
 var FlavorMatchSpecialArgs = map[string]string{}
 var CloudletManifestRequiredArgs = []string{}

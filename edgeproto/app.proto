@@ -212,6 +212,9 @@ message App {
   ServerlessConfig serverless_config = 40;
   // OS Type for VM Apps
   VmAppOsType vm_app_os_type = 41;
+  // User Defined Alerts
+  repeated string user_defined_alerts = 42;
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -240,6 +243,15 @@ message AppAutoProvPolicy {
   string auto_prov_policy = 2;
   option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization";
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
+}
+
+message AppUserDefinedAlert {
+  // App key
+  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  // Alert name 
+  string user_defined_alert = 2;
+  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization,alert-name=UserDefinedAlert";
+  option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,UserDefinedAlert";
 }
 
 message DeploymentCloudletRequest {
@@ -303,6 +315,24 @@ service AppApi {
   rpc RemoveAppAutoProvPolicy(AppAutoProvPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/remove/appautoprovpolicy"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
+    option (protogen.input_required) = true;
+  }
+  // Add an UserAlert to the App
+  rpc AddAppUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
+    option (google.api.http) = {
+      post: "/add/appuseralert"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
+    option (protogen.input_required) = true;
+  }
+  // Remove an UserAlert from the App
+  rpc RemoveAppUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
+    option (google.api.http) = {
+      post: "/remove/appuseralert"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";

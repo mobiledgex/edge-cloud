@@ -1234,6 +1234,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":              struct{}{},
 	"ShowClusterRefs":               struct{}{},
 	"ShowAppInstRefs":               struct{}{},
+	"ShowUserAlert":                 struct{}{},
 	"ShowController":                struct{}{},
 	"ShowNode":                      struct{}{},
 	"ShowDevice":                    struct{}{},
@@ -1246,6 +1247,8 @@ func IsShow(cmd string) bool {
 }
 
 var AllKeyTags = []string{
+	"alert",
+	"alertorg",
 	"app",
 	"apporg",
 	"appver",
@@ -1276,6 +1279,8 @@ var AllKeyTags = []string{
 }
 
 var AllKeyTagsMap = map[string]struct{}{
+	"alert":           struct{}{},
+	"alertorg":        struct{}{},
 	"app":             struct{}{},
 	"apporg":          struct{}{},
 	"appver":          struct{}{},
