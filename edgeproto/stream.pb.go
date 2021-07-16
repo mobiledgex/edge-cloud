@@ -1300,12 +1300,16 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e StreamState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(StreamState_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Stream")
 	return json.Marshal(str)
 }
-
+*/
 var StreamStateCommonPrefix = "Stream"
 
 func (m *AppInstKey) IsValidArgsForStreamAppInst() error {

@@ -153,7 +153,7 @@ func TestParseArgs(t *testing.T) {
 	rc := edgeproto.Cloudlet{
 		IpSupport: edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
 	}
-	args = []string{"ipsupport=Dynamic"}
+	args = []string{"ipsupport=2"}
 	testParseArgs(t, input, args, &rc, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
 
 	// For updates, we need to distinguish between empty fields to be updated,
