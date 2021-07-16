@@ -382,8 +382,8 @@ func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
 	alert.Labels = appInstToAlertLabels(in)
 
 	alert.Annotations = make(map[string]string)
-	alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertClusterSvcAppInstDown
-	alert.Annotations[cloudcommon.AlertAnnotationDescription] = cloudcommon.AlertClusterSvcAppInstDownDescription
+	alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertClusterSvcAppInstFailure
+	alert.Annotations[cloudcommon.AlertAnnotationDescription] = cloudcommon.AlertClusterSvcAppInstFailureDescription
 
 	alertCache.Update(ctx, &alert, 0)
 }
@@ -397,18 +397,10 @@ func clearAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
 func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
 	labels := make(map[string]string)
 
-	labels["alertname"] = cloudcommon.AlertClusterSvcAppInstDown
+	labels["alertname"] = cloudcommon.AlertClusterSvcAppInstFailure
 	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopePlatform
 
-	labels[edgeproto.AppKeyTagName] = appInst.Key.AppKey.Name
-	labels[edgeproto.AppKeyTagVersion] = appInst.Key.AppKey.Version
-	labels[edgeproto.AppKeyTagOrganization] = appInst.Key.AppKey.Organization
-
-	labels[edgeproto.CloudletKeyTagOrganization] = appInst.Key.ClusterInstKey.CloudletKey.Organization
-	labels[edgeproto.CloudletKeyTagName] = appInst.Key.ClusterInstKey.CloudletKey.Name
-
-	labels[edgeproto.ClusterKeyTagName] = appInst.Key.ClusterInstKey.ClusterKey.Name
-	labels[edgeproto.ClusterInstKeyTagOrganization] = appInst.Key.ClusterInstKey.Organization
+	labels = util.AddMaps(labels, appInst.Key.GetTags())
 
 	return labels
 }

@@ -2,16 +2,16 @@ package cloudcommon
 
 // Alert names
 const (
-	AlertAutoScaleUp                      = "AutoScaleUp"
-	AlertAutoScaleDown                    = "AutoScaleDown"
-	AlertClusterAutoScale                 = "ClusterAutoScale"
-	AlertAppInstDown                      = "AppInstDown"
-	AlertClusterSvcAppInstDown            = "ClusterSvcAppInstDown"
-	AlertAutoUndeploy                     = "AutoProvUndeploy"
-	AlertCloudletDown                     = "CloudletDown"
-	AlertCloudletDownDescription          = "Cloudlet resource manager is offline"
-	AlertClusterSvcAppInstDownDescription = "Cluster-svc createAppInst failed"
-	AlertCloudletResourceUsage            = "CloudletResourceUsage"
+	AlertAutoScaleUp                         = "AutoScaleUp"
+	AlertAutoScaleDown                       = "AutoScaleDown"
+	AlertClusterAutoScale                    = "ClusterAutoScale"
+	AlertAppInstDown                         = "AppInstDown"
+	AlertClusterSvcAppInstFailure            = "ClusterSvcAppInstFailure"
+	AlertAutoUndeploy                        = "AutoProvUndeploy"
+	AlertCloudletDown                        = "CloudletDown"
+	AlertCloudletDownDescription             = "Cloudlet resource manager is offline"
+	AlertClusterSvcAppInstFailureDescription = "Cluster-svc create AppInst failed"
+	AlertCloudletResourceUsage               = "CloudletResourceUsage"
 )
 
 // Alert types
