@@ -16,10 +16,7 @@ import (
 // filtered by cloudletkey(s).
 
 func (s *AppSend) UpdateOk(ctx context.Context, key *edgeproto.AppKey) bool {
-	if s.sendrecv.filterCloudletKeys {
-		// Apps gets sent with AppInst
-		return false
-	}
+	// we need to update all the app changes regardless of the field updated
 	return true
 }
 

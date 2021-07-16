@@ -99,6 +99,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.StreamObjApiCmd = edgeproto.NewStreamObjApiClient(conn)
 	gencmd.AppInstLatencyApiCmd = edgeproto.NewAppInstLatencyApiClient(conn)
 	gencmd.GPUDriverApiCmd = edgeproto.NewGPUDriverApiClient(conn)
+	gencmd.UserAlertApiCmd = edgeproto.NewUserAlertApiClient(conn)
 	return nil
 }
 
@@ -148,6 +149,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.StreamObjApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstLatencyApiCmds...)
 	controllerCmd.AddCommand(gencmd.GPUDriverApiCmds...)
+	controllerCmd.AddCommand(gencmd.UserAlertApiCmds...)
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())
 	gencmd.RunCommandCmd.Run = runRunCommand

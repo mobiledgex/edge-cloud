@@ -151,7 +151,9 @@ type ClusterSvc interface {
 	// GetVersionProperties returns properties related to the platform version
 	GetVersionProperties() map[string]string
 	// Get AppInst Configs
-	GetAppInstConfigs(ctx context.Context, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst, autoScalePolicy *edgeproto.AutoScalePolicy, settings *edgeproto.Settings) ([]*edgeproto.ConfigFile, error)
+	GetAppInstConfigs(ctx context.Context, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst,
+		autoScalePolicy *edgeproto.AutoScalePolicy, settings *edgeproto.Settings,
+		userAlerts []edgeproto.UserAlert) ([]*edgeproto.ConfigFile, error)
 }
 
 // AccessApi handles functions that require secrets access, but

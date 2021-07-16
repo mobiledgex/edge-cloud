@@ -114,6 +114,9 @@ var sigChan chan os.Signal
 
 var AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 var ClusterInstCache edgeproto.ClusterInstCache
+var AppInstCache edgeproto.AppInstCache
+var AppCache edgeproto.AppCache
+var UserAlertCache edgeproto.UserAlertCache
 var settings *edgeproto.Settings = edgeproto.GetDefaultSettings()
 var nodeMgr node.NodeMgr
 var alertCache edgeproto.AlertCache
@@ -170,7 +173,7 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 	// Need to create a connection to server, as passed to us by commands
 	if new.State == edgeproto.TrackedState_READY {
 		// Create Prometheus on the cluster after creation
-		if err = createMEXPromInst(ctx, dialOpts, new); err != nil {
+		if err = createMEXPromInst(ctx, dialOpts, new, nil); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
 		}
@@ -204,8 +207,121 @@ func autoScalePolicyCb(ctx context.Context, old *edgeproto.AutoScalePolicy, new 
 	ClusterInstCache.Mux.Unlock()
 
 	for _, inst := range insts {
-		err := createMEXPromInst(ctx, dialOpts, &inst)
+		err := createMEXPromInst(ctx, dialOpts, &inst, nil)
 		log.SpanLog(ctx, log.DebugLevelApi, "Updated policy for Prometheus", "ClusterInst", inst.Key, "AutoScalePolicy", new.Key.Name, "err", err)
+	}
+}
+
+func appInstCb(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
+	if new == nil {
+		// we don't really need to clean up rules
+		return
+	}
+
+	// We only add new rules, we can keep old rules around
+	if new.State == edgeproto.TrackedState_READY {
+		log.SpanLog(ctx, log.DebugLevelNotify, "appinst update", "new", new, "old", old)
+		app := edgeproto.App{}
+		found := AppCache.Get(&new.Key.AppKey, &app)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Unable to find app", "app", new.Key.AppKey.Name)
+			return
+		}
+		if app.Deployment != cloudcommon.DeploymentTypeKubernetes {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Unsupported deployment", "app", new)
+			return
+		}
+		// No user-defined alerts configured
+		if len(app.UserDefinedAlerts) == 0 {
+			log.SpanLog(ctx, log.DebugLevelNotify, "No user-defined alerts configured", "app", new)
+			return
+		}
+		// get the prometheus cluster
+		cluster := edgeproto.ClusterInst{}
+		found = ClusterInstCache.Get(new.ClusterInstKey(), &cluster)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Unable to find cluster", "app", new.Key.AppKey.Name,
+				"cluster", new.ClusterInstKey())
+			return
+		}
+		if err := createMEXPromInst(ctx, dialOpts, &cluster, &app); err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
+				cluster, "error", err.Error())
+		}
+	}
+}
+
+func updateAllPromInstsForApp(ctx context.Context, app *edgeproto.App) {
+	// walk appInst cache and update those cluster insts
+	insts := []edgeproto.ClusterInst{}
+	AppInstCache.Mux.Lock()
+	for k, v := range AppInstCache.Objs {
+		if k.AppKey == app.Key {
+			cluster := edgeproto.ClusterInst{}
+			found := ClusterInstCache.Get(v.Obj.ClusterInstKey(), &cluster)
+			if !found {
+				log.SpanLog(ctx, log.DebugLevelNotify, "Unable to find cluster", "app", v.Obj,
+					"cluster", v.Obj.ClusterInstKey())
+				continue
+			}
+			insts = append(insts, cluster)
+		}
+	}
+	AppInstCache.Mux.Unlock()
+
+	// Now walk all the clusterInstances and update Prometheus instance
+	for ii := range insts {
+		err := createMEXPromInst(ctx, dialOpts, &insts[ii], app)
+		log.SpanLog(ctx, log.DebugLevelApi, "Updated user alerts for Prometheus", "ClusterInst", insts[ii].Key,
+			"app", app.Key, "err", err)
+	}
+
+}
+
+func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
+	if new == nil || old == nil {
+		return
+	}
+	if !old.AppUserAlertsDifferent(new) {
+		// nothing to update
+		return
+	}
+	log.SpanLog(ctx, log.DebugLevelNotify, "app update", "new", new, "old", old)
+	updateAllPromInstsForApp(ctx, new)
+}
+
+// Walk all the app Instances and update the clusters that have the instances that use this alert
+func userAlertCb(ctx context.Context, old *edgeproto.UserAlert, new *edgeproto.UserAlert) {
+	log.SpanLog(ctx, log.DebugLevelNotify, "User Alert update", "new", new, "old", old)
+	if new == nil || old == nil {
+		// deleted, so all the appInsts should've been cleaned up already
+		return
+	}
+	if new.Matches(old) {
+		// nothing to update
+		return
+	}
+
+	// update all prometheus AppInsts on ClusterInsts using the Alert
+	apps := []edgeproto.App{}
+	AppCache.Mux.Lock()
+	for k, v := range AppCache.Objs {
+		if new.Key.Organization != k.Organization {
+			continue
+		}
+		for _, alertName := range v.Obj.UserDefinedAlerts {
+			if alertName == new.Key.Name {
+				app := edgeproto.App{}
+				app.DeepCopyIn(v.Obj)
+				apps = append(apps, app)
+			}
+		}
+	}
+	AppCache.Mux.Unlock()
+
+	// walk the apps and update all prometheus instances for it
+	for ii := range apps {
+		updateAllPromInstsForApp(ctx, &apps[ii])
 	}
 }
 
@@ -218,8 +334,14 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	notifyClient := notify.NewClient(nodeMgr.Name(), strings.Split(addrs, ","), tlsDialOption)
 	edgeproto.InitAutoScalePolicyCache(&AutoScalePolicyCache)
 	edgeproto.InitClusterInstCache(&ClusterInstCache)
+	edgeproto.InitAppInstCache(&AppInstCache)
+	edgeproto.InitUserAlertCache(&UserAlertCache)
+	edgeproto.InitAppCache(&AppCache)
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
 	AutoScalePolicyCache.SetUpdatedCb(autoScalePolicyCb)
+	AppInstCache.SetUpdatedCb(appInstCb)
+	AppCache.SetUpdatedCb(appCb)
+	UserAlertCache.SetUpdatedCb(userAlertCb)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
@@ -302,10 +424,18 @@ func appInstGetApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, ap
 	return nil, err
 }
 
-// create an appInst as a clustersvc
-func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterInst *edgeproto.ClusterInst, app *edgeproto.App) error {
+// Only active connections limit is a cloudlet prometheus level alert
+func isClusterPrometheusAlert(alert *edgeproto.UserAlert) bool {
+	if alert.ActiveConnLimit != 0 {
+		return false
+	}
+	return true
+}
+
+// create an appInst as a cluster-svc
+func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, platformApp *edgeproto.App) error {
 	//update flavor
-	app.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
+	platformApp.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
@@ -313,42 +443,73 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	defer conn.Close()
 	apiClient := edgeproto.NewAppInstApiClient(conn)
 
-	appInst := edgeproto.AppInst{
+	platformAppInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:         app.Key,
+			AppKey:         platformApp.Key,
 			ClusterInstKey: *clusterInst.Key.Virtual(""),
 		},
 		Flavor: clusterInst.Flavor,
 	}
-	if clusterSvcPlugin != nil && clusterInst.AutoScalePolicy != "" {
-		policy := edgeproto.AutoScalePolicy{}
-		policyKey := edgeproto.PolicyKey{}
-		policyKey.Organization = clusterInst.Key.Organization
-		policyKey.Name = clusterInst.AutoScalePolicy
-		if !AutoScalePolicyCache.Get(&policyKey, &policy) {
-			return fmt.Errorf("Auto scale policy %s not found for ClusterInst %s", clusterInst.AutoScalePolicy, clusterInst.Key.GetKeyString())
+	if clusterSvcPlugin != nil {
+		var policy *edgeproto.AutoScalePolicy
+		var userAlerts []edgeproto.UserAlert
+		var userAppInst *edgeproto.AppInst
+		if clusterInst.AutoScalePolicy != "" {
+			policy = &edgeproto.AutoScalePolicy{}
+			policyKey := edgeproto.PolicyKey{}
+			policyKey.Organization = clusterInst.Key.Organization
+			policyKey.Name = clusterInst.AutoScalePolicy
+			if !AutoScalePolicyCache.Get(&policyKey, policy) {
+				return fmt.Errorf("Auto scale policy %s not found for ClusterInst %s", clusterInst.AutoScalePolicy, clusterInst.Key.GetKeyString())
+			}
 		}
-		configs, err := clusterSvcPlugin.GetAppInstConfigs(ctx, clusterInst, &appInst, &policy, settings)
+		// Check if we need to collect alerts
+		if app != nil && len(app.UserDefinedAlerts) > 0 {
+			userAlerts = []edgeproto.UserAlert{}
+			userAppInst = &edgeproto.AppInst{
+				Key: edgeproto.AppInstKey{
+					AppKey:         app.Key,
+					ClusterInstKey: *clusterInst.Key.Virtual(""),
+				},
+			}
+			for _, alertName := range app.UserDefinedAlerts {
+				userAlert := edgeproto.UserAlert{
+					Key: edgeproto.UserAlertKey{
+						Name:         alertName,
+						Organization: app.Key.Organization,
+					},
+				}
+				found := UserAlertCache.Get(&userAlert.Key, &userAlert)
+				if !found {
+					log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to find alert definition", "alert", userAlert)
+					continue
+				}
+				if isClusterPrometheusAlert(&userAlert) {
+					userAlerts = append(userAlerts, userAlert)
+				}
+			}
+		}
+		configs, err := clusterSvcPlugin.GetAppInstConfigs(ctx, clusterInst, userAppInst, policy, settings, userAlerts)
 		if err != nil {
 			return err
 		}
-		appInst.Configs = configs
+		platformAppInst.Configs = configs
 	}
 
 	eventStart := time.Now()
-	res, err := appInstCreateApi(ctx, apiClient, appInst)
+	res, err := appInstCreateApi(ctx, apiClient, platformAppInst)
 	if err != nil {
 		// Handle non-fatal errors
-		if strings.Contains(err.Error(), appInst.Key.ExistsError().Error()) {
-			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "app", app.String(), "cluster", clusterInst.Key.String())
-			updateExistingAppInst(ctx, apiClient, &appInst)
+		if strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) {
+			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
+			updateExistingAppInst(ctx, apiClient, &platformAppInst)
 			err = nil
 		} else if strings.Contains(err.Error(), "not found") {
-			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", app.String())
+			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", platformApp.String())
 			// Create the app
-			if nerr := createAppCommon(ctx, dialOpts, app); nerr == nil {
+			if nerr := createAppCommon(ctx, dialOpts, platformApp); nerr == nil {
 				eventStart = time.Now()
-				res, err = appInstCreateApi(ctx, apiClient, appInst)
+				res, err = appInstCreateApi(ctx, apiClient, platformAppInst)
 			}
 		} else {
 			errstr := err.Error()
@@ -359,16 +520,20 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			err = fmt.Errorf("CreateAppInst failed: %s", errstr)
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", appInst.String(), "result", res.String(), "err", err)
+	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "err", err)
 	if err == nil {
-		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", app.Key.Organization, node.EventType, appInst.Key.GetTags(), err, eventStart, time.Now())
-		clearAlertAppInst(ctx, &appInst)
+		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", platformApp.Key.Organization, node.EventType, platformAppInst.Key.GetTags(), err, eventStart, time.Now())
+		clearAlertAppInst(ctx, &platformAppInst)
 	} else {
 		// Generate an alert
-		createAlertAppInst(ctx, &appInst)
+		createAlertAppInst(ctx, &platformAppInst)
 	}
 	return err
 
+}
+
+func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst, app *edgeproto.App) error {
+	return createAppInstCommon(ctx, dialOpts, inst, app, &MEXPrometheusApp)
 }
 
 func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
@@ -405,13 +570,9 @@ func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
 	return labels
 }
 
-func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
-	return createAppInstCommon(ctx, dialOpts, inst, &MEXPrometheusApp)
-}
-
 func createNFSAutoProvAppInstIfRequired(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
 	if inst.SharedVolumeSize != 0 {
-		return createAppInstCommon(ctx, dialOpts, inst, &NFSAutoProvisionApp)
+		return createAppInstCommon(ctx, dialOpts, inst, nil, &NFSAutoProvisionApp)
 	}
 	return nil
 }
@@ -703,6 +864,9 @@ func main() {
 	notifyClient.RegisterRecvClusterInstCache(&ClusterInstCache)
 	notifyClient.RegisterRecvAutoScalePolicyCache(&AutoScalePolicyCache)
 	notifyClient.RegisterRecvCloudletCache(nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion))
+	notifyClient.RegisterRecvAppCache(&AppCache)
+	notifyClient.RegisterRecvAppInstCache(&AppInstCache)
+	notifyClient.RegisterRecvUserAlertCache(&UserAlertCache)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(settings, nil))
 	edgeproto.InitAlertCache(&alertCache)
 	notifyClient.RegisterSendAlertCache(&alertCache)

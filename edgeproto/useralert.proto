@@ -1,0 +1,90 @@
+// User-defined alerts
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+message UserAlertKey {
+  // Name of the organization for the app that this alert can be applied to
+  string organization = 1 [(protogen.keytag) = "alertorg"];
+  // Alert name
+  string name = 2 [(protogen.keytag) = "alert"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message UserAlert {
+  repeated string fields = 1;
+  // Unique identifier key
+  UserAlertKey key = 2 [(gogoproto.nullable) = false];
+  // container or pod CPU utilization rate(percentage) across all nodes
+  uint32 cpu_utilization_limit = 3;
+  // container or pod memory utilization rate(percentage) across all nodes 
+  uint32 mem_utilization_limit = 4;
+  // container or pod disk utilization rate(percentage) across all nodes
+  uint32 disk_utilization_limit = 5;
+  // Active Connections alert threshold
+  uint32 active_conn_limit = 6;
+  // Alert Severity
+  string severity = 7;
+  // Duration for which alert interval is active
+  int64 trigger_time = 8 [(gogoproto.casttype) = "Duration"];
+  // Additional Labels
+  map <string, string> labels = 9;
+  // Additional Annotations for extra information about the alert
+  map <string, string> annotations = 10;
+  
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.alias) = "name=Key.Name,alert-org=Key.Organization,cpu-utilization=CpuLimit,mem-usage=MemLimit,disk-usage=DiskLimit,active-connections=ActiveConnLimit,trigger-time=TriggerTime";
+  option (protogen.uses_org) = "key=Organization";
+}
+
+service UserAlertApi {
+  // Create a User Defined Alert
+  rpc CreateUserAlert(UserAlert) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/useralert"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
+    option (protogen.method_also_required) = "Severity";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
+  }
+  // Delete a User Defined Alert
+  rpc DeleteUserAlert(UserAlert) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/useralert"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
+  }
+  // Update a User Defined Alert
+  rpc UpdateUserAlert(UserAlert) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/useralert"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
+  }
+  // Show User Defined Alerts. Any fields specified will be used to filter results.
+  rpc ShowUserAlert(UserAlert) returns (stream UserAlert) {
+    option (google.api.http) = {
+      post: "/show/useralert"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Organization";
+  }
+}
