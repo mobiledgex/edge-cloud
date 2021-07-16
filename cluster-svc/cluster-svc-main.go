@@ -229,6 +229,11 @@ func appInstCb(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppIn
 			log.SpanLog(ctx, log.DebugLevelNotify, "Unsupported deployment", "app", new)
 			return
 		}
+		// No user-defined alerts configured
+		if len(app.UserDefinedAlerts) == 0 {
+			log.SpanLog(ctx, log.DebugLevelNotify, "No user-defined alerts configured", "app", new)
+			return
+		}
 		// get the prometheus cluster
 		cluster := edgeproto.ClusterInst{}
 		found = ClusterInstCache.Get(new.ClusterInstKey(), &cluster)
@@ -275,7 +280,7 @@ func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
 	if new == nil || old == nil {
 		return
 	}
-	if new.Matches(old) || !old.AppUserAlertsDifferent(new) {
+	if !old.AppUserAlertsDifferent(new) {
 		// nothing to update
 		return
 	}
@@ -304,7 +309,9 @@ func userAlertCb(ctx context.Context, old *edgeproto.UserAlert, new *edgeproto.U
 		}
 		for _, alertName := range v.Obj.UserDefinedAlerts {
 			if alertName == new.Key.Name {
-				apps = append(apps, *v.Obj)
+				app := edgeproto.App{}
+				app.DeepCopyIn(v.Obj)
+				apps = append(apps, app)
 			}
 		}
 	}

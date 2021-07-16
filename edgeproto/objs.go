@@ -1226,15 +1226,15 @@ func (a *UserAlert) Validate(fields map[string]struct{}) error {
 		return errors.New("At least one of the measurements for alert should be set")
 	}
 	// check CPU to be within 0-100 percent
-	if a.CpuUtilizationLimit > 0 && a.CpuUtilizationLimit > 100 {
+	if a.CpuUtilizationLimit > 100 {
 		return errors.New("Cpu utilization limit is percent. Valid values 1-100%")
 	}
 	// check Memory to be within 0-100 percent
-	if a.MemUtilizationLimit > 0 && a.MemUtilizationLimit > 100 {
+	if a.MemUtilizationLimit > 100 {
 		return errors.New("Memory utilization limit is percent. Valid values 1-100%")
 	}
 	// check Disk to be within 0-100 percent
-	if a.DiskUtilizationLimit > 0 && a.DiskUtilizationLimit > 100 {
+	if a.DiskUtilizationLimit > 100 {
 		return errors.New("Disk utilization limit is percent. Valid values 1-100%")
 	}
 	return nil
@@ -1242,9 +1242,9 @@ func (a *UserAlert) Validate(fields map[string]struct{}) error {
 
 // Check if UserDefinedAlerts are different between two apps
 func (app *App) AppUserAlertsDifferent(other *App) bool {
-	alertsChanged := false
+	alertsDiff := false
 	if len(app.UserDefinedAlerts) != len(other.UserDefinedAlerts) {
-		alertsChanged = true
+		alertsDiff = true
 	} else {
 		oldAlerts := make(map[string]struct{})
 		for _, alert := range app.UserDefinedAlerts {
@@ -1252,10 +1252,10 @@ func (app *App) AppUserAlertsDifferent(other *App) bool {
 		}
 		for _, alert := range other.UserDefinedAlerts {
 			if _, found := oldAlerts[alert]; !found {
-				alertsChanged = true
+				alertsDiff = true
 				break
 			}
 		}
 	}
-	return alertsChanged
+	return alertsDiff
 }
