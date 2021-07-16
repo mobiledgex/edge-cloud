@@ -485,9 +485,10 @@ message FlavorMatch {
   CloudletKey key = 1 [(gogoproto.nullable) = false];
   // Flavor name to lookup
   string flavor_name = 3;
+  // availability zone for optional resources if any
   string availability_zone = 4;
   option (protogen.also_required) = "FlavorName";
- option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName";
 }
 
 message CloudletManifest {
