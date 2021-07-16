@@ -103,6 +103,7 @@ func FinishTracer() {
 	if tracerCloser == nil {
 		return
 	}
+	// reporter is closed as part of tracer Close() call
 	tracerCloser.Close()
 	tracerCloser = nil
 }
