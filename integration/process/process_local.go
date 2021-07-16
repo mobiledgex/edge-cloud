@@ -1184,6 +1184,11 @@ func (p *DockerGeneric) GetRunArgs() []string {
 	args := []string{
 		"run", "--rm", "--name", p.Name,
 	}
+	if runtime.GOOS != "darwin" {
+		// For Linux, "host.docker.internal" host name doesn't work from inside docker container
+		// Use "--add-host" to add this mapping, only works if Docker version >= 20.04
+		args = append(args, "--add-host", "host.docker.internal:host-gateway")
+	}
 	for k, v := range p.DockerEnvVars {
 		args = append(args, "-e", fmt.Sprintf("%s=%s", k, v))
 	}

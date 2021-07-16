@@ -107,6 +107,9 @@ func FinishTracer() {
 	}
 	tracerCloser.Close()
 	tracerCloser = nil
+	if reporterCloser == nil {
+		return
+	}
 	reporterCloser.Close()
 	reporterCloser = nil
 }
