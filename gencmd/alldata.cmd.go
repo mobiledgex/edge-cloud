@@ -286,6 +286,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
 		}
 	}
+	for i0 := 0; i0 < len(in.UserDefinedAlerts); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -330,6 +332,7 @@ var AllDataOptionalArgs = []string{
 	"settings.appinstclientcleanupinterval",
 	"settings.clusterautoscaleaveragingdurationsec",
 	"settings.clusterautoscaleretrydelay",
+	"settings.userdefinedalertmintriggertime",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -631,6 +634,7 @@ var AllDataOptionalArgs = []string{
 	"apps:#.serverlessconfig.ram",
 	"apps:#.serverlessconfig.minreplicas",
 	"apps:#.vmappostype",
+	"apps:#.userdefinedalerts",
 	"appinstances:#.fields",
 	"appinstances:#.key.appkey.organization",
 	"appinstances:#.key.appkey.name",
@@ -731,6 +735,17 @@ var AllDataOptionalArgs = []string{
 	"gpudrivers:#.properties",
 	"gpudrivers:#.state",
 	"gpudrivers:#.ignorestate",
+	"userdefinedalerts:#.fields",
+	"userdefinedalerts:#.key.organization",
+	"userdefinedalerts:#.key.name",
+	"userdefinedalerts:#.cpuutilizationlimit",
+	"userdefinedalerts:#.memutilizationlimit",
+	"userdefinedalerts:#.diskutilizationlimit",
+	"userdefinedalerts:#.activeconnlimit",
+	"userdefinedalerts:#.severity",
+	"userdefinedalerts:#.triggertime",
+	"userdefinedalerts:#.labels",
+	"userdefinedalerts:#.annotations",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -774,6 +789,7 @@ var AllDataComments = map[string]string{
 	"settings.appinstclientcleanupinterval":                                         "AppInstClient cleanup thread run interval",
 	"settings.clusterautoscaleaveragingdurationsec":                                 "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
 	"settings.clusterautoscaleretrydelay":                                           "Cluster auto scale retry delay if scaling failed",
+	"settings.userdefinedalertmintriggertime":                                       "Minimmum user alert trigger time",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",
@@ -1027,6 +1043,7 @@ var AllDataComments = map[string]string{
 	"apps:#.serverlessconfig.ram":                                                   "RAM allocation in megabytes per container when serverless",
 	"apps:#.serverlessconfig.minreplicas":                                           "Minimum number of replicas when serverless",
 	"apps:#.vmappostype":                                                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
+	"apps:#.userdefinedalerts":                                                      "User Defined Alerts",
 	"appinstances:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                                        "App developer organization",
 	"appinstances:#.key.appkey.name":                                                "App name",
@@ -1107,6 +1124,16 @@ var AllDataComments = map[string]string{
 	"gpudrivers:#.properties":                                                       "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
 	"gpudrivers:#.state":                                                            "State to figure out if any action on the GPU driver is in-progress",
 	"gpudrivers:#.ignorestate":                                                      "Ignore state will ignore any action in-progress on the GPU driver",
+	"userdefinedalerts:#.key.organization":                                          "Name of the organization for the app that this alert can be applied to",
+	"userdefinedalerts:#.key.name":                                                  "Alert name",
+	"userdefinedalerts:#.cpuutilizationlimit":                                       "container or pod CPU utilization rate(percentage) across all nodes",
+	"userdefinedalerts:#.memutilizationlimit":                                       "container or pod memory utilization rate(percentage) across all nodes",
+	"userdefinedalerts:#.diskutilizationlimit":                                      "container or pod disk utilization rate(percentage) across all nodes",
+	"userdefinedalerts:#.activeconnlimit":                                           "Active Connections alert threshold",
+	"userdefinedalerts:#.severity":                                                  "Alert Severity",
+	"userdefinedalerts:#.triggertime":                                               "Duration for which alert interval is active",
+	"userdefinedalerts:#.labels":                                                    "Additional Labels",
+	"userdefinedalerts:#.annotations":                                               "Additional Annotations for extra information about the alert",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -1115,6 +1142,7 @@ var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.status.msgs":              "StringArray",
 	"apps:#.autoprovpolicies":                 "StringArray",
 	"apps:#.fields":                           "StringArray",
+	"apps:#.userdefinedalerts":                "StringArray",
 	"autoprovpolicies:#.fields":               "StringArray",
 	"autoscalepolicies:#.fields":              "StringArray",
 	"cloudletinfos:#.errors":                  "StringArray",
@@ -1143,6 +1171,9 @@ var AllDataSpecialArgs = map[string]string{
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
 	"trustpolicies:#.fields":                  "StringArray",
+	"userdefinedalerts:#.annotations":         "StringToString",
+	"userdefinedalerts:#.fields":              "StringArray",
+	"userdefinedalerts:#.labels":              "StringToString",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
 	"vmpools:#.status.msgs":                   "StringArray",

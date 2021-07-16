@@ -45,6 +45,7 @@ func runCreate(c *cli.Command, args []string) error {
 	gencmd.CreateTrustPolicys(c, data.TrustPolicies, &err)
 	gencmd.CreateClusterInsts(c, data.ClusterInsts, &err)
 	gencmd.CreateAppInsts(c, data.AppInstances, &err)
+	gencmd.CreateUserAlerts(c, data.UserDefinedAlerts, &err)
 
 	return err
 }
@@ -77,5 +78,6 @@ func runDelete(c *cli.Command, args []string) error {
 		gencmd.ResetSettingsBatch(c, data.Settings, &err)
 	}
 	gencmd.DeleteFlavors(c, data.Flavors, &err)
+	gencmd.DeleteUserAlerts(c, data.UserDefinedAlerts, &err)
 	return err
 }

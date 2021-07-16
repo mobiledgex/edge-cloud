@@ -15,11 +15,33 @@ func TestValidateSeverity(t *testing.T) {
 }
 
 func TestValidateMonitoredAlert(t *testing.T) {
-	require.True(t, IsMonitoredAlert(AlertClusterAutoScale))
-	require.True(t, IsMonitoredAlert(AlertAutoScaleUp))
-	require.True(t, IsMonitoredAlert(AlertAutoScaleDown))
-	require.True(t, IsMonitoredAlert(AlertAppInstDown))
-	require.True(t, IsMonitoredAlert(AlertAutoUndeploy))
-	require.False(t, IsMonitoredAlert(""))
-	require.False(t, IsMonitoredAlert("UnmonitoredAlert"))
+	labels := map[string]string{}
+	require.False(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{AlertScopeTypeTag: "invalidScope"}
+	require.False(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": "SomeUserAlert", AlertScopeTypeTag: AlertScopeApp}
+	require.True(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": "UnmonitoredAlert", AlertScopeTypeTag: AlertScopeCloudlet}
+	require.True(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": AlertAutoScaleUp, AlertScopeTypeTag: AlertScopeCloudlet}
+	require.True(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": AlertAutoScaleDown}
+	require.True(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": AlertAppInstDown, AlertScopeTypeTag: AlertScopeCloudlet}
+	require.True(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": AlertAutoUndeploy, AlertScopeTypeTag: AlertScopeCloudlet}
+	require.True(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": "", AlertScopeTypeTag: AlertScopeCloudlet}
+	require.False(t, IsMonitoredAlert(labels))
+
+	labels = map[string]string{"alertname": "UnmonitoredAlert"}
+	require.False(t, IsMonitoredAlert(labels))
 }

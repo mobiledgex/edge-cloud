@@ -1201,3 +1201,61 @@ func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
 	}
 	return false
 }
+
+func (key *UserAlertKey) ValidateKey() error {
+	if key.Name == "" || key.Organization == "" {
+		return errors.New("Missing name, or organization of alert")
+	}
+	return nil
+}
+
+func (a *UserAlert) Validate(fields map[string]struct{}) error {
+	if err := a.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	// Since active connections and other metrics are part
+	// of different instances of Prometheus, disallow mixing them
+	if a.ActiveConnLimit != 0 {
+		if a.CpuUtilizationLimit != 0 || a.MemUtilizationLimit != 0 || a.DiskUtilizationLimit != 0 {
+			return errors.New("Active Connection Alerts should not include any other triggers")
+		}
+	}
+	// at least one of the values for alert should be set
+	if a.ActiveConnLimit == 0 && a.CpuUtilizationLimit == 0 &&
+		a.MemUtilizationLimit == 0 && a.DiskUtilizationLimit == 0 {
+		return errors.New("At least one of the measurements for alert should be set")
+	}
+	// check CPU to be within 0-100 percent
+	if a.CpuUtilizationLimit > 100 {
+		return errors.New("Cpu utilization limit is percent. Valid values 1-100%")
+	}
+	// check Memory to be within 0-100 percent
+	if a.MemUtilizationLimit > 100 {
+		return errors.New("Memory utilization limit is percent. Valid values 1-100%")
+	}
+	// check Disk to be within 0-100 percent
+	if a.DiskUtilizationLimit > 100 {
+		return errors.New("Disk utilization limit is percent. Valid values 1-100%")
+	}
+	return nil
+}
+
+// Check if UserDefinedAlerts are different between two apps
+func (app *App) AppUserAlertsDifferent(other *App) bool {
+	alertsDiff := false
+	if len(app.UserDefinedAlerts) != len(other.UserDefinedAlerts) {
+		alertsDiff = true
+	} else {
+		oldAlerts := make(map[string]struct{})
+		for _, alert := range app.UserDefinedAlerts {
+			oldAlerts[alert] = struct{}{}
+		}
+		for _, alert := range other.UserDefinedAlerts {
+			if _, found := oldAlerts[alert]; !found {
+				alertsDiff = true
+				break
+			}
+		}
+	}
+	return alertsDiff
+}

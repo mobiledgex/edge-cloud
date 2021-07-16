@@ -30,7 +30,8 @@ func getHelmOpts(ctx context.Context, client ssh.Client, appName, delims string,
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	// Walk the Configs in the App and generate the yaml files from the helm customization ones
 	for ii, v := range configs {
-		if v.Kind == edgeproto.AppConfigHelmYaml {
+		// skip non helm and empty configs
+		if v.Kind == edgeproto.AppConfigHelmYaml && v.Config != "" {
 			// config can either be remote, or local
 			cfg, err := cloudcommon.GetDeploymentManifest(ctx, nil, v.Config)
 			if err != nil {
@@ -169,7 +170,7 @@ func CreateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts, "helmArgs", helmArgs)
 	cmd = fmt.Sprintf("%s helm install %s %s %s %s", names.KconfEnv, names.HelmAppName, chart,
 		helmArgs, helmOpts)
 	out, err = client.Output(cmd)
@@ -191,9 +192,24 @@ func UpdateHelmAppInst(ctx context.Context, client ssh.Client, names *KubeNames,
 	if err != nil {
 		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts, "helmArgs", helmArgs)
-	cmd := fmt.Sprintf("%s helm upgrade %s %s %s %s", names.KconfEnv, helmArgs, helmOpts, names.HelmAppName, names.AppImage)
+
+	// get helm repository config for the app
+	// NOTE: since upgrading, no need to add the repo, should already exist
+	_, chart, err := getHelmRepoAndChart(app.ImagePath)
+	if err != nil {
+		return err
+	}
+
+	// Update repos, just in case we need to refresh available versions
+	cmd := fmt.Sprintf("%s helm repo update", names.KconfEnv)
 	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("updating helm repos, %s, %s, %v", cmd, out, err)
+	}
+
+	log.SpanLog(ctx, log.DebugLevelInfra, "Helm options", "helmOpts", helmOpts, "helmArgs", helmArgs)
+	cmd = fmt.Sprintf("%s helm upgrade %s %s %s %s", names.KconfEnv, helmArgs, helmOpts, names.HelmAppName, chart)
+	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error updating helm chart, %s, %s, %v", cmd, out, err)
 	}
