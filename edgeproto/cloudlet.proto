@@ -483,8 +483,10 @@ message Cloudlet {
 message FlavorMatch {
   // Cloudlet ctx
   CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Flavor name to lookup
   string flavor_name = 3;
   string availability_zone = 4;
+  option (protogen.also_required) = "FlavorName";
  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName";
 }
 
