@@ -34,6 +34,7 @@ settings:
   - interval: 672h0m0s
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
+  userdefinedalertmintriggertime: 30s
 flavors:
 - key:
     name: x1.tiny

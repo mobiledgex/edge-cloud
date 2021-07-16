@@ -230,6 +230,7 @@ var SettingsOptionalArgs = []string{
 	"appinstclientcleanupinterval",
 	"clusterautoscaleaveragingdurationsec",
 	"clusterautoscaleretrydelay",
+	"userdefinedalertmintriggertime",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -268,6 +269,7 @@ var SettingsComments = map[string]string{
 	"appinstclientcleanupinterval":                                     "AppInstClient cleanup thread run interval",
 	"clusterautoscaleaveragingdurationsec":                             "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
 	"clusterautoscaleretrydelay":                                       "Cluster auto scale retry delay if scaling failed",
+	"userdefinedalertmintriggertime":                                   "Minimmum user alert trigger time",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
