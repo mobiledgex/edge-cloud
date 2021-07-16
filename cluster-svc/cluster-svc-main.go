@@ -407,7 +407,8 @@ func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
 	labels[edgeproto.CloudletKeyTagOrganization] = appInst.Key.ClusterInstKey.CloudletKey.Organization
 	labels[edgeproto.CloudletKeyTagName] = appInst.Key.ClusterInstKey.CloudletKey.Name
 
-	labels["cluster"] = appInst.Key.ClusterInstKey.ClusterKey.Name
+	labels[edgeproto.ClusterKeyTagName] = appInst.Key.ClusterInstKey.ClusterKey.Name
+	labels[edgeproto.ClusterInstKeyTagOrganization] = appInst.Key.ClusterInstKey.Organization
 
 	return labels
 }
