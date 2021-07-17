@@ -817,12 +817,16 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e LProto) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(LProto_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "LProto")
 	return json.Marshal(str)
 }
-
+*/
 var LProtoCommonPrefix = "LProto"
 
 var HealthCheckStrings = []string{
@@ -921,12 +925,16 @@ func (e *HealthCheck) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e HealthCheck) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(HealthCheck_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "HealthCheck")
 	return json.Marshal(str)
 }
-
+*/
 var HealthCheckCommonPrefix = "HealthCheck"
 
 var CloudletStateStrings = []string{
@@ -1045,12 +1053,16 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e CloudletState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(CloudletState_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "CloudletState")
 	return json.Marshal(str)
 }
-
+*/
 var CloudletStateCommonPrefix = "CloudletState"
 
 var MaintenanceStateStrings = []string{
@@ -1175,10 +1187,15 @@ func (e *MaintenanceState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e MaintenanceState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(MaintenanceState_CamelName, int32(e))
 	return json.Marshal(str)
 }
+*/
 func (m *AppPort) Size() (n int) {
 	if m == nil {
 		return 0

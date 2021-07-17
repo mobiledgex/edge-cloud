@@ -4107,12 +4107,16 @@ func (e *VMState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e VMState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VMState_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Vm")
 	return json.Marshal(str)
 }
-
+*/
 var VMStateCommonPrefix = "Vm"
 
 var VMActionStrings = []string{
@@ -4206,12 +4210,16 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e VMAction) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VMAction_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "VmAction")
 	return json.Marshal(str)
 }
-
+*/
 var VMActionCommonPrefix = "VmAction"
 
 func (m *VMPool) IsValidArgsForCreateVMPool() error {
