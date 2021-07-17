@@ -340,12 +340,16 @@ func (e *VersionHash) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e VersionHash) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VersionHash_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Hash")
 	return json.Marshal(str)
 }
-
+*/
 var VersionHashCommonPrefix = "Hash"
 
 // Keys being hashed:

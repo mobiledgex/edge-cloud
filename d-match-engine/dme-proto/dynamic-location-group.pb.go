@@ -550,12 +550,16 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e DlgMessage_DlgAck) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Dlg")
 	return json.Marshal(str)
 }
-
+*/
 var DlgAckCommonPrefix = "Dlg"
 
 func (m *DlgMessage) IsValidArgsForSendToGroup() error {
