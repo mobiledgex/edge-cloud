@@ -12447,12 +12447,16 @@ func (e *PlatformType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e PlatformType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(PlatformType_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "PlatformType")
 	return json.Marshal(str)
 }
-
+*/
 var PlatformTypeCommonPrefix = "PlatformType"
 
 var InfraApiAccessStrings = []string{
@@ -12532,11 +12536,15 @@ func (e *InfraApiAccess) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e InfraApiAccess) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(InfraApiAccess_CamelName, int32(e))
 	return json.Marshal(str)
 }
-
+*/
 var OSTypeStrings = []string{
 	"LINUX",
 	"WINDOWS",
@@ -12619,11 +12627,15 @@ func (e *OSType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e OSType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(OSType_CamelName, int32(e))
 	return json.Marshal(str)
 }
-
+*/
 var ReportScheduleStrings = []string{
 	"EveryWeek",
 	"Every15Days",
@@ -12711,10 +12723,15 @@ func (e *ReportSchedule) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e ReportSchedule) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ReportSchedule_CamelName, int32(e))
 	return json.Marshal(str)
 }
+*/
 func (m *GPUDriver) IsValidArgsForCreateGPUDriver() error {
 	if m.LicenseConfigMd5Sum != "" {
 		return fmt.Errorf("Invalid field specified: LicenseConfigMd5Sum, this field is only for internal use")
