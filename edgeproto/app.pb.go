@@ -4175,12 +4175,16 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e ImageType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ImageType_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "ImageType")
 	return json.Marshal(str)
 }
-
+*/
 var ImageTypeCommonPrefix = "ImageType"
 
 var VmAppOsTypeStrings = []string{
@@ -4289,12 +4293,16 @@ func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e VmAppOsType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VmAppOsType_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "VmAppOs")
 	return json.Marshal(str)
 }
-
+*/
 var VmAppOsTypeCommonPrefix = "VmAppOs"
 
 var DeleteTypeStrings = []string{
@@ -4374,11 +4382,15 @@ func (e *DeleteType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e DeleteType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(DeleteType_CamelName, int32(e))
 	return json.Marshal(str)
 }
-
+*/
 var AccessTypeStrings = []string{
 	"ACCESS_TYPE_DEFAULT_FOR_DEPLOYMENT",
 	"ACCESS_TYPE_DIRECT",
@@ -4470,12 +4482,16 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e AccessType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(AccessType_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "AccessType")
 	return json.Marshal(str)
 }
-
+*/
 var AccessTypeCommonPrefix = "AccessType"
 
 func (m *App) IsValidArgsForCreateApp() error {
