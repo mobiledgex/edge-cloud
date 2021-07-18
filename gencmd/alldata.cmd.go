@@ -288,6 +288,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.UserDefinedAlerts); i0++ {
 	}
+	for i0 := 0; i0 < len(in.FlowRateLimitSettings); i0++ {
+	}
+	for i0 := 0; i0 < len(in.MaxReqsRateLimitSettings); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -333,6 +337,8 @@ var AllDataOptionalArgs = []string{
 	"settings.clusterautoscaleaveragingdurationsec",
 	"settings.clusterautoscaleretrydelay",
 	"settings.userdefinedalertmintriggertime",
+	"settings.disableratelimit",
+	"settings.maxnumperipratelimiters",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -746,6 +752,22 @@ var AllDataOptionalArgs = []string{
 	"userdefinedalerts:#.triggertime",
 	"userdefinedalerts:#.labels",
 	"userdefinedalerts:#.annotations",
+	"flowratelimitsettings:#.fields",
+	"flowratelimitsettings:#.key.flowsettingsname",
+	"flowratelimitsettings:#.key.ratelimitkey.apiname",
+	"flowratelimitsettings:#.key.ratelimitkey.apiendpointtype",
+	"flowratelimitsettings:#.key.ratelimitkey.ratelimittarget",
+	"flowratelimitsettings:#.settings.flowalgorithm",
+	"flowratelimitsettings:#.settings.reqspersecond",
+	"flowratelimitsettings:#.settings.burstsize",
+	"maxreqsratelimitsettings:#.fields",
+	"maxreqsratelimitsettings:#.key.maxreqssettingsname",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiname",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiendpointtype",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.ratelimittarget",
+	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm",
+	"maxreqsratelimitsettings:#.settings.maxrequests",
+	"maxreqsratelimitsettings:#.settings.interval",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -790,6 +812,8 @@ var AllDataComments = map[string]string{
 	"settings.clusterautoscaleaveragingdurationsec":                                 "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
 	"settings.clusterautoscaleretrydelay":                                           "Cluster auto scale retry delay if scaling failed",
 	"settings.userdefinedalertmintriggertime":                                       "Minimmum user alert trigger time",
+	"settings.disableratelimit":                                                     "Disable rate limiting for APIs (default is false)",
+	"settings.maxnumperipratelimiters":                                              "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",
@@ -1134,6 +1158,22 @@ var AllDataComments = map[string]string{
 	"userdefinedalerts:#.triggertime":                                               "Duration for which alert interval is active",
 	"userdefinedalerts:#.labels":                                                    "Additional Labels",
 	"userdefinedalerts:#.annotations":                                               "Additional Annotations for extra information about the alert",
+	"flowratelimitsettings:#.fields":                                                "Fields are used for the Update API to specify which fields to apply",
+	"flowratelimitsettings:#.key.flowsettingsname":                                  "Unique name for FlowRateLimitSettings (there can be multiple FlowSettings per RateLimitSettingsKey)",
+	"flowratelimitsettings:#.key.ratelimitkey.apiname":                              "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
+	"flowratelimitsettings:#.key.ratelimitkey.apiendpointtype":                      "API Endpoint type, one of UnknownApiEndpointType, Dme",
+	"flowratelimitsettings:#.key.ratelimitkey.ratelimittarget":                      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"flowratelimitsettings:#.settings.flowalgorithm":                                "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
+	"flowratelimitsettings:#.settings.reqspersecond":                                "requests per second for flow rate limiting",
+	"flowratelimitsettings:#.settings.burstsize":                                    "burst size for flow rate limiting",
+	"maxreqsratelimitsettings:#.fields":                                             "Fields are used for the Update API to specify which fields to apply",
+	"maxreqsratelimitsettings:#.key.maxreqssettingsname":                            "Unique name for MaxReqsRateLimitSettings (there can be multiple MaxReqsSettings per RateLimitSettingsKey)",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiname":                           "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.apiendpointtype":                   "API Endpoint type, one of UnknownApiEndpointType, Dme",
+	"maxreqsratelimitsettings:#.key.ratelimitkey.ratelimittarget":                   "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm":                          "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
+	"maxreqsratelimitsettings:#.settings.maxrequests":                               "Maximum number of requests for the given Interval",
+	"maxreqsratelimitsettings:#.settings.interval":                                  "Time interval",
 }
 var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.errors":                   "StringArray",
@@ -1165,8 +1205,10 @@ var AllDataSpecialArgs = map[string]string{
 	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
+	"flowratelimitsettings:#.fields":          "StringArray",
 	"gpudrivers:#.fields":                     "StringArray",
 	"gpudrivers:#.properties":                 "StringToString",
+	"maxreqsratelimitsettings:#.fields":       "StringArray",
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",

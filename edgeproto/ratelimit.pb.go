@@ -3690,7 +3690,8 @@ func (e *ApiEndpointType) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 func (e ApiEndpointType) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(ApiEndpointType_CamelName, int32(e)), nil
+	str := proto.EnumName(ApiEndpointType_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -3722,6 +3723,15 @@ func (e *ApiEndpointType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
+func (e ApiEndpointType) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(ApiEndpointType_CamelName, int32(e))
+	return json.Marshal(str)
+}
+*/
 var RateLimitTargetStrings = []string{
 	"UNKNOWN_TARGET",
 	"ALL_REQUESTS",
@@ -3776,7 +3786,8 @@ func (e *RateLimitTarget) UnmarshalYAML(unmarshal func(interface{}) error) error
 }
 
 func (e RateLimitTarget) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(RateLimitTarget_CamelName, int32(e)), nil
+	str := proto.EnumName(RateLimitTarget_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -3808,6 +3819,15 @@ func (e *RateLimitTarget) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
+func (e RateLimitTarget) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(RateLimitTarget_CamelName, int32(e))
+	return json.Marshal(str)
+}
+*/
 var FlowRateLimitAlgorithmStrings = []string{
 	"UNKNOWN_FLOW_ALGORITHM",
 	"TOKEN_BUCKET_ALGORITHM",
@@ -3857,7 +3877,8 @@ func (e *FlowRateLimitAlgorithm) UnmarshalYAML(unmarshal func(interface{}) error
 }
 
 func (e FlowRateLimitAlgorithm) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(FlowRateLimitAlgorithm_CamelName, int32(e)), nil
+	str := proto.EnumName(FlowRateLimitAlgorithm_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -3889,6 +3910,15 @@ func (e *FlowRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
+func (e FlowRateLimitAlgorithm) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(FlowRateLimitAlgorithm_CamelName, int32(e))
+	return json.Marshal(str)
+}
+*/
 var MaxReqsRateLimitAlgorithmStrings = []string{
 	"UNKNOWN_MAX_REQS_ALGORITHM",
 	"FIXED_WINDOW_ALGORITHM",
@@ -3933,7 +3963,8 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalYAML(unmarshal func(interface{}) er
 }
 
 func (e MaxReqsRateLimitAlgorithm) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(MaxReqsRateLimitAlgorithm_CamelName, int32(e)), nil
+	str := proto.EnumName(MaxReqsRateLimitAlgorithm_CamelName, int32(e))
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -3964,6 +3995,16 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
+
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
+func (e MaxReqsRateLimitAlgorithm) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(MaxReqsRateLimitAlgorithm_CamelName, int32(e))
+	return json.Marshal(str)
+}
+*/
 func (m *FlowRateLimitSettings) IsValidArgsForCreateFlowRateLimitSettings() error {
 	return nil
 }

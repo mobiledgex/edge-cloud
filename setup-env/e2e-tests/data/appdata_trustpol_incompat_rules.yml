@@ -19,6 +19,7 @@ settings:
   cloudletmaintenancetimeout: 2s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  disableratelimit: true
 
 flavors:
 - key:

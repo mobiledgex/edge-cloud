@@ -181,7 +181,7 @@ func runUpdateFlowRateLimitSettings(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateFlowRateLimitSettings(c, obj)
 }
 
@@ -429,7 +429,7 @@ func runUpdateMaxReqsRateLimitSettings(c *cli.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData, cli.JsonNamespace)
+	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
 	return UpdateMaxReqsRateLimitSettings(c, obj)
 }
 

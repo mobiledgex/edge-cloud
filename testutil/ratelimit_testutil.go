@@ -16,6 +16,7 @@ import (
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"io"
 	math "math"
+	"time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -86,7 +87,11 @@ func (r *Run) RateLimitSettingsApi_FlowRateLimitSettings(data *[]edgeproto.FlowR
 				*r.Rc = false
 				return
 			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			yamlData := cli.MapData{
+				Namespace: cli.YamlNamespace,
+				Data:      objMap,
+			}
+			obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)
 
 			out, err := r.client.UpdateFlowRateLimitSettings(r.ctx, obj)
 			if err != nil {
@@ -165,7 +170,11 @@ func (r *Run) RateLimitSettingsApi_MaxReqsRateLimitSettings(data *[]edgeproto.Ma
 				*r.Rc = false
 				return
 			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+			yamlData := cli.MapData{
+				Namespace: cli.YamlNamespace,
+				Data:      objMap,
+			}
+			obj.Fields = cli.GetSpecifiedFields(&yamlData, obj)
 
 			out, err := r.client.UpdateMaxReqsRateLimitSettings(r.ctx, obj)
 			if err != nil {
@@ -246,6 +255,15 @@ func (s *DummyServer) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, ser
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.RateLimitSettings{})
 		}
+		if ch, ok := s.MidstreamFailChs["ShowRateLimitSettings"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
+		}
 	}
 	return err
 }
@@ -280,6 +298,15 @@ func (s *DummyServer) ShowFlowRateLimitSettings(in *edgeproto.FlowRateLimitSetti
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.FlowRateLimitSettings{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowFlowRateLimitSettings"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.FlowRateLimitSettingsCache.Show(in, func(obj *edgeproto.FlowRateLimitSettings) error {
@@ -319,6 +346,15 @@ func (s *DummyServer) ShowMaxReqsRateLimitSettings(in *edgeproto.MaxReqsRateLimi
 	if obj.Matches(in, edgeproto.MatchFilter()) {
 		for ii := 0; ii < s.ShowDummyCount; ii++ {
 			server.Send(&edgeproto.MaxReqsRateLimitSettings{})
+		}
+		if ch, ok := s.MidstreamFailChs["ShowMaxReqsRateLimitSettings"]; ok {
+			// Wait until client receives the SendMsg, since they
+			// are buffered and dropped once we return err here.
+			select {
+			case <-ch:
+			case <-time.After(5 * time.Second):
+			}
+			return fmt.Errorf("midstream failure!")
 		}
 	}
 	err = s.MaxReqsRateLimitSettingsCache.Show(in, func(obj *edgeproto.MaxReqsRateLimitSettings) error {

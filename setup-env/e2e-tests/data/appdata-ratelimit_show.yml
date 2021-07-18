@@ -31,6 +31,9 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
+  userdefinedalertmintriggertime: 30s
   disableratelimit: false
   maxnumperipratelimiters: 10000
 flavors:
@@ -62,8 +65,8 @@ clusterinsts:
     name: x1.small
   sharedvolumesize: 100
   
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   deployment: kubernetes
   nummasters: 1
   numnodes: 2
@@ -76,8 +79,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   deployment: kubernetes
   nummasters: 1
   numnodes: 2
@@ -93,9 +96,9 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-1
@@ -107,9 +110,9 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-2
@@ -121,9 +124,9 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: tmus-cloud-3
@@ -135,9 +138,9 @@ cloudlets:
   location:
     latitude: 32
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: azure-cloud-4
@@ -149,9 +152,9 @@ cloudlets:
   location:
     latitude: 36
     longitude: -95
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: gcp-cloud-5
@@ -162,7 +165,7 @@ cloudletinfos:
 - key:
     organization: tmus
     name: tmus-cloud-1
-  state: CloudletStateReady
+  state: Ready
   notifyid: 7
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -207,6 +210,8 @@ cloudletinfos:
     - name: External IPs
       value: 2
       inframaxvalue: 30
+    - name: Instances
+      value: 6
     clusterinsts:
     - clusterkey:
         name: SmallCluster
@@ -223,7 +228,7 @@ cloudletinfos:
 - key:
     organization: tmus
     name: tmus-cloud-2
-  state: CloudletStateReady
+  state: Ready
   notifyid: 8
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -268,6 +273,8 @@ cloudletinfos:
     - name: External IPs
       value: 3
       inframaxvalue: 30
+    - name: Instances
+      value: 7
     clusterinsts:
     - clusterkey:
         name: SmallCluster
@@ -284,7 +291,7 @@ cloudletinfos:
 - key:
     organization: tmus
     name: tmus-cloud-3
-  state: CloudletStateReady
+  state: Ready
   notifyid: 9
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -329,10 +336,12 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 2
 - key:
     organization: azure
     name: azure-cloud-4
-  state: CloudletStateReady
+  state: Ready
   notifyid: 10
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -377,10 +386,12 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 2
 - key:
     organization: gcp
     name: gcp-cloud-5
-  state: CloudletStateReady
+  state: Ready
   notifyid: 11
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
@@ -425,13 +436,15 @@ cloudletinfos:
     - name: External IPs
       value: 1
       inframaxvalue: 30
+    - name: Instances
+      value: 2
 apps:
 - key:
     organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls
   officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
@@ -450,13 +463,13 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acme.someapplication1
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   accessports: udp:20002
   defaultflavor:
     name: x1.small
@@ -474,18 +487,18 @@ apps:
     -----END PUBLIC KEY-----
   deployment: helm
   androidpackagename: com.acme.helmApplication
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
     name: NFSAutoProvision
     version: "1.0"
   imagepath: https://charts.helm.sh/stable:stable/nfs-client-provisioner
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   defaultflavor:
     name: x1.medium
   annotations: version=1.2.8
   deployment: helm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -502,20 +515,20 @@ apps:
     name: SamsungEnablingLayer
     version: "1.0"
   imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accessports: tcp:64000
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
   deployment: kubernetes
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
-  imagetype: ImageTypeHelm
+  imagetype: Helm
   accessports: tcp:9090
   internalports: true
   trusted: true
@@ -523,7 +536,7 @@ apps:
     name: x1.medium
   annotations: version=9.4.10
   deployment: helm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -571,7 +584,7 @@ apps:
     name: vmapp1
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
-  imagetype: ImageTypeQcow
+  imagetype: Qcow
   accessports: tcp:80,tcp:443,udp:10002
   defaultflavor:
     name: x1.small
@@ -588,31 +601,31 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: vm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo1
     name: vmapp2
     version: "1.0"
   imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
-  imagetype: ImageTypeQcow
+  imagetype: Qcow
   accessports: tcp:80,tcp:443,udp:10002
   defaultflavor:
     name: x1.small
   cluster:
     name: DefaultCluster
   deployment: vm
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo
     name: NoPortsApp
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   defaultflavor:
     name: x1.small
   deployment: kubernetes
   officialfqdn: noportsapp.acmeappco.com
-  accesstype: AccessTypeLoadBalancer
+  accesstype: LoadBalancer
 appinstances:
 - key: 
     appkey:
@@ -629,10 +642,9 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: smallcluster.tmus-cloud-1.tmus.mobiledgex.net   
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -652,7 +664,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessDynamic
+  liveness: Dynamic
   flavor:
     name: x1.small
 
@@ -671,29 +683,25 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  uri: shared.tmus-cloud-1.tmus.localtest.net
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp.
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 81
     publicport: 81
-    fqdnprefix: someapplication110-tcp.
     tls: true
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 444
     publicport: 444
-    fqdnprefix: someapplication110-tcp.
     tls: true
   flavor:
     name: x1.small
@@ -716,9 +724,9 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessDynamic
+  liveness: Dynamic
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 9090
     publicport: 9090
   flavor:
@@ -738,29 +746,25 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessStatic
+  uri: smallcluster.tmus-cloud-2.tmus.localtest.net
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-    fqdnprefix: someapplication110-tcp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication110-tcp.
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
-    fqdnprefix: someapplication110-udp.
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 81
     publicport: 81
-    fqdnprefix: someapplication110-tcp.
     tls: true
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 444
     publicport: 444
-    fqdnprefix: someapplication110-tcp.
     tls: true
   flavor:
     name: x1.small
@@ -783,9 +787,10 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  uri: shared.tmus-cloud-1.tmus.localtest.net
+  liveness: Static
   mappedports:
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 20002
     publicport: 20002
   flavor:
@@ -805,15 +810,16 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  uri: acmeappco1vmapp110.tmus-cloud-1.tmus.localtest.net
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -833,15 +839,16 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  liveness: LivenessStatic
+  uri: acmeappco1vmapp210.tmus-cloud-2.tmus.localtest.net
+  liveness: Static
   mappedports:
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 80
     publicport: 80
-  - proto: LProtoTcp
+  - proto: Tcp
     internalport: 443
     publicport: 443
-  - proto: LProtoUdp
+  - proto: Udp
     internalport: 10002
     publicport: 10002
   flavor:
@@ -861,7 +868,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
   runtimeinfo:
